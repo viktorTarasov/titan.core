@@ -1,0 +1,3304 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_CLL_StatHandler_Functions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 512
+//  Updated:  2012-02-17
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////
+//  Module: EPTF_CLL_StatHandler_Functions
+// 
+//  Purpose:
+//    This module contains the implementation of the StatHandlerClient.
+// 
+//  Module depends on:
+//    <EPTF_CLL_Base_Functions>
+//    <EPTF_CLL_Common_Definitions>
+//    <EPTF_CLL_FBQ_Functions>
+//    <EPTF_CLL_HashMapStr2Int_Functions>
+//    <EPTF_CLL_StatHandler_Definitions>
+//    <EPTF_CLL_StatHandlerClient_Definitions>
+//    <EPTF_CLL_StatHandlerLogging_Functions>
+//    <EPTF_CLL_Variable_Definitions>
+//    <EPTF_CLL_Variable_Functions>
+//    <EPTF_CLL_HashMap_Functions>
+//
+//  Module Parameters:
+//    tsp_debug_EPTF_StatHandler - *boolean* - debug flag, default false
+//
+//  Current Owner:
+//    Gabor Tatarka (EGBOTAT)
+// 
+//  Last Review Date:
+//    2009-05-22
+//
+//  Detailed Comments:
+//    This module contains the implementation of the StatHandler.
+//    Public API:
+//    - <f_EPTF_StatHandler_init_CT>
+//    - <f_EPTF_StatHandler_registerStatDeclaredCallbackFn>
+//    - <f_EPTF_StatHandler_deregisterStatDeclaredCallbackFn>
+//    - <f_EPTF_StatHandler_getId>
+//    - <f_EPTF_StatHandler_getNofStats>
+//    - <f_EPTF_StatHandler_getName>
+//    - <f_EPTF_StatHandler_getMethod>
+//    - <f_EPTF_StatHandler_getVarIdx>
+//    - <f_EPTF_StatHandler_getParentIdx>
+//    - <f_EPTF_StatHandler_getAuxStats>
+//    - <f_EPTF_StatHandler_getAuxVars>
+//    - <f_EPTF_StatHandler_getNofSources>
+//    - <f_EPTF_StatHandler_getVarsOfSource>
+//
+///////////////////////////////////////////////////////////////
+
+module EPTF_CLL_StatHandler_Functions {
+
+import from EPTF_CLL_Base_Functions all;
+import from EPTF_CLL_Common_Definitions all;
+import from EPTF_CLL_FBQ_Functions all;
+import from EPTF_CLL_HashMapStr2Int_Functions all;
+import from EPTF_CLL_StatHandler_Definitions all;
+import from EPTF_CLL_StatHandlerClient_Definitions all;
+import from EPTF_CLL_StatHandlerLogging_Functions all;
+import from EPTF_CLL_Variable_Definitions all;
+import from EPTF_CLL_Variable_Functions all;
+import from EPTF_CLL_DataSource_Definitions all;
+import from EPTF_CLL_DataSourceClient_Functions all;
+import from EPTF_CLL_StatHandler_DSFunctions all;
+import from EPTF_CLL_HashMap_Functions all;
+friend module EPTF_CLL_StatHandlerUI_Functions;
+friend module EPTF_CLL_StatHandler_DSFunctions;
+
+modulepar boolean tsp_debug_EPTF_StatHandler := false;
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_StatHandler_init_CT
+// 
+//  Purpose:
+//    Init function for component type <EPTF_StatHandler_CT>
+//
+//  Parameters:
+//    pl_selfName - *in* *charstring* - EPTF self name
+//    pl_dataSource_compRef - *in* <EPTF_DataSource_CT> - dataSource component reference
+//
+//  Return Value:
+//    -
+//
+//  Errors & assertions:
+//    - 
+//
+//  Detailed Comments:
+//    -
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_StatHandler_init_CT(
+  in charstring pl_selfName,
+  in EPTF_DataSource_CT pl_dataSource_compRef := null) 
+runs on EPTF_StatHandler_CT
+{
+  if(v_EPTF_StatHandler_initialized) { return; }
+
+  f_EPTF_StatHandlerLogging_init_CT(
+    pl_selfName,
+    c_EPTF_StatHandler_loggingComponentMask,
+    tsp_debug_EPTF_StatHandler);
+
+  f_EPTF_Var_init_CT(pl_selfName);
+
+  f_EPTF_HashMap_init_CT (pl_selfName);
+
+  f_EPTF_FBQ_init_CT(pl_selfName);
+
+  v_EPTF_StatHandler_aggregatedStats := c_empty_EPTF_StatHandler_AggregatedStatDatabase;
+
+  v_EPTF_StatHandler_aggregatedStats.hashmap_name2Idx :=
+  f_EPTF_str2int_HashMap_New(
+    f_EPTF_Base_selfName()&v_EPTF_StatHandler_nameSeparator&c_EPTF_StatHandler_HashMapName2Idx)
+  //pl_selfName&v_EPTF_StatHandler_nameSeparator&c_EPTF_StatHandler_HashMapName2Idx);
+
+  f_EPTF_Var_newInt(f_EPTF_StatHandler_genUniqueName(c_EPTF_StatHandler_ResetVarName),
+    0, v_EPTF_StatHandler_resetButtonVarIdx);
+
+  f_EPTF_Var_addPostProcFn(v_EPTF_StatHandler_resetButtonVarIdx,
+    {refers(f_EPTF_StatHandler_resetButtonPressed), {}});
+  f_EPTF_Var_addGuardFn(v_EPTF_StatHandler_resetButtonVarIdx,
+    {refers(f_EPTF_StatHandler_resetButtonGuard), {}});
+
+  v_EPTF_StatHandler_resetComponents := {};
+  v_EPTF_StatHandler_nofPendingResets := 0;
+
+  v_EPTF_StatHandler_statDeclaredCallbackFns := {};
+
+  vd_EPTF_StatHandler_behavior := activate(as_EPTF_StatHandler_behavior());
+
+  if( f_EPTF_Var_getId(f_EPTF_StatHandler_genUniqueName(c_EPTF_StatHandler_ResetVarNameGlobal)) == -1 ){
+    var integer vl_resetVarGlobal := 0;
+    f_EPTF_Var_newInt(
+      f_EPTF_StatHandler_genUniqueName(c_EPTF_StatHandler_ResetVarNameGlobal),
+      0,
+      vl_resetVarGlobal);
+  }
+
+  if( f_EPTF_Var_getId(f_EPTF_StatHandler_genUniqueName(c_EPTF_StatHandler_ResetVarNameLocal)) == -1 ){
+    var integer vl_resetVarLocal := 0;
+	f_EPTF_Var_newInt(
+      f_EPTF_StatHandler_genUniqueName(c_EPTF_StatHandler_ResetVarNameLocal),
+      0,
+      vl_resetVarLocal);
+  }
+
+  if(pl_dataSource_compRef != null){
+    f_EPTF_DataSourceClient_init_CT(f_EPTF_Base_selfName(), pl_dataSource_compRef);
+    f_EPTF_DataSourceClient_registerData(c_StatHandler_DataSource_sourceId, f_EPTF_Base_selfName(), refers(f_EPTF_StatHandler_DSProcessData), pl_dataSource_compRef);
+    f_EPTF_DataSourceClient_sendReady(c_StatHandler_DataSource_sourceId, f_EPTF_Base_selfName());
+  }
+
+  f_EPTF_Base_registerCleanup(refers(f_EPTF_StatHandler_cleanup_CT));
+  v_EPTF_StatHandler_initialized := true;
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_StatHandler_registerStatDeclaredCallbackFn
+//
+//  Purpose:
+//    Function for registering a callback function for declare stat
+//
+//  Parameters:
+//    pl_fn - *in*  <EPTF_StatHandler_statDeclared_FT> - callback function reference
+//
+//  Return Value:
+//    -
+//
+//  Errors & assertions:
+//    -
+//
+//  Detailed Comments:
+//    -
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_StatHandler_registerStatDeclaredCallbackFn(
+  in EPTF_StatHandler_statDeclared_FT pl_fn)
+runs on EPTF_StatHandler_CT
+{
+  for(var integer i:=0; i<sizeof(v_EPTF_StatHandler_statDeclaredCallbackFns); i:=i+1) {
+    if(v_EPTF_StatHandler_statDeclaredCallbackFns[i] == pl_fn) { return; }
+  }
+  v_EPTF_StatHandler_statDeclaredCallbackFns[sizeof(v_EPTF_StatHandler_statDeclaredCallbackFns)] := pl_fn;
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_StatHandler_deregisterStatDeclaredCallbackFn
+//
+//  Purpose:
+//    Function for deregistering a callback function for declare stat
+//
+//  Parameters:
+//    pl_fn - *in*  <EPTF_StatHandler_statDeclared_FT> - callback function reference
+//
+//  Return Value:
+//    -
+//
+//  Errors & assertions:
+//    -
+//
+//  Detailed Comments:
+//    -
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_StatHandler_deregisterStatDeclaredCallbackFn(
+  in EPTF_StatHandler_statDeclared_FT pl_fn)
+runs on EPTF_StatHandler_CT
+{
+  var EPTF_StatHandler_statDeclared_FTList vl_old := v_EPTF_StatHandler_statDeclaredCallbackFns;
+  v_EPTF_StatHandler_statDeclaredCallbackFns := {};
+  for(var integer i:=0; i<sizeof(vl_old); i:=i+1) {
+    if(vl_old[i] != pl_fn) {
+      v_EPTF_StatHandler_statDeclaredCallbackFns[sizeof(v_EPTF_StatHandler_statDeclaredCallbackFns)] :=
+      vl_old[i];
+    }
+  }
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_StatHandler_getId
+//
+//  Purpose:
+//    Function for getting the id/index of a statistic.
+//
+//  Parameters:
+//    pl_statName - *in*  *charstring* - name of the stat
+//
+//  Return Value:
+//    *integer* - index of the stat, -1 if not found
+//
+//  Errors & assertions:
+//    -
+//
+//  Detailed Comments:
+//    -
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_StatHandler_getId(in charstring pl_statName)
+runs on EPTF_StatHandler_CT
+return integer
+{
+  var integer vl_idx := -1;
+  var boolean vl_found := f_EPTF_str2int_HashMap_Find(
+    v_EPTF_StatHandler_aggregatedStats.hashmap_name2Idx,
+    pl_statName,
+    vl_idx);
+  if(vl_found) {
+    return vl_idx;
+  } else {
+    return -1;
+  }
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_StatHandler_getNofStats
+//
+//  Purpose:
+//    Function for getting the number of declared aggregated statistics.
+//
+//  Parameters:
+//    -
+//
+//  Return Value:
+//    *integer* - number of stats
+//
+//  Errors & assertions:
+//    -
+//
+//  Detailed Comments:
+//    -
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_StatHandler_getNofStats(in charstring pl_statName)
+runs on EPTF_StatHandler_CT
+return integer
+{
+  return sizeof(v_EPTF_StatHandler_aggregatedStats.data);
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_StatHandler_getName
+//
+//  Purpose:
+//    Function for getting the name of a statistic by id/index.
+//
+//  Parameters:
+//    pl_statIdx - *in*  *integer* - index of the stat
+//
+//  Return Value:
+//    *charstring* - name of the stat
+//
+//  Errors & assertions:
+//    -
+//
+//  Detailed Comments:
+//    -
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_StatHandler_getName(in integer pl_statIdx)
+runs on EPTF_StatHandler_CT
+return charstring
+{
+  f_EPTF_Base_assert(%definitionId&": invalid stat index", pl_statIdx >= 0 and
+    pl_statIdx < sizeof(v_EPTF_StatHandler_aggregatedStats.data));
+  return v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].statName;
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_StatHandler_getMethod
+//
+//  Purpose:
+//    Function for getting the method of a statistic.
+//
+//  Parameters:
+//    pl_statIdx - *in*  *integer* - index of the stat
+//
+//  Return Value:
+//    *charstring* - method of the stat
+//
+//  Errors & assertions:
+//    -
+//
+//  Detailed Comments:
+//    -
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_StatHandler_getMethod(in integer pl_statIdx)
+runs on EPTF_StatHandler_CT
+return charstring
+{
+  f_EPTF_Base_assert(%definitionId&": invalid stat index", pl_statIdx >= 0 and
+    pl_statIdx < sizeof(v_EPTF_StatHandler_aggregatedStats.data));
+  return v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].statMethod;
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_StatHandler_getVarIdx
+//
+//  Purpose:
+//    Function for getting the Variable index of a statistic.
+//
+//  Parameters:
+//    pl_statIdx - *in*  *integer* - index of the stat
+//
+//  Return Value:
+//    *integer* - Variable index of the stat
+//
+//  Errors & assertions:
+//    -
+//
+//  Detailed Comments:
+//    -
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_StatHandler_getVarIdx(in integer pl_statIdx)
+runs on EPTF_StatHandler_CT
+return integer
+{
+  f_EPTF_Base_assert(%definitionId&": invalid stat index", pl_statIdx >= 0 and
+    pl_statIdx < sizeof(v_EPTF_StatHandler_aggregatedStats.data));
+  return v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].statVarIdx;
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_StatHandler_getParentIdx
+//
+//  Purpose:
+//    Function for getting the parent index of an aux statistic.
+//
+//  Parameters:
+//    pl_statIdx - *in*  *integer* - index of the aux stat
+//
+//  Return Value:
+//    *integer* - index of the parent stat, -1 if no parent (i.e. not an aux stat)
+//
+//  Errors & assertions:
+//    -
+//
+//  Detailed Comments:
+//    -
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_StatHandler_getParentIdx(in integer pl_statIdx)
+runs on EPTF_StatHandler_CT
+return integer
+{
+  f_EPTF_Base_assert(%definitionId&": invalid stat index", pl_statIdx >= 0 and
+    pl_statIdx < sizeof(v_EPTF_StatHandler_aggregatedStats.data));
+  return v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].parentIdx;
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_StatHandler_getAuxStats
+//
+//  Purpose:
+//    Function for getting the auxiliary stat indices of a statistic.
+//
+//  Parameters:
+//    pl_statIdx - *in*  *integer* - index of the stat
+//
+//  Return Value:
+//    <EPTF_IntegerList> - list of auxiliary stat indices
+//
+//  Errors & assertions:
+//    -
+//
+//  Detailed Comments:
+//    -
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_StatHandler_getAuxStats(in integer pl_statIdx)
+runs on EPTF_StatHandler_CT
+return EPTF_IntegerList
+{
+  f_EPTF_Base_assert(%definitionId&": invalid stat index", pl_statIdx >= 0 and
+    pl_statIdx < sizeof(v_EPTF_StatHandler_aggregatedStats.data));
+  return v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].auxStats;
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_StatHandler_getAuxVars
+//
+//  Purpose:
+//    Function for getting the auxiliary Variable indices of a statistic.
+//
+//  Parameters:
+//    pl_statIdx - *in*  *integer* - index of the stat
+//
+//  Return Value:
+//    <EPTF_IntegerList> - list of auxiliary Var indices
+//
+//  Errors & assertions:
+//    -
+//
+//  Detailed Comments:
+//    -
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_StatHandler_getAuxVars(in integer pl_statIdx)
+runs on EPTF_StatHandler_CT
+return EPTF_IntegerList
+{
+  f_EPTF_Base_assert(%definitionId&": invalid stat index", pl_statIdx >= 0 and
+    pl_statIdx < sizeof(v_EPTF_StatHandler_aggregatedStats.data));
+  return v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].auxVars;
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_StatHandler_getNofSources
+//
+//  Purpose:
+//    Function for getting the number of data sources of a statistic.
+//
+//  Parameters:
+//    pl_statIdx - *in*  *integer* - index of the stat
+//
+//  Return Value:
+//    *integer* - number of data sources
+//
+//  Errors & assertions:
+//    -
+//
+//  Detailed Comments:
+//    -
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_StatHandler_getNofSources(in integer pl_statIdx)
+runs on EPTF_StatHandler_CT
+return integer
+{
+  f_EPTF_Base_assert(%definitionId&": invalid stat index", pl_statIdx >= 0 and
+    pl_statIdx < sizeof(v_EPTF_StatHandler_aggregatedStats.data));
+  return f_EPTF_FBQ_getLengthOfBusyChain(v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].sourceQueue);
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_StatHandler_getVarsOfSource
+//
+//  Purpose:
+//    Function for getting the Variable indices of a source of a statistic.
+//
+//  Parameters:
+//    pl_statIdx - *in*  *integer* - index of the stat
+//    pl_sourceIdx - *in*  *integer* - index of the source within the stat
+//
+//  Return Value:
+//    <EPTF_IntegerList> - list of Variable indices
+//
+//  Errors & assertions:
+//    -
+//
+//  Detailed Comments:
+//    -
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_StatHandler_getVarsOfSource(in integer pl_statIdx, in integer pl_sourceIdx)
+runs on EPTF_StatHandler_CT
+return EPTF_IntegerList
+{
+  f_EPTF_Base_assert(%definitionId&": invalid stat index", pl_statIdx >= 0 and
+    pl_statIdx < sizeof(v_EPTF_StatHandler_aggregatedStats.data));
+  f_EPTF_Base_assert(%definitionId&": invalid source index", pl_sourceIdx >= 0 and
+    pl_sourceIdx < sizeof(v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].sources));
+  return v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].sources[pl_sourceIdx].varIdxList;
+}
+
+/////////////////////////////////////////////////////////////////////////////
+//  Function: f_EPTF_StatHandler_getVarNameByStatName
+//
+//  Purpose:
+//    Function for getting the variable name for a statistic name.
+//
+//  Parameters:
+//    pl_statName - *in*  *charstring* - name of statistic
+//    pl_varName - *out*  *charstring* - the variable name for a statistic name
+//
+//  Return Value:
+//    *boolean* - true if success
+//
+//  Errors & assertions:
+//    -
+//
+//  Detailed Comments:
+//    -
+//
+/////////////////////////////////////////////////////////////////////////////
+public function f_EPTF_StatHandler_getVarNameByStatName(
+  in charstring pl_statName,
+  out charstring pl_varName)
+runs on EPTF_StatHandler_CT
+return boolean
+{
+  var integer vl_idx := f_EPTF_StatHandler_getId(pl_statName);
+  if(vl_idx < 0) { return false; }
+  pl_varName := f_EPTF_Var_getName(f_EPTF_StatHandler_getVarIdx(vl_idx));
+  return true;  
+}
+
+
+///////////////////////////////////////////////////////////
+//  Group: Private
+//
+//  Purpose:
+//    Private functions used by StatHandler.
+//
+//  Detailed Comments:
+//    Do not call the functions within this group form outside of StatHandler.
+//
+///////////////////////////////////////////////////////////
+group Private {
+
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_StatHandler_cleanup_CT
+  //
+  //  Purpose:
+  //    Cleanup function for component type <EPTF_StatHandler_CT>
+  //
+  //  Parameters:
+  //    -
+  //
+  //  Return Value:
+  //    -
+  //
+  //  Errors & assertions:
+  //    -
+  //
+  //  Detailed Comments:
+  //    -
+  //
+  ///////////////////////////////////////////////////////////
+  private function f_EPTF_StatHandler_cleanup_CT()
+  runs on EPTF_StatHandler_CT
+  {
+    if(not v_EPTF_StatHandler_initialized) { return; }
+    deactivate(vd_EPTF_StatHandler_behavior);
+    vd_EPTF_StatHandler_behavior := null;
+    if(c_EPTF_Common_debugSwitch and f_EPTF_StatHandlerLogging_debugEnabled()) {
+      f_EPTF_StatHandlerLogging_debug(%definitionId&": aggregated stats database: "
+        &log2str(v_EPTF_StatHandler_aggregatedStats));
+      f_EPTF_StatHandlerLogging_debug(%definitionId&": resetComponents database: "
+        &log2str(v_EPTF_StatHandler_resetComponents));
+    }
+    // unsubscribing from *remote* variables is not needed at cleanup, but unsibscribing from
+    // local-provider is needed to prevent the calcFn from running and using unbound values during cleanup
+    for(var integer i:=0; i<sizeof(v_EPTF_StatHandler_aggregatedStats.data); i:=i+1) {
+      f_EPTF_Var_unsubscribe(v_EPTF_StatHandler_aggregatedStats.data[i].statVarIdx);
+    }
+    
+    f_EPTF_str2int_HashMap_Delete(f_EPTF_Base_selfName()&v_EPTF_StatHandler_nameSeparator&c_EPTF_StatHandler_HashMapName2Idx);
+    v_EPTF_StatHandler_aggregatedStats := c_empty_EPTF_StatHandler_AggregatedStatDatabase;
+    
+    v_EPTF_StatHandler_resetButtonVarIdx := -1;
+    v_EPTF_StatHandler_resetComponents := {};
+    v_EPTF_StatHandler_nofPendingResets := 0;
+    
+    v_EPTF_StatHandler_statDeclaredCallbackFns := {};
+    
+    v_EPTF_StatHandler_initialized := false;
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_StatHandler_callStatDeclaredCallbacks
+  //
+  //  Purpose:
+  //    Function for calling the stat-declared callback functions
+  //
+  //  Parameters:
+  //    pl_statIdx - *in*  *integer* - index of the declared stat
+  //
+  //  Return Value:
+  //    -
+  //
+  //  Errors & assertions:
+  //    -
+  //
+  //  Detailed Comments:
+  //    -
+  //
+  ///////////////////////////////////////////////////////////
+  private function f_EPTF_StatHandler_callStatDeclaredCallbacks(in integer pl_statIdx)
+  runs on EPTF_StatHandler_CT
+  {
+    for(var integer i:=0; i<sizeof(v_EPTF_StatHandler_statDeclaredCallbackFns); i:=i+1) {
+      v_EPTF_StatHandler_statDeclaredCallbackFns[i].apply(
+        v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].statName,
+        v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].statMethod,
+        v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].statVarIdx
+      )
+    }
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_StatHandler_registerBindStatToWidgetCallbackFn
+  //
+  //  Purpose:
+  //    Function for registering a callback function for bind-stat-to-widget.
+  //
+  //  Parameters:
+  //    pl_fn - *in*  <EPTF_StatHandler_bindStatToWidget_FT> - callback function reference
+  //
+  //  Return Value:
+  //    -
+  //
+  //  Errors & assertions:
+  //    -
+  //
+  //  Detailed Comments:
+  //    -
+  //
+  ///////////////////////////////////////////////////////////
+  friend function f_EPTF_StatHandler_registerBindStatToWidgetCallbackFn(
+    in EPTF_StatHandler_bindStatToWidget_FT pl_fn)
+  runs on EPTF_StatHandler_CT
+  {
+    v_EPTF_StatHandler_bindStatToWidgetFn := pl_fn
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_StatHandler_setParent
+  //
+  //  Purpose:
+  //    Function for setting the parent of an aux stat.
+  //
+  //  Parameters:
+  //    pl_statIdx - *in* *integer*
+  //    pl_parentIdx - *in* *integer*
+  //
+  //  Return Value:
+  //    -
+  //
+  //  Errors & assertions:
+  //    If stat has a parent already.
+  //
+  //  Detailed Comments:
+  //    -
+  //
+  ///////////////////////////////////////////////////////////
+  private function f_EPTF_StatHandler_setParent(
+    in integer pl_statIdx,
+    in integer pl_parentIdx)
+  runs on EPTF_StatHandler_CT
+  {
+    f_EPTF_Base_assert(%definitionId&": stat has a parent already.",
+      v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].parentIdx < 0);
+    v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].parentIdx := pl_parentIdx;
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_StatHandler_declareStat
+  //
+  //  Purpose:
+  //    Function for declaring a statistic.
+  //
+  //  Parameters:
+  //    pl_statName - *in*  *charstring* - name of the stat to create
+  //    pl_statMethod - *in* *charstring* - statistics method to use
+  //    pl_statResetValue - *in* <EPTF_Var_DirectContent>- reset value
+  //
+  //  Return Value:
+  //    *integer* - index of the declared stat (-1 on error)
+  //
+  //  Errors & assertions:
+  //    Redeclaration with different method or reset value.
+  //
+  //  Detailed Comments:
+  //    -
+  //
+  ///////////////////////////////////////////////////////////
+  private function f_EPTF_StatHandler_declareStat(
+    in charstring pl_statName,
+    in charstring pl_statMethod,
+    in EPTF_Var_DirectContent pl_statResetValue)
+  runs on EPTF_StatHandler_CT
+  return integer
+  {
+    var integer vl_idx := f_EPTF_StatHandler_getId(pl_statName);
+    if(vl_idx > -1) { // found
+      if(v_EPTF_StatHandler_aggregatedStats.data[vl_idx].statMethod != pl_statMethod or
+        v_EPTF_StatHandler_aggregatedStats.data[vl_idx].statResetValue != pl_statResetValue) {
+        f_EPTF_StatHandlerLogging_warning(%definitionId&": redeclaration of "&
+          pl_statName&" with different properties.");
+        return -1;
+      } else if(c_EPTF_Common_debugSwitch and f_EPTF_StatHandlerLogging_debugEnabled()) {
+        f_EPTF_StatHandlerLogging_debug(%definitionId&": redeclaration of "&
+          pl_statName&" with same properties.");
+      }
+    } else {
+      vl_idx := sizeof(v_EPTF_StatHandler_aggregatedStats.data);
+      v_EPTF_StatHandler_aggregatedStats.data[vl_idx] := c_empty_EPTF_StatHandler_AggregatedStat;
+      v_EPTF_StatHandler_aggregatedStats.data[vl_idx].statName := pl_statName;
+      v_EPTF_StatHandler_aggregatedStats.data[vl_idx].statMethod := pl_statMethod;
+      v_EPTF_StatHandler_aggregatedStats.data[vl_idx].statResetValue := pl_statResetValue;
+      f_EPTF_str2int_HashMap_Insert(
+        v_EPTF_StatHandler_aggregatedStats.hashmap_name2Idx,
+        pl_statName,
+        vl_idx);
+      v_EPTF_StatHandler_aggregatedStats.data[vl_idx].statVarIdx :=
+      f_EPTF_Var_newVar(pl_statName, pl_statResetValue);
+      f_EPTF_StatHandler_setMethodForStat(vl_idx);
+      f_EPTF_FBQ_initFreeBusyQueue(v_EPTF_StatHandler_aggregatedStats.data[vl_idx].sourceQueue);
+      
+      if(c_EPTF_Common_debugSwitch and f_EPTF_StatHandlerLogging_debugEnabled()) {
+        f_EPTF_StatHandlerLogging_debug(%definitionId&": declared stat "&pl_statName
+          &" with stat method "&pl_statMethod&", reset value "&log2str(pl_statResetValue));
+        f_EPTF_StatHandlerLogging_debug(%definitionId&": aggregated stats database: "
+          &log2str(v_EPTF_StatHandler_aggregatedStats));
+      }
+      f_EPTF_StatHandler_callStatDeclaredCallbacks(vl_idx);
+    }
+    return vl_idx;
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_StatHandler_registerStat
+  //
+  //  Purpose:
+  //    Function for registering a data source for a statistic.
+  //
+  //  Parameters:
+  //    pl_sourceCompRef - *in* <EPTF_Var_CT> - component reference that has the source variable
+  //    pl_sender - *in* <EPTF_StatHandlerClient_CT> - component reference of the sender of registerStat message
+  //    pl_providerVarList - *in* <EPTF_CharstringList> - list of source variable names on the source component
+  //    pl_subscriptionMode - *in* <EPTF_Var_SubscriptionMode> - subscription mode
+  //    pl_targetStatName - *in* *charstring* - name of the stat to register to
+  //    pl_sourceUniqueId - *in* *integer* - unique ID for the source - will be used recursively for aux stats, can be used to deregister
+  //    pl_refreshRate - *in* *integer* - refresh rate of the subscription
+  //
+  //  Return Value:
+  //    *boolean* - true on success
+  //
+  //  Errors & assertions:
+  //    Nonexistent target stat; empty or invalid provider var list.
+  //
+  //  Detailed Comments:
+  //    Required provider variables for each stat method:
+  //    Min: single value, integer or float, same as the type of target stat
+  //    Max: single value, integer or float, same as the type of target stat
+  //    Mean: [0]: local mean (float), [1]: number of samples (int)
+  //    StandardDev: [0]: local mean (float), [1]: number of samples (int), [2]: S (float)
+  //    Sum: single value, integer or float, same as the type of target stat
+  //    GlobalAverage: [0]: sum (float), [1]: number of elements (int)
+  //    Density: [0]: density distr.bin values (integerList), [1]: distr.bin boundaries (floatList, check only)
+  //    Percentile95: [0]: density distr.bin values (integerList), [1]: distr.bin boundaries (floatList, check only), [2]: max (float)
+  //    PercentileP: [0]: density distr.bin values (integerList), [1]: distr.bin boundaries (floatList, check only), [2]: max (float), [3]: pValue (float)  
+  //
+  ///////////////////////////////////////////////////////////
+  private function f_EPTF_StatHandler_registerStat(
+    in EPTF_Var_CT pl_sourceCompRef,
+    in EPTF_StatHandlerClient_CT pl_sender,
+    in EPTF_CharstringList pl_providerVarList,
+    in EPTF_Var_SubscriptionMode pl_subscriptionMode,
+    in charstring pl_targetStatName,
+    in integer pl_sourceUniqueId := -1,
+    in integer pl_refreshRate)
+  runs on EPTF_StatHandler_CT
+  return boolean
+  {
+    if(v_EPTF_StatHandler_nofPendingResets > 0) {
+      f_EPTF_StatHandlerLogging_warning(%definitionId&" called while reset is in progress");
+    }
+    if(sizeof(pl_providerVarList) < 1) {
+      f_EPTF_StatHandlerLogging_warning(%definitionId&": provider variable list is empty");
+      return false;
+    }
+    
+    // step 1: find the target statistic
+    var integer vl_statIdx := f_EPTF_StatHandler_getId(pl_targetStatName);
+    if(vl_statIdx < 0) { // not found
+      f_EPTF_StatHandlerLogging_warning(log2str(%definitionId&": no such statistics: ", pl_targetStatName));
+      return false;
+    }
+    
+    var EPTF_StatHandler_StatOfComponent vl_source := c_empty_EPTF_StatHandler_StatOfComponent;
+    vl_source.compRef := pl_sourceCompRef;
+    vl_source.varNameList := pl_providerVarList;
+    
+    var integer vl_sourceIdx := f_EPTF_FBQ_getOrCreateFreeSlot(v_EPTF_StatHandler_aggregatedStats.data[vl_statIdx].sourceQueue);
+    if(vl_sourceIdx >= sizeof(v_EPTF_StatHandler_aggregatedStats.data[vl_statIdx].sources)) {
+      // newly created slot
+      v_EPTF_StatHandler_aggregatedStats.data[vl_statIdx].sources[vl_sourceIdx] := c_empty_EPTF_StatHandler_StatOfComponent;
+    }
+    // Note: moving it to the busy queue is needed to prevent race condition arising from working with remote variables in subsequently called functions...
+    // Must be moved back to the free queue on error, before returning with false.
+    f_EPTF_FBQ_moveFromFreeToBusyTail(vl_sourceIdx, v_EPTF_StatHandler_aggregatedStats.data[vl_statIdx].sourceQueue);
+    f_EPTF_FBQ_moveFromBusyToInvalid(vl_sourceIdx, v_EPTF_StatHandler_aggregatedStats.data[vl_statIdx].sourceQueue);
+    // FIXME: no f_EPTF_FBQ_moveFromFreeToInvalid in FreeBusyQueue
+    
+    if(pl_sourceUniqueId < 0) {
+      pl_sourceUniqueId := vl_sourceIdx;
+    }
+    vl_source.uniqueId := pl_sourceUniqueId;
+    //vl_source.lastResetTimestamp := f_EPTF_Base_getAbsTimeInSecs();
+    
+    // step 2: based on stat method...
+    select(v_EPTF_StatHandler_aggregatedStats.data[vl_statIdx].statMethod) {
+      
+      // step 2a: register for aux stats, if any
+      // step 2b: perform checks and subscribe to providers
+      case(c_EPTF_StatHandler_Method_Min,
+        c_EPTF_StatHandler_Method_Max,
+        c_EPTF_StatHandler_Method_Sum) {
+        if(not f_EPTF_StatHandler_registerStat_Single(
+            pl_sourceCompRef,
+            pl_sender,
+            pl_providerVarList,
+            pl_subscriptionMode,
+            vl_statIdx,
+            vl_source.varIdxList,
+            pl_sourceUniqueId,
+            pl_refreshRate)) {
+          f_EPTF_FBQ_moveFromInvalidToFreeHead(vl_sourceIdx, v_EPTF_StatHandler_aggregatedStats.data[vl_statIdx].sourceQueue);
+          return false;
+        }
+      }
+      
+      case(c_EPTF_StatHandler_Method_Mean) {
+        if(not f_EPTF_StatHandler_registerStat_Mean(
+            pl_sourceCompRef,
+            pl_sender,
+            pl_providerVarList,
+            pl_subscriptionMode,
+            vl_statIdx,
+            vl_source.varIdxList,
+            pl_sourceUniqueId,
+            pl_refreshRate)) {
+          f_EPTF_FBQ_moveFromInvalidToFreeHead(vl_sourceIdx, v_EPTF_StatHandler_aggregatedStats.data[vl_statIdx].sourceQueue);
+          return false;
+        }
+      }
+      
+      case(c_EPTF_StatHandler_Method_StandardDev) {
+        if(not f_EPTF_StatHandler_registerStat_StandardDev(
+            pl_sourceCompRef,
+            pl_sender,
+            pl_providerVarList,
+            pl_subscriptionMode,
+            vl_statIdx,
+            vl_source.varIdxList,
+            pl_sourceUniqueId,
+            pl_refreshRate)) {
+          f_EPTF_FBQ_moveFromInvalidToFreeHead(vl_sourceIdx, v_EPTF_StatHandler_aggregatedStats.data[vl_statIdx].sourceQueue);
+          return false;
+        }
+      }
+      
+      case(c_EPTF_StatHandler_Method_GlobalAverage) {
+        if(not f_EPTF_StatHandler_registerStat_GlobalAverage(
+            pl_sourceCompRef,
+            pl_sender,
+            pl_providerVarList,
+            pl_subscriptionMode,
+            vl_statIdx,
+            vl_source.varIdxList,
+            pl_sourceUniqueId,
+            pl_refreshRate)) {
+          f_EPTF_FBQ_moveFromInvalidToFreeHead(vl_sourceIdx, v_EPTF_StatHandler_aggregatedStats.data[vl_statIdx].sourceQueue);
+          return false;
+        }
+      }
+      
+      case(c_EPTF_StatHandler_Method_Density) {
+        if(not f_EPTF_StatHandler_registerStat_Density(
+            pl_sourceCompRef,
+            pl_sender,
+            pl_providerVarList,
+            pl_subscriptionMode,
+            vl_statIdx,
+            vl_source.varIdxList,
+            pl_sourceUniqueId,
+            pl_refreshRate)) {
+          f_EPTF_FBQ_moveFromInvalidToFreeHead(vl_sourceIdx, v_EPTF_StatHandler_aggregatedStats.data[vl_statIdx].sourceQueue);
+          return false;
+        }
+      }
+      
+      case(c_EPTF_StatHandler_Method_Percentile95,
+        c_EPTF_StatHandler_Method_PercentileP) {
+        if(not f_EPTF_StatHandler_registerStat_PercentileP(
+            pl_sourceCompRef,
+            pl_sender,
+            pl_providerVarList,
+            pl_subscriptionMode,
+            vl_statIdx,
+            vl_source.varIdxList,
+            pl_sourceUniqueId,
+            pl_refreshRate)) {
+          f_EPTF_FBQ_moveFromInvalidToFreeHead(vl_sourceIdx, v_EPTF_StatHandler_aggregatedStats.data[vl_statIdx].sourceQueue);
+          return false;
+        }
+      }
+    }
+    f_EPTF_FBQ_moveFromInvalidToBusyTail(vl_sourceIdx, v_EPTF_StatHandler_aggregatedStats.data[vl_statIdx].sourceQueue);
+    
+    // step 3: add source to stat
+    v_EPTF_StatHandler_aggregatedStats.data[vl_statIdx].sources[vl_sourceIdx] := vl_source;
+    
+    // step 4: add local provider to stat's Var
+    f_EPTF_Var_addLocalProviders(
+      v_EPTF_StatHandler_aggregatedStats.data[vl_statIdx].statVarIdx,
+      vl_source.varIdxList);
+    
+    f_EPTF_Var_refreshContent(v_EPTF_StatHandler_aggregatedStats.data[vl_statIdx].statVarIdx);
+    
+    // step 5: add data sources to reset-component vl_sender
+    var boolean vl_found := false;
+    for(var integer i:=0; i<sizeof(v_EPTF_StatHandler_resetComponents); i:=i+1) {
+      if(pl_sender == v_EPTF_StatHandler_resetComponents[i].compRef) {
+        v_EPTF_StatHandler_resetComponents[i].sources[v_EPTF_StatHandler_resetComponents[i].nofSources] := {
+          statIdx := vl_statIdx,
+          sourceIdx := vl_sourceIdx
+        }
+        vl_found := true;
+        v_EPTF_StatHandler_aggregatedStats.data[vl_statIdx].sources[vl_sourceIdx].resetCompIdx := i;
+        v_EPTF_StatHandler_aggregatedStats.data[vl_statIdx].sources[vl_sourceIdx].resetSourceIdx :=
+        v_EPTF_StatHandler_resetComponents[i].nofSources;
+        v_EPTF_StatHandler_resetComponents[i].nofSources := v_EPTF_StatHandler_resetComponents[i].nofSources + 1;
+        break;
+      }
+    }
+    if(not vl_found) {
+      var integer vl_idx := sizeof(v_EPTF_StatHandler_resetComponents);
+      v_EPTF_StatHandler_resetComponents[vl_idx] := {
+        compRef := pl_sender,
+        sources := {
+          {
+            statIdx := vl_statIdx,
+            sourceIdx := vl_sourceIdx
+          }
+        },
+        nofSources := 1
+      }
+      v_EPTF_StatHandler_aggregatedStats.data[vl_statIdx].sources[vl_sourceIdx].resetCompIdx := vl_idx;
+      v_EPTF_StatHandler_aggregatedStats.data[vl_statIdx].sources[vl_sourceIdx].resetSourceIdx := 0;
+    }
+    
+    if(c_EPTF_Common_debugSwitch and f_EPTF_StatHandlerLogging_debugEnabled()) {
+      f_EPTF_StatHandlerLogging_debug(log2str(%definitionId, ": finished registering data source of component ",
+          pl_sourceCompRef, ": ", pl_providerVarList, " for stat ", pl_targetStatName));
+      f_EPTF_StatHandlerLogging_debug(%definitionId&": aggregated stats database: "
+        &log2str(v_EPTF_StatHandler_aggregatedStats));
+      f_EPTF_StatHandlerLogging_debug(%definitionId&": resetComponents database: "
+        &log2str(v_EPTF_StatHandler_resetComponents));
+    }
+    
+    return true;
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_StatHandler_checkVar
+  //
+  //  Purpose:
+  //    Function for checking variable type
+  //
+  //  Parameters:
+  //    pl_idx - *in* *integer* - variable index
+  //    pl_template - *template* <EPTF_Var_DirectContent> - template to match to
+  //
+  //  Return Value:
+  //    *boolean* - true on match
+  //
+  //  Errors & assertions:
+  //    -
+  //
+  //  Detailed Comments:
+  //    -
+  //
+  ///////////////////////////////////////////////////////////
+  private function f_EPTF_StatHandler_checkVar(in integer pl_idx, template EPTF_Var_DirectContent pl_template)
+  runs on EPTF_StatHandler_CT
+  return boolean
+  {
+    var EPTF_Var_DirectContent vl_content;
+    f_EPTF_Var_getContent(pl_idx, vl_content);
+    return match(vl_content, pl_template);
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_StatHandler_registerStat_Single
+  //
+  //  Purpose:
+  //    Function for registering a single data source for a statistic.
+  //
+  //  Parameters:
+  //    pl_sourceCompRef - *in* <EPTF_Var_CT> - component reference that has the source variable
+  //    pl_sender - *in* <EPTF_StatHandlerClient_CT> - component reference of the sender of registerStat message
+  //    pl_providerVarList - *in* <EPTF_CharstringList> - list of source variable names
+  //    pl_subscriptionMode - *in* <EPTF_Var_SubscriptionMode> - subscription mode
+  //    pl_statIdx - *in* *integer* - index of the stat to register to
+  //    pl_varIdxList - *inout* <EPTF_IntegerList> - returned variable indexes
+  //    pl_sourceUniqueId - *in* *integer* - unique ID for the source - will be used recursively for aux stats, can be used to deregister
+  //    pl_refreshRate - *in* *integer* - the refresh rate of the subscription
+  //
+  //  Return Value:
+  //    *boolean* - true on success
+  //
+  //  Errors & assertions:
+  //    Invalid provider var list.
+  //
+  //  Detailed Comments:
+  //    -
+  ///////////////////////////////////////////////////////////
+  private function f_EPTF_StatHandler_registerStat_Single(
+    in EPTF_Var_CT pl_sourceCompRef,
+    in EPTF_StatHandlerClient_CT pl_sender,
+    in EPTF_CharstringList pl_providerVarList,
+    in EPTF_Var_SubscriptionMode pl_subscriptionMode,
+    in integer pl_statIdx,
+    inout EPTF_IntegerList pl_varIdxList,
+    in integer pl_sourceUniqueId,
+    in integer pl_refreshRate)
+  runs on EPTF_StatHandler_CT
+  return boolean
+  {
+    // source should be single numerical value, same type as the target stat
+    if(sizeof(pl_providerVarList) != 1) {
+      f_EPTF_StatHandlerLogging_warning(%definitionId&": provider variable list for \"" &
+        v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].statMethod &
+        "\" statistics \"" & v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].statName &
+        "\" has multiple elements, expected single numerical variable.");
+      return false;
+    }
+    
+    if(pl_sourceCompRef == self) { // put the variables directly in the database as source
+      pl_varIdxList[c_EPTF_StatHandler_sourceVarIdx_single] := f_EPTF_Var_getId(pl_providerVarList[c_EPTF_StatHandler_providerVarIdx_single]);
+    } else { // subscribe to the remote variables
+      f_EPTF_Var_subscribeRemote(
+        pl_sourceCompRef,
+        pl_providerVarList[c_EPTF_StatHandler_providerVarIdx_single],
+        pl_subscriptionMode,
+        pl_varIdxList[c_EPTF_StatHandler_sourceVarIdx_single],
+        // note: Var is given a unique name to prevent "deregisterStat" from unsubscribing ALL stats' source with the same remote Var.
+        f_EPTF_StatHandler_getName(pl_statIdx)&"."&log2str(pl_sourceCompRef)&"."&pl_providerVarList[c_EPTF_StatHandler_providerVarIdx_single],
+        pl_refreshRate);
+    }
+    
+    // check type of provider variables
+    if( (
+        ischosen(v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].statResetValue.intVal) and
+        not f_EPTF_StatHandler_checkVar(pl_varIdxList[c_EPTF_StatHandler_sourceVarIdx_single], {intVal:=?})
+      ) or (
+        ischosen(v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].statResetValue.floatVal) and
+        not f_EPTF_StatHandler_checkVar(pl_varIdxList[c_EPTF_StatHandler_sourceVarIdx_single], {floatVal:=?})
+      ) ) {
+      f_EPTF_StatHandlerLogging_warning(%definitionId&": invalid source type for stat "&
+        v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].statName);
+      f_EPTF_Var_unsubscribe(pl_varIdxList[c_EPTF_StatHandler_sourceVarIdx_single]);
+      return false;
+    }
+    
+    return true;
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_StatHandler_registerStat_Mean
+  //
+  //  Purpose:
+  //    Function for registering a data source for a mean statistic.
+  //
+  //  Parameters:
+  //    pl_sourceCompRef - *in* <EPTF_Var_CT> - component reference that has the source variable
+  //    pl_sender - *in* <EPTF_StatHandlerClient_CT> - component reference of the sender of registerStat message
+  //    pl_providerVarList - *in* <EPTF_CharstringList> - list of source variable names
+  //    pl_subscriptionMode - *in* <EPTF_Var_SubscriptionMode> - subscription mode
+  //    pl_statIdx - *in* *integer* - index of the stat to register to
+  //    pl_varIdxList - *inout* <EPTF_IntegerList> - returned variable indexes
+  //    pl_sourceUniqueId - *in* *integer* - unique ID for the source - will be used recursively for aux stats, can be used to deregister
+  //    pl_refreshRate - *in* *integer* - the refresh rate of the subscription
+  //
+  //  Return Value:
+  //    *boolean* - true on success
+  //
+  //  Errors & assertions:
+  //    Invalid provider var list.
+  //
+  //  Detailed Comments:
+  //    -
+  ///////////////////////////////////////////////////////////
+  private function f_EPTF_StatHandler_registerStat_Mean(
+    in EPTF_Var_CT pl_sourceCompRef,
+    in EPTF_StatHandlerClient_CT pl_sender,
+    in EPTF_CharstringList pl_providerVarList,
+    in EPTF_Var_SubscriptionMode pl_subscriptionMode,
+    in integer pl_statIdx,
+    inout EPTF_IntegerList pl_varIdxList,
+    in integer pl_sourceUniqueId,
+    in integer pl_refreshRate)
+  runs on EPTF_StatHandler_CT
+  return boolean
+  {
+    //Mean: [0]: local mean (float), [1]: number of samples (int)
+    if(sizeof(pl_providerVarList) != 2) {
+      f_EPTF_StatHandlerLogging_warning(%definitionId&": provider variable list for \"" &
+        v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].statMethod &
+        "\" statistics \"" & v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].statName &
+        "\" needs two elements: local mean and number of samples.");
+      return false;
+    }
+    
+    if(pl_sourceCompRef == self) { // put the variables directly in the database as source
+      pl_varIdxList[c_EPTF_StatHandler_sourceVarIdx_mean] := f_EPTF_Var_getId(pl_providerVarList[c_EPTF_StatHandler_providerVarIdx_mean]);
+      pl_varIdxList[c_EPTF_StatHandler_sourceVarIdx_nofSamples] := f_EPTF_Var_getId(pl_providerVarList[c_EPTF_StatHandler_providerVarIdx_nofSamples]);
+    } else { // subscribe to the remote variables
+      f_EPTF_Var_subscribeRemote(
+        pl_sourceCompRef,
+        pl_providerVarList[c_EPTF_StatHandler_providerVarIdx_mean],
+        pl_subscriptionMode,
+        pl_varIdxList[c_EPTF_StatHandler_sourceVarIdx_mean],
+        // note: Var is given a unique name to prevent "deregisterStat" from unsubscribing ALL stats' source with the same remote Var.
+        f_EPTF_StatHandler_getName(pl_statIdx)&"."&log2str(pl_sourceCompRef)&"."&pl_providerVarList[c_EPTF_StatHandler_providerVarIdx_mean],
+        pl_refreshRate);
+      f_EPTF_Var_subscribeRemote(
+        pl_sourceCompRef,
+        pl_providerVarList[c_EPTF_StatHandler_providerVarIdx_nofSamples],
+        pl_subscriptionMode,
+        pl_varIdxList[c_EPTF_StatHandler_sourceVarIdx_nofSamples],
+        // note: Var is given a unique name to prevent "deregisterStat" from unsubscribing ALL stats' source with the same remote Var.
+        f_EPTF_StatHandler_getName(pl_statIdx)&"."&log2str(pl_sourceCompRef)&"."&pl_providerVarList[c_EPTF_StatHandler_providerVarIdx_nofSamples],
+        pl_refreshRate);
+    }
+    
+    // check type of provider variables
+    if( (
+        not f_EPTF_StatHandler_checkVar(pl_varIdxList[c_EPTF_StatHandler_sourceVarIdx_mean], {floatVal:=?})
+      ) or (
+        not f_EPTF_StatHandler_checkVar(pl_varIdxList[c_EPTF_StatHandler_sourceVarIdx_nofSamples], {intVal:=?})
+      ) ) {
+      f_EPTF_StatHandlerLogging_warning(%definitionId&": invalid source types for stat " &
+        v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].statName);
+      f_EPTF_Var_unsubscribe(pl_varIdxList[c_EPTF_StatHandler_sourceVarIdx_mean]);
+      f_EPTF_Var_unsubscribe(pl_varIdxList[c_EPTF_StatHandler_sourceVarIdx_nofSamples]);
+      return false;
+    }
+    
+    return true;
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_StatHandler_registerStat_StandardDev
+  //
+  //  Purpose:
+  //    Function for registering a data source for a standard deviation statistic.
+  //
+  //  Parameters:
+  //    pl_sourceCompRef - *in* <EPTF_Var_CT> - component reference that has the source variable
+  //    pl_sender - *in* <EPTF_StatHandlerClient_CT> - component reference of the sender of registerStat message
+  //    pl_providerVarList - *in* <EPTF_CharstringList> - list of source variable names
+  //    pl_subscriptionMode - *in* <EPTF_Var_SubscriptionMode> - subscription mode
+  //    pl_statIdx - *in* *integer* - index of the stat to register to
+  //    pl_varIdxList - *inout* <EPTF_IntegerList> - returned variable indexes
+  //    pl_sourceUniqueId - *in* *integer* - unique ID for the source - will be used recursively for aux stats, can be used to deregister
+  //    pl_refreshRate - *in* *integer* - the refresh rate of the subscription
+  //
+  //  Return Value:
+  //    *boolean* - true on success
+  //
+  //  Errors & assertions:
+  //    Invalid provider var list.
+  //
+  //  Detailed Comments:
+  //    -
+  ///////////////////////////////////////////////////////////
+  private function f_EPTF_StatHandler_registerStat_StandardDev(
+    in EPTF_Var_CT pl_sourceCompRef,
+    in EPTF_StatHandlerClient_CT pl_sender,
+    in EPTF_CharstringList pl_providerVarList,
+    in EPTF_Var_SubscriptionMode pl_subscriptionMode,
+    in integer pl_statIdx,
+    inout EPTF_IntegerList pl_varIdxList,
+    in integer pl_sourceUniqueId,
+    in integer pl_refreshRate)
+  runs on EPTF_StatHandler_CT
+  return boolean
+  {
+    //StandardDev: [0]: local mean (float), [1]: number of samples (int), [2]: S
+    if(sizeof(pl_providerVarList) != 3) {
+      f_EPTF_StatHandlerLogging_warning(%definitionId&": provider variable list for \"" &
+        v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].statMethod &
+        "\" statistics \"" & v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].statName &
+        "\" needs three elements: local mean, number of samples and S.");
+      return false;
+    }
+    
+    if(pl_sourceCompRef == self) { // put the variables directly in the database as source
+      pl_varIdxList[c_EPTF_StatHandler_sourceVarIdx_mean] := f_EPTF_Var_getId(pl_providerVarList[c_EPTF_StatHandler_providerVarIdx_mean]);
+      pl_varIdxList[c_EPTF_StatHandler_sourceVarIdx_nofSamples] := f_EPTF_Var_getId(pl_providerVarList[c_EPTF_StatHandler_providerVarIdx_nofSamples]);
+      pl_varIdxList[c_EPTF_StatHandler_sourceVarIdx_S] := f_EPTF_Var_getId(pl_providerVarList[c_EPTF_StatHandler_providerVarIdx_S]);
+    } else { // subscribe to the remote variables
+      f_EPTF_Var_subscribeRemote(
+        pl_sourceCompRef,
+        pl_providerVarList[c_EPTF_StatHandler_providerVarIdx_mean],
+        pl_subscriptionMode,
+        pl_varIdxList[c_EPTF_StatHandler_sourceVarIdx_mean],
+        // note: Var is given a unique name to prevent "deregisterStat" from unsubscribing ALL stats' source with the same remote Var.
+        f_EPTF_StatHandler_getName(pl_statIdx)&"."&log2str(pl_sourceCompRef)&"."&pl_providerVarList[c_EPTF_StatHandler_providerVarIdx_mean],
+        pl_refreshRate);
+      f_EPTF_Var_subscribeRemote(
+        pl_sourceCompRef,
+        pl_providerVarList[c_EPTF_StatHandler_providerVarIdx_nofSamples],
+        pl_subscriptionMode,
+        pl_varIdxList[c_EPTF_StatHandler_sourceVarIdx_nofSamples],
+        // note: Var is given a unique name to prevent "deregisterStat" from unsubscribing ALL stats' source with the same remote Var.
+        f_EPTF_StatHandler_getName(pl_statIdx)&"."&log2str(pl_sourceCompRef)&"."&pl_providerVarList[c_EPTF_StatHandler_providerVarIdx_nofSamples],
+        pl_refreshRate);
+      f_EPTF_Var_subscribeRemote(
+        pl_sourceCompRef,
+        pl_providerVarList[c_EPTF_StatHandler_providerVarIdx_S],
+        pl_subscriptionMode,
+        pl_varIdxList[c_EPTF_StatHandler_sourceVarIdx_S],
+        // note: Var is given a unique name to prevent "deregisterStat" from unsubscribing ALL stats' source with the same remote Var.
+        f_EPTF_StatHandler_getName(pl_statIdx)&"."&log2str(pl_sourceCompRef)&"."&pl_providerVarList[c_EPTF_StatHandler_providerVarIdx_S],
+        pl_refreshRate);
+    }
+    
+    // check type of provider variables
+    if( (
+        not f_EPTF_StatHandler_checkVar(pl_varIdxList[c_EPTF_StatHandler_sourceVarIdx_mean], {floatVal:=?})
+      ) or (
+        not f_EPTF_StatHandler_checkVar(pl_varIdxList[c_EPTF_StatHandler_sourceVarIdx_nofSamples], {intVal:=?})
+      ) or (
+        not f_EPTF_StatHandler_checkVar(pl_varIdxList[c_EPTF_StatHandler_sourceVarIdx_S], {floatVal:=?})
+      ) ) {
+      f_EPTF_StatHandlerLogging_warning(%definitionId&": invalid source types for stat " &
+        v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].statName);
+      f_EPTF_Var_unsubscribe(pl_varIdxList[c_EPTF_StatHandler_sourceVarIdx_mean]);
+      f_EPTF_Var_unsubscribe(pl_varIdxList[c_EPTF_StatHandler_sourceVarIdx_nofSamples]);
+      f_EPTF_Var_unsubscribe(pl_varIdxList[c_EPTF_StatHandler_sourceVarIdx_S]);
+      return false;
+    }
+    
+    return true;
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_StatHandler_registerStat_GlobalAverage
+  //
+  //  Purpose:
+  //    Function for registering a data source for a global average statistic.
+  //
+  //  Parameters:
+  //    pl_sourceCompRef - *in* <EPTF_Var_CT> - component reference that has the source variable
+  //    pl_sender - *in* <EPTF_StatHandlerClient_CT> - component reference of the sender of registerStat message
+  //    pl_providerVarList - *in* <EPTF_CharstringList> - list of source variable names
+  //    pl_subscriptionMode - *in* <EPTF_Var_SubscriptionMode> - subscription mode
+  //    pl_statIdx - *in* *integer* - index of the stat to register to
+  //    pl_varIdxList - *inout* <EPTF_IntegerList> - returned variable indexes
+  //    pl_sourceUniqueId - *in* *integer* - unique ID for the source - will be used recursively for aux stats, can be used to deregister
+  //    pl_refreshRate - *in* *integer* - the refresh rate of the subscription
+  //
+  //  Return Value:
+  //    *boolean* - true on success
+  //
+  //  Errors & assertions:
+  //    Invalid provider var list.
+  //
+  //  Detailed Comments:
+  //    -
+  ///////////////////////////////////////////////////////////
+  private function f_EPTF_StatHandler_registerStat_GlobalAverage(
+    in EPTF_Var_CT pl_sourceCompRef,
+    in EPTF_StatHandlerClient_CT pl_sender,
+    in EPTF_CharstringList pl_providerVarList,
+    in EPTF_Var_SubscriptionMode pl_subscriptionMode,
+    in integer pl_statIdx,
+    inout EPTF_IntegerList pl_varIdxList,
+    in integer pl_sourceUniqueId,
+    in integer pl_refreshRate)
+  runs on EPTF_StatHandler_CT
+  return boolean
+  {
+    //GlobalAverage: [0]: sum (float), [1]: number of elements (int)
+    if(sizeof(pl_providerVarList) != 2) {
+      f_EPTF_StatHandlerLogging_warning(%definitionId&": provider variable list for \"" &
+        v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].statMethod &
+        "\" statistics \"" & v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].statName &
+        "\" needs two elements: sum and element number.");
+      return false;
+    }
+    
+    if(pl_sourceCompRef == self) { // put the variables directly in the database as source
+      pl_varIdxList[c_EPTF_StatHandler_sourceVarIdx_sum] := f_EPTF_Var_getId(pl_providerVarList[c_EPTF_StatHandler_providerVarIdx_sum]);
+      pl_varIdxList[c_EPTF_StatHandler_sourceVarIdx_elementNumber] := f_EPTF_Var_getId(pl_providerVarList[c_EPTF_StatHandler_providerVarIdx_elementNumber]);
+    } else { // subscribe to the remote variables
+      f_EPTF_Var_subscribeRemote(
+        pl_sourceCompRef,
+        pl_providerVarList[c_EPTF_StatHandler_providerVarIdx_sum],
+        pl_subscriptionMode,
+        pl_varIdxList[c_EPTF_StatHandler_sourceVarIdx_sum],
+        // note: Var is given a unique name to prevent "deregisterStat" from unsubscribing ALL stats' source with the same remote Var.
+        f_EPTF_StatHandler_getName(pl_statIdx)&"."&log2str(pl_sourceCompRef)&"."&pl_providerVarList[c_EPTF_StatHandler_providerVarIdx_sum],
+        pl_refreshRate);
+      f_EPTF_Var_subscribeRemote(
+        pl_sourceCompRef,
+        pl_providerVarList[c_EPTF_StatHandler_providerVarIdx_elementNumber],
+        pl_subscriptionMode,
+        pl_varIdxList[c_EPTF_StatHandler_sourceVarIdx_elementNumber],
+        // note: Var is given a unique name to prevent "deregisterStat" from unsubscribing ALL stats' source with the same remote Var.
+        f_EPTF_StatHandler_getName(pl_statIdx)&"."&log2str(pl_sourceCompRef)&"."&pl_providerVarList[c_EPTF_StatHandler_providerVarIdx_elementNumber],
+        pl_refreshRate);
+    }
+    
+    // check type of provider variables
+    if( (
+        not f_EPTF_StatHandler_checkVar(pl_varIdxList[c_EPTF_StatHandler_sourceVarIdx_sum], {floatVal:=?})
+      ) or (
+        not f_EPTF_StatHandler_checkVar(pl_varIdxList[c_EPTF_StatHandler_sourceVarIdx_elementNumber], {intVal:=?})
+      ) ) {
+      f_EPTF_StatHandlerLogging_warning(%definitionId&": invalid source types for stat " &
+        v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].statName);
+      f_EPTF_Var_unsubscribe(pl_varIdxList[c_EPTF_StatHandler_sourceVarIdx_sum]);
+      f_EPTF_Var_unsubscribe(pl_varIdxList[c_EPTF_StatHandler_sourceVarIdx_elementNumber]);
+      return false;
+    }
+    
+    return true;
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_StatHandler_registerStat_Density
+  //
+  //  Purpose:
+  //    Function for registering a data source for a density statistic.
+  //
+  //  Parameters:
+  //    pl_sourceCompRef - *in* <EPTF_Var_CT> - component reference that has the source variable
+  //    pl_sender - *in* <EPTF_StatHandlerClient_CT> - component reference of the sender of registerStat message
+  //    pl_providerVarList - *in* <EPTF_CharstringList> - list of source variable names
+  //    pl_subscriptionMode - *in* <EPTF_Var_SubscriptionMode> - subscription mode
+  //    pl_statIdx - *in* *integer* - index of the stat to register to
+  //    pl_varIdxList - *inout* <EPTF_IntegerList> - returned variable indexes
+  //    pl_sourceUniqueId - *in* *integer* - unique ID for the source - will be used recursively for aux stats, can be used to deregister
+  //    pl_refreshRate - *in* *integer* - the refresh rate of the subscription
+  //
+  //  Return Value:
+  //    *boolean* - true on success
+  //
+  //  Errors & assertions:
+  //    Invalid provider var list.
+  //
+  //  Detailed Comments:
+  //    -
+  ///////////////////////////////////////////////////////////
+  private function f_EPTF_StatHandler_registerStat_Density(
+    in EPTF_Var_CT pl_sourceCompRef,
+    in EPTF_StatHandlerClient_CT pl_sender,
+    in EPTF_CharstringList pl_providerVarList,
+    in EPTF_Var_SubscriptionMode pl_subscriptionMode,
+    in integer pl_statIdx,
+    inout EPTF_IntegerList pl_varIdxList,
+    in integer pl_sourceUniqueId,
+    in integer pl_refreshRate)
+  runs on EPTF_StatHandler_CT
+  return boolean
+  {
+    //Density: [0]: density distr.bin values (integerList), [1]: distr.bin boundaries (floatList)
+    if(sizeof(pl_providerVarList) != 2) {
+      f_EPTF_StatHandlerLogging_warning(%definitionId&": provider variable list for \"" &
+        v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].statMethod &
+        "\" statistics \"" & v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].statName &
+        "\" needs two elements: density and boundaries.");
+      return false;
+    }
+    
+    var EPTF_Var_DirectContent vl_boundaries;
+    
+    if(pl_sourceCompRef == self) { // put the variables directly in the database as source
+      pl_varIdxList[c_EPTF_StatHandler_sourceVarIdx_density] := f_EPTF_Var_getId(pl_providerVarList[c_EPTF_StatHandler_providerVarIdx_density]);
+      pl_varIdxList[c_EPTF_StatHandler_sourceVarIdx_boundaries] := f_EPTF_Var_getId(pl_providerVarList[c_EPTF_StatHandler_providerVarIdx_boundaries]);
+    } else { // subscribe to the remote variables
+      f_EPTF_Var_subscribeRemote(
+        pl_sourceCompRef,
+        pl_providerVarList[c_EPTF_StatHandler_providerVarIdx_density],
+        pl_subscriptionMode,
+        pl_varIdxList[c_EPTF_StatHandler_sourceVarIdx_density],
+        // note: Var is given a unique name to prevent "deregisterStat" from unsubscribing ALL stats' source with the same remote Var.
+        f_EPTF_StatHandler_getName(pl_statIdx)&"."&log2str(pl_sourceCompRef)&"."&pl_providerVarList[c_EPTF_StatHandler_providerVarIdx_density],
+        pl_refreshRate);
+      f_EPTF_Var_subscribeRemote(
+        pl_sourceCompRef,
+        pl_providerVarList[c_EPTF_StatHandler_providerVarIdx_boundaries],
+        pl_subscriptionMode,
+        pl_varIdxList[c_EPTF_StatHandler_sourceVarIdx_boundaries],
+        // note: Var is given a unique name to prevent "deregisterStat" from unsubscribing ALL stats' source with the same remote Var.
+        f_EPTF_StatHandler_getName(pl_statIdx)&"."&log2str(pl_sourceCompRef)&"."&pl_providerVarList[c_EPTF_StatHandler_providerVarIdx_boundaries],
+        pl_refreshRate);
+    }
+    f_EPTF_Var_getContent(pl_varIdxList[c_EPTF_StatHandler_sourceVarIdx_boundaries], vl_boundaries);
+    
+    // check type of provider variables
+    if( (
+        not f_EPTF_StatHandler_checkVar(pl_varIdxList[c_EPTF_StatHandler_sourceVarIdx_density], {integerlistVal:=?})
+      ) or (
+        not ischosen(vl_boundaries.floatlistVal)
+      ) ) {
+      f_EPTF_StatHandlerLogging_warning(%definitionId&": invalid source types for stat " &
+        v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].statName);
+      f_EPTF_Var_unsubscribe(pl_varIdxList[c_EPTF_StatHandler_sourceVarIdx_density]);
+      f_EPTF_Var_unsubscribe(pl_varIdxList[c_EPTF_StatHandler_sourceVarIdx_boundaries]);
+      return false;
+    }
+    
+    // if first source, setup aux `boundaries' variable of the stat
+    if(f_EPTF_FBQ_getLengthOfBusyChain(v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].sourceQueue) == 0) {
+      f_EPTF_Var_adjustContent(v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].auxVars[c_EPTF_StatHandler_auxVarIdx_boundaries],
+        vl_boundaries);
+      if(v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].parentIdx >= 0) {
+        // setting the reset value for aux density stat of percentile95 (and percentileP)
+        f_EPTF_Var_getContent(
+          pl_varIdxList[c_EPTF_StatHandler_sourceVarIdx_density],
+          v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].statResetValue);
+        for(var integer i:=0; i<sizeof(v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].statResetValue.integerlistVal); i:=i+1) {
+          v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].statResetValue.integerlistVal[i] := 0;
+        }
+        f_EPTF_StatHandlerLogging_debug(%definitionId&": changed reset value of stat " &
+          v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].statName & " to " &
+          log2str(v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].statResetValue));
+      }
+    }
+    
+    // otherwise, check if the boundaries are the same as stored in the aux var
+    else {
+      var EPTF_Var_DirectContent vl_storedBoundaries;
+      f_EPTF_Var_getContent(v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].auxVars[c_EPTF_StatHandler_auxVarIdx_boundaries],
+        vl_storedBoundaries);
+      if(vl_boundaries != vl_storedBoundaries) {
+        f_EPTF_StatHandlerLogging_warning(log2str(%definitionId&": boundaries ", vl_boundaries,
+            " of source differs from boundaries", vl_storedBoundaries, " stored for the stat ",
+            v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].statName));
+        f_EPTF_Var_unsubscribe(pl_varIdxList[c_EPTF_StatHandler_sourceVarIdx_density]);
+        f_EPTF_Var_unsubscribe(pl_varIdxList[c_EPTF_StatHandler_sourceVarIdx_boundaries]);
+        return false;
+      }
+    }
+    
+    f_EPTF_Var_addPostProcFn(pl_varIdxList[c_EPTF_StatHandler_sourceVarIdx_boundaries],
+      {refers(f_EPTF_StatHandler_boundariesPostproc), {pl_statIdx}});
+    
+    return true;
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_StatHandler_registerStat_PercentileP
+  //
+  //  Purpose:
+  //    Function for registering a data source for a PercentileP (and Percentile95) statistic.
+  //
+  //  Parameters:
+  //    pl_sourceCompRef - *in* <EPTF_Var_CT> - component reference that has the source variable
+  //    pl_sender - *in* <EPTF_StatHandlerClient_CT> - component reference of the sender of registerStat message
+  //    pl_providerVarList - *in* <EPTF_CharstringList> - list of source variable names
+  //    pl_subscriptionMode - *in* <EPTF_Var_SubscriptionMode> - subscription mode
+  //    pl_statIdx - *in* *integer* - index of the stat to register to
+  //    pl_varIdxList - *inout* <EPTF_IntegerList> - returned variable indexes
+  //    pl_sourceUniqueId - *in* *integer* - unique ID for the source - will be used recursively for aux stats, can be used to deregister
+  //    pl_refreshRate - *in* *integer* - the refresh rate of the subscription
+  //
+  //  Return Value:
+  //    *boolean* - true on success
+  //
+  //  Errors & assertions:
+  //    Invalid provider var list.
+  //
+  //  Detailed Comments:
+  //    -
+  ///////////////////////////////////////////////////////////
+  private function f_EPTF_StatHandler_registerStat_PercentileP(
+    in EPTF_Var_CT pl_sourceCompRef,
+    in EPTF_StatHandlerClient_CT pl_sender,
+    in EPTF_CharstringList pl_providerVarList,
+    in EPTF_Var_SubscriptionMode pl_subscriptionMode,
+    in integer pl_statIdx,
+    inout EPTF_IntegerList pl_varIdxList,
+    in integer pl_sourceUniqueId,
+    in integer pl_refreshRate)
+  runs on EPTF_StatHandler_CT
+  return boolean
+  {
+    if(sizeof(pl_providerVarList) != 4) {
+      f_EPTF_StatHandlerLogging_warning(%definitionId&": provider variable list for \"" &
+        v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].statMethod &
+        "\" statistics \"" & v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].statName &
+        "\" needs four elements: density, boundaries, max and pValue.");
+      return false;
+    }
+    
+    // density aux stat
+    var EPTF_CharstringList vl_auxProviderVarList := {};
+    vl_auxProviderVarList[c_EPTF_StatHandler_providerVarIdx_density] := pl_providerVarList[c_EPTF_StatHandler_providerVarIdx_density];
+    vl_auxProviderVarList[c_EPTF_StatHandler_providerVarIdx_boundaries] := pl_providerVarList[c_EPTF_StatHandler_providerVarIdx_boundaries];
+    var integer vl_auxIdx := v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].auxStats[c_EPTF_StatHandler_auxStatIdx_density];
+    var charstring vl_auxName := v_EPTF_StatHandler_aggregatedStats.data[vl_auxIdx].statName;
+    if(not f_EPTF_StatHandler_registerStat(
+        pl_sourceCompRef,
+        pl_sender,
+        vl_auxProviderVarList,
+        pl_subscriptionMode,
+        vl_auxName,
+        pl_sourceUniqueId,
+        pl_refreshRate)) {
+      f_EPTF_StatHandlerLogging_warning(log2str(%definitionId&": could not register source for aux stat ", vl_auxName));
+      return false;
+    }
+    
+    // max aux stat
+    vl_auxProviderVarList := {};
+    vl_auxProviderVarList[c_EPTF_StatHandler_providerVarIdx_single] := pl_providerVarList[c_EPTF_StatHandler_providerVarIdx_max];
+    vl_auxIdx := v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].auxStats[c_EPTF_StatHandler_auxStatIdx_max];
+    vl_auxName := v_EPTF_StatHandler_aggregatedStats.data[vl_auxIdx].statName;
+    if(not f_EPTF_StatHandler_registerStat(
+        pl_sourceCompRef,
+        pl_sender,
+        vl_auxProviderVarList,
+        pl_subscriptionMode,
+        vl_auxName,
+        pl_sourceUniqueId,
+        pl_refreshRate)) {
+      f_EPTF_StatHandlerLogging_warning(log2str(%definitionId&": could not register source for aux stat ", vl_auxName));
+      return false;
+    }
+    
+    //PercentileP: [0]: density distr.bin values (integerList), [1]: distr.bin boundaries (floatList, check only), [2]: max (float) [3]: pValue (float)
+    
+    if(pl_sourceCompRef == self) { // put the variables directly in the database as source
+      pl_varIdxList[c_EPTF_StatHandler_sourceVarIdx_density] := f_EPTF_Var_getId(pl_providerVarList[c_EPTF_StatHandler_providerVarIdx_density]);
+      pl_varIdxList[c_EPTF_StatHandler_sourceVarIdx_boundaries] := f_EPTF_Var_getId(pl_providerVarList[c_EPTF_StatHandler_providerVarIdx_boundaries]);
+      pl_varIdxList[c_EPTF_StatHandler_sourceVarIdx_max] := f_EPTF_Var_getId(pl_providerVarList[c_EPTF_StatHandler_providerVarIdx_max]);
+    } else { // subscribe to the remote variables
+      f_EPTF_Var_subscribeRemote(
+        pl_sourceCompRef,
+        pl_providerVarList[c_EPTF_StatHandler_providerVarIdx_density],
+        pl_subscriptionMode,
+        pl_varIdxList[c_EPTF_StatHandler_sourceVarIdx_density],
+        // note: Var is given a unique name to prevent "deregisterStat" from unsubscribing ALL stats' source with the same remote Var.
+        f_EPTF_StatHandler_getName(pl_statIdx)&"."&log2str(pl_sourceCompRef)&"."&pl_providerVarList[c_EPTF_StatHandler_providerVarIdx_density],
+        pl_refreshRate);
+      f_EPTF_Var_subscribeRemote(
+        pl_sourceCompRef,
+        pl_providerVarList[c_EPTF_StatHandler_providerVarIdx_boundaries],
+        pl_subscriptionMode,
+        pl_varIdxList[c_EPTF_StatHandler_sourceVarIdx_boundaries],
+        // note: Var is given a unique name to prevent "deregisterStat" from unsubscribing ALL stats' source with the same remote Var.
+        f_EPTF_StatHandler_getName(pl_statIdx)&"."&log2str(pl_sourceCompRef)&"."&pl_providerVarList[c_EPTF_StatHandler_providerVarIdx_boundaries],
+        pl_refreshRate);
+      f_EPTF_Var_subscribeRemote(
+        pl_sourceCompRef,
+        pl_providerVarList[c_EPTF_StatHandler_providerVarIdx_max],
+        pl_subscriptionMode,
+        pl_varIdxList[c_EPTF_StatHandler_sourceVarIdx_max],
+        // note: Var is given a unique name to prevent "deregisterStat" from unsubscribing ALL stats' source with the same remote Var.
+        f_EPTF_StatHandler_getName(pl_statIdx)&"."&log2str(pl_sourceCompRef)&"."&pl_providerVarList[c_EPTF_StatHandler_providerVarIdx_max],
+        pl_refreshRate);
+    }
+    
+    // Var types already checked when registering for aux stats
+    
+    if(pl_providerVarList[c_EPTF_StatHandler_providerVarIdx_pValue]=="") {
+      //Percentile95 statistics arrived, pl_providerVarList[c_EPTF_StatHandler_providerVarIdx_pValue] is empty
+      return true;
+    }
+    
+    // pValue aux
+    if(pl_sourceCompRef == self) { // put the variables directly in the database as source
+      
+      pl_varIdxList[c_EPTF_StatHandler_sourceVarIdx_pValue] := f_EPTF_Var_getId(pl_providerVarList[c_EPTF_StatHandler_providerVarIdx_pValue]);
+    } else { // subscribe to the remote variables
+      f_EPTF_Var_subscribeRemote(
+        pl_sourceCompRef,
+        pl_providerVarList[c_EPTF_StatHandler_providerVarIdx_pValue],
+        pl_subscriptionMode,
+        pl_varIdxList[c_EPTF_StatHandler_sourceVarIdx_pValue],
+        // note: Var is given a unique name to prevent "deregisterStat" from unsubscribing ALL stats' source with the same remote Var.
+        f_EPTF_StatHandler_getName(pl_statIdx)&"."&log2str(pl_sourceCompRef)&"."&pl_providerVarList[c_EPTF_StatHandler_providerVarIdx_pValue],
+        pl_refreshRate);	
+    }
+    
+    // Var types already checked when registering for aux stats
+    
+    var EPTF_Var_DirectContent vl_pValue;
+    f_EPTF_Var_getContent(pl_varIdxList[c_EPTF_StatHandler_sourceVarIdx_pValue], vl_pValue);
+    
+    // if first source, setup aux `pValue' variable of the stat
+    if(f_EPTF_FBQ_getLengthOfBusyChain(v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].sourceQueue) == 0) {
+      f_EPTF_Var_adjustContent(v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].auxVars[c_EPTF_StatHandler_auxVarIdx_pValue],
+        vl_pValue);
+    }
+    // otherwise, check if the boundaries are the same as stored in the aux var
+    else {
+      var EPTF_Var_DirectContent vl_storedPValue;
+      f_EPTF_Var_getContent(v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].auxVars[c_EPTF_StatHandler_auxVarIdx_pValue],
+        vl_storedPValue);
+      if(vl_pValue != vl_storedPValue) {
+        f_EPTF_StatHandlerLogging_warning(log2str(%definitionId&": pValue ", vl_pValue,
+            " of source differs from pValue", vl_storedPValue, " stored for the stat ",
+            v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].statName&", Could not register source."));
+        f_EPTF_Var_unsubscribe(pl_varIdxList[c_EPTF_StatHandler_sourceVarIdx_density]);
+        f_EPTF_Var_unsubscribe(pl_varIdxList[c_EPTF_StatHandler_sourceVarIdx_boundaries]);
+        f_EPTF_Var_unsubscribe(pl_varIdxList[c_EPTF_StatHandler_sourceVarIdx_max]);
+        f_EPTF_Var_unsubscribe(pl_varIdxList[c_EPTF_StatHandler_sourceVarIdx_pValue]);	
+        return false;
+      }
+    }    
+    
+    return true;
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Type: f_EPTF_StatHandler_boundariesPostproc
+  // 
+  //  Purpose:
+  //   Postproc function for boundaries Var
+  // 
+  //  Parameters:
+  //    pl_idx - *integer* -  index of the EPTF Variable, 
+  //    pl_argList - <EPTF_IntegerList> - the arguments 
+  // 
+  //  Detailed Comments:
+  //    Cancels registration of source if boundaries change.
+  //    Used for density, Percentile95 and PercentileP stats.
+  //    Arguments in pl_argList: [0]: statIdx
+  //    Source index determined by searching for provider Var pl_idx
+  ///////////////////////////////////////////////////////////
+  private function f_EPTF_StatHandler_boundariesPostproc(
+    in integer pl_idx,
+    in EPTF_IntegerList pl_argList)
+  runs on EPTF_StatHandler_CT
+  {
+    var EPTF_Var_DirectContent vl_new, vl_old;
+    f_EPTF_Var_getContent(pl_idx, vl_new);
+    f_EPTF_Var_getContent(v_EPTF_StatHandler_aggregatedStats.data[pl_argList[0]].auxVars[c_EPTF_StatHandler_auxVarIdx_boundaries], vl_old);
+    if(vl_old == vl_new) { return; } // Fixes sampledAtSync subscription refreshing the value even if no change (use sampled instead).
+    
+    var integer vl_sourceIdx := -1;
+    var integer vl_idx := -1;
+    if(not f_EPTF_FBQ_getBusyHeadIdx(vl_idx, v_EPTF_StatHandler_aggregatedStats.data[pl_argList[0]].sourceQueue)) {
+      f_EPTF_Base_assert(%definitionId&": f_EPTF_FBQ_getBusyHeadIdx failed", false);
+    }
+    for(var integer i:=0; i<f_EPTF_FBQ_getLengthOfBusyChain(v_EPTF_StatHandler_aggregatedStats.data[pl_argList[0]].sourceQueue); i:=i+1) {
+      for(var integer j:=0; j<sizeof(v_EPTF_StatHandler_aggregatedStats.data[pl_argList[0]].sources[vl_idx].varIdxList); j:=j+1) {
+        if(pl_idx == v_EPTF_StatHandler_aggregatedStats.data[pl_argList[0]].sources[vl_idx].varIdxList[j]) {
+          vl_sourceIdx := vl_idx; // source with idx 'vl_idx' provides Variable pl_idx at index 'j'
+          break;
+        }
+      }
+      if(vl_sourceIdx >= 0) { break; }
+      if(not f_EPTF_FBQ_getFwdBusyItemIdx(vl_idx, v_EPTF_StatHandler_aggregatedStats.data[pl_argList[0]].sourceQueue)) {
+        /*do nothing*/
+      }
+    }
+    if(vl_sourceIdx >= 0) {
+      f_EPTF_StatHandlerLogging_warning(%definitionId&": \"boundaries\" part of source "&int2str(vl_sourceIdx)&
+        " changed for stat "&v_EPTF_StatHandler_aggregatedStats.data[pl_argList[0]].statName&
+        " from "&log2str(vl_old)&" to "&log2str(vl_new));
+      f_EPTF_StatHandler_cancelRegister(pl_argList[0], vl_sourceIdx);
+      if(v_EPTF_StatHandler_aggregatedStats.data[pl_argList[0]].parentIdx >= 0) {
+        f_EPTF_StatHandler_cancelRegister(v_EPTF_StatHandler_aggregatedStats.data[pl_argList[0]].parentIdx, vl_sourceIdx);
+      }
+    } else {
+      f_EPTF_StatHandlerLogging_warning(%definitionId&": source providing Variable with index "&int2str(pl_idx)&
+        " not found in stat "&v_EPTF_StatHandler_aggregatedStats.data[pl_argList[0]].statName);
+    }
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_StatHandler_deregisterStat
+  //
+  //  Purpose:
+  //    Function for de-registering data sources of a stat provided by a client
+  //
+  //  Parameters:
+  //    pl_sourceCompRef - *in* <EPTF_Var_CT> - component reference that has the source variable
+  //    pl_providerVarList - *in* <EPTF_CharstringList> - name of one of the provider Vars
+  //    pl_targetStatName - *in* *charstring* - name of the stat to de-register from
+  //
+  //  Return Value:
+  //    *boolean* - true on success
+  //
+  //  Errors & assertions:
+  //    Nonexistent statistic.
+  //
+  //  Detailed Comments:
+  //    If pl_providerVar is empty string, *all* sources provided by the component is deregistered.
+  ///////////////////////////////////////////////////////////
+  private function f_EPTF_StatHandler_deregisterStat(
+    in EPTF_Var_CT pl_sourceCompRef,
+    in charstring pl_targetStatName,
+    in EPTF_CharstringList pl_providerVarList)
+  runs on EPTF_StatHandler_CT
+  return boolean
+  {
+    var integer vl_targetStatIdx := f_EPTF_StatHandler_getId(pl_targetStatName);
+    if(vl_targetStatIdx < 0) {
+      return false;
+    }
+    if(lengthof(pl_providerVarList) == 0) {
+      var integer vl_idx := -1;
+      if(not f_EPTF_FBQ_getBusyHeadIdx(vl_idx, v_EPTF_StatHandler_aggregatedStats.data[vl_targetStatIdx].sourceQueue)) {
+        f_EPTF_Base_assert(%definitionId&": f_EPTF_FBQ_getBusyHeadIdx failed", false);
+      }
+      for(var integer i:=0;
+        i<f_EPTF_FBQ_getLengthOfBusyChain(v_EPTF_StatHandler_aggregatedStats.data[vl_targetStatIdx].sourceQueue);
+        i:=i+1) {
+        if(v_EPTF_StatHandler_aggregatedStats.data[vl_targetStatIdx].sources[vl_idx].compRef == pl_sourceCompRef) {
+          f_EPTF_StatHandler_deregisterStatByIdx(vl_idx, vl_targetStatIdx);
+        }
+        if(not f_EPTF_FBQ_getFwdBusyItemIdx(vl_idx, v_EPTF_StatHandler_aggregatedStats.data[vl_targetStatIdx].sourceQueue)) {
+          /*do nothing*/
+        }
+      }
+    } else {
+      var integer vl_idx := -1;
+      if(not f_EPTF_FBQ_getBusyHeadIdx(vl_idx, v_EPTF_StatHandler_aggregatedStats.data[vl_targetStatIdx].sourceQueue)) {
+        f_EPTF_Base_assert(%definitionId&": f_EPTF_FBQ_getBusyHeadIdx failed", false);
+      }
+      for(var integer i:=0;
+        i<f_EPTF_FBQ_getLengthOfBusyChain(v_EPTF_StatHandler_aggregatedStats.data[vl_targetStatIdx].sourceQueue);
+        i:=i+1) {
+        if(v_EPTF_StatHandler_aggregatedStats.data[vl_targetStatIdx].sources[vl_idx].compRef == pl_sourceCompRef and
+          v_EPTF_StatHandler_aggregatedStats.data[vl_targetStatIdx].sources[vl_idx].varNameList == pl_providerVarList) {
+          f_EPTF_StatHandler_deregisterStatByIdx(vl_idx, vl_targetStatIdx);
+          break;
+        }
+        if(not f_EPTF_FBQ_getFwdBusyItemIdx(vl_idx, v_EPTF_StatHandler_aggregatedStats.data[vl_targetStatIdx].sourceQueue)) {
+          /*do nothing*/
+        }
+      }
+    }
+    
+    if(c_EPTF_Common_debugSwitch and f_EPTF_StatHandlerLogging_debugEnabled()) {
+      f_EPTF_StatHandlerLogging_debug(log2str(%definitionId, ": finished deregistering data source of component ",
+          pl_sourceCompRef, ": ", pl_providerVarList, " from stat ", pl_targetStatName));
+      f_EPTF_StatHandlerLogging_debug(%definitionId&": aggregated stats database: "
+        &log2str(v_EPTF_StatHandler_aggregatedStats));
+      f_EPTF_StatHandlerLogging_debug(%definitionId&": resetComponents database: "
+        &log2str(v_EPTF_StatHandler_resetComponents));
+    }
+    return true;
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_StatHandler_deregisterStatByIdx
+  //
+  //  Purpose:
+  //    Function for de-registering a data source of a stat and its aux stats
+  //
+  //  Parameters:
+  //    pl_sourceUniqueId - *in* *integer* - name of one of the provider Vars
+  //    pl_targetStatIdx - *in* *integer* - index of the stat to de-register from
+  //
+  //  Return Value:
+  //    -
+  //
+  //  Errors & assertions:
+  //    -
+  //
+  //  Detailed Comments:
+  //    -
+  ///////////////////////////////////////////////////////////
+  private function f_EPTF_StatHandler_deregisterStatByIdx(
+    in integer pl_sourceUniqueId,
+    in integer pl_targetStatIdx)
+  runs on EPTF_StatHandler_CT
+  {
+    // note there's a high chance that the unique ID is the index of the source, so check that first
+    // the only exception could be if an aux stat has some extra data sources (more than the original stat has)
+    f_EPTF_Base_assert(%definitionId&": source unique ID is negative.", pl_sourceUniqueId >= 0);
+    if(pl_sourceUniqueId < sizeof(v_EPTF_StatHandler_aggregatedStats.data[pl_targetStatIdx].sources) and
+      pl_sourceUniqueId == v_EPTF_StatHandler_aggregatedStats.data[pl_targetStatIdx].sources[pl_sourceUniqueId].uniqueId) {
+      f_EPTF_StatHandler_removeSource(pl_targetStatIdx, pl_sourceUniqueId);
+    } else {
+      var integer vl_idx := -1;
+      if(not f_EPTF_FBQ_getBusyHeadIdx(vl_idx, v_EPTF_StatHandler_aggregatedStats.data[pl_targetStatIdx].sourceQueue)) {
+        f_EPTF_Base_assert(%definitionId&": f_EPTF_FBQ_getBusyHeadIdx failed", false);
+      }
+      for(var integer i:=0;
+        i<f_EPTF_FBQ_getLengthOfBusyChain(v_EPTF_StatHandler_aggregatedStats.data[pl_targetStatIdx].sourceQueue);
+        i:=i+1) {
+        if(pl_sourceUniqueId == v_EPTF_StatHandler_aggregatedStats.data[pl_targetStatIdx].sources[vl_idx].uniqueId) {
+          f_EPTF_StatHandler_removeSource(pl_targetStatIdx, vl_idx);
+          break;
+        }
+        if(not f_EPTF_FBQ_getFwdBusyItemIdx(vl_idx, v_EPTF_StatHandler_aggregatedStats.data[pl_targetStatIdx].sourceQueue)) {
+          /*do nothing*/
+        }
+      }
+    }
+    if(c_EPTF_Common_debugSwitch and f_EPTF_StatHandlerLogging_debugEnabled()) {
+      f_EPTF_StatHandlerLogging_debug(%definitionId&": deregistered sources with unique ID "
+        &int2str(pl_sourceUniqueId)&" from stat "&f_EPTF_StatHandler_getName(pl_targetStatIdx));
+      f_EPTF_StatHandlerLogging_debug(%definitionId&": sources: "&log2str(v_EPTF_StatHandler_aggregatedStats.data[pl_targetStatIdx].sources));
+    }
+    
+    for(var integer vl_aux:=0; vl_aux<sizeof(v_EPTF_StatHandler_aggregatedStats.data[pl_targetStatIdx].auxStats); vl_aux:=vl_aux+1) {
+      var integer vl_auxIdx := v_EPTF_StatHandler_aggregatedStats.data[pl_targetStatIdx].auxStats[vl_aux];
+      f_EPTF_StatHandlerLogging_debug(%definitionId&": deregistering data sources from aux stat "
+        &v_EPTF_StatHandler_aggregatedStats.data[vl_auxIdx].statName);
+      f_EPTF_StatHandler_deregisterStatByIdx(
+        pl_sourceUniqueId,
+        vl_auxIdx);
+    }
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_StatHandler_removeSource
+  //
+  //  Purpose:
+  //    Function for removing a data source of a stat
+  //
+  //  Parameters:
+  //    pl_statIdx - *in* *integer* - statistics index
+  //    pl_sourceIdx - *in* *integer* - source index of the stat
+  //
+  //  Return Value:
+  //    -
+  //
+  //  Errors & assertions:
+  //    -
+  //
+  //  Detailed Comments:
+  //    Deregisters a single source from a statistics and its aux stats
+  ///////////////////////////////////////////////////////////
+  private function f_EPTF_StatHandler_removeSource(
+    in integer pl_statIdx,
+    in integer pl_sourceIdx)
+  runs on EPTF_StatHandler_CT
+  {
+    f_EPTF_Var_removeLocalProviders(
+      v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].statVarIdx,
+      v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].sources[pl_sourceIdx].varIdxList);
+    f_EPTF_Var_refreshContent(v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].statVarIdx);
+    
+    if(v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].sources[pl_sourceIdx].compRef != self) {
+      for(var integer vl_varIdx := 0;
+        vl_varIdx < sizeof(v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].sources[pl_sourceIdx].varIdxList);
+        vl_varIdx := vl_varIdx + 1) {
+        //        f_EPTF_Var_unsubscribe(v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].sources[pl_sourceIdx].varIdxList[vl_varIdx]);
+      }
+    }
+    var integer vl_cIdx := v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].sources[pl_sourceIdx].resetCompIdx;
+    var integer vl_sIdx := v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].sources[pl_sourceIdx].resetSourceIdx;
+    var integer vl_nofS := v_EPTF_StatHandler_resetComponents[vl_cIdx].nofSources;
+    v_EPTF_StatHandler_resetComponents[vl_cIdx].sources[vl_sIdx] :=
+    v_EPTF_StatHandler_resetComponents[vl_cIdx].sources[vl_nofS - 1];
+    v_EPTF_StatHandler_resetComponents[vl_cIdx].nofSources :=
+    v_EPTF_StatHandler_resetComponents[vl_cIdx].nofSources - 1;
+    v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].sources[pl_sourceIdx] := c_empty_EPTF_StatHandler_StatOfComponent;
+    f_EPTF_FBQ_moveFromBusyToFreeTail(pl_sourceIdx, v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].sourceQueue);
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_StatHandler_cancelRegister
+  //
+  //  Purpose:
+  //    Function for cancelling the registeration of a data source of a stat
+  //
+  //  Parameters:
+  //    pl_statIdx - *in* *integer* - statistics index
+  //    pl_sourceIdx - *in* *integer* - source index of the stat
+  //
+  //  Return Value:
+  //    -
+  //
+  //  Errors & assertions:
+  //    -
+  //
+  //  Detailed Comments:
+  //    Deregisters a single source from a statistics and its aux stats
+  ///////////////////////////////////////////////////////////
+  private function f_EPTF_StatHandler_cancelRegister(
+    in integer pl_statIdx,
+    in integer pl_sourceIdx)
+  runs on EPTF_StatHandler_CT
+  {
+    f_EPTF_StatHandlerLogging_debug(%definitionId&": cancelling registration of source "&int2str(pl_sourceIdx)&
+      " of stat "&v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].statName);
+    if(sizeof(v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].auxStats) == 0) {
+      f_EPTF_StatHandler_removeSource(pl_statIdx, pl_sourceIdx);
+    } else {
+      f_EPTF_StatHandler_deregisterStatByIdx(
+        v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].sources[pl_sourceIdx].uniqueId,
+        pl_statIdx
+      );
+    }
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_StatHandler_getVarNamesForStatAsSource
+  //
+  //  Purpose:
+  //    Returns names of EPTF Variables that can be used to register a stat to another stat as source.
+  //
+  //  Parameters:
+  //    pl_statIdx - *in* *integer* - the index of the stat
+  //
+  //  Return Value:
+  //    EPTF_CharstringList - list of EPTF Variable names
+  //
+  //  Errors & assertions:
+  //    -
+  //
+  //  Detailed Comments:
+  //    -
+  ///////////////////////////////////////////////////////////
+  private function f_EPTF_StatHandler_getVarNamesForStatAsSource(
+    in integer pl_statIdx)
+  runs on EPTF_StatHandler_CT
+  return EPTF_CharstringList
+  {
+    var EPTF_CharstringList vl_names := {};
+    if(sizeof(v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].providerVars) == 0) {
+      select(v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].statMethod) {
+        case (c_EPTF_StatHandler_Method_Min, c_EPTF_StatHandler_Method_Max, c_EPTF_StatHandler_Method_Sum) {
+          //        v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].providerVars[c_EPTF_StatHandler_providerVarIdx_single] :=
+          //          v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].statVarIdx;
+          return {f_EPTF_Var_getName(v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].statVarIdx)};
+        }
+        case (c_EPTF_StatHandler_Method_Mean) {
+          v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].providerVars[c_EPTF_StatHandler_providerVarIdx_mean] :=
+          v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].statVarIdx;
+          f_EPTF_Var_newInt(
+            v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].statName
+            & v_EPTF_StatHandler_nameSeparator & "provider_nofSamples",
+            0,
+            v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].providerVars[c_EPTF_StatHandler_providerVarIdx_nofSamples]);
+          f_EPTF_Var_refreshContent(v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].statVarIdx); // calcFn updates the newly created variable
+        }
+        case (c_EPTF_StatHandler_Method_StandardDev) {
+          v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].providerVars[c_EPTF_StatHandler_providerVarIdx_mean] :=
+          v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].auxVars[c_EPTF_StatHandler_auxVarIdx_mean];
+          f_EPTF_Var_newInt(
+            v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].statName
+            & v_EPTF_StatHandler_nameSeparator & "provider_nofSamples",
+            0,
+            v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].providerVars[c_EPTF_StatHandler_providerVarIdx_nofSamples]);
+          f_EPTF_Var_refreshContent(v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].statVarIdx); // calcFn updates the newly created variables
+          v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].providerVars[c_EPTF_StatHandler_providerVarIdx_S] :=
+          v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].statVarIdx;
+        }
+        case (c_EPTF_StatHandler_Method_GlobalAverage) {
+          f_EPTF_Var_newFloat(
+            v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].statName
+            & v_EPTF_StatHandler_nameSeparator & "provider_sum",
+            0.0,
+            v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].providerVars[c_EPTF_StatHandler_providerVarIdx_sum]);
+          f_EPTF_Var_newInt(
+            v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].statName
+            & v_EPTF_StatHandler_nameSeparator & "provider_elementNumber",
+            0,
+            v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].providerVars[c_EPTF_StatHandler_providerVarIdx_elementNumber]);
+          f_EPTF_Var_refreshContent(v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].statVarIdx); // calcFn updates the newly created variables
+        }
+        case (c_EPTF_StatHandler_Method_Density) {
+          v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].providerVars[c_EPTF_StatHandler_providerVarIdx_density] :=
+          v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].statVarIdx;
+          v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].providerVars[c_EPTF_StatHandler_providerVarIdx_boundaries] :=
+          v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].auxVars[c_EPTF_StatHandler_auxVarIdx_boundaries];
+        }
+        case (c_EPTF_StatHandler_Method_Percentile95,
+          c_EPTF_StatHandler_Method_PercentileP) {
+          var integer vl_densityStat := v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].auxStats[c_EPTF_StatHandler_auxStatIdx_density];
+          v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].providerVars[c_EPTF_StatHandler_providerVarIdx_density] :=
+          f_EPTF_StatHandler_getVarIdx(vl_densityStat);
+          
+          v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].providerVars[c_EPTF_StatHandler_providerVarIdx_boundaries] :=
+          v_EPTF_StatHandler_aggregatedStats.data[vl_densityStat].auxVars[c_EPTF_StatHandler_auxVarIdx_boundaries];
+          
+          v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].providerVars[c_EPTF_StatHandler_providerVarIdx_max] :=
+          f_EPTF_StatHandler_getVarIdx(
+            v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].auxStats[c_EPTF_StatHandler_auxStatIdx_max]
+          );
+          
+          v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].providerVars[c_EPTF_StatHandler_providerVarIdx_pValue] :=
+          v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].auxVars[c_EPTF_StatHandler_auxVarIdx_pValue];
+        }
+        case else {
+          f_EPTF_Base_assert(%definitionId&": Unknown stat method", false);
+        }
+      }  //select
+    }
+    
+    for(var integer i:=0; i<sizeof(v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].providerVars); i:=i+1) {
+      vl_names[i] := f_EPTF_Var_getName(v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].providerVars[i]);
+    }
+    return vl_names;
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Altstep: as_EPTF_StatHandler_behavior
+  //
+  //  Purpose:
+  //    StatHandler behavior altstep
+  //
+  //  Parameters:
+  //    -
+  //
+  //  Return Value:
+  //    -
+  //
+  //  Errors & assertions:
+  //    Unhandled union field in request from client or unexpected message received.
+  //
+  //  Detailed Comments:
+  //    -
+  ///////////////////////////////////////////////////////////
+  private altstep as_EPTF_StatHandler_behavior()
+  runs on EPTF_StatHandler_CT
+  {
+    var EPTF_StatHandler_MgmtMsg_Request vl_req;
+    var EPTF_StatHandler_MgmtMsg_Response vl_resp;
+    var EPTF_StatHandlerClient_CT vl_client;
+    []v_EPTF_StatHandler_MgmtPCO.receive(EPTF_StatHandler_MgmtMsg_Request:?)
+    -> value vl_req sender vl_client
+    {
+      if(ischosen(vl_req.request.getResetVarNameReq)) {
+        vl_resp := {
+          sIdx := vl_req.sIdx,
+          response := {
+            resetVarNameResp := {
+              resetVarName := f_EPTF_StatHandler_genUniqueName(c_EPTF_StatHandler_ResetVarName),
+              resetVarComp := self
+            }
+          }
+        }
+        v_EPTF_StatHandler_MgmtPCO.send(vl_resp) to vl_client;
+      } else if(ischosen(vl_req.request.declareReq)) {
+        var integer vl_idx := f_EPTF_StatHandler_declareStat(
+          vl_req.request.declareReq.statName,
+          vl_req.request.declareReq.statMethod,
+          vl_req.request.declareReq.statResetValue);
+        vl_resp := {
+          sIdx := vl_req.sIdx,
+          response := {
+            statusResp := {
+              result := (vl_idx >= 0)
+            }
+          }
+        }
+        v_EPTF_StatHandler_MgmtPCO.send(vl_resp) to vl_client;
+      } else if(ischosen(vl_req.request.registerReq)) {
+        var boolean vl_res := f_EPTF_StatHandler_registerStat(
+          vl_req.request.registerReq.sourceCompRef,
+          vl_client,
+          vl_req.request.registerReq.providerVarList,
+          vl_req.request.registerReq.subscriptionMode,
+          vl_req.request.registerReq.targetStatName,
+          -,
+          vl_req.request.registerReq.refreshRate);
+        if(vl_req.sIdx >= 0) {
+          vl_resp := {
+            sIdx := vl_req.sIdx,
+            response := {
+              statusResp := {
+                result := vl_res
+              }
+            }
+          }
+          v_EPTF_StatHandler_MgmtPCO.send(vl_resp) to vl_client;
+        }
+      } else if(ischosen(vl_req.request.deregisterReq)) {
+        var boolean vl_res := f_EPTF_StatHandler_deregisterStat(
+          vl_req.request.deregisterReq.sourceCompRef,
+          vl_req.request.deregisterReq.targetStatName,
+          vl_req.request.deregisterReq.providerVarList);
+        vl_resp := {
+          sIdx := vl_req.sIdx,
+          response := {
+            statusResp := {
+              result := vl_res
+            }
+          }
+        }
+        v_EPTF_StatHandler_MgmtPCO.send(vl_resp) to vl_client;
+      } else if(ischosen(vl_req.request.getProviderVars)) {
+        var integer vl_idx := f_EPTF_StatHandler_getId(vl_req.request.getProviderVars.statName);
+        vl_resp := {
+          sIdx := vl_req.sIdx,
+          response := {
+            providerVarsResp := {
+              providerVars := f_EPTF_StatHandler_getVarNamesForStatAsSource(vl_idx)
+            }
+          }
+        }
+        v_EPTF_StatHandler_MgmtPCO.send(vl_resp) to vl_client;
+      } else if(ischosen(vl_req.request.getVarReq)) {
+        var integer vl_idx := f_EPTF_StatHandler_getId(vl_req.request.getVarReq.statName);
+        if(vl_idx >= 0) { // found
+          vl_resp := {
+            sIdx := vl_req.sIdx,
+            response := {
+              getVarResp := {
+                statVarName := vl_req.request.getVarReq.statName // FIXME: may change later?
+              }
+            }
+          }
+        } else {
+          vl_resp := {
+            sIdx := vl_req.sIdx,
+            response := {
+              getVarResp := {
+                statVarName := ""
+              }
+            }
+          }
+        }
+        v_EPTF_StatHandler_MgmtPCO.send(vl_resp) to vl_client;
+      } else if(ischosen(vl_req.request.resetAck)) {
+        // update those sources' reset status that are reset by vl_client
+        for(var integer i:=0; i<sizeof(v_EPTF_StatHandler_resetComponents); i:=i+1) {
+          if(v_EPTF_StatHandler_resetComponents[i].compRef == vl_client) {
+            for(var integer s:=0; s<v_EPTF_StatHandler_resetComponents[i].nofSources; s:=s+1) {
+              v_EPTF_StatHandler_aggregatedStats.data
+              [v_EPTF_StatHandler_resetComponents[i].sources[s].statIdx].sources
+              [v_EPTF_StatHandler_resetComponents[i].sources[s].sourceIdx].resetPending := false;
+              v_EPTF_StatHandler_aggregatedStats.data
+              [v_EPTF_StatHandler_resetComponents[i].sources[s].statIdx].sources
+              [v_EPTF_StatHandler_resetComponents[i].sources[s].sourceIdx].lastResetTimestamp := vl_req.request.resetAck.resetTimestamp;
+            }
+            v_EPTF_StatHandler_nofPendingResets := v_EPTF_StatHandler_nofPendingResets - 1;
+            if(v_EPTF_StatHandler_nofPendingResets < 0) { v_EPTF_StatHandler_nofPendingResets := 0; }
+            break;
+          }
+        }
+        // note: needs no response
+      } else if(ischosen(vl_req.request.bindStatToWidget)) {
+        var boolean vl_res := false;
+        if(v_EPTF_StatHandler_bindStatToWidgetFn != null) {
+          vl_res := v_EPTF_StatHandler_bindStatToWidgetFn.apply(
+            vl_req.request.bindStatToWidget.statName,
+            vl_req.request.bindStatToWidget.widgetId,
+            vl_req.request.bindStatToWidget.additionalWidget,
+            vl_req.request.bindStatToWidget.subscriptionMode,
+            vl_req.request.bindStatToWidget.refreshRate);
+        } else {
+          f_EPTF_StatHandlerLogging_warning(%definitionId&": bindStatToWidget received, handler function not set.");
+        }
+        if(vl_req.sIdx >= 0) {
+          vl_resp := {
+            sIdx := vl_req.sIdx,
+            response := {
+              statusResp := {
+                result := vl_res
+              }
+            }
+          }
+          v_EPTF_StatHandler_MgmtPCO.send(vl_resp) to vl_client;
+        }
+      } else {
+        f_EPTF_Base_assert(%definitionId&": Unhandled union field in request: "&log2str(vl_req), false);
+      }
+      repeat;
+    }
+    []v_EPTF_StatHandler_MgmtPCO.receive -> sender vl_client
+    {
+      f_EPTF_StatHandlerLogging_warning(%definitionId&": unexpected message received from "&log2str(vl_client));
+      repeat;
+    }
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_StatHandler_resetButtonPressed
+  //
+  //  Purpose:
+  //    Postproc function for reset button variable.
+  //
+  //  Parameters:
+  //    pl_idx - *in* *integer* -  index of the reset button EPTF Variable
+  //    pl_argList - *in* <EPTF_IntegerList> - the arguments
+  //
+  //  Return Value:
+  //    -
+  //
+  //  Errors & assertions:
+  //    -
+  //
+  //  Detailed Comments:
+  //    -
+  ///////////////////////////////////////////////////////////
+  private function f_EPTF_StatHandler_resetButtonPressed(in integer pl_idx, in EPTF_IntegerList pl_argList)
+  runs on EPTF_StatHandler_CT
+  {
+    // set resetPending for all sources and aggregated stats
+    for(var integer vl_statIdx:=0; vl_statIdx<sizeof(v_EPTF_StatHandler_aggregatedStats.data); vl_statIdx:=vl_statIdx+1) {
+      v_EPTF_StatHandler_aggregatedStats.data[vl_statIdx].resetPending := true;
+      for(var integer vl_sourceIdx:=0; vl_sourceIdx<sizeof(v_EPTF_StatHandler_aggregatedStats.data[vl_statIdx].sources); vl_sourceIdx := vl_sourceIdx+1) {
+        if(f_EPTF_FBQ_itemIsBusy(vl_sourceIdx, v_EPTF_StatHandler_aggregatedStats.data[vl_statIdx].sourceQueue)) {
+          v_EPTF_StatHandler_aggregatedStats.data[vl_statIdx].sources[vl_sourceIdx].resetPending := true;
+        }
+      }
+    }
+    v_EPTF_StatHandler_nofPendingResets := sizeof(v_EPTF_StatHandler_resetComponents);
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_StatHandler_resetButtonGuard
+  //
+  //  Purpose:
+  //    Guard function for reset button variable.
+  //
+  //  Parameters:
+  //    pl_idx - *in* *integer* -  index of the reset button EPTF Variable, 
+  //    pl_argList - *in* <EPTF_IntegerList> - the arguments 
+  //    pl_newContent - *in* <EPTF_Var_DirectContent> - the new value to be checked
+  //
+  //  Return Value:
+  //    *boolean* - true if new value is allowed, false if not.
+  //
+  //  Errors & assertions:
+  //    -
+  //
+  //  Detailed Comments:
+  //    -
+  ///////////////////////////////////////////////////////////
+  private function f_EPTF_StatHandler_resetButtonGuard(in integer pl_idx, in EPTF_IntegerList pl_argList, in EPTF_Var_DirectContent pl_newContent)
+  runs on EPTF_StatHandler_CT
+  return boolean
+  {
+    if(v_EPTF_StatHandler_nofPendingResets > 0) { return false; }
+    return true;
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_StatHandler_genUniqueName
+  //
+  //  Purpose:
+  //    Function for getting a globally unique name for the reset button variable.
+  //
+  //  Parameters:
+  //    pl_name - *in* *chastring* - input name
+  //
+  //  Return Value:
+  //    *charstring* - the unique name generated from pl_name
+  //
+  //  Errors & assertions:
+  //    -
+  //
+  //  Detailed Comments:
+  //    -
+  ///////////////////////////////////////////////////////////
+  friend function f_EPTF_StatHandler_genUniqueName(in charstring pl_name)
+  runs on EPTF_StatHandler_CT
+  return charstring
+  {
+    return pl_name & v_EPTF_StatHandler_nameSeparator & int2str(f_EPTF_Base_upcast(self));
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_StatHandler_getNameSeparator
+  //
+  //  Purpose:
+  //    Function for getting the name separator.
+  //
+  //  Parameters:
+  //    -
+  //
+  //  Return Value:
+  //    *charstring* - the name separator
+  //
+  //  Errors & assertions:
+  //    -
+  //
+  //  Detailed Comments:
+  //    -
+  ///////////////////////////////////////////////////////////
+  friend function f_EPTF_StatHandler_getNameSeparator()
+  runs on EPTF_StatHandler_CT
+  return charstring
+  {
+    return v_EPTF_StatHandler_nameSeparator;
+  }
+  
+  
+  ///////////////////////////////////////////////////////////
+  //  Group: StatHandler_Methods
+  //
+  //  Purpose:
+  //    Stat aggregation methods supported by StatHandler.
+  //
+  //  Detailed Comments:
+  //    -
+  //
+  ///////////////////////////////////////////////////////////
+  group StatHandler_Methods {
+    
+    ///////////////////////////////////////////////////////////
+    //  Function: f_EPTF_StatHandler_setMethodForStat
+    //
+    //  Purpose:
+    //    Function for setting the aggregation method for a stat.
+    //
+    //  Parameters:
+    //    pl_statIdx - *in* *integer* - the index of the stat
+    //
+    //  Return Value:
+    //    -
+    //
+    //  Errors & assertions:
+    //    Unsupported method
+    //
+    //  Detailed Comments:
+    //    -
+    ///////////////////////////////////////////////////////////
+    private function f_EPTF_StatHandler_setMethodForStat(in integer pl_statIdx)
+    runs on EPTF_StatHandler_CT
+    {
+      var integer vl_varIdx := v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].statVarIdx;
+      var EPTF_Var_ProviderLocal vl_provider := {
+        calcFn := {
+          funcRef := null,
+          argList := {}, // updated when registering data sources
+          nonVarArgList := {pl_statIdx}
+        }
+      };
+      
+      if(ischosen(v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].statResetValue.intVal)) {
+        select(v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].statMethod) {
+          case (c_EPTF_StatHandler_Method_Min) {
+            vl_provider.calcFn.funcRef := refers(f_EPTF_StatHandler_intMinMethod);
+          }
+          case (c_EPTF_StatHandler_Method_Max) {
+            vl_provider.calcFn.funcRef := refers(f_EPTF_StatHandler_intMaxMethod);
+          }
+          case(c_EPTF_StatHandler_Method_Sum) {
+            vl_provider.calcFn.funcRef := refers(f_EPTF_StatHandler_intSumMethod);
+          }
+          case (
+            c_EPTF_StatHandler_Method_Mean,
+            c_EPTF_StatHandler_Method_StandardDev,
+            c_EPTF_StatHandler_Method_GlobalAverage,
+            c_EPTF_StatHandler_Method_Density,
+            c_EPTF_StatHandler_Method_Percentile95,
+            c_EPTF_StatHandler_Method_PercentileP) {
+            f_EPTF_StatHandlerLogging_error(%definitionId&": Stat method \""
+              &v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].statMethod
+              &"\" for integer stat \""&v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].statName
+              &"\" is not supported.");
+          }
+          case else {
+            f_EPTF_StatHandlerLogging_warning(%definitionId&": Stat method \""
+              &v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].statMethod
+              &"\" for integer stat \""&v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].statName
+              &"\" is unsupported or not yet supported.");
+          }
+        }
+        
+      } else if(ischosen(v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].statResetValue.floatVal)) {
+        select(v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].statMethod) {
+          case (c_EPTF_StatHandler_Method_Min) {
+            vl_provider.calcFn.funcRef := refers(f_EPTF_StatHandler_floatMinMethod);
+          }
+          case (c_EPTF_StatHandler_Method_Max) {
+            vl_provider.calcFn.funcRef := refers(f_EPTF_StatHandler_floatMaxMethod);
+          }
+          case (c_EPTF_StatHandler_Method_Mean) {
+            vl_provider.calcFn.funcRef := refers(f_EPTF_StatHandler_floatMeanMethod);
+          }
+          case (c_EPTF_StatHandler_Method_StandardDev) {
+            vl_provider.calcFn.funcRef := refers(f_EPTF_StatHandler_floatStandardDevMethod);
+            f_EPTF_StatHandler_createAuxData_StandardDev(pl_statIdx);
+          }
+          case(c_EPTF_StatHandler_Method_Sum) {
+            vl_provider.calcFn.funcRef := refers(f_EPTF_StatHandler_floatSumMethod);
+          }
+          case (c_EPTF_StatHandler_Method_GlobalAverage) {
+            vl_provider.calcFn.funcRef := refers(f_EPTF_StatHandler_floatGlobalAverageMethod);
+          }
+          case (c_EPTF_StatHandler_Method_Percentile95) {
+            vl_provider.calcFn.funcRef := refers(f_EPTF_StatHandler_floatPercentilePMethod);
+            f_EPTF_StatHandler_createAuxData_PercentileP(pl_statIdx, 0.95);
+            
+            // set Var calcFn dependency:
+            var integer vl_idxAuxDensity := v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].auxStats[c_EPTF_StatHandler_auxStatIdx_density];
+            var integer vl_idxAuxMax := v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].auxStats[c_EPTF_StatHandler_auxStatIdx_max];
+            vl_provider.calcFn.argList := {
+              v_EPTF_StatHandler_aggregatedStats.data[vl_idxAuxDensity].statVarIdx,
+              v_EPTF_StatHandler_aggregatedStats.data[vl_idxAuxMax].statVarIdx
+            }
+            if(c_EPTF_Common_debugSwitch) {
+              f_EPTF_StatHandlerLogging_debug(%definitionId&": dependency of stat "& v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].statName &": "
+                & log2str(vl_provider.calcFn.argList));
+            }
+            
+          }
+          case (c_EPTF_StatHandler_Method_PercentileP) {
+            vl_provider.calcFn.funcRef := refers(f_EPTF_StatHandler_floatPercentilePMethod);
+            f_EPTF_StatHandler_createAuxData_PercentileP(pl_statIdx, 0.5);
+            
+            // set Var calcFn dependency:
+            var integer vl_idxAuxDensity := v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].auxStats[c_EPTF_StatHandler_auxStatIdx_density];
+            var integer vl_idxAuxMax := v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].auxStats[c_EPTF_StatHandler_auxStatIdx_max];
+            var integer vl_idxAuxP := v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].auxVars[c_EPTF_StatHandler_auxVarIdx_pValue];
+            vl_provider.calcFn.argList := {
+              v_EPTF_StatHandler_aggregatedStats.data[vl_idxAuxDensity].statVarIdx,
+              v_EPTF_StatHandler_aggregatedStats.data[vl_idxAuxMax].statVarIdx,
+              vl_idxAuxP
+            }
+            if(c_EPTF_Common_debugSwitch) {
+              f_EPTF_StatHandlerLogging_debug(%definitionId&": dependency of stat "& v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].statName &": "
+                & log2str(vl_provider.calcFn.argList));
+            }
+            
+          }	
+          case else {
+            f_EPTF_StatHandlerLogging_warning(%definitionId&": Stat method \""
+              &v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].statMethod
+              &"\" for float stat \""&v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].statName
+              &"\" is unsupported or not yet supported.");
+          }
+        }
+        
+      } else if(ischosen(v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].statResetValue.integerlistVal)) {
+        select(v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].statMethod) {
+          case (c_EPTF_StatHandler_Method_Density) {
+            vl_provider.calcFn.funcRef := refers(f_EPTF_StatHandler_intlistDensityMethod);
+            f_EPTF_StatHandler_createAuxData_Density(pl_statIdx);
+          }
+          case else {
+            f_EPTF_StatHandlerLogging_warning(%definitionId&": Stat method \""
+              &v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].statMethod
+              &"\" for float-list stat \""&v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].statName
+              &"\" is unsupported or not yet supported.");
+          }
+        }
+        
+      } else {
+        f_EPTF_StatHandlerLogging_error(%definitionId&": Cannot set \""
+          &v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].statMethod
+          &"\" stat method for stat "
+          &v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].statName&" := "
+          &log2str(v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].statResetValue));
+      }
+      
+      f_EPTF_Var_subscribeLocal(vl_varIdx, vl_provider);
+    }
+    
+    ///////////////////////////////////////////////////////////
+    //  Function: f_EPTF_StatHandler_updateResetState
+    //
+    //  Purpose:
+    //    Function for updating the reset stat for a stat.
+    //
+    //  Parameters:
+    //    pl_statIdx - *in* *integer* - the index of the stat
+    //
+    //  Return Value:
+    //    *boolean* - true if reset is pending
+    //
+    //  Errors & assertions:
+    //    -
+    //
+    //  Detailed Comments:
+    //    -
+    ///////////////////////////////////////////////////////////
+    private function f_EPTF_StatHandler_updateResetState(in integer pl_statIdx)
+    runs on EPTF_StatHandler_CT
+    return boolean
+    {
+      var boolean vl_resetPending := false;
+      for(var integer i:=0; i<sizeof(v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].sources); i:=i+1) {
+        if(f_EPTF_FBQ_itemIsBusy(i, v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].sourceQueue)) {
+          vl_resetPending := vl_resetPending or v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].sources[i].resetPending;
+        }
+      }
+      v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].resetPending := vl_resetPending;
+      if(c_EPTF_Common_debugSwitch and (not vl_resetPending)) {
+        f_EPTF_StatHandlerLogging_debug(%definitionId&": reset process finished for stat "
+          &v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].statName);
+      }
+      return vl_resetPending;
+    }
+    
+    ///////////////////////////////////////////////////////////
+    //  Function: f_EPTF_StatHandler_isSourceValid
+    //
+    //  Purpose:
+    //    Function for checking if a source has valid data.
+    //
+    //  Parameters:
+    //    pl_statIdx - *in* *integer* - the index of the stat
+    //    pl_sourceIdx - *in* *integer* - the index of the source within the stat data
+    //
+    //  Return Value:
+    //    *boolean* - true if source is valid,
+    //    false if reset is pending for source or timestamp of the last value is less than the last reset timestamp
+    //
+    //  Errors & assertions:
+    //    -
+    //
+    //  Detailed Comments:
+    //    -
+    ///////////////////////////////////////////////////////////
+    private function f_EPTF_StatHandler_isSourceValid(in integer pl_statIdx, in integer pl_sourceIdx)
+    runs on EPTF_StatHandler_CT
+    return boolean
+    {
+      if(v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].sources[pl_sourceIdx].resetPending) { return false; }
+      for(var integer i:=0; i<sizeof(v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].sources[pl_sourceIdx].varIdxList); i:=i+1) {
+        var EPTF_Var_TimeLine vl_timeline;
+        f_EPTF_Var_getTimeLine(v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].sources[pl_sourceIdx].varIdxList[i], vl_timeline);
+        if(sizeof(vl_timeline.timeLineData) != 0) {
+          if(vl_timeline.timeLineData[sizeof(vl_timeline.timeLineData) - 1].timestamp <
+            v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].sources[pl_sourceIdx].lastResetTimestamp) {
+            return false;
+          }
+        }
+      }
+      return true;
+    }
+    
+    ///////////////////////////////////////////////////////////
+    //  Function: f_EPTF_StatHandler_intMinMethod
+    //
+    //  Purpose:
+    //    Min statistics method for integer stat.
+    //
+    //  Parameters:
+    //    pl_idx - *in* *integer* -  index of the EPTF Variable
+    //    pl_argList - *in* <EPTF_IntegerList> - the arguments: list of integers that should be EPTF Variable indexes (these Variables are set to the local providers)
+    //    pl_nonVarArgList - *in* <EPTF_IntegerList> - list of any other indexes used by the CalcFn function. They do not have to be EPTF Variable indexes.
+    //    pl_retVal - *inout* <EPTF_Var_DirectContent> - the return value
+    //
+    //  Return Value:
+    //    -
+    //
+    //  Errors & assertions:
+    //    -
+    //
+    //  Detailed Comments:
+    //    When called pl_retVal will contain the current value of the ETPF_Var
+    //    Before the function exits it should set the new value into pl_retVal
+    ///////////////////////////////////////////////////////////
+    private function f_EPTF_StatHandler_intMinMethod(in integer pl_idx, in EPTF_IntegerList pl_argList, in EPTF_IntegerList pl_nonVarArgList, inout EPTF_Var_DirectContent pl_retVal)
+    runs on EPTF_StatHandler_CT
+    {
+      // var integer vl_statIdx := pl_nonVarArgList[0];
+      if(v_EPTF_StatHandler_aggregatedStats.data[pl_nonVarArgList[0]].resetPending) {
+        if(f_EPTF_StatHandler_updateResetState(pl_nonVarArgList[0])) { return; }
+      }
+      if(sizeof(pl_argList) == 0) { return; }
+      var integer vl_min := f_EPTF_Var_getIntValue(pl_argList[0]);
+      for(var integer i:=1; i<sizeof(pl_argList); i:=i+1) {
+        var integer vl_other := f_EPTF_Var_getIntValue(pl_argList[i]);
+        if(vl_min > vl_other) { vl_min := vl_other; }
+      }
+      pl_retVal := {intVal := vl_min};
+      if(c_EPTF_Common_debugSwitch and f_EPTF_StatHandlerLogging_debugEnabled()) {
+        f_EPTF_StatHandlerLogging_debug("Changing value of stat "&
+          v_EPTF_StatHandler_aggregatedStats.data[pl_nonVarArgList[0]].statName&
+          " to "&log2str(pl_retVal));
+      }
+    }
+    
+    ///////////////////////////////////////////////////////////
+    //  Function: f_EPTF_StatHandler_floatMinMethod
+    //
+    //  Purpose:
+    //    Min statistics method for float stat.
+    //
+    //  Parameters:
+    //    pl_idx - *in* *integer* -  index of the EPTF Variable
+    //    pl_argList - *in* <EPTF_IntegerList> - the arguments: list of integers that should be EPTF Variable indexes (these Variables are set to the local providers)
+    //    pl_nonVarArgList - *in* <EPTF_IntegerList> - list of any other indexes used by the CalcFn function. They do not have to be EPTF Variable indexes.
+    //    pl_retVal - *inout* <EPTF_Var_DirectContent> - the return value
+    //
+    //  Return Value:
+    //    -
+    //
+    //  Errors & assertions:
+    //    -
+    //
+    //  Detailed Comments:
+    //    When called pl_retVal will contain the current value of the ETPF_Var
+    //    Before the function exits it should set the new value into pl_retVal
+    ///////////////////////////////////////////////////////////
+    private function f_EPTF_StatHandler_floatMinMethod(in integer pl_idx, in EPTF_IntegerList pl_argList, in EPTF_IntegerList pl_nonVarArgList, inout EPTF_Var_DirectContent pl_retVal)
+    runs on EPTF_StatHandler_CT
+    {
+      // var integer vl_statIdx := pl_nonVarArgList[0];
+      if(v_EPTF_StatHandler_aggregatedStats.data[pl_nonVarArgList[0]].resetPending) {
+        if(f_EPTF_StatHandler_updateResetState(pl_nonVarArgList[0])) { return; }
+      }
+      if(sizeof(pl_argList) == 0) { return; }
+      var float vl_min := f_EPTF_Var_getFloatValue(pl_argList[0]);
+      for(var integer i:=1; i<sizeof(pl_argList); i:=i+1) {
+        var float vl_other := f_EPTF_Var_getFloatValue(pl_argList[i]);
+        if(vl_min > vl_other) { vl_min := vl_other; }
+      }
+      pl_retVal := {floatVal := vl_min};
+      if(c_EPTF_Common_debugSwitch and f_EPTF_StatHandlerLogging_debugEnabled()) {
+        f_EPTF_StatHandlerLogging_debug("Changing value of stat "&
+          v_EPTF_StatHandler_aggregatedStats.data[pl_nonVarArgList[0]].statName&
+          " to "&log2str(pl_retVal));
+      }
+    }
+    
+    ///////////////////////////////////////////////////////////
+    //  Function: f_EPTF_StatHandler_intMaxMethod
+    //
+    //  Purpose:
+    //    Max statistics method for integer stat.
+    //
+    //  Parameters:
+    //    pl_idx - *in* *integer* -  index of the EPTF Variable
+    //    pl_argList - *in* <EPTF_IntegerList> - the arguments: list of integers that should be EPTF Variable indexes (these Variables are set to the local providers)
+    //    pl_nonVarArgList - *in* <EPTF_IntegerList> - list of any other indexes used by the CalcFn function. They do not have to be EPTF Variable indexes.
+    //    pl_retVal - *inout* <EPTF_Var_DirectContent> - the return value
+    //
+    //  Return Value:
+    //    -
+    //
+    //  Errors & assertions:
+    //    -
+    //
+    //  Detailed Comments:
+    //    When called pl_retVal will contain the current value of the ETPF_Var
+    //    Before the function exits it should set the new value into pl_retVal
+    ///////////////////////////////////////////////////////////
+    private function f_EPTF_StatHandler_intMaxMethod(in integer pl_idx, in EPTF_IntegerList pl_argList, in EPTF_IntegerList pl_nonVarArgList, inout EPTF_Var_DirectContent pl_retVal)
+    runs on EPTF_StatHandler_CT
+    {
+      // var integer vl_statIdx := pl_nonVarArgList[0];
+      if(v_EPTF_StatHandler_aggregatedStats.data[pl_nonVarArgList[0]].resetPending) {
+        if(f_EPTF_StatHandler_updateResetState(pl_nonVarArgList[0])) { return; }
+      }
+      if(sizeof(pl_argList) == 0) { return; }
+      var integer vl_max := f_EPTF_Var_getIntValue(pl_argList[0]);
+      for(var integer i:=1; i<sizeof(pl_argList); i:=i+1) {
+        var integer vl_other := f_EPTF_Var_getIntValue(pl_argList[i]);
+        if(vl_max < vl_other) { vl_max := vl_other; }
+      }
+      pl_retVal := {intVal := vl_max};
+      if(c_EPTF_Common_debugSwitch and f_EPTF_StatHandlerLogging_debugEnabled()) {
+        f_EPTF_StatHandlerLogging_debug("Changing value of stat "&
+          v_EPTF_StatHandler_aggregatedStats.data[pl_nonVarArgList[0]].statName&
+          " to "&log2str(pl_retVal));
+      }
+    }
+    
+    ///////////////////////////////////////////////////////////
+    //  Function: f_EPTF_StatHandler_floatMaxMethod
+    //
+    //  Purpose:
+    //    Max statistics method for float stat.
+    //
+    //  Parameters:
+    //    pl_idx - *in* *integer* -  index of the EPTF Variable
+    //    pl_argList - *in* <EPTF_IntegerList> - the arguments: list of integers that should be EPTF Variable indexes (these Variables are set to the local providers)
+    //    pl_nonVarArgList - *in* <EPTF_IntegerList> - list of any other indexes used by the CalcFn function. They do not have to be EPTF Variable indexes.
+    //    pl_retVal - *inout* <EPTF_Var_DirectContent> - the return value
+    //
+    //  Return Value:
+    //    -
+    //
+    //  Errors & assertions:
+    //    -
+    //
+    //  Detailed Comments:
+    //    When called pl_retVal will contain the current value of the ETPF_Var
+    //    Before the function exits it should set the new value into pl_retVal
+    ///////////////////////////////////////////////////////////
+    private function f_EPTF_StatHandler_floatMaxMethod(in integer pl_idx, in EPTF_IntegerList pl_argList, in EPTF_IntegerList pl_nonVarArgList, inout EPTF_Var_DirectContent pl_retVal)
+    runs on EPTF_StatHandler_CT
+    {
+      // var integer vl_statIdx := pl_nonVarArgList[0];
+      if(v_EPTF_StatHandler_aggregatedStats.data[pl_nonVarArgList[0]].resetPending) {
+        if(f_EPTF_StatHandler_updateResetState(pl_nonVarArgList[0])) { return; }
+      }
+      if(sizeof(pl_argList) == 0) { return; }
+      var float vl_max := f_EPTF_Var_getFloatValue(pl_argList[0]);
+      for(var integer i:=1; i<sizeof(pl_argList); i:=i+1) {
+        var float vl_other := f_EPTF_Var_getFloatValue(pl_argList[i]);
+        if(vl_max < vl_other) { vl_max := vl_other; }
+      }
+      pl_retVal := {floatVal := vl_max};
+      if(c_EPTF_Common_debugSwitch and f_EPTF_StatHandlerLogging_debugEnabled()) {
+        f_EPTF_StatHandlerLogging_debug("Changing value of stat "&
+          v_EPTF_StatHandler_aggregatedStats.data[pl_nonVarArgList[0]].statName&
+          " to "&log2str(pl_retVal));
+      }
+    }
+    
+    ///////////////////////////////////////////////////////////
+    //  Function: f_EPTF_StatHandler_floatMeanMethod
+    //
+    //  Purpose:
+    //    Mean statistics method for float stat.
+    //
+    //  Parameters:
+    //    pl_idx - *in* *integer* -  index of the EPTF Variable
+    //    pl_argList - *in* <EPTF_IntegerList> - the arguments: list of integers that should be EPTF Variable indexes (these Variables are set to the local providers)
+    //    pl_nonVarArgList - *in* <EPTF_IntegerList> - list of any other indexes used by the CalcFn function. They do not have to be EPTF Variable indexes.
+    //    pl_retVal - *inout* <EPTF_Var_DirectContent> - the return value
+    //
+    //  Return Value:
+    //    -
+    //
+    //  Errors & assertions:
+    //    -
+    //
+    //  Detailed Comments:
+    //    When called pl_retVal will contain the current value of the ETPF_Var
+    //    Before the function exits it should set the new value into pl_retVal
+    //    ALG V of http://en.wikipedia.org/wiki/Algorithms_for_calculating_variance
+    //    is used to calculate mean
+    ///////////////////////////////////////////////////////////
+    private function f_EPTF_StatHandler_floatMeanMethod(in integer pl_idx, in EPTF_IntegerList pl_argList, in EPTF_IntegerList pl_nonVarArgList, inout EPTF_Var_DirectContent pl_retVal)
+    runs on EPTF_StatHandler_CT
+    {
+      if(sizeof(pl_argList) == 0) { return; } // no data sources
+      var integer vl_statIdx := pl_nonVarArgList[0];
+      if(v_EPTF_StatHandler_aggregatedStats.data[vl_statIdx].resetPending) {
+        if(f_EPTF_StatHandler_updateResetState(vl_statIdx)) { return; }
+      }
+      //global mean for 2 values:
+      // delta = mean2-mean1
+      // mean = mean1 + delta * (N2/(N1+N2))
+      //
+      // the variable indexes from the statistics database's source filed are used instead of pl_argList
+      // source.varIdxList[0] : local mean (float)
+      // source.varIdxList[1] : the number of samples (Int)
+      var float mean := 0.0;
+      var float N := 0.0;
+      var integer vl_idx := -1;
+      if(not f_EPTF_FBQ_getBusyHeadIdx(vl_idx, v_EPTF_StatHandler_aggregatedStats.data[vl_statIdx].sourceQueue)) {
+        f_EPTF_Base_assert(%definitionId&": f_EPTF_FBQ_getBusyHeadIdx failed", false);
+      }
+      for(var integer i:=0; i<f_EPTF_FBQ_getLengthOfBusyChain(v_EPTF_StatHandler_aggregatedStats.data[vl_statIdx].sourceQueue); i:=i+1) {
+        var float N2 := int2float(f_EPTF_Var_getIntValue(v_EPTF_StatHandler_aggregatedStats.data[vl_statIdx].sources[vl_idx].varIdxList[c_EPTF_StatHandler_sourceVarIdx_nofSamples]));
+        if(N2 > 0.0) {
+          var float mean2 := f_EPTF_Var_getFloatValue(v_EPTF_StatHandler_aggregatedStats.data[vl_statIdx].sources[vl_idx].varIdxList[c_EPTF_StatHandler_sourceVarIdx_mean]);
+          var float delta := mean2 - mean;
+          N := N + N2;
+          mean := mean + delta * (N2/N);
+        }
+        if(not f_EPTF_FBQ_getFwdBusyItemIdx(vl_idx, v_EPTF_StatHandler_aggregatedStats.data[vl_statIdx].sourceQueue)) {
+          /*do nothing*/
+        }
+      }
+      pl_retVal.floatVal := mean;
+      if(c_EPTF_Common_debugSwitch and f_EPTF_StatHandlerLogging_debugEnabled()) {
+        f_EPTF_StatHandlerLogging_debug("Changing value of stat "&
+          v_EPTF_StatHandler_aggregatedStats.data[vl_statIdx].statName&
+          " to "&log2str(pl_retVal));
+      }
+      if(sizeof(v_EPTF_StatHandler_aggregatedStats.data[vl_statIdx].providerVars) > 0) {
+        f_EPTF_Var_adjustContent(
+          v_EPTF_StatHandler_aggregatedStats.data[vl_statIdx].providerVars[c_EPTF_StatHandler_providerVarIdx_nofSamples],
+          {intVal := float2int(N)});
+      }
+    }
+    
+    ///////////////////////////////////////////////////////////
+    //  Function: f_EPTF_StatHandler_floatStandardDevMethod
+    //
+    //  Purpose:
+    //    Standard deviation statistics method for float stat.
+    //
+    //  Parameters:
+    //    pl_idx - *in* *integer* -  index of the EPTF Variable
+    //    pl_argList - *in* <EPTF_IntegerList> - the arguments: list of integers that should be EPTF Variable indexes (these Variables are set to the local providers)
+    //    pl_nonVarArgList - *in* <EPTF_IntegerList> - list of any other indexes used by the CalcFn function. They do not have to be EPTF Variable indexes.
+    //    pl_retVal - *inout* <EPTF_Var_DirectContent> - the return value
+    //
+    //  Return Value:
+    //    -
+    //
+    //  Errors & assertions:
+    //    -
+    //
+    //  Detailed Comments:
+    //    When called pl_retVal will contain the current value of the ETPF_Var
+    //    Before the function exits it should set the new value into pl_retVal
+    //    ALG V of http://en.wikipedia.org/wiki/Algorithms_for_calculating_variance
+    //    is used to calculate mean and variance
+    ///////////////////////////////////////////////////////////
+    private function f_EPTF_StatHandler_floatStandardDevMethod(in integer pl_idx, in EPTF_IntegerList pl_argList, in EPTF_IntegerList pl_nonVarArgList, inout EPTF_Var_DirectContent pl_retVal)
+    runs on EPTF_StatHandler_CT
+    {
+      if(sizeof(pl_argList) == 0) { return; } // no data sources
+      var integer vl_statIdx := pl_nonVarArgList[0];
+      if(v_EPTF_StatHandler_aggregatedStats.data[vl_statIdx].resetPending) {
+        if(f_EPTF_StatHandler_updateResetState(vl_statIdx)) { return; }
+      }
+      //global mean for 2 values:
+      // delta = mean2-mean1
+      // mean = mean1 + delta * (N2/(N1+N2))
+      // S = S1 + S2 + delta*delta* ((N1*N2)/(N1+N2)) // note: S is called M2 on the wiki
+      //
+      // deviation(variance) = S/N
+      //
+      // the variable indexes from the statistics database's source filed are used instead of pl_argList
+      // source.varIdxList[0] : local mean (float)
+      // source.varIdxList[1] : the number of samples (Int)
+      // source.varIdxList[2] : local S (float)
+      var float mean := 0.0;
+      var float N := 0.0;
+      var float S := 0.0;
+      var integer vl_idx := -1;
+      if(not f_EPTF_FBQ_getBusyHeadIdx(vl_idx, v_EPTF_StatHandler_aggregatedStats.data[vl_statIdx].sourceQueue)) {
+        f_EPTF_Base_assert(%definitionId&": f_EPTF_FBQ_getBusyHeadIdx failed", false);
+      }
+      for(var integer i:=0; i<f_EPTF_FBQ_getLengthOfBusyChain(v_EPTF_StatHandler_aggregatedStats.data[vl_statIdx].sourceQueue); i:=i+1) {
+        var float N2 := int2float(f_EPTF_Var_getIntValue(v_EPTF_StatHandler_aggregatedStats.data[vl_statIdx].sources[vl_idx].varIdxList[c_EPTF_StatHandler_sourceVarIdx_nofSamples]));
+        if(N2 > 0.0) {
+          var float mean2 := f_EPTF_Var_getFloatValue(v_EPTF_StatHandler_aggregatedStats.data[vl_statIdx].sources[vl_idx].varIdxList[c_EPTF_StatHandler_sourceVarIdx_mean]);
+          var float S2 := f_EPTF_Var_getFloatValue(v_EPTF_StatHandler_aggregatedStats.data[vl_statIdx].sources[vl_idx].varIdxList[c_EPTF_StatHandler_sourceVarIdx_S]);
+          var float delta := mean2 - mean;
+          var float N1 := N;
+          N := N + N2;
+          mean := mean + delta * (N2/N);
+          S := S + S2 + delta * delta * ((N1*N2)/N);
+        }
+        if(not f_EPTF_FBQ_getFwdBusyItemIdx(vl_idx, v_EPTF_StatHandler_aggregatedStats.data[vl_statIdx].sourceQueue)) {
+          /*do nothing*/
+        }
+      }
+      if(N > 0.0) {
+        pl_retVal.floatVal := S;
+        if(c_EPTF_Common_debugSwitch and f_EPTF_StatHandlerLogging_debugEnabled()) {
+          f_EPTF_StatHandlerLogging_debug("Changing value of stat "&
+            v_EPTF_StatHandler_aggregatedStats.data[vl_statIdx].statName&
+            " to "&log2str(pl_retVal));
+          f_EPTF_StatHandlerLogging_debug("Changing value of auxiliary mean variable to "&log2str(mean));
+        }
+        f_EPTF_Var_adjustContent(v_EPTF_StatHandler_aggregatedStats.data[vl_statIdx].auxVars[c_EPTF_StatHandler_auxVarIdx_mean], {floatVal := mean});
+      }
+      if(sizeof(v_EPTF_StatHandler_aggregatedStats.data[vl_statIdx].providerVars) > 0) {
+        f_EPTF_Var_adjustContent(
+          v_EPTF_StatHandler_aggregatedStats.data[vl_statIdx].providerVars[c_EPTF_StatHandler_providerVarIdx_nofSamples],
+          {intVal := float2int(N)});
+      }
+    }
+    
+    ///////////////////////////////////////////////////////////
+    //  Function: f_EPTF_StatHandler_intSumMethod
+    //
+    //  Purpose:
+    //    Sum statistics method for float stat.
+    //
+    //  Parameters:
+    //    pl_idx - *in* *integer* -  index of the EPTF Variable
+    //    pl_argList - *in* <EPTF_IntegerList> - the arguments: list of integers that should be EPTF Variable indexes (these Variables are set to the local providers)
+    //    pl_nonVarArgList - *in* <EPTF_IntegerList> - list of any other indexes used by the CalcFn function. They do not have to be EPTF Variable indexes.
+    //    pl_retVal - *inout* <EPTF_Var_DirectContent> - the return value
+    //
+    //  Return Value:
+    //    -
+    //
+    //  Errors & assertions:
+    //    -
+    //
+    //  Detailed Comments:
+    //    When called pl_retVal will contain the current value of the ETPF_Var
+    //    Before the function exits it should set the new value into pl_retVal
+    ///////////////////////////////////////////////////////////
+    private function f_EPTF_StatHandler_intSumMethod(in integer pl_idx, in EPTF_IntegerList pl_argList, in EPTF_IntegerList pl_nonVarArgList, inout EPTF_Var_DirectContent pl_retVal)
+    runs on EPTF_StatHandler_CT
+    {
+      // var integer vl_statIdx := pl_nonVarArgList[0];
+      if(v_EPTF_StatHandler_aggregatedStats.data[pl_nonVarArgList[0]].resetPending) {
+        if(f_EPTF_StatHandler_updateResetState(pl_nonVarArgList[0])) { return; }
+      }
+      var integer vl_sum := 0;
+      for(var integer i:=0; i<sizeof(pl_argList); i:=i+1) {
+        vl_sum := vl_sum + f_EPTF_Var_getIntValue(pl_argList[i]);
+      }
+      pl_retVal := {intVal := vl_sum};
+      if(c_EPTF_Common_debugSwitch and f_EPTF_StatHandlerLogging_debugEnabled()) {
+        f_EPTF_StatHandlerLogging_debug("Changing value of stat "&
+          v_EPTF_StatHandler_aggregatedStats.data[pl_nonVarArgList[0]].statName&
+          " to "&log2str(pl_retVal));
+      }
+    }
+    
+    ///////////////////////////////////////////////////////////
+    //  Function: f_EPTF_StatHandler_floatSumMethod
+    //
+    //  Purpose:
+    //    Sum statistics method for float stat.
+    //
+    //  Parameters:
+    //    pl_idx - *in* *integer* -  index of the EPTF Variable
+    //    pl_argList - *in* <EPTF_IntegerList> - the arguments: list of integers that should be EPTF Variable indexes (these Variables are set to the local providers)
+    //    pl_nonVarArgList - *in* <EPTF_IntegerList> - list of any other indexes used by the CalcFn function. They do not have to be EPTF Variable indexes.
+    //    pl_retVal - *inout* <EPTF_Var_DirectContent> - the return value
+    //
+    //  Return Value:
+    //    -
+    //
+    //  Errors & assertions:
+    //    -
+    //
+    //  Detailed Comments:
+    //    When called pl_retVal will contain the current value of the ETPF_Var
+    //    Before the function exits it should set the new value into pl_retVal
+    ///////////////////////////////////////////////////////////
+    private function f_EPTF_StatHandler_floatSumMethod(in integer pl_idx, in EPTF_IntegerList pl_argList, in EPTF_IntegerList pl_nonVarArgList, inout EPTF_Var_DirectContent pl_retVal)
+    runs on EPTF_StatHandler_CT
+    {
+      // var integer vl_statIdx := pl_nonVarArgList[0];
+      if(v_EPTF_StatHandler_aggregatedStats.data[pl_nonVarArgList[0]].resetPending) {
+        if(f_EPTF_StatHandler_updateResetState(pl_nonVarArgList[0])) { return; }
+      }
+      var float vl_sum := 0.0;
+      for(var integer i:=0; i<sizeof(pl_argList); i:=i+1) {
+        vl_sum := vl_sum + f_EPTF_Var_getFloatValue(pl_argList[i]);
+      }
+      pl_retVal := {floatVal := vl_sum};
+      if(c_EPTF_Common_debugSwitch and f_EPTF_StatHandlerLogging_debugEnabled()) {
+        f_EPTF_StatHandlerLogging_debug("Changing value of stat "&
+          v_EPTF_StatHandler_aggregatedStats.data[pl_nonVarArgList[0]].statName&
+          " to "&log2str(pl_retVal));
+      }
+    }
+    
+    ///////////////////////////////////////////////////////////
+    //  Function: f_EPTF_StatHandler_floatGlobalAverageMethod
+    //
+    //  Purpose:
+    //    Global average statistics method for float stat.
+    //
+    //  Parameters:
+    //    pl_idx - *in* *integer* -  index of the EPTF Variable
+    //    pl_argList - *in* <EPTF_IntegerList> - the arguments: list of integers that should be EPTF Variable indexes (these Variables are set to the local providers)
+    //    pl_nonVarArgList - *in* <EPTF_IntegerList> - list of any other indexes used by the CalcFn function. They do not have to be EPTF Variable indexes.
+    //    pl_retVal - *inout* <EPTF_Var_DirectContent> - the return value
+    //
+    //  Return Value:
+    //    -
+    //
+    //  Errors & assertions:
+    //    -
+    //
+    //  Detailed Comments:
+    //    When called pl_retVal will contain the current value of the ETPF_Var
+    //    Before the function exits it should set the new value into pl_retVal
+    ///////////////////////////////////////////////////////////
+    private function f_EPTF_StatHandler_floatGlobalAverageMethod(in integer pl_idx, in EPTF_IntegerList pl_argList, in EPTF_IntegerList pl_nonVarArgList, inout EPTF_Var_DirectContent pl_retVal)
+    runs on EPTF_StatHandler_CT
+    {
+      if(sizeof(pl_argList) == 0) { return; } // no data sources
+      var integer vl_statIdx := pl_nonVarArgList[0];
+      if(v_EPTF_StatHandler_aggregatedStats.data[pl_nonVarArgList[0]].resetPending) {
+        if(f_EPTF_StatHandler_updateResetState(pl_nonVarArgList[0])) { return; }
+      }
+      // source.varIdxList[0] : sum
+      // source.varIdxList[1] : element number
+      var float sum := 0.0;
+      var integer n := 0;
+      var integer vl_idx := -1;
+      if(not f_EPTF_FBQ_getBusyHeadIdx(vl_idx, v_EPTF_StatHandler_aggregatedStats.data[vl_statIdx].sourceQueue)) {
+        f_EPTF_Base_assert(%definitionId&": f_EPTF_FBQ_getBusyHeadIdx failed", false);
+      }
+      for(var integer i:=0; i<f_EPTF_FBQ_getLengthOfBusyChain(v_EPTF_StatHandler_aggregatedStats.data[vl_statIdx].sourceQueue); i:=i+1) {
+        sum := sum + f_EPTF_Var_getFloatValue(v_EPTF_StatHandler_aggregatedStats.data[vl_statIdx].sources[vl_idx].varIdxList[c_EPTF_StatHandler_sourceVarIdx_sum]);
+        n := n + f_EPTF_Var_getIntValue(v_EPTF_StatHandler_aggregatedStats.data[vl_statIdx].sources[vl_idx].varIdxList[c_EPTF_StatHandler_sourceVarIdx_elementNumber]);
+        if(not f_EPTF_FBQ_getFwdBusyItemIdx(vl_idx, v_EPTF_StatHandler_aggregatedStats.data[vl_statIdx].sourceQueue)) {
+          /*do nothing*/
+        }
+      }
+      //HN24252
+      if(0 < n){
+        pl_retVal.floatVal := sum / int2float(n);
+      }else{
+        pl_retVal.floatVal := 0.0;
+      }
+      if(c_EPTF_Common_debugSwitch and f_EPTF_StatHandlerLogging_debugEnabled()) {
+        f_EPTF_StatHandlerLogging_debug("Changing value of stat "&
+          v_EPTF_StatHandler_aggregatedStats.data[vl_statIdx].statName&
+          " to "&log2str(pl_retVal));
+      }
+      if(sizeof(v_EPTF_StatHandler_aggregatedStats.data[vl_statIdx].providerVars) > 0) {
+        f_EPTF_Var_adjustContent(
+          v_EPTF_StatHandler_aggregatedStats.data[vl_statIdx].providerVars[c_EPTF_StatHandler_providerVarIdx_sum],
+          {floatVal := sum});
+        f_EPTF_Var_adjustContent(
+          v_EPTF_StatHandler_aggregatedStats.data[vl_statIdx].providerVars[c_EPTF_StatHandler_providerVarIdx_elementNumber],
+          {intVal := n});
+      }
+    }
+    
+    ///////////////////////////////////////////////////////////
+    //  Function: f_EPTF_StatHandler_intlistDensityMethod
+    //
+    //  Purpose:
+    //    Density statistics method for intlist stat.
+    //
+    //  Parameters:
+    //    pl_idx - *in* *integer* -  index of the EPTF Variable
+    //    pl_argList - *in* <EPTF_IntegerList> - the arguments: list of integers that should be EPTF Variable indexes (these Variables are set to the local providers)
+    //    pl_nonVarArgList - *in* <EPTF_IntegerList> - list of any other indexes used by the CalcFn function. They do not have to be EPTF Variable indexes.
+    //    pl_retVal - *inout* <EPTF_Var_DirectContent> - the return value
+    //
+    //  Return Value:
+    //    -
+    //
+    //  Errors & assertions:
+    //    -
+    //
+    //  Detailed Comments:
+    //    When called pl_retVal will contain the current value of the ETPF_Var
+    //    Before the function exits it should set the new value into pl_retVal
+    ///////////////////////////////////////////////////////////
+    private function f_EPTF_StatHandler_intlistDensityMethod(in integer pl_idx, in EPTF_IntegerList pl_argList, in EPTF_IntegerList pl_nonVarArgList, inout EPTF_Var_DirectContent pl_retVal)
+    runs on EPTF_StatHandler_CT
+    {
+      if(sizeof(pl_argList) == 0) { return; } // no data sources
+      var EPTF_Var_DirectContent vl_content;
+      var integer i:=0, j:=0;
+      var integer vl_statIdx := pl_nonVarArgList[0];
+      if(v_EPTF_StatHandler_aggregatedStats.data[vl_statIdx].resetPending) {
+        if(f_EPTF_StatHandler_updateResetState(vl_statIdx)) { return; }
+      }
+      //      pl_retVal := v_EPTF_StatHandler_aggregatedStats.data[vl_statIdx].statResetValue;
+      for(i:=0; i<sizeof(v_EPTF_StatHandler_aggregatedStats.data[vl_statIdx].statResetValue.integerlistVal); i:=i+1) {
+        pl_retVal.integerlistVal[i] := 0;
+      }
+      var integer vl_idx := -1;
+      if(not f_EPTF_FBQ_getBusyHeadIdx(vl_idx, v_EPTF_StatHandler_aggregatedStats.data[vl_statIdx].sourceQueue)) {
+        f_EPTF_Base_assert(%definitionId&": f_EPTF_FBQ_getBusyHeadIdx failed", false);
+      }
+      for(i:=0; i<f_EPTF_FBQ_getLengthOfBusyChain(v_EPTF_StatHandler_aggregatedStats.data[vl_statIdx].sourceQueue); i:=i+1) {
+        f_EPTF_Var_getContent(v_EPTF_StatHandler_aggregatedStats.data[vl_statIdx].sources[vl_idx].varIdxList[c_EPTF_StatHandler_sourceVarIdx_density], vl_content);
+        f_EPTF_Base_assert(%definitionId&": stat data source is not integerlist.",
+          ischosen(vl_content.integerlistVal));
+        f_EPTF_Base_assert(%definitionId&": stat data source differs in size.",
+          sizeof(pl_retVal.integerlistVal) == sizeof(vl_content.integerlistVal));
+        for(j:=0; j<sizeof(pl_retVal.integerlistVal); j:=j+1) {
+          pl_retVal.integerlistVal[j] := pl_retVal.integerlistVal[j] + vl_content.integerlistVal[j];
+        }
+        if(not f_EPTF_FBQ_getFwdBusyItemIdx(vl_idx, v_EPTF_StatHandler_aggregatedStats.data[vl_statIdx].sourceQueue)) {
+          /*do nothing*/
+        }
+      }
+      if(c_EPTF_Common_debugSwitch and f_EPTF_StatHandlerLogging_debugEnabled()) {
+        f_EPTF_StatHandlerLogging_debug("Changing value of stat "&
+          v_EPTF_StatHandler_aggregatedStats.data[vl_statIdx].statName&
+          " to "&log2str(pl_retVal));
+      }
+    }
+    
+    ///////////////////////////////////////////////////////////
+    //  Function: f_EPTF_StatHandler_floatPercentilePMethod
+    //
+    //  Purpose:
+    //    PercentileP statistics method for float stat.
+    //
+    //  Parameters:
+    //    pl_idx - *in* *integer* -  index of the EPTF Variable
+    //    pl_argList - *in* <EPTF_IntegerList> - the arguments: list of integers that should be EPTF Variable indexes (these Variables are set to the local providers)
+    //    pl_nonVarArgList - *in* <EPTF_IntegerList> - list of any other indexes used by the CalcFn function. They do not have to be EPTF Variable indexes.
+    //    pl_retVal - *inout* <EPTF_Var_DirectContent> - the return value
+    //
+    //  Return Value:
+    //    -
+    //
+    //  Errors & assertions:
+    //    -
+    //
+    //  Detailed Comments:
+    //    When called pl_retVal will contain the current value of the ETPF_Var
+    //    Before the function exits it should set the new value into pl_retVal
+    ///////////////////////////////////////////////////////////
+    private function f_EPTF_StatHandler_floatPercentilePMethod(in integer pl_idx, in EPTF_IntegerList pl_argList, in EPTF_IntegerList pl_nonVarArgList, inout EPTF_Var_DirectContent pl_retVal)
+    runs on EPTF_StatHandler_CT
+    {
+      if(sizeof(pl_argList) == 0) { return; } // no data sources
+      var integer vl_statIdx := pl_nonVarArgList[0];
+      if(v_EPTF_StatHandler_aggregatedStats.data[vl_statIdx].resetPending) {
+        if(f_EPTF_StatHandler_updateResetState(vl_statIdx)) { return; }
+      }
+      
+      var integer vl_densityStat := v_EPTF_StatHandler_aggregatedStats.data[vl_statIdx].auxStats[c_EPTF_StatHandler_auxStatIdx_density];
+      var EPTF_IntegerList vl_density := f_EPTF_Var_getIntegerlistValue(v_EPTF_StatHandler_aggregatedStats.data[vl_densityStat].statVarIdx);
+      var EPTF_FloatList vl_boundaries := f_EPTF_Var_getFloatlistValue(v_EPTF_StatHandler_aggregatedStats.data[vl_densityStat].auxVars[c_EPTF_StatHandler_auxVarIdx_boundaries]);
+      
+      var integer vl_maxStat := v_EPTF_StatHandler_aggregatedStats.data[vl_statIdx].auxStats[c_EPTF_StatHandler_auxStatIdx_max];
+      pl_retVal.floatVal := f_EPTF_Var_getFloatValue(v_EPTF_StatHandler_aggregatedStats.data[vl_maxStat].statVarIdx);
+      
+      var float vl_pValue := f_EPTF_Var_getFloatValue(v_EPTF_StatHandler_aggregatedStats.data[vl_statIdx].auxVars[c_EPTF_StatHandler_auxVarIdx_pValue]);      
+      
+      var integer vl_elems := 0, i;
+      for(i:=0; i<sizeof(vl_density); i:=i+1) {
+        vl_elems := vl_elems + vl_density[i];
+      }
+      // 0.0 <= vl_pValue <= 1.0
+      vl_elems := float2int(int2float(vl_elems) * vl_pValue);
+      
+      var integer vl_num := 0;
+      for(i:=0; i<sizeof(vl_boundaries); i:=i+1) {
+        if(vl_elems > vl_num + vl_density[i]) {
+          vl_num := vl_num + vl_density[i];
+        } else {
+          pl_retVal.floatVal := vl_boundaries[i];
+          break;
+        }
+      }
+      
+      if(c_EPTF_Common_debugSwitch and f_EPTF_StatHandlerLogging_debugEnabled()) {
+        f_EPTF_StatHandlerLogging_debug("Changing value of stat "&
+          v_EPTF_StatHandler_aggregatedStats.data[vl_statIdx].statName&
+          " to "&log2str(pl_retVal)&
+          " pValue is "&log2str(vl_pValue) );
+      }
+    }
+    
+  } // group StatHandlerMethods
+  
+  ///////////////////////////////////////////////////////////
+  //  Group: StatHandlerAuxData
+  //
+  //  Purpose:
+  //    Functions for creating aux data for statistics.
+  //
+  //  Detailed Comments:
+  //    -
+  //
+  ///////////////////////////////////////////////////////////
+  group StatHandlerAuxData {
+    
+    ///////////////////////////////////////////////////////////
+    //  Function: f_EPTF_StatHandler_createAuxName
+    //
+    //  Purpose:
+    //    Name creating function for aux data
+    //
+    //  Parameters:
+    //    pl_statName - *in* *charstring* - statistics name
+    //    pl_suffix - *in* *charstring* - name suffix for aux data
+    //
+    //  Return Value:
+    //    *charstring* - the created aux name
+    //
+    //  Errors & assertions:
+    //    -
+    //
+    //  Detailed Comments:
+    //    -
+    ///////////////////////////////////////////////////////////
+    private function f_EPTF_StatHandler_createAuxName(in charstring pl_statName, in charstring pl_suffix)
+    runs on EPTF_StatHandler_CT
+    return charstring
+    {
+      return pl_statName & v_EPTF_StatHandler_nameSeparator & pl_suffix;
+    }
+    
+    ///////////////////////////////////////////////////////////
+    //  Function: f_EPTF_StatHandler_createAuxData_StandardDev
+    //
+    //  Purpose:
+    //    Function for creating aux data for standard deviation statistics.
+    //
+    //  Parameters:
+    //    pl_statIdx - *in* *integer* - the stat index
+    //
+    //  Return Value:
+    //    -
+    //
+    //  Errors & assertions:
+    //    -
+    //
+    //  Detailed Comments:
+    //    -
+    ///////////////////////////////////////////////////////////
+    private function f_EPTF_StatHandler_createAuxData_StandardDev(in integer pl_statIdx)
+    runs on EPTF_StatHandler_CT
+    {
+      // Standard deviation needs an aux mean variable
+      var charstring vl_auxName := f_EPTF_StatHandler_createAuxName(v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].statName, c_EPTF_StatHandler_auxVarName_mean);
+      v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].auxVars[c_EPTF_StatHandler_auxVarIdx_mean] :=
+      f_EPTF_Var_newVar(vl_auxName, {floatVal := 0.0});
+    }
+    
+    ///////////////////////////////////////////////////////////
+    //  Function: f_EPTF_StatHandler_createAuxData_Density
+    //
+    //  Purpose:
+    //    Function for creating aux data for density statistics.
+    //
+    //  Parameters:
+    //    pl_statIdx - *in* *integer* - the stat index
+    //
+    //  Return Value:
+    //    -
+    //
+    //  Errors & assertions:
+    //    -
+    //
+    //  Detailed Comments:
+    //    -
+    ///////////////////////////////////////////////////////////
+    private function f_EPTF_StatHandler_createAuxData_Density(in integer pl_statIdx)
+    runs on EPTF_StatHandler_CT
+    {
+      // Density needs the distribution boundaries as floatlist aux data
+      var charstring vl_auxName := f_EPTF_StatHandler_createAuxName(v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].statName, c_EPTF_StatHandler_auxVarName_boundaries);
+      v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].auxVars[c_EPTF_StatHandler_auxVarIdx_boundaries] :=
+      f_EPTF_Var_newVar(vl_auxName, {floatlistVal := {}});
+    }
+    
+    ///////////////////////////////////////////////////////////
+    //  Function: f_EPTF_StatHandler_createAuxData_PercentileP
+    //
+    //  Purpose:
+    //    Function for creating aux data for PercentileP and Percentile95 statistics.
+    //
+    //  Parameters:
+    //    pl_statIdx - *in* *integer* - the stat index
+    //    pl_pValue - *in* *float* - the pValue of the statistic   
+    //
+    //  Return Value:
+    //    -
+    //
+    //  Errors & assertions:
+    //    -
+    //
+    //  Detailed Comments:
+    //    The P value can be between 0.0 and 1.0. For example the value 0.5 means 50th percentile and the median value.
+    ///////////////////////////////////////////////////////////
+    private function f_EPTF_StatHandler_createAuxData_PercentileP(in integer pl_statIdx, in float pl_pValue)
+    runs on EPTF_StatHandler_CT
+    {
+      // PercentileP needs an auxiliary density stat
+      var charstring vl_auxName := f_EPTF_StatHandler_createAuxName(v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].statName, c_EPTF_StatHandler_auxStatName_density);
+      var integer vl_auxIdx := f_EPTF_StatHandler_declareStat(
+        vl_auxName,
+        c_EPTF_StatHandler_Method_Density,
+        {integerlistVal := {}}); // reset value will be updated when registering the first data source
+      if(vl_auxIdx < 0) { f_EPTF_StatHandlerLogging_error(%definitionId&": could not create aux stat \""&vl_auxName&"\" for PercentileP."); }
+      v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].auxStats[c_EPTF_StatHandler_auxStatIdx_density] := vl_auxIdx;
+      f_EPTF_StatHandler_setParent(vl_auxIdx, pl_statIdx);
+      
+      // PercentileP needs an auxiliary max stat
+      vl_auxName := f_EPTF_StatHandler_createAuxName(v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].statName, c_EPTF_StatHandler_auxStatName_max);
+      vl_auxIdx := f_EPTF_StatHandler_declareStat(
+        vl_auxName,
+        c_EPTF_StatHandler_Method_Max,
+        {floatVal := 0.0});
+      if(vl_auxIdx < 0) { f_EPTF_StatHandlerLogging_error(%definitionId&": could not create aux stat \""&vl_auxName&"\" for PercentileP."); }
+      v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].auxStats[c_EPTF_StatHandler_auxStatIdx_max] := vl_auxIdx;
+      f_EPTF_StatHandler_setParent(vl_auxIdx, pl_statIdx);
+      
+      // PercentileP needs an aux pValue variable
+      vl_auxName := f_EPTF_StatHandler_createAuxName(v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].statName, c_EPTF_StatHandler_auxVarName_pValue);
+      v_EPTF_StatHandler_aggregatedStats.data[pl_statIdx].auxVars[c_EPTF_StatHandler_auxVarIdx_pValue] :=
+      f_EPTF_Var_newVar(vl_auxName, {floatVal := pl_pValue});      
+      
+      if(c_EPTF_Common_debugSwitch and f_EPTF_StatHandlerLogging_debugEnabled()) {
+        f_EPTF_StatHandlerLogging_debug(log2str(%definitionId, ": Aux Data created for PercentileP"));
+      }
+    }
+    
+  } // group StatHandlerAuxData
+  
+} // group Private
+
+} // end of module

@@ -1,0 +1,56 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_CLL_HashMap_Definitions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 512
+//  Updated:  2011-10-13
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////
+//  File: EPTF_CLL_HashMap_Definitions.ttcn
+// 
+//  Purpose:
+//    Provides type definitions of the HashMaps feature.
+// 
+//  File depends on:
+//    <EPTF_CLL_Base_Definitions>
+// 
+//  Current Owner:
+//    Jozsef Gyurusi (ethjgi)
+// 
+//  Last Review Date:
+//    -
+//
+//  Detailed Comments:
+//    Defines the component type of the HashMap feature.
+//    For more detailed on the functionality see <EPTF_CLL_HashMap_Functions>.
+//
+///////////////////////////////////////////////////////////////
+module EPTF_CLL_HashMap_Definitions {
+
+import from EPTF_CLL_Base_Definitions all;
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_HashMap_CT
+// 
+//  Purpose:
+//   The component that implements the EPTF HashMap feature
+// 
+//  Elements:
+//    v_HashMap_initialized - *boolean* - prevents multiple initialization
+//
+//  Detailed Comments:
+//    To use the EPTF HashMap, extend your component with <EPTF_HashMap_CT>
+//
+///////////////////////////////////////////////////////////
+type component EPTF_HashMap_CT extends EPTF_Base_CT {
+  var boolean v_HashMap_initialized := false;
+}
+
+}  // end of module EPTF_CLL_HashMap_Definitions

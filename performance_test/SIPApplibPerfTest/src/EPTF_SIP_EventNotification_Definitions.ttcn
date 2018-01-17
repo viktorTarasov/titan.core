@@ -1,0 +1,178 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_SIP_EventNotification_Definitions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 522
+//  Updated:  2012-11-28
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////
+//  Module: EPTF_SIP_EventNotification_Definitions
+// 
+//  Purpose:
+//    Type definitions and constants for SIP Event Notification (RFC 3265).
+// 
+//  Module depends on:
+//    <EPTF_CLL_FBQ_Definitions>
+//
+//    <EPTF_SIP_Common_Definitions>
+//
+//    <SIPmsg_Types>
+//
+//  Last review date:  
+//    2009-04-20
+// 
+///////////////////////////////////////////////////////////
+
+module EPTF_SIP_EventNotification_Definitions {
+
+import from EPTF_CLL_FBQ_Definitions all;
+
+import from EPTF_SIP_Common_Definitions all;
+
+import from SIPmsg_Types all;
+
+////////////////////////////////////////////////////
+//Type: SIP_SubscriptionData
+//
+//Purpose:  
+//  Stores subscription data of a user
+//
+//Elements:
+//  - state - *integer* - state of the subscription (constants are defined later)
+//  - userIdx - *integer* - the index of the user in v_db_users
+//  - dialogIdx - *integer* - the index of the dialog in v_db_dialog
+//  - FSMIdx - *integer* - the FSM context data index
+//  - subscribeUACIdx - *integer* - reference to the SUBSCRIBE UAC (creating or unsubscribing) transaction, see HN63629
+//  - eventTypeIdx - *integer* - event type index (in the supported events list)
+//  - eventId - *charstring* - event ID
+//  - expireInterval - *integer* - expire interval of the subscription
+//  - subscriptionStateReporting - *boolean* - true if the state of the subscription should also be reported with the NOTIFY
+//  - callId - <CallidString> - an identifier of the dialog of the subscription
+//  - localTag - *charstring* - an identifier of the dialog of the subscription
+//  - remoteTag - *charstring* - an identifier of the dialog of the subscription
+//
+////////////////////////////////////////////////////
+type record SIP_SubscriptionData {
+  integer                         state,
+  integer                         userIdx,
+  integer                         dialogIdx,
+  integer                         FSMIdx,
+  integer                         subscribeUACIdx, // HN63629
+  integer                         eventTypeIdx,
+
+  charstring                      eventId,
+
+  integer                         expireInterval,
+  boolean                         subscriptionStateReporting,
+
+  // dialog identifiers:
+  CallidString                    callId,
+  charstring                      localTag,
+  charstring                      remoteTag
+}
+
+///////////////////////////////////////////////////////////
+// Constant: c_SIP_SubscriptionData_init
+//
+// Purpose:
+//   Contains initialization data for <SIP_SubscriptionData>.
+//
+///////////////////////////////////////////////////////////
+const SIP_SubscriptionData c_SIP_SubscriptionData_init := {
+  state := c_SIP_Subscribe_State_unknown,
+  userIdx := -1,
+  dialogIdx := -1,
+  FSMIdx := -1,
+  subscribeUACIdx := -1,
+  eventTypeIdx := -1,
+
+  eventId := "",
+
+  expireInterval := 3600,
+
+  subscriptionStateReporting := true,
+
+  callId                := "",
+  localTag              := "",
+  remoteTag             := ""
+}
+
+///////////////////////////////////////////////////////////
+// Type: SIP_SubscriptionDataList
+//
+// Purpose:
+//   Defines a container for <SIP_SubscriptionData>.
+///////////////////////////////////////////////////////////
+type record of SIP_SubscriptionData SIP_SubscriptionDataList;
+
+////////////////////////////////////////////////////
+//Type: SIP_SubscriptionDatabase
+//
+//Purpose:  
+//  SIP subscription database.
+//
+//Elements:
+//  - queue - <EPTF_FreeBusyQueue> - FreeBusy queue for index management
+//  - data - <SIP_SubscriptionDataList> - subscription list
+//  - supportedEventTypes - <SIP_SupportedEventTypes> - supported event type list
+//  - hashRef - *integer* - the reference of the hash that stores the subscriptions
+//
+////////////////////////////////////////////////////
+type record SIP_SubscriptionDatabase {
+  EPTF_FreeBusyQueue                    queue,
+  SIP_SubscriptionDataList              data,
+  SIP_SupportedEventTypes               supportedEventTypes,
+  integer                               hashRef
+}
+
+
+///////////////////////////////////////////////////////////
+// Constant: Subscrition states.
+//
+// Elements:
+//  c_SIP_Subscribe_State_unknown - state after initialization
+//  c_SIP_Subscribe_State_active - active
+//  c_SIP_Subscribe_State_pending - pending
+//  c_SIP_Subscribe_State_terminated - termainated
+///////////////////////////////////////////////////////////
+const integer c_SIP_Subscribe_State_unknown := 0;
+const integer c_SIP_Subscribe_State_active := 1;
+const integer c_SIP_Subscribe_State_pending := 2;
+const integer c_SIP_Subscribe_State_terminated := 3;
+const integer c_SIP_Subscribe_State_toBeterminated := 4;
+const integer c_SIP_Subscribe_State_created := 5;
+
+///////////////////////////////////////////////////////////
+// Type: StateList
+//
+// Purpose:
+//   Defines a container for *charstring*.
+///////////////////////////////////////////////////////////
+type record of charstring StateList;
+
+
+///////////////////////////////////////////////////////////
+// Constant: Subscrition state list.
+//
+// Purpose:
+//  Can be indexed with the subscription state constants.
+//
+//  Elements:
+//    "unknow", "active", "pending", "terminated"
+///////////////////////////////////////////////////////////
+const StateList c_SIP_SubscriptionState_List :={
+  "unknow", "active", "pending", "terminated", "terminated"
+}
+
+}//end of module
+with {
+extension "version <RnXnn>"
+}
+

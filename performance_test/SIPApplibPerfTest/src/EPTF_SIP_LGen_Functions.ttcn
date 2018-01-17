@@ -1,0 +1,1683 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_SIP_LGen_Functions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 522
+//  Updated:  2012-11-28
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////
+//  Module: EPTF_SIP_LGen_Functions
+//
+//  Module depends on:
+//    <EPTF_CLL_Base_Functions>
+//
+//    <EPTF_CLL_Common_Definitions>
+//
+//    <EPTF_CLL_LGenBase_ConfigFunctions>
+//
+//    <EPTF_CLL_LGenBase_Functions>
+//
+//    <EPTF_CLL_LGenBase_TemplateFunctions>
+//
+//    <EPTF_CLL_Logging_Definitions>
+//
+//    <EPTF_CLL_Logging_Functions>
+//
+//    <EPTF_CLL_FBQ_Functions>
+//
+//    <EPTF_CLL_HashMap_Functions>
+//
+//    <EPTF_CLL_HashMapInt2Int_Functions>
+//
+//    <EPTF_CLL_HashMapStr2Int_Functions>
+//
+//    <EPTF_CLL_Variable_Functions>
+//
+//    <EPTF_SIP_Common_Definitions>
+//
+//    <EPTF_SIP_Common_Functions>
+//
+//    <EPTF_SIP_Dialog_Functions>
+//
+//    <EPTF_SIP_EventNotification_Functions>
+//
+//    <EPTF_SIP_Events>
+//
+//    <EPTF_SIP_LGen_Definitions>
+//
+//    <EPTF_SIP_MessageHandler_Functions>
+//
+//    <EPTF_SIP_TestSteps>
+//
+//    <EPTF_SIP_Transaction_Definitions>
+//
+//    <EPTF_SIP_Transaction_Functions>
+//
+//    <EPTF_SIP_Publish_Functions>
+//
+//    <EPTF_SIP_UserDatabase_Definitions>
+//
+//    <EPTF_SIP_UserDatabase_Functions>
+//
+//    <SIPmsg_Types>
+//
+//  Last review date:
+//    2012-10-24
+////////////////////////////////////////////////////
+module EPTF_SIP_LGen_Functions
+{
+import from EPTF_CLL_Base_Functions all;
+import from EPTF_CLL_Common_Definitions all;
+import from EPTF_CLL_LGenBase_ConfigFunctions all;
+import from EPTF_CLL_LGenBase_Functions all;
+import from EPTF_CLL_LGenBase_TemplateFunctions all;
+import from EPTF_CLL_Logging_Definitions all;
+import from EPTF_CLL_Logging_Functions all;
+import from EPTF_CLL_FBQ_Functions all;
+import from EPTF_CLL_HashMap_Functions all;
+import from EPTF_CLL_HashMapInt2Int_Functions all;
+import from EPTF_CLL_HashMapStr2Int_Functions all;
+import from EPTF_CLL_Variable_Functions all;
+
+import from EPTF_SIP_Common_Definitions all;
+import from EPTF_SIP_Common_Functions all;
+import from EPTF_SIP_Dialog_Functions all;
+import from EPTF_SIP_EventNotification_Functions all;
+import from EPTF_SIP_Events all;
+import from EPTF_SIP_LGen_Definitions all;
+import from EPTF_SIP_MessageHandler_Functions all;
+import from EPTF_SIP_TestSteps all;
+import from EPTF_SIP_Transaction_Definitions all;
+import from EPTF_SIP_Transaction_Functions all;
+import from EPTF_SIP_Publish_Functions all;
+import from EPTF_SIP_UserDatabase_Definitions all;
+import from EPTF_SIP_UserDatabase_Functions all;
+import from EPTF_CLL_DataSource_Definitions all; 
+
+import from SIPmsg_Types all;
+
+import from EPTF_CLL_DataSourceClient_Functions all; 
+
+modulepar boolean tsp_EPTF_SIP_warningEnabled := true;
+modulepar boolean tsp_EPTF_SIP_debugEnabled := false;
+modulepar boolean tsp_EPTF_SIP_3xxEnabled := false;
+modulepar boolean tsp_EPTF_SIP_4xxEnabled := false;
+modulepar boolean tsp_EPTF_SIP_5xxEnabled := false;
+modulepar boolean tsp_EPTF_SIP_6xxEnabled := false;
+modulepar boolean tsp_EPTF_SIP_3xxTo6xxEnabled := false;
+
+modulepar boolean tsp_EPTF_SIP_invalidMessageEnabled := true;
+
+////////////////////////////////////////////////////
+//Function: f_SIP_applibInit
+//
+//Purpose:
+//  Initializes the Application Library.
+//
+//Parameters:
+//  - pl_applName - *in* *charstring* - the name to use in <f_EPTF_LGenBase_init>
+//  - pl_sourceCompRef - <EPTF_DataSource_CT> - - the main DataSource component (server).
+//
+////////////////////////////////////////////////////
+public function f_SIP_applibInit(in charstring pl_applName, 
+      in EPTF_DataSource_CT pl_sourceCompRef := null)
+runs on EPTF_SIP_LGen_CT 
+{
+  if (v_SIP_LGenInitialized){return;}
+
+//init functions
+  f_EPTF_LGenBase_init(pl_applName, 0, pl_applName);
+  v_EPTF_SIP_selfName := f_EPTF_Base_selfName();
+  //FIXME Check and warning
+  f_EPTF_Logging_init_CT(pl_applName);
+  f_EPTF_HashMap_init_CT(pl_applName);
+
+  f_EPTF_Base_registerCleanup(refers(f_SIP_cleanUp));
+
+  v_SIP_myBIdx := f_EPTF_LGenBase_declareBehaviorType(c_SIP_myBName, tsp_SIP_maxBindableBCtx, refers(f_SIP_bCtxReset), refers(f_SIP_bCtxBind), refers(f_SIP_bCtxUnbind));
+
+  if (null == v_userSearchFunc)
+  {
+    v_userSearchFunc := refers(f_EPTF_SIP_User_FindByURI);
+  }
+  
+
+  v_SIP_Logging_MaskId := 
+    f_EPTF_Logging_registerComponentMasks(
+      "SIP_Logging", 
+      {"WARNING", "DEBUG", "3xx", "4xx", "5xx", "6xx", "3xxTo6xx", "InvalidMessage"}, 
+      EPTF_Logging_CLL);
+
+  if(tsp_EPTF_SIP_warningEnabled) {
+    f_EPTF_Logging_enableLocalMask(v_SIP_Logging_MaskId, c_EPTF_SIP_Logging_WARNING);
+  } else {
+    f_EPTF_Logging_disableLocalMask(v_SIP_Logging_MaskId, c_EPTF_SIP_Logging_WARNING);
+  }
+
+  if(tsp_EPTF_SIP_debugEnabled) {
+    f_EPTF_Logging_enableLocalMask(v_SIP_Logging_MaskId, c_EPTF_SIP_Logging_DEBUG);
+  } else {
+    f_EPTF_Logging_disableLocalMask(v_SIP_Logging_MaskId, c_EPTF_SIP_Logging_DEBUG);
+    if(tsp_SIP_debugLogging) {
+      f_SIP_Logging_WARNING("modulepar tsp_SIP_debugLogging is obsolete, "&
+        "use tsp_EPTF_SIP_debugEnabled instead.");
+    }
+  }
+  
+  if (tsp_EPTF_SIP_3xxEnabled){
+    f_EPTF_Logging_enableLocalMask(v_SIP_Logging_MaskId, c_EPTF_SIP_Logging_3xx);
+  } else {
+    f_EPTF_Logging_disableLocalMask(v_SIP_Logging_MaskId, c_EPTF_SIP_Logging_3xx);
+  }
+
+  if (tsp_EPTF_SIP_4xxEnabled){
+    f_EPTF_Logging_enableLocalMask(v_SIP_Logging_MaskId, c_EPTF_SIP_Logging_4xx);
+  } else {
+    f_EPTF_Logging_disableLocalMask(v_SIP_Logging_MaskId, c_EPTF_SIP_Logging_4xx);
+  }
+
+  if (tsp_EPTF_SIP_5xxEnabled){
+    f_EPTF_Logging_enableLocalMask(v_SIP_Logging_MaskId, c_EPTF_SIP_Logging_5xx);
+  } else {
+    f_EPTF_Logging_disableLocalMask(v_SIP_Logging_MaskId, c_EPTF_SIP_Logging_5xx);
+  }
+
+  if (tsp_EPTF_SIP_6xxEnabled){
+    f_EPTF_Logging_enableLocalMask(v_SIP_Logging_MaskId, c_EPTF_SIP_Logging_6xx);
+  } else {
+    f_EPTF_Logging_disableLocalMask(v_SIP_Logging_MaskId, c_EPTF_SIP_Logging_6xx);
+  }
+
+  if (tsp_EPTF_SIP_3xxTo6xxEnabled){
+    f_EPTF_Logging_enableLocalMask(v_SIP_Logging_MaskId, c_EPTF_SIP_Logging_3xxTo6xx);
+  } else {
+    f_EPTF_Logging_disableLocalMask(v_SIP_Logging_MaskId, c_EPTF_SIP_Logging_3xxTo6xx);
+  }
+  
+  if (tsp_EPTF_SIP_invalidMessageEnabled){
+    f_EPTF_Logging_enableLocalMask(v_SIP_Logging_MaskId, c_EPTF_SIP_Logging_invalidMessage);
+  }else {
+    f_EPTF_Logging_disableLocalMask(v_SIP_Logging_MaskId, c_EPTF_SIP_Logging_invalidMessage);
+  }
+
+  f_SIP_Logging_DEBUG(log2str(%definitionId,": myBIdx is ", v_SIP_myBIdx));
+
+  f_EPTF_SIP_UA_initDatabase();
+  f_EPTF_SIP_User_InitDatabase();
+  f_EPTF_SIP_Transaction_InitDatabase();
+  f_EPTF_SIP_ModifyMsgCallBack_initDatabase();
+  f_EPTF_SIP_Dialog_InitDatabase();
+  f_EPTF_SIP_Subscription_InitDatabase();
+  f_EPTF_SIP_Publish_InitDatabase();
+
+  f_SIP_declareFunctions();
+
+  f_SIP_addEvents();
+
+//initialize statistics
+  f_SIP_initStats();
+
+//declare external template types
+  f_SIP_declareExternalTemplates();
+  
+//register Call-Id generation function
+  f_EPTF_SIP_registerCallIdGen(refers(f_EPTF_SIP_genCallId_default));
+  
+//register SIP encoding function
+  f_EPTF_SIP_registerSipEncode(refers(f_EPTF_SIP_sipEncodeRequest_default), refers(f_EPTF_SIP_sipEncodeResponse_default));
+  
+  f_SIP_Logging_DEBUG(%definitionId & ": initialization finished.");
+
+  v_requestHandlerTU := refers(f_EPTF_SIP_Message_RequestHandlerTU);
+
+  if(pl_sourceCompRef != null)
+   {
+     f_EPTF_SIP_DS_init(pl_applName, pl_sourceCompRef);
+   }
+  v_SIP_LGenInitialized := true;
+}
+
+////////////////////////////////////////////////////
+//Function: f_SIP_bCtxReset
+//
+//Purpose:
+//  See <f_EPTF_LGenBase_init>
+//  
+////////////////////////////////////////////////////
+function f_SIP_bCtxReset(in integer pl_eIdx)
+runs on EPTF_SIP_LGen_CT
+{
+  var integer vl_user:= f_EPTF_LGenBase_getBehaviorCtxItem(pl_eIdx, v_SIP_myBIdx, 0);
+  
+  v_db_users.data[vl_user] := c_SIP_UserData_init;
+}
+
+////////////////////////////////////////////////////
+//Function: f_SIP_bCtxBind
+//
+//Purpose:
+//  See <f_EPTF_LGenBase_init>
+//  
+////////////////////////////////////////////////////
+function f_SIP_bCtxBind(in integer pl_eIdx)
+runs on EPTF_SIP_LGen_CT
+return EPTF_IntegerList
+{
+  var integer vl_userIdx := f_EPTF_FBQ_getOrCreateFreeSlot(v_db_users.queue);
+  f_EPTF_FBQ_moveFromFreeHeadToBusyTail(v_db_users.queue);
+
+  v_db_users.data[vl_userIdx] := c_SIP_UserData_init;
+  v_db_users.data[vl_userIdx].eIdx := pl_eIdx;
+  v_db_users.data[vl_userIdx].sessions[0] := c_SIP_Session_init;
+  v_db_users.data[vl_userIdx].sessions[0].sessionId := 0;
+  v_db_users.data[vl_userIdx].sessions[0].terminate := false;
+  
+  return {vl_userIdx};
+}
+
+////////////////////////////////////////////////////
+//Function: f_SIP_bCtxUnbind
+//
+//Purpose:
+//  See <f_EPTF_LGenBase_init>
+//  
+////////////////////////////////////////////////////
+function f_SIP_bCtxUnbind(in integer pl_eIdx)
+runs on EPTF_SIP_LGen_CT
+{
+  if (not v_SIP_LGenInitialized) {return;}
+
+  var integer vl_user:= f_EPTF_LGenBase_getBehaviorCtxItem(pl_eIdx, v_SIP_myBIdx, 0);
+
+  f_EPTF_FBQ_moveFromBusyToFreeTail(vl_user, v_db_users.queue);
+}
+
+////////////////////////////////////////////////////
+//Function: f_SIP_cleanUp
+//
+//Purpose:
+//  Cleans up the SIP AppLib context.
+//  
+////////////////////////////////////////////////////
+private function f_SIP_cleanUp()
+runs on EPTF_SIP_LGen_CT
+{
+  if (not v_SIP_LGenInitialized) {return;}
+  v_SIP_LGenInitialized := false;
+  
+  f_EPTF_SIP_Dialog_cleanUpDatabase();
+  f_EPTF_SIP_Transaction_cleanUpDatabase();
+  f_EPTF_SIP_Subscription_cleanUpDatabase();
+  f_EPTF_SIP_Publish_cleanUpDatabase();
+  f_EPTF_SIP_User_cleanUpDatabase();
+  f_EPTF_SIP_UA_cleanUpDatabase();
+  f_EPTF_SIP_ModifyMsgCallBack_cleanUpDatabase();
+
+  f_EPTF_int2int_HashMap_Delete(c_EPTF_SIP_hashMapName_statusCode2Idx);
+  f_EPTF_str2int_HashMap_Delete(c_EPTF_SIP_hashMapName_reasonPhrase2Idx);
+  v_statistics.outgoing.requests := {};
+  v_statistics.outgoing.responses := {};
+  v_statistics.incoming.requests := {};
+  v_statistics.incoming.responses := {};
+
+  vcb_EPTF_SIP_responseStatCreatedList := {};
+}
+
+////////////////////////////////////////////////////
+//Function: f_SIP_getStatNamePrefix
+//
+//Purpose:
+//  Generates the name prefixes for statistics.
+//
+//Return value:
+//  charstring - statistic name prefix
+////////////////////////////////////////////////////
+function f_SIP_getStatNamePrefix()
+runs on EPTF_SIP_LGen_CT
+return charstring
+{
+  return v_EPTF_SIP_selfName & ".";
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_resetStats
+//
+//Purpose:
+//  Resets the statistics.
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_resetStats()
+runs on EPTF_SIP_LGen_CT
+{
+  for (var integer i := 0; i < sizeof(v_statistics.outgoing.responses); i := i + 1)
+  {
+    f_EPTF_Var_adjustContent(v_statistics.outgoing.responses[i].msgCounter_k, { intVal := 0 });
+    f_EPTF_Var_adjustContent(v_statistics.outgoing.responses[i].retrans_k, { intVal := 0 });
+
+    f_EPTF_Var_adjustContent(v_statistics.incoming.responses[i].msgCounter_k, { intVal := 0 });
+    f_EPTF_Var_adjustContent(v_statistics.incoming.responses[i].retrans_k, { intVal := 0 });
+  }
+  
+  for (var integer i := 0; i < sizeof(v_statistics.outgoing.requests); i := i + 1)
+  {
+    f_EPTF_Var_adjustContent(v_statistics.outgoing.requests[i].msgCounter_k, { intVal := 0 });
+    f_EPTF_Var_adjustContent(v_statistics.outgoing.requests[i].retrans_k, { intVal := 0 });
+
+    f_EPTF_Var_adjustContent(v_statistics.incoming.requests[i].msgCounter_k, { intVal := 0 });
+    f_EPTF_Var_adjustContent(v_statistics.incoming.requests[i].retrans_k, { intVal := 0 });
+  }
+}
+
+function f_SIP_addEvents()
+runs on EPTF_SIP_LGen_CT
+{
+  var integer vl_dummy;
+
+  if (c_SIP_eventIdx_ACK != f_EPTF_LGenBase_declareFsmEvent(c_SIP_myBName, c_SIP_eventName_ACK) or
+      c_SIP_eventIdx_BYE != f_EPTF_LGenBase_declareFsmEvent(c_SIP_myBName, c_SIP_eventName_BYE) or
+      c_SIP_eventIdx_CANCEL != f_EPTF_LGenBase_declareFsmEvent(c_SIP_myBName, c_SIP_eventName_CANCEL) or
+      c_SIP_eventIdx_INFO != f_EPTF_LGenBase_declareFsmEvent(c_SIP_myBName, c_SIP_eventName_INFO) or
+      c_SIP_eventIdx_INVITE != f_EPTF_LGenBase_declareFsmEvent(c_SIP_myBName, c_SIP_eventName_INVITE) or
+      c_SIP_eventIdx_OPTIONS != f_EPTF_LGenBase_declareFsmEvent(c_SIP_myBName, c_SIP_eventName_OPTIONS) or
+      c_SIP_eventIdx_MESSAGE != f_EPTF_LGenBase_declareFsmEvent(c_SIP_myBName, c_SIP_eventName_MESSAGE) or
+      c_SIP_eventIdx_NOTIFY != f_EPTF_LGenBase_declareFsmEvent(c_SIP_myBName, c_SIP_eventName_NOTIFY) or
+      c_SIP_eventIdx_PRACK != f_EPTF_LGenBase_declareFsmEvent(c_SIP_myBName, c_SIP_eventName_PRACK) or
+      c_SIP_eventIdx_PUBLISH != f_EPTF_LGenBase_declareFsmEvent(c_SIP_myBName, c_SIP_eventName_PUBLISH) or
+      c_SIP_eventIdx_REFER != f_EPTF_LGenBase_declareFsmEvent(c_SIP_myBName, c_SIP_eventName_REFER) or
+      c_SIP_eventIdx_REGISTER != f_EPTF_LGenBase_declareFsmEvent(c_SIP_myBName, c_SIP_eventName_REGISTER) or
+      c_SIP_eventIdx_SUBSCRIBE != f_EPTF_LGenBase_declareFsmEvent(c_SIP_myBName, c_SIP_eventName_SUBSCRIBE) or
+      c_SIP_eventIdx_UPDATE != f_EPTF_LGenBase_declareFsmEvent(c_SIP_myBName, c_SIP_eventName_UPDATE) or
+      c_SIP_eventIdx_reINVITE != f_EPTF_LGenBase_declareFsmEvent(c_SIP_myBName, c_SIP_eventName_reINVITE))
+  {
+    f_EPTF_LGenBase_log();
+    log("error"); mtc.stop
+  }
+
+  for (var integer i := 15; i < 700; i := i + 1)
+  {
+    vl_dummy := f_EPTF_LGenBase_declareFsmEvent(c_SIP_myBName, int2str(i));
+  }
+
+  if (c_SIP_eventIdx_1xx != f_EPTF_LGenBase_declareFsmEvent(c_SIP_myBName, c_SIP_eventName_1xx) or
+      c_SIP_eventIdx_2xx != f_EPTF_LGenBase_declareFsmEvent(c_SIP_myBName, c_SIP_eventName_2xx) or
+      c_SIP_eventIdx_3xx != f_EPTF_LGenBase_declareFsmEvent(c_SIP_myBName, c_SIP_eventName_3xx) or
+      c_SIP_eventIdx_4xx != f_EPTF_LGenBase_declareFsmEvent(c_SIP_myBName, c_SIP_eventName_4xx) or
+      c_SIP_eventIdx_5xx != f_EPTF_LGenBase_declareFsmEvent(c_SIP_myBName, c_SIP_eventName_5xx) or
+      c_SIP_eventIdx_6xx != f_EPTF_LGenBase_declareFsmEvent(c_SIP_myBName, c_SIP_eventName_6xx) or
+      c_SIP_eventIdx_3xxto6xx != f_EPTF_LGenBase_declareFsmEvent(c_SIP_myBName, c_SIP_eventName_3xxto6xx) or
+      c_SIP_eventIdx_unknownTransaction != f_EPTF_LGenBase_declareFsmEvent(c_SIP_myBName, c_SIP_eventName_unknownTransaction) or
+      c_SIP_eventIdx_unknownDialog != f_EPTF_LGenBase_declareFsmEvent(c_SIP_myBName, c_SIP_eventName_unknownDialog) or
+      c_SIP_eventIdx_retransmittedRequest != f_EPTF_LGenBase_declareFsmEvent(c_SIP_myBName, c_SIP_eventName_retransmittedRequest) or
+      c_SIP_eventIdx_unknownSubscription != f_EPTF_LGenBase_declareFsmEvent(c_SIP_myBName, c_SIP_eventName_unknownSubscription) or
+      c_SIP_eventIdx_retransmittedResponse != f_EPTF_LGenBase_declareFsmEvent(c_SIP_myBName, c_SIP_eventName_retransmittedResponse) or
+      c_SIP_eventIdx_NOTIFYActive != f_EPTF_LGenBase_declareFsmEvent(c_SIP_myBName, c_SIP_eventName_NOTIFYActive) or
+      c_SIP_eventIdx_NOTIFYPending != f_EPTF_LGenBase_declareFsmEvent(c_SIP_myBName, c_SIP_eventName_NOTIFYPending) or
+      c_SIP_eventIdx_NOTIFYTerminated != f_EPTF_LGenBase_declareFsmEvent(c_SIP_myBName, c_SIP_eventName_NOTIFYTerminated) or
+      c_SIP_eventIdx_retryAfter != f_EPTF_LGenBase_declareFsmEvent(c_SIP_myBName, c_SIP_eventName_retryAfter) or
+      c_SIP_eventIdx_UACTransactionTimeout != f_EPTF_LGenBase_declareFsmEvent(c_SIP_myBName, c_SIP_eventName_UACTransactionTimeout) or
+      c_SIP_eventIdx_UASTransactionTimeout != f_EPTF_LGenBase_declareFsmEvent(c_SIP_myBName, c_SIP_eventName_UASTransactionTimeout) or
+      c_SIP_eventIdx_requestOutOfOrder != f_EPTF_LGenBase_declareFsmEvent(c_SIP_myBName, c_SIP_eventName_requestOutOfOrder) or
+      c_SIP_eventIdx_userNotFound != f_EPTF_LGenBase_declareFsmEvent(c_SIP_myBName, c_SIP_eventName_userNotFound) or
+      c_SIP_eventIdx_responseNotFoundForPRACK != f_EPTF_LGenBase_declareFsmEvent(c_SIP_myBName, c_SIP_eventName_responseNotFoundForPRACK) or
+      c_SIP_eventIdx_provisionalRespOutOfOrder != f_EPTF_LGenBase_declareFsmEvent(c_SIP_myBName, c_SIP_eventName_provisionalRespOutOfOrder) or
+      c_SIP_eventIdx_unknownPublication != f_EPTF_LGenBase_declareFsmEvent(c_SIP_myBName, c_SIP_eventName_unknownPublication) or
+      c_SIP_eventIdx_invalidTransactionId != f_EPTF_LGenBase_declareFsmEvent(c_SIP_myBName, c_SIP_eventName_invalidTransactionId) or
+      c_SIP_eventIdx_portError != f_EPTF_LGenBase_declareFsmEvent(c_SIP_myBName, c_SIP_eventName_portError) or 
+      c_SIP_eventIdx_connectionClosed != f_EPTF_LGenBase_declareFsmEvent(c_SIP_myBName, c_SIP_eventName_connectionClosed) or
+      c_SIP_eventIdx_ACKto2xx != f_EPTF_LGenBase_declareFsmEvent(c_SIP_myBName, c_SIP_eventName_ACKto2xx) or 
+      c_SIP_eventIdx_RespWithoutContext != f_EPTF_LGenBase_declareFsmEvent(c_SIP_myBName, c_SIP_eventName_RespWithoutContext) or
+      c_SIP_eventIdx_RespWithUnknownSubscription != f_EPTF_LGenBase_declareFsmEvent(c_SIP_myBName, c_SIP_eventName_RespWithUnknownSubscription) or
+      c_SIP_eventIdx_invalidResp_CSeq != f_EPTF_LGenBase_declareFsmEvent(c_SIP_myBName, c_SIP_eventName_invalidResp_CSeq) or
+      c_SIP_eventIdx_unknownResourceForPUBLISH != f_EPTF_LGenBase_declareFsmEvent(c_SIP_myBName, c_SIP_eventName_unknownResourceForPUBLISH) or
+      c_SIP_eventIdx_unknownPUBLISH != f_EPTF_LGenBase_declareFsmEvent(c_SIP_myBName, c_SIP_eventName_unknownPUBLISH)
+      )
+  {
+    f_EPTF_LGenBase_log();
+    log("error"); mtc.stop
+  }
+
+  for (var integer i := c_SIP_maxEventIdx + 1; i < tsp_EPTF_SIP_maxEventIndices; i := i + 1)
+  {
+    vl_dummy := f_EPTF_LGenBase_declareFsmEvent(c_SIP_myBName, int2str(i));
+  }
+
+}
+
+function f_SIP_declareFunctions()
+runs on EPTF_SIP_LGen_CT
+{
+  if(//steps
+    c_SIP_stepIdx_createREGISTER != f_EPTF_LGenBase_declareStep(c_SIP_myBName,{c_SIP_stepFunction_createREGISTER,refers(f_SIP_step_createREGISTER)}) or
+    c_SIP_stepIdx_createINVITE != f_EPTF_LGenBase_declareStep(c_SIP_myBName,{c_SIP_stepFunction_createINVITE,refers(f_SIP_step_createINVITE)}) or
+    c_SIP_stepIdx_createResponse != f_EPTF_LGenBase_declareStep(c_SIP_myBName, {c_SIP_stepFunction_createResponse, refers(f_SIP_step_createResponse)}) or 
+    c_SIP_stepIdx_createACK != f_EPTF_LGenBase_declareStep(c_SIP_myBName, {c_SIP_stepFunction_createACK, refers(f_SIP_step_createACK)}) or 
+    c_SIP_stepIdx_createBYE != f_EPTF_LGenBase_declareStep(c_SIP_myBName, {c_SIP_stepFunction_createBYE, refers(f_SIP_step_createBYE)}) or
+    c_SIP_stepIdx_handleINVITE != f_EPTF_LGenBase_declareStep(c_SIP_myBName,{c_SIP_stepFunction_handleINVITE,refers(f_SIP_step_handleINVITE)}) or
+    c_SIP_stepIdx_handleBYE != f_EPTF_LGenBase_declareStep(c_SIP_myBName,{c_SIP_stepFunction_handleBYE,refers(f_SIP_step_handleBYE)}) or
+    c_SIP_stepIdx_createMESSAGE != f_EPTF_LGenBase_declareStep(c_SIP_myBName,{c_SIP_stepFunction_createMESSAGE,refers(f_SIP_step_createMESSAGE)}) or 
+    c_SIP_stepIdx_createCANCEL != f_EPTF_LGenBase_declareStep(c_SIP_myBName,{c_SIP_stepFunction_createCANCEL,refers(f_SIP_step_createCANCEL)}) or 
+    c_SIP_stepIdx_createDEREGISTER != f_EPTF_LGenBase_declareStep(c_SIP_myBName,{c_SIP_stepFunction_createDEREGISTER,refers(f_SIP_step_createDEREGISTER)}) or
+    c_SIP_stepIdx_handleMESSAGE != f_EPTF_LGenBase_declareStep(c_SIP_myBName,{c_SIP_stepFunction_handleMESSAGE,refers(f_SIP_step_handleMESSAGE)}) or
+    c_SIP_stepIdx_handleCANCEL != f_EPTF_LGenBase_declareStep(c_SIP_myBName,{c_SIP_stepFunction_handleCANCEL,refers(f_SIP_step_handleCANCEL)}) or
+    c_SIP_stepIdx_createSUBSCRIBE != f_EPTF_LGenBase_declareStep(c_SIP_myBName,{c_SIP_stepFunction_createSUBSCRIBE,refers(f_SIP_step_createSUBSCRIBE)}) or
+    c_SIP_stepIdx_refreshSUBSCRIBE != f_EPTF_LGenBase_declareStep(c_SIP_myBName,{c_SIP_stepFunction_refreshSUBSCRIBE,refers(f_SIP_step_refreshSUBSCRIBE)}) or
+    c_SIP_stepIdx_removeSUBSCRIBE != f_EPTF_LGenBase_declareStep(c_SIP_myBName,{c_SIP_stepFunction_removeSUBSCRIBE,refers(f_SIP_step_removeSUBSCRIBE)}) or
+    c_SIP_stepIdx_handleNOTIFY != f_EPTF_LGenBase_declareStep(c_SIP_myBName,{c_SIP_stepFunction_handleNOTIFY,refers(f_SIP_step_handleNOTIFY)}) or
+    c_SIP_stepIdx_createPUBLISH != f_EPTF_LGenBase_declareStep(c_SIP_myBName,{c_SIP_stepFunction_createPUBLISH,refers(f_SIP_step_createPUBLISH)}) or
+    c_SIP_stepIdx_refreshPUBLISH != f_EPTF_LGenBase_declareStep(c_SIP_myBName,{c_SIP_stepFunction_refreshPUBLISH,refers(f_SIP_step_refreshPUBLISH)}) or
+    c_SIP_stepIdx_modifyPUBLISH != f_EPTF_LGenBase_declareStep(c_SIP_myBName,{c_SIP_stepFunction_modifyPUBLISH,refers(f_SIP_step_modifyPUBLISH)}) or
+    c_SIP_stepIdx_removePUBLISH != f_EPTF_LGenBase_declareStep(c_SIP_myBName,{c_SIP_stepFunction_removePUBLISH,refers(f_SIP_step_removePUBLISH)}) or
+    c_SIP_stepIdx_disableGroupEvent != f_EPTF_LGenBase_declareStep(c_SIP_myBName,{c_SIP_stepFunction_disableGroupEvent,refers(f_SIP_step_disableGroupEvent)}) or
+    c_SIP_stepIdx_cleanUp != f_EPTF_LGenBase_declareStep(c_SIP_myBName,{c_SIP_stepFunction_cleanUp,refers(f_SIP_step_cleanUp)}) or
+    c_SIP_stepIdx_setRetryAfterTimer != f_EPTF_LGenBase_declareStep(c_SIP_myBName,{c_SIP_stepFunction_setRetryAfterTimer,refers(f_SIP_step_setRetryAfterTimer)}) or
+    c_SIP_stepIdx_rejectRequest != f_EPTF_LGenBase_declareStep(c_SIP_myBName,{c_SIP_stepFunction_rejectRequest,refers(f_SIP_step_rejectRequest)}) or
+    c_SIP_stepIdx_createNOTIFY != f_EPTF_LGenBase_declareStep(c_SIP_myBName,{c_SIP_stepFunction_createNOTIFY,refers(f_SIP_step_createNOTIFY)}) or 
+    c_SIP_stepIdx_createREFER != f_EPTF_LGenBase_declareStep(c_SIP_myBName,{c_SIP_stepFunction_createREFER,refers(f_SIP_step_createREFER)}) or 
+    c_SIP_stepIdx_handleREFER != f_EPTF_LGenBase_declareStep(c_SIP_myBName,{c_SIP_stepFunction_handleREFER,refers(f_SIP_step_handleREFER)}) or
+    c_SIP_stepIdx_init != f_EPTF_LGenBase_declareStep(c_SIP_myBName,{c_SIP_stepFunction_init,refers(f_SIP_step_init)}) or
+    c_SIP_stepIdx_handleREGISTER != f_EPTF_LGenBase_declareStep(c_SIP_myBName,{c_SIP_stepFunction_handleREGISTER,refers(f_SIP_step_handleREGISTER)}) or
+    c_SIP_stepIdx_createREFERinDialog != f_EPTF_LGenBase_declareStep(c_SIP_myBName,{c_SIP_stepFunction_createREFERinDialog,refers(f_SIP_step_createREFERinDialog)}) or
+    c_SIP_stepIdx_createReINVITE != f_EPTF_LGenBase_declareStep(c_SIP_myBName,{c_SIP_stepFunction_createReINVITE,refers(f_SIP_step_createReINVITE)}) or
+    c_SIP_stepIdx_handleReINVITE != f_EPTF_LGenBase_declareStep(c_SIP_myBName,{c_SIP_stepFunction_handleReINVITE,refers(f_SIP_step_handleReINVITE)}) or
+    c_SIP_stepIdx_createUPDATE != f_EPTF_LGenBase_declareStep(c_SIP_myBName,{c_SIP_stepFunction_createUPDATE,refers(f_SIP_step_createUPDATE)}) or
+    c_SIP_stepIdx_handleUPDATE != f_EPTF_LGenBase_declareStep(c_SIP_myBName,{c_SIP_stepFunction_handleUPDATE,refers(f_SIP_step_handleUPDATE)}) or
+    c_SIP_stepIdx_createPRACK != f_EPTF_LGenBase_declareStep(c_SIP_myBName,{c_SIP_stepFunction_createPRACK,refers(f_SIP_step_createPRACK)}) or
+    c_SIP_stepIdx_handlePRACK != f_EPTF_LGenBase_declareStep(c_SIP_myBName,{c_SIP_stepFunction_handlePRACK,refers(f_SIP_step_handlePRACK)}) or
+    c_SIP_stepIdx_createOPTIONS != f_EPTF_LGenBase_declareStep(c_SIP_myBName,{c_SIP_stepFunction_createOPTIONS,refers(f_SIP_step_createOPTIONS)}) or
+    c_SIP_stepIdx_handleOPTIONS != f_EPTF_LGenBase_declareStep(c_SIP_myBName,{c_SIP_stepFunction_handleOPTIONS,refers(f_SIP_step_handleOPTIONS)}) or
+    c_SIP_stepIdx_handleRequest != f_EPTF_LGenBase_declareStep(c_SIP_myBName,{c_SIP_stepFunction_handleRequest,refers(f_SIP_step_handleRequest)}) or
+    c_SIP_stepIdx_createForwardedRequest != f_EPTF_LGenBase_declareStep(c_SIP_myBName,{c_SIP_stepFunction_createForwardedRequest,refers(f_SIP_step_createForwardedRequest)}) or
+    c_SIP_stepIdx_createRequestStateless != f_EPTF_LGenBase_declareStep(c_SIP_myBName,{c_SIP_stepFunction_createRequestStateless,refers(f_SIP_step_createRequestStateless)}) or
+c_SIP_stepIdx_createForwardedACK != f_EPTF_LGenBase_declareStep(c_SIP_myBName,{c_SIP_stepFunction_createForwardedACK,refers(f_SIP_step_createForwardedACK)}) or
+    c_SIP_stepIdx_createForwardedResponse != f_EPTF_LGenBase_declareStep(c_SIP_myBName,{c_SIP_stepFunction_createForwardedResponse,refers(f_SIP_step_createForwardedResponse)}) or
+    c_SIP_stepIdx_cleanUpDynamicData != f_EPTF_LGenBase_declareStep(c_SIP_myBName,{c_SIP_stepFunction_cleanUpDynamicData,refers(f_SIP_step_cleanUpDynamicData)}) or
+    c_SIP_stepIdx_handleINFO != f_EPTF_LGenBase_declareStep(c_SIP_myBName,{c_SIP_stepFunction_handleINFO,refers(f_SIP_step_handleINFO)}) or
+    c_SIP_stepIdx_createINFO != f_EPTF_LGenBase_declareStep(c_SIP_myBName,{c_SIP_stepFunction_createINFO,refers(f_SIP_step_createINFO)}) or
+    c_SIP_stepIdx_handleSUBSCRIBE != f_EPTF_LGenBase_declareStep(c_SIP_myBName,{c_SIP_stepFunction_handleSUBSCRIBE,refers(f_SIP_step_handleSUBSCRIBE)}) or
+    c_SIP_stepIdx_handleTransportError != f_EPTF_LGenBase_declareStep(c_SIP_myBName,{c_SIP_stepFunction_handleTransportError,refers(f_SIP_step_handleTransportError)}) or
+    c_SIP_stepIdx_handlePUBLISH != f_EPTF_LGenBase_declareStep(c_SIP_myBName,{c_SIP_stepFunction_handlePUBLISH,refers(f_SIP_step_handlePUBLISH)}) or
+    c_SIP_stepIdx_sendRequest != f_EPTF_LGenBase_declareStep(c_SIP_myBName,{c_SIP_stepFunction_sendRequest,refers(f_SIP_step_sendRequest)}) or
+    c_SIP_stepIdx_modifyRequestCallBack != f_EPTF_LGenBase_declareStep(c_SIP_myBName,{c_SIP_stepFunction_modifyRequestCallBack,refers(f_SIP_step_modifyRequestCallBack)}) or
+    c_SIP_stepIdx_generateINVITE != f_EPTF_LGenBase_declareStep(c_SIP_myBName,{c_SIP_stepFunction_generateINVITE,refers(f_SIP_step_generateINVITE)}) or
+    c_SIP_stepIdx_generateREGISTER != f_EPTF_LGenBase_declareStep(c_SIP_myBName,{c_SIP_stepFunction_generateREGISTER,refers(f_SIP_step_generateREGISTER)}) or
+    c_SIP_stepIdx_generateDEREGISTER != f_EPTF_LGenBase_declareStep(c_SIP_myBName,{c_SIP_stepFunction_generateDEREGISTER,refers(f_SIP_step_generateDEREGISTER)}) or
+    c_SIP_stepIdx_generateReINVITE != f_EPTF_LGenBase_declareStep(c_SIP_myBName,{c_SIP_stepFunction_generateReINVITE,refers(f_SIP_step_generateReINVITE)}) or
+    c_SIP_stepIdx_generateUPDATE != f_EPTF_LGenBase_declareStep(c_SIP_myBName,{c_SIP_stepFunction_generateUPDATE,refers(f_SIP_step_generateUPDATE)}) or
+    c_SIP_stepIdx_generateMESSAGE != f_EPTF_LGenBase_declareStep(c_SIP_myBName,{c_SIP_stepFunction_generateMESSAGE,refers(f_SIP_step_generateMESSAGE)}) or
+    c_SIP_stepIdx_generateCANCEL != f_EPTF_LGenBase_declareStep(c_SIP_myBName,{c_SIP_stepFunction_generateCANCEL,refers(f_SIP_step_generateCANCEL)}) or
+    c_SIP_stepIdx_generateSUBSCRIBE != f_EPTF_LGenBase_declareStep(c_SIP_myBName,{c_SIP_stepFunction_generateSUBSCRIBE,refers(f_SIP_step_generateSUBSCRIBE)}) or
+    c_SIP_stepIdx_generateRefreshSUBSCRIBE != f_EPTF_LGenBase_declareStep(c_SIP_myBName,{c_SIP_stepFunction_generateRefreshSUBSCRIBE,refers(f_SIP_step_generateRefreshSUBSCRIBE)}) or
+    c_SIP_stepIdx_generateRemoveSUBSCRIBE != f_EPTF_LGenBase_declareStep(c_SIP_myBName,{c_SIP_stepFunction_generateRemoveSUBSCRIBE,refers(f_SIP_step_generateRemoveSUBSCRIBE)}) or
+    c_SIP_stepIdx_generateREFER != f_EPTF_LGenBase_declareStep(c_SIP_myBName,{c_SIP_stepFunction_generateREFER,refers(f_SIP_step_generateREFER)}) or
+    c_SIP_stepIdx_generateREFERinDialog != f_EPTF_LGenBase_declareStep(c_SIP_myBName,{c_SIP_stepFunction_generateREFERinDialog,refers(f_SIP_step_generateREFERinDialog)}) or
+    c_SIP_stepIdx_generatePUBLISH != f_EPTF_LGenBase_declareStep(c_SIP_myBName,{c_SIP_stepFunction_generatePUBLISH,refers(f_SIP_step_generatePUBLISH)}) or
+    c_SIP_stepIdx_generateRefreshPUBLISH != f_EPTF_LGenBase_declareStep(c_SIP_myBName,{c_SIP_stepFunction_generateRefreshPUBLISH,refers(f_SIP_step_generateRefreshPUBLISH)}) or
+    c_SIP_stepIdx_generateModifyPUBLISH != f_EPTF_LGenBase_declareStep(c_SIP_myBName,{c_SIP_stepFunction_generateModifyPUBLISH,refers(f_SIP_step_generateModifyPUBLISH)}) or
+    c_SIP_stepIdx_generateRemovePUBLISH != f_EPTF_LGenBase_declareStep(c_SIP_myBName,{c_SIP_stepFunction_generateRemovePUBLISH,refers(f_SIP_step_generateRemovePUBLISH)}) or
+    c_SIP_stepIdx_generateResponse != f_EPTF_LGenBase_declareStep(c_SIP_myBName,{c_SIP_stepFunction_generateResponse,refers(f_SIP_step_generateResponse)}) or
+    c_SIP_stepIdx_generateACK != f_EPTF_LGenBase_declareStep(c_SIP_myBName,{c_SIP_stepFunction_generateACK,refers(f_SIP_step_generateACK)}) or
+    c_SIP_stepIdx_generateBYE != f_EPTF_LGenBase_declareStep(c_SIP_myBName,{c_SIP_stepFunction_generateBYE,refers(f_SIP_step_generateBYE)}) or
+    c_SIP_stepIdx_generateNOTIFY != f_EPTF_LGenBase_declareStep(c_SIP_myBName,{c_SIP_stepFunction_generateNOTIFY,refers(f_SIP_step_generateNOTIFY)}) or
+    c_SIP_stepIdx_generatePRACK != f_EPTF_LGenBase_declareStep(c_SIP_myBName,{c_SIP_stepFunction_generatePRACK,refers(f_SIP_step_generatePRACK)}) or
+    c_SIP_stepIdx_generateOPTIONS != f_EPTF_LGenBase_declareStep(c_SIP_myBName,{c_SIP_stepFunction_generateOPTIONS,refers(f_SIP_step_generateOPTIONS)}) or
+    c_SIP_stepIdx_generateINFO != f_EPTF_LGenBase_declareStep(c_SIP_myBName,{c_SIP_stepFunction_generateINFO,refers(f_SIP_step_generateINFO)}) or
+    c_SIP_stepIdx_generateRejectRequest != f_EPTF_LGenBase_declareStep(c_SIP_myBName,{c_SIP_stepFunction_generateRejectRequest,refers(f_SIP_step_generateRejectRequest)}) or
+    c_SIP_stepIdx_generateForwardedRequest != f_EPTF_LGenBase_declareStep(c_SIP_myBName,{c_SIP_stepFunction_generateForwardedRequest,refers(f_SIP_step_generateForwardedRequest)}) or
+    c_SIP_stepIdx_generateRequestStateless != f_EPTF_LGenBase_declareStep(c_SIP_myBName,{c_SIP_stepFunction_generateRequestStateless,refers(f_SIP_step_generateRequestStateless)}) or
+    c_SIP_stepIdx_generateForwardedACK != f_EPTF_LGenBase_declareStep(c_SIP_myBName,{c_SIP_stepFunction_generateForwardedACK,refers(f_SIP_step_generateForwardedACK)}) or
+    c_SIP_stepIdx_generateForwardedResponse != f_EPTF_LGenBase_declareStep(c_SIP_myBName,{c_SIP_stepFunction_generateForwardedResponse,refers(f_SIP_step_generateForwardedResponse)}) or
+    c_SIP_stepIdx_modifyResponseCallBack != f_EPTF_LGenBase_declareStep(c_SIP_myBName,{c_SIP_stepFunction_modifyResponseCallBack,refers(f_SIP_step_modifyResponseCallBack)}) or
+    c_SIP_stepIdx_sendResponse != f_EPTF_LGenBase_declareStep(c_SIP_myBName,{c_SIP_stepFunction_sendResponse,refers(f_SIP_step_sendResponse)}) or
+    c_SIP_stepIdx_sendSTUN != f_EPTF_LGenBase_declareStep(c_SIP_myBName,{c_SIP_stepFunction_sendSTUN,refers(f_SIP_step_sendSTUN)})
+    )
+  {
+    //fixme
+    f_EPTF_LGenBase_log();
+    log("error"); mtc.stop
+  }
+}
+function f_SIP_declareExternalTemplates()
+runs on EPTF_SIP_LGen_CT
+{
+  var integer i;  
+  var charstring vl_name;  
+
+  v_templateTypeIdx_REGISTER := f_EPTF_LGenBase_declareTemplateType(
+    {c_SIP_myBName, c_EPTF_SIP_extTemplateType_REGISTER}, 
+    {},
+    {"callId", "cSeq", "fromUsr", "localHost", "localTag", "transport", "localIP", "localPort", "trId", 
+     "contentLength", "remPort", "remHost", "toUsr", "reqHost", "reqPort", "proxyHost", "proxyPort", "auth", "authOpt", "proxyAuthOpt"});
+
+  v_templateTypeIdx_DEREGISTER := f_EPTF_LGenBase_declareTemplateType(
+    {c_SIP_myBName, c_EPTF_SIP_extTemplateType_DEREGISTER}, 
+    {},
+    {"callId", "cSeq", "fromUsr", "localHost", "localTag", "transport", "localIP", "localPort", "trId", 
+     "contentLength", "remPort", "remHost", "toUsr", "reqHost", "reqPort", "proxyHost", "proxyPort", "auth", "authOpt", "proxyAuthOpt"});
+
+  v_templateTypeIdx_INVITE := f_EPTF_LGenBase_declareTemplateType(
+    {c_SIP_myBName, c_EPTF_SIP_extTemplateType_INVITE}, 
+    {},
+    {"toUsr", "callId", "cSeq", "fromUsr", "localHost", "localTag", "transport", "localIP", "localPort", "trId", 
+     "remHost", "contentLength", "remPort", "proxyHost", "proxyPort", "auth", "authOpt", "proxyAuthOpt", "cType", 
+     "secondaryLocalHost", "secondaryTransport" });
+
+  v_templateTypeIdx_UPDATE := f_EPTF_LGenBase_declareTemplateType(
+    {c_SIP_myBName, c_EPTF_SIP_extTemplateType_UPDATE}, 
+    {},
+    {"toUsr", "callId", "cSeq", "fromUsr", "localHost", "localTag", "transport", "localIP", "localPort", "trId", 
+     "remHost", "contentLength", "remPort", "proxyHost", "proxyPort", "auth", "authOpt", "proxyAuthOpt", "cType", 
+     "secondaryLocalHost", "secondaryTransport" });
+
+  for (i := 0; i < 700; i := i + 1) { v_templateTypeIdx_Responses[i] := {}; }
+
+  vl_name := c_EPTF_SIP_extTemplateType_100TRYING;
+  for (i := 0; i < tsp_EPTF_SIP_maxResponseTemplates; i := i + 1) {
+    if (i>0) { vl_name := c_EPTF_SIP_extTemplateType_100TRYING & "." & int2str(i); }
+    v_templateTypeIdx_Responses[100][i] := f_EPTF_LGenBase_declareTemplateType({c_SIP_myBName, vl_name}, 
+      {},
+      {"toUsr", "callId", "cSeq", "fromUsr", "localHost", "localTag", "transport", "localIP", "localPort", "trId",
+       "remHost", "contentLength", "remPort", "proxyHost", "proxyPort", "auth", "authOpt", "proxyAuthOpt", "extraHeaders"});
+  }
+
+  vl_name := c_EPTF_SIP_extTemplateType_180RINGING;
+  for (i := 0; i < tsp_EPTF_SIP_maxResponseTemplates; i := i + 1) {
+    if (i>0) { vl_name := c_EPTF_SIP_extTemplateType_180RINGING & "." & int2str(i); }
+    v_templateTypeIdx_Responses[180][i] := f_EPTF_LGenBase_declareTemplateType({c_SIP_myBName, vl_name}, 
+      {},
+      {"toUsr", "callId", "cSeq", "fromUsr", "localHost", "localTag", "transport", "localIP", "localPort", "trId",
+       "remHost", "contentLength", "remPort", "proxyHost", "proxyPort", "auth", "authOpt", "proxyAuthOpt", "extraHeaders"});
+  }
+
+  vl_name := c_EPTF_SIP_extTemplateType_181CallIsBeingForwarded;
+  for (i := 0; i < tsp_EPTF_SIP_maxResponseTemplates; i := i + 1) {
+    if (i>0) { vl_name := c_EPTF_SIP_extTemplateType_181CallIsBeingForwarded & "." & int2str(i); }
+    v_templateTypeIdx_Responses[181][i] := f_EPTF_LGenBase_declareTemplateType({c_SIP_myBName, vl_name}, 
+      {},
+      {"toUsr", "callId", "cSeq", "fromUsr", "localHost", "localTag", "transport", "localIP", "localPort", "trId",
+       "remHost", "contentLength", "remPort", "proxyHost", "proxyPort", "auth", "authOpt", "proxyAuthOpt", "extraHeaders"});
+  }
+
+  vl_name := c_EPTF_SIP_extTemplateType_183SESSIONPROGRESS;
+  for (i := 0; i < tsp_EPTF_SIP_maxResponseTemplates; i := i + 1) {
+    if (i>0) { vl_name := c_EPTF_SIP_extTemplateType_183SESSIONPROGRESS & "." & int2str(i); }
+    v_templateTypeIdx_Responses[183][i] := f_EPTF_LGenBase_declareTemplateType({c_SIP_myBName, vl_name}, 
+      {},
+      {"toUsr", "callId", "cSeq", "fromUsr", "localHost", "localTag", "transport", "localIP", "localPort", "trId",
+       "remHost", "contentLength", "remPort", "proxyHost", "proxyPort", "auth", "authOpt", "proxyAuthOpt", "extraHeaders"});
+  }
+
+  vl_name := c_EPTF_SIP_extTemplateType_200OK;
+  for (i := 0; i < tsp_EPTF_SIP_maxResponseTemplates; i := i + 1) {
+    if (i>0) { vl_name := c_EPTF_SIP_extTemplateType_200OK & "." & int2str(i); }
+    v_templateTypeIdx_Responses[200][i] := f_EPTF_LGenBase_declareTemplateType({c_SIP_myBName, vl_name}, 
+      {},
+      {"toUsr", "callId", "cSeq", "fromUsr", "localHost", "localTag", "transport", "localIP", "localPort", "trId",
+       "remHost", "contentLength", "remPort", "proxyHost", "proxyPort", "auth", "authOpt", "proxyAuthOpt", "extraHeaders"});
+  }
+
+  v_templateTypeIdx_reINVITE := f_EPTF_LGenBase_declareTemplateType(
+    {c_SIP_myBName, c_EPTF_SIP_extTemplateType_reINVITE}, 
+    {},
+    {"toUsr", "callId", "cSeq", "fromUsr", "localHost", "localTag", "transport", "localIP", "localPort", "trId", "remoteTag",
+     "remHost", "contentLength", "remPort", "proxyHost", "proxyPort", "auth", "authOpt", "proxyAuthOpt", 
+     "secondaryLocalHost", "secondaryTransport"});
+
+  v_templateTypeIdx_PRACK := f_EPTF_LGenBase_declareTemplateType( // review
+    {c_SIP_myBName, c_EPTF_SIP_extTemplateType_PRACK}, 
+    {},
+    {"toUsr", "callId", "cSeq", "fromUsr", "localHost", "localTag", "transport", "localIP", "localPort", "trId",
+     "remHost", "contentLength", "remPort", "proxyHost", "proxyPort", "auth", "authOpt", "proxyAuthOpt", "rSeq", "rSeqNum"});
+
+  v_templateTypeIdx_BYE := f_EPTF_LGenBase_declareTemplateType(
+    {c_SIP_myBName, c_EPTF_SIP_extTemplateType_BYE}, 
+    {},
+    {"toUsr", "remHost", "callId", "cSeq", "fromUsr", "localHost", "localTag", "transport", "localIP", "localPort", "trId",
+     "contentLength", "remPort", "requestURI", "proxyHost", "proxyPort", "auth", "authOpt", "proxyAuthOpt", "remoteTag"});
+
+  v_templateTypeIdx_ACK := {};
+
+  vl_name := c_EPTF_SIP_extTemplateType_ACK; 
+  for (i := 0; i < tsp_EPTF_SIP_maxRequestTemplates; i := i + 1) {
+    if (i>0) { vl_name := c_EPTF_SIP_extTemplateType_ACK & "." & int2str(i); }
+    v_templateTypeIdx_ACK[i] := f_EPTF_LGenBase_declareTemplateType({c_SIP_myBName, vl_name}, 
+      {},
+      {"toUsr", "remHost", "callId", "cSeq", "fromUsr", "localHost", "localTag", "transport", "localIP", "localPort", "trId",
+       "contentLength", "remPort", "requestURI", "proxyHost", "proxyPort", "auth", "authOpt", "proxyAuthOpt", "remoteTag"});
+  }
+
+  v_templateTypeIdx_initPUBLISH := f_EPTF_LGenBase_declareTemplateType(
+    {c_SIP_myBName, c_EPTF_SIP_extTemplateType_initPUBLISH}, 
+    {},
+    {"toUsr", "remHost", "callId", "cSeq", "fromUsr", "localHost", "localTag", "transport", "localIP", "localPort", "trId",
+     "contentLength", "remPort", "expires", "proxyHost", "proxyPort", "auth", "authOpt", "proxyAuthOpt"});
+
+  v_templateTypeIdx_modifyPUBLISH := f_EPTF_LGenBase_declareTemplateType(
+    {c_SIP_myBName, c_EPTF_SIP_extTemplateType_modifyPUBLISH}, 
+    {},
+    {"toUsr", "remHost", "callId", "cSeq", "fromUsr", "localHost", "localTag", "transport", "localIP", "localPort", "trId", "eTag",
+     "contentLength", "remPort", "expires", "proxyHost", "proxyPort", "auth", "authOpt", "proxyAuthOpt"});
+
+  v_templateTypeIdx_initSUBSCRIBE := f_EPTF_LGenBase_declareTemplateType(
+    {c_SIP_myBName, c_EPTF_SIP_extTemplateType_initSUBSCRIBE}, 
+    {},
+    {"toUsr", "remHost", "callId", "cSeq", "fromUsr", "localHost", "localTag", "transport", "localIP", "localPort", "trId",
+     "contentLength", "remPort", "expires", "proxyHost", "proxyPort", "auth", "authOpt", "proxyAuthOpt"});
+
+  v_templateTypeIdx_refreshSUBSCRIBE := f_EPTF_LGenBase_declareTemplateType(
+    {c_SIP_myBName, c_EPTF_SIP_extTemplateType_refreshSUBSCRIBE}, 
+    {},
+    {"toUsr", "remHost", "callId", "cSeq", "fromUsr", "localHost", "localTag", "transport", "localIP", "localPort", "trId", "remoteTag",
+     "contentLength", "remPort", "expires", "requestURI", "proxyHost", "proxyPort", "auth", "authOpt", "proxyAuthOpt"});
+
+  v_templateTypeIdx_MESSAGE := f_EPTF_LGenBase_declareTemplateType(
+    {c_SIP_myBName, c_EPTF_SIP_extTemplateType_MESSAGE}, 
+    {},
+    {"toUsr", "remHost", "callId", "cSeq", "fromUsr", "localHost", "localTag", "transport", "localIP", "localPort", "trId",
+     "contentLength", "remPort", "proxyHost", "proxyPort", "auth", "authOpt", "proxyAuthOpt"});
+
+  v_templateTypeIdx_OPTIONS := f_EPTF_LGenBase_declareTemplateType(
+    {c_SIP_myBName, c_EPTF_SIP_extTemplateType_OPTIONS}, 
+    {},
+    {"callId", "cSeq", "fromUsr", "localHost", "localTag", "transport", "localIP", "localPort", "trId",
+     "contentLength", "remPort", "remHost", "toUsr", "proxyHost", "proxyPort", "auth", "authOpt", "proxyAuthOpt"});
+     
+  v_templateTypeIdx_CANCEL := f_EPTF_LGenBase_declareTemplateType(
+    {c_SIP_myBName, c_EPTF_SIP_extTemplateType_CANCEL}, 
+    {},
+    {"toUsr", "callId", "cSeq", "fromUsr", "localHost", "localTag", "transport", "localIP", "localPort", "trId", 
+     "remHost", "contentLength", "remPort", "proxyHost", "proxyPort", "auth", "authOpt", "proxyAuthOpt", "cType", 
+     "secondaryLocalHost", "secondaryTransport" });
+
+  v_templateTypeIdx_INFO := f_EPTF_LGenBase_declareTemplateType(
+    {c_SIP_myBName, c_EPTF_SIP_extTemplateType_INFO}, 
+    {},
+    {"toUsr", "callId", "cSeq", "fromUsr", "localHost", "localTag", "transport", "localIP", "localPort", "trId", 
+     "remHost", "contentLength", "remPort", "proxyHost", "proxyPort", "auth", "authOpt", "proxyAuthOpt", "cType", 
+     "secondaryLocalHost", "secondaryTransport" });
+      
+  v_templateTypeIdx_NOTIFY := f_EPTF_LGenBase_declareTemplateType(
+    {c_SIP_myBName, c_EPTF_SIP_extTemplateType_NOTIFY}, 
+    {},
+    {"toUsr", "callId", "cSeq", "fromUsr", "localHost", "localTag", "transport", "localIP", "localPort", "trId", 
+     "remHost", "contentLength", "remPort", "proxyHost", "proxyPort", "auth", "authOpt", "proxyAuthOpt", "cType", 
+     "secondaryLocalHost", "secondaryTransport", "remoteTag", "expires", "subscrState", "event", "eventId" });
+
+  v_templateTypeIdx_REFER := f_EPTF_LGenBase_declareTemplateType(
+    {c_SIP_myBName, c_EPTF_SIP_extTemplateType_REFER}, 
+    {},
+    {"toUsr", "callId", "cSeq", "fromUsr", "localHost", "localTag", "transport", "localIP", "localPort", "trId", 
+     "remHost", "contentLength", "remPort", "proxyHost", "proxyPort", "auth", "authOpt", "proxyAuthOpt", "cType", 
+     "secondaryLocalHost", "secondaryTransport" });    
+///////////
+  v_templateTypeIdx_REGISTER_BODY := f_EPTF_LGenBase_declareTemplateType(
+    {c_SIP_myBName, c_EPTF_SIP_extTemplateType_REGISTER_BODY}, 
+    {},
+    {"callId", "cSeq", "fromUsr", "localHost", "localTag", "transport", "localIP", "localPort", "trId",
+     "remPort", "remHost", "toUsr", "reqHost", "reqPort", "proxyHost", "proxyPort", "auth", "authOpt", "proxyAuthOpt",
+     "localMediaIP", "localMediaPort", "remoteMediaIP", "remoteMediaPort"});
+
+  v_templateTypeIdx_DEREGISTER_BODY := f_EPTF_LGenBase_declareTemplateType(
+    {c_SIP_myBName, c_EPTF_SIP_extTemplateType_DEREGISTER_BODY}, 
+    {},
+    {"callId", "cSeq", "fromUsr", "localHost", "localTag", "transport", "localIP", "localPort", "trId",
+     "remPort", "remHost", "toUsr", "reqHost", "reqPort", "proxyHost", "proxyPort", "auth", "authOpt", "proxyAuthOpt",
+     "localMediaIP", "localMediaPort", "remoteMediaIP", "remoteMediaPort"});
+
+  v_templateTypeIdx_INVITE_BODY := f_EPTF_LGenBase_declareTemplateType(
+    {c_SIP_myBName, c_EPTF_SIP_extTemplateType_INVITE_BODY}, 
+    {},
+    {"toUsr", "remHost", "callId", "cSeq", "fromUsr", "localHost", "localTag", "transport", "localIP", "localPort", "trId",
+     "remPort", "proxyHost", "proxyPort", "auth", "authOpt", "proxyAuthOpt",
+     "localMediaIP", "localMediaPort", "remoteMediaIP", "remoteMediaPort"});
+
+  v_templateTypeIdx_UPDATE_BODY := f_EPTF_LGenBase_declareTemplateType(
+    {c_SIP_myBName, c_EPTF_SIP_extTemplateType_UPDATE_BODY}, 
+    {},
+    {"toUsr", "callId", "cSeq", "fromUsr", "localHost", "localTag", "transport", "localIP", "localPort", "trId", 
+     "remHost", "contentLength", "remPort", "proxyHost", "proxyPort", "auth", "authOpt", "proxyAuthOpt", "cType", 
+     "secondaryLocalHost", "secondaryTransport",
+     "localMediaIP", "localMediaPort", "remoteMediaIP", "remoteMediaPort" });
+
+  for (i := 0; i < 700; i := i + 1) { v_templateTypeIdx_Responses_BODY[i] := {}; }
+
+  vl_name := c_EPTF_SIP_extTemplateType_100TRYING_BODY; 
+  for (i := 0; i < tsp_EPTF_SIP_maxResponseTemplates; i := i + 1) {
+    if (i>0) { vl_name := c_EPTF_SIP_extTemplateType_100TRYING_BODY & "." & int2str(i); }
+    v_templateTypeIdx_Responses_BODY[100][i] := f_EPTF_LGenBase_declareTemplateType({c_SIP_myBName, vl_name}, 
+      {},
+      {"toUsr", "remHost", "callId", "cSeq", "fromUsr", "localHost", "localTag", "transport", "localIP", "localPort", "trId",
+       "remPort", "proxyHost", "proxyPort", "auth", "authOpt", "proxyAuthOpt",
+       "localMediaIP", "localMediaPort", "remoteMediaIP", "remoteMediaPort"});
+  }
+  
+  vl_name := c_EPTF_SIP_extTemplateType_181CallIsBeingForwarded_BODY; 
+  for (i := 0; i < tsp_EPTF_SIP_maxResponseTemplates; i := i + 1) {
+    if (i>0) { vl_name := c_EPTF_SIP_extTemplateType_181CallIsBeingForwarded_BODY & "." & int2str(i); }
+    v_templateTypeIdx_Responses_BODY[181][i] := f_EPTF_LGenBase_declareTemplateType({c_SIP_myBName, vl_name}, 
+      {},
+      {"toUsr", "remHost", "callId", "cSeq", "fromUsr", "localHost", "localTag", "transport", "localIP", "localPort", "trId",
+       "remPort", "proxyHost", "proxyPort", "auth", "authOpt", "proxyAuthOpt",
+       "localMediaIP", "localMediaPort", "remoteMediaIP", "remoteMediaPort"});
+  }
+  
+  vl_name := c_EPTF_SIP_extTemplateType_180RINGING_BODY; 
+  for (i := 0; i < tsp_EPTF_SIP_maxResponseTemplates; i := i + 1) {
+    if (i>0) { vl_name := c_EPTF_SIP_extTemplateType_180RINGING_BODY & "." & int2str(i); }
+    v_templateTypeIdx_Responses_BODY[180][i] := f_EPTF_LGenBase_declareTemplateType({c_SIP_myBName, vl_name}, 
+      {},
+      {"toUsr", "remHost", "callId", "cSeq", "fromUsr", "localHost", "localTag", "transport", "localIP", "localPort", "trId",
+       "remPort", "proxyHost", "proxyPort", "auth", "authOpt", "proxyAuthOpt",
+       "localMediaIP", "localMediaPort", "remoteMediaIP", "remoteMediaPort"});
+  }
+
+  vl_name := c_EPTF_SIP_extTemplateType_183SESSIONPROGRESS_BODY; 
+  for (i := 0; i < tsp_EPTF_SIP_maxResponseTemplates; i := i + 1) {
+    if (i>0) { vl_name := c_EPTF_SIP_extTemplateType_183SESSIONPROGRESS_BODY & "." & int2str(i); }
+    v_templateTypeIdx_Responses_BODY[183][i] := f_EPTF_LGenBase_declareTemplateType({c_SIP_myBName, vl_name}, 
+      {},
+      {"toUsr", "remHost", "callId", "cSeq", "fromUsr", "localHost", "localTag", "transport", "localIP", "localPort", "trId",
+       "remPort", "proxyHost", "proxyPort", "auth", "authOpt", "proxyAuthOpt",
+       "localMediaIP", "localMediaPort", "remoteMediaIP", "remoteMediaPort"});
+  }
+ 
+  vl_name := c_EPTF_SIP_extTemplateType_200OK_BODY; 
+  for (i := 0; i < tsp_EPTF_SIP_maxResponseTemplates; i := i + 1) {
+    if (i>0) { vl_name := c_EPTF_SIP_extTemplateType_200OK_BODY & "." & int2str(i); }
+    v_templateTypeIdx_Responses_BODY[200][i] := f_EPTF_LGenBase_declareTemplateType({c_SIP_myBName, vl_name}, 
+      {},
+      {"toUsr", "remHost", "callId", "cSeq", "fromUsr", "localHost", "localTag", "transport", "localIP", "localPort", "trId",
+       "remPort", "proxyHost", "proxyPort", "auth", "authOpt", "proxyAuthOpt",
+       "localMediaIP", "localMediaPort", "remoteMediaIP", "remoteMediaPort"});
+  }
+
+  v_templateTypeIdx_reINVITE_BODY := f_EPTF_LGenBase_declareTemplateType(
+    {c_SIP_myBName, c_EPTF_SIP_extTemplateType_reINVITE_BODY}, 
+    {},
+    {"toUsr", "remHost", "callId", "cSeq", "fromUsr", "localHost", "localTag", "transport", "localIP", "localPort", "trId",
+     "remPort", "proxyHost", "proxyPort", "auth", "authOpt", "proxyAuthOpt",
+     "localMediaIP", "localMediaPort", "remoteMediaIP", "remoteMediaPort"});
+
+  v_templateTypeIdx_PRACK_BODY := f_EPTF_LGenBase_declareTemplateType(
+    {c_SIP_myBName, c_EPTF_SIP_extTemplateType_PRACK_BODY}, 
+    {},
+    {"toUsr", "remHost", "callId", "cSeq", "fromUsr", "localHost", "localTag", "transport", "localIP", "localPort", "trId",
+     "remPort", "proxyHost", "proxyPort", "auth", "authOpt", "proxyAuthOpt",
+     "localMediaIP", "localMediaPort", "remoteMediaIP", "remoteMediaPort"});
+
+  v_templateTypeIdx_BYE_BODY := f_EPTF_LGenBase_declareTemplateType(
+    {c_SIP_myBName, c_EPTF_SIP_extTemplateType_BYE_BODY}, 
+    {},
+    {"toUsr", "remHost", "callId", "cSeq", "fromUsr", "localHost", "localTag", "transport", "localIP", "localPort", "trId", "remoteTag",
+     "remPort", "requestURI", "proxyHost", "proxyPort", "auth", "authOpt", "proxyAuthOpt",
+     "localMediaIP", "localMediaPort", "remoteMediaIP", "remoteMediaPort"});
+
+  v_templateTypeIdx_ACK_BODY := {};
+
+  vl_name := c_EPTF_SIP_extTemplateType_ACK_BODY; 
+  for (i := 0; i < tsp_EPTF_SIP_maxRequestTemplates; i := i + 1) {
+    if (i>0) { vl_name := c_EPTF_SIP_extTemplateType_ACK_BODY & "." & int2str(i); }
+    v_templateTypeIdx_ACK_BODY[i] := f_EPTF_LGenBase_declareTemplateType({c_SIP_myBName, vl_name}, 
+      {},
+      {"toUsr", "remHost", "callId", "cSeq", "fromUsr", "localHost", "localTag", "transport", "localIP", "localPort", "trId", "remoteTag",
+       "remPort", "requestURI", "proxyHost", "proxyPort", "auth", "authOpt", "proxyAuthOpt",
+       "localMediaIP", "localMediaPort", "remoteMediaIP", "remoteMediaPort"});
+  }
+
+  v_templateTypeIdx_initPUBLISH_BODY := f_EPTF_LGenBase_declareTemplateType(
+    {c_SIP_myBName, c_EPTF_SIP_extTemplateType_initPUBLISH_BODY}, 
+    {},
+    {"toUsr", "remHost", "callId", "cSeq", "fromUsr", "localHost", "localTag", "transport", "localIP", "localPort", "trId",
+     "remPort", "expires", "proxyHost", "proxyPort", "auth", "authOpt", "proxyAuthOpt",
+     "localMediaIP", "localMediaPort", "remoteMediaIP", "remoteMediaPort"});
+  
+  v_templateTypeIdx_modifyPUBLISH_BODY := f_EPTF_LGenBase_declareTemplateType(
+    {c_SIP_myBName, c_EPTF_SIP_extTemplateType_modifyPUBLISH_BODY}, 
+    {},
+    {"toUsr", "remHost", "callId", "cSeq", "fromUsr", "localHost", "localTag", "transport", "localIP", "localPort", "trId", "eTag",
+     "remPort", "expires", "proxyHost", "proxyPort", "auth", "authOpt", "proxyAuthOpt",
+     "localMediaIP", "localMediaPort", "remoteMediaIP", "remoteMediaPort"});
+
+  v_templateTypeIdx_initSUBSCRIBE_BODY := f_EPTF_LGenBase_declareTemplateType(
+    {c_SIP_myBName, c_EPTF_SIP_extTemplateType_initSUBSCRIBE_BODY}, 
+    {},
+    {"toUsr", "remHost", "callId", "cSeq", "fromUsr", "localHost", "localTag", "transport", "localIP", "localPort", "trId",
+     "remPort", "expires", "proxyHost", "proxyPort", "auth", "authOpt", "proxyAuthOpt",
+     "localMediaIP", "localMediaPort", "remoteMediaIP", "remoteMediaPort"});
+
+  v_templateTypeIdx_refreshSUBSCRIBE_BODY := f_EPTF_LGenBase_declareTemplateType(
+    {c_SIP_myBName, c_EPTF_SIP_extTemplateType_refreshSUBSCRIBE_BODY}, 
+    {},
+    {"toUsr", "remHost", "callId", "cSeq", "fromUsr", "localHost", "localTag", "transport", "localIP", "localPort", "trId", "remoteTag",
+     "remPort", "expires", "requestURI", "proxyHost", "proxyPort", "auth", "authOpt", "proxyAuthOpt",
+     "localMediaIP", "localMediaPort", "remoteMediaIP", "remoteMediaPort"});
+
+  v_templateTypeIdx_MESSAGE_BODY := f_EPTF_LGenBase_declareTemplateType(
+    {c_SIP_myBName, c_EPTF_SIP_extTemplateType_MESSAGE_BODY}, 
+    {},
+    {"toUsr", "remHost", "callId", "cSeq", "fromUsr", "localHost", "localTag", "transport", "localIP", "localPort", "trId",
+     "remPort", "proxyHost", "proxyPort", "auth", "authOpt", "proxyAuthOpt",
+     "localMediaIP", "localMediaPort", "remoteMediaIP", "remoteMediaPort"});
+
+  v_templateTypeIdx_OPTIONS_BODY := f_EPTF_LGenBase_declareTemplateType(
+    {c_SIP_myBName, c_EPTF_SIP_extTemplateType_OPTIONS_BODY}, 
+    {},
+    {"toUsr", "remHost", "callId", "cSeq", "fromUsr", "localHost", "localTag", "transport", "localIP", "localPort", "trId",
+     "remPort", "proxyHost", "proxyPort", "auth", "authOpt", "proxyAuthOpt",
+     "localMediaIP", "localMediaPort", "remoteMediaIP", "remoteMediaPort"});
+ 
+  v_templateTypeIdx_CANCEL_BODY := f_EPTF_LGenBase_declareTemplateType(
+    {c_SIP_myBName, c_EPTF_SIP_extTemplateType_CANCEL_BODY}, 
+    {},
+    {"toUsr", "remHost", "callId", "cSeq", "fromUsr", "localHost", "localTag", "transport", "localIP", "localPort", "trId",
+     "remPort", "proxyHost", "proxyPort", "auth", "authOpt", "proxyAuthOpt",
+     "localMediaIP", "localMediaPort", "remoteMediaIP", "remoteMediaPort"});
+
+  v_templateTypeIdx_INFO_BODY := f_EPTF_LGenBase_declareTemplateType(
+    {c_SIP_myBName, c_EPTF_SIP_extTemplateType_INFO_BODY}, 
+    {},
+    {"toUsr", "remHost", "callId", "cSeq", "fromUsr", "localHost", "localTag", "transport", "localIP", "localPort", "trId",
+     "remPort", "proxyHost", "proxyPort", "auth", "authOpt", "proxyAuthOpt",
+     "localMediaIP", "localMediaPort", "remoteMediaIP", "remoteMediaPort"}); 
+
+  v_templateTypeIdx_NOTIFY_BODY := f_EPTF_LGenBase_declareTemplateType(
+    {c_SIP_myBName, c_EPTF_SIP_extTemplateType_NOTIFY_BODY}, 
+    {},
+    {"toUsr", "remHost", "callId", "cSeq", "fromUsr", "localHost", "localTag", "transport", "localIP", "localPort", "trId",
+     "remPort", "proxyHost", "proxyPort", "auth", "authOpt", "proxyAuthOpt",
+     "localMediaIP", "localMediaPort", "remoteMediaIP", "remoteMediaPort"});
+
+  v_templateTypeIdx_REFER_BODY := f_EPTF_LGenBase_declareTemplateType(
+    {c_SIP_myBName, c_EPTF_SIP_extTemplateType_REFER_BODY}, 
+    {},
+    {"toUsr", "remHost", "callId", "cSeq", "fromUsr", "localHost", "localTag", "transport", "localIP", "localPort", "trId",
+     "remPort", "proxyHost", "proxyPort", "auth", "authOpt", "proxyAuthOpt",
+     "localMediaIP", "localMediaPort", "remoteMediaIP", "remoteMediaPort"});
+}
+
+////////////////////////////////////////////////////
+//Function: f_SIP_setMsgFunctions
+//
+//Purpose:
+//  Sets the functions that should be set from the transport layer. 
+//
+//Parameters:
+//  - pl_sendMethod - *in* <fcb_EPTF_SIP_SendMessage_FT> - the function reference to send a SIP message
+//  - pl_removeUasMethod - *in* <fcb_EPTF_SIP_RemoveTransaction> - the function to remove the connection data
+//            belonging to a UAS. "... requires the server transport to maintain an association
+//            between server transactions and transport connections ..." RFC3261, 18.2.2
+//
+////////////////////////////////////////////////////
+function f_SIP_setMsgFunctions(
+  in fcb_EPTF_SIP_SendMessage_FT pl_sendMethod,
+  in fcb_EPTF_SIP_RemoveTransaction pl_removeUasMethod := null
+)
+runs on EPTF_SIP_LGen_CT
+{
+  vf_EPTF_SIP_LGen_msgSender         := pl_sendMethod ;  //send callback function on LGen
+  v_removeUAS                        := pl_removeUasMethod; //FIXME ZG: setter method!
+}
+
+function f_EPTF_SIP_setRequestHandlerTU(in fcb_EPTF_SIP_requestHandlerTU pl_requestHandlerTU)
+runs on EPTF_SIP_LGen_CT
+{
+  v_requestHandlerTU := pl_requestHandlerTU;
+}
+
+function f_EPTF_SIP_setSearchFunc(in fcb_EPTF_SIP_User_FindByURI pl_searchFunc)
+runs on EPTF_SIP_LGen_CT
+{
+  v_userSearchFunc := pl_searchFunc;
+}
+
+function f_EPTF_SIP_setSTUNCallBacks(
+  in fcb_EPTF_SIP_getSTUNPayload pl_getSTUNPayload, 
+  in fcb_EPTF_SIP_getSTUNHostName pl_getSTUNHostName)
+runs on EPTF_SIP_LGen_CT
+{
+  vcb_EPTF_SIP_getSTUNPayload := pl_getSTUNPayload;
+  vcb_EPTF_SIP_getSTUNHostName := pl_getSTUNHostName
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_addDomain
+//
+//Purpose:
+//  Configures the domains to handle by the AppLib.
+//
+//Parameters:
+//  - pl_domain - *in* *charstring* - 
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_addDomain(in charstring pl_domain)
+runs on EPTF_SIP_LGen_CT
+{
+  v_domains[sizeof(v_domains)] := pl_domain;
+}
+
+function f_EPTF_SIP_setTimerC(in float pl_timerValue)
+runs on EPTF_SIP_LGen_CT
+{
+  v_timerC := pl_timerValue;
+}
+
+function f_SIP_initStats()
+runs on EPTF_SIP_LGen_CT
+{
+  var charstring vl_namePrefix := f_SIP_getStatNamePrefix();
+
+  f_EPTF_Var_newInt(vl_namePrefix & c_EPTF_SIP_statName_nofDiscarded, 0, v_statIdx_nofDiscarded);
+  f_EPTF_Var_newInt(vl_namePrefix & c_EPTF_SIP_statName_UACRetransmissions, 0, v_statIdx_nofUACRetransmissions);
+  f_EPTF_Var_newInt(vl_namePrefix & c_EPTF_SIP_statName_UASRetransmissions, 0, v_statIdx_nofUASRetransmissions);
+  f_EPTF_Var_newInt(vl_namePrefix & c_EPTF_SIP_statName_RetransmittedRequest, 0, v_statIdx_nofRetransmittedRequest);
+  f_EPTF_Var_newInt(vl_namePrefix & c_EPTF_SIP_statName_RetransmittedResponse, 0, v_statIdx_nofRetransmittedResponse);
+  f_EPTF_Var_newInt(vl_namePrefix & c_EPTF_SIP_statName_UACTimeouts, 0, v_statIdx_nofUACTimeouts);
+  f_EPTF_Var_newInt(vl_namePrefix & c_EPTF_SIP_statName_UASTimeouts, 0, v_statIdx_nofUASTimeouts);
+  f_EPTF_Var_newInt(vl_namePrefix & c_EPTF_SIP_statName_nofFSMRetransmission, 0, v_statIdx_nofFSMRetransmission);
+
+  v_statistics.statusCode2Idx := f_EPTF_int2int_HashMap_New(c_EPTF_SIP_hashMapName_statusCode2Idx);
+  v_statistics.reasonPhrase2Idx := f_EPTF_str2int_HashMap_New(c_EPTF_SIP_hashMapName_reasonPhrase2Idx);
+  v_statistics.outgoing.requests := {};
+  v_statistics.outgoing.responses := {};
+  v_statistics.incoming.requests := {};
+  v_statistics.incoming.responses := {};
+
+  //requests
+  var Method vl_method;
+  
+  vl_method := ACK_E;
+  f_EPTF_Var_newInt(vl_namePrefix & c_EPTF_SIP_statName_nofOutACK, 0, v_statistics.outgoing.requests[enum2int(vl_method)].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix & c_EPTF_SIP_statName_nofOutRetransACK, 0, v_statistics.outgoing.requests[enum2int(vl_method)].retrans_k);
+  f_EPTF_Var_newInt(vl_namePrefix & c_EPTF_SIP_statName_nofIncACK, 0, v_statistics.incoming.requests[enum2int(vl_method)].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix & c_EPTF_SIP_statName_nofIncRetransACK, 0, v_statistics.incoming.requests[enum2int(vl_method)].retrans_k);
+
+  vl_method := BYE_E;
+  f_EPTF_Var_newInt(vl_namePrefix & c_EPTF_SIP_statName_nofOutBYE, 0, v_statistics.outgoing.requests[enum2int(vl_method)].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix & c_EPTF_SIP_statName_nofOutRetransBYE, 0, v_statistics.outgoing.requests[enum2int(vl_method)].retrans_k);
+  f_EPTF_Var_newInt(vl_namePrefix & c_EPTF_SIP_statName_nofIncBYE, 0, v_statistics.incoming.requests[enum2int(vl_method)].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix & c_EPTF_SIP_statName_nofIncRetransBYE, 0, v_statistics.incoming.requests[enum2int(vl_method)].retrans_k);
+
+  vl_method := CANCEL_E;
+  f_EPTF_Var_newInt(vl_namePrefix & c_EPTF_SIP_statName_nofOutCANCEL, 0, v_statistics.outgoing.requests[enum2int(vl_method)].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix & c_EPTF_SIP_statName_nofOutRetransCANCEL, 0, v_statistics.outgoing.requests[enum2int(vl_method)].retrans_k);
+  f_EPTF_Var_newInt(vl_namePrefix & c_EPTF_SIP_statName_nofIncCANCEL, 0, v_statistics.incoming.requests[enum2int(vl_method)].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix & c_EPTF_SIP_statName_nofIncRetransCANCEL, 0, v_statistics.incoming.requests[enum2int(vl_method)].retrans_k);
+
+  vl_method := INFO_E;
+  f_EPTF_Var_newInt(vl_namePrefix & c_EPTF_SIP_statName_nofOutINFO, 0, v_statistics.outgoing.requests[enum2int(vl_method)].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix & c_EPTF_SIP_statName_nofOutRetransINFO, 0, v_statistics.outgoing.requests[enum2int(vl_method)].retrans_k);
+  f_EPTF_Var_newInt(vl_namePrefix & c_EPTF_SIP_statName_nofIncINFO, 0, v_statistics.incoming.requests[enum2int(vl_method)].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix & c_EPTF_SIP_statName_nofIncRetransINFO, 0, v_statistics.incoming.requests[enum2int(vl_method)].retrans_k);
+
+  vl_method := INVITE_E;
+  f_EPTF_Var_newInt(vl_namePrefix & c_EPTF_SIP_statName_nofOutINVITE, 0, v_statistics.outgoing.requests[enum2int(vl_method)].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix & c_EPTF_SIP_statName_nofOutRetransINVITE, 0, v_statistics.outgoing.requests[enum2int(vl_method)].retrans_k);
+  f_EPTF_Var_newInt(vl_namePrefix & c_EPTF_SIP_statName_nofIncINVITE, 0, v_statistics.incoming.requests[enum2int(vl_method)].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix & c_EPTF_SIP_statName_nofIncRetransINVITE, 0, v_statistics.incoming.requests[enum2int(vl_method)].retrans_k);
+
+  vl_method := OPTIONS_E;
+  f_EPTF_Var_newInt(vl_namePrefix & c_EPTF_SIP_statName_nofOutOPTIONS, 0, v_statistics.outgoing.requests[enum2int(vl_method)].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix & c_EPTF_SIP_statName_nofOutRetransOPTIONS, 0, v_statistics.outgoing.requests[enum2int(vl_method)].retrans_k);
+  f_EPTF_Var_newInt(vl_namePrefix & c_EPTF_SIP_statName_nofIncOPTIONS, 0, v_statistics.incoming.requests[enum2int(vl_method)].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix & c_EPTF_SIP_statName_nofIncRetransOPTIONS, 0, v_statistics.incoming.requests[enum2int(vl_method)].retrans_k);
+
+  vl_method := MESSAGE_E;
+  f_EPTF_Var_newInt(vl_namePrefix & c_EPTF_SIP_statName_nofOutMESSAGE, 0, v_statistics.outgoing.requests[enum2int(vl_method)].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix & c_EPTF_SIP_statName_nofOutRetransMESSAGE, 0, v_statistics.outgoing.requests[enum2int(vl_method)].retrans_k);
+  f_EPTF_Var_newInt(vl_namePrefix & c_EPTF_SIP_statName_nofIncMESSAGE, 0, v_statistics.incoming.requests[enum2int(vl_method)].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix & c_EPTF_SIP_statName_nofIncRetransMESSAGE, 0, v_statistics.incoming.requests[enum2int(vl_method)].retrans_k);
+
+  vl_method := NOTIFY_E;
+  f_EPTF_Var_newInt(vl_namePrefix & c_EPTF_SIP_statName_nofOutNOTIFY, 0, v_statistics.outgoing.requests[enum2int(vl_method)].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix & c_EPTF_SIP_statName_nofOutRetransNOTIFY, 0, v_statistics.outgoing.requests[enum2int(vl_method)].retrans_k);
+  f_EPTF_Var_newInt(vl_namePrefix & c_EPTF_SIP_statName_nofIncNOTIFY, 0, v_statistics.incoming.requests[enum2int(vl_method)].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix & c_EPTF_SIP_statName_nofIncRetransNOTIFY, 0, v_statistics.incoming.requests[enum2int(vl_method)].retrans_k);
+
+  vl_method := PRACK_E;
+  f_EPTF_Var_newInt(vl_namePrefix & c_EPTF_SIP_statName_nofOutPRACK, 0, v_statistics.outgoing.requests[enum2int(vl_method)].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix & c_EPTF_SIP_statName_nofOutRetransPRACK, 0, v_statistics.outgoing.requests[enum2int(vl_method)].retrans_k);
+  f_EPTF_Var_newInt(vl_namePrefix & c_EPTF_SIP_statName_nofIncPRACK, 0, v_statistics.incoming.requests[enum2int(vl_method)].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix & c_EPTF_SIP_statName_nofIncRetransPRACK, 0, v_statistics.incoming.requests[enum2int(vl_method)].retrans_k);
+
+  vl_method := PUBLISH_E;
+  f_EPTF_Var_newInt(vl_namePrefix & c_EPTF_SIP_statName_nofOutPUBLISH, 0, v_statistics.outgoing.requests[enum2int(vl_method)].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix & c_EPTF_SIP_statName_nofOutRetransPUBLISH, 0, v_statistics.outgoing.requests[enum2int(vl_method)].retrans_k);
+  f_EPTF_Var_newInt(vl_namePrefix & c_EPTF_SIP_statName_nofIncPUBLISH, 0, v_statistics.incoming.requests[enum2int(vl_method)].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix & c_EPTF_SIP_statName_nofIncRetransPUBLISH, 0, v_statistics.incoming.requests[enum2int(vl_method)].retrans_k);
+
+  vl_method := REFER_E;
+  f_EPTF_Var_newInt(vl_namePrefix & c_EPTF_SIP_statName_nofOutREFER, 0, v_statistics.outgoing.requests[enum2int(vl_method)].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix & c_EPTF_SIP_statName_nofOutRetransREFER, 0, v_statistics.outgoing.requests[enum2int(vl_method)].retrans_k);
+  f_EPTF_Var_newInt(vl_namePrefix & c_EPTF_SIP_statName_nofIncREFER, 0, v_statistics.incoming.requests[enum2int(vl_method)].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix & c_EPTF_SIP_statName_nofIncRetransREFER, 0, v_statistics.incoming.requests[enum2int(vl_method)].retrans_k);
+
+  vl_method := REGISTER_E;
+  f_EPTF_Var_newInt(vl_namePrefix & c_EPTF_SIP_statName_nofOutREGISTER, 0, v_statistics.outgoing.requests[enum2int(vl_method)].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix & c_EPTF_SIP_statName_nofOutRetransREGISTER, 0, v_statistics.outgoing.requests[enum2int(vl_method)].retrans_k);
+  f_EPTF_Var_newInt(vl_namePrefix & c_EPTF_SIP_statName_nofIncREGISTER, 0, v_statistics.incoming.requests[enum2int(vl_method)].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix & c_EPTF_SIP_statName_nofIncRetransREGISTER, 0, v_statistics.incoming.requests[enum2int(vl_method)].retrans_k);
+
+  vl_method := SUBSCRIBE_E;
+  f_EPTF_Var_newInt(vl_namePrefix & c_EPTF_SIP_statName_nofOutSUBSCRIBE, 0, v_statistics.outgoing.requests[enum2int(vl_method)].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix & c_EPTF_SIP_statName_nofOutRetransSUBSCRIBE, 0, v_statistics.outgoing.requests[enum2int(vl_method)].retrans_k);
+  f_EPTF_Var_newInt(vl_namePrefix & c_EPTF_SIP_statName_nofIncSUBSCRIBE, 0, v_statistics.incoming.requests[enum2int(vl_method)].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix & c_EPTF_SIP_statName_nofIncRetransSUBSCRIBE, 0, v_statistics.incoming.requests[enum2int(vl_method)].retrans_k);
+
+  vl_method := UPDATE_E;
+  f_EPTF_Var_newInt(vl_namePrefix & c_EPTF_SIP_statName_nofOutUPDATE, 0, v_statistics.outgoing.requests[enum2int(vl_method)].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix & c_EPTF_SIP_statName_nofOutRetransUPDATE, 0, v_statistics.outgoing.requests[enum2int(vl_method)].retrans_k);
+  f_EPTF_Var_newInt(vl_namePrefix & c_EPTF_SIP_statName_nofIncUPDATE, 0, v_statistics.incoming.requests[enum2int(vl_method)].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix & c_EPTF_SIP_statName_nofIncRetransUPDATE, 0, v_statistics.incoming.requests[enum2int(vl_method)].retrans_k);
+  
+  //responses
+  var integer vl_statusCode;
+  var integer vl_next := 0;
+  
+  vl_statusCode := 100;
+  f_EPTF_int2int_HashMap_Insert(v_statistics.statusCode2Idx, vl_statusCode, vl_next);
+  f_EPTF_Var_newInt(vl_namePrefix & c_EPTF_SIP_statName_nofOut100Trying, 0, v_statistics.outgoing.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix & c_EPTF_SIP_statName_nofOutRetrans100Trying, 0, v_statistics.outgoing.responses[vl_next].retrans_k);
+  f_EPTF_Var_newInt(vl_namePrefix & c_EPTF_SIP_statName_nofInc100Trying, 0, v_statistics.incoming.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix & c_EPTF_SIP_statName_nofIncRetrans100Trying, 0, v_statistics.incoming.responses[vl_next].retrans_k);
+  vl_next := vl_next + 1;
+  
+  vl_statusCode := 180;
+  f_EPTF_int2int_HashMap_Insert(v_statistics.statusCode2Idx, vl_statusCode, vl_next);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOut180Ringing, 0, v_statistics.outgoing.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOutRetrans180Ringing, 0, v_statistics.outgoing.responses[vl_next].retrans_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofInc180Ringing, 0, v_statistics.incoming.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofIncRetrans180Ringing, 0, v_statistics.incoming.responses[vl_next].retrans_k);
+  vl_next := vl_next + 1;
+
+  vl_statusCode := 181;
+  f_EPTF_int2int_HashMap_Insert(v_statistics.statusCode2Idx, vl_statusCode, vl_next);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOut181CallIsBeingForwarded, 0, v_statistics.outgoing.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOutRetrans181CallIsBeingForwarded, 0, v_statistics.outgoing.responses[vl_next].retrans_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofInc181CallIsBeingForwarded, 0, v_statistics.incoming.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofIncRetrans181CallIsBeingForwarded, 0, v_statistics.incoming.responses[vl_next].retrans_k);
+  vl_next := vl_next + 1;
+
+  vl_statusCode := 182;
+  f_EPTF_int2int_HashMap_Insert(v_statistics.statusCode2Idx, vl_statusCode, vl_next);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOut182Queued, 0, v_statistics.outgoing.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOutRetrans182Queued, 0, v_statistics.outgoing.responses[vl_next].retrans_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofInc182Queued, 0, v_statistics.incoming.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofIncRetrans182Queued, 0, v_statistics.incoming.responses[vl_next].retrans_k);
+  vl_next := vl_next + 1;
+
+  vl_statusCode := 183;
+  f_EPTF_int2int_HashMap_Insert(v_statistics.statusCode2Idx, vl_statusCode, vl_next);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOut183SessionProgress, 0, v_statistics.outgoing.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOutRetrans183SessionProgress, 0, v_statistics.outgoing.responses[vl_next].retrans_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofInc183SessionProgress, 0, v_statistics.incoming.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofIncRetrans183SessionProgress, 0, v_statistics.incoming.responses[vl_next].retrans_k);
+  vl_next := vl_next + 1;
+
+  vl_statusCode := 200;
+  f_EPTF_int2int_HashMap_Insert(v_statistics.statusCode2Idx, vl_statusCode, vl_next);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOut200OK, 0, v_statistics.outgoing.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOutRetrans200OK, 0, v_statistics.outgoing.responses[vl_next].retrans_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofInc200OK, 0, v_statistics.incoming.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofIncRetrans200OK, 0, v_statistics.incoming.responses[vl_next].retrans_k);
+  vl_next := vl_next + 1;
+
+  vl_statusCode := 202;
+  f_EPTF_int2int_HashMap_Insert(v_statistics.statusCode2Idx, vl_statusCode, vl_next);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOut202Accepted, 0, v_statistics.outgoing.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOutRetrans202Accepted, 0, v_statistics.outgoing.responses[vl_next].retrans_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofInc202Accepted, 0, v_statistics.incoming.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofIncRetrans202Accepted, 0, v_statistics.incoming.responses[vl_next].retrans_k);
+  vl_next := vl_next + 1;
+
+  vl_statusCode := 300;
+  f_EPTF_int2int_HashMap_Insert(v_statistics.statusCode2Idx, vl_statusCode, vl_next);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOut300MultipleChoices, 0, v_statistics.outgoing.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOutRetrans300MultipleChoices, 0, v_statistics.outgoing.responses[vl_next].retrans_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofInc300MultipleChoices, 0, v_statistics.incoming.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofIncRetrans300MultipleChoices, 0, v_statistics.incoming.responses[vl_next].retrans_k);
+  vl_next := vl_next + 1;
+
+  vl_statusCode := 301;
+  f_EPTF_int2int_HashMap_Insert(v_statistics.statusCode2Idx, vl_statusCode, vl_next);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOut301MovedPermanently, 0, v_statistics.outgoing.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOutRetrans301MovedPermanently, 0, v_statistics.outgoing.responses[vl_next].retrans_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofInc301MovedPermanently, 0, v_statistics.incoming.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofIncRetrans301MovedPermanently, 0, v_statistics.incoming.responses[vl_next].retrans_k);
+  vl_next := vl_next + 1;
+
+  vl_statusCode := 302;
+  f_EPTF_int2int_HashMap_Insert(v_statistics.statusCode2Idx, vl_statusCode, vl_next);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOut302MovedTemporarily, 0, v_statistics.outgoing.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOutRetrans302MovedTemporarily, 0, v_statistics.outgoing.responses[vl_next].retrans_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofInc302MovedTemporarily, 0, v_statistics.incoming.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofIncRetrans302MovedTemporarily, 0, v_statistics.incoming.responses[vl_next].retrans_k);
+  vl_next := vl_next + 1;
+
+  vl_statusCode := 305;
+  f_EPTF_int2int_HashMap_Insert(v_statistics.statusCode2Idx, vl_statusCode, vl_next);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOut305UseProxy, 0, v_statistics.outgoing.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOutRetrans305UseProxy, 0, v_statistics.outgoing.responses[vl_next].retrans_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofInc305UseProxy, 0, v_statistics.incoming.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofIncRetrans305UseProxy, 0, v_statistics.incoming.responses[vl_next].retrans_k);
+  vl_next := vl_next + 1;
+
+  vl_statusCode := 380;
+  f_EPTF_int2int_HashMap_Insert(v_statistics.statusCode2Idx, vl_statusCode, vl_next);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOut380AlternativeService, 0, v_statistics.outgoing.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOutRetrans380AlternativeService, 0, v_statistics.outgoing.responses[vl_next].retrans_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofInc380AlternativeService, 0, v_statistics.incoming.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofIncRetrans380AlternativeService, 0, v_statistics.incoming.responses[vl_next].retrans_k);
+  vl_next := vl_next + 1;
+
+  vl_statusCode := 400;
+  f_EPTF_int2int_HashMap_Insert(v_statistics.statusCode2Idx, vl_statusCode, vl_next);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOut400BadRequest, 0, v_statistics.outgoing.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOutRetrans400BadRequest, 0, v_statistics.outgoing.responses[vl_next].retrans_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofInc400BadRequest, 0, v_statistics.incoming.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofIncRetrans400BadRequest, 0, v_statistics.incoming.responses[vl_next].retrans_k);
+  vl_next := vl_next + 1;
+
+  vl_statusCode := 401;
+  f_EPTF_int2int_HashMap_Insert(v_statistics.statusCode2Idx, vl_statusCode, vl_next);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOut401Unauthorized, 0, v_statistics.outgoing.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOutRetrans401Unauthorized, 0, v_statistics.outgoing.responses[vl_next].retrans_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofInc401Unauthorized, 0, v_statistics.incoming.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofIncRetrans401Unauthorized, 0, v_statistics.incoming.responses[vl_next].retrans_k);
+  vl_next := vl_next + 1;
+
+  vl_statusCode := 402;
+  f_EPTF_int2int_HashMap_Insert(v_statistics.statusCode2Idx, vl_statusCode, vl_next);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOut402PaymentRequired, 0, v_statistics.outgoing.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOutRetrans402PaymentRequired, 0, v_statistics.outgoing.responses[vl_next].retrans_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofInc402PaymentRequired, 0, v_statistics.incoming.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofIncRetrans402PaymentRequired, 0, v_statistics.incoming.responses[vl_next].retrans_k);
+  vl_next := vl_next + 1;
+
+  vl_statusCode := 403;
+  f_EPTF_int2int_HashMap_Insert(v_statistics.statusCode2Idx, vl_statusCode, vl_next);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOut403Forbidden, 0, v_statistics.outgoing.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOutRetrans403Forbidden, 0, v_statistics.outgoing.responses[vl_next].retrans_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofInc403Forbidden, 0, v_statistics.incoming.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofIncRetrans403Forbidden, 0, v_statistics.incoming.responses[vl_next].retrans_k);
+  vl_next := vl_next + 1;
+
+  vl_statusCode := 404;
+  f_EPTF_int2int_HashMap_Insert(v_statistics.statusCode2Idx, vl_statusCode, vl_next);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOut404NotFound, 0, v_statistics.outgoing.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOutRetrans404NotFound, 0, v_statistics.outgoing.responses[vl_next].retrans_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofInc404NotFound, 0, v_statistics.incoming.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofIncRetrans404NotFound, 0, v_statistics.incoming.responses[vl_next].retrans_k);
+  vl_next := vl_next + 1;
+
+  vl_statusCode := 405;
+  f_EPTF_int2int_HashMap_Insert(v_statistics.statusCode2Idx, vl_statusCode, vl_next);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOut405MethodNotAllowed, 0, v_statistics.outgoing.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOutRetrans405MethodNotAllowed, 0, v_statistics.outgoing.responses[vl_next].retrans_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofInc405MethodNotAllowed, 0, v_statistics.incoming.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofIncRetrans405MethodNotAllowed, 0, v_statistics.incoming.responses[vl_next].retrans_k);
+  vl_next := vl_next + 1;
+
+  vl_statusCode := 406;
+  f_EPTF_int2int_HashMap_Insert(v_statistics.statusCode2Idx, vl_statusCode, vl_next);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOut406NotAcceptable, 0, v_statistics.outgoing.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOutRetrans406NotAcceptable, 0, v_statistics.outgoing.responses[vl_next].retrans_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofInc406NotAcceptable, 0, v_statistics.incoming.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofIncRetrans406NotAcceptable, 0, v_statistics.incoming.responses[vl_next].retrans_k);
+  vl_next := vl_next + 1;
+
+  vl_statusCode := 407;
+  f_EPTF_int2int_HashMap_Insert(v_statistics.statusCode2Idx, vl_statusCode, vl_next);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOut407ProxyAuthenticationRequired, 0, v_statistics.outgoing.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOutRetrans407ProxyAuthenticationRequired, 0, v_statistics.outgoing.responses[vl_next].retrans_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofInc407ProxyAuthenticationRequired, 0, v_statistics.incoming.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofIncRetrans407ProxyAuthenticationRequired, 0, v_statistics.incoming.responses[vl_next].retrans_k);
+  vl_next := vl_next + 1;
+
+  vl_statusCode := 408;
+  f_EPTF_int2int_HashMap_Insert(v_statistics.statusCode2Idx, vl_statusCode, vl_next);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOut408RequestTimeout, 0, v_statistics.outgoing.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOutRetrans408RequestTimeout, 0, v_statistics.outgoing.responses[vl_next].retrans_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofInc408RequestTimeout, 0, v_statistics.incoming.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofIncRetrans408RequestTimeout, 0, v_statistics.incoming.responses[vl_next].retrans_k);
+  vl_next := vl_next + 1;
+
+  vl_statusCode := 409;
+  f_EPTF_int2int_HashMap_Insert(v_statistics.statusCode2Idx, vl_statusCode, vl_next);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOut409Conflict, 0, v_statistics.outgoing.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOutRetrans409Conflict, 0, v_statistics.outgoing.responses[vl_next].retrans_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofInc409Conflict, 0, v_statistics.incoming.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofIncRetrans409Conflict, 0, v_statistics.incoming.responses[vl_next].retrans_k);
+  vl_next := vl_next + 1;
+
+  vl_statusCode := 410;
+  f_EPTF_int2int_HashMap_Insert(v_statistics.statusCode2Idx, vl_statusCode, vl_next);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOut410Gone, 0, v_statistics.outgoing.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOutRetrans410Gone, 0, v_statistics.outgoing.responses[vl_next].retrans_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofInc410Gone, 0, v_statistics.incoming.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofIncRetrans410Gone, 0, v_statistics.incoming.responses[vl_next].retrans_k);
+  vl_next := vl_next + 1;
+
+  vl_statusCode := 412;
+  f_EPTF_int2int_HashMap_Insert(v_statistics.statusCode2Idx, vl_statusCode, vl_next);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOut412ConditionalRequestFailed, 0, v_statistics.outgoing.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOutRetrans412ConditionalRequestFailed, 0, v_statistics.outgoing.responses[vl_next].retrans_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofInc412ConditionalRequestFailed, 0, v_statistics.incoming.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofIncRetrans412ConditionalRequestFailed, 0, v_statistics.incoming.responses[vl_next].retrans_k);
+  vl_next := vl_next + 1;
+
+  vl_statusCode := 413;
+  f_EPTF_int2int_HashMap_Insert(v_statistics.statusCode2Idx, vl_statusCode, vl_next);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOut413RequestEntityTooLarge, 0, v_statistics.outgoing.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOutRetrans413RequestEntityTooLarge, 0, v_statistics.outgoing.responses[vl_next].retrans_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofInc413RequestEntityTooLarge, 0, v_statistics.incoming.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofIncRetrans413RequestEntityTooLarge, 0, v_statistics.incoming.responses[vl_next].retrans_k);
+  vl_next := vl_next + 1;
+
+  vl_statusCode := 414;
+  f_EPTF_int2int_HashMap_Insert(v_statistics.statusCode2Idx, vl_statusCode, vl_next);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOut414RequestURITooLong, 0, v_statistics.outgoing.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOutRetrans414RequestURITooLong, 0, v_statistics.outgoing.responses[vl_next].retrans_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofInc414RequestURITooLong, 0, v_statistics.incoming.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofIncRetrans414RequestURITooLong, 0, v_statistics.incoming.responses[vl_next].retrans_k);
+  vl_next := vl_next + 1;
+
+  vl_statusCode := 415;
+  f_EPTF_int2int_HashMap_Insert(v_statistics.statusCode2Idx, vl_statusCode, vl_next);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOut415UnsupportedMediaType, 0, v_statistics.outgoing.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOutRetrans415UnsupportedMediaType, 0, v_statistics.outgoing.responses[vl_next].retrans_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofInc415UnsupportedMediaType, 0, v_statistics.incoming.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofIncRetrans415UnsupportedMediaType, 0, v_statistics.incoming.responses[vl_next].retrans_k);
+  vl_next := vl_next + 1;
+
+  vl_statusCode := 416;
+  f_EPTF_int2int_HashMap_Insert(v_statistics.statusCode2Idx, vl_statusCode, vl_next);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOut416UnsupportedURIScheme, 0, v_statistics.outgoing.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOutRetrans416UnsupportedURIScheme, 0, v_statistics.outgoing.responses[vl_next].retrans_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofInc416UnsupportedURIScheme, 0, v_statistics.incoming.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofIncRetrans416UnsupportedURIScheme, 0, v_statistics.incoming.responses[vl_next].retrans_k);
+  vl_next := vl_next + 1;
+
+  vl_statusCode := 417;
+  f_EPTF_int2int_HashMap_Insert(v_statistics.statusCode2Idx, vl_statusCode, vl_next);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOut417UnknownResourcePriority, 0, v_statistics.outgoing.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOutRetrans417UnknownResourcePriority, 0, v_statistics.outgoing.responses[vl_next].retrans_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofInc417UnknownResourcePriority, 0, v_statistics.incoming.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofIncRetrans417UnknownResourcePriority, 0, v_statistics.incoming.responses[vl_next].retrans_k);
+  vl_next := vl_next + 1;
+
+  vl_statusCode := 420;
+  f_EPTF_int2int_HashMap_Insert(v_statistics.statusCode2Idx, vl_statusCode, vl_next);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOut420BadExtension, 0, v_statistics.outgoing.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOutRetrans420BadExtension, 0, v_statistics.outgoing.responses[vl_next].retrans_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofInc420BadExtension, 0, v_statistics.incoming.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofIncRetrans420BadExtension, 0, v_statistics.incoming.responses[vl_next].retrans_k);
+  vl_next := vl_next + 1;
+
+  vl_statusCode := 421;
+  f_EPTF_int2int_HashMap_Insert(v_statistics.statusCode2Idx, vl_statusCode, vl_next);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOut421ExtensionRequired, 0, v_statistics.outgoing.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOutRetrans421ExtensionRequired, 0, v_statistics.outgoing.responses[vl_next].retrans_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofInc421ExtensionRequired, 0, v_statistics.incoming.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofIncRetrans421ExtensionRequired, 0, v_statistics.incoming.responses[vl_next].retrans_k);
+  vl_next := vl_next + 1;
+
+  vl_statusCode := 422;
+  f_EPTF_int2int_HashMap_Insert(v_statistics.statusCode2Idx, vl_statusCode, vl_next);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOut422SessionIntervalTooSmall, 0, v_statistics.outgoing.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOutRetrans422SessionIntervalTooSmall, 0, v_statistics.outgoing.responses[vl_next].retrans_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofInc422SessionIntervalTooSmall, 0, v_statistics.incoming.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofIncRetrans422SessionIntervalTooSmall, 0, v_statistics.incoming.responses[vl_next].retrans_k);
+  vl_next := vl_next + 1;
+
+  vl_statusCode := 423;
+  f_EPTF_int2int_HashMap_Insert(v_statistics.statusCode2Idx, vl_statusCode, vl_next);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOut423IntervalTooBrief, 0, v_statistics.outgoing.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOutRetrans423IntervalTooBrief, 0, v_statistics.outgoing.responses[vl_next].retrans_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofInc423IntervalTooBrief, 0, v_statistics.incoming.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofIncRetrans423IntervalTooBrief, 0, v_statistics.incoming.responses[vl_next].retrans_k);
+  vl_next := vl_next + 1;
+
+  vl_statusCode := 424;
+  f_EPTF_int2int_HashMap_Insert(v_statistics.statusCode2Idx, vl_statusCode, vl_next);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOut424BadLocationInformation, 0, v_statistics.outgoing.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOutRetrans424BadLocationInformation, 0, v_statistics.outgoing.responses[vl_next].retrans_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofInc424BadLocationInformation, 0, v_statistics.incoming.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofIncRetrans424BadLocationInformation, 0, v_statistics.incoming.responses[vl_next].retrans_k);
+  vl_next := vl_next + 1;
+
+  vl_statusCode := 428;
+  f_EPTF_int2int_HashMap_Insert(v_statistics.statusCode2Idx, vl_statusCode, vl_next);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOut428UseIdentityHeader, 0, v_statistics.outgoing.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOutRetrans428UseIdentityHeader, 0, v_statistics.outgoing.responses[vl_next].retrans_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofInc428UseIdentityHeader, 0, v_statistics.incoming.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofIncRetrans428UseIdentityHeader, 0, v_statistics.incoming.responses[vl_next].retrans_k);
+  vl_next := vl_next + 1;
+
+  vl_statusCode := 429;
+  f_EPTF_int2int_HashMap_Insert(v_statistics.statusCode2Idx, vl_statusCode, vl_next);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOut429ProvideReferrerIdentity, 0, v_statistics.outgoing.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOutRetrans429ProvideReferrerIdentity, 0, v_statistics.outgoing.responses[vl_next].retrans_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofInc429ProvideReferrerIdentity, 0, v_statistics.incoming.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofIncRetrans429ProvideReferrerIdentity, 0, v_statistics.incoming.responses[vl_next].retrans_k);
+  vl_next := vl_next + 1;
+
+  vl_statusCode := 433;
+  f_EPTF_int2int_HashMap_Insert(v_statistics.statusCode2Idx, vl_statusCode, vl_next);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOut433AnonymityDisallowed, 0, v_statistics.outgoing.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOutRetrans433AnonymityDisallowed, 0, v_statistics.outgoing.responses[vl_next].retrans_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofInc433AnonymityDisallowed, 0, v_statistics.incoming.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofIncRetrans433AnonymityDisallowed, 0, v_statistics.incoming.responses[vl_next].retrans_k);
+  vl_next := vl_next + 1;
+
+  vl_statusCode := 436;
+  f_EPTF_int2int_HashMap_Insert(v_statistics.statusCode2Idx, vl_statusCode, vl_next);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOut436BadIdentityInfo, 0, v_statistics.outgoing.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOutRetrans436BadIdentityInfo, 0, v_statistics.outgoing.responses[vl_next].retrans_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofInc436BadIdentityInfo, 0, v_statistics.incoming.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofIncRetrans436BadIdentityInfo, 0, v_statistics.incoming.responses[vl_next].retrans_k);
+  vl_next := vl_next + 1;
+
+  vl_statusCode := 437;
+  f_EPTF_int2int_HashMap_Insert(v_statistics.statusCode2Idx, vl_statusCode, vl_next);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOut437UnsupportedCertificate, 0, v_statistics.outgoing.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOutRetrans437UnsupportedCertificate, 0, v_statistics.outgoing.responses[vl_next].retrans_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofInc437UnsupportedCertificate, 0, v_statistics.incoming.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofIncRetrans437UnsupportedCertificate, 0, v_statistics.incoming.responses[vl_next].retrans_k);
+  vl_next := vl_next + 1;
+
+  vl_statusCode := 438;
+  f_EPTF_int2int_HashMap_Insert(v_statistics.statusCode2Idx, vl_statusCode, vl_next);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOut438InvalidIdentityHeader, 0, v_statistics.outgoing.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOutRetrans438InvalidIdentityHeader, 0, v_statistics.outgoing.responses[vl_next].retrans_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofInc438InvalidIdentityHeader, 0, v_statistics.incoming.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofIncRetrans438InvalidIdentityHeader, 0, v_statistics.incoming.responses[vl_next].retrans_k);
+  vl_next := vl_next + 1;
+
+  vl_statusCode := 480;
+  f_EPTF_int2int_HashMap_Insert(v_statistics.statusCode2Idx, vl_statusCode, vl_next);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOut480TemporarilyUnavailable, 0, v_statistics.outgoing.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOutRetrans480TemporarilyUnavailable, 0, v_statistics.outgoing.responses[vl_next].retrans_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofInc480TemporarilyUnavailable, 0, v_statistics.incoming.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofIncRetrans480TemporarilyUnavailable, 0, v_statistics.incoming.responses[vl_next].retrans_k);
+  vl_next := vl_next + 1;
+
+  vl_statusCode := 481;
+  f_EPTF_int2int_HashMap_Insert(v_statistics.statusCode2Idx, vl_statusCode, vl_next);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOut481CallTransactionDoesNotExist, 0, v_statistics.outgoing.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOutRetrans481CallTransactionDoesNotExist, 0, v_statistics.outgoing.responses[vl_next].retrans_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofInc481CallTransactionDoesNotExist, 0, v_statistics.incoming.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofIncRetrans481CallTransactionDoesNotExist, 0, v_statistics.incoming.responses[vl_next].retrans_k);
+  vl_next := vl_next + 1;
+
+  vl_statusCode := 482;
+  f_EPTF_int2int_HashMap_Insert(v_statistics.statusCode2Idx, vl_statusCode, vl_next);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOut482LoopDetected, 0, v_statistics.outgoing.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOutRetrans482LoopDetected, 0, v_statistics.outgoing.responses[vl_next].retrans_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofInc482LoopDetected, 0, v_statistics.incoming.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofIncRetrans482LoopDetected, 0, v_statistics.incoming.responses[vl_next].retrans_k);
+  vl_next := vl_next + 1;
+
+  vl_statusCode := 483;
+  f_EPTF_int2int_HashMap_Insert(v_statistics.statusCode2Idx, vl_statusCode, vl_next);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOut483TooManyHops, 0, v_statistics.outgoing.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOutRetrans483TooManyHops, 0, v_statistics.outgoing.responses[vl_next].retrans_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofInc483TooManyHops, 0, v_statistics.incoming.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofIncRetrans483TooManyHops, 0, v_statistics.incoming.responses[vl_next].retrans_k);
+  vl_next := vl_next + 1;
+
+  vl_statusCode := 484;
+  f_EPTF_int2int_HashMap_Insert(v_statistics.statusCode2Idx, vl_statusCode, vl_next);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOut484AddressIncomplete, 0, v_statistics.outgoing.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOutRetrans484AddressIncomplete, 0, v_statistics.outgoing.responses[vl_next].retrans_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofInc484AddressIncomplete, 0, v_statistics.incoming.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofIncRetrans484AddressIncomplete, 0, v_statistics.incoming.responses[vl_next].retrans_k);
+  vl_next := vl_next + 1;
+
+  vl_statusCode := 485;
+  f_EPTF_int2int_HashMap_Insert(v_statistics.statusCode2Idx, vl_statusCode, vl_next);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOut485Ambiguous, 0, v_statistics.outgoing.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOutRetrans485Ambiguous, 0, v_statistics.outgoing.responses[vl_next].retrans_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofInc485Ambiguous, 0, v_statistics.incoming.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofIncRetrans485Ambiguous, 0, v_statistics.incoming.responses[vl_next].retrans_k);
+  vl_next := vl_next + 1;
+
+  vl_statusCode := 486;
+  f_EPTF_int2int_HashMap_Insert(v_statistics.statusCode2Idx, vl_statusCode, vl_next);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOut486BusyHere, 0, v_statistics.outgoing.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOutRetrans486BusyHere, 0, v_statistics.outgoing.responses[vl_next].retrans_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofInc486BusyHere, 0, v_statistics.incoming.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofIncRetrans486BusyHere, 0, v_statistics.incoming.responses[vl_next].retrans_k);
+  vl_next := vl_next + 1;
+
+  vl_statusCode := 487;
+  f_EPTF_int2int_HashMap_Insert(v_statistics.statusCode2Idx, vl_statusCode, vl_next);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOut487RequestTerminated, 0, v_statistics.outgoing.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOutRetrans487RequestTerminated, 0, v_statistics.outgoing.responses[vl_next].retrans_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofInc487RequestTerminated, 0, v_statistics.incoming.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofIncRetrans487RequestTerminated, 0, v_statistics.incoming.responses[vl_next].retrans_k);
+  vl_next := vl_next + 1;
+
+  vl_statusCode := 488;
+  f_EPTF_int2int_HashMap_Insert(v_statistics.statusCode2Idx, vl_statusCode, vl_next);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOut488NotAcceptableHere, 0, v_statistics.outgoing.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOutRetrans488NotAcceptableHere, 0, v_statistics.outgoing.responses[vl_next].retrans_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofInc488NotAcceptableHere, 0, v_statistics.incoming.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofIncRetrans488NotAcceptableHere, 0, v_statistics.incoming.responses[vl_next].retrans_k);
+  vl_next := vl_next + 1;
+
+  vl_statusCode := 489;
+  f_EPTF_int2int_HashMap_Insert(v_statistics.statusCode2Idx, vl_statusCode, vl_next);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOut489BadEvent, 0, v_statistics.outgoing.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOutRetrans489BadEvent, 0, v_statistics.outgoing.responses[vl_next].retrans_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofInc489BadEvent, 0, v_statistics.incoming.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofIncRetrans489BadEvent, 0, v_statistics.incoming.responses[vl_next].retrans_k);
+  vl_next := vl_next + 1;
+
+  vl_statusCode := 491;
+  f_EPTF_int2int_HashMap_Insert(v_statistics.statusCode2Idx, vl_statusCode, vl_next);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOut491RequestPending, 0, v_statistics.outgoing.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOutRetrans491RequestPending, 0, v_statistics.outgoing.responses[vl_next].retrans_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofInc491RequestPending, 0, v_statistics.incoming.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofIncRetrans491RequestPending, 0, v_statistics.incoming.responses[vl_next].retrans_k);
+  vl_next := vl_next + 1;
+
+  vl_statusCode := 493;
+  f_EPTF_int2int_HashMap_Insert(v_statistics.statusCode2Idx, vl_statusCode, vl_next);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOut493Undecipherable, 0, v_statistics.outgoing.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOutRetrans493Undecipherable, 0, v_statistics.outgoing.responses[vl_next].retrans_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofInc493Undecipherable, 0, v_statistics.incoming.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofIncRetrans493Undecipherable, 0, v_statistics.incoming.responses[vl_next].retrans_k);
+  vl_next := vl_next + 1;
+
+  vl_statusCode := 494;
+  f_EPTF_int2int_HashMap_Insert(v_statistics.statusCode2Idx, vl_statusCode, vl_next);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOut494SecurityAgreementRequired, 0, v_statistics.outgoing.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOutRetrans494SecurityAgreementRequired, 0, v_statistics.outgoing.responses[vl_next].retrans_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofInc494SecurityAgreementRequired, 0, v_statistics.incoming.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofIncRetrans494SecurityAgreementRequired, 0, v_statistics.incoming.responses[vl_next].retrans_k);
+  vl_next := vl_next + 1;
+
+  vl_statusCode := 500;
+  f_EPTF_int2int_HashMap_Insert(v_statistics.statusCode2Idx, vl_statusCode, vl_next);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOut500ServerInternalError, 0, v_statistics.outgoing.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOutRetrans500ServerInternalError, 0, v_statistics.outgoing.responses[vl_next].retrans_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofInc500ServerInternalError, 0, v_statistics.incoming.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofIncRetrans500ServerInternalError, 0, v_statistics.incoming.responses[vl_next].retrans_k);
+  vl_next := vl_next + 1;
+
+  vl_statusCode := 501;
+  f_EPTF_int2int_HashMap_Insert(v_statistics.statusCode2Idx, vl_statusCode, vl_next);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOut501NotImplemented, 0, v_statistics.outgoing.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOutRetrans501NotImplemented, 0, v_statistics.outgoing.responses[vl_next].retrans_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofInc501NotImplemented, 0, v_statistics.incoming.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofIncRetrans501NotImplemented, 0, v_statistics.incoming.responses[vl_next].retrans_k);
+  vl_next := vl_next + 1;
+
+  vl_statusCode := 502;
+  f_EPTF_int2int_HashMap_Insert(v_statistics.statusCode2Idx, vl_statusCode, vl_next);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOut502BadGateway, 0, v_statistics.outgoing.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOutRetrans502BadGateway, 0, v_statistics.outgoing.responses[vl_next].retrans_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofInc502BadGateway, 0, v_statistics.incoming.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofIncRetrans502BadGateway, 0, v_statistics.incoming.responses[vl_next].retrans_k);
+  vl_next := vl_next + 1;
+
+  vl_statusCode := 503;
+  f_EPTF_int2int_HashMap_Insert(v_statistics.statusCode2Idx, vl_statusCode, vl_next);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOut503ServiceUnavailable, 0, v_statistics.outgoing.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOutRetrans503ServiceUnavailable, 0, v_statistics.outgoing.responses[vl_next].retrans_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofInc503ServiceUnavailable, 0, v_statistics.incoming.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofIncRetrans503ServiceUnavailable, 0, v_statistics.incoming.responses[vl_next].retrans_k);
+  vl_next := vl_next + 1;
+
+  vl_statusCode := 504;
+  f_EPTF_int2int_HashMap_Insert(v_statistics.statusCode2Idx, vl_statusCode, vl_next);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOut504ServerTimeout, 0, v_statistics.outgoing.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOutRetrans504ServerTimeout, 0, v_statistics.outgoing.responses[vl_next].retrans_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofInc504ServerTimeout, 0, v_statistics.incoming.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofIncRetrans504ServerTimeout, 0, v_statistics.incoming.responses[vl_next].retrans_k);
+  vl_next := vl_next + 1;
+
+  vl_statusCode := 505;
+  f_EPTF_int2int_HashMap_Insert(v_statistics.statusCode2Idx, vl_statusCode, vl_next);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOut505VersionNotSupported, 0, v_statistics.outgoing.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOutRetrans505VersionNotSupported, 0, v_statistics.outgoing.responses[vl_next].retrans_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofInc505VersionNotSupported, 0, v_statistics.incoming.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofIncRetrans505VersionNotSupported, 0, v_statistics.incoming.responses[vl_next].retrans_k);
+  vl_next := vl_next + 1;
+
+  vl_statusCode := 513;
+  f_EPTF_int2int_HashMap_Insert(v_statistics.statusCode2Idx, vl_statusCode, vl_next);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOut513MessageTooLarge, 0, v_statistics.outgoing.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOutRetrans513MessageTooLarge, 0, v_statistics.outgoing.responses[vl_next].retrans_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofInc513MessageTooLarge, 0, v_statistics.incoming.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofIncRetrans513MessageTooLarge, 0, v_statistics.incoming.responses[vl_next].retrans_k);
+  vl_next := vl_next + 1;
+
+  vl_statusCode := 580;
+  f_EPTF_int2int_HashMap_Insert(v_statistics.statusCode2Idx, vl_statusCode, vl_next);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOut580PreconditionFailure, 0, v_statistics.outgoing.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOutRetrans580PreconditionFailure, 0, v_statistics.outgoing.responses[vl_next].retrans_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofInc580PreconditionFailure, 0, v_statistics.incoming.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofIncRetrans580PreconditionFailure, 0, v_statistics.incoming.responses[vl_next].retrans_k);
+  vl_next := vl_next + 1;
+
+  vl_statusCode := 600;
+  f_EPTF_int2int_HashMap_Insert(v_statistics.statusCode2Idx, vl_statusCode, vl_next);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOut600BusyEverywhere, 0, v_statistics.outgoing.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOutRetrans600BusyEverywhere, 0, v_statistics.outgoing.responses[vl_next].retrans_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofInc600BusyEverywhere, 0, v_statistics.incoming.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofIncRetrans600BusyEverywhere, 0, v_statistics.incoming.responses[vl_next].retrans_k);
+  vl_next := vl_next + 1;
+
+  vl_statusCode := 603;
+  f_EPTF_int2int_HashMap_Insert(v_statistics.statusCode2Idx, vl_statusCode, vl_next);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOut603Decline, 0, v_statistics.outgoing.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOutRetrans603Decline, 0, v_statistics.outgoing.responses[vl_next].retrans_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofInc603Decline, 0, v_statistics.incoming.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofIncRetrans603Decline, 0, v_statistics.incoming.responses[vl_next].retrans_k);
+  vl_next := vl_next + 1;
+
+  vl_statusCode := 604;
+  f_EPTF_int2int_HashMap_Insert(v_statistics.statusCode2Idx, vl_statusCode, vl_next);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOut604DoesNotExistAnywhere, 0, v_statistics.outgoing.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOutRetrans604DoesNotExistAnywhere, 0, v_statistics.outgoing.responses[vl_next].retrans_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofInc604DoesNotExistAnywhere, 0, v_statistics.incoming.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofIncRetrans604DoesNotExistAnywhere, 0, v_statistics.incoming.responses[vl_next].retrans_k);
+  vl_next := vl_next + 1;
+
+  vl_statusCode := 606;
+  f_EPTF_int2int_HashMap_Insert(v_statistics.statusCode2Idx, vl_statusCode, vl_next);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOut606NotAcceptable, 0, v_statistics.outgoing.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofOutRetrans606NotAcceptable, 0, v_statistics.outgoing.responses[vl_next].retrans_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofInc606NotAcceptable, 0, v_statistics.incoming.responses[vl_next].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix &  c_EPTF_SIP_statName_nofIncRetrans606NotAcceptable, 0, v_statistics.incoming.responses[vl_next].retrans_k);
+  vl_next := vl_next + 1;
+}
+
+group SIP_DS_functions
+{
+  ///////////////////////////////////////////////////////////
+  //  Function: f_IMS_SIP_DS_init
+  //
+  //  Purpose:
+  //    Initializes the SIP DataSource, and registers the variables and conditions into the Media DS.
+  //
+  //  Parameters:
+  //    - pl_selfName - *in* *charstring* - component name
+  //    - pl_sourceCompRef - <EPTF_DataSource_CT> - - the main DataSource component (server).
+  //
+  //  Return Value:
+  //    -
+  //
+  //  Errors:
+  //    -
+  //
+  //  Detailed Comments:
+  //    -
+  //
+  ///////////////////////////////////////////////////////////  
+  private function f_EPTF_SIP_DS_init(in charstring pl_selfName, in EPTF_DataSource_CT pl_sourceCompRef)
+  runs on EPTF_SIP_LGen_CT
+  {
+    f_EPTF_DataSourceClient_init_CT(pl_selfName,pl_sourceCompRef)
+    f_EPTF_DataSourceClient_registerData(c_EPTF_SIP_DS_sourceId, f_EPTF_Base_selfName(), refers(f_EPTF_SIP_DS_DSProcessData));
+  }
+
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_SIP_DS_DSProcessData
+  // 
+  //  Purpose:
+  //    Processes the incoming Data requests - iterators and external data elements - and gives back a variable name.
+  //    It should be registered in the Setup CT. Type function <fcb_EPTF_DataSourceClient_dataHandler>
+  //
+  //  Parameters:
+  //    *out charstring pl_dataVarName* - this variable contains the value of the data or the iterator result
+  //    *in charstring pl_source* - the name of the data source 'feature'
+  //    *in charstring pl_ptcName* - the name of the ptc (ID of the PTC)  
+  //    *in charstring pl_element* - the name of the data element
+  //    *in* <EPTF_DataSource_Params> *pl_params* - the parameters
+  //      of the data for the dataElement
+  //
+  //  Return Value:
+  //    integer - error code (0 of OK, non zero if unsuccessful: e.g. invalid parameters given in pl_params)
+  //
+  //  Detailed Comments: 
+  //    When this function is called in the first time it creates the variable that contains the
+  //    names of the variables that store the values of the elements of the data or the iterator. This variable name
+  //    is returned in pl_dataVarName.
+  //
+  ////////////////////////////////////////////////////
+  private function f_EPTF_SIP_DS_DSProcessData(out charstring pl_dataVarName,
+    in charstring pl_source,
+    in charstring pl_ptcName,
+    in charstring pl_element,
+    in EPTF_DataSource_Params pl_params)
+  runs on EPTF_SIP_LGen_CT return integer
+  {
+    var EPTF_CharstringList vl_result := {}
+    pl_dataVarName := pl_element;
+
+    var integer vl_iteratorVarIdx := f_EPTF_Var_getId(pl_dataVarName);
+    if(vl_iteratorVarIdx == -1){
+      f_EPTF_Logging_warning(true, %definitionId&": Invalid DataSource parameter: Invalid iterator or externalData or parameter: "&
+        "\nSource: "&pl_source&
+        "\nPTC : "&pl_ptcName &
+        "\nElement Name : " &pl_element&
+        "\nParams: " & log2str(pl_params));  
+      return -2;
+    }
+    return 0;
+  }
+} //end of group SIP_DS_functions
+
+}//end of module
+with {
+extension "version <RnXnn>"
+}
+

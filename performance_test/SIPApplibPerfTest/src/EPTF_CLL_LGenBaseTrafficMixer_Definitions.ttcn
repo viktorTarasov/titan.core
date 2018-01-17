@@ -1,0 +1,130 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_CLL_LGenBaseTrafficMixer_Definitions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 512
+//  Updated:  2008-02-12
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////
+// Module: EPTF_CLL_LGenBaseTrafficMixer_Definitions
+//
+// Purpose:
+//   Module that defines the EPTF_TrafficMixer definitions.
+//
+// Module Parameters:
+//    -
+//
+//  Module depends on:
+//   <EPTF_CLL_Common_Definitions>
+//
+// Current Owner:
+//    Gabor Tatarka (egbotat)
+//
+// Last Review Date:
+//    2008-02-26
+//
+//  Detailed Comments:
+//    The Traffic mixer makes it possible to generate traffic cases
+//    based on their weight factors. The generation can be random or
+//    deterministic. To use the Traffic Mixer feature, extend your
+//    component with <EPTF_TrafficMixer_CT>
+// 
+///////////////////////////////////////////////////////////
+
+module EPTF_CLL_LGenBaseTrafficMixer_Definitions {
+
+import from EPTF_CLL_Common_Definitions all;
+//import from EPTF_CLL_Variable_Definitions all;
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_ProbabilityList
+// 
+//  Purpose:
+//    Type for the list of weights.
+// 
+//  Elements:
+//    Record of *float*.
+// 
+// Detailed Comments:
+//    -
+// 
+///////////////////////////////////////////////////////////
+type EPTF_FloatList EPTF_ProbabilityList;
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_BurstList
+// 
+//  Purpose:
+//    Type for the list of bursts.
+// 
+//  Elements:
+//    Record of *integer*.
+// 
+// Detailed Comments:
+//    -
+// 
+///////////////////////////////////////////////////////////
+type EPTF_IntegerList EPTF_BurstList;
+
+type record EPTF_TrafficMixer_scenarioTraffixMixData {
+  EPTF_ProbabilityList wList , // weight of each traffic
+  EPTF_ProbabilityList pList , // probability of each traffic ( == eloszlas-Fv)
+  EPTF_ProbabilityList currentBurst,
+
+  EPTF_BurstList burstList ,
+  integer burstListIdx 
+
+}
+const EPTF_TrafficMixer_scenarioTraffixMixData c_EPTF_TrafficMixer_initialScenarioTraffixMixData := {
+  wList := {}, // weight of each traffic
+  pList := {}, // probability of each traffic ( == eloszlas-Fv)
+  currentBurst := {},
+
+  burstList := {},
+  burstListIdx := 0
+}
+
+type record of EPTF_TrafficMixer_scenarioTraffixMixData EPTF_TrafficMixer_scenarioTraffixMixDataList;
+
+///////////////////////////////////////////////////////////
+//  Component: EPTF_TrafficMixer_CT
+// 
+//  Purpose:
+//    This component contains the variables needed for EPTF_TrafficMixer Functions.
+// 
+//  Elements:
+//    - v_wList - <EPTF_ProbabilityList> - weight of each traffic
+//
+//    - v_pList - <EPTF_ProbabilityList> -  probability of each traffic ( == eloszlas-Fv).
+//
+//    - v_currentBurst- <EPTF_ProbabilityList> - current burst value for the deterministic traffic case generation. 
+//
+//    - BurstList - <EPTF_BurstList> - list of bursts to generate for each traffic case. See also <f_EPTF_generateTrafficMix>
+//
+//    - vc_EPTF_deterministicTrafficMix_k - key for EPTF_Param: "*adminName*.deterministicTrafficMix"
+//
+//    - BurstListIdx - variable used in function <f_EPTF_CS_Admin_selectTrafficCase>
+// 
+// Detailed Comments:
+// 
+///////////////////////////////////////////////////////////
+//type component EPTF_TrafficMixer_CT extends EPTF_Var_CT {
+//  var EPTF_ProbabilityList v_wList := {}; // weight of each traffic
+//  var EPTF_ProbabilityList v_pList := {}; // probability of each traffic ( == eloszlas-Fv)
+//  var EPTF_ProbabilityList v_currentBurst := {};
+
+//  var EPTF_BurstList BurstList := {};
+//  var integer BurstListIdx := 0;
+
+//  var boolean deterministicTrafficMix:=true;
+//}
+
+} // module
+

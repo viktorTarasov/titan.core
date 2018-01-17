@@ -1,0 +1,1985 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_SIP_MessageCreator_Functions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 522
+//  Updated:  2012-11-28
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////
+//  Module: EPTF_SIP_MessageCreator_Functions
+//
+//  Purpose:
+//  Function definitions for creating SIP messages
+//
+//  Module depends on:
+//    <EPTF_CLL_Common_Definitions>
+//
+//    <EPTF_CLL_LGenBase_TemplateDefinitions>
+//
+//    <EPTF_CLL_RBTScheduler_Functions>
+//
+//    <EPTF_CLL_Variable_Functions>
+//
+//    <EPTF_SIP_Common_Definitions>
+//
+//    <EPTF_SIP_Common_Functions>
+//
+//    <EPTF_SIP_LGen_Definitions>
+//
+//    <EPTF_SIP_Templates>
+//
+//    <EPTF_SIP_Transaction_Definitions>
+//
+//    <Socket_API_Definitions>
+//
+//    <SIPmsg_Types>
+//
+//    <TCCSecurity_Functions>
+//
+//  Last review date:
+//    2012-11-08
+////////////////////////////////////////////////////
+module EPTF_SIP_MessageCreator_Functions
+{
+import from EPTF_CLL_Common_Definitions all;
+import from EPTF_CLL_LGenBase_TemplateDefinitions all;
+import from EPTF_CLL_RBTScheduler_Functions all;
+import from EPTF_CLL_Variable_Functions all;
+
+import from EPTF_SIP_Common_Definitions all;
+import from EPTF_SIP_Common_Functions all;
+import from EPTF_SIP_LGen_Definitions all;
+import from EPTF_SIP_Templates all;
+import from EPTF_SIP_Transaction_Definitions all;
+
+import from Socket_API_Definitions all;
+
+import from SIPmsg_Types all;
+
+import from TCCSecurity_Functions all;
+
+///////////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_Message_SendRequest
+//
+//Purpose:
+//  Composes the outgoing message to the transport layer.
+//
+//Parameters:
+//  - pl_userIdx - *in* *integer* - the index of the user in v_db_users
+//  - pl_sessionIdx - *in* *integer* - the index of the session to send the request in
+//  - pl_transport - *in* <SIP_Transport> - the preferred transport protocol
+//  - pl_requestRaw - *in* *octetstring* - the encoded SIP request
+//  - toAddr - in* <SIP_FlatSipUrl> - target address
+//  - pl_request - in* <PDU_SIP_Request> - the SIP request to send
+//
+///////////////////////////////////////////////////////////
+function f_EPTF_SIP_Message_SendRequest(
+  in integer pl_userIdx,
+  in integer pl_sessionIdx,
+  in SIP_Transport pl_transport,
+  in octetstring pl_requestRaw,
+  in SIP_FlatSipUrl toAddr,
+  in PDU_SIP_Request pl_request)
+runs on EPTF_SIP_LGen_CT
+{
+  f_EPTF_SIP_updateStat_outReq(pl_request.requestLine.method);
+  v_body := pl_requestRaw;
+
+  if(vf_EPTF_SIP_LGen_msgSender != null) {
+
+    var EPTF_SIP_Message_OUT  vl_SIP_message := c_SIP_MessageOUT_init;
+    var integer vl_port := v_db_users.data[pl_userIdx].sessions[pl_sessionIdx].port_ps;
+
+    if (-1 != toAddr.portField)
+    {
+      vl_port := toAddr.portField;
+    }
+
+    vl_SIP_message.userId := pl_userIdx;
+    if (ACK_E != pl_request.requestLine.method)
+    {
+      var charstring vl_id := "";
+      var charstring vl_method := "";
+
+      f_EPTF_SIP_GetTransactionId(pl_request.msgHeader, vl_id);
+      f_EPTF_SIP_method2str(pl_request.requestLine.method, vl_method);
+
+      vl_SIP_message.branchId := f_EPTF_SIP_genTransportID(vl_id, vl_method);
+    }
+
+    vl_SIP_message.transportParams.proto := pl_transport;
+
+    vl_SIP_message.transportParams.port_uc := v_db_users.data[pl_userIdx].sessions[pl_sessionIdx].port_uc;
+    vl_SIP_message.transportParams.port_us := v_db_users.data[pl_userIdx].sessions[pl_sessionIdx].port_us;
+    vl_SIP_message.transportParams.port_ps := vl_port;
+
+    vl_SIP_message.sipMessage.request := pl_requestRaw;
+
+    vl_SIP_message.transportParams.toAddr := f_EPTF_SIP_getTargetFromRequestURI(toAddr);
+
+    if (vg_hook_ASP_SendTo != null) 
+    { 
+      var ProtoTuple vl_proto := f_EPTF_SIP_SIPTransport2ProtoTuple(pl_transport);
+
+      vg_hook_ASP_SendTo.apply(
+        pl_userIdx, 
+        {request := {
+          requestLine := pl_request.requestLine,
+          msgHeader := pl_request.msgHeader
+        }},
+        vl_proto,
+        T_EPTF_componentClock.read);
+    }
+    
+    vf_EPTF_SIP_LGen_msgSender.apply(vl_SIP_message);  //send message to Transport
+  }
+
+  f_EPTF_SchedulerComp_refreshSnapshotTime();
+}
+
+///////////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_Message_RetransmitRequest
+//
+//Purpose:
+//  To retransmit a SIP request.
+//
+//Parameters:
+//  - pl_userIdx - *in* *integer* - the index of the user in v_db_users
+//  - pl_sessionIdx - *in* *integer* - the index of the session to send the request in
+//  - pl_transport - *in* <SIP_Transport> - the preferred transport protocol
+//  - pl_requestRaw - *in* *octetstring* - the encoded SIP request
+//  - toAddr - in* <SIP_FlatSipUrl> - target address
+//  - pl_request - in* <PDU_SIP_Request> - the SIP request to send
+//
+///////////////////////////////////////////////////////////
+function f_EPTF_SIP_Message_RetransmitRequest(
+  in integer pl_userIdx,
+  in integer pl_sessionIdx,
+  in SIP_Transport pl_transport,
+  in octetstring pl_requestRaw,
+  in SIP_FlatSipUrl toAddr,
+  in PDU_SIP_Request pl_request)
+runs on EPTF_SIP_LGen_CT
+{
+  f_EPTF_Var_adjustContent(v_statIdx_nofRetransmittedRequest,
+    { intVal := f_EPTF_Var_getIntValue(v_statIdx_nofRetransmittedRequest) + 1 });
+
+  f_EPTF_SIP_updateStat_outReqRetrans(pl_request.requestLine.method);
+  
+  f_EPTF_SIP_Message_SendRequest(
+    pl_userIdx,
+    pl_sessionIdx,
+    pl_transport,
+    pl_requestRaw,
+    toAddr,
+    pl_request);
+}
+
+///////////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_Message_SendResponse
+//
+//Purpose:
+//  Composes the outgoing message to the transport layer.
+//
+//Parameters:
+//  - pl_userIdx - *in* *integer* - the index of the user in v_db_users
+//  - pl_sessionIdx - *in* *integer* - the index of the session to send the response in
+//  - pl_transport - *in* <SIP_Transport> - the preferred transport protocol
+//  - pl_reponseRaw - *in* *octetstring* - the encoded SIP response
+//  - pl_via - *in* <ViaBody> - the via header of the response
+//  - pl_connId - *in* - connectoin id received from the transport layer with the request
+//  - pl_response - *in* <EPTF_SIP_LGen_CT> - the SIP response
+//
+///////////////////////////////////////////////////////////
+function f_EPTF_SIP_Message_SendResponse(
+  in integer pl_userIdx,
+  in integer pl_sessionIdx,
+  in SIP_Transport pl_transport,
+  in octetstring pl_responseRaw,
+  in ViaBody pl_via,
+  in charstring pl_connId,
+//USED ONLY FOR CALL-BACK
+  in PDU_SIP_Response pl_response)
+runs on EPTF_SIP_LGen_CT
+{
+  f_EPTF_SIP_updateStat_outResp(pl_response.statusLine.statusCode, pl_response.statusLine.reasonPhrase);
+  v_body := pl_responseRaw;
+
+  if(vf_EPTF_SIP_LGen_msgSender != null) {
+  
+    var EPTF_SIP_Message_OUT  vl_SIP_message := c_SIP_MessageOUT_init;
+    var integer vl_port := v_db_users.data[pl_userIdx].sessions[pl_sessionIdx].port_ps;
+    var charstring vl_target := "";
+
+    if (omit != pl_via.sentBy.portField)
+    {
+      vl_port := pl_via.sentBy.portField;
+    }
+
+    if (omit != pl_via.sentBy.host)
+    {
+      vl_target := pl_via.sentBy.host;
+    }
+
+    vl_SIP_message.userId := pl_userIdx;
+
+    if(c_EPTF_Common_debugSwitch and f_SIP_Logging_debugEnabled()) {
+      f_SIP_Logging_DEBUG(log2str(
+        %definitionId,": user(",pl_userIdx,")", " sessions: ", v_db_users.data[pl_userIdx].sessions));
+    }
+      
+    vl_SIP_message.transportParams.proto := pl_transport;
+
+    vl_SIP_message.transportParams.port_uc := v_db_users.data[pl_userIdx].sessions[pl_sessionIdx].port_uc;
+    vl_SIP_message.transportParams.port_us := v_db_users.data[pl_userIdx].sessions[pl_sessionIdx].port_us;
+
+    vl_SIP_message.transportParams.port_ps := vl_port;
+
+    vl_SIP_message.transportParams.toAddr := vl_target;
+    
+    vl_SIP_message.sipMessage.response := pl_responseRaw;
+    
+    vl_SIP_message.transportParams.connId := pl_connId;
+    
+    if (vg_hook_ASP_SendTo != null) 
+    { 
+      var ProtoTuple vl_proto := f_EPTF_SIP_SIPTransport2ProtoTuple(pl_transport);
+
+      vg_hook_ASP_SendTo.apply(
+        v_currentUser, 
+        {response := {
+          statusLine := pl_response.statusLine,
+          msgHeader := pl_response.msgHeader
+        }},
+        vl_proto,
+        T_EPTF_componentClock.read);
+    }
+
+    vf_EPTF_SIP_LGen_msgSender.apply(vl_SIP_message);  //send message to Transport
+  }
+
+  f_EPTF_SchedulerComp_refreshSnapshotTime();
+}
+
+///////////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_Message_RetransmitResponse
+//
+//Purpose:
+//  To retransmit a SIP response.
+//
+//Parameters:
+//  - pl_userIdx - *in* *integer* - the index of the user in v_db_users
+//  - pl_sessionIdx - *in* *integer* - the index of the session to send the response in
+//  - pl_transport - *in* <SIP_Transport> - the preferred transport protocol
+//  - pl_reponseRaw - *in* *octetstring* - the encoded SIP response
+//  - pl_via - *in* <ViaBody> - the via header of the response
+//  - pl_connId - *in* - connectoin id received from the transport layer with the request
+//  - pl_response - *in* <EPTF_SIP_LGen_CT> - the SIP response
+//
+///////////////////////////////////////////////////////////
+function f_EPTF_SIP_Message_RetransmitResponse(
+  in integer pl_userIdx,
+  in integer pl_sessionIdx,
+  in SIP_Transport pl_transport,
+  in octetstring pl_responseRaw,
+  in ViaBody pl_via,
+  in charstring pl_connId,
+//USED ONLY FOR CALL-BACK
+  in PDU_SIP_Response pl_response)
+runs on EPTF_SIP_LGen_CT
+{
+  f_EPTF_Var_adjustContent(v_statIdx_nofRetransmittedResponse,
+    { intVal := f_EPTF_Var_getIntValue(v_statIdx_nofRetransmittedResponse) + 1 });
+
+  f_EPTF_SIP_updateStat_outRespRetrans(pl_response.statusLine.statusCode, pl_response.statusLine.reasonPhrase);
+  
+  f_EPTF_SIP_Message_SendResponse(
+    pl_userIdx,
+    pl_sessionIdx,
+    pl_transport,
+    pl_responseRaw,
+    pl_via,
+    pl_connId,
+    pl_response);
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_Message_CreateResponseFromUAS
+//
+//Purpose:
+//  Creates a response SIP message from an existing UAS transaction
+//
+//Parameters:
+//  - pl_UAS - *in* *integer* - in index of the UAS transaction in v_db_UAS
+//  - pl_statusLine - *in* <StatusLine> - the status line to insert in the response
+//  - pl_contactID - *in* *integer* - the ID of the contact in <SIP_User>.iD to
+//      insert in the response
+//
+//Detailed comments:
+//  In case of a 405 response, an Allow header containing the c_SIP_AllowedMethods
+//  constant is inserted into the response.
+//  
+//  If the response is inside a dialog, the To tag is inserted into the response.
+//  If the response is also a 2xx response, a Contact header field is also inserted.
+//
+//  Relevant fields of the response is supposed to be prepared from the request at
+//  creation of the UAS (see f_EPTF_SIP_Transaction_prepareUASResponse)
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_Message_CreateResponseFromUAS(
+  in integer pl_UAS,
+  in StatusLine pl_statusLine,
+  in integer pl_contactID)
+runs on EPTF_SIP_LGen_CT
+{
+  var charstring vl_toTag := "";
+  if (omit != v_db_UAS.data[pl_UAS].response.msgHeader.toField.toParams)
+  {
+    f_EPTF_SIP_GetParameter(v_db_UAS.data[pl_UAS].response.msgHeader.toField.toParams, c_SIP_TAG_ID, vl_toTag);
+  }
+  //adding To tag if needed
+  if (v_db_UAS.data[pl_UAS].dialogIdx >= 0)
+  {
+    if ("" == vl_toTag)
+    { 
+      if (omit == v_db_UAS.data[pl_UAS].response.msgHeader.toField.toParams){
+        v_db_UAS.data[pl_UAS].response.msgHeader.toField.toParams := {
+          {
+            id := c_SIP_TAG_ID,
+            paramValue := v_db_dialog.data[v_db_UAS.data[pl_UAS].dialogIdx].localTag
+          }
+        };
+      } else {
+        f_EPTF_SIP_SetParameter(
+          v_db_UAS.data[pl_UAS].response.msgHeader.toField.toParams,
+          c_SIP_TAG_ID,
+          v_db_dialog.data[v_db_UAS.data[pl_UAS].dialogIdx].localTag);
+      }
+    }
+
+    if (101 <= pl_statusLine.statusCode and 299 >= pl_statusLine.statusCode and 
+        (v_db_UAS.data[pl_UAS].trInDialog == CREATE_DIALOG or
+          v_db_UAS.data[pl_UAS].trInDialog == REFRESH_DIALOG or
+          v_db_UAS.data[pl_UAS].trInDialog == INSIDE_DIALOG or
+          v_db_UAS.data[pl_UAS].trInDialog == REMOVE_DIALOG))
+    {
+      f_EPTF_SIP_addContact(v_db_UAS.data[pl_UAS].userIdx, v_db_UAS.data[pl_UAS].response.msgHeader, pl_contactID);
+    } 
+  }else{
+    if ("" == vl_toTag and 101 <= pl_statusLine.statusCode)
+    { 
+      if (omit == v_db_UAS.data[pl_UAS].response.msgHeader.toField.toParams){
+        v_db_UAS.data[pl_UAS].response.msgHeader.toField.toParams := {};
+      }
+      f_EPTF_SIP_genLocalTag(pl_UAS,
+        vl_toTag);
+
+      f_EPTF_SIP_SetParameter(
+        v_db_UAS.data[pl_UAS].response.msgHeader.toField.toParams,
+        c_SIP_TAG_ID,
+        vl_toTag);
+    }
+  }
+
+  if(pl_statusLine.statusCode == 405) 
+  {
+    v_db_UAS.data[pl_UAS].response.msgHeader.allow := {
+      fieldName := ALLOW_E,
+      methods := c_SIP_AllowedMethods
+    }
+  }
+  
+  v_db_UAS.data[pl_UAS].response.statusLine := pl_statusLine;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_createACKTo2xx
+//
+//Purpose:
+//  Creates an ACK request to a 2xx response.
+//
+//Parameters:
+//  - pl_userIdx - *in* *integer* - the index of the user in v_db_users
+//  - pl_dialogIdx - *in* *integer* - the index of the dialog in v_db_dialog
+//  - pl_trId - *in* *charstring* - transaction Id
+//  - pl_cSeq - *in* *integer* - Cseq number
+//  - pl_transport - *in* <SIP_Transport> - transport protocol
+//  - pl_ACK - *inout* <PDU_SIP_Request> - the generated request
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_createACKTo2xx(
+  in integer pl_userIdx,
+  in integer pl_dialogIdx, 
+  in charstring pl_trId,
+  in integer pl_cSeq,
+  in SIP_Transport pl_transport,
+  inout PDU_SIP_Request pl_ACK)
+runs on EPTF_SIP_LGen_CT
+{
+  pl_ACK := cg_PDU_SIP_Request_base;
+
+  pl_ACK.requestLine.method := ACK_E;
+
+  f_EPTF_SIP_FlatSipUrl2SipUrl(v_db_dialog.data[pl_dialogIdx].requestUri, pl_ACK.requestLine.requestUri);
+
+  pl_ACK.msgHeader.callId := 
+  {
+      fieldName := CALL_ID_E,
+      callid := v_db_dialog.data[pl_dialogIdx].callId
+  };
+
+  pl_ACK.msgHeader.cSeq := 
+  {
+    fieldName := CSEQ_E,
+    seqNumber := pl_cSeq,
+    method := "ACK"
+  }
+
+  pl_ACK.msgHeader.fromField :={
+    fieldName := FROM_E,
+//    addressField := v_db_dialog.data[pl_dialogIdx].localUri,
+    fromParams := {{id := c_SIP_TAG_ID, paramValue := v_db_dialog.data[pl_dialogIdx].localTag}}
+  }
+  f_EPTF_SIP_FlatSipUrl2AddrUnion(v_db_dialog.data[pl_dialogIdx].localUri,
+    pl_ACK.msgHeader.fromField.addressField);
+
+  pl_ACK.msgHeader.toField := {
+    fieldName := TO_E,
+//    addressField := v_db_dialog.data[pl_dialogIdx].remoteUri,
+    toParams := {{id := c_SIP_TAG_ID, paramValue := v_db_dialog.data[pl_dialogIdx].remoteTag}}
+  }
+  f_EPTF_SIP_FlatSipUrl2AddrUnion(v_db_dialog.data[pl_dialogIdx].remoteUri,
+    pl_ACK.msgHeader.toField.addressField);
+
+  pl_ACK.msgHeader.via := {
+    fieldName := VIA_E,
+    viaBody   :=
+    {{
+        sentProtocol :=
+        {
+          protocolName := c_SIP_NAME,
+          protocolVersion:= c_SIP_VERSION,
+          transport:= f_EPTF_SIP_transport2str(pl_transport)
+        },
+        sentBy    := {v_db_users.data[pl_userIdx].localHost, v_db_users.data[pl_userIdx].sessions[v_db_users.data[pl_userIdx].currentSession].port_us},
+        viaParams := {{
+            id :=c_SIP_BRANCH_ID,
+            paramValue := c_SIP_BRANCH_COOKIE & pl_trId
+          }}
+      }}
+  }
+
+  pl_ACK.msgHeader.contentLength := 
+  {
+    fieldName := CONTENT_LENGTH_E,
+    len := 0
+  }
+
+  pl_ACK.msgHeader.maxForwards := {
+    fieldName := MAX_FORWARDS_E,
+    forwards := 70
+  }
+
+  if (omit != v_db_dialog.data[pl_dialogIdx].ACKData.authInfo)
+  {
+    if (AUTHORIZATION_E == v_db_dialog.data[pl_dialogIdx].ACKData.authInfo.fieldName)
+    {
+      pl_ACK.msgHeader.authorization :={
+        fieldName := AUTHORIZATION_E,
+        body := v_db_dialog.data[pl_dialogIdx].ACKData.authInfo.credentials
+      }
+    }else if (PROXY_AUTHORIZATION_E == v_db_dialog.data[pl_dialogIdx].ACKData.authInfo.fieldName)
+    {
+      pl_ACK.msgHeader.proxyAuthorization := {
+        fieldName := PROXY_AUTHORIZATION_E,
+        credentials := v_db_dialog.data[pl_dialogIdx].ACKData.authInfo.credentials
+      }
+    }
+  }
+
+  var RouteBody_List vl_route := {};
+  f_EPTF_SIP_SIPRouteBodyList2Route(v_db_dialog.data[pl_dialogIdx].route, vl_route);
+  
+  if (sizeof(vl_route) > 0)
+  {
+    pl_ACK.msgHeader.route := {
+      fieldName := ROUTE_E,
+      routeBody := vl_route
+    }
+  }
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_createACKTo3xxto6xx
+//
+//Purpose:
+//  Creates an ACK request to an error response
+//
+//Parameters:
+//  - pl_transactionIdx - *in* *integer* - the index of the UAC transaction in v_db_UAC
+//  - pl_response - *in* <PDU_SIP_Response> - the error response to acknowledge
+//  - pl_ACK - *inout* <PDU_SIP_Request> - the generated request
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_createACKTo3xxto6xx(in integer pl_transactionIdx, in PDU_SIP_Response pl_response, inout PDU_SIP_Request pl_ACK)
+runs on EPTF_SIP_LGen_CT
+{
+  if(not ispresent(v_db_UAC.data[pl_transactionIdx].request)) {
+    f_SIP_Logging_WARNING(%definitionId&": request or response field not present in UAC.");
+    return;
+  }
+
+  pl_ACK := cg_PDU_SIP_Request_base;
+
+  pl_ACK.requestLine.method := ACK_E;
+  pl_ACK.requestLine.requestUri := v_db_UAC.data[pl_transactionIdx].request.requestLine.requestUri;
+
+  pl_ACK.msgHeader.callId := v_db_UAC.data[pl_transactionIdx].request.msgHeader.callId;
+
+  pl_ACK.msgHeader.fromField := v_db_UAC.data[pl_transactionIdx].request.msgHeader.fromField;
+
+  pl_ACK.msgHeader.toField := pl_response.msgHeader.toField;
+
+  pl_ACK.msgHeader.via :=
+  {
+    fieldName := VIA_E,
+    viaBody := {v_db_UAC.data[pl_transactionIdx].request.msgHeader.via.viaBody[0]}
+  }
+
+  pl_ACK.msgHeader.cSeq := 
+  {
+    fieldName := CSEQ_E,
+    seqNumber := v_db_UAC.data[pl_transactionIdx].request.msgHeader.cSeq.seqNumber,
+    method := "ACK"
+  }
+
+  pl_ACK.msgHeader.route := v_db_UAC.data[pl_transactionIdx].request.msgHeader.route;
+
+  pl_ACK.msgHeader.contentLength := 
+  {
+    fieldName := CONTENT_LENGTH_E,
+    len := 0
+  }
+
+  pl_ACK.msgHeader.maxForwards := {
+    fieldName := MAX_FORWARDS_E,
+    forwards := 70
+  }
+
+  v_db_UAC.data[pl_transactionIdx].sendNACK := true;
+
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_Message_CalcContentLength
+//
+//Purpose:
+//  Calculates the lenght of a SIP message and inserts a Content-Length header field
+//    in the message.
+//
+//Parameters:
+//  - pl_message - *inout* <PDU_SIP> - the SIP message
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_Message_CalcContentLength(inout PDU_SIP pl_message)
+runs on EPTF_SIP_LGen_CT
+{
+  if(ischosen(pl_message.request)) {
+    f_EPTF_SIP_Message_CalcContentLengthRequest(pl_message.request);
+  } else {
+    f_EPTF_SIP_Message_CalcContentLengthResponse(pl_message.response);
+  }
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_Message_CalcContentLengthRequest
+//
+//Purpose:
+//  Calculates the lenght of a SIP request and inserts a Content-Length header field
+//    in the message.
+//
+//Parameters:
+//  - pl_request - *inout* <PDU_SIP_Request> - the SIP request
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_Message_CalcContentLengthRequest(inout PDU_SIP_Request pl_request)
+runs on EPTF_SIP_LGen_CT
+{
+  if(ispresent(pl_request.messageBody)) {
+    pl_request.msgHeader.contentLength :=
+    {
+      fieldName := CONTENT_LENGTH_E,
+      len := lengthof(pl_request.messageBody)
+    }
+  }      
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_Message_CalcContentLengthResponse
+//
+//Purpose:
+//  Calculates the lenght of a SIP response and inserts a Content-Length header field
+//    in the message.
+//
+//Parameters:
+//  - pl_response - *inout* <PDU_SIP_Response> - the SIP request
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_Message_CalcContentLengthResponse(inout PDU_SIP_Response pl_response)
+runs on EPTF_SIP_LGen_CT
+{
+  if(ispresent(pl_response.messageBody)) {
+    pl_response.msgHeader.contentLength :=
+    {
+      fieldName := CONTENT_LENGTH_E,
+      len := lengthof(pl_response.messageBody)
+    }
+  }      
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_CreateNewRequestDictionaryForACKInDialogue
+//
+//Purpose:
+//  To create the dictionary for the external template.
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_CreateNewRequestDictionaryForACKInDialogue(
+  in    integer pl_userIdx,
+  in    integer pl_fsmIdx,
+  inout EPTF_LGenBase_TemplParamSubstList pl_dictionary
+)
+runs on EPTF_SIP_LGen_CT
+{
+  var integer vl_dialog := v_db_users.data[pl_userIdx].FSMs.data[pl_fsmIdx].dialogIdx;
+  var integer vl_currentSession := v_db_users.data[pl_userIdx].currentSession;
+  
+  var charstring vl_requestURI := "";
+  f_EPTF_SIP_SIPUrl2str(v_db_dialog.data[vl_dialog].ACKData.ACK.requestLine.requestUri, vl_requestURI);
+  
+  var charstring vl_localHost := "";
+  var charstring vl_fromUsr := "";
+  var SipUrl vl_url;
+  
+  f_EPTF_SIP_GetUri(v_db_dialog.data[vl_dialog].ACKData.ACK.msgHeader.fromField.addressField, vl_url);
+  vl_fromUsr := vl_url.userInfo.userOrTelephoneSubscriber;
+  vl_localHost := vl_url.hostPort.host;
+  
+  var charstring vl_remHost := "";
+  var integer vl_remPort := 0;
+  var charstring vl_toUsr := "";
+
+  f_EPTF_SIP_GetUri(v_db_dialog.data[vl_dialog].ACKData.ACK.msgHeader.toField.addressField, vl_url);
+
+  vl_toUsr := vl_url.userInfo.userOrTelephoneSubscriber;
+  vl_remHost := vl_url.hostPort.host;
+  if (ispresent(vl_url.hostPort.portField))
+  {
+    vl_remPort := vl_url.hostPort.portField;
+  }
+
+  var charstring vl_auth:="";
+  var charstring vl_authOpt:="";
+  var charstring vl_proxyAuthOpt:="";
+
+  if (ispresent(v_db_dialog.data[vl_dialog].ACKData.ACK.msgHeader.authorization)) {
+    f_EPTF_SIP_encodeCredentials(
+      v_db_dialog.data[vl_dialog].ACKData.ACK.msgHeader.authorization.body, 
+      vl_auth);
+    vl_authOpt := "\r\nAuthorization: "&vl_auth;
+  } else if (ispresent(v_db_dialog.data[vl_dialog].ACKData.ACK.msgHeader.proxyAuthorization)) {
+    f_EPTF_SIP_encodeCredentials(
+      v_db_dialog.data[vl_dialog].ACKData.ACK.msgHeader.proxyAuthorization.credentials,
+      vl_auth);
+    vl_proxyAuthOpt := "\r\nProxy-Authorization: "&vl_auth;
+  }
+
+  var charstring vl_remoteTag := "";
+  if (ispresent(v_db_dialog.data[vl_dialog].ACKData.ACK.msgHeader.toField.toParams))
+  {
+    f_EPTF_SIP_GetParameter(v_db_dialog.data[vl_dialog].ACKData.ACK.msgHeader.toField.toParams, c_SIP_TAG_ID, vl_remoteTag);
+  }
+  
+  var charstring vl_localTag := "";
+  if (ispresent(v_db_dialog.data[vl_dialog].ACKData.ACK.msgHeader.fromField.fromParams))
+  {
+    f_EPTF_SIP_GetParameter(v_db_dialog.data[vl_dialog].ACKData.ACK.msgHeader.fromField.fromParams, c_SIP_TAG_ID, vl_localTag);
+  }
+
+  pl_dictionary := {}; // FIXME - review
+
+  pl_dictionary[sizeof(pl_dictionary)] := {"remoteTag", vl_remoteTag};
+  pl_dictionary[sizeof(pl_dictionary)] := {"requestURI", vl_requestURI};
+  pl_dictionary[sizeof(pl_dictionary)] := {"toUsr", vl_toUsr};
+  pl_dictionary[sizeof(pl_dictionary)] := {"remHost", vl_remHost};
+  pl_dictionary[sizeof(pl_dictionary)] := {"callId", v_db_dialog.data[vl_dialog].ACKData.ACK.msgHeader.callId.callid};
+  pl_dictionary[sizeof(pl_dictionary)] := {"cSeq", int2str(v_db_dialog.data[vl_dialog].ACKData.ACK.msgHeader.cSeq.seqNumber)};
+  pl_dictionary[sizeof(pl_dictionary)] := {"fromUsr", vl_fromUsr};
+  pl_dictionary[sizeof(pl_dictionary)] := {"localHost", vl_localHost};
+  pl_dictionary[sizeof(pl_dictionary)] := {"localTag", vl_localTag};
+  pl_dictionary[sizeof(pl_dictionary)] := {"transport", f_EPTF_SIP_transport2str(v_db_dialog.data[vl_dialog].ACKData.transport)};
+  pl_dictionary[sizeof(pl_dictionary)] := {"localIP", v_db_users.data[pl_userIdx].localHost};
+  pl_dictionary[sizeof(pl_dictionary)] := {"localPort", int2str(v_db_users.data[pl_userIdx].sessions[vl_currentSession].port_us)};
+  pl_dictionary[sizeof(pl_dictionary)] := {"trId", v_db_dialog.data[vl_dialog].ACKData.trId};
+  pl_dictionary[sizeof(pl_dictionary)] := {"remPort", int2str(vl_remPort)};
+  pl_dictionary[sizeof(pl_dictionary)] := {"proxyHost", v_db_users.data[pl_userIdx].proxyName};
+  pl_dictionary[sizeof(pl_dictionary)] := {"proxyPort", int2str(v_db_users.data[pl_userIdx].proxyPort)};
+  pl_dictionary[sizeof(pl_dictionary)] := {"auth", vl_auth};
+  pl_dictionary[sizeof(pl_dictionary)] := {"authOpt", vl_authOpt};
+  pl_dictionary[sizeof(pl_dictionary)] := {"proxyAuthOpt", vl_proxyAuthOpt};
+  
+  var charstring vl_postfix := "";
+  for (var integer i := 0; i < sizeof(v_db_users.data[pl_userIdx].mediaParams); i := i + 1) 
+  { 
+    if (i > 0) { vl_postfix := "_" & int2str(i); } // multiple stream handling
+    
+    if (ispresent(v_db_users.data[pl_userIdx].mediaParams[i].localIP)) {
+      pl_dictionary[sizeof(pl_dictionary)] := {"localMediaIP"&vl_postfix, v_db_users.data[pl_userIdx].mediaParams[i].localIP};
+    }
+    if (ispresent(v_db_users.data[pl_userIdx].mediaParams[i].localPort)) {
+      pl_dictionary[sizeof(pl_dictionary)] := {"localMediaPort"&vl_postfix, int2str(v_db_users.data[pl_userIdx].mediaParams[i].localPort)};
+    }
+    if (ispresent(v_db_users.data[pl_userIdx].mediaParams[i].remoteIP)) {
+      pl_dictionary[sizeof(pl_dictionary)] := {"remoteMediaIP"&vl_postfix, v_db_users.data[pl_userIdx].mediaParams[i].remoteIP};
+    }
+    if (ispresent(v_db_users.data[pl_userIdx].mediaParams[i].remotePort)) {
+      pl_dictionary[sizeof(pl_dictionary)] := {"remoteMediaPort"&vl_postfix, int2str(v_db_users.data[pl_userIdx].mediaParams[i].remotePort)};
+    } 
+    
+  }
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_CreateNewRequestDictionary
+//
+//Purpose:
+//  To create the dictionary for the external template.
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_CreateNewRequestDictionary(
+  in    integer pl_TrIdx,
+  inout EPTF_LGenBase_TemplParamSubstList pl_dictionary
+)
+runs on EPTF_SIP_LGen_CT
+{
+  var integer i, vl_userIdx := v_db_UAC.data[pl_TrIdx].userIdx;
+  var integer vl_currentSession := v_db_UAC.data[pl_TrIdx].sessionIdx;
+
+  var charstring vl_postfix := "";
+  var charstring vl_requestURI := "";
+  f_EPTF_SIP_SIPUrl2str(v_db_UAC.data[pl_TrIdx].request.requestLine.requestUri, vl_requestURI);
+
+  var charstring vl_localHost := "";
+  var charstring vl_fromUsr := "";
+  var SipUrl vl_url;
+
+  f_EPTF_SIP_GetUri(v_db_UAC.data[pl_TrIdx].request.msgHeader.fromField.addressField, vl_url);
+  vl_fromUsr := vl_url.userInfo.userOrTelephoneSubscriber;
+  vl_localHost := vl_url.hostPort.host;
+
+  var charstring vl_remHost := "";
+  var integer vl_remPort := 0;
+  var charstring vl_toUsr := "";
+
+  f_EPTF_SIP_GetUri(v_db_UAC.data[pl_TrIdx].request.msgHeader.toField.addressField, vl_url);
+
+  vl_toUsr := vl_url.userInfo.userOrTelephoneSubscriber;
+  vl_remHost := vl_url.hostPort.host;
+  if (ispresent(vl_url.hostPort.portField))
+  {
+    vl_remPort := vl_url.hostPort.portField;
+  }  
+
+  var charstring vl_auth:="";
+  var charstring vl_authOpt:="";
+  var charstring vl_proxyAuthOpt:="";
+
+  if (ispresent(v_db_UAC.data[pl_TrIdx].request.msgHeader.authorization)) {
+    f_EPTF_SIP_encodeCredentials(
+      v_db_UAC.data[pl_TrIdx].request.msgHeader.authorization.body, 
+      vl_auth);
+    vl_authOpt := "\r\nAuthorization: "&vl_auth;
+  } else if (ispresent(v_db_UAC.data[pl_TrIdx].request.msgHeader.proxyAuthorization)) {
+    f_EPTF_SIP_encodeCredentials(
+      v_db_UAC.data[pl_TrIdx].request.msgHeader.proxyAuthorization.credentials,
+      vl_auth);
+    vl_proxyAuthOpt := "\r\nProxy-Authorization: "&vl_auth;
+  }
+
+  var charstring vl_remoteTag := "";
+  if (ispresent(v_db_UAC.data[pl_TrIdx].request.msgHeader.toField.toParams))
+  {
+    f_EPTF_SIP_GetParameter(v_db_UAC.data[pl_TrIdx].request.msgHeader.toField.toParams, c_SIP_TAG_ID, vl_remoteTag);
+  }
+
+  var charstring vl_localTag := "";
+  if (ispresent(v_db_UAC.data[pl_TrIdx].request.msgHeader.fromField.fromParams))
+  {
+    f_EPTF_SIP_GetParameter(v_db_UAC.data[pl_TrIdx].request.msgHeader.fromField.fromParams, c_SIP_TAG_ID, vl_localTag);
+  }
+
+  var charstring vl_secondaryLocalHost := vl_localHost;
+  if (ispresent(v_db_users.data[vl_userIdx].secondaryLocalHost)) {
+    vl_secondaryLocalHost := v_db_users.data[vl_userIdx].secondaryLocalHost;
+  }
+
+  var charstring vl_secondaryRemoteHost := vl_remHost;
+  if (ispresent(v_db_users.data[vl_userIdx].secondaryRemoteHost)) {
+    vl_secondaryRemoteHost := v_db_users.data[vl_userIdx].secondaryRemoteHost;
+  }
+
+  var charstring vl_secondaryTransport := f_EPTF_SIP_transport2str(v_db_UAC.data[pl_TrIdx].transport);
+  if (ispresent(v_db_users.data[vl_userIdx].secondaryTransport)) {
+    vl_secondaryTransport := f_EPTF_SIP_transport2str(v_db_users.data[vl_userIdx].secondaryTransport);
+  }
+
+  pl_dictionary := {}; // FIXME - review
+
+  pl_dictionary[sizeof(pl_dictionary)] := {"remoteTag", vl_remoteTag};
+  pl_dictionary[sizeof(pl_dictionary)] := {"requestURI", vl_requestURI};
+  pl_dictionary[sizeof(pl_dictionary)] := {"toUsr", vl_toUsr};
+  pl_dictionary[sizeof(pl_dictionary)] := {"remHost", vl_remHost};
+  pl_dictionary[sizeof(pl_dictionary)] := {"callId", v_db_UAC.data[pl_TrIdx].request.msgHeader.callId.callid};
+  pl_dictionary[sizeof(pl_dictionary)] := {"cSeq", int2str(v_db_UAC.data[pl_TrIdx].request.msgHeader.cSeq.seqNumber)};
+  pl_dictionary[sizeof(pl_dictionary)] := {"fromUsr", vl_fromUsr};
+  pl_dictionary[sizeof(pl_dictionary)] := {"localHost", vl_localHost};
+  pl_dictionary[sizeof(pl_dictionary)] := {"localTag", vl_localTag};
+  pl_dictionary[sizeof(pl_dictionary)] := {"transport", f_EPTF_SIP_transport2str(v_db_UAC.data[pl_TrIdx].transport)};
+  pl_dictionary[sizeof(pl_dictionary)] := {"localIP", v_db_users.data[vl_userIdx].localHost};
+  pl_dictionary[sizeof(pl_dictionary)] := {"localPort", int2str(v_db_users.data[vl_userIdx].sessions[vl_currentSession].port_us)};
+  pl_dictionary[sizeof(pl_dictionary)] := {"trId", v_db_UAC.data[pl_TrIdx].transactionId};
+  pl_dictionary[sizeof(pl_dictionary)] := {"remPort", int2str(vl_remPort)};
+  pl_dictionary[sizeof(pl_dictionary)] := {"proxyHost", v_db_users.data[vl_userIdx].proxyName};
+  pl_dictionary[sizeof(pl_dictionary)] := {"proxyPort", int2str(v_db_users.data[vl_userIdx].proxyPort)};
+  pl_dictionary[sizeof(pl_dictionary)] := {"auth", vl_auth};
+  pl_dictionary[sizeof(pl_dictionary)] := {"authOpt", vl_authOpt};
+  pl_dictionary[sizeof(pl_dictionary)] := {"proxyAuthOpt", vl_proxyAuthOpt};
+  pl_dictionary[sizeof(pl_dictionary)] := {"secondaryLocalHost", vl_secondaryLocalHost};
+  pl_dictionary[sizeof(pl_dictionary)] := {"secondaryRemoteHost", vl_secondaryRemoteHost};
+  pl_dictionary[sizeof(pl_dictionary)] := {"secondaryTransport", vl_secondaryTransport};
+
+  vl_postfix := "";
+  for (i := 0; i < sizeof(v_db_users.data[vl_userIdx].forwardedToUsers); i := i + 1)
+  {
+    if (i > 0) { vl_postfix := "_" & int2str(i); } // multiple stream handling
+
+    pl_dictionary[sizeof(pl_dictionary)] := {"forwardedToUsr" &vl_postfix, v_db_users.data[vl_userIdx].forwardedToUsers[i].username};
+    pl_dictionary[sizeof(pl_dictionary)] := {"forwardedToHost"&vl_postfix, v_db_users.data[vl_userIdx].forwardedToUsers[i].hostname};
+    pl_dictionary[sizeof(pl_dictionary)] := {"forwardedToPort"&vl_postfix, int2str(v_db_users.data[vl_userIdx].forwardedToUsers[i].portField)};
+  }
+
+  vl_postfix := "";
+  //action("Additional HOSTs (New Req) for SIP user: ", vl_userIdx, " -> ", v_db_users.data[vl_userIdx].additionalHosts);
+  for (i := 0; i < sizeof(v_db_users.data[vl_userIdx].additionalHosts); i := i + 1)
+  {
+    if (i > 0) { vl_postfix := "_" & int2str(i); } // multiple stream handling
+
+    pl_dictionary[sizeof(pl_dictionary)] := {"additionalUsr" &vl_postfix, v_db_users.data[vl_userIdx].additionalHosts[i].username};
+    pl_dictionary[sizeof(pl_dictionary)] := {"additionalHost"&vl_postfix, v_db_users.data[vl_userIdx].additionalHosts[i].hostname};
+    pl_dictionary[sizeof(pl_dictionary)] := {"additionalPort"&vl_postfix, int2str(v_db_users.data[vl_userIdx].additionalHosts[i].portField)};
+  }
+
+  vl_postfix := "";
+  for (i := 0; i < sizeof(v_db_users.data[vl_userIdx].mediaParams); i := i + 1) 
+  { 
+    if (i > 0) { vl_postfix := "_" & int2str(i); } // multiple stream handling
+    
+    if (ispresent(v_db_users.data[vl_userIdx].mediaParams[i].localIP)) {
+      pl_dictionary[sizeof(pl_dictionary)] := {"localMediaIP"&vl_postfix, v_db_users.data[vl_userIdx].mediaParams[i].localIP};
+    }
+    if (ispresent(v_db_users.data[vl_userIdx].mediaParams[i].localPort)) {
+      pl_dictionary[sizeof(pl_dictionary)] := {"localMediaPort"&vl_postfix, int2str(v_db_users.data[vl_userIdx].mediaParams[i].localPort)};
+    }
+    if (ispresent(v_db_users.data[vl_userIdx].mediaParams[i].remoteIP)) {
+      pl_dictionary[sizeof(pl_dictionary)] := {"remoteMediaIP"&vl_postfix, v_db_users.data[vl_userIdx].mediaParams[i].remoteIP};
+    }
+    if (ispresent(v_db_users.data[vl_userIdx].mediaParams[i].remotePort)) {
+      pl_dictionary[sizeof(pl_dictionary)] := {"remoteMediaPort"&vl_postfix, int2str(v_db_users.data[vl_userIdx].mediaParams[i].remotePort)};
+    }
+  } 
+  
+  // only for NOTIFY method 
+  var charstring vl_event := "", vl_eventId := "";
+  var integer vl_subscriptionIdx := v_db_UAC.data[pl_TrIdx].subscriptionIdx;
+  if(ispresent(v_db_UAC.data[pl_TrIdx].request.msgHeader.event) and v_db_UAC.data[pl_TrIdx].request.requestLine.method == NOTIFY_E)
+  {
+    vl_event := v_db_UAC.data[pl_TrIdx].request.msgHeader.event.event_type.event_package;
+    pl_dictionary[sizeof(pl_dictionary)] := {"event", vl_event};
+    
+    if ("" != v_db_subscription.data[vl_subscriptionIdx].eventId)
+    {
+      vl_eventId := v_db_subscription.data[vl_subscriptionIdx].eventId;
+      pl_dictionary[sizeof(pl_dictionary)] := {"eventId", vl_eventId};
+    }
+  }
+  
+  var charstring vl_subscrState := "";
+  if(ispresent(v_db_UAC.data[pl_TrIdx].request.msgHeader.subscription_state) and v_db_UAC.data[pl_TrIdx].request.requestLine.method == NOTIFY_E)
+  {
+    vl_subscrState := v_db_UAC.data[pl_TrIdx].request.msgHeader.subscription_state.substate_value;
+    pl_dictionary[sizeof(pl_dictionary)] := {"subscrState", vl_subscrState};
+  }
+  
+  var integer vl_expires := 0;
+  if(ispresent(v_db_subscription.data[vl_subscriptionIdx].expireInterval) and v_db_UAC.data[pl_TrIdx].request.requestLine.method == NOTIFY_E)
+  {
+    vl_expires := v_db_subscription.data[vl_subscriptionIdx].expireInterval;
+    pl_dictionary[sizeof(pl_dictionary)] := {"expires", int2str(vl_expires)};
+  }
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_CreateNewResponseDictionary
+//
+//Purpose:
+//  To create the dictionary for the external template.
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_CreateNewResponseDictionary(
+  in    integer pl_TrIdx,
+  inout EPTF_LGenBase_TemplParamSubstList pl_dictionary
+)
+runs on EPTF_SIP_LGen_CT
+{
+  var integer i, vl_userIdx := v_db_UAS.data[pl_TrIdx].userIdx;
+  var integer vl_currentSession := v_db_UAS.data[pl_TrIdx].sessionIdx;
+
+  //var charstring vl_requestURI := "";
+  //f_EPTF_SIP_SIPUrl2str(v_db_UAS.data[pl_TrIdx].request.requestLine.requestUri, vl_requestURI);
+  
+  var charstring vl_postfix := "";
+  var charstring vl_localHost := "";
+  var charstring vl_fromUsr := "";
+  var SipUrl vl_url;
+  
+  f_EPTF_SIP_GetUri(v_db_UAS.data[pl_TrIdx].response.msgHeader.fromField.addressField, vl_url);
+  vl_fromUsr := vl_url.userInfo.userOrTelephoneSubscriber;
+  vl_localHost := vl_url.hostPort.host;
+  
+  var charstring vl_remHost := "";
+  var integer vl_remPort := 0;
+  var charstring vl_toUsr := "";
+
+  f_EPTF_SIP_GetUri(v_db_UAS.data[pl_TrIdx].response.msgHeader.toField.addressField, vl_url);
+
+  vl_toUsr := vl_url.userInfo.userOrTelephoneSubscriber;
+  vl_remHost := vl_url.hostPort.host;
+  if (ispresent(vl_url.hostPort.portField))
+  {
+    vl_remPort := vl_url.hostPort.portField;
+  }
+  
+  var charstring vl_auth:="";
+  var charstring vl_authOpt:="";
+  var charstring vl_proxyAuthOpt:="";
+
+  if (ispresent(v_db_UAS.data[pl_TrIdx].response.msgHeader.authorization)) {
+    f_EPTF_SIP_encodeCredentials(
+      v_db_UAS.data[pl_TrIdx].response.msgHeader.authorization.body, 
+      vl_auth);
+    vl_authOpt := "\r\nAuthorization: "&vl_auth;
+  } else if (ispresent(v_db_UAS.data[pl_TrIdx].request.msgHeader.proxyAuthorization)) {
+    f_EPTF_SIP_encodeCredentials(
+      v_db_UAS.data[pl_TrIdx].response.msgHeader.proxyAuthorization.credentials,
+      vl_auth);
+    vl_proxyAuthOpt := "\r\nProxy-Authorization: "&vl_auth;
+  }
+
+  var charstring vl_remoteTag := "";
+  if (ispresent(v_db_UAS.data[pl_TrIdx].response.msgHeader.toField.toParams))
+  {
+    f_EPTF_SIP_GetParameter(v_db_UAS.data[pl_TrIdx].response.msgHeader.toField.toParams, c_SIP_TAG_ID, vl_remoteTag);
+  }
+  
+  var charstring vl_localTag := "";
+  if (ispresent(v_db_UAS.data[pl_TrIdx].response.msgHeader.fromField.fromParams))
+  {
+    f_EPTF_SIP_GetParameter(v_db_UAS.data[pl_TrIdx].response.msgHeader.fromField.fromParams, c_SIP_TAG_ID, vl_localTag);
+  }
+
+  var charstring vl_secondaryLocalHost := vl_localHost;
+  if (ispresent(v_db_users.data[vl_userIdx].secondaryLocalHost)) {
+    vl_secondaryLocalHost := v_db_users.data[vl_userIdx].secondaryLocalHost;
+  }
+
+  var charstring vl_secondaryRemoteHost := vl_remHost;
+  if (ispresent(v_db_users.data[vl_userIdx].secondaryRemoteHost)) {
+    vl_secondaryRemoteHost := v_db_users.data[vl_userIdx].secondaryRemoteHost;
+  }
+
+  var charstring vl_secondaryTransport := f_EPTF_SIP_transport2str(v_db_UAS.data[pl_TrIdx].transport);
+  if (ispresent(v_db_users.data[vl_userIdx].secondaryTransport)) {
+    vl_secondaryTransport := f_EPTF_SIP_transport2str(v_db_users.data[vl_userIdx].secondaryTransport);
+  }
+
+  pl_dictionary := {}; // FIXME - review
+  
+  pl_dictionary[sizeof(pl_dictionary)] := {"remoteTag", vl_remoteTag};
+  //pl_dictionary[sizeof(pl_dictionary)] := {"requestURI", vl_requestURI}; 
+  pl_dictionary[sizeof(pl_dictionary)] := {"toUsr", vl_toUsr};
+  pl_dictionary[sizeof(pl_dictionary)] := {"remHost", vl_remHost};
+  pl_dictionary[sizeof(pl_dictionary)] := {"callId", v_db_UAS.data[pl_TrIdx].response.msgHeader.callId.callid};
+  pl_dictionary[sizeof(pl_dictionary)] := {"cSeq", int2str(v_db_UAS.data[pl_TrIdx].response.msgHeader.cSeq.seqNumber)};
+  pl_dictionary[sizeof(pl_dictionary)] := {"fromUsr", vl_fromUsr};
+  pl_dictionary[sizeof(pl_dictionary)] := {"localHost", vl_localHost};
+  pl_dictionary[sizeof(pl_dictionary)] := {"localTag", vl_localTag};
+  pl_dictionary[sizeof(pl_dictionary)] := {"transport", f_EPTF_SIP_transport2str(v_db_UAS.data[pl_TrIdx].transport)};
+  pl_dictionary[sizeof(pl_dictionary)] := {"localIP", v_db_users.data[vl_userIdx].localHost};
+  pl_dictionary[sizeof(pl_dictionary)] := {"localPort", int2str(v_db_users.data[vl_userIdx].sessions[vl_currentSession].port_us)};
+  pl_dictionary[sizeof(pl_dictionary)] := {"trId", v_db_UAS.data[pl_TrIdx].transactionId};
+  pl_dictionary[sizeof(pl_dictionary)] := {"remPort", int2str(vl_remPort)};
+  pl_dictionary[sizeof(pl_dictionary)] := {"proxyHost", v_db_users.data[vl_userIdx].proxyName};
+  pl_dictionary[sizeof(pl_dictionary)] := {"proxyPort", int2str(v_db_users.data[vl_userIdx].proxyPort)};
+  pl_dictionary[sizeof(pl_dictionary)] := {"auth", vl_auth};
+  pl_dictionary[sizeof(pl_dictionary)] := {"authOpt", vl_authOpt};
+  pl_dictionary[sizeof(pl_dictionary)] := {"proxyAuthOpt", vl_proxyAuthOpt};
+  pl_dictionary[sizeof(pl_dictionary)] := {"secondaryLocalHost", vl_secondaryLocalHost};
+  pl_dictionary[sizeof(pl_dictionary)] := {"secondaryRemoteHost", vl_secondaryRemoteHost};
+  pl_dictionary[sizeof(pl_dictionary)] := {"secondaryTransport", vl_secondaryTransport};
+
+  vl_postfix := "";
+  for (i := 0; i < sizeof(v_db_users.data[vl_userIdx].forwardedToUsers); i := i + 1)
+  {
+    if (i > 0) { vl_postfix := "_" & int2str(i); } // multiple stream handling
+
+    pl_dictionary[sizeof(pl_dictionary)] := {"forwardedToUsr"&vl_postfix, v_db_users.data[vl_userIdx].forwardedToUsers[i].username};
+    pl_dictionary[sizeof(pl_dictionary)] := {"forwardedToHost"&vl_postfix, v_db_users.data[vl_userIdx].forwardedToUsers[i].hostname};
+    pl_dictionary[sizeof(pl_dictionary)] := {"forwardedToPort"&vl_postfix, int2str(v_db_users.data[vl_userIdx].forwardedToUsers[i].portField)};
+  }
+
+  vl_postfix := "";
+  //action("Additional HOSTs (New Rsp) for SIP user: ", vl_userIdx, " -> ", v_db_users.data[vl_userIdx].additionalHosts);
+  for (i := 0; i < sizeof(v_db_users.data[vl_userIdx].additionalHosts); i := i + 1)
+  {
+    if (i > 0) { vl_postfix := "_" & int2str(i); } // multiple stream handling
+
+    pl_dictionary[sizeof(pl_dictionary)] := {"additionalUsr" &vl_postfix, v_db_users.data[vl_userIdx].additionalHosts[i].username};
+    pl_dictionary[sizeof(pl_dictionary)] := {"additionalHost"&vl_postfix, v_db_users.data[vl_userIdx].additionalHosts[i].hostname};
+    pl_dictionary[sizeof(pl_dictionary)] := {"additionalPort"&vl_postfix, int2str(v_db_users.data[vl_userIdx].additionalHosts[i].portField)};
+  }
+
+  vl_postfix := "";    
+  for (i := 0; i < sizeof(v_db_users.data[vl_userIdx].mediaParams); i := i + 1) 
+  { 
+    if (i > 0) { vl_postfix := "_" & int2str(i); } // multiple stream handling
+    
+    if (ispresent(v_db_users.data[vl_userIdx].mediaParams[i].localIP)) {
+      pl_dictionary[sizeof(pl_dictionary)] := {"localMediaIP"&vl_postfix, v_db_users.data[vl_userIdx].mediaParams[i].localIP};
+    }
+    if (ispresent(v_db_users.data[vl_userIdx].mediaParams[i].localPort)) {
+      pl_dictionary[sizeof(pl_dictionary)] := {"localMediaPort"&vl_postfix, int2str(v_db_users.data[vl_userIdx].mediaParams[i].localPort)};
+    }
+    if (ispresent(v_db_users.data[vl_userIdx].mediaParams[i].remoteIP)) {
+      pl_dictionary[sizeof(pl_dictionary)] := {"remoteMediaIP"&vl_postfix, v_db_users.data[vl_userIdx].mediaParams[i].remoteIP};
+    }
+    if (ispresent(v_db_users.data[vl_userIdx].mediaParams[i].remotePort)) {
+      pl_dictionary[sizeof(pl_dictionary)] := {"remoteMediaPort"&vl_postfix, int2str(v_db_users.data[vl_userIdx].mediaParams[i].remotePort)};
+    } 
+    
+  }
+}
+
+///////////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_CreateNewRequest
+//
+//Purpose:
+//  Creates a new request message outside of a dialog.
+//
+//Parameters:
+//  - pl_TrIdx - *in integer* - the index of the UAC transaction in v_db_UAC
+//  - pl_requestUri - *in* <SipUrl> - the SIP request URI
+//  - pl_callId - *in* <CallidString> - the CallId
+//  - pl_cSeq - *in integer* - SIP Cseq number
+//  - pl_to - *in* <Addr_Union> - address in the To header field
+//  - pl_from - *in* <Addr_Union> - address in the From header field
+//  - pl_localTag - *in charstring* - the local tag
+//  - pl_route - *in* <RouteBody_List> - Route header
+//
+///////////////////////////////////////////////////////////
+function f_EPTF_SIP_CreateNewRequest(
+  in    integer pl_TrIdx,
+  in    SipUrl pl_requestUri,
+  in    CallidString pl_callId,
+  in    integer pl_cSeq,
+  in    Addr_Union pl_to,
+  in    Addr_Union pl_from,
+  in    charstring pl_localTag,
+  in    RouteBody_List  pl_route)
+runs on EPTF_SIP_LGen_CT
+{
+  var integer vl_userIdx := v_db_UAC.data[pl_TrIdx].userIdx;
+
+  /*if(not ispresent(v_db_UAC.data[pl_TrIdx].request)) {
+    v_db_UAC.data[pl_TrIdx].request := cg_PDU_SIP_Request_base;
+  }*/
+
+  f_EPTF_SIP_SipUrl2FlatSipUrl(pl_requestUri, v_db_UAC.data[pl_TrIdx].toAddr);
+  
+  v_db_UAC.data[pl_TrIdx].request.requestLine.requestUri := pl_requestUri;
+  v_db_UAC.data[pl_TrIdx].request.requestLine.method := v_db_UAC.data[pl_TrIdx].method;
+
+  v_db_UAC.data[pl_TrIdx].request.msgHeader.callId := {
+    fieldName := CALL_ID_E,
+    callid := pl_callId
+  }
+
+  v_db_UAC.data[pl_TrIdx].request.msgHeader.cSeq := {
+    fieldName := CSEQ_E,
+    seqNumber := pl_cSeq,
+    method := c_SIP_Methods[enum2int(v_db_UAC.data[pl_TrIdx].method)]
+  }
+
+  v_db_UAC.data[pl_TrIdx].request.msgHeader.fromField := {
+    fieldName := FROM_E,
+    addressField := pl_from,
+    fromParams := {{id := c_SIP_TAG_ID, paramValue := pl_localTag}}
+  }
+
+  v_db_UAC.data[pl_TrIdx].request.msgHeader.toField := {
+    fieldName := TO_E,
+    addressField := pl_to,
+    toParams := { }
+  }
+
+  var integer pl_currentSession := v_db_UAC.data[pl_TrIdx].sessionIdx;
+  v_db_UAC.data[pl_TrIdx].request.msgHeader.via := {
+    fieldName := VIA_E,
+    viaBody   :=
+    {{
+        sentProtocol :=
+        {
+          protocolName := c_SIP_NAME,
+          protocolVersion:= c_SIP_VERSION,
+          transport:= f_EPTF_SIP_transport2str(v_db_UAC.data[pl_TrIdx].transport)
+        },
+        sentBy    := {v_db_users.data[vl_userIdx].localHost, v_db_users.data[vl_userIdx].sessions[pl_currentSession].port_us},
+        viaParams := {{
+            id :=c_SIP_BRANCH_ID,
+            paramValue := c_SIP_BRANCH_COOKIE & v_db_UAC.data[pl_TrIdx].transactionId
+          }}
+      }}
+  }
+
+  v_db_UAC.data[pl_TrIdx].request.msgHeader.contentLength := 
+  {
+    fieldName := CONTENT_LENGTH_E,
+    len := 0
+  }
+
+  v_db_UAC.data[pl_TrIdx].request.msgHeader.maxForwards := {
+    fieldName := MAX_FORWARDS_E,
+    forwards := 70
+  }
+
+  if (v_db_users.data[vl_userIdx].authData.insertAuthHeaderInRequest)
+  {
+    f_EPTF_SIP_insertAuthorizationHeader(
+      v_db_UAC.data[pl_TrIdx].request, 
+      vl_userIdx, 
+      pl_currentSession);
+      
+    if (v_insertAuthHeaderOnChallengeOnly)
+    {
+      v_db_users.data[vl_userIdx].authData.insertAuthHeaderInRequest := false;
+    }
+  }
+
+  if (0 < sizeof(pl_route))
+  {
+    v_db_UAC.data[pl_TrIdx].request.msgHeader.route := {
+      fieldName := ROUTE_E,
+      routeBody := pl_route
+    }
+  }
+  
+};
+
+function f_EPTF_SIP_updateAuthData(
+  in RequestLine pl_requestLine,
+  in charstring pl_userName,
+  in charstring pl_passwd,
+  in integer pl_userIdx,
+  in integer pl_sessionIdx)
+runs on EPTF_SIP_LGen_CT
+{
+  var charstring vl_uri := "";
+  
+  f_EPTF_SIP_SIPUrl2str(pl_requestLine.requestUri, vl_uri);
+  
+  if ("" == v_db_users.data[pl_userIdx].authData.userName)
+  {
+    v_db_users.data[pl_userIdx].authData.userName := pl_userName;
+  }
+
+  if (v_db_users.data[pl_userIdx].authData.challenge == {})
+  {
+
+    v_db_users.data[pl_userIdx].authData.credentials.digestResponse := {}
+    
+    f_EPTF_SIP_SetParameter(
+      v_db_users.data[pl_userIdx].authData.credentials.digestResponse,
+      c_SIP_PARAM_USERNAME,
+      "\""&v_db_users.data[pl_userIdx].authData.userName&"\"");
+
+    if (isvalue( pl_requestLine.requestUri.hostPort.host))
+    {
+      f_EPTF_SIP_SetParameter(
+        v_db_users.data[pl_userIdx].authData.credentials.digestResponse,
+        c_SIP_PARAM_REALM,
+        "\""&pl_requestLine.requestUri.hostPort.host&"\"");
+    }
+
+    f_EPTF_SIP_SetParameter(
+      v_db_users.data[pl_userIdx].authData.credentials.digestResponse,
+      c_SIP_PARAM_URI,
+      "\""&vl_uri&"\"");
+
+    f_EPTF_SIP_SetParameter(
+      v_db_users.data[pl_userIdx].authData.credentials.digestResponse,
+      c_SIP_PARAM_NONCE,
+       "\"\"");
+
+    f_EPTF_SIP_SetParameter(
+      v_db_users.data[pl_userIdx].authData.credentials.digestResponse,
+      c_SIP_PARAM_RESPONSE,
+      "\"\"");
+  }else{
+
+    f_EPTF_SIP_updateCredentials(
+      pl_userIdx, 
+      pl_requestLine.method, 
+      v_db_users.data[pl_userIdx].authData.userName,
+      vl_uri, 
+      pl_passwd);
+  }
+  
+}
+
+///////////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_insertAuthorizationHeader
+//
+//Purpose:
+//  To insert authentication header in the request.
+//
+//Parameters:
+//  - pl_request - *in* <PDU_SIP_Request> - SIP request
+//  - pl_userIdx - *in* *integer* - the index of the user in v_db_users
+//  - pl_sessionIdx - *in* *integer* - the index of the session to send the response in
+//
+///////////////////////////////////////////////////////////
+function f_EPTF_SIP_insertAuthorizationHeader(
+  inout PDU_SIP_Request pl_request, 
+  in integer pl_userIdx, 
+  in integer pl_sessionIdx)
+runs on EPTF_SIP_LGen_CT
+{
+  var charstring vl_usernameValue := ""
+  var charstring vl_password := "";
+
+  if (ispresent(v_db_users.data[pl_userIdx].imsAKAData))
+  {
+    var charstring vl_notasciipassword := "";
+
+    vl_usernameValue := v_db_users.data[pl_userIdx].imsAKAData.privateUsername;
+
+    if (omit != v_db_users.data[pl_userIdx].sessions[pl_sessionIdx].secureSessionData)
+    {
+      vl_notasciipassword := oct2str(v_db_users.data[pl_userIdx].sessions[pl_sessionIdx].secureSessionData.RES);
+      f_TCCSecurity_hex2char(vl_notasciipassword, vl_password);
+    }
+  }else{
+    var SipUrl vl_url;
+    f_EPTF_SIP_GetUri(pl_request.msgHeader.fromField.addressField, vl_url);
+
+    if (ispresent(vl_url.userInfo))
+    {
+      vl_usernameValue := vl_url.userInfo.userOrTelephoneSubscriber;
+    }
+
+    if (ispresent(vl_url.hostPort.host))
+    {
+      vl_usernameValue := vl_usernameValue & "@" & vl_url.hostPort.host;
+    }
+    vl_password := v_db_users.data[pl_userIdx].authData.password;
+  }
+
+  f_EPTF_SIP_updateAuthData(pl_request.requestLine, vl_usernameValue, vl_password, pl_userIdx, pl_sessionIdx);
+  
+  if (REGISTER_E == pl_request.requestLine.method)
+  {
+    pl_request.msgHeader.authorization :=
+    {
+      fieldName := AUTHORIZATION_E,
+      body := v_db_users.data[pl_userIdx].authData.credentials
+    }
+  }else{
+    pl_request.msgHeader.proxyAuthorization :=
+    {
+      fieldName := PROXY_AUTHORIZATION_E,
+      credentials := v_db_users.data[pl_userIdx].authData.credentials
+    }
+  }
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_CreateNewRequestInDialog
+//
+//Purpose:
+//  Creates a new request message inside a dialog.
+//
+//Parameters:
+//  - pl_TrIdx - *in* *integer* - the inde of the UAC transaction in v_db_UAC
+//  - pl_dialogIdx - *in* *integer* - the index of the dialog in v_db_dialog
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_CreateNewRequestInDialog(
+  in    integer pl_TrIdx,
+  in    integer  pl_dialogIdx
+)
+runs on EPTF_SIP_LGen_CT
+{
+  var SipUrl vl_requestUri;
+  f_EPTF_SIP_FlatSipUrl2SipUrl(v_db_dialog.data[pl_dialogIdx].requestUri, vl_requestUri);
+  var Addr_Union vl_remoteUri, vl_localUri;
+  f_EPTF_SIP_FlatSipUrl2AddrUnion(v_db_dialog.data[pl_dialogIdx].remoteUri, vl_remoteUri);
+  f_EPTF_SIP_FlatSipUrl2AddrUnion(v_db_dialog.data[pl_dialogIdx].localUri, vl_localUri);
+  
+  var RouteBody_List vl_routeBody := {};
+  f_EPTF_SIP_SIPRouteBodyList2Route(v_db_dialog.data[pl_dialogIdx].route, vl_routeBody);
+  
+  f_EPTF_SIP_CreateNewRequest(
+    pl_TrIdx,
+    vl_requestUri,
+    v_db_dialog.data[pl_dialogIdx].callId,
+    v_db_dialog.data[pl_dialogIdx].localSeqNum,
+    vl_remoteUri,
+    vl_localUri,
+    v_db_dialog.data[pl_dialogIdx].localTag,
+    vl_routeBody
+  )
+
+  if ("" != v_db_dialog.data[pl_dialogIdx].remoteTag)
+  {
+    v_db_UAC.data[pl_TrIdx].request.msgHeader.toField.toParams := {
+      {id := c_SIP_TAG_ID, paramValue := v_db_dialog.data[pl_dialogIdx].remoteTag}
+    }
+  }
+  
+  f_EPTF_SIP_updateDialog(pl_dialogIdx);
+}
+
+function f_EPTF_SIP_updateDialog(in integer pl_dialogIdx)
+runs on EPTF_SIP_LGen_CT
+{
+  v_db_dialog.data[pl_dialogIdx].localSeqNum := f_EPTF_SIP_increaseCSeq(v_db_dialog.data[pl_dialogIdx].localSeqNum);
+}
+
+function f_EPTF_SIP_getSecurityMechanismIdx(in Security_mechanism_list pl_list, in charstring pl_mechanismName, inout integer pl_idx)
+return boolean
+{
+  for (var integer i := 0; i < sizeof(pl_list); i := i + 1)
+  {
+    if (pl_mechanismName == pl_list[i].mechanism_name)
+    {
+      pl_idx := i;
+      return true;
+    }
+  }
+
+  return false;
+}
+
+function f_SIP_addUserParams2MechList(inout SemicolonParam_List pl_mechanismList, in integer pl_userIdx) runs on EPTF_SIP_LGen_CT{
+  if(not ispresent(v_db_users.data[pl_userIdx].imsAKAData)) { return };
+  //add supported algs
+  for (var integer i := 0; i < sizeof(v_db_users.data[pl_userIdx].imsAKAData.supportedALGs); i := i + 1)
+  {
+    f_EPTF_SIP_SetParameter(
+      pl_mechanismList,
+      c_SIP_SECPARAM_ALG,
+      v_db_users.data[pl_userIdx].imsAKAData.supportedALGs[i])
+      }
+
+  for (var integer i := 0; i < sizeof(v_db_users.data[pl_userIdx].imsAKAData.supportedEALGs); i := i + 1)
+  {
+    f_EPTF_SIP_SetParameter(
+      pl_mechanismList,
+      c_SIP_SECPARAM_EALG,
+      v_db_users.data[pl_userIdx].imsAKAData.supportedEALGs[i]);
+  }
+
+  f_EPTF_SIP_SetParameter(
+    pl_mechanismList,
+    c_SIP_SECPARAM_PROTO,
+    v_db_users.data[pl_userIdx].imsAKAData.proto);
+
+  f_EPTF_SIP_SetParameter(
+    pl_mechanismList,
+    c_SIP_SECPARAM_MOD,
+    v_db_users.data[pl_userIdx].imsAKAData.mode);
+
+}
+
+function f_SIP_addSessionParams2MechList(
+  inout SemicolonParam_List pl_mechanismList, 
+  in integer pl_spi_c,
+  in integer pl_spi_s,
+  in integer pl_port_c,
+  in integer pl_port_s)
+runs on EPTF_SIP_LGen_CT
+{
+  f_EPTF_SIP_SetParameter(
+    pl_mechanismList,
+    c_SIP_SECPARAM_SPI_C,
+    int2str(pl_spi_c));
+
+  f_EPTF_SIP_SetParameter(
+    pl_mechanismList,
+    c_SIP_SECPARAM_SPI_S,
+    int2str(pl_spi_s));
+
+  f_EPTF_SIP_SetParameter(
+    pl_mechanismList,
+    c_SIP_SECPARAM_PORT_C,
+    int2str(pl_port_c));
+
+  f_EPTF_SIP_SetParameter(
+    pl_mechanismList,
+    c_SIP_SECPARAM_PORT_S,
+    int2str(pl_port_s));
+
+}
+
+function f_EPTF_SIP_imsAKA_addHeaders(in integer pl_userIdx, inout MessageHeader pl_msgHeader)
+runs on EPTF_SIP_LGen_CT
+{
+  if(not ispresent(v_db_users.data[pl_userIdx].imsAKAData)) { return };
+  pl_msgHeader.proxyRequire := {
+    fieldName := PROXY_REQUIRE_E,
+    optionsTags := {"sec-agree"}
+  }
+  pl_msgHeader.require :=
+  {
+    fieldName := REQUIRE_E,
+    optionsTags := {"sec-agree", "pref"}
+  }
+
+  pl_msgHeader.security_client := {
+    fieldName := SECURITY_CLIENT_E,
+    sec_mechanism_list := v_db_users.data[pl_userIdx].imsAKAData.securityClientData
+  }
+
+  if (v_db_users.data[pl_userIdx].imsAKAData.isValidSecSeverData)
+  {
+    pl_msgHeader.security_verify := {
+      fieldName := SECURITY_VERIFY_E,
+      sec_mechanism_list := v_db_users.data[pl_userIdx].imsAKAData.securityServerData
+    }
+  }
+
+}
+
+function f_EPTF_SIP_addContact(in integer pl_userIdx, inout MessageHeader pl_header, in integer pl_contactID := 0)
+runs on EPTF_SIP_LGen_CT
+{
+  var integer vl_contactId := pl_contactID;
+  
+  if(f_EPTF_SIP_getUserData_nrOfIds(pl_userIdx) > vl_contactId and 0 <= vl_contactId)
+  {
+    var Addr_Union addr;
+    f_EPTF_SIP_getUserData_id_addr(pl_userIdx, vl_contactId, addr);
+    f_EPTF_SIP_updateContact(pl_header.contact,
+      addr);
+  }
+
+}
+
+function f_EPTF_SIP_addREFERHeaders(in integer pl_userIdx, in integer pl_FSMIdx, inout MessageHeader pl_header)
+runs on EPTF_SIP_LGen_CT
+{
+  pl_header.refer_to :={
+    fieldName := REFER_TO_E,
+//    addr := v_db_users.data[pl_userIdx].FSMs.data[pl_FSMIdx].referToURI,
+    referToParams := omit
+  }
+  if(ispresent(v_db_users.data[pl_userIdx].FSMs.data[pl_FSMIdx].referToURI)) {
+    f_EPTF_SIP_FlatSipUrl2AddrUnion(v_db_users.data[pl_userIdx].FSMs.data[pl_FSMIdx].referToURI,
+      pl_header.refer_to.addr);
+  } else {
+    pl_header.refer_to.addr := {addrSpecUnion := cg_SipUrl_base};
+  }
+}
+
+function f_EPTF_SIP_addSUBSCRIBEHeaders(in integer pl_subscription, inout MessageHeader pl_header)
+runs on EPTF_SIP_LGen_CT
+{
+    pl_header.event :={
+      fieldName := EVENT_E,
+      event_type := v_db_subscription.supportedEventTypes[v_db_subscription.data[pl_subscription].eventTypeIdx],
+      event_params := omit
+    }
+
+    if ("" != v_db_subscription.data[pl_subscription].eventId)
+    {
+      pl_header.event.event_params := {{c_SIP_ID_ID, v_db_subscription.data[pl_subscription].eventId}};
+    }
+
+    if (0 <= v_db_subscription.data[pl_subscription].expireInterval)
+    {
+      pl_header.expires:={
+        fieldName := EXPIRES_E,
+        deltaSec := int2str(v_db_subscription.data[pl_subscription].expireInterval)
+      }
+    }
+}
+
+function f_EPTF_SIP_addPUBLISHHeadersINIT(in integer pl_publish, inout MessageHeader pl_header)
+runs on EPTF_SIP_LGen_CT
+{
+    pl_header.event :={
+      fieldName := EVENT_E,
+      event_type := v_db_publish.data[pl_publish].eventType,
+      event_params := omit
+    }
+
+    if (0 <= v_db_publish.data[pl_publish].expireInterval)
+    {
+      pl_header.expires:={
+        fieldName := EXPIRES_E,
+        deltaSec := int2str(v_db_publish.data[pl_publish].expireInterval)
+      }
+    }
+}
+
+function f_EPTF_SIP_addPUBLISHHeadersSUB(in integer pl_publish, inout MessageHeader pl_header)
+runs on EPTF_SIP_LGen_CT
+{
+    f_EPTF_SIP_addPUBLISHHeadersINIT(pl_publish,pl_header);
+
+    pl_header.sip_If_Match :=
+    {
+      fieldName := SIP_IF_MATCH_E,
+      entity_tag := v_db_publish.data[pl_publish].eTag
+    }
+    
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_SIP_forwardRequestPreprocess
+// 
+//  Purpose:
+//    Request validation, preprocess routing information, determine target(s) for the request
+// 
+//  Parameters:
+//    pl_request - *in* <PDU_SIP_Request> - the SIP request
+//    pl_userIdx - *in* *integer* - the index of the user in v_db_users
+//    pl_transport - *in* <EPTF_SIP_TransportParams_IN> - the transport, to port, from port
+// 
+//  Detailed comments:
+//    The target set is created in the v_targetURIList component variable. 
+//    If the Request-URI indicates that the request should be processed locally, no target
+//    set is created.
+//    To determine if the Route header of the Request-URI indicates this proxy the values
+//    added by means of <f_EPTF_SIP_addDomain> are used.
+//
+////////////////////////////////////////////////////////////
+function f_SIP_forwardRequestPreprocess(
+  inout PDU_SIP_Request pl_request, 
+  in integer pl_userIdx, 
+  in EPTF_SIP_TransportParams_IN pl_transport)
+runs on EPTF_SIP_LGen_CT
+{
+  var boolean vl_processLocally := false;
+  
+//check Max-Forward value
+  if (omit != pl_request.msgHeader.maxForwards and
+        0 >= pl_request.msgHeader.maxForwards.forwards)
+  {
+    f_SIP_Logging_WARNING(log2str(
+      %definitionId, 
+      ": invalid Max-Forward header value in incoming request: ", 
+      pl_request.msgHeader.maxForwards.forwards));
+  }
+
+//remove top-most Route header if it indicates this proxy
+  if (omit != pl_request.msgHeader.route and
+        0 < sizeof(pl_request.msgHeader.route.routeBody) and
+        omit != pl_request.msgHeader.route.routeBody[0].nameAddr.addrSpec.hostPort.host and
+        f_SIP_processLocally(pl_request.msgHeader.route.routeBody[0].nameAddr.addrSpec.hostPort.host))
+  {
+    
+    f_EPTF_SIP_StripFirstRoute(pl_request.msgHeader.route);
+
+    if (sizeof(pl_request.msgHeader.route.routeBody) == 0)
+    {
+      pl_request.msgHeader.route := omit;
+    }
+  }
+  
+/*  if (omit != pl_request.requestLine.requestUri.urlParameters)
+  {
+    var charstring vl_maddr := "";
+    f_EPTF_SIP_GetParameter(pl_request.requestLine.requestUri.urlParameters, c_SIP_MADDR_ID, vl_maddr);
+    
+    if ("" != vl_maddr and f_SIP_processLocally(vl_maddr))
+    {
+      var SIP_Transport vl_proto := v_db_users.data[pl_userIdx].preferredTransport;
+      var charstring vl_transport := "";
+      f_EPTF_SIP_GetParameter(pl_request.requestLine.requestUri.urlParameters, c_SIP_TRANSPORT_ID, vl_maddr);
+      if ("" != vl_transport)
+      {
+        vl_proto := f_EPTF_SIP_getTransport(vl_transport);
+      }
+      
+      //check if the request was received using the port and transport indicated by the URI
+      if (vl_proto == pl_transport.proto)
+      {
+        var integer vl_port := v_db_users.data[pl_userIdx].portNumbers[c_SIP_portNumberSIP];
+        if (omit != pl_request.requestLine.requestUri.hostPort.portField)
+        {
+          vl_port := pl_request.requestLine.requestUri.hostPort.portField;
+        }
+        
+        if (vl_port == pl_transport.port_us)
+        //strip maddr, and any non-default port or transport parameter
+        {
+          f_EPTF_SIP_RemoveParameter(pl_request.requestLine.requestUri.urlParameters, c_SIP_MADDR_ID);
+          vl_maddr := "";
+          if (vl_port != v_db_users.data[pl_userIdx].portNumbers[c_SIP_portNumberSIP])
+          {
+            pl_request.requestLine.requestUri.hostPort.portField := omit;
+          }
+          
+          if ("" != vl_transport and vl_proto != v_db_users.data[pl_userIdx].preferredTransport)
+          {
+            f_EPTF_SIP_RemoveParameter(pl_request.requestLine.requestUri.urlParameters, c_SIP_TRANSPORT_ID);
+          }
+        }
+      }
+    }
+  }
+*/
+
+//create target set (RFC3261 16.5)
+  if (omit != pl_request.requestLine.requestUri.hostPort.host)
+  {
+    vl_processLocally := f_SIP_processLocally(pl_request.requestLine.requestUri.hostPort.host);
+  }
+
+  if (not vl_processLocally)
+  {
+    v_targetURIList[0] := pl_request.requestLine.requestUri;
+  }
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_SIP_createForwardedRequest
+// 
+//  Purpose:
+//    Updates Request-URI with the first URI in the target set, updates Max-Forwards header,
+//    determines transport, port and target, adds a Via header.
+// 
+//  Parameters:
+//    pl_userIdx - *in* *integer* - the index of the user in v_db_users
+//    pl_branchId - *in* *charstring* - the branch id to insert in the Via header
+//    pl_proto - *in* <SIP_Transport> - the protocol to insert in the Via header
+//    pl_request - *in* <PDU_SIP_Request> - the SIP request
+// 
+//
+//  Detailed Comments:
+//    The transport is retreived from the top-most Route header if present, else
+//    from the Request-URI.
+//
+////////////////////////////////////////////////////////////
+function f_SIP_createForwardedRequest(
+  in integer pl_userIdx,
+  in charstring pl_branchId, 
+  in SIP_Transport pl_proto,
+  inout PDU_SIP_Request pl_request)
+runs on EPTF_SIP_LGen_CT
+{
+  if (sizeof(v_targetURIList) < 1)
+  {
+    return;
+  }
+
+//update Request-URI with the target
+  pl_request.requestLine.requestUri := v_targetURIList[0];
+
+//update Max-Forwards
+  if (omit == pl_request.msgHeader.maxForwards)
+  {
+    pl_request.msgHeader.maxForwards :={
+      fieldName := MAX_FORWARDS_E,
+      forwards := 70
+    }
+  }else{
+    pl_request.msgHeader.maxForwards.forwards := 
+      pl_request.msgHeader.maxForwards.forwards - 1;
+  }
+
+//add Via
+  var ViaBody vl_via :=
+  {
+    sentProtocol :={
+      protocolName := c_SIP_NAME,
+      protocolVersion:= c_SIP_VERSION,
+      transport:= f_EPTF_SIP_transport2str(pl_proto)
+    },
+    sentBy :={
+      host := v_db_users.data[pl_userIdx].localHost,
+      portField := v_db_users.data[pl_userIdx].sessions[0].port_us
+    },
+    viaParams := {
+      {
+            id :=c_SIP_BRANCH_ID,
+            paramValue := c_SIP_BRANCH_COOKIE & pl_branchId
+      }
+    }
+  }
+
+  if (omit == pl_request.msgHeader.via)
+  {
+    pl_request.msgHeader.via :={
+      fieldName := VIA_E,
+      viaBody := {}
+    }
+  }
+
+  var ViaBody_List vl_viaList := {vl_via};
+
+  for (var integer i := 0; i < sizeof(pl_request.msgHeader.via.viaBody); i := i + 1)
+  {
+    vl_viaList[sizeof(vl_viaList)] := pl_request.msgHeader.via.viaBody[i];
+  }
+
+  pl_request.msgHeader.via.viaBody := vl_viaList;
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_SIP_forwardResponsePreprocess
+// 
+//  Purpose:
+//    Strips the top-most Via header from a SIP response.
+// 
+//  Parameters:
+//    pl_response - *in* <PDU_SIP_Response> - the SIP response.
+// 
+//
+////////////////////////////////////////////////////////////
+function f_SIP_forwardResponsePreprocess(inout PDU_SIP_Response pl_response)
+runs on EPTF_SIP_LGen_CT
+{
+  var ViaBody_List vl_viaList := {};
+
+  for (var integer i := 1; i < sizeof(pl_response.msgHeader.via.viaBody); i := i + 1)
+  {
+    vl_viaList[sizeof(vl_viaList)] := pl_response.msgHeader.via.viaBody[i];
+  }
+  
+  pl_response.msgHeader.via.viaBody := vl_viaList;
+  
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_SIP_processLocally
+// 
+//  Purpose:
+//    Determine if domain should be processed locally
+// 
+//  Parameters:
+//    pl_address - *in* *charstring* - the SIP response.
+//  
+//  Return value:
+//    charstring - 
+//
+////////////////////////////////////////////////////////////
+function f_SIP_processLocally(in charstring pl_address)
+runs on EPTF_SIP_LGen_CT
+return boolean
+{
+  for (var integer i := 0; i < sizeof(v_domains); i := i + 1)
+  {
+    if (v_domains[i] == pl_address){return true;}
+  }
+
+  return false;
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_SIP_addTargetURI
+// 
+//  Purpose:
+//    Adds a new URI to the target set.
+// 
+//  Parameters:
+//    pl_target - *in* <SipUrl> - the SIP response.
+//  
+////////////////////////////////////////////////////////////
+function f_EPTF_SIP_addTargetURI(in SipUrl pl_target)
+runs on EPTF_SIP_LGen_CT
+{
+  v_targetURIList[sizeof(v_targetURIList)] := pl_target;
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_SIP_clearTargetSet
+// 
+//  Purpose:
+//    Clears the target set.
+// 
+////////////////////////////////////////////////////////////
+function f_EPTF_SIP_clearTargetSet()
+runs on EPTF_SIP_LGen_CT
+{
+  v_targetURIList := {};
+}
+
+///////////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_encodeCredentials
+//
+//Purpose:
+//  To encode a comma separated parameter list.
+//
+//Parameters:
+//  - pl_list - *in* <CommaParam_List> - The list to encode
+//
+///////////////////////////////////////////////////////////
+function f_EPTF_SIP_encodeCredentials(
+  in Credentials pl_credentials,
+  out charstring pl_raw)
+runs on EPTF_SIP_LGen_CT 
+{
+  var charstring vl_rawList;
+  
+  //log(pl_credentials);
+  
+  if (ischosen(pl_credentials.digestResponse)) {
+    pl_raw := "Digest ";
+    f_EPTF_SIP_encodeCommaParam_List(pl_credentials.digestResponse, vl_rawList);
+  } else if (ischosen(pl_credentials.otherResponse)) {
+    pl_raw := pl_credentials.otherResponse.authScheme&" ";
+    f_EPTF_SIP_encodeCommaParam_List(pl_credentials.otherResponse.authParams, vl_rawList);
+  }
+  
+  pl_raw := pl_raw&vl_rawList;
+}
+
+///////////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_encodeCommaParam_List                   
+//                                                                    
+//Purpose:                                                            
+//  To encode a comma separated parameter list.
+//                                                                    
+//Parameters:                                                         
+//  - pl_list - *in* <CommaParam_List> - The list to encode
+//
+///////////////////////////////////////////////////////////
+function f_EPTF_SIP_encodeCommaParam_List(
+  in CommaParam_List pl_list,
+  out charstring pl_raw)
+runs on EPTF_SIP_LGen_CT 
+{
+  pl_raw := "";
+  if (isvalue(pl_list) and sizeof(pl_list) > 0) {
+    // first value
+    pl_raw := pl_raw&pl_list[0].id;
+    if (ispresent(pl_list[0].paramValue)) {
+      pl_raw := pl_raw&"="&pl_list[0].paramValue
+    }
+    // the rest of values
+  	for (var integer i:=1; i < sizeof(pl_list); i := i + 1) {
+  	  pl_raw := pl_raw&", "&pl_list[i].id;
+  	  if (ispresent(pl_list[i].paramValue)) {
+  	    pl_raw := pl_raw&"="&pl_list[i].paramValue
+  	  }
+  	}
+  }
+}
+
+function f_EPTF_SIP_getTargetFromRequestURI(in SIP_FlatSipUrl pl_uri)
+return charstring
+{
+  var charstring vl_target := "";
+
+  if (omit != pl_uri.urlParameters)
+  {
+    f_EPTF_SIP_GetParameter(pl_uri.urlParameters, c_SIP_MADDR_ID, vl_target);
+  }
+
+  if ("" == vl_target)
+  {
+    if ("" != pl_uri.hostname)
+    {
+      vl_target := pl_uri.hostname;
+    }
+  }
+  
+  return vl_target;
+}
+
+///////////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_getRequestTarget
+//
+//Purpose:
+//  To recive the hostname from a SIP request that will be used for SIP routing.
+//
+//Parameters:
+//  - pl_request - *in* <PDU_SIP_Request> - SIP request
+//
+///////////////////////////////////////////////////////////
+function f_EPTF_SIP_getRequestTarget(in PDU_SIP_Request pl_request)
+return charstring
+{
+  var SipUrl vl_routingURI;
+  var SIP_FlatSipUrl vl_flatURI;
+  
+  f_SIP_selectRoutingURI(pl_request, vl_routingURI);
+  f_EPTF_SIP_SipUrl2FlatSipUrl(vl_routingURI, vl_flatURI);
+  
+  return f_EPTF_SIP_getTargetFromRequestURI(vl_flatURI);
+}
+
+///////////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_getResponseTarget
+//
+//Purpose:
+//  To recive the hostname from a SIP response that will be used for SIP routing.
+//
+//Parameters:
+//  - pl_response - *in* <PDU_SIP_Response> - SIP response
+//
+///////////////////////////////////////////////////////////
+function f_EPTF_SIP_getResponseTarget(in PDU_SIP_Response pl_response)
+return charstring
+{
+  var charstring vl_target := "";
+  
+  if (ispresent(pl_response.msgHeader.via) and sizeof(pl_response.msgHeader.via.viaBody) > 0 and 
+        ispresent(pl_response.msgHeader.via.viaBody[0].sentBy.host))
+  {
+    vl_target := pl_response.msgHeader.via.viaBody[0].sentBy.host
+  }
+  
+  return vl_target;
+}
+
+function f_EPTF_SIP_genTransportID(in charstring vl_branchId, in charstring pl_method)
+return charstring
+{
+  return vl_branchId & pl_method;
+  
+}
+
+}//end of module
+with {
+extension "version <RnXnn>"
+}
+

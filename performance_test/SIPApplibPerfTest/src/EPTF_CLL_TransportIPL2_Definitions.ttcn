@@ -1,0 +1,1027 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_CLL_TransportIPL2_Definitions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 512
+//  Updated:  2012-02-17
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////
+//  Module: EPTF_CLL_TransportIPL2_Definitions
+// 
+//  Purpose:
+//    Type and constant definitions for the UDP transport over IP Layer 2 (LANL2 test port).
+// 
+//  Module Parameters:
+//    -
+// 
+//  Module depends on:
+//    <EPTF_CLL_Base_Definitions>
+//    <EPTF_CLL_Common_Definitions>
+//    <EPTF_CLL_FBQ_Definitions>
+//    <EPTF_CLL_Logging_Definitions>
+//    <EPTF_CLL_RBTScheduler_Definitions>
+//    <EPTF_CLL_Variable_Definitions>
+//    <EPTF_CLL_Semaphore_Definitions>
+//    <EPTF_CLL_Transport_CommonDefinitions>
+//    <General_Types>
+//    <LANL2asp_PortType>
+//    <Socket_API_Definitions>
+//    <EPTF_CLL_HashMap_Definitions>
+// 
+//  Current Owner:
+//    EJNOSVN, EGBOTAT
+// 
+//  Last Review Date:
+//    -
+// 
+//  Detailed Comments:
+//    -
+//
+///////////////////////////////////////////////////////////
+module EPTF_CLL_TransportIPL2_Definitions
+{
+
+import from EPTF_CLL_Base_Definitions all;
+import from EPTF_CLL_Common_Definitions all;
+import from EPTF_CLL_FBQ_Definitions all;
+import from EPTF_CLL_Logging_Definitions all;
+import from EPTF_CLL_RBTScheduler_Definitions all;
+import from EPTF_CLL_Variable_Definitions all;
+import from EPTF_CLL_Semaphore_Definitions all;
+import from EPTF_CLL_Transport_CommonDefinitions all;
+
+import from General_Types all;
+import from LANL2asp_PortType all;
+
+import from Socket_API_Definitions all;
+import from EPTF_CLL_Buffer_Definitions all;
+
+import from EPTF_CLL_HashMap_Definitions all;
+//=========================================================================
+// Data Types
+//=========================================================================
+///////////////////////////////////////////////////////////
+//  const: c_EPTF_TransportIPL2_LGenTypesHashMapName
+// 
+//  Purpose:
+//    constant for the name of hashmap storing LGen types
+///////////////////////////////////////////////////////////
+const charstring c_EPTF_TransportIPL2_LGenTypesHashMapName := "EPTF_TransportIPL2:LGenTypes hashmap";
+
+///////////////////////////////////////////////////////////
+//  const: c_EPTF_TransportIPL2_connectionDBHashMapName
+// 
+//  Purpose:
+//    constant for the name of hashmap storing connection information
+///////////////////////////////////////////////////////////
+const charstring c_EPTF_TransportIPL2_connectionDBHashMapName := "EPTF_TransportIPL2:connection DB hashmap";
+
+///////////////////////////////////////////////////////////
+//  const: c_EPTF_TransportIPL2_nameCacheHashMapName
+// 
+//  Purpose:
+//    constant for the name of hashmap storing cached IP addresses for host names
+///////////////////////////////////////////////////////////
+const charstring c_EPTF_TransportIPL2_nameCacheHashMapName := "EPTF_TransportIPL2:name cache hashmap";
+
+///////////////////////////////////////////////////////////
+//  const: c_EPTF_TransportIPL2_ipFragmentBufferDBHashMapName
+// 
+//  Purpose:
+//    constant for the name of hashmap storing IP fragment buffers
+///////////////////////////////////////////////////////////
+const charstring c_EPTF_TransportIPL2_ipFragmentBufferDBHashMapName := "EPTF_TransportIPL2:fragment buffer hashmap";
+
+///////////////////////////////////////////////////////////
+//  const: c_EPTF_TransportIPL2_ipAddressHashMapName
+// 
+//  Purpose:
+//    constant for the name of hashmap storing IP addresses
+///////////////////////////////////////////////////////////
+const charstring c_EPTF_TransportIPL2_ipAddressHashMapName := "EPTF_TransportIPL2:IP address hashmap";
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_TransportIPL2_LGenInfo 
+// 
+//  Purpose:
+//   Record for storing LGen Informations
+// 
+//  Elements:
+//    msgHandler - <EPTF_Transport_MsgCallback_FT> - message handler function
+//    eventHandler - <EPTF_Transport_EventCallback_FT> - event handler function
+//    getMsgLen - <EPTF_Transport_GetMsgLen_FT> - message length calculating function
+//////////////////////////////////////////////////////////
+
+type record EPTF_TransportIPL2_LGenInfo
+{
+  EPTF_Transport_MsgCallback_FT    msgHandler,
+  EPTF_Transport_EventCallback_FT  eventHandler,
+  EPTF_TransportIPL2_getMsgLen     msgLenCalc,
+  EPTF_Transport_ConnectionOpened_FT      connOpenedFn,
+  EPTF_Transport_ConnectionClosed_FT      connClosedFn
+}
+
+///////////////////////////////////////////////////////////
+//  const: c_EPTF_TransportIPL2_LGenInfo_init
+// 
+//  Purpose:
+//    constant for initialize the LGen Info 
+///////////////////////////////////////////////////////////
+const EPTF_TransportIPL2_LGenInfo c_EPTF_TransportIPL2_LGenInfo_init :=
+{
+  msgHandler := null,
+  eventHandler := null,
+  msgLenCalc := {null, {}},
+  connOpenedFn := null,
+  connClosedFn := null
+}
+
+type record EPTF_TransportIPL2_getMsgLen
+{
+  EPTF_Transport_GetMsgLen_FT  getMsgLen,
+  EPTF_IntegerList             getMsgLenArgs
+}
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_XCAP_Transport_LGenInfoList 
+// 
+//  Purpose:
+//   List for storing LGen Information records
+//
+//////////////////////////////////////////////////////////
+type record of EPTF_TransportIPL2_LGenInfo EPTF_TransportIPL2_LGenInfoList 
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_TransportIPL2_TCPState
+// 
+//  Purpose:
+//   Enumerated type for the TCP state.
+//
+//  Detailed Comments:
+//    -
+//
+//////////////////////////////////////////////////////////
+type enumerated EPTF_TransportIPL2_TCPState {
+  CLOSED,
+  LISTEN,
+  SYN_SENT,
+  SYN_RECEIVED,
+  ESTABLISHED,
+  FIN_WAIT1,
+  FIN_WAIT2,
+  CLOSING,
+  TIME_WAIT,
+  CLOSE_WAIT,
+  LAST_ACK
+}
+
+type record EPTF_TransportIPL2_StateTransition {
+  EPTF_TransportIPL2_TCPState state,
+  EPTF_TransportIPL2_TCPState nextState
+}
+template EPTF_TransportIPL2_StateTransition t_EPTF_TransportIPL2_validStateTransitions :=
+( { CLOSED, (LISTEN, SYN_SENT, SYN_RECEIVED) },
+  //{ LISTEN, SYN_RECEIVED },  --- the listen socket is a separate socket, the actual connection goes CLOSED->SYN_RECEIVED
+  { LISTEN, CLOSED },
+  { SYN_SENT, (SYN_RECEIVED, ESTABLISHED) },
+  { SYN_RECEIVED, (ESTABLISHED, FIN_WAIT1) },
+  { ESTABLISHED, (FIN_WAIT1, CLOSE_WAIT) },
+  { FIN_WAIT1, (FIN_WAIT2, CLOSING, TIME_WAIT) },
+  { FIN_WAIT2, TIME_WAIT },
+  { CLOSING, TIME_WAIT },
+  { TIME_WAIT, CLOSED },
+  { CLOSE_WAIT, LAST_ACK },
+  { LAST_ACK, CLOSED }
+);
+
+///////////////////////////////////////////////////////////////////////////////
+//  Constant: c_EPTF_TransportIPL2_loggingEventClasses
+// 
+//  Purpose:
+//    list of logging event class names used on the EPTF CommPort IPL2 component
+// 
+//  Detailed Comments:
+//    <EPTF_Logging_EventClassPrefixList> { "Warning", "Debug" }
+///////////////////////////////////////////////////////////////////////////////
+const EPTF_Logging_EventClassPrefixList c_EPTF_TransportIPL2_loggingEventClasses := { "Warning", "Debug" };
+
+///////////////////////////////////////////////////////////////////////////////
+//  Constant: c_EPTF_TransportIPL2_loggingClassIdx_Warning
+// 
+//  Purpose:
+//    logging class index for Warning
+///////////////////////////////////////////////////////////////////////////////
+const integer c_EPTF_TransportIPL2_loggingClassIdx_Warning := 0;
+
+///////////////////////////////////////////////////////////////////////////////
+//  Constant: c_EPTF_TransportIPL2_loggingClassIdx_Debug
+// 
+//  Purpose:
+//    logging class index for Debug
+///////////////////////////////////////////////////////////////////////////////
+const integer c_EPTF_TransportIPL2_loggingClassIdx_Debug := 1;
+
+///////////////////////////////////////////////////////////////////////////////
+//  Constant: c_EPTF_TransportIPL2_varNamePrefix
+// 
+//  Purpose:
+//    Prepended to names when creating variables for statistics.
+///////////////////////////////////////////////////////////////////////////////
+const charstring c_EPTF_TransportIPL2_varNamePrefix := "IPL2.";
+
+///////////////////////////////////////////////////////////////////////////////
+//  Constant: c_EPTF_TransportIPL2_incMessage
+// 
+//  Purpose:
+//    Incoming message index
+///////////////////////////////////////////////////////////////////////////////
+const integer c_EPTF_TransportIPL2_incMessage := 0;
+
+///////////////////////////////////////////////////////////////////////////////
+//  Constant: c_EPTF_TransportIPL2_incMessageName
+// 
+//  Purpose:
+//    Name of the incoming message statistics
+///////////////////////////////////////////////////////////////////////////////
+const charstring c_EPTF_TransportIPL2_incMessageName := "Number of the incoming mssages";
+
+///////////////////////////////////////////////////////////////////////////////
+//  Constant: c_EPTF_TransportIPL2_incConnOpened
+// 
+//  Purpose:
+//    Incoming connection opened index
+///////////////////////////////////////////////////////////////////////////////
+const integer c_EPTF_TransportIPL2_incConnOpened := 1;
+
+///////////////////////////////////////////////////////////////////////////////
+//  Constant: c_EPTF_TransportIPL2_incConnOpenedName
+// 
+//  Purpose:
+//    Name of the incoming connection opened statistics
+///////////////////////////////////////////////////////////////////////////////
+const charstring c_EPTF_TransportIPL2_incConnOpenedName := "Number of the incoming connection opened events";
+
+///////////////////////////////////////////////////////////////////////////////
+//  Constant: c_EPTF_TransportIPL2_incConnClosed
+// 
+//  Purpose:
+//    Incoming connection closed index
+///////////////////////////////////////////////////////////////////////////////
+const integer c_EPTF_TransportIPL2_incConnClosed := 2;
+
+///////////////////////////////////////////////////////////////////////////////
+//  Constant: c_EPTF_TransportIPL2_incConnClosedName
+// 
+//  Purpose:
+//    Name of the incoming connection closed statistics
+///////////////////////////////////////////////////////////////////////////////
+const charstring c_EPTF_TransportIPL2_incConnClosedName := "Number of the incoming conection closed events";
+
+///////////////////////////////////////////////////////////////////////////////
+//  Constant: c_EPTF_TransportIPL2_outMessage
+// 
+//  Purpose:
+//    Outgoing message index
+///////////////////////////////////////////////////////////////////////////////
+const integer c_EPTF_TransportIPL2_outMessage := 0;
+
+///////////////////////////////////////////////////////////////////////////////
+//  Constant: c_EPTF_TransportIPL2_outMessageName
+// 
+//  Purpose:
+//    Name of the outgoing message statistics
+/////////////////////////////////////////////////////////////////////////////// 
+const charstring c_EPTF_TransportIPL2_outMessageName := "Number of the outoing messages";
+
+///////////////////////////////////////////////////////////////////////////////
+//  Constant: c_EPTF_TransportIPL2_outConnect
+// 
+//  Purpose:
+//    Outgoing connect index
+///////////////////////////////////////////////////////////////////////////////
+const integer c_EPTF_TransportIPL2_outConnect := 1;
+
+///////////////////////////////////////////////////////////////////////////////
+//  Constant: c_EPTF_TransportIPL2_outConnectName
+// 
+//  Purpose:
+//    Name of the outgoing connect statistics
+/////////////////////////////////////////////////////////////////////////////// 
+const charstring c_EPTF_TransportIPL2_outConnectName := "Number of the outoing connects";
+
+///////////////////////////////////////////////////////////////////////////////
+//  Constant: c_EPTF_TransportIPL2_outClose
+// 
+//  Purpose:
+//    Outgoing close index
+///////////////////////////////////////////////////////////////////////////////
+const integer c_EPTF_TransportIPL2_outClose := 2;
+
+///////////////////////////////////////////////////////////////////////////////
+//  Constant: c_EPTF_TransportIPL2_outCloseName
+// 
+//  Purpose:
+//    Name of the outgoing close statistics
+/////////////////////////////////////////////////////////////////////////////// 
+const charstring c_EPTF_TransportIPL2_outCloseName := "Number of the outoing closes";
+
+///////////////////////////////////////////////////////////////////////////////
+//  Constant: c_EPTF_TransportIPL2_outListen
+// 
+//  Purpose:
+//    Outgoing listen index
+///////////////////////////////////////////////////////////////////////////////
+const integer c_EPTF_TransportIPL2_outListen := 3;
+
+///////////////////////////////////////////////////////////////////////////////
+//  Constant: c_EPTF_TransportIPL2_outListenName
+// 
+//  Purpose:
+//    Name of the outgoing listen statistics
+/////////////////////////////////////////////////////////////////////////////// 
+const charstring c_EPTF_TransportIPL2_outListenName := "Number of the outoing listens";
+
+///////////////////////////////////////////////////////////////////////////////
+//  Constant: c_EPTF_TransportIPL2_nofErrorsName
+// 
+//  Purpose:
+//    Name of the errors
+/////////////////////////////////////////////////////////////////////////////// 
+const charstring c_EPTF_TransportIPL2_nofErrorsName := "Number of the errors";
+
+///////////////////////////////////////////////////////////////////////////////
+//  Constant: c_EPTF_TransportIPL2_lastErrorStringName
+// 
+//  Purpose:
+//    Name of the errors
+/////////////////////////////////////////////////////////////////////////////// 
+const charstring c_EPTF_TransportIPL2_lastErrorStringName := "Last error string";
+
+
+//////////////////////////////////////////////////////////
+// Type: EPTF_TransportIPL2_CT
+//
+// Purpose:
+//   The IPL2 communication port component type declaration
+//
+// Elements:
+//   v_EPTF_TransportIPL2_initialized - boolean - If the component is initialized, prevents multiple initialization
+//   v_EPTF_TransportIPL2_LGenTypesHashMapId - *integer* - the ID of hashmap storing LGen types
+//   v_EPTF_TransportIPL2_LGenInfoFreeBusyQueue - <EPTF_FreeBusyQueue> - freebusyqueue storing LGen type informations 
+//   v_EPTF_TransportIPL2_LGenInfoList - <EPTF_TransportIPL2_LGenInfoList> - list for storing LGen type informations 
+//   v_EPTF_TransportIPL2_incStats - <EPTF_IntegerList> - contains the keys to the incoming statistics
+//   v_EPTF_TransportIPL2_outStats - <EPTF_IntegerList> - contains the keys to the outgoing statistics
+//   v_EPTF_TransportIPL2_incStatCounters - <EPTF_IntegerList> - contains the counters of the incoming statistics
+//   v_EPTF_TransportIPL2_outStatCounters - <EPTF_IntegerList> - contains the counters of the outgoing statistics
+//   v_EPTF_TransportIPL2_nofErrors - *integer* - contains the index of the variable, which stores the number of errors
+//   v_EPTF_TransportIPL2_lastErrorString - *integer* - contains the index of the variable, which stores the last error message
+//   v_EPTF_TransportIPL2_loggingMaskId - *integer* - contains the logging mask ID
+//   vd_EPTF_TransportIPL2_defaultReceive - *default* - reference of activated default receiver altstep
+//   v_EPTF_CommPort_connectionDatabase - <EPTF_TransportIPL2_ConnectionDatabase> - connection database
+//   v_EPTF_TransportIPL2_nameCache - <EPTF_TransportIPL2_NameCache> - hostname cache
+//   v_EPTF_TransportIPL2_ipPacketId - *integer* - ID field for the sent IP packets
+//   v_EPTF_TransportIPL2_ipFragmentBufferDB - <EPTF_TransportIPL2_IPFragmentBufferDB> - buffer database for IP packet reassembly
+//   v_EPTF_TransportIPL2_routeTable - <EPTF_TransportIPL2_RouteTable> - routing table database (normalized)
+//   v_EPTF_TransportIPL2_gwArpDB - <EPTF_TransportIPL2_GwArpDB> - Fast ARP table database for gateways
+//   v_EPTF_TransportIPL2_ipArpDB - <EPTF_TransportIPL2_IPArpDB> - ARP database using hashmap for arbitrary IP. 
+//                                                                 It is not used when the route table is configured properly.
+//                                                                 Which means that a specific gateway is assigned for 
+//                                                                 group of IP addresses belonging to the same MAC addresses 
+///////////////////////////////////////////////////////////
+type component EPTF_TransportIPL2_CT 
+extends EPTF_Base_CT, EPTF_Logging_CT, EPTF_Var_CT, EPTF_Scheduler_CT, EPTF_Semaphore_CT, EPTF_SegmentBuffer_CT, EPTF_HashMap_CT, EPTF_FBQ_CT {
+  private port LANL2asp_PT                                    IPL2_PCO;
+  private var boolean                                         v_EPTF_TransportIPL2_initialized := false;
+  private var integer                                         v_EPTF_TransportIPL2_LGenTypesHashMapId := -1;
+  private var EPTF_FreeBusyQueue                              v_EPTF_TransportIPL2_LGenInfoFreeBusyQueue := c_EPTF_emptyFreeBusyQueue;
+  private var EPTF_TransportIPL2_LGenInfoList                 v_EPTF_TransportIPL2_LGenInfoList := {};
+  private var EPTF_IntegerList                                v_EPTF_TransportIPL2_incStats := {-1,-1,-1,-1,-1};
+  private var EPTF_IntegerList                                v_EPTF_TransportIPL2_outStats := {-1,-1,-1,-1};
+  private var EPTF_IntegerList                                v_EPTF_TransportIPL2_incStatCounters := {0,0,0,0,0};
+  private var EPTF_IntegerList                                v_EPTF_TransportIPL2_outStatCounters := {0,0,0,0};
+  private var integer                                         v_EPTF_TransportIPL2_nofErrors := -1;
+  private var integer                                         v_EPTF_TransportIPL2_lastErrorString := -1;
+  private var integer                                         v_EPTF_TransportIPL2_loggingMaskId := -1;
+  private var default                                         vd_EPTF_TransportIPL2_defaultReceive := null;
+
+  private var EPTF_TransportIPL2_ConnectionDatabase           v_EPTF_CommPort_connectionDatabase := { {}, c_EPTF_emptyFreeBusyQueue, -1 }
+  private var EPTF_TransportIPL2_NameCache                    v_EPTF_TransportIPL2_nameCache := { {}, -1 }
+  private var integer                                         v_EPTF_TransportIPL2_ipPacketId := 0;
+  private var EPTF_TransportIPL2_IPFragmentBufferDB           v_EPTF_TransportIPL2_ipFragmentBufferDB := { {}, c_EPTF_emptyFreeBusyQueue, -1 };
+  private var integer                                         v_EPTF_TransportIPL2_ipAddressHashmapId := -1;
+
+  private var EPTF_TransportIPL2_RouteTable                   v_EPTF_TransportIPL2_routeTable := {};
+  private var EPTF_IntegerList                                v_EPTF_TransportIPL2_routeTableToEthIF := {}; // route table entry -> ethernet interface associations
+  private var integer                                         v_EPTF_TransportIPL2_loopbackIF := -1;
+  private var boolean                                         v_EPTF_TransportIPL2_openLoopbackInterface := true;
+
+  private var EPTF_TransportIPL2_GwArpDB                      v_EPTF_TransportIPL2_gwArpDB := {};
+  private var EPTF_TransportIPL2_IPArpDB                      v_EPTF_TransportIPL2_ipArpDB := { {}, -1 };
+  private var EPTF_Transport_InterfaceInformationList         v_EPTF_Transport_interfaceInformationList := {};
+  private var EPTF_Transport_EthernetInterfaceList            v_EPTF_TransportIPL2_ethernetInterfaceList := {};
+}
+
+type component EPTF_SegmentBuffer_CT 
+extends EPTF_Buffer_CT, EPTF_FBQ_CT {
+
+}
+
+const EPTF_TransportIPL2_IpAddress c_EPTF_TransportIPL2_singleHostNetmask := 'FFFFFFFF'O;
+
+type record EPTF_TransportIPL2_EthernetInterface {
+  charstring name,
+  integer interfaceId,
+  EPTF_TransportIPL2_MACAddress macAddress optional,
+  EPTF_IntegerList interfaceInformationIdxs,
+  boolean promiscousMode optional,
+  EPTF_TransportIPL2_PacketFilter packetFilter
+}
+
+type record of EPTF_TransportIPL2_EthernetInterface EPTF_Transport_EthernetInterfaceList;
+
+type record EPTF_TransportIPL2_PacketFilter {
+  charstring filterString,
+  EPTF_TransportIPL2_SubnetList subnets
+}
+
+type record EPTF_TransportIPL2_Subnet {
+  EPTF_TransportIPL2_IpAddress  net,
+  EPTF_TransportIPL2_IpAddress  mask,
+  integer maskbits
+}
+type record of EPTF_TransportIPL2_Subnet EPTF_TransportIPL2_SubnetList;
+
+
+const EPTF_TransportIPL2_EthernetInterface c_EPTF_TransportIPL2_EthernetInterface_init := {
+  name := "",
+  interfaceId := -1,
+  macAddress := omit,
+  interfaceInformationIdxs := {},
+  promiscousMode := omit,
+  packetFilter := {
+    filterString := "",
+    subnets := {}
+  }
+}
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_TransportIPL2_IpAddress 
+// 
+//  Purpose:
+//   type for storing IP addresses
+// 
+//////////////////////////////////////////////////////////
+type octetstring EPTF_TransportIPL2_IpAddress length(4);
+
+group VLAN{
+type octetstring EPTF_TransportIPL2_TPID length (2);//Tag Protocol Identifier
+type integer EPTF_TransportIPL2_PCP (0..7);
+type integer EPTF_TransportIPL2_CFI (0..1);
+type integer EPTF_TransportIPL2_VID (0..4095);
+
+type record EPTF_TransportIPL2_VLAN_TCI//VLAN Tag Control Information
+{
+  //EPTF_TransportIPL2_TPID	TPID,//Tag Protocol Identifier (It is constant '8100'O)
+  EPTF_TransportIPL2_PCP	PCP,//Priority Code Point
+  EPTF_TransportIPL2_CFI	CFI,//Canonical Format Identifier
+  EPTF_TransportIPL2_VID	VID//VLAN id  
+}
+
+type record of EPTF_TransportIPL2_VLAN_TCI EPTF_TransportIPL2_VLAN_TCIs;
+
+const EPTF_TransportIPL2_VLAN_TCI c_EPTF_TransportIPL2_init_VLAN_TCI :=
+{
+  PCP := 0,
+  CFI := 0,
+  VID := 0
+}
+
+const EPTF_TransportIPL2_TPID c_EPTF_TransportIPL2_VLAN_TPID := '8100'O
+}
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_TransportIPL2_Connection 
+// 
+//  Purpose:
+//   Record for storing Connection/Socket Informations
+// 
+//  Elements:
+//    uniqueId - *integer* - unique socket ID (equals socket ID, can be overridden by the common transport layer)
+//    lgenIdx  - *integer* - index of the lgen
+//    userData - *integer* - user data
+//    remHost  - <EPTF_TransportIPL2_IpAddress> - remote ip address
+//    remPort  - *integer* - remote port number
+//    locHost  - <EPTF_TransportIPL2_IpAddress> - local ip address
+//    locPort  - *integer* - local port number
+//    proto    - <ProtoTuple> - protocol type
+//    hashKey  - *octetstring* - hash key used to store this element in hashmap <EPTF_TransportIPL2_ConnectionDatabase>.hashmapId
+//	  vlanTCIs - <EPTF_TransportIPL2_VLAN_TCIs> Tag Control Information list for VLAN
+//////////////////////////////////////////////////////////
+type record EPTF_TransportIPL2_Connection
+{
+  integer                       uniqueId,
+  integer                       lgenIdx,
+  integer                       userData,
+  EPTF_TransportIPL2_IpAddress  remHost optional,
+  integer                       remPort,
+  EPTF_TransportIPL2_IpAddress  locHost,
+  integer                       locPort,
+  ProtoTuple                    proto,
+  octetstring                   hashKey,
+  EPTF_TransportIPL2_VLAN_TCIs	vlanTCIs,
+  //valid only for TCP:
+  EPTF_TransportIPL2_TCPState   tcpState,
+  EPTF_TransportIPL2_TcpConnectionData    tcpConnectionData optional//valid only for TCP connected socket (not UDP or TCP listen socket)
+}
+
+type record EPTF_TransportIPL2_TcpConnectionData
+{
+  integer                       mss, // maximum segment size
+  integer                       remoteWindowSize,
+  octetstring                   sendFifo, // messages are appended to this fifo if they cannot fit the remote window size, and sent later
+  integer                       sendFifo_bufferID, // if CLL_Buffer is enabled, sendFifo is in a CLL_Buffer, whose id is stored in here
+  boolean                       pendingClose, // true if _close was called, but there was something in the sendFifo
+  EPTF_TransportIPL2_TcpSendBuffer sendBuffer,
+  integer                       sendSeqNum,
+  integer                       unackedBytes,
+  integer                       sendWindowStart,
+  float                         smoothedRTT, // smoothed round trip time
+  float                         retransmitTime,
+  EPTF_SegmentBuffer            segmentBuffer, // receive window + buffered continuous stream
+  integer                       expectedSeqNum, //last acknowledged seqNum, equals start of our receive window
+  //    integer                       receiveWindowSize,
+  integer                       ackTimerIdx,
+  integer                       timeWaitTimerIdx,
+  integer                       msgLen
+}
+
+type record EPTF_TransportIPL2_PDU_TCP {
+  integer             source_port,
+  integer             dest_port,
+  integer             sequence_number,
+  integer             acknowledgment_number,
+//  integer             data_offset,
+  integer             control_bits,
+  integer             window,
+//  integer             checksum,
+//  integer             urgent_pointer,
+  octetstring         options,
+  octetstring         data
+}
+
+const integer c_EPTF_TransportIPL2_TCPControlBit_urg := 32;
+const integer c_EPTF_TransportIPL2_TCPControlBit_ack := 16;
+const integer c_EPTF_TransportIPL2_TCPControlBit_psh := 8;
+const integer c_EPTF_TransportIPL2_TCPControlBit_rst := 4;
+const integer c_EPTF_TransportIPL2_TCPControlBit_syn := 2;
+const integer c_EPTF_TransportIPL2_TCPControlBit_fin := 1;
+
+///////////////////////////////////////////////////////////
+//  const: EPTF_TransportIPL2_Connection 
+// 
+//  Purpose:
+//   Constant for initializing values of type <EPTF_TransportIPL2_Connection>.
+// 
+//////////////////////////////////////////////////////////
+const EPTF_TransportIPL2_Connection c_EPTF_TransportIPL2_Connection_init := {
+  uniqueId := -1,
+  lgenIdx := -1,
+  userData := -1,
+  remHost := omit,
+  remPort := -1,
+  locHost := '00000000'O,
+  locPort := -1,
+  proto := {udp:={}},
+  hashKey := ''O,
+  vlanTCIs := {},
+  tcpState := CLOSED,
+  tcpConnectionData := omit
+}
+
+const EPTF_TransportIPL2_TcpConnectionData c_EPTF_TransportIPL2_TcpConnectionData_init := {
+  mss := c_EPTF_TransportIPL2_tcpDefaultMSS,
+  remoteWindowSize := 0,
+  sendFifo := ''O,
+  sendFifo_bufferID := -1,
+  pendingClose := false,
+  sendBuffer := { {}, c_EPTF_emptyFreeBusyQueue },
+  sendSeqNum := -1,
+  unackedBytes := 0,
+  sendWindowStart := -1,
+  smoothedRTT := 1.0,
+  retransmitTime := c_EPTF_TransportIPL2_tcpDefaultRetransmitTime,
+  segmentBuffer := c_EPTF_SegmentBuffer_init,
+  expectedSeqNum := 0,
+  //    receiveWindowSize := -1,
+  ackTimerIdx := -1,
+  timeWaitTimerIdx := -1,
+  msgLen := -1
+}
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_TransportIPL2_ConnectionList 
+// 
+//  Purpose:
+//   Type for storing a list of connections/sockets.
+//
+//  Elements:
+//   *record* *of* <EPTF_TransportIPL2_Connection>.
+// 
+//////////////////////////////////////////////////////////  
+type record of EPTF_TransportIPL2_Connection EPTF_TransportIPL2_ConnectionList;
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_TransportIPL2_ConnectionDatabase 
+// 
+//  Purpose:
+//   Type for storing Socket database
+// 
+//  Elements:
+//    data  - <EPTF_TransportIPL2_ConnectionList> - list of connections
+//    queue - <EPTF_FreeBusyQueue> - queue
+//    hashmapId  - *integer* - hashmap id in database.
+//
+//////////////////////////////////////////////////////////
+type record EPTF_TransportIPL2_ConnectionDatabase
+{
+  EPTF_TransportIPL2_ConnectionList 	data,
+  EPTF_FreeBusyQueue        	      	queue,
+  integer   	      	      	      	hashmapId
+}
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_TransportIPL2_ipAddressList 
+// 
+//  Purpose:
+//   Type for storing a list of IP addresses
+// 
+//  Elements:
+//   *record* *of* *octetstring*
+//
+//////////////////////////////////////////////////////////
+type record of octetstring EPTF_TransportIPL2_ipAddressList;
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_TransportIPL2_NameCache 
+// 
+//  Purpose:
+//   Type for cacheing hostname to IP address mappings
+// 
+//  Elements:
+//    addresses  - <EPTF_TransportIPL2_ipAddressList> - list of addresses
+//    hashmapId  - *integer* - hashmap id used to map hostnames to index into addresses field
+//
+//////////////////////////////////////////////////////////
+type record EPTF_TransportIPL2_NameCache {
+  EPTF_TransportIPL2_ipAddressList  addresses,
+  integer                           hashmapId
+}
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_TransportIPL2_IPFragmentBuffer 
+// 
+//  Purpose:
+//   Type for storing IP packet fragments 
+// 
+//  Elements:
+//    msg             - *octetstring* - buffer for reassembling the message
+//    receivedBytes   - *integer* - number of received bytes so far
+//    totalBytes      - *integer* - size of the whole packet
+//    removeTimerIdx  - *integer* - index of the event scheduled to remove this buffer
+//    hashKey         - *octetstring* - hashkey used to store this element
+//
+//  Detailed Comments:
+//    The field totalBytes is valid after the final fragment of the packet is received,
+//     it is calculated from the final packet's fragment offset plus the payload length.
+//    The buffer is removed either after receiving the whole packet,
+//     or if no more fragments are received within <tsp_EPTF_TransportIPL2_ipFragmentRemoveTimer>
+//     seconds. The field removeTimerIdx stores the event index used to schedule the latter.
+//////////////////////////////////////////////////////////
+type record EPTF_TransportIPL2_IPFragmentBuffer {
+  octetstring                       msg,
+  integer                           receivedBytes,
+  integer                           totalBytes,
+  integer                           removeTimerIdx,
+  octetstring                       hashKey
+}
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_TransportIPL2_IPFragmentBufferList 
+// 
+//  Purpose:
+//   Type for storing a list of IP fragment buffers
+// 
+//  Elements:
+//   *record* *of* <EPTF_TransportIPL2_IPFragmentBuffer>
+//
+//////////////////////////////////////////////////////////
+type record of EPTF_TransportIPL2_IPFragmentBuffer EPTF_TransportIPL2_IPFragmentBufferList;
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_TransportIPL2_IPFragmentBufferDB 
+// 
+//  Purpose:
+//   Type for storing IP fragment buffers 
+// 
+//  Elements:
+//    buffers    - <EPTF_TransportIPL2_IPFragmentBufferList> - list of buffers
+//    queue      - <EPTF_FreeBusyQueue> - Queue
+//    hashmapId  - *integer* - hashmap id used to map packet IDs to index into buffers field
+//
+//  Detailed Comments:
+//    Mapping incoming packets to a buffer is done using the hashmap referenced by hashmapId.
+//    The hash key used for this consists of the local and remote IP addresses and port numbers,
+//    protocol ID and the IP packet ID.
+//////////////////////////////////////////////////////////
+type record EPTF_TransportIPL2_IPFragmentBufferDB {
+  EPTF_TransportIPL2_IPFragmentBufferList   buffers,
+  EPTF_FreeBusyQueue        	      	      queue,
+  integer   	      	      	      	      hashmapId
+}
+
+///////////////////////////////////////////////////////////
+//  const: c_EPTF_TransportIPL2_ipFragmentOffsetScale 
+// 
+//  Purpose:
+//   Constant used when encoding/decoding offset of an IP fragment.
+//
+//  Detailed Comments:
+//    *8*
+//////////////////////////////////////////////////////////
+const integer c_EPTF_TransportIPL2_ipFragmentOffsetScale := 8;
+
+///////////////////////////////////////////////////////////
+//  const: c_EPTF_TransportIPL2_tcpDefaultMSS 
+// 
+//  Purpose:
+//   Default Maximum Segment Size for TCP
+//
+//  Detailed Comments:
+//    *536*
+//////////////////////////////////////////////////////////
+const integer c_EPTF_TransportIPL2_tcpDefaultMSS := 536;
+
+///////////////////////////////////////////////////////////
+//  const: c_EPTF_TransportIPL2_tcpDefaultMSL 
+// 
+//  Purpose:
+//   Default Maximum Segment Lifetime for TCP
+//
+//  Detailed Comments:
+//    *120.0*
+//////////////////////////////////////////////////////////
+const float c_EPTF_TransportIPL2_tcpDefaultMSL := 120.0;
+
+///////////////////////////////////////////////////////////
+//  const: c_EPTF_TransportIPL2_tcpDefaultRetransmitTime 
+// 
+//  Purpose:
+//   Default retransmission timer timeout value
+//
+//  Detailed Comments:
+//    *3.0*
+//////////////////////////////////////////////////////////
+const float c_EPTF_TransportIPL2_tcpDefaultRetransmitTime := 3.0;
+
+///////////////////////////////////////////////////////////
+//  const: c_EPTF_TransportIPL2_error...
+// 
+//  Purpose:
+//   Error codes used in the os_error_code field of results
+//
+//  Detailed Comments:
+//    c_EPTF_TransportIPL2_errorCantSendOnListenSocket := 1;
+//    c_EPTF_TransportIPL2_errorSocketIsNotConnected := 2;
+//    c_EPTF_TransportIPL2_errorInvalidLgenType := 3;
+//    c_EPTF_TransportIPL2_errorInvalidConnectionId := 4;
+//    c_EPTF_TransportIPL2_errorInvalidSocketState := 5;
+//    c_EPTF_TransportIPL2_errorSocketClosed := 6;
+//    c_EPTF_TransportIPL2_errorConnectionTimedOut := 7;
+//    c_EPTF_TransportIPL2_errorConnectionReset := 8;
+//    c_EPTF_TransportIPL2_errorUnsupportedPorotocol := 9;
+//////////////////////////////////////////////////////////
+const integer c_EPTF_TransportIPL2_errorCantSendOnListenSocket    := 1;
+const integer c_EPTF_TransportIPL2_errorSocketIsNotConnected      := 2;
+const integer c_EPTF_TransportIPL2_errorInvalidLgenType           := 3;
+const integer c_EPTF_TransportIPL2_errorInvalidConnectionId       := 4;
+const integer c_EPTF_TransportIPL2_errorInvalidSocketState        := 5;
+const integer c_EPTF_TransportIPL2_errorSocketClosed              := 6;
+const integer c_EPTF_TransportIPL2_errorConnectionTimedOut        := 7;
+const integer c_EPTF_TransportIPL2_errorConnectionReset           := 8;
+const integer c_EPTF_TransportIPL2_errorUnsupportedPorotocol      := 9;
+
+group EPTF_TransportIPL2_SegmentBuffer
+{
+  type record EPTF_TransportIPL2_TcpSendSegment {
+    integer ackSeqNum, // required acknowledgement number for the segment to be acked
+    integer payloadLength,
+    octetstring encodedSegment,
+    integer retransmitTimerIdx,
+    float timestamp
+  }
+  
+  const EPTF_TransportIPL2_TcpSendSegment c_EPTF_TransportIPL2_TcpSendSegment_init := {
+    ackSeqNum := -1,
+    payloadLength := -1,
+    encodedSegment := ''O,
+    retransmitTimerIdx := -1,
+    timestamp := -1.0
+  }
+  
+  type record of EPTF_TransportIPL2_TcpSendSegment EPTF_TransportIPL2_TcpSendSegmentList;
+  
+  type record EPTF_TransportIPL2_TcpSendBuffer {
+    EPTF_TransportIPL2_TcpSendSegmentList segments,
+    EPTF_FreeBusyQueue queue
+  }
+  
+  type record EPTF_SegmentData {
+    integer     seqNum,
+    octetstring data
+  }
+  
+  const EPTF_SegmentData EPTF_SegmentData_init := {
+    seqNum := -1,
+    data := ''O
+  }
+  
+  type record of EPTF_SegmentData EPTF_SegmentDataList;
+  
+  type record EPTF_SegmentDataQueue{
+    EPTF_SegmentDataList segments,
+    EPTF_FreeBusyQueue queue,
+    integer nofBytes
+  }
+  
+  type record EPTF_SegmentBuffer {
+    integer continuousBufferID, //used by EPTF_CLL_Buffer only
+    octetstring continuousBuffer,
+    EPTF_SegmentDataQueue nonContSegments,
+    integer finSegmentOffset // initialized to -1 meaning no FIN was received yet. Set to the relative offset in the window when FIN received,
+    // decremented just like the seqNum's of segments. If reaches 0, the FIN segment has to be handled.
+    // No segment with seqNum > finSegmentOffset must be put in nonContSegments!
+  }
+  
+  const EPTF_SegmentBuffer c_EPTF_SegmentBuffer_init := {
+    continuousBufferID := -1,
+    continuousBuffer := ''O,
+    nonContSegments := { {}, c_EPTF_emptyFreeBusyQueue, 0},
+    finSegmentOffset := -1
+  }
+  
+} // group EPTF_TransportIPL2_SegmentBuffer
+
+group EPTF_TransportIPL2_RouteHandler {
+  
+  type OCT6 EPTF_TransportIPL2_MACAddress;
+  
+  ///////////////////////////////////////////////////////////
+  //  const: c_EPTF_TransportIPL2_NullIpAddress 
+  // 
+  //  Purpose:
+  //   Represents a '0.0.0.0' IP address.
+  //
+  //  Detailed Comments:
+  //    It is used as an invalid value usually.
+  //////////////////////////////////////////////////////////
+  const EPTF_TransportIPL2_IpAddress c_EPTF_TransportIPL2_NullIpAddress := '00000000'O;
+  
+  ///////////////////////////////////////////////////////////
+  //  const: cg_EPTF_TransportIPL2_NullMACAddress 
+  // 
+  //  Purpose:
+  //   Represents a '00:00:00:00:00:00' MAC address.
+  //
+  //  Detailed Comments:
+  //    It is used as an invalid value usually.
+  //////////////////////////////////////////////////////////
+  const EPTF_TransportIPL2_MACAddress cg_EPTF_TransportIPL2_NullMACAddress := '000000000000'O;
+  
+  ///////////////////////////////////////////////////////////
+  //  const: cg_EPTF_TransportIPL2_BroadcastMACAddress 
+  // 
+  //  Purpose:
+  //   Represents a 'FF:FF:FF:FF:FF:FF' MAC address.
+  //
+  //  Detailed Comments:
+  //    It is the broadcast MAC address.
+  //////////////////////////////////////////////////////////
+  const EPTF_TransportIPL2_MACAddress cg_EPTF_TransportIPL2_BroadcastMACAddress := 'FFFFFFFFFFFF'O;
+  
+  ///////////////////////////////////////////////////////////
+  //  Type: EPTF_TransportIPL2_RouteTableEntry 
+  // 
+  //  Purpose:
+  //    It defines type of entry in the routing table. 
+  // 
+  //  Elements:
+  //    destination - <EPTF_TransportIPL2_IpAddress> - destination network
+  //    gateway     - <EPTF_TransportIPL2_IpAddress> - gateway address (0.0.0.0 if there is no gateway)
+  //    genmask     - <EPTF_TransportIPL2_IpAddress> - subnet mask
+  //    iface       - *charstring* - the name of the interface
+  //
+  //  Detailed Comments:
+  //    It stores the one item of the routing table.
+  //////////////////////////////////////////////////////////
+  type record EPTF_TransportIPL2_RouteTableEntry {
+    EPTF_TransportIPL2_IpAddress destination, // Destination network (eg. 192.168.0.0)
+    EPTF_TransportIPL2_IpAddress gateway, // Gateway address (0.0.0.0 if there is no gateway)
+    EPTF_TransportIPL2_IpAddress genmask, // Subnet mask
+    charstring iface // Interface name
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Type: EPTF_TransportIPL2_RouteTable 
+  // 
+  //  Purpose:
+  //    It defines type of the routing table database. It contains list of 
+  //    <EPTF_TransportIPL2_RouteTableEntry>.
+  //////////////////////////////////////////////////////////
+  type record of EPTF_TransportIPL2_RouteTableEntry EPTF_TransportIPL2_RouteTable;
+  
+} // group EPTF_TransportIPL2_RouteHandler
+
+group EPTF_TransportIPL2_ARP {
+  ///////////////////////////////////////////////////////////
+  //  Type: EPTF_TransportIPL2_GwArpDBEntry 
+  // 
+  //  Purpose:
+  //    It defines type of entry in the ARP table. 
+  // 
+  //  Elements:
+  //    gateway     - <EPTF_TransportIPL2_IpAddress>  - gateway address (0.0.0.0 if there is no gateway)
+  //    macaddr     - <EPTF_TransportIPL2_MACAddress> - the MAC address of the gateway
+  //
+  //  Detailed Comments:
+  //    It stores the one item of the ARP table.
+  //////////////////////////////////////////////////////////
+  type record EPTF_TransportIPL2_GwArpDBEntry {
+    EPTF_TransportIPL2_IpAddress gateway,
+    EPTF_TransportIPL2_MACAddress macaddr,
+    integer semaphoreIdx
+  } 
+  
+  ///////////////////////////////////////////////////////////
+  //  Type: EPTF_TransportIPL2_GwArpDB 
+  // 
+  //  Purpose:
+  //    It defines type of the arp table database for gateways. It contains list
+  //    of <EPTF_TransportIPL2_GwArpDBEntry>.
+  //////////////////////////////////////////////////////////
+  type record of EPTF_TransportIPL2_GwArpDBEntry EPTF_TransportIPL2_GwArpDB;
+  
+  ///////////////////////////////////////////////////////////
+  //  Type: cg_EPTF_TransportIPL2_ARP_prefix 
+  // 
+  //  Purpose:
+  //    It defines an ARP message prefix.
+  //    '0001'O thernet Hardware type (HTYPE)
+  //      This field specifies the Link Layer protocol type.
+  //      Here it is '0001'O (Ethernet).
+  //    Protocol type (PTYPE)
+  //      This field specifies the upper layer protocol for which the 
+  //      ARP request is intended. For IPv4, this has the value '0800'O.
+  //    Hardware length (HLEN)
+  //        Length (in octets) of a hardware address.
+  //        Ethernet addresses size is '06'O.
+  //    Protocol length (PLEN)
+  //        Length (in octets) of addresses used in the upper layer protocol.
+  //        IPv4 address size is '04'O.
+  //////////////////////////////////////////////////////////
+  const octetstring cg_EPTF_TransportIPL2_ARP_prefix := '000108000604'O;
+  
+  const LIN2_BO_LAST c_ip_gre_proto_arp := oct2int('0806'O);
+  const OCT2 cg_EPTF_TransportIPL2_ARP_TypeRequest := '0001'O;
+  const OCT2 cg_EPTF_TransportIPL2_ARP_TypeReply := '0002'O;
+  
+  type record EPTF_TransportIPL2_IPArpDBEntry {
+    EPTF_TransportIPL2_MACAddress macaddr,
+    integer semaphoreIdx
+  }
+  
+  type record of EPTF_TransportIPL2_IPArpDBEntry EPTF_TransportIPL2_IPArpDBEntryList;
+  
+  type record EPTF_TransportIPL2_IPArpDB
+  {
+    EPTF_TransportIPL2_IPArpDBEntryList  data,
+    integer                              hashmapId
+  }
+  
+  type record ARP_packet {
+    OCT2 arpType,
+    EPTF_TransportIPL2_IpAddress senderIPAddr,
+    EPTF_TransportIPL2_MACAddress senderMACAddr,
+    EPTF_TransportIPL2_IpAddress targetIPAddr,
+    EPTF_TransportIPL2_MACAddress targetMACAddr
+  }
+  
+} //group EPTF_TransportIPL2_ARP
+
+}  // end of module

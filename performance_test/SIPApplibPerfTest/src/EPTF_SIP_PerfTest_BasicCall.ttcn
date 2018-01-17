@@ -1,0 +1,786 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_SIP_PerfTest_BasicCall.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 522
+//  Updated:  2013-07-10
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+module EPTF_SIP_PerfTest_BasicCall
+{
+
+import from EPTF_SIP_Test_Common_Definitions all;
+import from EPTF_SIP_Test_Common_Functions all;
+
+import from EPTF_CLL_Base_Functions all;
+import from EPTF_CLL_LGenBase_Definitions all;
+import from EPTF_CLL_LGenBase_ConfigDefinitions all;
+import from EPTF_CLL_LGenBase_ConfigFunctions all;
+import from EPTF_CLL_LGenBase_StepFunctions all;
+import from EPTF_CLL_LGenBase_TrafficFunctions all;
+import from EPTF_CLL_LGenBaseStats_Definitions all;
+import from EPTF_CLL_LGenBaseStats_Functions all;
+import from EPTF_CLL_Variable_Functions all;
+
+import from EPTF_SIP_Dialog_Definitions all;
+import from EPTF_SIP_Events all;
+import from EPTF_SIP_Templates all;
+import from EPTF_SIP_TestSteps all;
+import from EPTF_SIP_Transaction_Definitions all;
+import from EPTF_SIP_Transport_Functions all;
+import from ttcn_ericsson_se_TitanSim_Perftest all;
+import from TestResultGen all;
+
+const charstring c_EPTF_SIP_Test_FSM_BasicCallTerm := "fsmBasicCallTerm";
+const integer c_EPTF_SIP_Test_BasicCallTerm_Timer_answer := 0;
+const integer c_EPTF_SIP_Test_BasicCallTerm_Timer_userWatchdog := 1;
+
+const integer c_EPTF_SIP_Test_BasicCallTerm_State_idle := 0;
+const integer c_EPTF_SIP_Test_BasicCallTerm_State_initiated := 1;
+const integer c_EPTF_SIP_Test_BasicCallTerm_State_accepted := 2;
+const integer c_EPTF_SIP_Test_BasicCallTerm_State_established := 3;
+const integer c_EPTF_SIP_Test_BasicCallTerm_State_refreshing := 4;
+
+function f_EPTF_SIP_PerfTest_BasicCallTerm_getFSM(
+  in float pl_answerTime,
+  in float pl_userWatchdogTime)
+runs on EPTF_SIP_LGen_Test_CT
+return EPTF_LGenBase_CompactFsmTable
+{
+  return {
+  //DOT: digraph fsmBasicCallTerm{
+    name := c_EPTF_SIP_Test_FSM_BasicCallTerm,
+    stateList := {"idle", "initiated", "accepted", "established", "refreshing"},
+    timerList := {{"T_answer", pl_answerTime}, {"T_userWatchdog", pl_userWatchdogTime}},
+    table := 
+    {
+      {eventToListen := {v_SIP_myBIdx,c_SIP_eventIdx_INVITE,entity},
+        cellRow := {
+          //state=idle
+          //DOT: idle -> initiated [label="i: INVITE\n o: 100 Trying,\n    180 Ringing,\n    startT(answer),\n    startT(userWatchdog)"]
+          { {
+              {refers(f_EPTF_LGenBase_step_recordEntityStart), {}},
+              {refers(f_SIP_step_init), {}},
+              {refers(f_EPTF_LGenBase_step_timerStart),{c_EPTF_SIP_Test_BasicCallTerm_Timer_userWatchdog}},
+              {refers(f_SIP_step_handleINVITE),{}},
+              {refers(f_SIP_step_createResponse),{c_status_100Trying_idx}},
+              {refers(f_SIP_step_createResponse),{c_status_180Ringing_idx}},
+//              {refers(f_EPTF_SIP_Test_checkDialogState),{c_SIP_DlgState_EarlyDialog}},
+              {refers(f_EPTF_LGenBase_step_timerStart),{c_EPTF_SIP_Test_BasicCallTerm_Timer_answer}}
+          },omit, c_EPTF_SIP_Test_BasicCallTerm_State_initiated},
+          //state==initiated
+          {omit,omit,omit},
+          //state==accepted
+          {omit,omit,omit},
+          //state==established
+          {omit,omit,omit},
+          //state==refreshing
+          {omit,omit,omit}
+        }
+      },
+      {eventToListen := {c_EPTF_LGenBase_specialBIdx_timerTimeout, c_EPTF_SIP_Test_BasicCallTerm_Timer_answer, fsm},
+        cellRow := {
+          //state=idle
+          { omit,omit,omit },
+          //state=initiated
+          //DOT: initiated -> accepted [label="t: answer\n o: 200 OK"]
+          { {
+              {refers(f_SIP_step_createResponse),{c_status_200OK_idx}}
+//              {refers(f_EPTF_SIP_Test_checkDialogState),{c_SIP_DlgState_Confirmed}}
+          },omit, c_EPTF_SIP_Test_BasicCallTerm_State_accepted},
+          //state==accepted
+          { omit,omit,omit },
+          //state=established
+          { omit,omit,omit },
+          //state==refreshing
+          {omit,omit,omit}
+        }
+      },
+      {eventToListen := {v_SIP_myBIdx, c_SIP_eventIdx_ACK, fsm},
+        cellRow := {
+          //state=idle
+          { omit,omit,omit },
+          //state=initiated
+          { omit,omit,omit },
+          //state==accepted
+          //DOT: accepted -> refreshing [label="i: ACK\n o: INVITE"]
+          {{
+            {refers(f_EPTF_SIP_Test_isUASFinished), {c_SIP_Method_INVITE}},
+            {refers(f_SIP_step_createReINVITE), {1}}
+          },omit,c_EPTF_SIP_Test_BasicCallTerm_State_refreshing },
+          //state=established
+          { omit,omit,omit },
+          //state==refreshing
+          {omit,omit,omit}
+        }
+      },
+      {eventToListen := {v_SIP_myBIdx, c_SIP_eventIdx_BYE, fsm},
+        cellRow := {
+          //state=idle
+          { omit,omit,omit },
+          //state=initiated
+          { omit,omit,omit },
+          //state==accepted
+          { omit,omit,omit },
+          //state=established
+          //DOT: established -> idle [label="i: BYE\n o: 200 OK, PASS"]
+          { {
+              {refers(f_SIP_step_handleBYE),{}},
+              {refers(f_SIP_step_createResponse),{c_status_200OK_idx}},
+//              {refers(f_EPTF_SIP_Test_isUASFinished), {c_SIP_Method_BYE}},
+//              {refers(f_EPTF_SIP_Test_checkDialogState), {c_SIP_DlgState_Terminated}},
+              {refers(f_EPTF_LGenBase_step_timerCancel),{c_EPTF_SIP_Test_BasicCallTerm_Timer_userWatchdog}},
+//              {refers(f_EPTF_SIP_Test_step_finished),{c_EPTF_SIP_Test_FSM_pass}}
+              {refers(f_EPTF_LGenBase_step_trafficSuccess), {}}
+          },omit, c_EPTF_SIP_Test_BasicCallTerm_State_idle}, // PASS
+          //state==refreshing
+          {omit,omit,omit}
+        }
+      },
+      {eventToListen := {v_SIP_myBIdx,200,fsm},
+        cellRow := {
+          //state=idle
+          { omit,omit,omit},
+          //state==initiated
+          {omit,omit, omit},
+          //state==accepted
+          { omit,omit,omit },
+          //state=established
+          {omit,omit,omit},
+          //state==refreshing
+          //DOT: refreshing -> established [label="i: 200 OK\n o: ACK"]
+          {{
+              {refers(f_SIP_step_createACK),{}}
+//              {refers(f_EPTF_SIP_Test_isUACFinished), {c_SIP_Method_INVITE}}
+
+          },omit,c_EPTF_SIP_Test_BasicCallTerm_State_established}
+        }
+      },
+      {eventToListen := {c_EPTF_LGenBase_specialBIdx_timerTimeout, c_EPTF_SIP_Test_BasicCallTerm_Timer_userWatchdog, fsm},
+        cellRow := {
+          //state=idle
+          { omit,omit, omit},
+          //state=initiated
+          //DOT: initiated -> idle [label="t: userWatchdog\n o: FAIL"]
+          { {
+              {refers(f_EPTF_LGenBase_step_timerCancel),{c_EPTF_SIP_Test_BasicCallTerm_Timer_answer}},
+//              {refers(f_EPTF_SIP_Test_step_finished),{c_EPTF_SIP_Test_FSM_fail}}
+              {refers(f_EPTF_LGenBase_step_trafficFailed), {}}
+          },omit, c_EPTF_SIP_Test_BasicCallTerm_State_idle},
+          //state=accepted
+          //DOT: accepted -> idle [label="t: userWatchdog\n o: FAIL"]
+          { {
+//              {refers(f_EPTF_SIP_Test_step_finished),{c_EPTF_SIP_Test_FSM_fail}}
+              {refers(f_EPTF_LGenBase_step_trafficFailed), {}}
+          },omit, c_EPTF_SIP_Test_BasicCallTerm_State_idle},
+          //state=established
+          //DOT: established -> idle [label="t: userWatchdog\n o: FAIL"]
+          { {
+//              {refers(f_EPTF_SIP_Test_step_finished),{c_EPTF_SIP_Test_FSM_fail}}
+              {refers(f_EPTF_LGenBase_step_trafficFailed), {}}
+          },omit, c_EPTF_SIP_Test_BasicCallTerm_State_idle},
+          //state==refreshing
+          //DOT: refreshing -> idle [label="t: userWatchdog\n o: FAIL"]
+          {{
+//              {refers(f_EPTF_SIP_Test_step_finished),{c_EPTF_SIP_Test_FSM_fail}}
+              {refers(f_EPTF_LGenBase_step_trafficFailed), {}}
+          },omit,c_EPTF_SIP_Test_BasicCallTerm_State_idle}
+        }
+      }//row
+    }//table
+  //DOT: }
+  }//fsm
+}
+
+const charstring c_EPTF_SIP_Test_FSM_BasicCallOrig := "fsmBasicCallOrig";
+const integer c_EPTF_SIP_Test_BasicCallOrig_Timer_maxTalk := 0;
+const integer c_EPTF_SIP_Test_BasicCallOrig_Timer_userWatchdog := 1;
+
+const integer c_EPTF_SIP_Test_BasicCallOrig_State_idle := 0;
+const integer c_EPTF_SIP_Test_BasicCallOrig_State_initiated := 1;
+const integer c_EPTF_SIP_Test_BasicCallOrig_State_established := 2;
+const integer c_EPTF_SIP_Test_BasicCallOrig_State_refreshing := 3;
+const integer c_EPTF_SIP_Test_BasicCallOrig_State_terminating := 4;
+
+function f_EPTF_SIP_PerfTest_BasicCallOrig_getFSM(
+  in float pl_maxTalkTime,
+  in float pl_userWatchdogTime)
+  runs on EPTF_SIP_LGen_Test_CT 
+  return EPTF_LGenBase_CompactFsmTable 
+{
+  return {
+    //DOT: digraph fsmBasicCallOrig{
+    name := c_EPTF_SIP_Test_FSM_BasicCallOrig,
+    stateList := {"idle","initiated","established", "refreshing", "terminating"},
+    timerList := {{"T_maxTalk", pl_maxTalkTime}, {"T_userWatchdog", pl_userWatchdogTime}},
+    table := 
+    {
+      {eventToListen := {c_EPTF_LGenBase_bIdx,c_EPTF_LGenBase_inputIdx_testMgmt_startTC,fsm},
+        cellRow := {
+          //state=idle
+          //DOT: idle -> initiated [label="i:startTC\n o: INVITE, startT(userWatchdog)"]
+          { {
+              {refers(f_SIP_step_init), {}},
+//              {refers(f_EPTF_SIP_Test_BasicCallOrig_setTimerValues), {}}, // don't put this damned function here, it's misleading - I was debugging LGenBase for almost a day and couldn't find out why my parametered timers won't work >:(
+              {refers(f_EPTF_LGenBase_step_timerStart),{c_EPTF_SIP_Test_BasicCallOrig_Timer_userWatchdog}},
+              {refers(f_SIP_step_createINVITE),{c_EPTF_SIP_Test_calledUserIdx, c_EPTF_SIP_Test_contactIdx}}
+            },omit, c_EPTF_SIP_Test_BasicCallOrig_State_initiated},
+          //state==initiated
+          {omit,omit,omit},
+          //state==established
+          {omit,omit,omit},
+          //state==refreshing
+          {omit,omit,omit},
+          //state==terminating
+          {omit,omit,omit}
+        }
+      },
+      {eventToListen := {v_SIP_myBIdx,180,fsm},
+        cellRow := {
+          //state=idle
+          {omit,omit,omit},
+          //state=initiated
+          { {
+              {refers(f_SIP_step_disableGroupEvent),{}},
+              {refers(f_EPTF_SIP_Test_checkDialogState),{c_SIP_DlgState_EarlyDialog}}
+
+          },omit, omit},
+          //state=established
+          {omit,omit,omit},
+          //state==refreshing
+          {omit,omit,omit},
+          //state=terminating
+          { omit,omit, omit}
+        }
+      },
+      {eventToListen := {v_SIP_myBIdx,200,fsm},
+        cellRow := {
+          //state=idle
+          {omit,omit,omit},
+          //state=initiated
+          //DOT: initiated -> established [label="i: 200 OK\n o: ACK, startT(maxTalk)"]
+          { {
+              {refers(f_SIP_step_disableGroupEvent),{}},
+              {refers(f_SIP_step_createACK),{}},
+              {refers(f_EPTF_SIP_Test_isUACFinished), {c_SIP_Method_INVITE}},
+              {refers(f_EPTF_SIP_Test_checkDialogState),{c_SIP_DlgState_Confirmed}},
+              {refers(f_EPTF_LGenBase_step_timerStart),{c_EPTF_SIP_Test_BasicCallOrig_Timer_maxTalk}}
+
+          },omit, c_EPTF_SIP_Test_BasicCallOrig_State_established},
+          //state=established
+          {omit,omit,omit},
+          //state==refreshing
+          {omit,omit,omit},
+          //state=terminating
+          //DOT: terminating -> idle [label="i: 200 OK\n o: PASS"]
+          { {
+              {refers(f_SIP_step_disableGroupEvent),{}},
+              {refers(f_EPTF_SIP_Test_isUACFinished), {c_SIP_Method_BYE}},
+              {refers(f_EPTF_SIP_Test_checkDialogState), {c_SIP_DlgState_Terminated}},
+              {refers(f_EPTF_LGenBase_step_timerCancel),{c_EPTF_SIP_Test_BasicCallOrig_Timer_userWatchdog}},
+//              {refers(f_EPTF_SIP_Test_step_finished),{c_EPTF_SIP_Test_FSM_pass}},
+              {refers(f_EPTF_LGenBase_step_trafficSuccess), {}},
+              {refers(f_SIP_step_cleanUp),{}}
+          },omit, c_EPTF_SIP_Test_BasicCallOrig_State_idle} // PASS
+        }
+      },
+      {eventToListen := {v_SIP_myBIdx,c_SIP_eventIdx_reINVITE,fsm},
+        cellRow := {
+          //state=idle
+          { omit,omit, omit},
+          //state==initiated
+          {omit,omit,omit},
+          //state==established
+          //DOT: established -> refreshing [label="i: INVITE\n o: 200 OK"]
+          {{
+              {refers(f_SIP_step_handleReINVITE),{}},
+              {refers(f_SIP_step_createResponse),{c_status_200OK_idx}}
+          },omit,c_EPTF_SIP_Test_BasicCallOrig_State_refreshing},
+          //state==refreshing
+          {omit,omit,omit},
+          //state==terminating
+          {omit,omit,omit}
+        }
+      },
+      {eventToListen := {v_SIP_myBIdx, c_SIP_eventIdx_ACK, fsm},
+        cellRow := {
+          //state=idle
+          { omit,omit,omit },
+          //state=initiated
+          { omit,omit,omit },
+          //state=established
+          { omit,omit,omit },
+          //state==refreshing
+          //DOT: refreshing -> established [label="i: ACK\n"]
+          {{
+              {refers(f_EPTF_SIP_Test_isUASFinished), {c_SIP_Method_INVITE}}
+          },omit,c_EPTF_SIP_Test_BasicCallOrig_State_established},
+          //state==terminating
+          {omit,omit,omit}
+        }
+      },
+      {eventToListen := {c_EPTF_LGenBase_specialBIdx_timerTimeout, c_EPTF_SIP_Test_BasicCallOrig_Timer_maxTalk, fsm},
+        cellRow := {
+          //state=idle
+          { omit,omit,omit },
+          //state=initiated
+          { omit,omit,omit },
+          //state==established
+          //DOT: established -> terminating [label="t: maxTalk\n o: BYE"]
+          { { 
+              {refers(f_SIP_step_createBYE),{}}
+          },omit, c_EPTF_SIP_Test_BasicCallOrig_State_terminating},
+          //state==refreshing
+          {omit,omit,omit},
+          //state=terminating
+          { omit,omit,omit }
+        }
+      },
+      {eventToListen := {c_EPTF_LGenBase_specialBIdx_timerTimeout, c_EPTF_SIP_Test_BasicCallOrig_Timer_userWatchdog, fsm},
+        cellRow := {
+          //state=idle
+          { omit,omit, omit},
+          //state=initiated
+          //DOT: initiated -> idle [label="t: userWatchdog\n o: FAIL"]
+          { {
+//              {refers(f_EPTF_SIP_Test_step_finished),{c_EPTF_SIP_Test_FSM_fail}}
+              {refers(f_EPTF_LGenBase_step_trafficFailed), {}}
+          },omit, c_EPTF_SIP_Test_BasicCallOrig_State_idle}, // FAIL
+          //state=established
+          //DOT: established -> idle [label="t: userWatchdog\n o: FAIL"]
+          { {
+              {refers(f_EPTF_LGenBase_step_timerCancel),{c_EPTF_SIP_Test_BasicCallOrig_Timer_maxTalk}},
+//              {refers(f_EPTF_SIP_Test_step_finished),{c_EPTF_SIP_Test_FSM_fail}}
+              {refers(f_EPTF_LGenBase_step_trafficFailed), {}}
+          },omit, c_EPTF_SIP_Test_BasicCallOrig_State_idle}, // FAIL
+          //state==refreshing
+          //DOT: refreshing -> idle [label="t: userWatchdog\n o: FAIL"]
+          {{
+              {refers(f_EPTF_LGenBase_step_timerCancel),{c_EPTF_SIP_Test_BasicCallOrig_Timer_maxTalk}},
+//              {refers(f_EPTF_SIP_Test_step_finished),{c_EPTF_SIP_Test_FSM_fail}}
+              {refers(f_EPTF_LGenBase_step_trafficFailed), {}}
+          },omit,c_EPTF_SIP_Test_BasicCallOrig_State_idle}, // FAIL
+          //state==terminating
+          //DOT: terminating -> idle [label="t: userWatchdog\n o: FAIL"]
+          { {
+//              {refers(f_EPTF_SIP_Test_step_finished),{c_EPTF_SIP_Test_FSM_fail}}
+              {refers(f_EPTF_LGenBase_step_trafficFailed), {}}
+          },omit, c_EPTF_SIP_Test_BasicCallOrig_State_idle} // FAIL
+        }
+      }//row
+    }//table
+  //DOT: }
+  }//fsm
+}
+
+type record SIP_PerfTest_Params {
+  integer nofEntities,
+  float cpsTransientTime,
+  float measurementInterval,
+  integer nofMeasures,
+  integer maxBadQosMeasures,
+  float minQos,
+  float maxExecTime
+};
+const SIP_PerfTest_Params c_SIP_PerfTest_Params_init := {
+  nofEntities := 50000,
+  cpsTransientTime := 6.0, // depends on maxTalkTime
+  measurementInterval := 3.0,
+  nofMeasures := 15,
+  maxBadQosMeasures := 3,
+  minQos := 0.9,
+  maxExecTime := 1000.0
+}
+modulepar SIP_PerfTest_Params tsp_SIP_PerfTest_params := c_SIP_PerfTest_Params_init;
+
+type record EPTF_SIP_PerfTest_MgmtPdu_ready { };
+type record EPTF_SIP_PerfTest_MgmtPdu_quit { };
+
+type union EPTF_SIP_PerfTest_MgmtPdu {
+  EPTF_SIP_PerfTest_MgmtPdu_ready ready,
+  EPTF_SIP_PerfTest_MgmtPdu_quit quit,
+  float maxCps
+}
+
+type port EPTF_SIP_PerfTest_MgmtPort message
+{
+  inout EPTF_SIP_PerfTest_MgmtPdu;
+} with { extension "internal" }
+
+type component EPTF_SIP_LGen_PerfTest_CT extends EPTF_SIP_LGen_Test_CT, TestResultGen_CT
+{
+  port EPTF_SIP_PerfTest_MgmtPort MGMT_PCO;
+  var SIP_PerfTest_Params v_perfTestParams := tsp_SIP_PerfTest_params;
+}
+
+function f_SIP_PerfTest_BasicCallOrig_behavior(
+  in charstring pl_selfname,
+  in float pl_initialCps,
+  in float pl_cpsDelta)
+runs on EPTF_SIP_LGen_PerfTest_CT
+{
+  var charstring vl_entityTypeName;
+  var integer vl_grpIdx;
+  var integer vl_scIndx;
+  var float vl_cps := pl_initialCps;
+  
+  f_EPTF_SIP_Test_init_CT(pl_selfname, ORIG);
+
+  vl_entityTypeName := "BasicCall";
+  var charstring vl_entityGrpName := "eg1";
+  vl_grpIdx := f_EPTF_SIP_Test_createEntityGroup(vl_entityGrpName, vl_entityTypeName, v_perfTestParams.nofEntities, nameAddr);
+  var integer vl_entityIdx := f_EPTF_LGenBase_getEGrpBaseOffset(vl_grpIdx);
+  for (var integer i := 0; i < v_perfTestParams.nofEntities; i := i + 1)
+  {
+    f_EPTF_SIP_mapUser2TransportUser(f_EPTF_LGenBase_getBehaviorCtxItem(i + vl_entityIdx, v_SIP_myBIdx, 0), 0);
+  }
+  
+//  f_EPTF_LGenBase_declareCompactFsmTable(f_EPTF_SIP_PerfTest_BasicCallOrig_getFSM(0.2, 3.0));
+  f_EPTF_LGenBase_declareCompactFsmTable(f_EPTF_SIP_PerfTest_BasicCallOrig_getFSM(5.0, 10.0));
+
+  var EPTF_LGenBase_TrafficCaseTypeDeclarator vl_tcType :={
+      name := "BasicCall",
+      fsmName := c_EPTF_SIP_Test_FSM_BasicCallOrig,
+      entityType := vl_entityTypeName,
+      tcParams := {}
+  }
+  f_EPTF_LGenBase_declareTrafficCaseType(vl_tcType);
+
+  var EPTF_LGenBase_ScenarioTypeDeclarator vl_scType :={
+    name := "sc1",
+    tcList := {
+      {
+        tcName := vl_tcType.name,
+        tcParamsList :={
+          {startDelay := 0.0},
+          {target := {cpsToReach := vl_cps}},
+          {scheduler := { preDefinedName := orig }},
+          {enableEntitiesAtStart := true},
+          {enabledAtStart := true},
+          {
+            trafficStartFinish := 
+            {
+              {
+                execTime := {
+                  time := v_perfTestParams.maxExecTime,
+                  actions :={}
+                }
+              }
+            }
+          },
+          {
+            trafficFinishedActions :={
+              {testFinished := {}}
+            }
+          }
+        }
+      }
+    },
+    scParamsList := {
+      {enabled :=true},
+      {trafficType := originating}
+    }  
+  };
+  f_EPTF_LGenBase_declareScenarioType3(vl_scType);
+
+  f_EPTF_LGenBase_createScenario2EntityGroup({vl_entityGrpName,vl_scType.name}, false);
+
+  vl_scIndx := f_EPTF_LGenBase_scNameIndexInEG(vl_grpIdx, vl_scType.name);
+  f_EPTF_LGenBase_enableScenarioOnEntityGroup(vl_grpIdx,vl_scIndx);
+
+  var float vl_maxCps := f_SIP_PerfTest_BasicCallOrig_getMaxCps(
+    vl_entityGrpName, vl_scType.name, vl_tcType.name,
+    pl_initialCps, pl_cpsDelta);
+  MGMT_PCO.send(EPTF_SIP_PerfTest_MgmtPdu:{maxCps := vl_maxCps});
+
+  //f_EPTF_Base_stop(pass);
+}
+
+/*function f_SIP_PerfTest_BasicCallOrig_stopEntities(
+  in charstring pl_entityGrpName,
+  in charstring pl_scName,
+  in charstring pl_tcName)
+runs on EPTF_SIP_LGen_Test_CT
+{
+  f_EPTF_LGenBase_setCPSByNames(pl_entityGrpName, pl_scName, pl_tcName, 0.0);
+  timer T_poll := 1.0, T_maxWait := 20.0;
+  T_poll.start;
+  T_maxWait.start;
+  var charstring vl_namePrefix := f_EPTF_LGenBaseStats_getNamePrefix(pl_entityGrpName, pl_scName, pl_tcName);
+  var integer vl_nofRunning_k := f_EPTF_Var_getId(vl_namePrefix & c_EPTF_LGenBaseStats_nameOfTcNrOfRunningEntities);
+  alt {
+    [] T_poll.timeout {
+      if(f_EPTF_Var_getIntValue(vl_nofRunning_k) != 0) {
+        T_poll.start;
+        repeat;
+      } else {
+        T_maxWait.stop;
+        action("all running entities finished.");
+      }
+    }
+    [] T_maxWait.timeout {
+      setverdict(inconc, "maxwait timeout while waiting for running entities to finish.");
+      f_EPTF_Base_stop(none);
+    }
+  }
+}*/
+
+function f_SIP_PerfTest_BasicCallOrig_getMaxCps(
+  in charstring pl_eGrpName,
+  in charstring pl_scName,
+  in charstring pl_tcName,
+  in float pl_initialCps,
+  in float pl_cpsDelta)
+runs on EPTF_SIP_LGen_PerfTest_CT
+return float
+{
+  var float vl_cps := pl_initialCps;
+  var charstring vl_namePrefix := f_EPTF_LGenBaseStats_getNamePrefix(pl_eGrpName, pl_scName, pl_tcName);
+
+  var integer vl_lastCps_k := f_EPTF_Var_getId(vl_namePrefix & c_EPTF_LGenBaseStats_nameOfTcLastCps);
+  var integer vl_nrOfStarts_k := f_EPTF_Var_getId(vl_namePrefix & c_EPTF_LGenBaseStats_nameOfTcNrOfStarts);
+  var integer vl_nrOfSuccesses_k := f_EPTF_Var_getId(vl_namePrefix & c_EPTF_LGenBaseStats_nameOfTcNrOfSuccesses);
+  var integer vl_nrOfFails_k := f_EPTF_Var_getId(vl_namePrefix & c_EPTF_LGenBaseStats_nameOfTcNnrOfFails);
+
+  var float vl_actionTime := v_perfTestParams.measurementInterval;
+
+  timer T_action := vl_actionTime;
+  timer T_transient := v_perfTestParams.cpsTransientTime;
+  timer T_maxExecTime := v_perfTestParams.maxExecTime;
+  T_maxExecTime.start;
+  T_transient.start;
+  var integer vl_prevSucc := 0;
+  var float vl_prevCps := vl_cps;
+  var integer vl_nofMeasures := 0;
+  var integer vl_badQosCount := 0;
+
+  action("Starting measurement at initial CPS ", vl_cps);
+  f_EPTF_LGenBase_setCPSByNames(pl_eGrpName, pl_scName, pl_tcName, vl_cps);
+
+  alt
+  {
+    [] T_transient.timeout {
+      T_action.start;
+      vl_prevSucc := f_EPTF_Var_getIntValue(vl_nrOfSuccesses_k);
+      repeat;
+    }
+    [] T_action.timeout{
+      action("Originating TC statistics: ",
+              "nrOfStarts: ", f_EPTF_Var_getIntValue(vl_nrOfStarts_k), " ",
+              "nrOfSuccesses: ", f_EPTF_Var_getIntValue(vl_nrOfSuccesses_k), " ",
+              "nrOfFails: ", ": ", f_EPTF_Var_getIntValue(vl_nrOfFails_k), " ",
+//              "NofTimeout: ", vl_nofTimeout, " ",
+              "lastCps: ", f_EPTF_Var_getFloatValue(vl_lastCps_k));
+
+/*      action("SIP statistics: ",
+              "nofDiscarded: ", f_EPTF_Var_getIntValue(v_nofDiscarded_k), " ",
+              "nofUACRetransmissions: ", f_EPTF_Var_getIntValue(v_nofUACRetransmissions_k), " ",
+              "nofUASRetransmissions: ", f_EPTF_Var_getIntValue(v_nofUASRetransmissions_k), " ",
+              "nofRetransmittedRequest: ", f_EPTF_Var_getIntValue(v_nofRetransmittedRequest_k), " ",
+              "nofRetransmittedResponse: ", f_EPTF_Var_getIntValue(v_nofRetransmittedResponse_k), " ",
+              "nofUACTimeouts: ", f_EPTF_Var_getIntValue(v_nofUACTimeouts_k));*/
+
+
+      var integer vl_currSucc := f_EPTF_Var_getIntValue(vl_nrOfSuccesses_k);
+      var float vl_succRate := int2float(vl_currSucc-vl_prevSucc)/vl_actionTime;
+      action("Success rate: ", vl_succRate);
+      vl_prevSucc := vl_currSucc;
+      if(vl_succRate/vl_cps < v_perfTestParams.minQos) {
+        action("QoS ", vl_succRate/vl_cps, " is lower than ", v_perfTestParams.minQos, " at CPS: ", vl_cps);
+        vl_badQosCount := vl_badQosCount + 1;
+        if(vl_badQosCount > v_perfTestParams.maxBadQosMeasures) {
+          action("Bad QoS count: ", vl_badQosCount, ", max allowed: ", v_perfTestParams.maxBadQosMeasures);
+          action("Max CPS: ", vl_prevCps);
+          return vl_prevCps;
+        }
+      }
+
+      vl_nofMeasures := vl_nofMeasures + 1;
+      if(vl_nofMeasures >= v_perfTestParams.nofMeasures) {
+        action("Bad QoS count: ", vl_badQosCount, ", max allowed: ", v_perfTestParams.maxBadQosMeasures);
+        if(vl_badQosCount > v_perfTestParams.maxBadQosMeasures) {
+          action("Max CPS: ", vl_prevCps);
+          return vl_prevCps;
+        } else {
+          vl_nofMeasures := 0;
+          vl_badQosCount := 0;
+          vl_prevCps := vl_cps;
+          vl_cps := vl_cps + pl_cpsDelta;
+          action("Adjusting CPS to ", vl_cps);
+          f_EPTF_LGenBase_setCPSByNames(pl_eGrpName, pl_scName, pl_tcName, vl_cps);
+          T_transient.start;
+          repeat;
+        }
+      }
+
+      T_action.start;
+      repeat;
+    }
+
+    [] T_maxExecTime.timeout {
+      setverdict(inconc, "Max execution time reached, max CPS not found yet.");
+      f_EPTF_Base_stop(none);
+    }
+  }
+
+  return vl_prevCps;
+}
+
+
+function f_SIP_PerfTest_BasicCallTerm_behavior(
+  in charstring pl_selfname)
+runs on EPTF_SIP_LGen_PerfTest_CT
+{
+  var charstring vl_entityTypeName;
+  var integer vl_grpIdx;
+  var integer vl_scIndx;
+
+  f_EPTF_SIP_Test_init_CT(pl_selfname, TERM);
+
+  vl_entityTypeName := "BasicCall";
+  var charstring vl_entityGrpName := "eg1";
+  vl_grpIdx := f_EPTF_SIP_Test_createEntityGroup(vl_entityGrpName, vl_entityTypeName, tsp_SIP_PerfTest_params.nofEntities, nameAddr);
+  var integer vl_entityIdx := f_EPTF_LGenBase_getEGrpBaseOffset(vl_grpIdx);
+  for (var integer i := 0; i < tsp_SIP_PerfTest_params.nofEntities; i := i + 1)
+  {
+    f_EPTF_SIP_mapUser2TransportUser(f_EPTF_LGenBase_getBehaviorCtxItem(i + vl_entityIdx, v_SIP_myBIdx, 0), 0);
+  }
+
+//  f_EPTF_LGenBase_declareCompactFsmTable(f_EPTF_SIP_PerfTest_BasicCallTerm_getFSM(0.2, 3.0));
+  f_EPTF_LGenBase_declareCompactFsmTable(f_EPTF_SIP_PerfTest_BasicCallTerm_getFSM(1.0, 11.0));
+
+  var EPTF_LGenBase_TrafficCaseTypeDeclarator vl_tcType :={
+      name := "BasicCall",
+      fsmName := c_EPTF_SIP_Test_FSM_BasicCallTerm,
+      entityType := vl_entityTypeName,
+      tcParams := {}
+  }
+  f_EPTF_LGenBase_declareTrafficCaseType(vl_tcType);
+
+  var EPTF_LGenBase_ScenarioTypeDeclarator vl_scType :={
+    name := "sc1",
+    tcList := {
+      {
+        tcName := vl_tcType.name,
+        tcParamsList := {
+          { startDelay := 0.0},
+          {target := {cpsToReach := 0.0}},
+          {scheduler := { preDefinedName := orig }},
+          {enableEntitiesAtStart := true},
+          {enabledAtStart := true}
+        }
+      }
+    },
+    scParamsList := {
+      {enabled :=true},
+      {trafficType := terminating}
+    }
+  }
+  f_EPTF_LGenBase_declareScenarioType3(vl_scType);
+
+  f_EPTF_LGenBase_createScenario2EntityGroup({vl_entityGrpName,vl_scType.name});
+
+  MGMT_PCO.send(EPTF_SIP_PerfTest_MgmtPdu:{ready:={}});
+  MGMT_PCO.receive(EPTF_SIP_PerfTest_MgmtPdu:{quit:={}});
+
+  //f_EPTF_Base_stop(pass); //BAAT
+}
+
+function f_EPTF_SIP_PerfTest_BasicCall(in float pl_initialCps, in float pl_cpsDelta)
+runs on EPTF_SIP_LGen_PerfTest_CT
+return float
+{
+  // Start originating and terminating component
+  var EPTF_SIP_LGen_PerfTest_CT  SIP_Term_CT := EPTF_SIP_LGen_PerfTest_CT.create;
+  connect(SIP_Term_CT:MGMT_PCO, self:MGMT_PCO);
+  SIP_Term_CT.start(f_SIP_PerfTest_BasicCallTerm_behavior("SIPTerm")); //starts the behaviour of the Term component
+
+  timer T_maxWait := 60.0;
+  T_maxWait.start;
+  alt {
+    [] MGMT_PCO.receive(EPTF_SIP_PerfTest_MgmtPdu:{ready:={}}) {
+      T_maxWait.stop;
+    }
+    [] T_maxWait.timeout {
+      setverdict(inconc, "timeout while waiting for terminating component to initialize.");
+      f_EPTF_Base_stop(none);
+    }
+  }
+
+  var EPTF_SIP_LGen_PerfTest_CT SIP_Orig_CT := EPTF_SIP_LGen_PerfTest_CT.create;
+  connect(SIP_Orig_CT:MGMT_PCO, self:MGMT_PCO);
+  SIP_Orig_CT.start(f_SIP_PerfTest_BasicCallOrig_behavior("SIPOrig", pl_initialCps, pl_cpsDelta)); //starts the behaviour of the Orig component
+  SIP_Orig_CT.done;
+  
+  timer T_dummy := 0.0;
+  T_dummy.start;
+  var EPTF_SIP_PerfTest_MgmtPdu vl_pdu;
+  var float vl_maxCps := pl_initialCps;
+  alt {
+    [] MGMT_PCO.receive(EPTF_SIP_PerfTest_MgmtPdu:?) -> value vl_pdu {
+      if(not ischosen(vl_pdu.maxCps)) { repeat }
+      vl_maxCps := vl_pdu.maxCps;
+    }
+    [] T_dummy.timeout {
+      setverdict(fail, "no result received from originating component");
+      f_EPTF_Base_stop(none);
+    }
+  }
+
+  MGMT_PCO.send(EPTF_SIP_PerfTest_MgmtPdu:{quit:={}}) to SIP_Term_CT;
+  SIP_Term_CT.done;
+
+  disconnect(SIP_Term_CT:MGMT_PCO, self:MGMT_PCO);
+  return vl_maxCps;
+}
+
+
+testcase tc_EPTF_SIP_PerfTest_BasicCall()
+runs on EPTF_SIP_LGen_PerfTest_CT
+{
+  var Testresult vl_testResult;
+  vl_testResult.name := "SIP Basic Call";
+  vl_testResult.purpose := "To measure the maximum CPS...";
+  f_TestResultGen_getEnvironment(vl_testResult.environment);
+  vl_testResult.parameter_list := {
+    {name := "nofEntities", unit := "-", base := int2str(tsp_SIP_PerfTest_params.nofEntities) },
+    {name := "cpsTransientTime", unit := "sec", base := float2str(tsp_SIP_PerfTest_params.cpsTransientTime)},
+    {name := "measurementInterval", unit := "sec", base := float2str(tsp_SIP_PerfTest_params.measurementInterval)},
+    {name := "nofMeasures", unit := "-", base := int2str(tsp_SIP_PerfTest_params.nofMeasures)},
+    {name := "maxBadQosMeasures", unit := "-", base := int2str(tsp_SIP_PerfTest_params.maxBadQosMeasures)},
+    {name := "minQos", unit := "%", base := float2str(tsp_SIP_PerfTest_params.minQos*100.0)},
+    {name := "maxExecTime", unit := "sec", base := float2str(tsp_SIP_PerfTest_params.maxExecTime)}
+  };
+  // var charstring vl_startTime := f_getTimeFormatted(f_time(), "%c");
+  var charstring vl_start_time := f_TestResultGen_getCurrentTime();
+  vl_testResult.start_time := vl_start_time;
+
+  // Start originating and terminating component
+  f_EPTF_Base_init_CT("mtc");
+
+  var float vl_maxCps := f_EPTF_SIP_PerfTest_BasicCall(100.0, 100.0); // coarse measurement
+  vl_maxCps := f_EPTF_SIP_PerfTest_BasicCall(vl_maxCps-20.0, 10.0); // fine measurement
+  vl_maxCps := f_EPTF_SIP_PerfTest_BasicCall(vl_maxCps-2.0, 1.0); // finer measurement
+
+  vl_testResult.end_time := f_TestResultGen_getCurrentTime();
+  action("MTC: final max CPS result: ", vl_maxCps);
+
+  vl_testResult.result_list := {{
+    name := "final max CPS result",
+    unit := "-",
+    base := float2str(vl_maxCps)
+  }};
+
+  //f_TestResultGen_appendResult("sip_basic_call_result"&vl_start_time&".xml", vl_testResult);
+  f_TestResultGen_appendResult("sip_basic_call_result.xml", vl_testResult);
+  f_EPTF_Base_stopAll(pass,true);
+  //f_EPTF_Base_stop(pass);
+}
+
+}//module

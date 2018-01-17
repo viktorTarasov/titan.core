@@ -1,0 +1,66 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//
+//  File:               TCP_Types.ttcn
+//  Rev:                <RnXnn>
+//  Prodnr:             CNL 113 675
+//  Updated:            2010-03-09
+//  Contact:            http://ttcn.ericsson.se
+//  Reference:          RFC 793          
+
+module TCP_Types
+{
+  import from General_Types all;
+  
+  type octetstring IP_Address length (4..16);
+  
+  external function f_enc_PDU_TCP
+  (
+   in IP_Address pl_ip_source := '00000000'O,// included default so function can be used with "pdu" parameter only
+   in IP_Address pl_ip_dest := '00000000'O,  // included default so function can be used with "pdu" parameter only
+   in PDU_TCP pdu,
+   in boolean pl_autoDataOffset := true,
+   in boolean pl_autoCheckSum := true  
+  )   
+  return octetstring;
+
+  external function f_dec_PDU_TCP(in octetstring stream) return PDU_TCP;
+    
+  external function f_TCP_verify_checksum(
+   in octetstring stream,
+   in IP_Address pl_ip_source, 
+   in IP_Address pl_ip_dest
+  ) return boolean
+  
+  type record TCP_Control_bits
+  {
+     BIT1    urg,
+     BIT1    ack,
+     BIT1    psh,
+     BIT1    rst,
+     BIT1    syn,
+     BIT1    fin
+  } with { variant "FIELDORDER(msb)" }
+    
+  type record PDU_TCP  
+  {
+     LIN2_BO_LAST             source_port,
+     LIN2_BO_LAST             dest_port,
+     LIN4_BO_LAST             sequence_number,
+     LIN4_BO_LAST             acknowledgment_number,
+     INT4b                    data_offset,
+     BIT6                     reserved,
+     TCP_Control_bits         control_bits,
+     LIN2_BO_LAST             window,
+     OCT2                     checksum,
+     LIN2_BO_LAST             urgent_pointer,
+     octetstring              options optional,
+     octetstring              data optional
+  } with { variant "FIELDORDER(msb)" }
+
+} with{ encode "RAW"}

@@ -1,0 +1,84 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_CLL_TransportRouting_Definitions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 512
+//  Updated:  2009-11-17
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////
+//  Module: EPTF_CLL_TransportRouting_Definitions
+// 
+//  Purpose:
+//    -
+// 
+//  Module Parameters:
+//    -
+// 
+//  Module depends on:
+//    <EPTF_CLL_Base_Definitions>
+// 
+//  Current Owner:
+//    ENORPIN
+// 
+//  Last Review Date:
+//    2007- - 
+// 
+//  Detailed Comments:
+// 
+///////////////////////////////////////////////////////////
+module EPTF_CLL_TransportRouting_Definitions
+{
+import from EPTF_CLL_Base_Definitions all;
+
+//=========================================================================
+// Data Types
+//=========================================================================
+///////////////////////////////////////////////////////////
+//  Group: Routing_Definitions
+// 
+//  Purpose:
+//    Definitions of the EPTF_Routing_CT
+//
+///////////////////////////////////////////////////////////
+group Transport_Routing_Definitions
+{
+  ///////////////////////////////////////////////////////////
+  // Type: f_EPTF_processMessage_FT
+  //
+  // Purpose:
+  //   Function type to register processMessage functions
+  //
+  // Elements:
+  //   -
+  ///////////////////////////////////////////////////////////
+  type function f_EPTF_Routing_processMessage_FT() 
+  runs on self; 
+  
+  //////////////////////////////////////////////////////////
+  // Type: EPTF_Routing_CT
+  //
+  // Purpose:
+  //   Component type to store routing functions
+  //
+  // Elements:
+  //   vf_EPTF_Routing_processOutgoingMessage - <f_EPTF_Routing_processMessage_FT> - functions pointer to the defined processOutgoingMessage
+  //   vf_EPTF_Routing_processIncomingMessage - <f_EPTF_Routing_processMessage_FT> - functions pointer to the defined processIncomingMessage
+  //   v_EPTF_Routing_initialized - *boolean* - guard flag to the init function
+  ///////////////////////////////////////////////////////////
+  //store routing information from incoming and outgoing messages
+  type component EPTF_Routing_CT
+  extends EPTF_Base_CT
+  {
+    private var f_EPTF_Routing_processMessage_FT  vf_EPTF_Routing_processOutgoingMessage := null;
+    private var f_EPTF_Routing_processMessage_FT  vf_EPTF_Routing_processIncomingMessage := null;
+    private var boolean                   v_EPTF_Routing_initialized := false;
+  }
+}// end of the Routing_Definitions group
+}  // end of module

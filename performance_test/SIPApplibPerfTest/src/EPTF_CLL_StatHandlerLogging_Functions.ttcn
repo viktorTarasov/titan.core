@@ -1,0 +1,229 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_CLL_StatHandlerLogging_Functions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 512
+//  Updated:  2010-01-28
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////
+//  Module: EPTF_CLL_StatHandlerLogging_Functions
+// 
+//  Purpose:
+//    This module contains the implementation of the logging subsytem used in StatHandler.
+// 
+//  Module depends on:
+//    <EPTF_CLL_Base_Functions>
+//    <EPTF_CLL_Logging_Definitions>
+//    <EPTF_CLL_Logging_Functions>
+//    <EPTF_CLL_StatHandlerLogging_Definitions>
+//
+//  Module Parameters:
+//    -
+//
+//  Current Owner:
+//    Gabor Tatarka (EGBOTAT)
+// 
+//  Last Review Date:
+//    -
+//
+//  Detailed Comments:
+//    This module contains the implementation of the logging subsytem used in StatHandler.
+//    Public API:
+//    - f_EPTF_StatHandlerLogging_init_CT
+//    - f_EPTF_StatHandlerLogging_error
+//    - f_EPTF_StatHandlerLogging_warning
+//    - f_EPTF_StatHandlerLogging_debug
+//    - f_EPTF_StatHandlerLogging_debugEnabled
+//
+///////////////////////////////////////////////////////////////
+module EPTF_CLL_StatHandlerLogging_Functions {
+
+import from EPTF_CLL_Base_Functions all;
+import from EPTF_CLL_Logging_Definitions all;
+import from EPTF_CLL_Logging_Functions all;
+import from EPTF_CLL_StatHandlerLogging_Definitions all;
+
+friend module EPTF_CLL_StatHandler_Functions;
+friend module EPTF_CLL_StatHandlerClient_Functions;
+friend module EPTF_CLL_StatHandlerUI_Functions;
+friend module EPTF_CLL_StatHandler_DSFunctions;
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_StatHandlerLogging_init_CT
+// 
+//  Purpose:
+//    Init function for component type EPTF_StatHandlerLogging_CT
+//
+//  Parameters:
+//    pl_selfName - *in* *charstring* - EPTF self name
+//    pl_componentMask - *in* *charstring* - logging component mask
+//    pl_debugEnabled - *in* *boolean* - initial state of debug logging
+//
+//  Return Value:
+//    -
+//
+//  Errors & assertions:
+//    - 
+//
+//  Detailed Comments:
+//    -
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_StatHandlerLogging_init_CT(
+  in charstring pl_selfName,
+  in charstring pl_componentMask,
+  in boolean pl_debugEnabled)
+runs on EPTF_StatHandlerLogging_CT
+{
+  if(v_EPTF_StatHandlerLogging_initialized) { return; }
+
+  f_EPTF_Logging_init_CT(pl_selfName);
+
+  v_EPTF_StatHandlerLogging_loggingComponentMask := pl_componentMask;
+  v_EPTF_StatHandlerLogging_maskId := f_EPTF_Logging_registerComponentMasks(pl_componentMask, c_EPTF_StatHandlerLogging_eventClasses, EPTF_Logging_CLL);
+  if(pl_debugEnabled) {
+    f_EPTF_Logging_enableLocalMask(v_EPTF_StatHandlerLogging_maskId, c_EPTF_StatHandlerLogging_ClassIdx_Debug);
+  } else {
+    f_EPTF_Logging_disableLocalMask(v_EPTF_StatHandlerLogging_maskId, c_EPTF_StatHandlerLogging_ClassIdx_Debug);
+  }
+
+  f_EPTF_Base_registerCleanup(refers(f_EPTF_StatHandlerLogging_cleanup_CT));
+  v_EPTF_StatHandlerLogging_initialized := true;
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_StatHandlerLogging_cleanup_CT
+// 
+//  Purpose:
+//    Cleanup function for component type EPTF_StatHandlerLogging_CT
+//
+//  Parameters:
+//    -
+//
+//  Return Value:
+//    -
+//
+//  Errors & assertions:
+//    - 
+//
+//  Detailed Comments:
+//    -
+//
+///////////////////////////////////////////////////////////
+private function f_EPTF_StatHandlerLogging_cleanup_CT()
+runs on EPTF_StatHandlerLogging_CT
+{
+  v_EPTF_StatHandlerLogging_initialized := false;
+}
+
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_StatHandlerLogging_error
+// 
+//  Purpose:
+//    Function to log an error from StatHandler feature.
+//
+//  Parameters:
+//    - pl_message - *in* *charstring* - the message to log
+//
+//  Return Value:
+//    -
+//
+//  Errors & assertions:
+//    - 
+//
+//  Detailed Comments:
+//    -
+//
+///////////////////////////////////////////////////////////
+friend function f_EPTF_StatHandlerLogging_error(in charstring pl_message)
+runs on EPTF_StatHandlerLogging_CT
+{
+  f_EPTF_Logging_error(true, v_EPTF_StatHandlerLogging_loggingComponentMask&": "&pl_message);
+  f_EPTF_Base_stopAll();
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_StatHandlerLogging_warning
+// 
+//  Purpose:
+//    Function to log a warning from StatHandler feature.
+//
+//  Parameters:
+//    - pl_message - *in* *charstring* - the message to log
+//
+//  Return Value:
+//    -
+//
+//  Errors & assertions:
+//    - 
+//
+//  Detailed Comments:
+//    -
+//
+///////////////////////////////////////////////////////////
+friend function f_EPTF_StatHandlerLogging_warning(in charstring pl_message)
+runs on EPTF_StatHandlerLogging_CT
+{
+  f_EPTF_Logging_warningV2(pl_message, v_EPTF_StatHandlerLogging_maskId, {c_EPTF_StatHandlerLogging_ClassIdx_Warning});
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_StatHandlerLogging_debug
+// 
+//  Purpose:
+//    Function to log a debug message from StatHandler feature.
+//
+//  Parameters:
+//    - pl_message - *in* *charstring* - the message to log
+//
+//  Return Value:
+//    -
+//
+//  Errors & assertions:
+//    - 
+//
+//  Detailed Comments:
+//    -
+//
+///////////////////////////////////////////////////////////
+friend function f_EPTF_StatHandlerLogging_debug(in charstring pl_message)
+runs on EPTF_StatHandlerLogging_CT
+{
+  f_EPTF_Logging_debugV2(pl_message, v_EPTF_StatHandlerLogging_maskId, {c_EPTF_StatHandlerLogging_ClassIdx_Debug});
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_StatHandlerLogging_debugEnabled
+// 
+//  Purpose:
+//    Function to check if debug is enabled for StatHandler
+//
+//  Parameters:
+//    -
+//
+//  Return Value:
+//    *boolean* - true if debug enalbed
+//
+//  Errors & assertions:
+//    - 
+//
+//  Detailed Comments:
+//    -
+//
+///////////////////////////////////////////////////////////
+friend function f_EPTF_StatHandlerLogging_debugEnabled()
+runs on EPTF_StatHandlerLogging_CT
+return boolean
+{
+  return f_EPTF_Logging_isEnabled(v_EPTF_StatHandlerLogging_maskId, c_EPTF_StatHandlerLogging_ClassIdx_Debug);
+}
+
+} // end of module

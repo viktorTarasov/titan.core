@@ -1,0 +1,122 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************///
+//  File:          ttcn_ericsson_se_TitanSim_Perftest.ttcn
+//  Description:
+//  References:
+//  Rev:           <RnXnn>
+//  Prodnr:        CNL 113 512
+//  Updated:       Fri Sep 23 14:16:17 2011
+//  Contact:       http://ttcn.ericsson.se
+//
+////////////////////////////////////////////////////////////////////////////////
+//
+//	Generated from file(s):
+//
+//	- testresults.xsd
+//			/* xml version = "1.0" encoding = "utf-8" */
+//			/* targetnamespace = "http://ttcn.ericsson.se/TitanSim/Perftest" */
+//
+////////////////////////////////////////////////////////////////////////////////
+
+
+module ttcn_ericsson_se_TitanSim_Perftest {
+
+
+import from XSD all;
+
+
+type record Testresults
+{
+	record of Testresult testresult_list
+}
+with {
+variant "name as uncapitalized";
+variant "element";
+variant (testresult_list) "untagged";
+variant (testresult_list[-]) "name as 'testresult'";
+};
+
+
+/* <xs:element name="parameters" type="data_type_list" />
+        <xs:element name="result" type="data_type_list2" /> */
+type record Testresult
+{
+	XSD.String name,
+	XSD.String purpose,
+	XSD.String start_time,
+	XSD.String end_time,
+	Environment_type environment,
+	record of Data_type parameter_list,
+	record of Data_type result_list
+}
+with {
+variant "name as uncapitalized";
+variant (parameter_list) "untagged";
+variant (parameter_list[-]) "name as 'parameter'";
+variant (result_list) "untagged";
+variant (result_list[-]) "name as 'result'";
+};
+
+
+/* <xs:complexType name="data_type_list">
+    <xs:sequence >
+      <xs:element name="parameter" type="data_type" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+  
+   <xs:complexType name="data_type_list2">
+    <xs:sequence >
+      <xs:element name="data" type="data_type2" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+  
+  <xs:complexType name="data_type2">
+    <xs:sequence>
+      <xs:element name="name" type="xs:string" />
+      <xs:element name="value" type="xs:string" />
+      <xs:element name="unit" type="xs:string" />
+    </xs:sequence>
+  </xs:complexType> */
+
+
+type record Data_type
+{
+	XSD.String name,
+	XSD.String unit,
+	XSD.String base
+}
+with {
+variant "name as uncapitalized";
+variant (name) "attribute";
+variant (unit) "attribute";
+variant (base) "untagged";
+};
+
+
+type record Environment_type
+{
+	XSD.String user,
+	XSD.String host,
+	XSD.String kernel,
+	XSD.String gcc_version,
+	XSD.String titan_version,
+	XSD.String cpu_info,
+	XSD.String memory_info
+}
+with {
+variant "name as uncapitalized";
+};
+
+
+}
+with {
+encode "XML";
+variant "namespace as 'http://ttcn.ericsson.se/TitanSim/Perftest'";
+variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+variant "elementFormQualified";
+}

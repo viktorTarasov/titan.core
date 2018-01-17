@@ -1,0 +1,183 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_CLL_TransportRouting_Functions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 512
+//  Updated:  2009-11-17
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////
+//  Module: EPTF_CLL_TransportRouting_Functions
+// 
+//  Purpose:
+//    -
+// 
+//  Module Parameters:
+//    -
+// 
+//  Module depends on:
+//    <EPTF_CLL_TransportRouting_Definitions>
+//
+//    <EPTF_CLL_Base_Functions>
+//
+//  Current Owner:
+//    ENORPIN
+// 
+//  Last Review Date:
+//    2008- - 
+// 
+//  Detailed Comments:
+// 
+// 
+///////////////////////////////////////////////////////////
+module EPTF_CLL_TransportRouting_Functions {
+
+
+//=========================================================================
+// Import Part
+//=========================================================================
+
+import from EPTF_CLL_TransportRouting_Definitions all;
+import from EPTF_CLL_Base_Functions all;
+
+//=========================================================================
+// Functions
+//========================================================================
+
+///////////////////////////////////////////////////////////
+//  Group: Routing_Functions
+// 
+//  Purpose:
+//    Functions to handle the EPTF_Routing_CT
+//
+///////////////////////////////////////////////////////////
+group Routing_Functions
+{
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_Routing_init_CT
+  // 
+  //  Purpose:
+  //    Function to inititalize the EPTF_Routing_CT component
+  //
+  //  Parameters:
+  //    pl_processOutgoingMsg - *in* <f_EPTF_Routing_processMessage_FT> - the function reference to the outgoing message process function
+  //    pl_processIncomingMsg - *in* <f_EPTF_Routing_processMessage_FT> - the function reference to the incoming message process function
+  //    pl_selfName - *in* *charstring* - the name of the component
+  //
+  //  Return Value:
+  //    -
+  //
+  //  Errors:
+  //    -
+  //
+  //  Detailed Comments:
+  //    -
+  //
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_Routing_init_CT (
+    in f_EPTF_Routing_processMessage_FT pl_processOutgoingMsg := null,
+    in f_EPTF_Routing_processMessage_FT pl_processIncomingMsg := null,
+    in charstring pl_selfName := "EPTF_Routing" )
+  runs on EPTF_Routing_CT
+  {
+    if (v_EPTF_Routing_initialized) {
+      return;
+    }
+    f_EPTF_Base_init_CT(pl_selfName);
+    
+    f_EPTF_Base_registerCleanup(refers(f_EPTF_Routing_cleanup));
+    
+    vf_EPTF_Routing_processOutgoingMessage := pl_processOutgoingMsg;
+    vf_EPTF_Routing_processIncomingMessage := pl_processIncomingMsg;
+    
+    v_EPTF_Routing_initialized := true;
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_Routing_processIncomingMessage
+  // 
+  //  Purpose:
+  //    Function to call the registered processIncomingMessage function
+  //
+  //  Parameters:
+  //    -
+  //
+  //  Return Value:
+  //    -
+  //
+  //  Errors:
+  //    -
+  //
+  //  Detailed Comments:
+  //    -
+  //
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_Routing_processIncomingMessage() 
+  runs on EPTF_Routing_CT {
+    if (not vf_EPTF_Routing_processIncomingMessage == null) {
+      vf_EPTF_Routing_processIncomingMessage.apply();
+	}
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_Routing_processOutgoingMessage
+  // 
+  //  Purpose:
+  //    Function to call the registered processOutgoingMessage function
+  //
+  //  Parameters:
+  //    -
+  //
+  //  Return Value:
+  //    -
+  //
+  //  Errors:
+  //    -
+  //
+  //  Detailed Comments:
+  //    -
+  //
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_Routing_processOutgoingMessage() 
+  runs on EPTF_Routing_CT {
+    if (not null == vf_EPTF_Routing_processOutgoingMessage) {
+      vf_EPTF_Routing_processOutgoingMessage.apply();  
+    }
+  }
+
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_Routing_cleanup
+  // 
+  //  Purpose:
+  //    Function to cleanup the EPTF_Routing component
+  //
+  //  Parameters:
+  //    -
+  //
+  //  Return Value:
+  //    -
+  //
+  //  Errors:
+  //    -
+  //
+  //  Detailed Comments:
+  //    -
+  //
+  ///////////////////////////////////////////////////////////  
+  private function f_EPTF_Routing_cleanup ()
+  runs on EPTF_Routing_CT {
+    vf_EPTF_Routing_processOutgoingMessage := null;
+    vf_EPTF_Routing_processIncomingMessage := null;
+    
+    v_EPTF_Routing_initialized := false;
+    
+  }
+}// end of Routing_Functions group
+
+}  // end of module

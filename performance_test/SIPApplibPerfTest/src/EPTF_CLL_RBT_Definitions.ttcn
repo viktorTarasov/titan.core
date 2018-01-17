@@ -1,0 +1,115 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_CLL_RBT_Definitions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 512
+//  Updated:  2011-06-21
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+// Module: EPTF_CLL_RBT_Definitions
+//
+// Purpose:
+//  This module contains the type and constant definitions of the EPTF RedBlackTree feature
+//
+// Module Parameters:
+//  -
+//
+// Module depends on:
+//  <EPTF_CLL_Base_Definitions>
+//  <EPTF_CLL_Common_Definitions>
+//
+// Current Owner:
+//  Gabor Tatarka (EGBOTAT)
+//
+// Last Review Date:
+//  -
+//
+///////////////////////////////////////////////////////////////////////////////
+
+module EPTF_CLL_RBT_Definitions {
+
+import from EPTF_CLL_Base_Definitions all;
+import from EPTF_CLL_Common_Definitions all;
+
+///////////////////////////////////////////////////////////
+// Type: EPTF_RBT_TreeId
+// 
+// Purpose:
+//  Type definition of a tree ID
+//
+// Elements:
+//  type alias for *integer*
+///////////////////////////////////////////////////////////
+type integer EPTF_RBT_TreeId;
+
+///////////////////////////////////////////////////////////
+// Type: EPTF_RBT_ItemIdx
+// 
+// Purpose:
+//  Type definition of an item index
+//
+// Elements:
+//  type alias for *integer*
+///////////////////////////////////////////////////////////
+type integer EPTF_RBT_ItemIdx;
+
+///////////////////////////////////////////////////////////
+// Type: EPTF_RBT_ItemIdxList
+// 
+// Purpose:
+//  Type definition of list of item indices
+//
+// Elements:
+//  type alias for <EPTF_IntegerList>
+///////////////////////////////////////////////////////////
+type EPTF_IntegerList EPTF_RBT_ItemIdxList;
+
+///////////////////////////////////////////////////////////
+// Type: EPTF_RBT_CT
+// 
+// Purpose:
+//  Component type definition of the RedBlackTree feature
+//
+// Detailed Comments:
+//  This component has to be extended by the component
+//  that wishes to use EPTF RedBlackTree.
+///////////////////////////////////////////////////////////
+type component EPTF_RBT_CT extends EPTF_Base_CT {
+  private var boolean v_EPTF_RBT_initialized := false;
+}
+
+group RBT_Test {
+
+  friend module EPTF_RBT_Test;
+  friend module EPTF_CLL_RBT_Functions;
+
+  friend type enumerated EPTF_RBT_ItemType {
+    RedNode,
+    BlackNode,
+    ChainItem,
+    FreeItem
+  }
+
+  friend type union EPTF_RBT_Key {
+    integer intKey,
+    float floatKey,
+    charstring stringKey
+  }
+
+  friend type record EPTF_RBT_TreeInitNode {
+    boolean isRed,
+    EPTF_RBT_Key key,
+    EPTF_RBT_TreeInitNode leftChild optional,
+    EPTF_RBT_TreeInitNode rightChild optional
+  }
+
+} // group RBT_Test
+
+} // module EPTF_CLL_RBT_Definitions

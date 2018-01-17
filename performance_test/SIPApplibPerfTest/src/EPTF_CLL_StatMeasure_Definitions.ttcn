@@ -1,0 +1,804 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_CLL_StatMeasure_Definitions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 512
+//  Updated:  2012-05-11
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+//  Module: EPTF_CLL_StatMeasure_Definitions
+// 
+//  Purpose:
+//    This module contains type definitions for TTCN-3 EPTF StatMeasure 
+//    implementation.
+// 
+//  Module Parameters:
+//    tsp_EPTF_StatMeasure_loggingComponentMask - *charstring* - component-type mask for logging, default value: "EPTF_StatMeasure"
+//
+//  Module depends on:
+//    <EPTF_CLL_Variable_Definitions>
+//    <EPTF_CLL_Logging_Definitions>
+// 
+//  Current Owner:
+//    Jozsef Gyurusi (ETHJGI)
+// 
+//  Last Review Date:
+//    2009-05-14
+//
+//  Detailed Comments:
+//    This module contains type definitions for TTCN-3 EPTF StatMeasure 
+//    implementation.
+// 
+///////////////////////////////////////////////////////////////////////////////
+
+module EPTF_CLL_StatMeasure_Definitions {
+
+import from EPTF_CLL_Variable_Definitions all;
+import from EPTF_CLL_Common_Definitions all;
+import from EPTF_CLL_Logging_Definitions all;
+
+modulepar charstring tsp_EPTF_StatMeasure_loggingComponentMask := "EPTF_StatMeasure";
+
+///////////////////////////////////////////////////////////////////////////////
+//  Type: EPTF_StatMeasure_statType
+// 
+//  Purpose:
+//     Declares the possible types of statistics
+//
+//  Elements:
+//    content - content of the variable
+//    delta - newValue-oldValue
+//    deltaSum - newValue-initialValue
+//    min - minimal value ever
+//    max - maximal value ever
+//    mean - mean value
+//    standardDev - standard deviation and mean
+//    EPS - measures the number of events during a refresh period (events/sec), 
+//          and the time of measurement. For variables the events are the 
+//          refresh events
+//    chrono - measures the time of measurement in sec. For variables it 
+//             measures the time between start and the last refresh event
+//    density - measures the density function: counts the values that falls
+//              into user given boundaries
+//    percentile95 - measures 95% statistics: the smallest number that is 
+//                   greater than the 95% of elements in the given data set
+//    percentileP - measures P% statistics: the smallest number that is 
+//                   greater than the P% of elements in the given data set
+//    limits - calculates a statusLED from a float value based on given limits
+//             for LED values		
+//
+//    custom - measures custom defined statistics: computes user stat
+//
+//  Detailed Comments:
+//   ALG III of http://en.wikipedia.org/wiki/Algorithms_for_calculating_variance
+//   is used to calculate mean and variance:
+//
+//   n = 0
+//   mean = 0
+//   S = 0
+//
+//   foreach x in data:
+//     n = n + 1
+//     delta = x - mean
+//     mean = mean + delta/n
+//     S = S + delta*(x - mean)      // This expression uses the new value of mean
+//   end for
+//
+//   standardDev = S/n
+//
+//
+//  For the EPS statistics its update function <f_EPTF_StatMeasure_update_EPS> 
+//  should be called when the EPS value should be updated. The measuring of 
+//  the EPS events is restarted from here.
+//    
+///////////////////////////////////////////////////////////////////////////////
+type enumerated EPTF_StatMeasure_statType {
+  content, // content of the variable
+  delta,  // newValue-oldValue
+  deltaSum,// newValue-initialValue
+  min,// minimal value ever
+  max,// maximal value ever
+  mean,// mean value
+  standardDev, // standard deviation and mean (if this is chosen, mean is 
+               // also calculated)
+  EPS, // measures the number of events during a refresh period (events/sec), 
+       // and the time of measurement. For variables the events are the refresh 
+       // events
+  chrono, // measures the time of measurement in sec. For variables it measures 
+          // the time between start and the last refresh event
+  density, // measures the density function: counts the values that falls 
+           // into user given boundaries
+  percentile95, // measures 95% statistics: the smallest number that is 
+                // greater than the 95% of elements in the given data set
+  percentileP,  // measures P% statistics: the smallest number that is 
+                // greater than the P% of elements in the given data set
+  limits,  // calculates a statusLED from a float value based on given limits
+           // for LED values		
+  custom // measures custom defined statistics: computes user stat
+  //...
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//  Type: EPTF_StatMeasure_StatParams
+// 
+//  Purpose:
+//     Defines the type of parameters of the different statistics
+//
+//  Elements:
+//    content - content of the variable
+//    delta - newValue-oldValue
+//    deltaSum - newValue-initialValue
+//    min - minimal value ever
+//    max - maximal value ever
+//    mean - mean value
+//    standardDev - standard deviation and mean
+//    EPS - measures the number of events during a refresh period (events/sec), 
+//          and the time of measurement. For variables the events are the 
+//          refresh events
+//    chrono - measures the time of measurement in sec. For variables it 
+//             measures the time between start and the last refresh event
+//    density - measures the density function: counts the values that falls
+//              into user given boundaries
+//    percentile95 - measures 95% statistics: the smallest number that is 
+//                   greater than the 95% of elements in the given data set
+//    percentileP - measures P% statistics: the smallest number that is 
+//                   greater than the P% of elements in the given data set
+//    custom - measures custom defined statistics: computes user stat
+//
+//  Detailed Comments:
+//    
+///////////////////////////////////////////////////////////////////////////////
+type union EPTF_StatMeasure_StatParams {
+  EPTF_StatMeasure_ContentPar content,
+  EPTF_StatMeasure_DeltaPar delta,
+  EPTF_StatMeasure_DeltaSumPar deltaSum,
+  EPTF_StatMeasure_MinPar min,
+  EPTF_StatMeasure_MaxPar max,
+  EPTF_StatMeasure_MeanPar mean,
+  EPTF_StatMeasure_StandardDevPar standardDev,
+  EPTF_StatMeasure_EPSPar EPS,
+  EPTF_StatMeasure_ChronoPar chrono,
+  EPTF_StatMeasure_DensityPar density,
+  EPTF_StatMeasure_Percentile95Par percentile95,
+  EPTF_StatMeasure_PercentilePPar percentileP,
+  EPTF_StatMeasure_LimitsPar limits,
+  EPTF_StatMeasure_CustomPar custom
+  //...
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//  Type: EPTF_StatMeasure_ContentPar
+// 
+//  Purpose:
+//     Declares the type the parameters of the content statistics
+//
+///////////////////////////////////////////////////////////////////////////////
+type record EPTF_StatMeasure_ContentPar {
+}
+///////////////////////////////////////////////////////////////////////////////
+//  Type: EPTF_StatMeasure_DeltaPar
+// 
+//  Purpose:
+//     Declares the type the parameters of the delta statistics
+//
+///////////////////////////////////////////////////////////////////////////////
+type EPTF_StatMeasure_ContentPar EPTF_StatMeasure_DeltaPar;
+///////////////////////////////////////////////////////////////////////////////
+//  Type: EPTF_StatMeasure_DeltaSumPar
+// 
+//  Purpose:
+//     Declares the type the parameters of the deltaSum statistics
+//
+///////////////////////////////////////////////////////////////////////////////
+type EPTF_StatMeasure_ContentPar EPTF_StatMeasure_DeltaSumPar;
+///////////////////////////////////////////////////////////////////////////////
+//  Type: EPTF_StatMeasure_MinPar
+// 
+//  Purpose:
+//     Declares the type the parameters of the min statistics
+//
+///////////////////////////////////////////////////////////////////////////////
+type EPTF_StatMeasure_ContentPar EPTF_StatMeasure_MinPar;
+///////////////////////////////////////////////////////////////////////////////
+//  Type: EPTF_StatMeasure_MaxPar
+// 
+//  Purpose:
+//     Declares the type the parameters of the max statistics
+//
+///////////////////////////////////////////////////////////////////////////////
+type EPTF_StatMeasure_ContentPar EPTF_StatMeasure_MaxPar;
+///////////////////////////////////////////////////////////////////////////////
+//  Type: EPTF_StatMeasure_MeanPar
+// 
+//  Purpose:
+//     Declares the type the parameters of the mean statistics
+//
+///////////////////////////////////////////////////////////////////////////////
+type EPTF_StatMeasure_ContentPar EPTF_StatMeasure_MeanPar;
+///////////////////////////////////////////////////////////////////////////////
+//  Type: EPTF_StatMeasure_StandardDevPar
+// 
+//  Purpose:
+//     Declares the type the parameters of the standardDev statistics
+//
+///////////////////////////////////////////////////////////////////////////////
+type EPTF_StatMeasure_ContentPar EPTF_StatMeasure_StandardDevPar;
+///////////////////////////////////////////////////////////////////////////////
+//  Type: EPTF_StatMeasure_EPSPar
+// 
+//  Purpose:
+//     Declares the type the parameters of the EPS statistics
+//
+///////////////////////////////////////////////////////////////////////////////
+type record of EPTF_StatMeasure_EPSPar_union EPTF_StatMeasure_EPSPar;
+
+// note: the record of union makes it possible to use old config files containing {} without modification
+type union EPTF_StatMeasure_EPSPar_union {
+  boolean registerDefaultUpdate
+}
+///////////////////////////////////////////////////////////////////////////////
+//  Type: EPTF_StatMeasure_ChronoPar
+// 
+//  Purpose:
+//     Declares the type the parameters of the chrono statistics
+//
+///////////////////////////////////////////////////////////////////////////////
+type EPTF_StatMeasure_ContentPar EPTF_StatMeasure_ChronoPar;
+///////////////////////////////////////////////////////////////////////////////
+//  Type: EPTF_StatMeasure_DensityPar
+// 
+//  Purpose:
+//     Declares the type the parameters of the density statistics
+//
+///////////////////////////////////////////////////////////////////////////////
+type union EPTF_StatMeasure_DensityPar {
+  EPTF_FloatList boundaries,
+  EPTF_StatMeasure_Scale scale
+};
+///////////////////////////////////////////////////////////////////////////////
+//  Type: EPTF_StatMeasure_Percentile95Par
+// 
+//  Purpose:
+//     Declares the type the parameters of the percentile95 statistics
+//
+///////////////////////////////////////////////////////////////////////////////
+type EPTF_StatMeasure_DensityPar EPTF_StatMeasure_Percentile95Par;
+
+///////////////////////////////////////////////////////////////////////////////
+//  Type: EPTF_StatMeasure_PercentilePPar
+// 
+//  Purpose:
+//     Declares the type the parameters of the percentileP statistics
+//
+///////////////////////////////////////////////////////////////////////////////
+type record EPTF_StatMeasure_PercentilePPar {
+  float valueP,
+  EPTF_StatMeasure_DensityPar density
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//  Type: EPTF_StatMeasure_LimitItem
+// 
+//  Purpose:
+//     Declares the different limits for all <EPTF_LEDColors>
+//     if omit: means -infinity
+//
+///////////////////////////////////////////////////////////////////////////////
+type union EPTF_StatMeasure_LimitItem {
+  float blueLimit,
+  float blackLimit,
+  float yellowLimit,
+  float greenLimit,
+  float redLimit
+};
+
+///////////////////////////////////////////////////////////////////////////////
+//  Type: EPTF_StatMeasure_LimitList
+// 
+//  Purpose:
+//     Declares the list of the different limits for all <EPTF_LEDColors>
+//
+///////////////////////////////////////////////////////////////////////////////
+type record of EPTF_StatMeasure_LimitItem EPTF_StatMeasure_LimitList;
+
+///////////////////////////////////////////////////////////////////////////////
+//  Type: EPTF_StatMeasure_LimitsPar
+// 
+//  Purpose:
+//     Declares the type the parameters of the limits statistics
+//
+///////////////////////////////////////////////////////////////////////////////
+type record EPTF_StatMeasure_LimitsPar {
+  integer referenceVarId, // if present, this is the id of the reference variable
+     // to calculate relative value from. If not given tha value is absolute.
+     // (the value of Variable used to create the stat from) minus (the value of Variable with referenceVarId id is compared to the limits)
+  EPTF_LEDColors defaultColor, // the default color of the LED
+  boolean enableValueInLEDText, // if true, the value of the last data is shown in the text of the LED
+  EPTF_StatMeasure_LimitList limits // the limits for different LED colors
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//  Type: EPTF_StatMeasure_CustomPar
+// 
+//  Purpose:
+//     Declares the type the parameters of the custom statistics
+//
+///////////////////////////////////////////////////////////////////////////////
+type record EPTF_StatMeasure_CustomPar {
+}
+//...
+
+///////////////////////////////////////////////////////////////////////////////
+//  Type: EPTF_StatMeasure_Scale
+// 
+//  Purpose:
+//     Declares the type the scales supported by Density, PercentileP and Percentile95 stats
+//
+///////////////////////////////////////////////////////////////////////////////
+type record EPTF_StatMeasure_Scale {
+  float min, 
+  float max, 
+  integer n, 
+  EPTF_StatMeasure_density_scale scale 
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//  Type: EPTF_StatMeasure_contentData
+// 
+//  Purpose:
+//     Declares the type EPTF_StatMeasure_contentData
+//
+///////////////////////////////////////////////////////////////////////////////
+type record EPTF_StatMeasure_contentData {
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//  Type: EPTF_StatMeasure_deltaData
+// 
+//  Purpose:
+//     Declares the type EPTF_StatMeasure_deltaData
+//
+///////////////////////////////////////////////////////////////////////////////
+type record EPTF_StatMeasure_deltaData {
+  EPTF_Var_DirectContent prevContent,   // auxiliary data (previous content)
+  EPTF_Var_DirectContent statValue // the current value of the stat
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//  Type: EPTF_StatMeasure_deltaSumData
+// 
+//  Purpose:
+//     Declares the type EPTF_StatMeasure_deltaSumData
+//
+///////////////////////////////////////////////////////////////////////////////
+type record EPTF_StatMeasure_deltaSumData {
+  EPTF_Var_DirectContent iniContent,   // auxiliary data (initialContent)
+  EPTF_Var_DirectContent statValue // the current value of the stat
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//  Type: EPTF_StatMeasure_minData
+// 
+//  Purpose:
+//     Declares the type EPTF_StatMeasure_minData
+//
+///////////////////////////////////////////////////////////////////////////////
+type record EPTF_StatMeasure_minData {
+  EPTF_Var_DirectContent statValue // the current value of the stat
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//  Type: EPTF_StatMeasure_maxData
+// 
+//  Purpose:
+//     Declares the type EPTF_StatMeasure_maxData
+//
+///////////////////////////////////////////////////////////////////////////////
+type record EPTF_StatMeasure_maxData {
+  EPTF_Var_DirectContent statValue // the current value of the stat
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//  Type: EPTF_StatMeasure_meanData
+// 
+//  Purpose:
+//     Declares the type EPTF_StatMeasure_meanData
+//
+///////////////////////////////////////////////////////////////////////////////
+type record EPTF_StatMeasure_meanData {
+  integer n,   // auxiliary data for Alg III. (number of data)
+  float x,   // auxiliary data for Alg III.
+  float delta,   // auxiliary data for Alg III.
+  float statValue // the current value of the stat
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//  Type: EPTF_StatMeasure_standardDevData
+// 
+//  Purpose:
+//     Declares the type EPTF_StatMeasure_standardDevData
+//
+///////////////////////////////////////////////////////////////////////////////
+type record EPTF_StatMeasure_standardDevData {
+  integer meanIdx,   // the index of the 'mean' statistics that is needed to 
+                     // calculate this standardDev
+  float S,     // auxiliary data for Alg III. (sum)
+  float statValue // the current value of the stat
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//  Type: EPTF_StatMeasure_EPSData
+// 
+//  Purpose:
+//     Declares the type EPTF_StatMeasure_EPSData
+//
+///////////////////////////////////////////////////////////////////////////////
+type record EPTF_StatMeasure_EPSData {
+  integer n,   // number of refreshes
+  float statValue, // the current value of the stat
+  float startTime, // time when the measurement was started
+  float measurementLength   // length of the measurement in seconds
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//  Type: EPTF_StatMeasure_chronoData
+// 
+//  Purpose:
+//     Declares the type EPTF_StatMeasure_chronoData
+//
+///////////////////////////////////////////////////////////////////////////////
+type record EPTF_StatMeasure_chronoData {
+  float statValue, // the current value of the stat
+  float startTime, // time when the measurement was started
+  float stopTime  // time when stop was called
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//  Type: EPTF_StatMeasure_density_scale
+// 
+//  Purpose:
+//     Declares the type EPTF_StatMeasure_density_scale
+//
+///////////////////////////////////////////////////////////////////////////////
+type enumerated EPTF_StatMeasure_density_scale {
+  userDefined,
+  linear,
+  logarithmic
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//  Type: EPTF_StatMeasure_densityData
+// 
+//  Purpose:
+//     Declares the type EPTF_StatMeasure_densityData
+//
+///////////////////////////////////////////////////////////////////////////////
+type record EPTF_StatMeasure_densityData {
+  EPTF_FloatList boundaries,  // the boundaries for the density function
+  EPTF_IntegerList statValue, // counts the values between the boundaries, the 
+                              //last element contains the counter for data > 
+                              // last boundary
+  integer createdBoundaryVarIdx // the idx of the EPTF Variable created from 
+                       // this stat (containing the boundaries) (-1: no var)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//  Type: EPTF_StatMeasure_percentile95Data
+// 
+//  Purpose:
+//     Declares the type EPTF_StatMeasure_percentile95Data
+//
+///////////////////////////////////////////////////////////////////////////////
+type record EPTF_StatMeasure_percentile95Data {
+  integer percentilePIdx // the index of the 'percentileP' statistics that is needed 
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//  Type: EPTF_StatMeasure_percentilePData
+// 
+//  Purpose:
+//     Declares the type EPTF_StatMeasure_percentilePData
+//
+///////////////////////////////////////////////////////////////////////////////
+type record EPTF_StatMeasure_percentilePData {
+  integer densityIdx, // the index of the 'density' statistics that is needed 
+  // to calculate this Pth percentile
+  integer maxIdx,     // the index of the 'max' statistics that is needed 
+  // to calculate this Pth percentile
+  float   pos,        // position of the current percentile P element
+  integer curBIdx,    // index of the current boundary used as stat value
+  integer lower,      // sum of elements under current boundary
+  integer current,    // elements in current boundary
+  float   statValue,  // the current value of the stat
+  float   valueP,     // the P value of Pth percentile
+  integer createdValuePVarIdx // the idx of the EPTF Variable created to
+                      // store the percentileP value (-1: no var)  
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//  Type: EPTF_StatMeasure_limitsData
+// 
+//  Purpose:
+//     Declares the type EPTF_StatMeasure_limitsData
+//
+///////////////////////////////////////////////////////////////////////////////
+type record EPTF_StatMeasure_limitsData {
+  integer referenceVarId, // if present, this is the id of the reference variable.
+     //  the value of Variable with valueVarId id minus the value of Variable with referenceVarId id is compared to the limits
+  EPTF_StatMeasure_LimitList limits, // the limits for different LED colors
+  EPTF_LEDColors defaultColor, // the default color of the LED
+  boolean enableValueInLEDText, // if true, the value of the last data is shown in the text of the LED
+  EPTF_StatusLED statValue // the current value of the stat
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//  Type: EPTF_StatMeasure_addData_FT
+// 
+//  Purpose:
+//     Function type for user defined statistics function (addData)
+//
+//     Usage: user registered function is inteded to update statistics
+//            value (either based on corresponding variable or provided new
+//            value). 
+//
+//            If statistic is created from a variable, the function
+//            is subscribed to the variable as a post processing function.
+//
+//            Mandatory function.
+//
+///////////////////////////////////////////////////////////////////////////////
+type function EPTF_StatMeasure_addData_FT(
+    in integer pl_statIdx, 
+    in EPTF_IntegerList pl_argList,
+    in EPTF_Var_DirectContent pl_newData)
+runs on self;
+
+///////////////////////////////////////////////////////////////////////////////
+//  Type: EPTF_StatMeasure_newStat_FT
+// 
+//  Purpose:
+//     Function type to create user defined statistics
+//
+//     Mandatory function.
+//
+///////////////////////////////////////////////////////////////////////////////
+type function EPTF_StatMeasure_newStat_FT(
+    in integer pl_statIdx, 
+    in EPTF_IntegerList pl_argList)
+runs on self;
+
+///////////////////////////////////////////////////////////////////////////////
+//  Type: EPTF_StatMeasure_getStat_FT
+// 
+//  Purpose:
+//     Function type for get user defined statistics value
+//
+///////////////////////////////////////////////////////////////////////////////
+type function EPTF_StatMeasure_getStat_FT(
+    in integer pl_statIdx, 
+    in EPTF_IntegerList pl_argList,
+    out EPTF_Var_DirectContent pl_statValue)
+runs on self return boolean;
+
+///////////////////////////////////////////////////////////////////////////////
+//  Type: EPTF_StatMeasure_stat2Str_FT
+// 
+//  Purpose:
+//     Function type to convert statistic value to charstring
+//
+///////////////////////////////////////////////////////////////////////////////
+type function EPTF_StatMeasure_stat2Str_FT(
+    in integer pl_statIdx, 
+    in EPTF_IntegerList pl_argList)
+runs on self return charstring;
+
+///////////////////////////////////////////////////////////////////////////////
+//  Type: EPTF_StatMeasure_createVarFromStat_FT
+// 
+//  Purpose:
+//     Function type for create var from user defined statistics type
+//
+///////////////////////////////////////////////////////////////////////////////
+type function EPTF_StatMeasure_createVarFromStat_FT(
+    in integer pl_statIdx, 
+    in EPTF_IntegerList pl_argList,
+    in charstring pl_varName)
+runs on self return integer;
+
+///////////////////////////////////////////////////////////////////////////////
+//  Type: EPTF_StatMeasure_resetStat_FT
+// 
+//  Purpose:
+//     Function type to reset user defined statistic
+//
+///////////////////////////////////////////////////////////////////////////////
+type function EPTF_StatMeasure_resetStat_FT(
+    in integer pl_statIdx, 
+    in EPTF_IntegerList pl_argList)
+runs on self;
+
+///////////////////////////////////////////////////////////////////////////////
+//  Type: EPTF_StatMeasure_enableStat_FT
+// 
+//  Purpose:
+//     Function type to enable user defined statistics
+//
+//     Statistics updates should be available only when stat is enabled
+//
+///////////////////////////////////////////////////////////////////////////////
+type function EPTF_StatMeasure_enableStat_FT(
+    in integer pl_statIdx, 
+    in EPTF_IntegerList pl_argList)
+runs on self;
+
+///////////////////////////////////////////////////////////////////////////////
+//  Type: EPTF_StatMeasure_disableStat_FT
+// 
+//  Purpose:
+//     Function type to disable user defined statistics
+//
+//     Statistics updates shouldn't be available when stat is disabled
+//
+///////////////////////////////////////////////////////////////////////////////
+type function EPTF_StatMeasure_disableStat_FT(
+    in integer pl_statIdx, 
+    in EPTF_IntegerList pl_argList)
+runs on self;
+
+///////////////////////////////////////////////////////////////////////////////
+//  Type: EPTF_StatMeasure_startStat_FT
+// 
+//  Purpose:
+//     Function type to user defined statistics measurement
+//
+///////////////////////////////////////////////////////////////////////////////
+type function EPTF_StatMeasure_CustomFunctions(
+    in integer pl_statIdx, 
+    in EPTF_IntegerList pl_argList)
+runs on self;
+
+///////////////////////////////////////////////////////////////////////////////
+//  Type: EPTF_StatMeasure_Custom_Functions
+// 
+//  Purpose:
+//     Container to store user defined functions and their current argument 
+//     lists for custom statistics 
+//
+///////////////////////////////////////////////////////////////////////////////
+type record EPTF_StatMeasure_customData 
+{
+  charstring                       statName,  
+  EPTF_StatMeasure_newStat_FT      newStatFn,
+  EPTF_IntegerList                 newStatFnArgList,
+  EPTF_StatMeasure_addData_FT      addDataFn,
+  EPTF_IntegerList                 addDataFnArgList,
+  EPTF_StatMeasure_getStat_FT      getStatFn,
+  EPTF_IntegerList                 getStatFnArgList,
+  EPTF_StatMeasure_stat2Str_FT     stat2StrFn,
+  EPTF_IntegerList                 stat2StrFnArgList,
+  EPTF_StatMeasure_createVarFromStat_FT createVarFromStatFn,
+  EPTF_IntegerList                 createVarFromStatFnArgList,
+  EPTF_StatMeasure_resetStat_FT    resetStatFn,
+  EPTF_IntegerList                 resetStatFnArgList,
+  EPTF_StatMeasure_enableStat_FT   enableStatFn,
+  EPTF_IntegerList                 enableStatFnArgList,
+  EPTF_StatMeasure_disableStat_FT  disableStatFn,
+  EPTF_IntegerList                 disableStatFnArgList
+}
+
+// union of databases for stats
+///////////////////////////////////////////////////////////////////////////////
+//  Type: EPTF_StatMeasure_statData
+// 
+//  Purpose:
+//     Declares the type EPTF_StatMeasure_statData
+//
+///////////////////////////////////////////////////////////////////////////////
+type union EPTF_StatMeasure_statData {
+  EPTF_StatMeasure_contentData content,
+  EPTF_StatMeasure_deltaData delta,
+  EPTF_StatMeasure_deltaSumData deltaSum,
+  EPTF_StatMeasure_minData min,
+  EPTF_StatMeasure_maxData max,
+  EPTF_StatMeasure_meanData mean,
+  EPTF_StatMeasure_standardDevData standardDev,
+  EPTF_StatMeasure_EPSData EPS,
+  EPTF_StatMeasure_chronoData chrono,
+  EPTF_StatMeasure_densityData density,
+  EPTF_StatMeasure_percentile95Data percentile95,
+  EPTF_StatMeasure_percentilePData percentileP,
+  EPTF_StatMeasure_limitsData limits,
+  EPTF_StatMeasure_customData custom
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//  Type: EPTF_StatMeasure_Statistics
+// 
+//  Purpose:
+//     Declares the type EPTF_StatMeasure_Statistics
+//
+///////////////////////////////////////////////////////////////////////////////
+type record EPTF_StatMeasure_Statistics {
+  integer varIdx, // index of the EPTF variable it is calculated from 
+                  // (where it's postProc is registered)
+  integer createdVarIdx, // the idx of the EPTF Variable created from this 
+                         // stat (containing the statValue) (-1: no var)
+  EPTF_StatMeasure_statData statData, // type of stat
+  boolean enabled, // true if statistics measuring is enabled, false if not
+  boolean reset    // true after the reset, addData will change it to false
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//  Type: EPTF_StatMeasure_StatisticsList
+// 
+//  Purpose:
+//     Declares the type EPTF_StatMeasure_StatisticsList
+//
+///////////////////////////////////////////////////////////////////////////////
+type record of EPTF_StatMeasure_Statistics EPTF_StatMeasure_StatisticsList;
+
+///////////////////////////////////////////////////////////////////////////////
+//  Type: EPTF_StatMeasure_CT
+// 
+//  Purpose:
+//   Maintain certain stand-alone statistics or statistics calculated from 
+//   an EPTF Variable.
+// 
+//  Elements:
+//
+//  Detailed Comments:
+//   To use the EPTF Statistics Measure, extend your component 
+//   with <EPTF_StatMeasure_CT>
+//
+///////////////////////////////////////////////////////////////////////////////
+type component EPTF_StatMeasure_CT 
+  extends EPTF_Var_CT, EPTF_Logging_CT 
+{
+  private var EPTF_StatMeasure_StatisticsList statList := {}; // the database for all stats
+  //var EPTF_StatMeasure_Custom_FunctionsList customStatFNs := {};
+  private var boolean v_EPTF_StatMeasure_initialized := false; // init flag
+
+  // logging
+  private var integer v_StatMeasure_loggingMaskId := c_EPTF_Logging_invalidMaskId;  
+}
+
+///////////////////////////////////////////////////////////
+//  Constant: c_EPTF_StatMeasure_loggingEventClasses
+// 
+//  Purpose:
+//    list of logging event class names used on the StatMeasure
+// 
+//  Detailed Comments:
+//    <EPTF_Logging_EventClassPrefixList> { "Warning", "Debug" }
+///////////////////////////////////////////////////////////
+const EPTF_Logging_EventClassPrefixList c_EPTF_StatMeasure_loggingEventClasses := { "Warning", "Debug" };
+
+///////////////////////////////////////////////////////////
+//  Constant: c_EPTF_StatMeasure_loggingClassIdx_Warning
+// 
+//  Purpose:
+//    logging class index for Error
+// 
+//  Detailed Comments:
+//    *0*
+///////////////////////////////////////////////////////////
+const integer c_EPTF_StatMeasure_loggingClassIdx_Warning := 0;
+///////////////////////////////////////////////////////////
+//  Constant: c_EPTF_StatMeasure_loggingClassIdx_Debug
+// 
+//  Purpose:
+//    logging class index for Error
+// 
+//  Detailed Comments:
+//    *1*
+///////////////////////////////////////////////////////////
+const integer c_EPTF_StatMeasure_loggingClassIdx_Debug := 1;
+
+} // module

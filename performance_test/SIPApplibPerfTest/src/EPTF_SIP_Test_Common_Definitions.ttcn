@@ -1,0 +1,403 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_SIP_Test_Common_Definitions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 522
+//  Updated:  2010-05-25
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+module EPTF_SIP_Test_Common_Definitions
+{
+
+import from EPTF_SIP_Common_Definitions all;
+import from EPTF_SIP_LGen_Definitions all;
+import from EPTF_SIP_Templates all;
+import from EPTF_SIP_Transport_Definitions all;
+
+import from EPTF_CLL_LGenBase_Definitions all;
+import from EPTF_CLL_LGenBase_ConfigDefinitions all;
+import from EPTF_CLL_FBQ_Definitions all;
+
+import from SIPmsg_Types all;
+
+import from EPTF_SIP_Test_Transport_Definitions all;
+
+modulepar
+{ 
+  float tsp_EPTF_SIP_Test_Term_AnswerTime_T := 2.0;  
+  float tsp_EPTF_SIP_Test_Orig_MaxTalk := 5.0;
+
+  charstring tsp_SIP_LGen_OrigmessageBody := "SIP Test";
+
+  integer tsp_nof_entities := 1;
+  float tsp_EPTF_SIP_Test_Term_UserWatchdog_T := 20.0;
+  float tsp_EPTF_SIP_Test_Orig_UserWatchdog_T := 20.0;
+  float tsp_EPTF_SIP_Test_retransTimeout := 5.0;
+
+  EPTF_LGenBase_TcMgmt_EntityTypeDeclaratorList       tsp_Orig_entityTypes := {};
+  EPTF_LGenBase_TcMgmt_EntityGrpDeclaratorList        tsp_Orig_entityGroups := {};
+  EPTF_LGenBase_TcMgmt_CompactFsmTableDeclaratorList  tsp_Orig_compactFsmTables := {};
+  EPTF_LGenBase_TcMgmt_tcTypeDeclaratorList           tsp_Orig_trafficCases := {};
+  EPTF_LGenBase_ScenarioTypeDeclaratorList            tsp_Orig_scenarios := {};
+  EPTF_LGenBase_TcMgmt_Scenarios2GrpList              tsp_Orig_Scenarios2Grps := {};
+
+  EPTF_LGenBase_TcMgmt_EntityTypeDeclaratorList       tsp_Term_entityTypes := {};
+  EPTF_LGenBase_TcMgmt_EntityGrpDeclaratorList        tsp_Term_entityGroups := {};
+  EPTF_LGenBase_TcMgmt_CompactFsmTableDeclaratorList  tsp_Term_compactFsmTables := {};
+  EPTF_LGenBase_TcMgmt_tcTypeDeclaratorList           tsp_Term_trafficCases := {};
+  EPTF_LGenBase_ScenarioTypeDeclaratorList            tsp_Term_scenarios := {};
+  EPTF_LGenBase_TcMgmt_Scenarios2GrpList              tsp_Term_Scenarios2Grps := {};
+}
+//======================================================
+type enumerated ActorType { ORIG, TERM };
+
+
+//======================================================
+type component EPTF_SIP_LGen_Test_CT
+extends EPTF_SIP_Test_Transport_CT, EPTF_SIP_LGen_CT
+{
+  var ActorType  v_EPTF_SIP_Test_actorType;
+
+  var integer v_EPTF_SIP_Test_myBIdx := -1;
+
+  var ContactAddress_List v_contactList := {};
+
+  var ContactAddress_ListDB v_contactListDB := {};
+
+  var integer v_nofFinished := 0; //vl_nofFinished
+
+  var EPTF_SIP_Test_LocationServiceDB v_locationServiceDB;
+
+  var integer v_SIP_Test_eventTypeIdx := 0;
+  //statistics:
+  var integer v_SIP_Test_nofInitiated:=0;
+  var integer v_SIP_Test_nofSentInvite:=0;
+  var integer v_SIP_Test_nofReceivedInvite:=0;
+  var integer v_SIP_Test_nofSentTrying:=0;
+  var integer v_SIP_Test_nofReceivedTrying:=0;
+  var integer v_SIP_Test_nofSentRinging:=0;
+  var integer v_SIP_Test_nofReceivedRinging:=0;
+  var integer v_SIP_Test_nofSent200OK:=0;
+  var integer v_SIP_Test_nofReceived200OK:=0;
+  var integer v_SIP_Test_nofSent487:=0;
+  var integer v_SIP_Test_nofReceived487:=0;
+  var integer v_SIP_Test_nofSentAck:=0;
+  var integer v_SIP_Test_nofReceivedAck:=0;
+  var integer v_SIP_Test_nofSentBye:=0;
+  var integer v_SIP_Test_nofReceivedBye:=0;
+  var integer v_SIP_Test_nofSentRegister:=0;
+  var integer v_SIP_Test_nofReceivedRegister:=0;
+  var integer v_SIP_Test_nofSentUpdate:=0;
+  var integer v_SIP_Test_nofReceivedUpdate:=0;
+  var integer v_SIP_Test_nofSentCancel:=0;
+  var integer v_SIP_Test_nofReceivedCancel:=0
+  var integer v_SIP_Test_nofSentMessage:=0;
+  var integer v_SIP_Test_nofReceivedMessage:=0;
+  var integer v_SIP_Test_nofSentRefer:=0;
+  var integer v_SIP_Test_nofReceivedRefer:=0;
+  var integer v_SIP_Test_nofSentNotify:=0;
+  var integer v_SIP_Test_nofReceivedNotify:=0;
+  var integer v_SIP_Test_nofSentSubscribe:=0;
+  var integer v_SIP_Test_nofReceivedSubscribe:=0;
+  var integer v_SIP_Test_nofSentPublish:=0;
+  var integer v_SIP_Test_nofReceivedPublish:=0;
+  
+  var integer v_extTemplateSetIdx := -1;
+}
+//======================================================
+type record of ContactAddress_List ContactAddress_ListDB;
+
+const charstring c_EPTF_SIP_Test_myBName := "SIP Test";
+
+const integer c_EPTF_SIP_Test_stepIdx_tcFinished := 0;
+const charstring c_EPTF_SIP_Test_stepName_tcFinished := "SIPTest: StepFunction_tcFinished";
+
+const integer c_EPTF_SIP_Test_stepIdx_finished := 1;
+const charstring c_EPTF_SIP_Test_stepName_finished := "SIPTest: StepFunction_finished";
+
+const integer c_EPTF_SIP_Test_eventIdx_finishedSucc := 0;
+const charstring c_SIP_eventName_finishedSucc := "Finished successfully";
+
+const integer c_EPTF_SIP_Test_eventIdx_finishedFail := 1;
+const charstring c_SIP_eventName_finishedFail := "Failed";
+
+const integer c_EPTF_SIP_Test_calledUserIdx := 0;
+const integer c_EPTF_SIP_Test_contactIdx := 0;
+
+const integer c_EPTF_SIP_Test_FSM_pass := 0;
+const integer c_EPTF_SIP_Test_FSM_fail := 1;
+
+type record EPTF_SIP_Test_LocationServiceDB
+{
+  integer hashRef,
+  integer actualUser,
+  integer nofUsers,
+  EPTF_FreeBusyQueue  queue, 
+  EPTF_SIP_Test_RegisteredUserList data
+}
+
+type record of EPTF_SIP_Test_RegisteredUser EPTF_SIP_Test_RegisteredUserList;
+
+type record EPTF_SIP_Test_RegisteredUser
+{
+  SipUrl  aor,
+  charstring key,
+  EPTF_SIP_Test_BindingList bindings
+}
+
+type record EPTF_SIP_Test_Binding
+{
+  ContactAddress  contact,
+  float   expireTime,
+  CallidString callID,
+  integer     cSeq
+}
+
+type record of EPTF_SIP_Test_Binding EPTF_SIP_Test_BindingList;
+
+const EPTF_SIP_Test_RegisteredUser c_EPTF_SIP_Test_initRegisteredUser :=
+{
+  aor := cg_SipUrl_base,
+  key := "",
+  bindings := {}
+}
+
+/*const Addr_Union c_defaultAddr := { 
+        nameAddr := { 
+          displayName := "", 
+          addrSpec := {
+            scheme := "sip", 
+            userInfo := {
+              userOrTelephoneSubscriber := "",
+              password := omit 
+            }, 
+            hostPort := {
+              host:="ericsson.com",
+              portField:=omit
+            }, 
+            urlParameters := omit,
+            headers := omit 
+          } } } */
+const Addr_Union c_defaultAddr := { 
+  addrSpecUnion := { 
+    scheme := "sip", 
+    userInfo := {
+      userOrTelephoneSubscriber := "",
+      password := omit 
+    }, 
+    hostPort := {
+      host:="ericsson.com",
+      portField:=omit
+    }, 
+    urlParameters := omit,
+    headers := omit 
+  }
+}
+
+const integer c_EPTF_SIP_Test_REGISTER_Succ := 0;
+const integer c_EPTF_SIP_Test_REGISTER_Invalid := 1;
+const integer c_EPTF_SIP_Test_REGISTER_Fail := 1;
+
+template SipUrl tr_requestUri(in template charstring pl_calledUserId, in template charstring tr_calledHostId) := {
+    scheme := "sip",
+    userInfo := {
+        userOrTelephoneSubscriber := pl_calledUserId, //e.g: "UserTerm_0",
+        password := omit
+    },
+    hostPort := {
+        host := tr_calledHostId,
+        portField := omit
+    },
+    urlParameters := omit,
+    headers := omit
+}
+  
+template RequestLine tr_requestLine(
+    in template Method    pl_method,
+    in template SipUrl    pl_requestUri) := {
+  method:= pl_method,
+  requestUri := pl_requestUri,
+  sipVersion := "SIP/2.0"
+}
+
+template MessageHeader t_msgHeader_empty := c_SIP_msgHeader_empty;
+
+template MessageHeader tr_msgHeader(
+    in template charstring tr_callId,
+    in template charstring tr_origUserId,//from
+    in template charstring tr_origHostId,
+    in template charstring tr_termUserId,//to
+    in template charstring tr_termHostId,
+    in template charstring tr_contactUserId,//contact
+    in template charstring tr_contactHostId) modifies t_msgHeader_empty := {
+  callId := {
+    fieldName := CALL_ID_E,
+    callid := tr_callId //"TTCN3270695000000@localhost"
+  },
+  contact := ( 
+    //first option:
+    {
+      fieldName := CONTACT_E,
+      contactBody := {
+        contactAddresses := {
+          {
+            addressField := {
+              nameAddr := {
+                displayName := tr_contactUserId, //e.g "UserOrig_0",
+                addrSpec := {
+                  scheme := "sip",
+                  userInfo := {
+                    userOrTelephoneSubscriber := tr_contactUserId, //e.g "UserOrig_0" 
+                    password := omit
+                  },
+                  hostPort := {
+                    host := tr_contactHostId, //e.g "ericsson.com",
+                    portField := omit
+                  },
+                  urlParameters := omit,
+                  headers := omit
+                }
+              }
+            },
+            contactParams := omit
+          }
+        }
+      }
+    },
+    //second option:
+    {
+      fieldName := CONTACT_E,
+      contactBody := {
+        contactAddresses := {
+          {
+            addressField := {
+              addrSpecUnion := {
+                scheme := "sip",
+                userInfo := {
+                  userOrTelephoneSubscriber := tr_contactUserId,
+                  password := omit
+                },
+                hostPort := {
+                  host :=  tr_contactHostId,
+                  portField := omit
+                },
+                urlParameters := omit,
+                headers := omit
+              }
+            },
+            contactParams := omit
+          }
+        }
+      }
+    }
+  ) ifpresent,
+  contentLength := {
+    fieldName := CONTENT_LENGTH_E,
+    len := 0
+  },
+  cSeq := {
+    fieldName := CSEQ_E,
+    seqNumber := ?, //1043726183,
+    method := ?
+  },
+  fromField := {
+    fieldName := FROM_E,
+    addressField := {
+      nameAddr := {
+        displayName := tr_origUserId, //"UserOrig_0",
+        addrSpec := {
+          scheme := "sip",
+          userInfo := {
+            userOrTelephoneSubscriber := tr_origUserId, //"UserOrig_0",
+            password := omit
+          },
+          hostPort := {
+            host := tr_origHostId, //"ericsson.com",
+            portField := omit
+          },
+          urlParameters := omit,
+          headers := omit
+        }
+      }
+    },
+    fromParams := {
+      {
+        id := "tag",
+        paramValue := ? //"430958000000"
+      }
+    }
+  },
+  maxForwards := {
+    fieldName := MAX_FORWARDS_E,
+    forwards := 70
+  },
+  toField := {
+    fieldName := TO_E,
+    addressField := {
+      nameAddr := {
+        displayName := tr_termUserId,
+        addrSpec := {
+          scheme := "sip",
+          userInfo := {
+            userOrTelephoneSubscriber := tr_termUserId, //"UserTerm_0",
+            password := omit
+          },
+          hostPort := {
+            host := tr_termHostId,
+            portField := omit
+          },
+          urlParameters := omit,
+          headers := omit
+        }
+      }
+    },
+    toParams := *
+  },
+  via := {
+    fieldName := VIA_E,
+    viaBody := {
+      {
+        sentProtocol := {
+          protocolName := "SIP",
+          protocolVersion := "2.0",
+          transport := "UDP"
+        },
+        sentBy := {
+          host := ?, //"localhost",
+          portField := ? //22224
+        },
+        viaParams := {
+          {
+            id := "branch",
+            paramValue := ? //"z9hG4bK631242T000000"
+          }
+        }
+      }
+    }
+  }
+}
+
+template PDU_SIP tr_SIP_request(in template RequestLine pl_requestLine,in template MessageHeader pl_msgHeader) := {
+  request:= { 
+    requestLine:= pl_requestLine,
+    msgHeader:= pl_msgHeader,
+    messageBody:=*,
+    payload:=*
+  }
+}
+template PDU_SIP tr_SIP_response(in template StatusLine pl_statusLine, in template MessageHeader pl_msgHeader) := {
+  response:={
+    statusLine:=pl_statusLine,
+    msgHeader:= pl_msgHeader,
+    messageBody:=*,
+    payload:=*
+  }
+}
+
+} //module

@@ -1,0 +1,2990 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_SIP_Transport_Functions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 522
+//  Updated:  2012-11-28
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////
+//  Module: EPTF_SIP_Transport_Functions
+//
+//  Purpose:
+//    Functions for sending (encoding) and receiving (decoding) SIP PDU's.
+//
+//  Module paramters:
+//    - tsp_EPTF_SIP_IPL4asp_HandleBothTCPandUDP - *boolean* - enable/disable listening on both TCP and UDP.
+//        Default value: false
+//    - tsp_EPTF_SIP_defaultTransportType - <EPTF_Transport_TransportType> - default transport type
+//        Default value: IPL4
+//
+//  Module depends on:  
+//    <EPTF_CLL_Common_Definitions>
+//
+//    <EPTF_CLL_Base_Functions>
+//
+//    <EPTF_CLL_Logging_Definitions>
+//
+//    <EPTF_CLL_Logging_Functions>
+//
+//    <EPTF_CLL_RBTScheduler_Functions>
+//
+//    <EPTF_CLL_HashMapInt2Int_Functions>
+//
+//    <EPTF_CLL_HashMapStr2Int_Functions>
+//
+//    <EPTF_CLL_FBQ_Functions>
+//
+//    <EPTF_CLL_Transport_CommonDefinitions>
+//
+//    <EPTF_CLL_Transport_Functions>
+//
+//    <EPTF_CLL_TransportRouting_Functions>
+//
+//    <EPTF_CLL_Variable_Functions>
+//
+//    <EPTF_SIP_Common_Functions>
+//
+//    <EPTF_SIP_LGen_Definitions>
+//
+//    <EPTF_SIP_Logger_Functions>
+//
+//    <EPTF_SIP_MessageCreator_Functions>
+//
+//    <EPTF_SIP_Templates>
+//
+//    <EPTF_SIP_Transport_Definitions>
+//
+//    <Socket_API_Definitions>
+//
+//    <IPL4asp_Types>
+//
+//    <SIPmsg_Types>
+//
+//    <TCCMessageHandling_Functions>
+//
+//  Last review date:
+//    2012-10-16
+////////////////////////////////////////////////////
+module EPTF_SIP_Transport_Functions
+{
+import from EPTF_CLL_Common_Definitions all;
+import from EPTF_CLL_Base_Functions all;
+import from EPTF_CLL_Logging_Definitions all;
+import from EPTF_CLL_Logging_Functions all;
+import from EPTF_CLL_RBTScheduler_Functions all;
+import from EPTF_CLL_HashMapInt2Int_Functions all;
+import from EPTF_CLL_HashMapOct2Int_Functions all;
+import from EPTF_CLL_HashMapStr2Int_Functions all;
+import from EPTF_CLL_FBQ_Functions all;
+import from EPTF_CLL_Transport_CommonDefinitions all;
+import from EPTF_CLL_Transport_Functions all;
+import from EPTF_CLL_TransportRouting_Functions all;
+import from EPTF_CLL_Variable_Functions all;
+
+import from EPTF_SIP_Common_Functions all;
+import from EPTF_SIP_LGen_Definitions all;
+import from EPTF_SIP_Logger_Functions all;
+import from EPTF_SIP_MessageCreator_Functions all;
+import from EPTF_SIP_Templates all;
+import from EPTF_SIP_Transport_Definitions all;
+
+import from Socket_API_Definitions all;
+import from IPL4asp_Types all; // OptionList - fixme: unused parameter in API, could possibly be removed
+
+import from SIPmsg_Types all;
+
+import from TCCConversion_Functions all;
+import from TCCMessageHandling_Functions all;
+import from EPTF_CLL_DataSource_Definitions all; 
+import from EPTF_CLL_DataSourceClient_Functions all
+
+// Set this to true, if you want the user to listen on both his TCP and UDP port
+// at the same time. Please note, that this means extra file descriptors which
+// can cause some performance drawback.
+modulepar boolean tsp_EPTF_SIP_IPL4asp_HandleBothTCPandUDP := false;
+modulepar integer tsp_EPTF_SIP_IPL4asp_maxBufferSize := 5;
+
+modulepar EPTF_Transport_TransportType tsp_EPTF_SIP_defaultTransportType := IPL4;
+
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_LocalTransport_init
+//
+//Purpose:
+//  Initializes the transport layer for simulating different UAs.
+//
+//Parameters:
+//  - p_proto - *in* *charstring* - the preferred listening protocol for the users.
+//  - pl_sourceCompRef - <EPTF_DataSource_CT> - - the main DataSource component (server).
+////////////////////////////////////////////////////
+function f_EPTF_SIP_LocalTransport_init(in charstring p_proto, in charstring pl_selfName := "SIP_Transport", in EPTF_Transport_TransportType pl_transportType := tsp_EPTF_SIP_defaultTransportType, 
+      in EPTF_DataSource_CT pl_sourceCompRef := null)
+runs on EPTF_SIP_LocalTransport_CT
+{
+  if (v_EPTF_SIP_LocalTransport_initialized){return;}
+
+  f_EPTF_Logging_init_CT(pl_selfName);
+f_EPTF_SIP_LoggerClient_init_CT(refers(f_EPTF_SIP_LoggerClient_sendMessageToLogger));
+  f_EPTF_Transport_init(pl_transportType, pl_selfName);
+
+  v_SIP_Transport_Logging_MaskId :=
+    f_EPTF_Logging_registerComponentMasks(
+      tsp_EPTF_SIP_Transport_loggingComponentMask,
+      c_EPTF_SIP_Transport_loggingEventClasses,
+      EPTF_Logging_CLL);
+
+  if (tsp_EPTF_SIP_LocalTransport_debugEnabled) 
+  {
+    f_EPTF_Logging_enableLocalMask(
+      v_SIP_Transport_Logging_MaskId, 
+      c_SIP_Transport_Logging_DEBUG);
+  } 
+  else 
+  {
+    f_EPTF_Logging_disableLocalMask(
+      v_SIP_Transport_Logging_MaskId, 
+      c_SIP_Transport_Logging_DEBUG);
+  }    
+
+  f_EPTF_SIP_initTransportDB();
+  f_EPTF_SIP_IPL4_initMapperRoutingDB(v_mapperRoutingDB);
+
+  vg_EPTF_SIP_IPL4asp_stats := c_EPTF_SIP_IPL4asp_Statistics_empty;
+
+  var charstring vl_namePrefix := f_EPTF_Base_selfName() & ".";
+  v_EPTF_SIP_Transport_stats := c_EPTF_SIP_Transport_Statistics_empty;
+  f_EPTF_Var_newInt(vl_namePrefix & c_EPTF_SIP_Transport_statName_nofOpenConnections, 0, v_EPTF_SIP_Transport_stats.nofOpenConnections_k);
+  f_EPTF_Var_newInt(vl_namePrefix & c_EPTF_SIP_Transport_statName_nofTransportWarnings, 0, v_EPTF_SIP_Transport_stats.nofTransportWarnings_k);
+  f_EPTF_Var_newInt(vl_namePrefix & c_EPTF_SIP_Transport_statName_nofReceivedMessages, 0, v_EPTF_SIP_Transport_stats.nofReceivedMessages_k);
+  f_EPTF_Var_newInt(vl_namePrefix & c_EPTF_SIP_Transport_statName_nofSentMessages, 0, v_EPTF_SIP_Transport_stats.nofSentMessages_k);
+  f_EPTF_Var_newInt(vl_namePrefix & c_EPTF_SIP_Transport_statName_nofReceivedBytes, 0, v_EPTF_SIP_Transport_stats.nofReceivedBytes_k);
+  f_EPTF_Var_newInt(vl_namePrefix & c_EPTF_SIP_Transport_statName_nofSentBytes, 0, v_EPTF_SIP_Transport_stats.nofSentBytes_k);
+
+  // Which protocol should the user use? Comes from a parameter:
+  vg_preferredTransport := p_proto;
+
+  f_EPTF_Transport_registerMsgLenCallback4LGenType(pl_transportType, refers(f_EPTF_SIP_getMsgLen), {}, c_SIP_Transport_LGenType);
+
+  f_EPTF_Transport_registerMsgCallback(
+    pl_transportType,
+    c_SIP_Transport_LGenType,
+    refers(f_EPTF_SIP_handleSIPMessage),
+    refers(f_EPTF_SIP_handleSIPEvent));
+
+  f_EPTF_Base_registerCleanup(refers(f_EPTF_SIP_LocalTransport_cleanup));
+  if(pl_sourceCompRef != null)
+   {
+     f_EPTF_SIP_Transport_DS_init(pl_selfName, pl_sourceCompRef);
+   }
+
+  v_EPTF_SIP_LocalTransport_initialized := true;
+}
+
+function f_EPTF_SIP_handleSIPEvent(
+  in EPTF_Transport_TransportType pl_transportType,
+  in Socket_API_Definitions.ConnectionId pl_connId,
+  in Socket_API_Definitions.PortEvent pl_event)
+runs on EPTF_SIP_LocalTransport_CT
+{
+  var integer v_user := -1;
+
+  // New incoming connection
+  if(ischosen(pl_event.connOpened))
+  {
+    if(c_EPTF_Common_debugSwitch and f_SIPTransport_Logging_debugEnabled()) {
+      f_SIPTransport_Logging_DEBUG(log2str(
+        ": incoming connection: ", pl_event));
+    }
+
+    v_user := pl_event.connOpened.userData;
+    var integer vl_idx;
+
+    var ConnectionTuple vl_connection := 
+    {
+      loc_host := pl_event.connOpened.locName,
+      loc_port := pl_event.connOpened.locPort,
+      rem_host := pl_event.connOpened.remName,
+      rem_port := pl_event.connOpened.remPort,
+      connId   := pl_connId,
+      proto    := pl_event.connOpened.proto,
+      connType := {incoming := {}},
+      connState := OPENED,
+      connIdStr := "",
+      transportType := pl_transportType/*,
+      removeIfClosed := true*/
+    };
+
+    if (vg_hook_ASP_Event != null)
+    { 
+      vg_hook_ASP_Event.apply(v_user, pl_event, T_EPTF_componentClock.read);
+    }
+
+    vg_EPTF_SIP_IPL4asp_stats.nofOpenConnections := vg_EPTF_SIP_IPL4asp_stats.nofOpenConnections + 1;
+    f_EPTF_Var_adjustContent(v_EPTF_SIP_Transport_stats.nofOpenConnections_k,
+      {intVal := f_EPTF_Var_getIntValue(v_EPTF_SIP_Transport_stats.nofOpenConnections_k) + 1});
+
+    f_EPTF_SIP_addConnection(vl_connection, vl_idx);
+    
+    //vg_SIP_userDB[v_user].tcp[sizeof(vg_SIP_userDB[v_user].tcp)] := vl_idx
+ 
+  }else if (ischosen(pl_event.connClosed))
+  {
+    if(c_EPTF_Common_debugSwitch and f_SIPTransport_Logging_debugEnabled()) {
+      f_SIPTransport_Logging_DEBUG(log2str(
+        ": connection closed: ", pl_event));
+    }
+
+    v_user := pl_event.connClosed.userData;
+
+    if (vg_hook_ASP_Event != null){
+      vg_hook_ASP_Event.apply(v_user, pl_event, T_EPTF_componentClock.read);
+    }
+
+    var integer vl_connectionIdx := -1;
+    if (not f_EPTF_int2int_HashMap_Find(v_connections.hashRefConnId, pl_connId, vl_connectionIdx))
+    {
+      f_SIPTransport_Logging_WARNING(
+        ": could not find connection failed " & int2str(pl_connId));
+      return;
+    }
+
+    f_EPTF_SIP_connectionClosed(vl_connectionIdx);
+
+    f_EPTF_SIP_MessageBuffer_deleteByKey(vl_connectionIdx);
+
+    if(vf_EPTF_SIP_LocalTransport_connectionClosed != null) {
+      vf_EPTF_SIP_LocalTransport_connectionClosed.apply(vg_SIP_userDB[v_user].sipUserIdxList);
+    }
+  }else if (ischosen(pl_event.result))
+  {
+    if (ispresent(pl_event.result.connId) and 
+        ispresent(pl_event.result.errorCode))
+    {
+      var Socket_API_Definitions.Result vl_result;
+      f_EPTF_Transport_getUserData(
+        pl_transportType,
+        pl_connId,
+        v_user,
+        vl_result);
+
+      if (f_EPTF_SIP_IPL4asp_handleResult(vl_result))
+      {
+        if (vg_hook_ASP_Event != null and v_user >= 0)
+        {
+          vg_hook_ASP_Event.apply(v_user, pl_event, T_EPTF_componentClock.read);
+        }
+      }
+
+      var integer vl_idx := -1;
+      var integer vl_connectionIdx := -1;
+      if (not f_EPTF_int2int_HashMap_Find(v_connections.hashRefConnId, pl_connId, vl_connectionIdx))
+      {
+        f_SIPTransport_Logging_WARNING(
+          ": could not find connection failed " & int2str(pl_connId));
+        return;
+      }
+
+      if (pl_event.result.errorCode == ERROR_AVAILABLE)
+      {
+        f_EPTF_SIP_sendBuffer(vl_connectionIdx, vl_idx);
+        v_connections.data[vl_connectionIdx].connState := OPENED;
+        f_EPTF_SIP_MessageBuffer_deleteByKey(vl_connectionIdx);
+      }else if (pl_event.result.errorCode == ERROR_TEMPORARILY_UNAVAILABLE)
+      {
+        v_connections.data[vl_connectionIdx].connState := TEMPORARY_UNAVAILABLE;
+      }
+
+      if (pl_event.result.errorCode != ERROR_AVAILABLE and 
+          pl_event.result.errorCode != ERROR_TEMPORARILY_UNAVAILABLE)
+      {
+        vg_EPTF_SIP_IPL4asp_stats.nofTransportWarnings := vg_EPTF_SIP_IPL4asp_stats.nofTransportWarnings + 1;
+        f_EPTF_Var_adjustContent(v_EPTF_SIP_Transport_stats.nofTransportWarnings_k,
+          {intVal := f_EPTF_Var_getIntValue(v_EPTF_SIP_Transport_stats.nofTransportWarnings_k) + 1});
+        action(pl_event);
+        if(vf_EPTF_SIP_LocalTransport_portError != null and v_user >= 0) {
+          vf_EPTF_SIP_LocalTransport_portError.apply(vg_SIP_userDB[v_user].sipUserIdxList, pl_event.result);
+        }
+      }
+    }
+  }
+}
+
+function f_EPTF_SIP_handleSIPMessage(
+  in EPTF_Transport_TransportType pl_transportType,
+  in Socket_API_Definitions.ConnectionId pl_connId,
+  in Socket_API_Definitions.HostName pl_remHost,
+  in Socket_API_Definitions.PortNumber pl_remPort,
+  in Socket_API_Definitions.HostName pl_locHost,
+  in Socket_API_Definitions.PortNumber pl_locPort,
+  in Socket_API_Definitions.ProtoTuple pl_proto,
+  in integer pl_userData,
+  in octetstring pl_msg)
+runs on EPTF_SIP_LocalTransport_CT
+{
+  v_SIP_message := c_SIP_MessageIN_init;
+
+  var integer vl_idx;
+  
+  f_EPTF_SchedulerComp_refreshSnapshotTime();
+  
+  if (pl_msg == char2oct("\r\n") or (lengthof(pl_msg) >= 8 and substr(pl_msg,4,4)=='2112A442'O))
+  {
+    //STUN magic cookie matched
+    if (vcb_EPTF_SIP_STUNHandler != null)
+    {
+      var ASP_RecvFrom vl_tmp := {
+        connId := pl_connId,
+        remName := pl_remHost,
+        remPort := pl_remPort,
+        locName := pl_locHost,
+        locPort := pl_locPort,
+        proto := pl_proto,
+        userData := pl_userData,
+        msg := pl_msg
+      }
+      vcb_EPTF_SIP_STUNHandler.apply(vl_tmp);
+    }
+    return;
+  }
+
+  if (not f_EPTF_int2int_HashMap_Find(v_connections.hashRefConnId, pl_connId, vl_idx))
+  {
+    f_SIPTransport_Logging_WARNING(
+      ": incoming connection could not be found! ");
+    return;
+  }
+
+  v_SIP_message.transportParams.port_us :=  v_connections.data[vl_idx].loc_port;
+  v_SIP_message.transportParams.port_pc :=  v_connections.data[vl_idx].rem_port;
+  
+  v_SIP_message.transportParams.connId := v_connections.data[vl_idx].connIdStr;
+  
+  if(ischosen(v_connections.data[vl_idx].proto.udp)) {
+    v_SIP_message.transportParams.proto := UDP;
+  } else if (ischosen(v_connections.data[vl_idx].proto.tcp)) {
+    v_SIP_message.transportParams.proto := TCP;
+  } else if (ischosen(v_connections.data[vl_idx].proto.ssl)) {
+    v_SIP_message.transportParams.proto := SSL;
+  } // fixme: else? (e.g. SCTP)
+
+  if(vg_SIP_userDB[pl_userData].nofSipUsers == 1) {
+    v_SIP_message.userId := vg_SIP_userDB[pl_userData].sipUserIdxList[0];
+  } else {
+    v_SIP_message.userId := -1;
+  }
+
+  v_SIP_message.sipMessage := pl_msg;
+  
+
+  //f_SIPTransport_Logging_DEBUG(log2str(
+  //  ": raw incoming message! ", v_SIP_message.sipMessage));
+
+  vg_EPTF_SIP_IPL4asp_stats.nofReceivedMessages := vg_EPTF_SIP_IPL4asp_stats.nofReceivedMessages + 1.0;
+  vg_EPTF_SIP_IPL4asp_stats.nofReceivedBytes := vg_EPTF_SIP_IPL4asp_stats.nofReceivedBytes + 
+                                                  int2float(lengthof(pl_msg));
+  f_EPTF_Var_adjustContent(v_EPTF_SIP_Transport_stats.nofReceivedMessages_k,
+    {intVal := f_EPTF_Var_getIntValue(v_EPTF_SIP_Transport_stats.nofReceivedMessages_k) + 1});
+  f_EPTF_Var_adjustContent(v_EPTF_SIP_Transport_stats.nofReceivedBytes_k,
+    {intVal := f_EPTF_Var_getIntValue(v_EPTF_SIP_Transport_stats.nofReceivedBytes_k) + lengthof(pl_msg)});
+
+  f_EPTF_SIP_LoggerClient_Logger({"Received: ",pl_msg});
+
+  /*if (ischosen(v_SIP_message.sipMessage.request) and ACK_E != v_SIP_message.sipMessage.request.requestLine.method and
+        pl_proto != {udp := {}})
+  {
+    f_EPTF_SIP_IPL4asp_storeIncomingConnection(vl_idx, 
+                                                v_SIP_message.sipMessage);
+  }*/
+  //send message to SIP LGen to process
+  vf_EPTF_SIP_LocalTransport_receive.apply(v_SIP_message);
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_Transport_getTransportFromAddress
+//
+//Purpose:  
+//  Get transport protocol from SIP URL
+//
+//Parameters:
+//  - pl_url - *in* <SipUrl> - SIP URL
+//  - pl_transport - *inout* *charstring* - transport protocol
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_Transport_getTransportFromAddress(
+  in SipUrl pl_url,
+  inout charstring pl_transport) return boolean
+{
+  if (ispresent(pl_url.urlParameters)) {
+    for (var integer i := 0; i < sizeof(pl_url.urlParameters); i := i + 1) {
+      if (pl_url.urlParameters[i].id == c_SIP_TRANSPORT_ID) {
+        pl_transport := pl_url.urlParameters[i].paramValue;
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_Transport_setSTUNHandler
+//
+//Purpose:  
+//  Sets the function to handle the incoming STUN messages.
+//
+//Parameters:
+//  - pl_STUNHandler - *in* <fcb_EPTF_SIP_STUNHandler> - message handler
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_Transport_setSTUNHandler(in fcb_EPTF_SIP_STUNHandler pl_STUNHandler)
+runs on EPTF_SIP_LocalTransport_CT
+{
+  vcb_EPTF_SIP_STUNHandler := pl_STUNHandler;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_setResolveTarget
+//
+//Purpose:  
+//  If true: the internal routing table will be used to get 
+//  SIP URI -> transport user index/remote port mappings.
+//  Entries can be added to the internal routing table by means of
+//  <f_EPTF_SIP_addTarget2TransportUserIdx>.
+//
+//Parameters:
+//  - pl_STUNHandler - *in* <fcb_EPTF_SIP_STUNHandler> - message handler
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_setResolveTarget(in boolean pl_resolve)
+runs on EPTF_SIP_LocalTransport_CT
+{
+  v_resolveTarget := pl_resolve;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_addTarget2TransportUserIdx
+//
+//Purpose:  
+//  Adds an entry to the internal routing database which contains
+//  host -> transport user index/remote port mappings
+//
+//Parameters:
+//  - pl_target - *in* *charstring* - the host
+//  - pl_userIdx - *in* *integer* - transport user idx (transport user contains remote IP address)
+//  - pl_portPs - *in* *integer* - remote port
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_addTarget2TransportUserIdx(in charstring pl_target, in integer pl_userIdx, in integer pl_portPs := -1)
+runs on EPTF_SIP_LocalTransport_CT
+{
+  var integer vl_tableIdx := -1;
+  
+  // if ip address, then vl_binaryAddr will contain valid binary address
+  var octetstring vl_binaryAddr := f_convertIPAddrToBinary(pl_target);
+  // if hostname was in the pl_target, then put the hostname in vl_binaryAddr with char2oct
+  if(vl_binaryAddr == ''O) { vl_binaryAddr := char2oct(pl_target); }
+  
+  if (not f_EPTF_oct2int_HashMap_Find(v_routingDB.target2routeIdx, vl_binaryAddr, vl_tableIdx))
+  {
+    vl_tableIdx := sizeof(v_routingDB.routingTable);
+    v_routingDB.routingTable[vl_tableIdx] := c_SIP_Transport_initRoutingEntry;
+    
+    f_EPTF_oct2int_HashMap_Insert(v_routingDB.target2routeIdx, vl_binaryAddr, vl_tableIdx);
+  }
+  
+  v_routingDB.routingTable[vl_tableIdx].transportUserIdx := pl_userIdx
+  v_routingDB.routingTable[vl_tableIdx].portPs := pl_portPs
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_getRoutingEntry4Target
+//
+//Purpose:  
+//  Retrieves the routing entry for a given host in the trasport database.
+//
+//Parameters:
+//  - pl_target - *in* *charstring* - the host
+//  - pl_entry - *inout* <SIP_Transport_RoutingEntry> - routing table entry containing the SIP Transport user index and the remote port
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_getRoutingEntry4Target(in charstring pl_target, inout SIP_Transport_RoutingEntry pl_entry)
+runs on EPTF_SIP_LocalTransport_CT
+return boolean
+{
+  var integer vl_tableIdx;
+  
+  // if ip address, then vl_binaryAddr will contain valid binary address
+  var octetstring vl_binaryAddr := f_convertIPAddrToBinary(pl_target);
+  // if hostname was in the pl_target, then put the hostname in vl_binaryAddr with char2oct
+  if(vl_binaryAddr == ''O) { vl_binaryAddr := char2oct(pl_target); }
+
+  if (f_EPTF_oct2int_HashMap_Find(v_routingDB.target2routeIdx, vl_binaryAddr, vl_tableIdx))
+  {
+    pl_entry := v_routingDB.routingTable[vl_tableIdx];
+    return true;
+  }  
+  
+  return false;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_LocalTransport_sendSIPMessage
+//
+//Purpose:  
+//  The message sender function.
+//
+//Parameters:
+//  - pl_message - *inout* <EPTF_SIP_Message_OUT> - message received from the AppLib
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_LocalTransport_sendSIPMessage(inout EPTF_SIP_Message_OUT pl_message) runs on EPTF_SIP_LocalTransport_CT
+{
+  var integer vl_connectionIdx;
+  var boolean  vl_sendIt := false;
+  var integer vl_userIdx := pl_message.userId;
+
+  var integer vl_portUc := pl_message.transportParams.port_uc;
+  var integer vl_portUs := pl_message.transportParams.port_us;
+  var integer vl_portPs := pl_message.transportParams.port_ps;
+  var charstring vl_target := pl_message.transportParams.toAddr;
+  var charstring vl_extTarget := vl_target;
+  var octetstring vl_msg := ''O;
+  var Socket_API_Definitions.ProtoTuple vl_proto;
+
+  if (tsp_EPTF_SIP_useRemotePortInRemoteTargetResolution) {
+    vl_extTarget := vl_extTarget & int2str(vl_portUs);
+  }
+
+  if (tsp_EPTF_SIP_useTransportProtocolInRemoteTargetResolution) {
+    select (pl_message.transportParams.proto) {
+      case (UDP) { vl_extTarget := vl_extTarget & "UDP"; }
+      case (TCP) { vl_extTarget := vl_extTarget & "TCP"; }
+    }
+  }
+
+  if(pl_message.transportParams.proto == TCP) {
+    vl_proto := {tcp := {}};
+  } else if(pl_message.transportParams.proto == UDP) {
+    vl_proto := {udp := {}};
+  } else if(pl_message.transportParams.proto == SSL) {
+    vl_proto := {ssl := {}};
+  } else {
+    f_SIPTransport_Logging_WARNING(log2str("Unhadled protocol: ", pl_message.transportParams.proto));
+    return;
+  }
+
+  /*
+  action("Send SIP msg: ", log2str(
+      ": sending SIP message for user: ", pl_message.userId ,
+      " transport: ", pl_message.transportParams.proto,
+      " target: ", vl_target,
+      " port_uc: ", vl_portUc,
+      " port_us: ", vl_portUs));
+  */
+  
+  if(c_EPTF_Common_debugSwitch and f_SIPTransport_Logging_debugEnabled()) {
+    f_SIPTransport_Logging_DEBUG(log2str(
+      ": sending SIP message for user: ", pl_message.userId ,
+      " transport: ", pl_message.transportParams.proto,
+      " target: ", vl_target,
+      " port_uc: ", vl_portUc,
+      " port_us: ", vl_portUs));
+  }
+
+  if (v_useUserMapping)
+  {
+    if (not f_EPTF_int2int_HashMap_Find(v_userIdx2TransportUserIdx, pl_message.userId, vl_userIdx))
+    {
+      if(c_EPTF_Common_debugSwitch and f_SIPTransport_Logging_debugEnabled())
+      {
+        f_SIPTransport_Logging_DEBUG(log2str(
+          ": could not find transport user for message: ", pl_message));
+      }
+    }
+  }
+  
+  if (v_resolveTarget)
+  {
+    var SIP_Transport_RoutingEntry vl_entry;
+    if (f_EPTF_SIP_getRoutingEntry4Target(vl_extTarget, vl_entry))
+    {
+      vl_userIdx := vl_entry.transportUserIdx;
+      if (-1 < vl_entry.portPs)
+      {
+        vl_portPs := vl_entry.portPs;
+      }
+    }else
+    {
+      if(c_EPTF_Common_debugSwitch and f_SIPTransport_Logging_debugEnabled())
+      {
+        f_SIPTransport_Logging_DEBUG(log2str(
+          ": could not find transport user for message: ", pl_message, " with Target: ", vl_extTarget));
+      }
+    }
+  }
+  
+  if (0 > vl_userIdx or sizeof(vg_SIP_userDB) <= vl_userIdx)
+  {
+    f_SIPTransport_Logging_WARNING(log2str(
+      ": could not find transport user for message: ", pl_message));
+    return;
+  }
+
+  if (-1 == vl_portPs)
+  {
+    vl_portPs := vg_SIP_userDB[vl_userIdx].proxyPort;//use default
+  }
+  
+  if(c_EPTF_Common_debugSwitch and f_SIPTransport_Logging_debugEnabled()) {
+    f_SIPTransport_Logging_DEBUG(log2str(
+      ": user connection indices: ",
+      " udp: ", vg_SIP_userDB[vl_userIdx].udp,
+      " tcp: ", vg_SIP_userDB[vl_userIdx].tcp,
+      " port_ps: ", vl_portPs));
+  }
+
+  // We have to determine the connection the message will be sent on.
+  // Please note, that the message itself is not analyzed! It's either sent
+  // to the IMS proxy, or on the connection where the request was received!
+  if (ischosen(pl_message.sipMessage.request))
+  {
+    //trying to listen only once
+    if (vg_SIP_userDB[vl_userIdx].notListening)
+    {
+      var EPTF_IntegerList v_connectionIdxList := f_EPTF_SIP_startListening(vl_userIdx,  vl_portUs, tsp_EPTF_SIP_IPL4asp_HandleBothTCPandUDP, vl_proto);
+      vg_SIP_userDB[vl_userIdx].notListening := false;
+    }
+
+    // get connection to proxy
+    vl_sendIt := f_EPTF_SIP_IPL4asp_getProxyConnection(
+        vl_userIdx,
+        vl_portUc, // from port
+        vl_portPs, // to port
+        vg_SIP_userDB[vl_userIdx].proxyName,
+        vl_proto,
+        vl_connectionIdx)
+    vl_msg := pl_message.sipMessage.request;
+  }
+  else if (ischosen(pl_message.sipMessage.response))
+  {
+    // get connection to send response
+    vl_sendIt := f_EPTF_SIP_IPL4asp_getIncomingConnection(
+                  vl_userIdx, 
+                  vl_portUc, 
+                  vl_portPs,
+                  vl_target,
+                  vl_proto,
+                  pl_message.transportParams.connId,
+                  vl_connectionIdx);
+    vl_msg := pl_message.sipMessage.response;
+  }
+
+  // If the connection was found and ready, we encode the message and try to send it:
+  if (vl_sendIt)
+  {
+    if ((ischosen(v_connections.data[vl_connectionIdx].proto.tcp) or
+        ischosen(v_connections.data[vl_connectionIdx].proto.ssl)) and
+        v_connections.data[vl_connectionIdx].connState == TEMPORARY_UNAVAILABLE)
+    {
+      f_EPTF_SIP_MessageBufferAdd(vl_userIdx, vl_connectionIdx, vl_msg);
+
+      if (vg_hook_ASP_Event != null) { 
+        var Socket_API_Definitions.PortEvent vl_event :={
+          result :={
+            errorCode := ERROR_TEMPORARILY_UNAVAILABLE,
+            connId := v_connections.data[vl_connectionIdx].connId,
+            os_error_code := omit,
+            os_error_text := omit
+          }
+        }
+
+        // eantwuh
+        vg_hook_ASP_Event.apply(pl_message.userId, vl_event, T_EPTF_componentClock.read); }
+
+    }else{
+      f_EPTF_SIP_send(vl_userIdx, vl_connectionIdx, vl_msg);
+    }
+  }else
+  {
+    f_SIPTransport_Logging_WARNING(
+      ": message could not be sent.");
+  }
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_getMsgLen
+//
+//Purpose:  
+//
+//Parameters:
+//    pl_transportType - *in* - <EPTF_Transport_TransportType> - Testport type
+//    pl_function - *in* - <EPTF_Transport_GetMsgLen_FT> - the message length calculation function reference
+//    pl_msgLenArgs - *in* - <EPTF_IntegerList> - the function arguments
+//    pL_LGenType - *in* *charstring* - the name of the LGen type
+//
+//Return value:
+//  integer - 
+//
+//Errors:
+//
+//Detailed comments:  
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_getMsgLen(
+  in EPTF_Transport_TransportType pl_transportType,
+  in octetstring pl_stream,
+  inout EPTF_IntegerList pl_args) // variadic list of user defined parameters
+return integer
+{
+  return f_TCCMessageHandling_getMessageLength(pl_stream);
+}
+
+////////////////////////////////////////////////////
+//Function: fcb_EPTF_SIP_LocalTransport_removeUAS
+//
+//Purpose:
+//  Removes the corresponding connection database entry in case of an UAS removal.
+//
+//Parameters:
+//  - pl_transactionId - *in* *charstring* - the id of the transaction that was removed.
+//
+////////////////////////////////////////////////////
+function fcb_EPTF_SIP_LocalTransport_removeUAS(in charstring pl_transactionId)
+runs on EPTF_SIP_LocalTransport_CT
+{
+/*  var integer vl_dbIdx := -1;
+
+  if (f_EPTF_str2int_HashMap_Find(vg_incomingConnections.hashRefTr, pl_transactionId, vl_dbIdx))
+  {
+    if(c_EPTF_Common_debugSwitch and f_SIPTransport_Logging_debugEnabled()) {
+      f_SIPTransport_Logging_DEBUG(log2str(
+        ": removing connection for transaction id ", pl_transactionId));
+    }
+    f_EPTF_SIP_IPL4asp_removeIncomingConnection(vl_dbIdx);
+  }
+*/
+}
+
+function f_EPTF_SIP_initTransportDB()
+runs on EPTF_SIP_LocalTransport_CT
+{
+  f_EPTF_SIP_initMessageBuffer();  
+
+  vg_SIP_userDB := {};
+  
+  f_EPTF_FBQ_initFreeBusyQueue(v_connections.queue);
+  v_connections.data := {};
+  v_connections.hashRefConnId := f_EPTF_int2int_HashMap_New(c_SIP_Transport_hashMapName_connIdHash);
+  v_connections.hashRefConnection := f_EPTF_str2int_HashMap_New(c_SIP_Transport_hashMapName_connectionHash);
+  v_connections.hashRefListen := f_EPTF_str2int_HashMap_New(c_SIP_Transport_hashMapName_listenHash);
+
+  //init incoming connection database
+  f_EPTF_FBQ_initFreeBusyQueue(vg_incomingConnections.queue);
+  vg_incomingConnections.data := {};
+  vg_incomingConnections.hashRefTr := f_EPTF_str2int_HashMap_New(c_SIP_Transport_hashMapName_trIdHash);
+  
+  v_userIdx2TransportUserIdx := f_EPTF_int2int_HashMap_New(c_SIP_Transport_hashMapName_userIdx2TransportUserIdx);
+  v_userIdx2IdxInTransportUserData := f_EPTF_int2int_HashMap_New(c_SIP_Transport_hashMapName_userIdx2IdxInTransportUserData);
+
+  f_EPTF_SIP_initRoutingDB();
+}
+
+function f_EPTF_SIP_resetTransportDB()
+runs on EPTF_SIP_LocalTransport_CT
+{
+  f_EPTF_SIP_resetMessageBuffer();
+
+  vg_SIP_userDB := {};
+  
+  f_EPTF_FBQ_initFreeBusyQueue(v_connections.queue);
+  v_connections.data := {};
+  f_EPTF_int2int_HashMap_Delete(c_SIP_Transport_hashMapName_connIdHash);
+  f_EPTF_str2int_HashMap_Delete(c_SIP_Transport_hashMapName_connectionHash);
+  f_EPTF_str2int_HashMap_Delete(c_SIP_Transport_hashMapName_listenHash);
+
+  //init incoming connection database
+  f_EPTF_FBQ_initFreeBusyQueue(vg_incomingConnections.queue);
+  vg_incomingConnections.data := {};
+  f_EPTF_str2int_HashMap_Delete(c_SIP_Transport_hashMapName_trIdHash);
+  
+  f_EPTF_int2int_HashMap_Delete(c_SIP_Transport_hashMapName_userIdx2TransportUserIdx);
+  f_EPTF_int2int_HashMap_Delete(c_SIP_Transport_hashMapName_userIdx2IdxInTransportUserData);
+
+  f_EPTF_SIP_resetRoutingDB();
+  
+  vf_EPTF_SIP_LocalTransport_receive := null;
+}
+
+function f_EPTF_SIP_initRoutingDB()
+runs on EPTF_SIP_LocalTransport_CT
+{
+  v_routingDB.target2routeIdx := f_EPTF_oct2int_HashMap_New(c_SIP_Transport_hashMapName_target2routeIdx);
+  v_routingDB.routingTable := {};
+}
+
+function f_EPTF_SIP_resetRoutingDB()
+runs on EPTF_SIP_LocalTransport_CT
+{
+  f_EPTF_oct2int_HashMap_Delete(c_SIP_Transport_hashMapName_target2routeIdx);
+  v_routingDB.routingTable := {};
+}
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_LocalTransport_cleanup
+//
+//Purpose:
+//
+//Errors:
+//
+//Detailed comments:
+//
+////////////////////////////////////////////////////
+private function f_EPTF_SIP_LocalTransport_cleanup() runs on EPTF_SIP_LocalTransport_CT
+{
+  var integer vl_idx;
+  var integer vl_lengthOfBusy;
+  var integer vl_dummyInt := -1;
+  var boolean vl_dummy;
+  
+  if (f_EPTF_FBQ_getBusyHeadIdx(vl_idx, v_connections.queue))
+  {
+    vl_lengthOfBusy := f_EPTF_FBQ_getLengthOfBusyChain(v_connections.queue);
+    for (var integer i := 0; i < vl_lengthOfBusy; i := i + 1)
+    {
+      if (-1 != v_connections.data[vl_idx].connId)
+      {
+        f_EPTF_SIP_CloseConnection(vl_idx);
+      }
+      vl_dummy := f_EPTF_FBQ_getFwdBusyItemIdx(vl_idx, v_connections.queue);
+    }
+  }
+  
+  f_EPTF_SIP_resetTransportDB();
+  f_EPTF_SIP_IPL4_cleanUpMapperRoutingDB(v_mapperRoutingDB);
+  v_EPTF_SIP_LocalTransport_initialized := false;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_connect
+//
+//Purpose:  
+//
+//Parameters:
+//  - vl_id - *in* *integer* -
+//
+//Return value:
+//  boolean - 
+//
+//Errors:
+//
+//Detailed comments:  
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_connect(
+    in integer pl_userIdx,
+    in Socket_API_Definitions.HostName remName,
+    in Socket_API_Definitions.PortNumber remPort,
+    in Socket_API_Definitions.HostName locName,
+    in Socket_API_Definitions.PortNumber locPort,
+    in Socket_API_Definitions.ConnectionId connId := -1,
+    in Socket_API_Definitions.ProtoTuple proto,
+    in OptionList options := {},
+    inout integer pl_connectionIdx,
+    in EPTF_Transport_TransportType pl_transportType := tsp_EPTF_SIP_defaultTransportType)
+runs on EPTF_SIP_LocalTransport_CT
+return boolean
+{
+  var Socket_API_Definitions.Result vl_result;
+  var ConnectionTuple vl_connection := c_Transport_initConnectionTuple;
+  vl_connection.transportType := pl_transportType;
+
+  var integer vl_socketId := f_EPTF_Transport_connect(
+    pl_transportType,
+    proto,
+    locName,
+    locPort,
+    remName,
+    remPort,
+    c_SIP_Transport_LGenType,
+    vl_result,
+    false);
+
+
+  if (ispresent(vl_result.errorCode))
+  {
+    if (vl_result.errorCode == ERROR_TEMPORARILY_UNAVAILABLE)
+    {
+      vl_connection.loc_host := locName;
+      vl_connection.loc_port := locPort;
+      vl_connection.rem_host := remName;
+      vl_connection.rem_port := remPort;
+      vl_connection.connId := vl_socketId;
+      vl_connection.proto := proto;
+      vl_connection.connType := {outgoing := {}};
+      vl_connection.connState := TEMPORARY_UNAVAILABLE;
+//      vl_connection.removeIfClosed := false;
+    }else{
+      f_SIPTransport_Logging_WARNING(log2str(
+          ": could not create connection: ", vl_result, 
+          "Remote IP:", remName, "Remote port:", remPort, "Local IP:", locName, "Local port:", locPort,
+          "Proto:", proto));
+      if(vf_EPTF_SIP_LocalTransport_portError != null) {
+        vf_EPTF_SIP_LocalTransport_portError.apply(vg_SIP_userDB[pl_userIdx].sipUserIdxList, vl_result);
+      }
+      return false;
+    }
+  }else{
+    vl_connection.loc_host := locName;
+    vl_connection.loc_port := locPort;
+    vl_connection.rem_host := remName;
+    vl_connection.rem_port := remPort;
+    vl_connection.connId := vl_socketId;
+    vl_connection.proto := proto;
+    vl_connection.connType := {outgoing := {}};
+    vl_connection.connState := OPENED;
+//    vl_connection.removeIfClosed := false;
+  }
+  
+  f_EPTF_Transport_setUserData(pl_transportType, vl_socketId, pl_userIdx, vl_result)
+  
+  f_EPTF_SIP_addConnection(vl_connection, pl_connectionIdx);
+
+  vg_EPTF_SIP_IPL4asp_stats.nofOpenConnections := vg_EPTF_SIP_IPL4asp_stats.nofOpenConnections + 1;
+  f_EPTF_Var_adjustContent(v_EPTF_SIP_Transport_stats.nofOpenConnections_k,
+    {intVal := f_EPTF_Var_getIntValue(v_EPTF_SIP_Transport_stats.nofOpenConnections_k) + 1});
+
+  if(c_EPTF_Common_debugSwitch and f_SIPTransport_Logging_debugEnabled()) {
+    f_SIPTransport_Logging_DEBUG(log2str(
+      ": connection opened ", vl_connection));
+  }
+  
+  return true;
+}
+
+function f_ETPF_SIP_reConnect(in integer pl_userIdx, in integer pl_connectionIdx)
+runs on EPTF_SIP_LocalTransport_CT
+return boolean
+{
+  var Socket_API_Definitions.Result vl_result;
+  
+  if (-1 != v_connections.data[pl_connectionIdx].connId)
+  {
+    f_SIPTransport_Logging_WARNING(
+      ": trying to reconnect an active connection ");
+    return false;
+  }
+  
+  var integer vl_socketId := f_EPTF_Transport_connect(
+    v_connections.data[pl_connectionIdx].transportType,
+    v_connections.data[pl_connectionIdx].proto,
+    v_connections.data[pl_connectionIdx].loc_host,
+    v_connections.data[pl_connectionIdx].loc_port,
+    v_connections.data[pl_connectionIdx].rem_host,
+    v_connections.data[pl_connectionIdx].rem_port,
+    c_SIP_Transport_LGenType,
+    vl_result,
+    false);
+
+  if (ispresent(vl_result.errorCode))
+  {
+    if (vl_result.errorCode == ERROR_TEMPORARILY_UNAVAILABLE)
+    {
+      v_connections.data[pl_connectionIdx].connState := TEMPORARY_UNAVAILABLE
+    }else{
+      f_SIPTransport_Logging_WARNING(log2str(
+        ": could not create connection: ", vl_result,"Remote IP:",v_connections.data[pl_connectionIdx].rem_host,"Port:",v_connections.data[pl_connectionIdx].rem_port,"Local IP:",v_connections.data[pl_connectionIdx].loc_host,"Port:",v_connections.data[pl_connectionIdx].loc_port));
+      if(vf_EPTF_SIP_LocalTransport_portError != null) {
+        vf_EPTF_SIP_LocalTransport_portError.apply(vg_SIP_userDB[pl_userIdx].sipUserIdxList, vl_result);
+      }
+      return false;
+    }
+  }else{
+    v_connections.data[pl_connectionIdx].connState := OPENED;
+  }
+  
+  v_connections.data[pl_connectionIdx].connId := vl_socketId;
+
+  f_EPTF_int2int_HashMap_Insert(v_connections.hashRefConnId, vl_socketId, pl_connectionIdx);
+  
+  f_EPTF_Transport_setUserData(v_connections.data[pl_connectionIdx].transportType, vl_socketId, pl_userIdx, vl_result)
+  
+  return true;
+}
+
+function f_EPTF_SIP_listen(
+    in integer pl_userIdx,
+    in Socket_API_Definitions.HostName locName,
+    in Socket_API_Definitions.PortNumber locPort,
+    in Socket_API_Definitions.ProtoTuple proto,
+    in OptionList options := {},
+    inout integer pl_connectionIdx,
+    in EPTF_Transport_TransportType pl_transportType := tsp_EPTF_SIP_defaultTransportType
+)
+runs on EPTF_SIP_LocalTransport_CT
+return boolean
+{
+  var Socket_API_Definitions.Result vl_result;
+  var ConnectionTuple vl_connection := c_Transport_initConnectionTuple;
+  vl_connection.transportType := pl_transportType;
+
+  //action("Listen: ", "Local IP: ",locName," Local port: ",locPort," Proto: ",proto);
+
+  var integer vl_socketId := f_EPTF_Transport_listen(
+    pl_transportType,
+    proto,
+    locName,
+    locPort,
+    c_SIP_Transport_LGenType,
+    vl_result,
+    false);
+  
+  if (f_EPTF_SIP_IPL4asp_handleResult(vl_result)) // Everything went OK
+  {
+    vl_connection.loc_host := locName;
+    vl_connection.loc_port := locPort;
+    vl_connection.connId := vl_socketId;
+    vl_connection.proto := proto;
+    vl_connection.connType := {listening := {}};
+    vl_connection.connState := OPENED;
+//    vl_connection.removeIfClosed := false;
+  }else
+  {
+    f_SIPTransport_Logging_WARNING(log2str(
+        ": could not listen: ","Local IP: ",locName," Local port: ",locPort," Proto: ",proto));
+    return false;
+  }
+  
+  f_EPTF_Transport_setUserData(pl_transportType, vl_socketId, pl_userIdx, vl_result);
+
+  f_EPTF_SIP_addConnection(vl_connection, pl_connectionIdx);
+
+  return true;  
+}
+
+function f_EPTF_SIP_createTCPPoolConn(in integer pl_userIdx, in integer pl_localPort, in Socket_API_Definitions.ProtoTuple pl_proto := {tcp := {}})
+runs on EPTF_SIP_LocalTransport_CT
+return boolean
+{
+
+  var integer pl_connectionIdx := -1;
+
+  if (not f_EPTF_SIP_connect(
+            pl_userIdx, 
+            vg_SIP_userDB[pl_userIdx].proxyName,
+            vg_SIP_userDB[pl_userIdx].proxyPort,
+            vg_SIP_userDB[pl_userIdx].localIP,
+            pl_localPort,
+            -1,
+            pl_proto,
+            {},
+            pl_connectionIdx,
+            vg_SIP_userDB[pl_userIdx].transportType))
+
+  {
+    return false;
+  }
+  vg_SIP_userDB[pl_userIdx].tcp[sizeof(vg_SIP_userDB[pl_userIdx].tcp)] := pl_connectionIdx;
+  
+  vg_SIP_userDB[pl_userIdx].roundRobinPool := true;
+  vg_SIP_userDB[pl_userIdx].poolSize := vg_SIP_userDB[pl_userIdx].poolSize + 1;
+  return true;
+}
+
+function f_EPTF_SIP_getCurrentTCPConn(in integer pl_userIdx, inout ConnectionTuple pl_connection, in Socket_API_Definitions.ProtoTuple pl_proto := {tcp := {}})
+runs on EPTF_SIP_LocalTransport_CT
+return boolean
+{
+  if (0 == sizeof(vg_SIP_userDB[pl_userIdx].tcp))
+  {
+    var integer vl_connIdx := -1;
+    if (not f_EPTF_SIP_connect(
+              pl_userIdx,
+              vg_SIP_userDB[pl_userIdx].proxyName,
+              vg_SIP_userDB[pl_userIdx].proxyPort,
+              vg_SIP_userDB[pl_userIdx].localIP,
+              vg_SIP_userDB[pl_userIdx].localPorts[c_SIP_Transport_outgoingPort], 
+              -1, 
+              pl_proto,
+              {},
+              vl_connIdx,
+              vg_SIP_userDB[pl_userIdx].transportType))
+    {
+      return false;
+    }
+
+    vg_SIP_userDB[pl_userIdx].tcp[0] := vl_connIdx;
+    vg_SIP_userDB[pl_userIdx].currentTCP := 0;
+    pl_connection := v_connections.data[vl_connIdx]
+    return true;
+  }
+
+  pl_connection := v_connections.data[vg_SIP_userDB[pl_userIdx].tcp[vg_SIP_userDB[pl_userIdx].currentTCP]];
+  
+  return true;
+}
+
+function f_EPTF_SIP_getCurrentTCP(in integer pl_userIdx)
+runs on EPTF_SIP_LocalTransport_CT
+return integer
+{
+  return vg_SIP_userDB[pl_userIdx].currentTCP;
+}
+
+function f_EPTF_SIP_setCurrentTCP(in integer pl_userIdx, in integer pl_currentTCP)
+runs on EPTF_SIP_LocalTransport_CT
+return boolean
+{
+  if (sizeof(vg_SIP_userDB[pl_userIdx].tcp) <= pl_currentTCP){return false;}
+  
+  vg_SIP_userDB[pl_userIdx].currentTCP := pl_currentTCP;
+  return true;
+}
+
+function f_EPTF_SIP_getnofTransportUsers(inout integer pl_numb)
+runs on EPTF_SIP_LocalTransport_CT
+{
+  pl_numb := sizeof(vg_SIP_userDB);
+}
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_IPL4asp_SetUserData
+//
+//Purpose:
+//  Adds connection data to the connection database.
+//
+//Parameters:
+//  - pl_transportUserIdx - *in* *integer* - the index of the user in v_connectionDB
+//  - pl_ipAddress - *in* *charstring* - the local IP address of the user
+//  - pl_portNumbers - *in* <EPTF_IntegerList> - the port numbers used by the user
+//  - p_proto - *in* *charstring* - the preferred transport protocol to use
+//  - pl_proxyName - *in* *charstring*  - the host of the proxy
+//  - pl_proxyPort - *in* *integer* - the default port of the proxy
+//  - pl_sipUserIdx - *in* *integer* - the index of a SIP user in case of 1-1 mapping
+//                                      between the SIP and the transport users
+//  - pl_roundRobinPool - *in* *boolean* - the method of TCP connectoin chosing for an outgoing message
+//  - pl_mapUser - *in* *boolean* - map the SIP user to the transport user
+//  - pl_transportType - *in* <EPTF_Transport_TransportType> - the transport type to use with this transport user (either IPL2 or IPL4)
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_IPL4asp_SetUserData
+(
+  in integer pl_transportUserIdx,
+  in charstring pl_ipAddress,
+  in EPTF_IntegerList pl_portNumbers,
+  in charstring p_proto,
+  in charstring pl_proxyName,
+  in integer pl_proxyPort,
+  in integer pl_sipUserIdx := -1,
+  in boolean pl_roundRobinPool := false,
+  in boolean pl_mapUser := true,
+  in EPTF_Transport_TransportType pl_transportType := tsp_EPTF_SIP_defaultTransportType
+)
+runs on EPTF_SIP_LocalTransport_CT
+{
+  var Socket_API_Definitions.ProtoTuple vl_proto;
+  
+  var charstring vl_protoString := f_putInLowercase(p_proto);
+  
+  if(vl_protoString == "tcp") {
+    vl_proto := {tcp := {}};
+  } else if(vl_protoString == "udp") {
+    vl_proto := {udp := {}};
+  } else if(vl_protoString == "ssl" or vl_protoString == "tls") {
+    vl_proto := {ssl := {}};
+  }else
+  {
+    f_SIPTransport_Logging_WARNING( %definitionId & 
+      ": Unknown transport " & p_proto & ". Setting default: UDP.");
+    vl_proto := {udp := {}};
+  }
+
+  if (sizeof(pl_portNumbers) == 0)
+  {
+    f_SIPTransport_Logging_WARNING(
+      ": in case of UDP at least 1, in case of TCP/SSL at least two different ports must be defined.");
+    return;
+  }
+
+  if (sizeof(pl_portNumbers) == 1 and
+        (ischosen(vl_proto.tcp) or ischosen(vl_proto.ssl)))
+  {
+    f_SIPTransport_Logging_WARNING(
+      ": in case of TCP/SSL, at least two different ports must be defined.");
+    return;
+  }
+
+  vg_SIP_userDB[pl_transportUserIdx].localIP :=pl_ipAddress;
+  vg_SIP_userDB[pl_transportUserIdx].sipUserIdxList := { }; // user will be added by f_EPTF_SIP_mapUser2TransportUser
+  vg_SIP_userDB[pl_transportUserIdx].nofSipUsers := 0;
+  vg_SIP_userDB[pl_transportUserIdx].localPorts := pl_portNumbers;
+  vg_SIP_userDB[pl_transportUserIdx].proxyName := pl_proxyName;
+  vg_SIP_userDB[pl_transportUserIdx].proxyProto := vl_proto;
+  vg_SIP_userDB[pl_transportUserIdx].proxyPort := pl_proxyPort;
+  vg_SIP_userDB[pl_transportUserIdx].proxyClientPort := -1
+  vg_SIP_userDB[pl_transportUserIdx].udp := {};
+  vg_SIP_userDB[pl_transportUserIdx].tcp := {};
+  vg_SIP_userDB[pl_transportUserIdx].currentTCP := 0;
+  vg_SIP_userDB[pl_transportUserIdx].roundRobinPool := pl_roundRobinPool;
+  vg_SIP_userDB[pl_transportUserIdx].poolSize := 0;
+  vg_SIP_userDB[pl_transportUserIdx].notListening := true;
+  vg_SIP_userDB[pl_transportUserIdx].transportType := pl_transportType;
+  
+ if (-1 == pl_sipUserIdx)
+  {
+    pl_sipUserIdx := pl_transportUserIdx;
+  }
+  
+  if (pl_mapUser)
+  {
+    f_EPTF_SIP_mapUser2TransportUser(pl_sipUserIdx, pl_transportUserIdx);
+  }
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_Transport_setProxyForTransportUser
+//
+//Purpose:
+//  Sets the proxy for a given transport user.
+//
+//Parameters:
+//  - pl_transportUserIdx - *in* *integer* - the index of the transport user
+//  - pl_proxyProto - *in* <ProtoTuple> - the preferred protocol to use with the proxy
+//  - pl_proxyName - *in* *charstring* - the host name of the proxy
+//  - pl_proxyPort - *in* *integer* - the port number of the proxy
+//
+////////////////////////////////////////////////////
+public function f_EPTF_SIP_Transport_setProxyForTransportUser(
+  in integer pl_transportUserIdx,
+  in Socket_API_Definitions.ProtoTuple pl_proxyProto,
+  in charstring pl_proxyName,
+  in integer pl_proxyPort)
+runs on EPTF_SIP_LocalTransport_CT
+{
+  var EPTF_IntegerList vl_newTcpList := {};
+  for (var integer i := 0; i < sizeof(vg_SIP_userDB[pl_transportUserIdx].tcp); i := i + 1)
+  {
+    if (vg_SIP_userDB[pl_transportUserIdx].proxyPort == v_connections.data[vg_SIP_userDB[pl_transportUserIdx].tcp[i]].rem_port and
+        vg_SIP_userDB[pl_transportUserIdx].proxyName == v_connections.data[vg_SIP_userDB[pl_transportUserIdx].tcp[i]].rem_host)
+    {
+      if(c_EPTF_Common_debugSwitch and f_SIPTransport_Logging_debugEnabled()) {
+        f_SIPTransport_Logging_DEBUG(%definitionId&log2str("Removing connection ", v_connections.data[vg_SIP_userDB[pl_transportUserIdx].tcp[i]]));
+      }
+      f_EPTF_SIP_removeConnection(vg_SIP_userDB[pl_transportUserIdx].tcp[i]);
+    } else {
+      vl_newTcpList[sizeof(vl_newTcpList)] := vg_SIP_userDB[pl_transportUserIdx].tcp[i];
+    }
+  }
+
+  vg_SIP_userDB[pl_transportUserIdx].proxyName := pl_proxyName;
+  vg_SIP_userDB[pl_transportUserIdx].proxyProto := pl_proxyProto;
+  vg_SIP_userDB[pl_transportUserIdx].proxyPort := pl_proxyPort;
+  vg_SIP_userDB[pl_transportUserIdx].tcp := vl_newTcpList; // needed to prevent reConnect to the removed connection
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_IPL4asp_Transport_setProxyName
+//
+//Purpose:
+//  Sets the proxy host name
+//
+//Parameters:
+//  - p_proxyname - *in* *charstring* - the host name
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_IPL4asp_Transport_setProxyName(in charstring p_proxyname) runs on EPTF_SIP_LocalTransport_CT
+{
+  vg_proxyName := p_proxyname;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_IPL4asp_Transport_setProxyPort
+//
+//Purpose:
+//  Sets the proxy port.
+//
+//Parameters:
+//  - p_proxyport - *in* *integer* - the port number
+//
+//Errors:
+//
+//Detailed comments:  
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_IPL4asp_Transport_setProxyPort(in integer p_proxyport) runs on EPTF_SIP_LocalTransport_CT
+{
+  vg_proxyPort := p_proxyport;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_IPL4asp_Transport_setPreferredTransport
+//
+//Purpose:
+//  Sets the preferred transport protocol.
+//
+//Parameters:
+//  - p_proto - *in* *charstring* - the protocol
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_IPL4asp_Transport_setPreferredTransport(in charstring p_proto) runs on EPTF_SIP_LocalTransport_CT
+{
+  vg_preferredTransport := p_proto;
+}
+
+function f_EPTF_SIP_findFromLocPort(in integer pl_port, in EPTF_IntegerList pl_conns, inout integer pl_connIdx)
+runs on EPTF_SIP_LocalTransport_CT
+return boolean
+{
+  for (var integer i := 0; i < sizeof(pl_conns); i := i + 1)
+  {
+    if (pl_port == v_connections.data[pl_conns[i]].loc_port)
+    {
+      pl_connIdx := pl_conns[i];
+      return true;
+    }
+  }
+  return false;
+}
+
+function f_EPTF_SIP_findFromLocPortAndRemPort(
+  in integer pl_locPort, 
+  in integer pl_remoPort,
+  in EPTF_IntegerList pl_conns, 
+  inout integer pl_connIdx)
+runs on EPTF_SIP_LocalTransport_CT
+return boolean
+{
+  for (var integer i := 0; i < sizeof(pl_conns); i := i + 1)
+  {
+    if (pl_locPort == v_connections.data[pl_conns[i]].loc_port and
+          pl_remoPort == v_connections.data[pl_conns[i]].rem_port)
+    {
+      pl_connIdx := pl_conns[i];
+      return true;
+    }
+  }
+  return false;
+}
+
+function f_EPTF_SIP_findFromRemPort(
+  in integer pl_remoPort,
+  in EPTF_IntegerList pl_conns, 
+  inout integer pl_connIdx)
+runs on EPTF_SIP_LocalTransport_CT
+return boolean
+{
+  for (var integer i := 0; i < sizeof(pl_conns); i := i + 1)
+  {
+    if (pl_remoPort == v_connections.data[pl_conns[i]].rem_port)
+    {
+      pl_connIdx := pl_conns[i];
+      return true;
+    }
+  }
+  return false;
+}
+
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_IPL4asp_startListening
+//
+//Purpose:  
+//
+//Parameters:
+//  - v_userIdx - *in* *integer* -
+//
+//Errors:
+//
+//Detailed comments:  
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_IPL4asp_startListening(in integer v_userIdx,in boolean pl_bothTCPandUDP := true, in Socket_API_Definitions.ProtoTuple pl_proto := {tcp := {}})
+runs on EPTF_SIP_LocalTransport_CT
+{
+  var EPTF_IntegerList v_connectionIdx := 
+    f_EPTF_SIP_startListening(v_userIdx, vg_SIP_userDB[v_userIdx].localPorts[c_SIP_Transport_listeningPort], pl_bothTCPandUDP, pl_proto);
+}
+
+function f_EPTF_SIP_IPL4asp_startListeningOnPort(in integer v_userIdx, in integer pl_port, in boolean pl_bothTCPandUDP := true, in Socket_API_Definitions.ProtoTuple pl_proto := {tcp := {}})
+runs on EPTF_SIP_LocalTransport_CT
+{
+  var EPTF_IntegerList v_connectionIdx := 
+    f_EPTF_SIP_startListening(v_userIdx, pl_port, pl_bothTCPandUDP, pl_proto);
+}
+
+function f_EPTF_SIP_IPL4asp_startListening4Users(in EPTF_IntegerList v_users,in boolean pl_bothTCPandUDP := true, in Socket_API_Definitions.ProtoTuple pl_proto := {tcp := {}})
+runs on EPTF_SIP_LocalTransport_CT
+{
+  var integer pl_userIdx := v_users[0];
+  var EPTF_IntegerList v_connectionIdx := 
+    f_EPTF_SIP_startListening(pl_userIdx, vg_SIP_userDB[pl_userIdx].localPorts[c_SIP_Transport_listeningPort], pl_bothTCPandUDP, pl_proto);
+  
+  //retreive added connection
+/*
+  for (var integer i := 1; i < sizeof(v_users); i := i + 1)
+  {
+    if (-1 != v_connectionIdx[c_SIP_Transport_UDP])
+    {
+      vg_SIP_userDB[v_users[i]].udp[sizeof(vg_SIP_userDB[v_users[i]].udp)] := v_connectionIdx[c_SIP_Transport_UDP];
+    }
+    if (-1 != v_connectionIdx[c_SIP_Transport_TCP])
+    {
+      vg_SIP_userDB[v_users[i]].tcp_listen[sizeof(vg_SIP_userDB[v_users[i]].tcp_listen)] := v_connectionIdx[c_SIP_Transport_TCP];
+    }
+  }
+*/
+}
+
+function f_EPTF_SIP_startListening(in integer v_userIdx, in integer pl_port, in boolean pl_bothTCPandUDP := true, in Socket_API_Definitions.ProtoTuple pl_proto := {tcp := {}})
+runs on EPTF_SIP_LocalTransport_CT
+return EPTF_IntegerList
+{
+  var Socket_API_Definitions.Result vl_result;
+  var integer vl_connectionIdx := -1;
+  var Socket_API_Definitions.ProtoTuple vl_e_proto := {tcp := {}};
+  
+  var EPTF_IntegerList v_connIdx := {-1, -1}
+  
+  var charstring vl_hashString := vg_SIP_userDB[v_userIdx].localIP & int2str(pl_port);
+  
+  // In case of UDP:
+  if (pl_bothTCPandUDP or vg_SIP_userDB[v_userIdx].proxyProto == {udp := {}})
+  {
+    if (not f_EPTF_str2int_HashMap_Find(v_connections.hashRefListen, vl_hashString & "UDP", vl_connectionIdx))
+    {
+      vl_connectionIdx := -1;
+      if (f_EPTF_SIP_listen(
+            v_userIdx, 
+            vg_SIP_userDB[v_userIdx].localIP, 
+            pl_port, 
+            {udp := {}},
+            {},
+            vl_connectionIdx,
+            vg_SIP_userDB[v_userIdx].transportType))
+      {
+        f_EPTF_str2int_HashMap_Insert(v_connections.hashRefListen, vl_hashString & "UDP", vl_connectionIdx)
+      }
+    }
+
+    v_connIdx[c_SIP_Transport_UDP] := vl_connectionIdx;
+/*    
+    var integer vl_idx := -1;
+
+    if (f_EPTF_SIP_findFromLocPort(pl_port, vg_SIP_userDB[v_userIdx].udp, vl_idx))
+    {
+      v_connIdx[c_SIP_Transport_UDP] := vl_idx;
+    }else
+    {
+      vl_idx := sizeof(vg_SIP_userDB[v_userIdx].udp);
+
+      if (f_EPTF_SIP_listen(
+            v_userIdx, 
+            vg_SIP_userDB[v_userIdx].localIP, 
+            pl_port, 
+            {udp := {}},
+            {},
+            vl_connectionIdx,
+            vg_SIP_userDB[v_userIdx].transportType))
+      {
+        vg_SIP_userDB[v_userIdx].udp[vl_idx] := vl_connectionIdx;
+        v_connIdx[c_SIP_Transport_UDP] := vl_connectionIdx;
+      }
+    }
+*/
+  }
+  // In case of TCP/SSL:
+  if (pl_bothTCPandUDP or vg_SIP_userDB[v_userIdx].proxyProto == {tcp := {}} or vg_SIP_userDB[v_userIdx].proxyProto == {ssl := {}})
+  {
+    if (not f_EPTF_str2int_HashMap_Find(v_connections.hashRefListen, vl_hashString & "TCP", vl_connectionIdx))
+    {//nobody is listening
+      vl_connectionIdx := -1;
+      if(pl_proto=={udp := {}}) {
+        vl_e_proto:={tcp := {}};
+      } else {
+        vl_e_proto:=pl_proto;
+      }
+      if (f_EPTF_SIP_listen(
+            v_userIdx, 
+            vg_SIP_userDB[v_userIdx].localIP, 
+            pl_port, 
+            vl_e_proto,
+            {},
+            vl_connectionIdx,
+            vg_SIP_userDB[v_userIdx].transportType))
+      {
+        f_EPTF_str2int_HashMap_Insert(v_connections.hashRefListen, vl_hashString & "TCP", vl_connectionIdx)
+      }
+    }
+  
+    v_connIdx[c_SIP_Transport_TCP] := vl_connectionIdx;
+/*
+    var integer vl_idx := -1;
+    
+    if (f_EPTF_SIP_findFromLocPort(pl_port, vg_SIP_userDB[v_userIdx].tcp_listen, vl_idx))
+    {
+      v_connIdx[c_SIP_Transport_TCP] := vl_idx;
+    }else
+    {
+      vl_idx := sizeof(vg_SIP_userDB[v_userIdx].tcp_listen);
+
+      if (f_EPTF_SIP_listen(
+            v_userIdx, 
+            vg_SIP_userDB[v_userIdx].localIP, 
+            pl_port, 
+            pl_proto,
+            {},
+            vl_connectionIdx,
+            vg_SIP_userDB[v_userIdx].transportType))
+      {
+        vg_SIP_userDB[v_userIdx].tcp_listen[vl_idx] := vl_connectionIdx;
+        v_connIdx[c_SIP_Transport_TCP] := vl_connectionIdx;
+      }
+    }
+*/
+  }
+  
+  return v_connIdx;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_IPL4asp_getProxyConnection
+//
+//Purpose:  
+//
+//Parameters:
+//
+////////////////////////////////////////////////////
+// To call this, the listening socket MUST be already open:
+function f_EPTF_SIP_IPL4asp_getProxyConnection(
+  in integer v_userIdx, 
+  in integer pl_fromPort,
+  in integer pl_toPort,
+  in charstring pl_target,
+  in Socket_API_Definitions.ProtoTuple pl_transport,
+  inout integer p_connection)
+runs on EPTF_SIP_LocalTransport_CT
+return boolean
+{
+  var integer vl_connIdx;
+  var integer vl_fromPort := pl_fromPort;
+
+  if (ischosen(pl_transport.tcp) or ischosen(pl_transport.ssl))
+  {
+    if (-1 == vl_fromPort)
+    {
+      vl_fromPort := vg_SIP_userDB[v_userIdx].localPorts[c_SIP_Transport_outgoingPort];
+    }
+    
+    //create connection
+    if (0 == sizeof(vg_SIP_userDB[v_userIdx].tcp))
+    {
+      
+      if (not f_EPTF_SIP_connect(
+                v_userIdx,
+                pl_target,
+                //vg_SIP_userDB[v_userIdx].proxyName,
+                pl_toPort,
+                vg_SIP_userDB[v_userIdx].localIP,
+                vl_fromPort, 
+                -1, 
+                pl_transport,
+                {},
+                vl_connIdx,
+                vg_SIP_userDB[v_userIdx].transportType))
+      {
+        return false;
+      }
+
+      vg_SIP_userDB[v_userIdx].tcp[0] := vl_connIdx;
+      vg_SIP_userDB[v_userIdx].currentTCP := 0;
+      p_connection := vl_connIdx;
+      return true;
+    }
+    
+//try to find an existing connection
+    if (-1 == pl_fromPort)
+    {
+      if (vg_SIP_userDB[v_userIdx].roundRobinPool) //next from the pool
+      {
+        vl_connIdx := vg_SIP_userDB[v_userIdx].tcp[vg_SIP_userDB[v_userIdx].currentTCP];
+
+        if (-1 == vl_connIdx)
+        {
+          f_SIPTransport_Logging_WARNING(
+            ": invalid connection in TCP/SSL pool.");
+          return false;
+        }
+        vg_SIP_userDB[v_userIdx].currentTCP := 
+          (vg_SIP_userDB[v_userIdx].currentTCP + 1) mod vg_SIP_userDB[v_userIdx].poolSize;
+
+        if (-1 == v_connections.data[vl_connIdx].connId)
+        {
+          if (not f_ETPF_SIP_reConnect(v_userIdx, vl_connIdx))
+          {
+            return false;
+          }
+        }
+
+        p_connection := vl_connIdx;
+        return true;
+      }else{
+        if (f_EPTF_SIP_findFromRemPort(pl_toPort, vg_SIP_userDB[v_userIdx].tcp, vl_connIdx))
+        {
+          if (-1 == v_connections.data[vl_connIdx].connId)
+          {
+            if (not f_ETPF_SIP_reConnect(v_userIdx, vl_connIdx))
+            {
+              return false;
+            }
+          }
+
+          p_connection := vl_connIdx;
+          return true;
+        }
+      }
+    }else{
+      if (f_EPTF_SIP_findFromLocPortAndRemPort(pl_fromPort, pl_toPort, vg_SIP_userDB[v_userIdx].tcp, vl_connIdx))
+      {
+        if (-1 == v_connections.data[vl_connIdx].connId)
+        {
+          if (not f_ETPF_SIP_reConnect(v_userIdx, vl_connIdx))
+          {
+            return false;
+          }
+        }
+        p_connection := vl_connIdx;
+        return true;
+      }
+    }
+    
+//create new connection
+    var integer vl_connectionIdx := -1;
+    var integer vl_new := -1;
+    var boolean vl_found := false;
+
+    for (var integer i := 0; i < sizeof(vg_SIP_userDB[v_userIdx].tcp); i := i + 1)
+    {
+      if (-1 == v_connections.data[vg_SIP_userDB[v_userIdx].tcp[i]].connId)
+      {
+        vl_found := true;
+        vl_new := i;
+        break;
+      }
+    }
+    if (vl_found)
+    {
+      if (not f_ETPF_SIP_reConnect(v_userIdx, vg_SIP_userDB[v_userIdx].tcp[vl_new]))
+      {
+        return false;
+      }
+    }else{
+      vl_new := sizeof(vg_SIP_userDB[v_userIdx].tcp);
+      if (not f_EPTF_SIP_connect(
+                v_userIdx,
+                pl_target,
+                //vg_SIP_userDB[v_userIdx].proxyName,
+                pl_toPort,
+                vg_SIP_userDB[v_userIdx].localIP,
+                vl_fromPort, 
+                -1, 
+                pl_transport,
+                {},
+                vl_connectionIdx,
+                vg_SIP_userDB[v_userIdx].transportType))
+      {
+        return false;
+      }
+      vg_SIP_userDB[v_userIdx].tcp[vl_new] := vl_connectionIdx
+    }
+
+    p_connection := vg_SIP_userDB[v_userIdx].tcp[vl_new];
+    return true;
+    
+  }else{
+    var integer vl_idx;
+    var integer vl_connectionIdx;
+
+    if (-1 == vl_fromPort)
+    {
+      vl_fromPort := vg_SIP_userDB[v_userIdx].localPorts[c_SIP_Transport_listeningPort];
+    }
+    
+    if (f_EPTF_SIP_findFromLocPort(vl_fromPort, vg_SIP_userDB[v_userIdx].udp, vl_idx))
+    {
+      v_connections.data[vl_idx].rem_port := pl_toPort;
+      v_connections.data[vl_idx].rem_host := pl_target;//vg_SIP_userDB[v_userIdx].proxyName;
+      p_connection := vl_idx;
+      return true;
+    }
+
+    vl_idx := sizeof(vg_SIP_userDB[v_userIdx].udp);
+    var charstring vl_hashString := vg_SIP_userDB[v_userIdx].localIP & int2str(vl_fromPort) & "UDP";
+
+    if (not f_EPTF_str2int_HashMap_Find(v_connections.hashRefListen, vl_hashString, vl_connectionIdx))
+    {
+      vl_connectionIdx := -1;
+      if (f_EPTF_SIP_listen(
+        v_userIdx, 
+        vg_SIP_userDB[v_userIdx].localIP, 
+        vl_fromPort, 
+        {udp := {}},
+        {},
+        vl_connectionIdx,
+        vg_SIP_userDB[v_userIdx].transportType))
+      {
+        f_EPTF_str2int_HashMap_Insert(v_connections.hashRefListen, vl_hashString, vl_connectionIdx)
+      }else{return false;}
+    }
+        
+    vg_SIP_userDB[v_userIdx].udp[vl_idx] := vl_connectionIdx;
+
+    v_connections.data[vl_connectionIdx].rem_port := pl_toPort;
+    v_connections.data[vl_connectionIdx].rem_host := pl_target;//vg_SIP_userDB[v_userIdx].proxyName;
+    p_connection := vl_connectionIdx;
+    return true;    
+  }
+  
+  return false;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_IPL4asp_storeIncomingConnection
+//
+//Purpose:  
+//
+//Parameters:
+//  - pl_connectionIdx - *in* *integer* - connection id
+//  - pl_msg - *in* <PDU_SIP> - incoming message
+//
+//Errors:
+//
+//Detailed comments:  
+//
+////////////////////////////////////////////////////
+/*function f_EPTF_SIP_IPL4asp_storeIncomingConnection(
+  in integer pl_connectionIdx, 
+  in PDU_SIP pl_msg)
+runs on EPTF_SIP_LocalTransport_CT
+{
+  var integer    vl_dbIdx := -1;
+  var charstring vl_transactionId;
+  f_EPTF_SIP_Transport_GetTransactionId(pl_msg.request.msgHeader, vl_transactionId);
+
+  if (not f_EPTF_str2int_HashMap_Find(vg_incomingConnections.hashRefTr, vl_transactionId, vl_dbIdx))
+  {
+
+    vl_dbIdx := f_EPTF_FBQ_getOrCreateFreeSlot(vg_incomingConnections.queue);
+    f_EPTF_FBQ_moveFromFreeHeadToBusyTail(vg_incomingConnections.queue);
+
+    vg_incomingConnections.data[vl_dbIdx] :=
+    {
+      connectionId := pl_connectionIdx,
+      transactionId := vl_transactionId,
+      timerId := -1
+    }
+    
+    f_EPTF_str2int_HashMap_Insert(vg_incomingConnections.hashRefTr, vl_transactionId, vl_dbIdx);
+    if(c_EPTF_Common_debugSwitch and f_SIPTransport_Logging_debugEnabled()) {
+      f_SIPTransport_Logging_DEBUG(log2str(
+        ": ", vl_transactionId," was stored in DB!"));
+    }
+
+    if (not f_EPTF_SIP_IPL4asp_StartT_Connection(vl_dbIdx))
+    {
+      action(%definitionId, ": could not start incoming connection timer.");
+    }
+    
+    v_connections.data[pl_connectionIdx].removeIfClosed := false;
+  }
+  else
+  {
+    if(c_EPTF_Common_debugSwitch and f_SIPTransport_Logging_debugEnabled()) {
+      f_SIPTransport_Logging_DEBUG(log2str(
+        ": ", vl_transactionId," already in DB at ",vl_dbIdx,"!"));
+
+      f_SIPTransport_Logging_DEBUG(log2str(
+        ": ", pl_msg));
+    }
+  }
+}*/
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_IPL4asp_getIncomingConnection
+//
+//Purpose:  
+//
+//Parameters:
+//  - p_user - *inout* *integer* -
+//  - p_asp - *inout* <ASP_SendTo> -
+//  - pl_transId - *in* *charstring* -
+//
+//Return value:
+//  boolean - 
+//
+//Errors:
+//
+//Detailed comments:  
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_IPL4asp_getIncomingConnection(
+  inout integer p_user,
+  in integer pl_portUc,
+  in integer pl_portPs,
+  in charstring pl_target,
+  in Socket_API_Definitions.ProtoTuple pl_proto, 
+  in charstring pl_connId,
+  inout integer p_connection)
+runs on EPTF_SIP_LocalTransport_CT
+return boolean
+{
+  var integer    vl_Idx := -1;
+  
+  if (ischosen(pl_proto.tcp) or ischosen(pl_proto.ssl))
+  {
+    // lookup the connection
+    if (f_EPTF_str2int_HashMap_Find(v_connections.hashRefConnection, pl_connId, vl_Idx))
+    {
+      if(c_EPTF_Common_debugSwitch and f_SIPTransport_Logging_debugEnabled()) {
+        f_SIPTransport_Logging_DEBUG(log2str(
+          ": ", pl_connId," found in DB! ", v_connections.data[vl_Idx]));
+      }
+
+      p_connection := vl_Idx;
+      return true;
+/*      if (CLOSED != v_connections.data[vl_Idx].connState)
+      {
+        p_connection := v_connections.data[vl_Idx];
+        return true;
+      }else{
+        f_EPTF_SIP_IPL4asp_removeIncomingConnection(vl_dbIdx);
+      }*/
+    }else
+    {
+      if(c_EPTF_Common_debugSwitch and f_SIPTransport_Logging_debugEnabled()) {
+        f_SIPTransport_Logging_DEBUG(%definitionId & ": " & pl_connId & " was not found in DB, creating new connection ");
+      }
+    }
+  }
+  
+  return f_EPTF_SIP_IPL4asp_getProxyConnection(
+          p_user, 
+          pl_portUc, 
+          pl_portPs,
+          pl_target,
+          pl_proto,
+          p_connection);
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_IPL4asp_removeIncomingConnection
+//
+//Purpose:  
+//
+//Parameters:
+//  - p_dbIdx - *in* *integer* -
+//
+//Return value:
+//  boolean - 
+//
+////////////////////////////////////////////////////
+/*function f_EPTF_SIP_IPL4asp_removeIncomingConnection(in integer pl_dbIdx)
+runs on EPTF_SIP_LocalTransport_CT
+{
+  if (f_EPTF_FBQ_itemIsFree(pl_dbIdx, vg_incomingConnections.queue))
+  {
+    if(c_EPTF_Common_debugSwitch and f_SIPTransport_Logging_debugEnabled()) {
+      f_SIPTransport_Logging_DEBUG(log2str(
+        ": ",pl_dbIdx," is not busy in DB!"));
+    }
+    return
+  }
+  
+  if(0 <= vg_incomingConnections.data[pl_dbIdx].timerId)
+  {
+    if(not f_EPTF_SchedulerComp_CancelEvent(vg_incomingConnections.data[pl_dbIdx].timerId))
+    {
+      vg_incomingConnections.data[pl_dbIdx].timerId := -1;
+      f_SIPTransport_Logging_WARNING(
+        ": could not cancel incoming connection timer!");
+    }
+    
+    vg_incomingConnections.data[pl_dbIdx].timerId := -1;
+  }
+  
+  var integer vl_connectionId := vg_incomingConnections.data[pl_dbIdx].connectionId;
+
+  if (ischosen(v_connections.data[vl_connectionId].connType.incoming))
+  {
+    v_connections.data[vl_connectionId].removeIfClosed := true;
+  }
+  
+  if (CLOSED == v_connections.data[vl_connectionId].connState)
+  {
+    f_EPTF_SIP_removeConnection(vl_connectionId);
+  }
+  
+  f_EPTF_str2int_HashMap_Erase(vg_incomingConnections.hashRefTr, vg_incomingConnections.data[pl_dbIdx].transactionId);
+  vg_incomingConnections.data[pl_dbIdx] := c_empty_IncomingConnection;
+  f_EPTF_FBQ_moveFromBusyToFreeTail(pl_dbIdx, vg_incomingConnections.queue);
+  
+  
+  if(c_EPTF_Common_debugSwitch and f_SIPTransport_Logging_debugEnabled()) {
+    f_SIPTransport_Logging_DEBUG(log2str(
+      ": ", pl_dbIdx," was removed from DB!"));
+  }
+}*/
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_CloseConnection
+//
+//Purpose:  
+//
+//Parameters:
+//  - p_conn - *inout* <ConnectionTuple> -
+//  - p_proto - *in* <ProtoTuple> -
+//
+//Errors:
+//
+//Detailed comments:  
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_CloseConnection(
+    in integer p_connectionIdx)
+runs on EPTF_SIP_LocalTransport_CT
+{
+  var Socket_API_Definitions.Result vl_result;
+
+  f_EPTF_SIP_MessageBuffer_deleteByKey(p_connectionIdx);
+  
+  if(not f_EPTF_Transport_close(v_connections.data[p_connectionIdx].transportType, v_connections.data[p_connectionIdx].connId, vl_result)) {
+    f_SIPTransport_Logging_WARNING(log2str(v_connections.data[p_connectionIdx].connId));
+  }
+
+  if (not f_EPTF_SIP_IPL4asp_handleResult(vl_result)) 
+  {
+    f_SIPTransport_Logging_WARNING(log2str(v_connections.data[p_connectionIdx].connId));
+  }
+  else
+  {
+    v_connections.data[p_connectionIdx].connId := -1;
+    vg_EPTF_SIP_IPL4asp_stats.nofOpenConnections := vg_EPTF_SIP_IPL4asp_stats.nofOpenConnections - 1;
+    f_EPTF_Var_adjustContent(v_EPTF_SIP_Transport_stats.nofOpenConnections_k,
+      {intVal := f_EPTF_Var_getIntValue(v_EPTF_SIP_Transport_stats.nofOpenConnections_k) - 1});
+  }
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_IPL4asp_handleResult
+//
+//Purpose:  
+//
+//Parameters:
+//  - p_res - *inout* <Result> -
+//
+//Return value:
+//  boolean - 
+//
+//Errors:
+//
+//Detailed comments:  
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_IPL4asp_handleResult(inout Socket_API_Definitions.Result p_res)
+runs on EPTF_SIP_LocalTransport_CT
+return boolean
+{
+  if (ispresent(p_res.errorCode) and (p_res.errorCode != ERROR_TEMPORARILY_UNAVAILABLE))
+  {
+    vg_EPTF_SIP_IPL4asp_stats.nofTransportWarnings := vg_EPTF_SIP_IPL4asp_stats.nofTransportWarnings + 1;
+    f_EPTF_Var_adjustContent(v_EPTF_SIP_Transport_stats.nofTransportWarnings_k,
+      {intVal := f_EPTF_Var_getIntValue(v_EPTF_SIP_Transport_stats.nofTransportWarnings_k) + 1});
+
+    f_SIPTransport_Logging_WARNING(log2str(%definitionId,": transport error: ", p_res)); // ****
+    return false;
+  }
+  return true;
+}
+
+function f_EPTF_SIP_send(
+  in integer pl_userId,
+  in integer pl_connectionIdx,
+  in octetstring pl_msg
+  )
+runs on EPTF_SIP_LocalTransport_CT
+{
+  var Socket_API_Definitions.Result vl_result;
+
+  if(not f_EPTF_Transport_sendTo(
+            v_connections.data[pl_connectionIdx].transportType,
+            v_connections.data[pl_connectionIdx].connId,
+            v_connections.data[pl_connectionIdx].rem_host,
+            v_connections.data[pl_connectionIdx].rem_port,
+            pl_msg,
+            vl_result,
+            false)) {
+    f_SIPTransport_Logging_WARNING(log2str(": message could not be sent: ",
+        v_connections.data[pl_connectionIdx], " - result: ", vl_result));
+    if(vf_EPTF_SIP_LocalTransport_portError != null) {
+      vf_EPTF_SIP_LocalTransport_portError.apply(vg_SIP_userDB[pl_userId].sipUserIdxList, vl_result);
+    }
+  }
+  
+  vg_EPTF_SIP_IPL4asp_stats.nofSentMessages := vg_EPTF_SIP_IPL4asp_stats.nofSentMessages + 1.0;
+  vg_EPTF_SIP_IPL4asp_stats.nofSentBytes := vg_EPTF_SIP_IPL4asp_stats.nofSentBytes + int2float(lengthof(pl_msg));
+  f_EPTF_Var_adjustContent(v_EPTF_SIP_Transport_stats.nofSentMessages_k,
+    {intVal := f_EPTF_Var_getIntValue(v_EPTF_SIP_Transport_stats.nofSentMessages_k) + 1});
+  f_EPTF_Var_adjustContent(v_EPTF_SIP_Transport_stats.nofSentBytes_k,
+    {intVal := f_EPTF_Var_getIntValue(v_EPTF_SIP_Transport_stats.nofSentBytes_k) + lengthof(pl_msg)});
+
+  //eantwuh
+  //if (vg_hook_ASP_SendTo != null) { vg_hook_ASP_SendTo.apply(pl_userId, pl_header, pl_sendTo.proto, T_EPTF_componentClock.read); }
+
+  f_EPTF_SIP_LoggerClient_Logger({"Sent: ",pl_msg});
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_SIP_Transport_GetTransactionId
+// 
+//  Purpose:
+//    Gets the transaction ID from of a SIP message
+// 
+//  Parameters:
+//    - pl_msgHeader - *inout* <MessageHeader> - the SIP message header
+//    - pl_id - *inout* *charstring* - the transaction ID
+// 
+//  Return Value:
+//    -
+// 
+//  Errors:
+//
+//  Detailed Comments:
+//    The function extracts the transaction ID from the
+//      VIA branch ID parameter and removs the SIP branch cookie "z9hG4bK".
+///////////////////////////////////////////////////////////
+function f_EPTF_SIP_Transport_GetTransactionId(
+  inout MessageHeader pl_msgHeader,
+  inout charstring pl_id)
+runs on EPTF_SIP_LocalTransport_CT
+{
+  var charstring branch := "";
+  var integer lenBranch;
+
+  if(ispresent(pl_msgHeader.via.viaBody[0].viaParams)) {
+    f_EPTF_SIP_GetParameter(pl_msgHeader.via.viaBody[0].viaParams,
+      c_SIP_BRANCH_ID, branch);
+  }
+
+  lenBranch := lengthof(branch);
+  if(lenBranch == 0) {
+    f_SIPTransport_Logging_WARNING(log2str(
+      ": top-most Via header field in header doesn't have branch parameter: ", pl_msgHeader));
+    pl_id := "";
+    return;
+  }
+  if( (lenBranch <= c_SIP_BRANCH_COOKIE_LEN)
+    or(substr(branch, 0, c_SIP_BRANCH_COOKIE_LEN) != c_SIP_BRANCH_COOKIE) ) {
+    f_SIPTransport_Logging_WARNING(
+      ": branch parameter in Via header is not RFC 3261 compliant.");
+    pl_id := "";
+    return;
+  }
+  pl_id := substr(branch, c_SIP_BRANCH_COOKIE_LEN,
+    lenBranch - c_SIP_BRANCH_COOKIE_LEN);
+}
+
+
+group SIP_MessageBuffer
+{
+
+function f_EPTF_SIP_initMessageBuffer()
+runs on EPTF_SIP_LocalTransport_CT
+{
+  vg_messageBuffer.connectionIdHash := f_EPTF_int2int_HashMap_New (c_SIP_Transport_hashMapName_sipKeyToMessageRecord);
+  f_EPTF_FBQ_initFreeBusyQueue(vg_messageBuffer.queue);
+  vg_messageBuffer.data := {};
+}
+
+function f_EPTF_SIP_resetMessageBuffer()
+runs on EPTF_SIP_LocalTransport_CT
+{
+  f_EPTF_int2int_HashMap_Delete(c_SIP_Transport_hashMapName_sipKeyToMessageRecord);
+  f_EPTF_FBQ_initFreeBusyQueue(vg_messageBuffer.queue);
+  vg_messageBuffer.data := {};
+}
+
+function f_EPTF_SIP_MessageBufferAdd (
+  in integer pl_userIdx,
+  in integer pl_connectionIdx,
+  in octetstring pl_msg) 
+runs on EPTF_SIP_LocalTransport_CT
+{
+  var integer vl_idx := -1;
+  var SIP_MessageBuffer_Message vl_message :=
+  {
+     userId := pl_userIdx,
+     msg := pl_msg
+  }
+  
+  if (f_EPTF_int2int_HashMap_Find(vg_messageBuffer.connectionIdHash, pl_connectionIdx, vl_idx))
+  {
+    if (tsp_EPTF_SIP_IPL4asp_maxBufferSize < sizeof(vg_messageBuffer.data[vl_idx]))
+    {
+      f_SIPTransport_Logging_WARNING(log2str(
+        ": buffer is erased for connection ", pl_connectionIdx));
+      vg_messageBuffer.data[vl_idx] := {};
+    }
+    vg_messageBuffer.data[vl_idx][sizeof(vg_messageBuffer.data[vl_idx])] := vl_message;
+  }else{
+    vl_idx := f_EPTF_FBQ_getOrCreateFreeSlot(vg_messageBuffer.queue);
+    f_EPTF_int2int_HashMap_Insert(vg_messageBuffer.connectionIdHash, pl_connectionIdx, vl_idx);
+    f_EPTF_FBQ_moveFromFreeHeadToBusyTail(vg_messageBuffer.queue);
+    vg_messageBuffer.data[vl_idx][0] := vl_message;
+  }
+}
+
+function f_EPTF_MessageBuffer_getIdx(
+  in integer pl_connectionIdx,
+  inout integer pl_idx) 
+runs on EPTF_SIP_LocalTransport_CT
+return boolean{
+
+  if (f_EPTF_int2int_HashMap_Find(vg_messageBuffer.connectionIdHash,pl_connectionIdx,pl_idx))
+  {
+    return true;
+  
+  }else{
+    pl_idx := -1;
+    if(c_EPTF_Common_debugSwitch and f_SIPTransport_Logging_debugEnabled()) {
+      f_SIPTransport_Logging_DEBUG(log2str(
+        ": could not find index with the given key (",pl_connectionIdx,")."));
+    }
+    return false;
+  }
+
+return false;  
+}
+
+function f_EPTF_MessageBuffer_deleteByIdx(
+  in integer pl_connectionIdx,
+  in integer pl_idx)
+runs on EPTF_SIP_LocalTransport_CT
+{
+  vg_messageBuffer.data[pl_idx] := {};
+  f_EPTF_int2int_HashMap_Erase(vg_messageBuffer.connectionIdHash,pl_connectionIdx);
+  f_EPTF_FBQ_moveFromBusyToFreeHead(pl_idx,vg_messageBuffer.queue);
+}
+
+function f_EPTF_SIP_MessageBuffer_deleteByKey(in integer pl_connectionIdx)
+runs on EPTF_SIP_LocalTransport_CT
+{
+  var integer vl_idx := -1;
+  
+  if (f_EPTF_MessageBuffer_getIdx(pl_connectionIdx, vl_idx))
+  {
+    vg_messageBuffer.data[vl_idx] := {};
+    f_EPTF_int2int_HashMap_Erase(vg_messageBuffer.connectionIdHash,pl_connectionIdx);
+    f_EPTF_FBQ_moveFromBusyToFreeHead(vl_idx,vg_messageBuffer.queue);
+  }
+}
+
+function f_EPTF_SIP_sendBuffer(in integer pl_connectionIdx, inout integer pl_idx)
+runs on EPTF_SIP_LocalTransport_CT
+{
+  if (f_EPTF_MessageBuffer_getIdx(pl_connectionIdx, pl_idx))
+  {
+    for (var integer i := 0; i < sizeof(vg_messageBuffer.data[pl_idx]); i := i + 1)
+    {
+      f_EPTF_SIP_send(vg_messageBuffer.data[pl_idx][i].userId,  pl_connectionIdx, vg_messageBuffer.data[pl_idx][i].msg);
+    }
+  }
+}
+
+}
+
+function f_EPTF_SIP_addSipUserToTransportUserData(in integer pl_sipUser, in integer pl_transportUser)
+runs on EPTF_SIP_LocalTransport_CT
+{
+  var integer vl_idx := -1;
+  if (f_EPTF_int2int_HashMap_Find(v_userIdx2TransportUserIdx, pl_sipUser, vl_idx)) {
+    if(vl_idx == pl_transportUser) {
+      if(c_EPTF_Common_debugSwitch and f_SIPTransport_Logging_debugEnabled()) {
+        f_SIPTransport_Logging_DEBUG(log2str(%definitionId&": SIP user ", pl_sipUser,
+          " already present in transport user ", pl_transportUser));
+      }
+      return;
+    }/* else{
+      f_SIPTransport_Logging_WARNING(log2str(%definitionId&": WARNING: SIP user ", pl_sipUser,
+        " is also present in transport user ", vl_idx));
+    }*/
+  }
+
+  vg_SIP_userDB[pl_transportUser].sipUserIdxList[vg_SIP_userDB[pl_transportUser].nofSipUsers] := pl_sipUser;
+  f_EPTF_int2int_HashMap_Insert(v_userIdx2IdxInTransportUserData, pl_sipUser, vg_SIP_userDB[pl_transportUser].nofSipUsers);
+  vg_SIP_userDB[pl_transportUser].nofSipUsers := vg_SIP_userDB[pl_transportUser].nofSipUsers + 1;
+
+  if(c_EPTF_Common_debugSwitch and f_SIPTransport_Logging_debugEnabled()) {
+    f_SIPTransport_Logging_DEBUG(log2str(%definitionId&": added SIP user ", pl_sipUser, " to transport user ", pl_transportUser));
+    f_SIPTransport_Logging_DEBUG(log2str(%definitionId&": sipUserIdxList: ", vg_SIP_userDB[pl_transportUser].sipUserIdxList));
+    f_SIPTransport_Logging_DEBUG(log2str(%definitionId&": nofSipUsers: ", vg_SIP_userDB[pl_transportUser].nofSipUsers));
+  }
+}
+
+function f_EPTF_SIP_removeSipUserFromTransportUserData(in integer pl_sipUser, in integer pl_transportUser)
+runs on EPTF_SIP_LocalTransport_CT
+{
+  var integer vl_idx := -1;
+  if (f_EPTF_int2int_HashMap_Find(v_userIdx2IdxInTransportUserData, pl_sipUser, vl_idx)) {
+    if(vg_SIP_userDB[pl_transportUser].sipUserIdxList[vl_idx] == pl_sipUser) {
+      vg_SIP_userDB[pl_transportUser].nofSipUsers := vg_SIP_userDB[pl_transportUser].nofSipUsers - 1;
+      vg_SIP_userDB[pl_transportUser].sipUserIdxList[vl_idx] :=
+        vg_SIP_userDB[pl_transportUser].sipUserIdxList[vg_SIP_userDB[pl_transportUser].nofSipUsers]
+      f_EPTF_int2int_HashMap_Erase(v_userIdx2IdxInTransportUserData, pl_sipUser);
+      f_EPTF_int2int_HashMap_Update(v_userIdx2IdxInTransportUserData, vg_SIP_userDB[pl_transportUser].sipUserIdxList[vl_idx], vl_idx);
+      if(c_EPTF_Common_debugSwitch and f_SIPTransport_Logging_debugEnabled()) {
+        f_SIPTransport_Logging_DEBUG(log2str(%definitionId&": removed SIP user ", pl_sipUser,
+          " from transport user ", pl_transportUser, " at index ", vl_idx));
+        f_SIPTransport_Logging_DEBUG(log2str(%definitionId&": sipUserIdxList: ", vg_SIP_userDB[pl_transportUser].sipUserIdxList));
+        f_SIPTransport_Logging_DEBUG(log2str(%definitionId&": nofSipUsers: ", vg_SIP_userDB[pl_transportUser].nofSipUsers));
+      }
+      return;
+    }
+  }
+
+  if(c_EPTF_Common_debugSwitch and f_SIPTransport_Logging_debugEnabled()) {
+    f_SIPTransport_Logging_DEBUG(log2str(%definitionId&": SIP user ", pl_sipUser,
+      " not found in transport user ", pl_transportUser));
+    f_SIPTransport_Logging_DEBUG(log2str(%definitionId&": sipUserIdxList: ", vg_SIP_userDB[pl_transportUser].sipUserIdxList));
+    f_SIPTransport_Logging_DEBUG(log2str(%definitionId&": nofSipUsers: ", vg_SIP_userDB[pl_transportUser].nofSipUsers));
+  }
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_SIP_mapUser2TransportUser
+// 
+//  Purpose:
+//    Gets the transaction ID from of a SIP message
+// 
+//  Parameters:
+//    - pl_user - *in* *integer* - the SIP user index
+//    - pl_transportUser - *in* *integer* - the transport user index
+//    - pl_setBackwardIdx - *in* *boolean* - true if the mapping is 1-1
+// 
+///////////////////////////////////////////////////////////
+function f_EPTF_SIP_mapUser2TransportUser(in integer pl_user, in integer pl_transportUser, in boolean pl_setBackwardIdx := false)
+runs on EPTF_SIP_LocalTransport_CT
+{
+  v_useUserMapping := true;
+  var integer vl_idx := -1;
+  
+  if (f_EPTF_int2int_HashMap_Find(v_userIdx2TransportUserIdx, pl_user, vl_idx))
+  {
+    if(vl_idx != pl_transportUser) {
+      f_EPTF_SIP_removeSipUserFromTransportUserData(pl_user, vl_idx);
+      f_EPTF_SIP_addSipUserToTransportUserData(pl_user, pl_transportUser);
+      f_EPTF_int2int_HashMap_Update(v_userIdx2TransportUserIdx, pl_user, pl_transportUser);
+    }
+  }else{ //new mapping
+    f_EPTF_SIP_addSipUserToTransportUserData(pl_user, pl_transportUser);
+    f_EPTF_int2int_HashMap_Insert(v_userIdx2TransportUserIdx, pl_user, pl_transportUser);
+  }
+}
+
+function f_EPTF_SIP_unmapUser(in integer pl_user)
+runs on EPTF_SIP_LocalTransport_CT
+{
+  var integer vl_idx := -1;
+  if (f_EPTF_int2int_HashMap_Find(v_userIdx2TransportUserIdx, pl_user, vl_idx))
+  {
+    f_EPTF_SIP_removeSipUserFromTransportUserData(pl_user, vl_idx);
+    f_EPTF_int2int_HashMap_Erase(v_userIdx2TransportUserIdx, pl_user);
+  }
+}
+
+function f_EPTF_SIP_addConnection(in ConnectionTuple pl_conn, inout integer pl_idx)
+runs on EPTF_SIP_LocalTransport_CT
+{
+  pl_idx := f_EPTF_FBQ_getOrCreateFreeSlot(v_connections.queue);
+  f_EPTF_FBQ_moveFromFreeHeadToBusyTail(v_connections.queue);
+
+  if(c_EPTF_Common_debugSwitch and f_SIPTransport_Logging_debugEnabled()) {
+    f_SIPTransport_Logging_DEBUG(log2str(
+      ": "," adding connection ", pl_idx, " ", pl_conn));
+  }
+  
+  f_EPTF_int2int_HashMap_Insert(v_connections.hashRefConnId, pl_conn.connId, pl_idx);
+  
+  var charstring vl_connId;
+
+  var charstring vl_transport := "UDP";
+  if(ischosen(pl_conn.proto.tcp) or ischosen(pl_conn.proto.ssl)) {
+    vl_transport := "TCP";
+  }
+
+  vl_connId := pl_conn.loc_host & int2str(pl_conn.loc_port) & pl_conn.rem_host & int2str(pl_conn.rem_port) & vl_transport;
+  
+  f_EPTF_str2int_HashMap_Insert(
+    v_connections.hashRefConnection, 
+    vl_connId, 
+    pl_idx);
+  
+  v_connections.data[pl_idx] := pl_conn;
+  v_connections.data[pl_idx].connIdStr := vl_connId;
+}
+
+function f_EPTF_SIP_removeConnection(in integer pl_idx)
+runs on EPTF_SIP_LocalTransport_CT
+{
+  if (0 <= pl_idx and sizeof(v_connections.data) >  pl_idx and f_EPTF_FBQ_itemIsFree(pl_idx, v_connections.queue))
+  {
+    if(c_EPTF_Common_debugSwitch and f_SIPTransport_Logging_debugEnabled()) {
+      f_SIPTransport_Logging_DEBUG(log2str(
+        ": ",pl_idx," is not busy in connection DB!"));
+    }
+    return
+  }
+
+  if (-1 != v_connections.data[pl_idx].connId)
+  {
+    f_EPTF_int2int_HashMap_Erase(v_connections.hashRefConnId, v_connections.data[pl_idx].connId);
+    f_EPTF_SIP_CloseConnection(pl_idx);
+  }
+
+  if(c_EPTF_Common_debugSwitch and f_SIPTransport_Logging_debugEnabled()) {
+    f_SIPTransport_Logging_DEBUG(log2str(
+      ": "," removing connection ", pl_idx, " ", v_connections.data[pl_idx]));
+  }
+
+  f_EPTF_str2int_HashMap_Erase(
+    v_connections.hashRefConnection, 
+    v_connections.data[pl_idx].connIdStr);
+  
+  v_connections.data[pl_idx] := c_Transport_initConnectionTuple;
+  f_EPTF_FBQ_moveFromBusyToFreeTail(pl_idx, v_connections.queue);
+}
+
+function f_EPTF_SIP_connectionClosed(in integer pl_idx)
+runs on EPTF_SIP_LocalTransport_CT
+{
+  f_EPTF_int2int_HashMap_Erase(v_connections.hashRefConnId, v_connections.data[pl_idx].connId);
+
+  v_connections.data[pl_idx].connId := -1;
+  v_connections.data[pl_idx].connState := CLOSED;
+  
+  if (v_connections.data[pl_idx].connType == {incoming := {}})
+  {
+    f_EPTF_SIP_removeConnection(pl_idx);
+  }
+}
+
+function f_SIPTransport_Logging_WARNING(in charstring pl_message)
+runs on EPTF_SIP_LocalTransport_CT
+{
+  f_EPTF_Logging_warningV2(pl_message, v_SIP_Transport_Logging_MaskId, {c_SIP_Transport_Logging_WARNING});
+}
+
+function f_SIPTransport_Logging_DEBUG(in charstring pl_message)
+runs on EPTF_SIP_LocalTransport_CT
+{
+  f_EPTF_Logging_debugV2(pl_message, v_SIP_Transport_Logging_MaskId, {c_SIP_Transport_Logging_DEBUG});
+}
+
+function f_SIPTransport_Logging_debugEnabled()
+runs on EPTF_SIP_LocalTransport_CT
+return boolean
+{
+  return f_EPTF_Logging_isEnabled(v_SIP_Transport_Logging_MaskId, c_SIP_Transport_Logging_DEBUG);
+}
+
+function f_SIP_setLocalTransportReceiveFunction(
+  in fcb_EPTF_SIP_ReceiveMessage_FT pl_receiveMethod
+)
+runs on  EPTF_SIP_LocalTransport_CT
+{
+  vf_EPTF_SIP_LocalTransport_receive := pl_receiveMethod;    //receive callback function on LocalTransport 
+}
+
+function f_EPTF_SIP_setEventHandler_connectionClosed(
+  in fcb_EPTF_SIP_IPL4_ConnectionClosed p_handlerFn)
+runs on EPTF_SIP_LocalTransport_CT
+{
+  vf_EPTF_SIP_LocalTransport_connectionClosed := p_handlerFn;
+}
+
+function f_EPTF_SIP_setEventHandler_portError(
+  in fcb_EPTF_SIP_IPL4_PortError p_handlerFn)
+runs on EPTF_SIP_LocalTransport_CT
+{
+  vf_EPTF_SIP_LocalTransport_portError := p_handlerFn;
+}
+
+///////////////////////////////////////////////////////////
+//  Group: RemoteTransport
+// 
+//  Purpose:
+//    Functions of the RemoteTransport component
+//
+///////////////////////////////////////////////////////////
+group RemoteTransport
+{
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_RemoteTransport_init
+//
+//Purpose:
+//  Initializes the remote transport layer.
+//
+//Parameters:
+//  - pl_offset - *in* *integer* - since more than one remote LGen component can belong to a mapper,
+//                                  to make the SIP user index unique in the mapper, this offset
+//                                  will be used.
+////////////////////////////////////////////////////
+function f_EPTF_SIP_RemoteTransport_init(
+    in integer pl_offset,
+    in fcb_EPTF_SIP_ReceiveMessage_FT pl_receiveMessage,
+    in charstring pl_selfName := "SIP_RemoteTransport")
+runs on EPTF_SIP_RemoteTransport_CT
+{
+  if (v_EPTF_SIP_RemoteTransport_initialized){return;}
+
+  f_EPTF_Base_init_CT(pl_selfName);
+  f_EPTF_Logging_init_CT(pl_selfName);
+
+  v_SIP_Transport_Logging_MaskId :=
+    f_EPTF_Logging_registerComponentMasks(
+      tsp_EPTF_SIP_Transport_loggingComponentMask,
+      c_EPTF_SIP_Transport_loggingEventClasses,
+      EPTF_Logging_CLL);
+
+  if (tsp_EPTF_SIP_LocalTransport_debugEnabled) 
+  {
+    f_EPTF_Logging_enableLocalMask(
+      v_SIP_Transport_Logging_MaskId, 
+      c_SIP_Transport_Logging_DEBUG);
+  } 
+  else 
+  {
+    f_EPTF_Logging_disableLocalMask(
+      v_SIP_Transport_Logging_MaskId, 
+      c_SIP_Transport_Logging_DEBUG);
+  }
+  
+  v_EPTF_SIP_offset := pl_offset;
+  
+  vf_EPTF_SIP_RemoteTransport_handleReceive := pl_receiveMessage;
+
+  vd_EPTF_SIP_RemoteTransport_default := activate(as_EPTF_SIP_RemoteTransport_Handler());
+  
+  f_EPTF_Base_registerCleanup(refers(f_EPTF_SIP_RemoteTransport_cleanup));
+  
+  SIP_PCO.send(EPTF_SIP_Transport_Login: {offset := pl_offset});
+
+  v_EPTF_SIP_RemoteTransport_initialized := true;
+}
+
+///////////////////////////////////////////////////////////
+//  Altstep: as_EPTF_SIP_RemoteTransport_Handler
+// 
+//  Purpose:
+//    Altstep to handle the incoming messages from the mapper component
+//
+///////////////////////////////////////////////////////////
+altstep as_EPTF_SIP_RemoteTransport_Handler()
+runs on EPTF_SIP_RemoteTransport_CT
+{
+  []SIP_PCO.receive (EPTF_SIP_Message_IN:?) -> value v_EPTF_SIP_RemoteTransport_message
+    {
+      vf_EPTF_SIP_RemoteTransport_handleReceive.apply(v_EPTF_SIP_RemoteTransport_message);
+      repeat;
+    }
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_SIP_RemoteTransport_sendSIPMessage
+// 
+//  Purpose:
+//    Function to send the messages to the mapper component
+//
+//  Parameters:
+//    pl_Message - *in* <EPTF_SIP_Message> - The SIP applib message
+//
+///////////////////////////////////////////////////////////  
+function f_EPTF_SIP_RemoteTransport_sendSIPMessage(inout EPTF_SIP_Message_OUT pl_Message)
+runs on EPTF_SIP_RemoteTransport_CT
+{    
+  SIP_PCO.send(pl_Message);
+}
+
+////////////////////////////////////////////////////
+//Function: fcb_EPTF_SIP_RemoteTransport_removeUAS
+//
+//Purpose:
+//  Removes the corresponding connection database entry in case of an UAS removal.
+//
+//Parameters:
+//  - pl_transactionId - *in* *charstring* - the id of the transaction that was removed.
+//
+////////////////////////////////////////////////////
+function fcb_EPTF_SIP_RemoteTransport_removeUAS(in charstring pl_transactionId)
+runs on EPTF_SIP_RemoteTransport_CT
+{
+  //SIP_PCO.send(pl_transactionId);
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_SIP_RemoteTransport_cleanup
+// 
+//  Purpose:
+//    Function to clean the RemoteTransport component
+//
+/////////////////////////////////////////////////////////// 
+private function f_EPTF_SIP_RemoteTransport_cleanup () 
+runs on EPTF_SIP_RemoteTransport_CT
+{
+  if (not v_EPTF_SIP_RemoteTransport_initialized){return;}
+
+  deactivate(vd_EPTF_SIP_RemoteTransport_default);
+  vd_EPTF_SIP_RemoteTransport_default := null;
+
+  vf_EPTF_SIP_RemoteTransport_handleReceive := null;
+  v_EPTF_SIP_RemoteTransport_initialized := false;
+}
+}// RemoteTransport group
+
+
+
+///////////////////////////////////////////////////////////
+//  Group: Mapper
+// 
+//  Purpose:
+//    Functions of the Mapper component
+//
+///////////////////////////////////////////////////////////
+group Mapper
+{
+///////////////////////////////////////////////////////////
+//  Altstep: as_EPTF_SIP_Mapper_Handler
+// 
+//  Purpose:
+//    Handle the incoming messages from the RemoteTransport component
+//
+///////////////////////////////////////////////////////////
+altstep as_EPTF_SIP_Mapper_Handler()
+runs on EPTF_SIP_Mapper_CT
+{
+  []SIP_PCO.receive(EPTF_SIP_Message_OUT:?) -> value v_EPTF_SIP_Mapper_message  sender vc_EPTF_SIP_Mapper_componentRef
+  {
+    f_EPTF_Routing_processOutgoingMessage();
+    v_EPTF_SIP_Mapper_message.userId := v_EPTF_SIP_Mapper_message.userId + v_offsets[f_EPTF_Base_upcast(vc_EPTF_SIP_Mapper_componentRef)];
+    f_EPTF_SIP_LocalTransport_sendSIPMessage(v_EPTF_SIP_Mapper_message); 
+    repeat;
+  }
+  []SIP_PCO.receive(EPTF_SIP_Transport_Login: ?) -> value v_EPTF_SIP_Mapper_login sender vc_EPTF_SIP_Mapper_componentRef
+  {
+    var integer vl_compId := f_EPTF_Base_upcast(vc_EPTF_SIP_Mapper_componentRef);
+    v_LGens[sizeof(v_LGens)] := vl_compId;
+    
+    v_offsets[vl_compId] := v_EPTF_SIP_Mapper_login.offset;
+    repeat;
+  }
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_SIP_Mapper_init_CT
+// 
+//  Purpose:
+//    Function to init the Mapper component
+//
+//  Parameters:
+//    - pl_selfName - *in charstring* - the name of the component
+//
+///////////////////////////////////////////////////////////   
+function f_EPTF_SIP_Mapper_init_CT(
+  in charstring pl_selfName := "",
+  in charstring pl_proto
+)
+runs on EPTF_SIP_Mapper_CT
+{
+  if (v_EPTF_SIP_Mapper_initialized) { return; }
+
+  f_EPTF_Base_init_CT(pl_selfName);
+  f_EPTF_str2int_HashMap_Init(); 
+  vd_EPTF_SIP_Mapper_default := activate(as_EPTF_SIP_Mapper_Handler());
+  v_EPTF_SIP_Mapper_lGenId := -1;
+  v_EPTF_SIP_Mapper_trId2LGen_hashMapIdx := f_EPTF_str2int_HashMap_New(c_SIP_Transport_hashMapName_trId2LGen);
+
+  f_EPTF_Base_registerCleanup(refers(f_EPTF_SIP_Mapper_cleanup_CT));
+  
+  f_EPTF_SIP_LocalTransport_init(pl_proto);
+  
+  f_SIP_setLocalTransportReceiveFunction(refers(f_EPTF_SIP_Mapper_MsgHandler));
+  
+  f_EPTF_Routing_init_CT(refers(f_EPTF_SIP_Mapper_processOutgoingMessage),refers(f_EPTF_SIP_Mapper_processIncomingMessage));
+
+  v_EPTF_SIP_Mapper_initialized := true;
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_SIP_Mapper_cleanup_CT
+// 
+//  Purpose:
+//    Function to clean the Mapper component
+//
+///////////////////////////////////////////////////////////   
+private function f_EPTF_SIP_Mapper_cleanup_CT()
+runs on EPTF_SIP_Mapper_CT
+{
+  deactivate(vd_EPTF_SIP_Mapper_default);
+  vd_EPTF_SIP_Mapper_default := null;
+  
+  v_EPTF_SIP_Mapper_lGenId := -1;
+
+  v_EPTF_SIP_Mapper_trId2LGen_hashMapIdx := -1;
+  f_EPTF_str2int_HashMap_Delete(c_SIP_Transport_hashMapName_trId2LGen);
+
+  v_EPTF_SIP_Mapper_initialized := false;
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_SIP_Mapper_processOutgoingMessage
+// 
+//  Purpose:
+//    Function to process the outgoing messages
+//
+///////////////////////////////////////////////////////////     
+function f_EPTF_SIP_Mapper_processOutgoingMessage() 
+runs on EPTF_SIP_Mapper_CT 
+{
+  var integer vl_lgenId := f_EPTF_Base_upcast(vc_EPTF_SIP_Mapper_componentRef);
+  var integer vl_dbEntry := -1;
+  
+  //for the ACK request, no routing table entry is necessary
+  if ("" == v_EPTF_SIP_Mapper_message.branchId) {return;}
+  
+  if (f_EPTF_str2int_HashMap_Find(v_EPTF_SIP_Mapper_trId2LGen_hashMapIdx, v_EPTF_SIP_Mapper_message.branchId, vl_dbEntry))
+  {
+    if (vl_dbEntry != vl_lgenId)
+    {
+      f_SIPTransport_Logging_WARNING(
+        ": inconsistent database for branchId: " & v_EPTF_SIP_Mapper_message.branchId);
+    }
+    return;
+  }
+  
+  f_EPTF_str2int_HashMap_Insert(
+    v_EPTF_SIP_Mapper_trId2LGen_hashMapIdx, 
+    v_EPTF_SIP_Mapper_message.branchId, 
+    vl_lgenId);
+    
+  if(c_EPTF_Common_debugSwitch and f_SIPTransport_Logging_debugEnabled()) {
+    f_SIPTransport_Logging_DEBUG(%definitionId &
+      ": added routing data: " & v_EPTF_SIP_Mapper_message.branchId & " " & int2str(vl_lgenId));
+  }
+    
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_SIP_Mapper_processIncomingMessage
+// 
+//  Purpose:
+//    Function to process the incoming messages
+//
+/////////////////////////////////////////////////////////// 
+function f_EPTF_SIP_Mapper_processIncomingMessage() 
+runs on EPTF_SIP_Mapper_CT 
+{
+  v_EPTF_SIP_Mapper_lGenId := -1;
+  
+  var charstring vl_body := "";
+  
+  if (not f_oct2char_safe(v_SIP_message.sipMessage, vl_body))
+  {
+    f_SIPTransport_Logging_WARNING(log2str(
+      ": corrupted message arrived and dropped :", v_SIP_message.sipMessage,
+      " encoded part: ", vl_body, 
+      " remote port: ", v_SIP_message.transportParams.port_pc, 
+      " local port: ", v_SIP_message.transportParams.port_us));
+    return;
+  }
+  
+  var PDU_SIP vl_sipMessage := f_SIP_decode(vl_body);
+  
+  if (ischosen(vl_sipMessage.request))
+  {
+    if (v_currentLGen >= sizeof(v_LGens))
+    {
+      f_SIPTransport_Logging_WARNING(%definitionId &
+        ": no LGen was found the forward request, dropping message!");
+      return;
+    }
+    
+    var SipUrl vl_uri;
+    var charstring vl_uriStr := "";
+
+    if (ispresent(vl_sipMessage.request.msgHeader.ppreferredID) and 
+          sizeof(vl_sipMessage.request.msgHeader.ppreferredID.ids) > 0)
+    {
+      vl_uri := vl_sipMessage.request.msgHeader.ppreferredID.ids[0].addrSpecUnion;
+    }
+    else {
+      f_EPTF_SIP_GetUri(vl_sipMessage.request.msgHeader.toField.addressField, vl_uri);
+    }
+    
+    f_EPTF_SIP_canonizeUri(vl_uri);
+    f_EPTF_SIP_SIPUrl2str(vl_uri, vl_uriStr);
+
+    if(c_EPTF_Common_debugSwitch and f_SIPTransport_Logging_debugEnabled()) {
+      f_SIPTransport_Logging_DEBUG(%definitionId &
+        ": SIP URI: " & vl_uriStr);
+    }
+
+    if (REGISTER_E == vl_sipMessage.request.requestLine.method)
+    {
+      var charstring vl_expires := "";
+      
+      if (ispresent (vl_sipMessage.request.msgHeader.expires)) {
+        vl_expires := vl_sipMessage.request.msgHeader.expires.deltaSec
+      }   
+      
+      if (ispresent(vl_sipMessage.request.msgHeader.contact) and 
+                ischosen(vl_sipMessage.request.msgHeader.contact.contactBody.contactAddresses))
+      {
+        if (0 < sizeof(vl_sipMessage.request.msgHeader.contact.contactBody.contactAddresses))
+        {
+          if(ispresent(vl_sipMessage.request.msgHeader.contact.contactBody.contactAddresses[0].contactParams)) 
+          {
+            f_EPTF_SIP_GetParameter(
+              vl_sipMessage.request.msgHeader.contact.contactBody.contactAddresses[0].contactParams,
+              c_SIP_EXPIRES_ID, 
+              vl_expires);
+          }
+        }
+      }
+     
+      if ("0" == vl_expires) //de-register
+      {
+        if (f_EPTF_SIP_IPL4_getRoutingData(v_mapperRoutingDB, vl_uriStr, v_EPTF_SIP_Mapper_lGenId))
+        {
+          //retransmitted de-register message will be routed properly
+          //WARNING: no entry will be deleted from the routing database
+          //f_EPTF_SIP_IPL4_removeRoutingData(v_mapperRoutingDB, vl_uriStr);
+        }else{
+          v_EPTF_SIP_Mapper_lGenId := -1;
+          f_SIPTransport_Logging_WARNING(%definitionId &
+            ": no LGen was found the forward de-register!");
+        }
+      }else{// register/re-register
+        if (not f_EPTF_SIP_IPL4_getRoutingData(v_mapperRoutingDB, vl_uriStr, v_EPTF_SIP_Mapper_lGenId))
+        {
+          f_EPTF_SIP_Transport_getNextLGen(v_EPTF_SIP_Mapper_lGenId);
+          f_EPTF_SIP_IPL4_addRoutingData(v_mapperRoutingDB, vl_uriStr, v_EPTF_SIP_Mapper_lGenId);
+        }
+      }
+    }else{
+      if (not f_EPTF_SIP_IPL4_getRoutingData(v_mapperRoutingDB, vl_uriStr, v_EPTF_SIP_Mapper_lGenId))
+      {
+        v_EPTF_SIP_Mapper_lGenId := -1;
+      }
+    }
+   
+    if (-1 == v_EPTF_SIP_Mapper_lGenId)
+    {
+      f_EPTF_SIP_Transport_getNextLGen(v_EPTF_SIP_Mapper_lGenId);
+    }
+    
+  }else if (ischosen(vl_sipMessage.response)) {
+    var charstring vl_transactionId := "";
+    var charstring vl_id := "";
+    
+    f_EPTF_SIP_Transport_GetTransactionId(vl_sipMessage.response.msgHeader, vl_transactionId);
+
+    vl_id := f_EPTF_SIP_genTransportID(vl_transactionId, vl_sipMessage.response.msgHeader.cSeq.method);
+    
+    if(f_EPTF_str2int_HashMap_Find(v_EPTF_SIP_Mapper_trId2LGen_hashMapIdx, vl_id, v_EPTF_SIP_Mapper_lGenId))
+    {
+      if (200 <= vl_sipMessage.response.statusLine.statusCode)
+      {
+        f_EPTF_str2int_HashMap_Erase(
+          v_EPTF_SIP_Mapper_trId2LGen_hashMapIdx, 
+          vl_id);
+
+        if(c_EPTF_Common_debugSwitch and f_SIPTransport_Logging_debugEnabled()) {
+          f_SIPTransport_Logging_DEBUG(%definitionId &
+            ": removed routing data: " & vl_id & " " & int2str(v_EPTF_SIP_Mapper_lGenId));
+        }
+      }
+    }else{
+      f_SIPTransport_Logging_WARNING(%definitionId &
+        ": no routing entry, dropping message");
+      v_EPTF_SIP_Mapper_lGenId := -1;
+    }
+  }
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_SIP_Mapper_receiveMsg
+// 
+//  Purpose:
+//    Function to receive the incoming messages
+//
+///////////////////////////////////////////////////////////  
+function f_EPTF_SIP_Mapper_MsgHandler(inout EPTF_SIP_Message_IN pl_message)
+runs on EPTF_SIP_Mapper_CT
+{
+  f_EPTF_Routing_processIncomingMessage();
+  
+  if (0 <= v_EPTF_SIP_Mapper_lGenId)
+  {
+    SIP_PCO.send(pl_message) to f_EPTF_Base_downcast(v_EPTF_SIP_Mapper_lGenId);
+  }
+}
+
+function f_EPTF_SIP_Transport_getNextLGen(inout integer pl_lgenIdx)
+runs on EPTF_SIP_Mapper_CT
+{
+  pl_lgenIdx := v_LGens[v_currentLGen];
+  v_currentLGen := (v_currentLGen + 1) mod sizeof(v_LGens);
+}
+
+}//Mapper group
+
+//mapper routing database for routing messages to LGens
+group EPTF_SIP_Transport_MapperRoutingDB
+{
+
+function f_EPTF_SIP_IPL4_initMapperRoutingDB(inout SIP_Transport_MapperRoutingDB pl_DB)
+runs on EPTF_SIP_LocalTransport_CT
+{
+  pl_DB.uri2lgenIdxHash := 
+    f_EPTF_str2int_HashMap_New(c_SIP_Transport_hashMapName_uri2idxHash);
+}
+
+function f_EPTF_SIP_IPL4_cleanUpMapperRoutingDB(inout SIP_Transport_MapperRoutingDB pl_DB)
+runs on EPTF_SIP_LocalTransport_CT
+{
+  f_EPTF_str2int_HashMap_Delete(c_SIP_Transport_hashMapName_uri2idxHash);
+}
+
+function f_EPTF_SIP_IPL4_getRoutingData(inout SIP_Transport_MapperRoutingDB pl_DB, in charstring pl_uri, inout integer pl_lgenIdx)
+runs on EPTF_SIP_LocalTransport_CT
+return boolean
+{
+  if (f_EPTF_str2int_HashMap_Find(pl_DB.uri2lgenIdxHash, pl_uri, pl_lgenIdx))
+  {
+    if(c_EPTF_Common_debugSwitch and f_SIPTransport_Logging_debugEnabled()) {
+      f_SIPTransport_Logging_DEBUG(%definitionId &
+        ": routing data found: " & pl_uri & " : " & int2str(pl_lgenIdx));
+    }
+    
+    return true;
+  }
+  
+  return false;
+}
+
+function f_EPTF_SIP_IPL4_addRoutingData(inout SIP_Transport_MapperRoutingDB pl_DB, in charstring pl_uri, in integer pl_lgenIdx)
+runs on EPTF_SIP_LocalTransport_CT
+{
+  if(c_EPTF_Common_debugSwitch and f_SIPTransport_Logging_debugEnabled()) {
+    f_SIPTransport_Logging_DEBUG(%definitionId &
+      ": adding routing data: " & pl_uri & " : " & int2str(pl_lgenIdx));
+  }
+  f_EPTF_str2int_HashMap_Insert(pl_DB.uri2lgenIdxHash, pl_uri, pl_lgenIdx);
+}
+
+function f_EPTF_SIP_IPL4_removeRoutingData(inout SIP_Transport_MapperRoutingDB pl_DB, in charstring pl_uri)
+runs on EPTF_SIP_LocalTransport_CT
+{
+  if(c_EPTF_Common_debugSwitch and f_SIPTransport_Logging_debugEnabled()) {
+    f_SIPTransport_Logging_DEBUG(%definitionId &
+      ": removing routing data for " & pl_uri);
+  }
+  f_EPTF_str2int_HashMap_Erase(pl_DB.uri2lgenIdxHash, pl_uri);
+}
+
+
+}//EPTF_SIP_Transport_MapperRoutingDB
+
+group SIP_Transport_DS_functions
+{
+    ///////////////////////////////////////////////////////////
+  //  Function: f_IMS_SIP_Transport_DS_init
+  //
+  //  Purpose:
+  //    Initializes the SIP_Transport DataSource, and registers the variables and conditions into the Media DS.
+  //
+  //  Parameters:
+  //    - pl_selfName - *in* *charstring* - component name
+  //    - pl_sourceCompRef - <EPTF_DataSource_CT> - - the main DataSource component (server).
+  //
+  //  Return Value:
+  //    -
+  //
+  //  Errors:
+  //    -
+  //
+  //  Detailed Comments:
+  //    -
+  //
+  ///////////////////////////////////////////////////////////  
+  private function f_EPTF_SIP_Transport_DS_init(in charstring pl_selfName, in EPTF_DataSource_CT pl_sourceCompRef)
+  runs on EPTF_SIP_LocalTransport_CT
+  {
+    f_EPTF_DataSourceClient_init_CT(pl_selfName, pl_sourceCompRef)
+    f_EPTF_DataSourceClient_registerData(c_EPTF_SIP_Transport_DS_sourceId, f_EPTF_Base_selfName(), refers(f_EPTF_SIP_Transport_DS_DSProcessData));
+  }
+
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_SIP_Transport_DS_DSProcessData
+  // 
+  //  Purpose:
+  //    Processes the incoming Data requests - iterators and external data elements - and gives back a variable name.
+  //    It should be registered in the Setup CT. Type function <fcb_EPTF_DataSourceClient_dataHandler>
+  //
+  //  Parameters:
+  //    *out charstring pl_dataVarName* - this variable contains the value of the data or the iterator result
+  //    *in charstring pl_source* - the name of the data source 'feature'
+  //    *in charstring pl_ptcName* - the name of the ptc (ID of the PTC)  
+  //    *in charstring pl_element* - the name of the data element
+  //    *in* <EPTF_DataSource_Params> *pl_params* - the parameters
+  //      of the data for the dataElement
+  //
+  //  Return Value:
+  //    integer - error code (0 of OK, non zero if unsuccessful: e.g. invalid parameters given in pl_params)
+  //
+  //  Detailed Comments: 
+  //    When this function is called in the first time it creates the variable that contains the
+  //    names of the variables that store the values of the elements of the data or the iterator. This variable name
+  //    is returned in pl_dataVarName.
+  //
+  ////////////////////////////////////////////////////
+  private function f_EPTF_SIP_Transport_DS_DSProcessData(out charstring pl_dataVarName,
+    in charstring pl_source,
+    in charstring pl_ptcName,
+    in charstring pl_element,
+    in EPTF_DataSource_Params pl_params)
+  runs on EPTF_SIP_LocalTransport_CT return integer
+  {
+    var EPTF_CharstringList vl_result := {}
+    pl_dataVarName := f_EPTF_Base_selfName() & "." & c_EPTF_SIP_Transport_statName_root & pl_element;
+
+    var integer vl_iteratorVarIdx := f_EPTF_Var_getId(pl_dataVarName);
+    if(vl_iteratorVarIdx == -1){
+      f_EPTF_Logging_warning(true, %definitionId&": Invalid DataSource parameter: Invalid iterator or externalData or parameter: "&
+        "\nSource: "&pl_source&
+        "\nPTC : "&pl_ptcName &
+        "\nElement Name : " &pl_element&
+        "\nParams: " & log2str(pl_params));  
+      return -2;
+    }
+    return 0;
+  }
+} // end of group SIP_Transport_DS_functions
+}//end of module
+with {
+extension "version <RnXnn>"
+}
+

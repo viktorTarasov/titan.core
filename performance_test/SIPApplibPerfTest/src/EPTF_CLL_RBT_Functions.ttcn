@@ -1,0 +1,620 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_CLL_RBT_Functions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 512
+//  Updated:  2011-09-28
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+// Module: EPTF_CLL_RBT_Functions
+//
+// Purpose:
+//  This module contains the function definitions of the EPTF RedBlackTree feature
+//
+// Module Parameters:
+//  -
+//
+// Module depends on:
+//  <EPTF_CLL_Base_Functions>
+//  <EPTF_CLL_RBT_Definitions>
+//
+// Current Owner:
+//  Gabor Tatarka (EGBOTAT)
+//
+// Public functions:
+//  - <f_EPTF_RBT_init_CT> (pl_selfName)
+//  - <f_EPTF_RBT_createIntTree> (pl_name) return EPTF_RBT_TreeId
+//  - <f_EPTF_RBT_createFloatTree> (pl_name) return EPTF_RBT_TreeId
+//  - <f_EPTF_RBT_createCharstringTree> (pl_name) return EPTF_RBT_TreeId
+//  - <f_EPTF_RBT_deleteTree> (pl_tree)
+//  - <f_EPTF_RBT_getName> (pl_tree) return charstring
+//  - <f_EPTF_RBT_insertIntItem> (pl_tree, pl_key) return EPTF_RBT_ItemIdx
+//  - <f_EPTF_RBT_insertFloatItem> (pl_tree, pl_key) return EPTF_RBT_ItemIdx
+//  - <f_EPTF_RBT_insertCharstringItem> (pl_tree, pl_key) return EPTF_RBT_ItemIdx
+//  - <f_EPTF_RBT_removeItem> (pl_tree, pl_item)
+//  - <f_EPTF_RBT_getItemWithSmallestKey> (pl_tree) return EPTF_RBT_ItemIdx
+//  - <f_EPTF_RBT_getKeyOfIntItem> (pl_tree, pl_item) return integer
+//  - <f_EPTF_RBT_getKeyOfFloatItem> (pl_tree, pl_item) return float
+//  - <f_EPTF_RBT_getKeyOfCharstringItem> (pl_tree, pl_item) return float
+//  - <f_EPTF_RBT_findFirstItemByIntKey> (pl_tree, pl_key) return EPTF_RBT_ItemIdx
+//  - <f_EPTF_RBT_findFirstItemByFloatKey> (pl_tree, pl_key) return EPTF_RBT_ItemIdx
+//  - <f_EPTF_RBT_findFirstItemByCharstringKey> (pl_tree, pl_key) return EPTF_RBT_ItemIdx
+//  - <f_EPTF_RBT_getRoot> (pl_tree) return EPTF_RBT_ItemIdx
+//  - <f_EPTF_RBT_getLeft> (pl_tree, pl_item) return EPTF_RBT_ItemIdx
+//  - <f_EPTF_RBT_getRight> (pl_tree, pl_item) return EPTF_RBT_ItemIdx
+//  - <f_EPTF_RBT_getParent> (pl_tree, pl_item) return EPTF_RBT_ItemIdx
+//  - <f_EPTF_RBT_getNextInChain> (pl_tree, pl_item) return EPTF_RBT_ItemIdx
+//  - <f_EPTF_RBT_getPrevInChain> (pl_tree, pl_item) return EPTF_RBT_ItemIdx
+//  - <f_EPTF_RBT_iterateIncremental> (pl_tree, pl_item) return EPTF_RBT_ItemIdx
+//  - <f_EPTF_RBT_sortIncremental> (pl_tree, pl_itemsSorted)
+//  - <f_EPTF_RBT_isItemValid> (pl_tree, pl_item) return boolean
+//  - <f_EPTF_RBT_dumpToPng> (pl_tree, pl_name)
+//
+// Last Review Date:
+//  -
+//
+///////////////////////////////////////////////////////////////////////////////
+
+module EPTF_CLL_RBT_Functions {
+
+import from EPTF_CLL_Base_Functions all;
+import from EPTF_CLL_RBT_Definitions all;
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_NQueue_init_CT
+// 
+//  Purpose:
+//    Initializes the RedBlackTree feature
+//
+//  Parameters:
+//    pl_selfName - *in* *charstring* - EPTF self name
+///////////////////////////////////////////////////////////
+public function f_EPTF_RBT_init_CT(in charstring pl_selfName)
+runs on EPTF_RBT_CT
+{
+  if(v_EPTF_RBT_initialized) { return }
+  f_EPTF_Base_init_CT(pl_selfName);
+  f_EPTF_Base_registerCleanup(refers(f_EPTF_RBT_cleanup_CT));
+  f_EPTF_RBT_init();
+  v_EPTF_RBT_initialized := true;
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_RBT_createIntTree
+// 
+//  Purpose:
+//    Creates a new empty tree with integer key type
+//
+//  Parameters:
+//    pl_name - *in* *charstring* - name of the tree, optional
+//
+//  Return Value:
+//    <EPTF_RBT_TreeId> - the ID of the created tree
+///////////////////////////////////////////////////////////
+public external function f_EPTF_RBT_createIntTree(in charstring pl_name := "")
+return EPTF_RBT_TreeId;
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_RBT_createFloatTree
+// 
+//  Purpose:
+//    Creates a new empty tree with float key type
+//
+//  Parameters:
+//    pl_name - *in* *charstring* - name of the tree, optional
+//
+//  Return Value:
+//    <EPTF_RBT_TreeId> - the ID of the created tree
+///////////////////////////////////////////////////////////
+public external function f_EPTF_RBT_createFloatTree(in charstring pl_name := "")
+return EPTF_RBT_TreeId;
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_RBT_createCharstringTree
+// 
+//  Purpose:
+//    Creates a new empty tree with charstring key type
+//
+//  Parameters:
+//    pl_name - *in* *charstring* - name of the tree, optional
+//
+//  Return Value:
+//    <EPTF_RBT_TreeId> - the ID of the created tree
+///////////////////////////////////////////////////////////
+public external function f_EPTF_RBT_createCharstringTree(in charstring pl_name := "")
+return EPTF_RBT_TreeId;
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_RBT_deleteTree
+// 
+//  Purpose:
+//    Deletes an existing tree and all the resources it uses
+//
+//  Parameters:
+//    pl_tree - *in* <EPTF_RBT_TreeId> - the tree ID
+//
+//  Return Value:
+//    -
+///////////////////////////////////////////////////////////
+public external function f_EPTF_RBT_deleteTree(in EPTF_RBT_TreeId pl_tree);
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_RBT_getName
+// 
+//  Purpose:
+//    Returns the name of a tree
+//
+//  Parameters:
+//    pl_tree - *in* <EPTF_RBT_TreeId> - the tree ID
+//
+//  Return Value:
+//    *charstring* - name of the tree
+///////////////////////////////////////////////////////////
+public external function f_EPTF_RBT_getName(in EPTF_RBT_TreeId pl_tree)
+return charstring;
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_RBT_getItemCount
+// 
+//  Purpose:
+//    Returns the number of items (node + chain) of a tree
+//
+//  Parameters:
+//    pl_tree - *in* <EPTF_RBT_TreeId> - the tree ID
+//
+//  Return Value:
+//    *integer* - number of items
+///////////////////////////////////////////////////////////
+public external function f_EPTF_RBT_getItemCount(in EPTF_RBT_TreeId pl_tree)
+return integer;
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_RBT_insertIntItem
+// 
+//  Purpose:
+//    Inserts (creates) a new item into the tree with integer key type
+//
+//  Parameters:
+//    pl_tree - *in* <EPTF_RBT_TreeId> - the tree ID
+//    pl_key - *in* *integer* - the key of the new item
+//
+//  Return Value:
+//    <EPTF_RBT_ItemIdx> - the ID of the created item
+///////////////////////////////////////////////////////////
+public external function f_EPTF_RBT_insertIntItem(
+  in EPTF_RBT_TreeId pl_tree,
+  in integer pl_key)
+return EPTF_RBT_ItemIdx;
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_RBT_insertFloatItem
+// 
+//  Purpose:
+//    Inserts (creates) a new item into the tree with float key type
+//
+//  Parameters:
+//    pl_tree - *in* <EPTF_RBT_TreeId> - the tree ID
+//    pl_key - *in* *float* - the key of the new item
+//
+//  Return Value:
+//    <EPTF_RBT_ItemIdx> - the ID of the created item
+///////////////////////////////////////////////////////////
+public external function f_EPTF_RBT_insertFloatItem(
+  in EPTF_RBT_TreeId pl_tree,
+  in float pl_key)
+return EPTF_RBT_ItemIdx;
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_RBT_insertCharstringItem
+// 
+//  Purpose:
+//    Inserts (creates) a new item into the tree with charstring key type
+//
+//  Parameters:
+//    pl_tree - *in* <EPTF_RBT_TreeId> - the tree ID
+//    pl_key - *in* *charstring* - the key of the new item
+//
+//  Return Value:
+//    <EPTF_RBT_ItemIdx> - the ID of the created item
+///////////////////////////////////////////////////////////
+public external function f_EPTF_RBT_insertCharstringItem(
+  in EPTF_RBT_TreeId pl_tree,
+  in charstring pl_key)
+return EPTF_RBT_ItemIdx;
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_RBT_removeItem
+// 
+//  Purpose:
+//    Removes an item from the tree
+//
+//  Parameters:
+//    pl_tree - *in* <EPTF_RBT_TreeId> - the tree ID
+//    pl_key - *in* <EPTF_RBR_ItemIdx> - the index of the item to remove
+///////////////////////////////////////////////////////////
+public external function f_EPTF_RBT_removeItem(
+  in EPTF_RBT_TreeId pl_tree,
+  in EPTF_RBT_ItemIdx pl_item);
+
+group RBT_Scheduler {
+  friend module EPTF_CLL_RBTScheduler_Functions;
+  friend external function f_EPTF_RBT_removeItemWithoutFree(
+    in EPTF_RBT_TreeId pl_tree,
+    in EPTF_RBT_ItemIdx pl_item);
+  friend external function f_EPTF_RBT_freeInvalidItem(
+    in EPTF_RBT_TreeId pl_tree,
+    in EPTF_RBT_ItemIdx pl_item);
+} // group RBT_Scheduler
+
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_RBT_getItemWithSmallestKey
+// 
+//  Purpose:
+//    Returns the item with the smallest key in the tree
+//
+//  Parameters:
+//    pl_tree - *in* <EPTF_RBT_TreeId> - the tree ID
+//
+//  Return Value:
+//    <EPTF_RBT_ItemIdx> - the ID of the item with smallest key, or -1 if empty tree
+///////////////////////////////////////////////////////////
+public external function f_EPTF_RBT_getItemWithSmallestKey(
+  in EPTF_RBT_TreeId pl_tree)
+return EPTF_RBT_ItemIdx;
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_RBT_getKeyOfIntItem
+// 
+//  Purpose:
+//    Returns the key of an item of the tree with integer key type
+//
+//  Parameters:
+//    pl_tree - *in* <EPTF_RBT_TreeId> - the tree ID
+//    pl_item - *in* <EPTF_RBT_ItemIdx> - the item index
+//
+//  Return Value:
+//    *integer* - the key of the item
+///////////////////////////////////////////////////////////
+public external function f_EPTF_RBT_getKeyOfIntItem(
+  in EPTF_RBT_TreeId pl_tree,
+  in EPTF_RBT_ItemIdx pl_item)
+return integer;
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_RBT_getKeyOfFloatItem
+// 
+//  Purpose:
+//    Returns the key of an item of the tree with float key type
+//
+//  Parameters:
+//    pl_tree - *in* <EPTF_RBT_TreeId> - the tree ID
+//    pl_item - *in* <EPTF_RBT_ItemIdx> - the item index
+//
+//  Return Value:
+//    *float* - the key of the item
+///////////////////////////////////////////////////////////
+public external function f_EPTF_RBT_getKeyOfFloatItem(
+  in EPTF_RBT_TreeId pl_tree,
+  in EPTF_RBT_ItemIdx pl_item)
+return float;
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_RBT_getKeyOfCharstringItem
+// 
+//  Purpose:
+//    Returns the key of an item of the tree with charstring key type
+//
+//  Parameters:
+//    pl_tree - *in* <EPTF_RBT_TreeId> - the tree ID
+//    pl_item - *in* <EPTF_RBT_ItemIdx> - the item index
+//
+//  Return Value:
+//    *charstring* - the key of the item
+///////////////////////////////////////////////////////////
+public external function f_EPTF_RBT_getKeyOfCharstringItem(
+  in EPTF_RBT_TreeId pl_tree,
+  in EPTF_RBT_ItemIdx pl_item)
+return charstring;
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_RBT_findFirstItemByIntKey
+// 
+//  Purpose:
+//    Returns the first item with the given integer key
+//
+//  Parameters:
+//    pl_tree - *in* <EPTF_RBT_TreeId> - the tree ID
+//    pl_key - *in* *integer* - the key
+//
+//  Return Value:
+//    <EPTF_RBT_ItemIdx> - the index of the item, or -1 if not found
+///////////////////////////////////////////////////////////
+public external function f_EPTF_RBT_findFirstItemByIntKey(
+  in EPTF_RBT_TreeId pl_tree,
+  in integer pl_key)
+return EPTF_RBT_ItemIdx;
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_RBT_findFirstItemByFloatKey
+// 
+//  Purpose:
+//    Returns the first item with the given float key
+//
+//  Parameters:
+//    pl_tree - *in* <EPTF_RBT_TreeId> - the tree ID
+//    pl_key - *in* *float* - the key
+//
+//  Return Value:
+//    <EPTF_RBT_ItemIdx> - the index of the item, or -1 if not found
+///////////////////////////////////////////////////////////
+public external function f_EPTF_RBT_findFirstItemByFloatKey(
+  in EPTF_RBT_TreeId pl_tree,
+  in float pl_key)
+return EPTF_RBT_ItemIdx;
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_RBT_findFirstItemByCharstringKey
+// 
+//  Purpose:
+//    Returns the first item with the given charstring key
+//
+//  Parameters:
+//    pl_tree - *in* <EPTF_RBT_TreeId> - the tree ID
+//    pl_key - *in* *charstring* - the key
+//
+//  Return Value:
+//    <EPTF_RBT_ItemIdx> - the index of the item, or -1 if not found
+///////////////////////////////////////////////////////////
+public external function f_EPTF_RBT_findFirstItemByCharstringKey(
+  in EPTF_RBT_TreeId pl_tree,
+  in charstring pl_key)
+return EPTF_RBT_ItemIdx;
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_RBT_getRoot
+// 
+//  Purpose:
+//    Returns the root node of the tree
+//
+//  Parameters:
+//    pl_tree - *in* <EPTF_RBT_TreeId> - the tree ID
+//
+//  Return Value:
+//    <EPTF_RBT_ItemIdx> - the root node, or -1 if empty tree
+///////////////////////////////////////////////////////////
+public external function f_EPTF_RBT_getRoot(
+  in EPTF_RBT_TreeId pl_tree)
+return EPTF_RBT_ItemIdx;
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_RBT_getLeft
+// 
+//  Purpose:
+//    Returns the left child of a node
+//
+//  Parameters:
+//    pl_tree - *in* <EPTF_RBT_TreeId> - the tree ID
+//    pl_item - *in* <EPTF_RBT_ItemIdx> - the starting item index
+//
+//  Return Value:
+//    <EPTF_RBT_ItemIdx> - the left child node, or -1 if none (no child or chain item)
+///////////////////////////////////////////////////////////
+public external function f_EPTF_RBT_getLeft(
+  in EPTF_RBT_TreeId pl_tree,
+  in EPTF_RBT_ItemIdx pl_item)
+return EPTF_RBT_ItemIdx;
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_RBT_getRight
+// 
+//  Purpose:
+//    Returns the right child of a node
+//
+//  Parameters:
+//    pl_tree - *in* <EPTF_RBT_TreeId> - the tree ID
+//    pl_item - *in* <EPTF_RBT_ItemIdx> - the starting item index
+//
+//  Return Value:
+//    <EPTF_RBT_ItemIdx> - the right child node, or -1 if none (no child or chain item)
+///////////////////////////////////////////////////////////
+public external function f_EPTF_RBT_getRight(
+  in EPTF_RBT_TreeId pl_tree,
+  in EPTF_RBT_ItemIdx pl_item)
+return EPTF_RBT_ItemIdx;
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_RBT_getParent
+// 
+//  Purpose:
+//    Returns the parent of a node
+//
+//  Parameters:
+//    pl_tree - *in* <EPTF_RBT_TreeId> - the tree ID
+//    pl_item - *in* <EPTF_RBT_ItemIdx> - the item index
+//
+//  Return Value:
+//    <EPTF_RBT_ItemIdx> - the parent node, or -1 if no parent (i.e. root node or chain item)
+///////////////////////////////////////////////////////////
+public external function f_EPTF_RBT_getParent(
+  in EPTF_RBT_TreeId pl_tree,
+  in EPTF_RBT_ItemIdx pl_item)
+return EPTF_RBT_ItemIdx;
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_RBT_getNextInChain
+// 
+//  Purpose:
+//    Returns the next item in the chain
+//
+//  Parameters:
+//    pl_tree - *in* <EPTF_RBT_TreeId> - the tree ID
+//    pl_item - *in* <EPTF_RBT_ItemIdx> - the starting item index
+//
+//  Return Value:
+//    <EPTF_RBT_ItemIdx> - the next item in chain, or -1 if end of chain
+///////////////////////////////////////////////////////////
+public external function f_EPTF_RBT_getNextInChain(
+  in EPTF_RBT_TreeId pl_tree,
+  in EPTF_RBT_ItemIdx pl_item)
+return EPTF_RBT_ItemIdx; // -1 if no more items (end of chain)
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_RBT_getPrevInChain
+// 
+//  Purpose:
+//    Returns the previous item in the chain
+//
+//  Parameters:
+//    pl_tree - *in* <EPTF_RBT_TreeId> - the tree ID
+//    pl_item - *in* <EPTF_RBT_ItemIdx> - the starting item index
+//
+//  Return Value:
+//    <EPTF_RBT_ItemIdx> - the previous item in chain, or -1 if pl_item is the node itself
+///////////////////////////////////////////////////////////
+public external function f_EPTF_RBT_getPrevInChain(
+  in EPTF_RBT_TreeId pl_tree,
+  in EPTF_RBT_ItemIdx pl_item)
+return EPTF_RBT_ItemIdx;
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_RBT_iterateIncremental
+// 
+//  Purpose:
+//    Returns either the next element in chain or (if none) the first element with the next bigger key
+//
+//  Parameters:
+//    pl_tree - *in* <EPTF_RBT_TreeId> - the tree ID
+//    pl_item - *in* <EPTF_RBT_ItemIdx> - the starting item index
+//
+//  Return Value:
+//    <EPTF_RBT_ItemIdx> - the next item
+///////////////////////////////////////////////////////////
+public external function f_EPTF_RBT_iterateIncremental(
+  in EPTF_RBT_TreeId pl_tree,
+  in EPTF_RBT_ItemIdx pl_item)
+return EPTF_RBT_ItemIdx;
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_RBT_iterateDecremental
+// 
+//  Purpose:
+//    Returns either the previous element in chain or (if none) the first element with the next smaller key
+//
+//  Parameters:
+//    pl_tree - *in* <EPTF_RBT_TreeId> - the tree ID
+//    pl_item - *in* <EPTF_RBT_ItemIdx> - the starting item index
+//
+//  Return Value:
+//    <EPTF_RBT_ItemIdx> - the previous item
+///////////////////////////////////////////////////////////
+// TODO: implement
+/*public external function f_EPTF_RBT_iterateDecremental(
+  in EPTF_RBT_TreeId pl_tree,
+  in EPTF_RBT_ItemIdx pl_item)
+return EPTF_RBT_ItemIdx;*/
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_RBT_sortIncremental
+// 
+//  Purpose:
+//    Returns the index list of the items in the tree in ascending order
+//
+//  Parameters:
+//    pl_tree - *in* <EPTF_RBT_TreeId> - the tree ID
+//    pl_itemsSorted - *out* <EPTF_RBT_ItemIdxList> - index list of the sorted items
+//
+//  Return Value:
+//    -
+///////////////////////////////////////////////////////////
+public external function f_EPTF_RBT_sortIncremental(
+  in EPTF_RBT_TreeId pl_tree,
+  out EPTF_RBT_ItemIdxList pl_itemsSorted);
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_RBT_sortDecremental
+// 
+//  Purpose:
+//    Returns the index list of the items in the tree in descending order
+//
+//  Parameters:
+//    pl_tree - *in* <EPTF_RBT_TreeId> - the tree ID
+//    pl_itemsSorted - *out* <EPTF_RBT_ItemIdxList> - index list of the sorted items
+//
+//  Return Value:
+//    -
+///////////////////////////////////////////////////////////
+// TODO: implement
+/*public external function f_EPTF_RBT_sortDecremental(
+  in EPTF_RBT_TreeId pl_tree,
+  out EPTF_RBT_ItemIdxList pl_itemsSorted);*/
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_RBT_isItemValid
+// 
+//  Purpose:
+//    Returns true if item is valid: not free and not invalid
+//
+//  Parameters:
+//    pl_tree - *in* <EPTF_RBT_TreeId> - the tree ID
+//    pl_item - *in* <EPTF_RBT_ItemIdx> - the starting item index
+//
+//  Return Value:
+//    *boolean* - true if item is valid
+///////////////////////////////////////////////////////////
+public external function f_EPTF_RBT_isItemValid(
+  in EPTF_RBT_TreeId pl_tree,
+  in EPTF_RBT_ItemIdx pl_item)
+return boolean;
+
+group RBT_Test {
+
+friend module EPTF_RBT_Test;
+friend external function f_EPTF_RBT_isTreeValid(in EPTF_RBT_TreeId pl_tree) return boolean;
+friend external function f_EPTF_RBT_cloneTree(in EPTF_RBT_TreeId pl_src, in EPTF_RBT_TreeId pl_dst);// both must be existing trees (key type does not matter)
+friend external function f_EPTF_RBT_createAndInitTree(in charstring pl_name, in EPTF_RBT_TreeInitNode pl_rootNode) return EPTF_RBT_TreeId; // returns -1 if invalid
+friend external function f_EPTF_RBT_getItemType(in EPTF_RBT_TreeId pl_tree, in EPTF_RBT_ItemIdx pl_item) return EPTF_RBT_ItemType;
+
+} // group RBT_Test
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_RBT_dumpToPng
+// 
+//  Purpose:
+//    Dumps the tree to dot and PNG files (requires `dot` to be installed)
+//
+//  Parameters:
+//    pl_tree - *in* <EPTF_RBT_TreeId> - the tree ID
+//    pl_name - *in* *charstring* - file name *without extension*
+//
+//  Detailed Comments:
+//    For testing purposes, number of items in the tree should not
+//    be too large, due to the limitations of `dot`
+///////////////////////////////////////////////////////////
+public external function f_EPTF_RBT_dumpToPng(
+  in EPTF_RBT_TreeId pl_tree,
+  in charstring pl_name);
+
+group EPTF_RBT_PrivateFunctions {
+
+  private function f_EPTF_RBT_cleanup_CT()
+  runs on EPTF_RBT_CT
+  {
+    if(not v_EPTF_RBT_initialized) { return }
+    f_EPTF_RBT_cleanup();
+    v_EPTF_RBT_initialized := false;
+  }
+
+  private external function f_EPTF_RBT_init();
+  private external function f_EPTF_RBT_cleanup();
+
+} // group EPTF_RBT_PrivateFunctions
+
+} // module EPTF_CLL_RBT_Functions

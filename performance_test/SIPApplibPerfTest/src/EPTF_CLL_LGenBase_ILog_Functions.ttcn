@@ -1,0 +1,573 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_CLL_LGenBase_ILog_Functions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 512
+//  Updated:  2012-11-25
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////
+// Module: EPTF_CLL_LGenBase_ILog_Functions
+//
+// Purpose:
+//   This module contains function definitions for EPTF_CLL_LGenBase_ILog feature
+//
+// Module Parameters:
+//    -
+//
+//  Module depends on:
+//    <EPTF_CLL_LGenBase_ILog_Definitions>
+//    <EPTF_CLL_ILog_Definitions>
+//    <EPTF_CLL_ILog_Functions>
+//    <EPTF_CLL_LGenBase_Functions>
+//    <EPTF_CLL_LGenBase_ConfigFunctions>
+//    <EPTF_CLL_LGenBase_Definitions>
+//    <EPTF_CLL_Common_Definitions>
+//    <EPTF_CLL_Common_Functions>
+// 
+// Current Owner:
+//    Janos Zoltan Svaner (EJNOSVN)
+//
+// Last Review Date:
+//    -
+//
+//  Detailed Comments:
+//    -
+///////////////////////////////////////////////////////////
+
+module EPTF_CLL_LGenBase_ILog_Functions {
+import from EPTF_CLL_Base_Functions all;
+import from EPTF_CLL_LGenBase_Definitions all;
+import from EPTF_CLL_LGenBase_ConfigFunctions all;
+import from EPTF_CLL_LGenBase_ILog_Definitions all;
+import from EPTF_CLL_ILog_Definitions all;
+import from EPTF_CLL_ILog_Functions all;
+import from EPTF_CLL_Common_Definitions all;
+import from EPTF_CLL_Common_Functions all;
+import from TCCFileIO_Functions all;
+import from TCCDateTime_Functions all;
+import from EPTF_CLL_LGenBase_LoggingFunctions all;
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_LGenBase_ILog_register_DB
+// 
+//  Purpose:
+//    Calls <f_EPTF_ILog_register_DB>.
+//
+//  Parameters:
+//    pl_logItemFn   - *in* <EPTF_ILog_LogItem_FT> - callback function reference for saving log items
+//    pl_paramList   - *in* <EPTF_IntegerList> - list of optional parameters
+//
+//  Return Value:
+//    *integer* - the index of the new database record in the database list
+///////////////////////////////////////////////////////////
+public function f_EPTF_LGenBase_ILog_register_DB(
+  in EPTF_ILog_LogItem_FT pl_logItemFn,
+  in EPTF_IntegerList pl_paramList := {} )
+runs on EPTF_LGenBase_Private_CT
+return integer {
+  return f_EPTF_ILog_register_DB(pl_logItemFn, pl_paramList);
+}
+
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_LGenBase_ILog_newChains
+// 
+//  Purpose:
+//    This function creates a new chains or reuses an existing free chains for short and detailed chains. 
+//    Sets the elements of the application data assigned to the FSM context. 
+//
+//  Parameters:
+//    pl_eAbsIdx              - *in* integer - entity absolute index
+//    pl_fsmCtx               - *in* integer - FSM ctx index
+//    pl_logHeaderDetailedFn  - *in* <EPTF_ILog_LogHeader_FT> - callback function reference for generating the detailed chain log header
+//    pl_paramDetailed        - *in* <EPTF_IntegerList> - list of detailed chain optional parameters
+//    pl_logHeaderShortFn     - *in* <EPTF_ILog_LogHeader_FT> - callback function reference for generating the short chain log header
+//    pl_paramShort           - *in* <EPTF_IntegerList> - list of short chain optional parameters
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_LGenBase_ILog_newChains(
+  in integer pl_eAbsIdx,
+  in integer pl_fsmCtx,
+  in EPTF_ILog_LogHeader_FT pl_logHeaderDetailedFn := null,
+  in EPTF_IntegerList pl_paramDetailed := {},
+  in EPTF_ILog_LogHeader_FT pl_logHeaderShortFn := null,
+  in EPTF_IntegerList pl_paramShort := {})
+runs on EPTF_LGenBase_Private_CT{
+  // check previous data existance
+  if( (c_EPTF_LGenBase_ILog_appDataIdForDetailedChainIdId<f_EPTF_LGenBase_getAppDataSizeOfFsmCtx(pl_eAbsIdx, pl_fsmCtx, c_EPTF_LGenBase_bIdx)) and 
+      (f_EPTF_LGenBase_ILog_getChainId(pl_eAbsIdx, pl_fsmCtx, short)!=-1 or f_EPTF_LGenBase_ILog_getChainId(pl_eAbsIdx, pl_fsmCtx, detailed)!=-1)){
+    f_EPTF_Common_warning(%definitionId & c_EPTF_LGenBase_ILog_unprocesedChains);    
+  }
+  var integer vl_chainId := f_EPTF_ILog_newChain(c_EPTF_LGenBase_ILog_shortChain, short, pl_logHeaderShortFn, pl_paramShort);
+  f_EPTF_LGenBase_setAppDataItemOfFsmCtx( pl_eAbsIdx, pl_fsmCtx, c_EPTF_LGenBase_bIdx, c_EPTF_LGenBase_ILog_appDataIdForShortChainIdId, vl_chainId);
+
+  vl_chainId := f_EPTF_ILog_newChain(c_EPTF_LGenBase_ILog_detailedChainName, detailed, pl_logHeaderDetailedFn, pl_paramDetailed);
+  f_EPTF_LGenBase_setAppDataItemOfFsmCtx( pl_eAbsIdx, pl_fsmCtx, c_EPTF_LGenBase_bIdx, c_EPTF_LGenBase_ILog_appDataIdForDetailedChainIdId, vl_chainId);
+}
+
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_LGenBase_ILog_getChainId
+// 
+//  Purpose:
+//    Returns an element of the application data assigned to the FSM context  
+//
+//  Parameters:
+//    pl_eAbsIdx    - *in* integer - entity absolute index
+//    pl_fsmCtx     - *in* integer - FSM ctx index
+//    pl_type       - *in* <EPTF_ILog_chainType> - chain type: detailed | short   
+//
+//  Return Value:
+//   *integer* - the application specific data of the requested chain
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_LGenBase_ILog_getChainId(
+  in integer pl_eAbsIdx,
+  in integer pl_fsmCtx,
+  in EPTF_ILog_chainType pl_type
+)
+runs on EPTF_LGenBase_Private_CT
+return integer{
+  if( f_EPTF_LGenBase_getAppDataSizeOfFsmCtx(pl_eAbsIdx, pl_fsmCtx, c_EPTF_LGenBase_bIdx)<=enum2int(pl_type) ){
+    return -1; // no chain found
+  }
+
+  if(pl_type == short){
+    return f_EPTF_LGenBase_getAppDataItemOfFsmCtx(pl_eAbsIdx,pl_fsmCtx, c_EPTF_LGenBase_bIdx, c_EPTF_LGenBase_ILog_appDataIdForShortChainIdId);
+  } else {
+    return f_EPTF_LGenBase_getAppDataItemOfFsmCtx(pl_eAbsIdx,pl_fsmCtx, c_EPTF_LGenBase_bIdx, c_EPTF_LGenBase_ILog_appDataIdForDetailedChainIdId);
+  }
+}
+
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_LGenBase_ILog_addToChainsBase
+// 
+//  Purpose:
+//    Add element(s) short and or detailed chain Id(s) to the chains that are given in the test step arguments.
+//
+//  Parameters:
+//    pl_eAbsIdx - *in* integer - entity absolute index
+//    pl_fsmCtx  - *in* integer - FSM ctx index
+//    pl_dbIdx   - *in* integer - the database id that stores the log elements of the chain
+//
+//  Return Value:
+//    *integer*
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_LGenBase_ILog_addToChainsBase(
+  in integer pl_eAbsIdx,
+  in integer pl_fsmCtx, 
+  in integer pl_dbIdx
+)
+runs on EPTF_LGenBase_Private_CT
+return integer{
+  var EPTF_IntegerList vl_chains := {};
+  var integer vl_chainId := -1;
+  var boolean vl_allValidChains := true;
+  if(f_EPTF_LGenBase_ILog_shortLogEnabled(pl_eAbsIdx, pl_fsmCtx)){
+	vl_chainId := f_EPTF_LGenBase_ILog_getChainId(pl_eAbsIdx, pl_fsmCtx, short);
+  	if(vl_chainId != -1){ vl_chains[sizeof(vl_chains)] := vl_chainId; } else {vl_allValidChains := false;}
+  } 
+  vl_chainId := f_EPTF_LGenBase_ILog_getChainId(pl_eAbsIdx, pl_fsmCtx, detailed);
+  if(vl_chainId != -1){ vl_chains[sizeof(vl_chains)] := vl_chainId; }  else {vl_allValidChains := false;}
+  
+  var integer vl_elementIdx := f_EPTF_ILog_addToChains(pl_dbIdx, vl_chains);
+  f_EPTF_LGenBase_ILog_disableShortLogBase(pl_eAbsIdx, pl_fsmCtx);
+  if(vl_allValidChains == false){
+    f_EPTF_LGenBase_loggingDebugTraffic(%definitionId & c_EPTF_LGenBase_ILog_noValidWarning);
+  }
+  return vl_elementIdx;
+}
+
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_LGenBase_ILog_addToChains
+// 
+//  Purpose:
+//    Calls the f_EPTF_LGenBase_ILog_addToChainsBase function to add elements to the chains listed in the pl_ptr
+//
+//  Parameters:
+//    pl_ptr     - *in* <EPTF_LGenBase_TestStepArgs> - record type for test step arguments
+//    pl_dbIdx   - *in* integer - the database id that stores the log elements of the chain
+//
+//  Return Value:
+//    *integer* - the index of the created item in the user side database, or -1 if the pl_dbIdx or the chain list 
+//                does not contain valid chain id or the chain list is empty and there is no chain in use
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_LGenBase_ILog_addToChains(
+  in EPTF_LGenBase_TestStepArgs pl_ptr, 
+  in integer pl_dbIdx
+)
+runs on EPTF_LGenBase_Private_CT
+return integer{
+  
+  var integer vl_eAbsIdx := pl_ptr.eIdx;
+  var integer vl_fsmCtx := pl_ptr.refContext.fCtxIdx;
+ 
+  return f_EPTF_LGenBase_ILog_addToChainsBase(vl_eAbsIdx, vl_fsmCtx, pl_dbIdx);
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_LGenBase_ILog_step_logSuccess
+// 
+//  Purpose:
+//    logSuccess STEP
+//    Calls the f_EPTF_LGenBase_ILog_logSuccess function.
+//
+//  Parameters:
+//    pl_ptr     - *in* <EPTF_LGenBase_TestStepArgs> - record type for test step arguments
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_LGenBase_ILog_step_logSuccess(
+  in EPTF_LGenBase_TestStepArgs pl_ptr
+)
+runs on EPTF_LGenBase_Private_CT{
+  var integer vl_eAbsIdx := pl_ptr.eIdx;
+  var integer vl_fsmCtx := pl_ptr.refContext.fCtxIdx;
+ 
+ f_EPTF_LGenBase_ILog_logSuccess(vl_eAbsIdx, vl_fsmCtx);
+ 
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_LGenBase_ILog_logSuccess
+// 
+//  Purpose:
+//    The function creates the log from the items of the short chain and deletes it from the detailed chain.
+//
+//  Parameters:
+//    pl_eAbsIdx    - *in* integer - entity absolute index
+//    pl_fsmCtx     - *in* integer - FSM ctx index
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_LGenBase_ILog_logSuccess(
+  in integer pl_eAbsIdx,
+  in integer pl_fsmCtx
+)
+runs on EPTF_LGenBase_Private_CT{
+  var boolean vl_allValidChains := true;
+  var integer vl_chainId := f_EPTF_LGenBase_ILog_getChainId(pl_eAbsIdx, pl_fsmCtx, short);
+  if(vl_chainId != -1){v_lastLogRet := f_EPTF_ILog_logChain( vl_chainId );} else {vl_allValidChains := false;}
+  vl_chainId := f_EPTF_LGenBase_ILog_getChainId(pl_eAbsIdx, pl_fsmCtx, detailed);
+  if(vl_chainId != -1){v_lastLogRet := f_EPTF_ILog_deleteChain( vl_chainId );} else {vl_allValidChains := false;}
+  f_EPTF_LGenBase_ILog_deleteChainIds(pl_eAbsIdx, pl_fsmCtx); 
+  if(vl_allValidChains == false){
+    f_EPTF_LGenBase_loggingDebugTraffic(%definitionId & c_EPTF_LGenBase_ILog_noValidWarning);
+  }
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_LGenBase_ILog_step_logFailed
+// 
+//  Purpose:
+//    logFailed STEP
+//    The function calls the f_EPTF_LGenBase_ILog_logFailed function.
+//
+//  Parameters:
+//    pl_ptr     - *in* <EPTF_LGenBase_TestStepArgs> - record type for test step arguments
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_LGenBase_ILog_step_logFailed(
+  in EPTF_LGenBase_TestStepArgs pl_ptr
+)
+runs on EPTF_LGenBase_Private_CT{
+  var integer vl_eAbsIdx := pl_ptr.eIdx;
+  var integer vl_fsmCtx := pl_ptr.refContext.fCtxIdx;
+ 
+ f_EPTF_LGenBase_ILog_logFailed(vl_eAbsIdx, vl_fsmCtx);
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_LGenBase_ILog_logFailed
+// 
+//  Purpose:
+//    The function creates the log from the items of the short and detailed chain.
+//
+//  Parameters:
+//    pl_eAbsIdx    - *in* integer - entity absolute index
+//    pl_fsmCtx     - *in* integer - FSM ctx index
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_LGenBase_ILog_logFailed(
+  in integer pl_eAbsIdx,
+  in integer pl_fsmCtx
+)
+runs on EPTF_LGenBase_Private_CT{
+  var boolean vl_allValidChains := true;
+  var integer vl_chainId := f_EPTF_LGenBase_ILog_getChainId(pl_eAbsIdx, pl_fsmCtx, short);
+  if(vl_chainId != -1){v_lastLogRet := f_EPTF_ILog_logChain( vl_chainId );} else {vl_allValidChains := false;}
+  vl_chainId := f_EPTF_LGenBase_ILog_getChainId(pl_eAbsIdx, pl_fsmCtx, detailed);
+  if(vl_chainId != -1){v_lastLogRet := f_EPTF_ILog_logChain( vl_chainId );} else {vl_allValidChains := false;}
+  f_EPTF_LGenBase_ILog_deleteChainIds(pl_eAbsIdx, pl_fsmCtx);  
+  if(vl_allValidChains == false){
+    f_EPTF_LGenBase_loggingDebugTraffic(%definitionId & c_EPTF_LGenBase_ILog_noValidWarning);
+  }
+}
+
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_LGenBase_ILog_step_deleteLog
+// 
+//  Purpose:
+//    deleteLog STEP
+//    The function calls the f_EPTF_LGenBase_ILog_deleteLog function.
+//
+//  Parameters:
+//    pl_ptr     - *in* <EPTF_LGenBase_TestStepArgs> - record type for test step arguments
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_LGenBase_ILog_step_deleteLog(
+  in EPTF_LGenBase_TestStepArgs pl_ptr
+)
+runs on EPTF_LGenBase_Private_CT{
+  var integer vl_eAbsIdx := pl_ptr.eIdx;
+  var integer vl_fsmCtx := pl_ptr.refContext.fCtxIdx;
+ 
+  f_EPTF_LGenBase_ILog_deleteLog(vl_eAbsIdx, vl_fsmCtx);
+}
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_LGenBase_ILog_deleteLog
+// 
+//  Purpose:
+//    The function deletes the log from the items of the short and detailed chain.
+//
+//  Parameters:
+//    pl_eAbsIdx    - *in* integer - entity absolute index
+//    pl_fsmCtx     - *in* integer - FSM ctx index
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_LGenBase_ILog_deleteLog(
+  in integer pl_eAbsIdx,
+  in integer pl_fsmCtx
+)
+runs on EPTF_LGenBase_Private_CT{
+  var boolean vl_allValidChains := true;
+  var integer vl_chainId := f_EPTF_LGenBase_ILog_getChainId(pl_eAbsIdx, pl_fsmCtx, short);
+  if(vl_chainId != -1){v_lastLogRet := f_EPTF_ILog_deleteChain( vl_chainId );} else {vl_allValidChains := false;}
+  vl_chainId := f_EPTF_LGenBase_ILog_getChainId(pl_eAbsIdx, pl_fsmCtx, detailed);
+  if(vl_chainId != -1){v_lastLogRet := f_EPTF_ILog_deleteChain( vl_chainId );} else {vl_allValidChains := false;}
+  f_EPTF_LGenBase_ILog_deleteChainIds(pl_eAbsIdx, pl_fsmCtx);  
+  if(vl_allValidChains == false){
+    f_EPTF_Common_warning(%definitionId & c_EPTF_LGenBase_ILog_noValidWarning);
+  }
+}
+
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_LGenBase_ILog_step_shortLogNext
+// 
+//  Purpose:
+//    shortLogNext STEP
+//    Sets an element of the application data assigned to the FSM context: enable short log
+//
+//  Parameters:
+//    pl_ptr     - *in* <EPTF_LGenBase_TestStepArgs> - record type for test step arguments
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_LGenBase_ILog_step_shortLogNext(
+  in EPTF_LGenBase_TestStepArgs pl_ptr
+) 
+runs on EPTF_LGenBase_Private_CT{
+  var integer vl_shortChainId := f_EPTF_LGenBase_getAppDataItemOfFsmCtx(pl_ptr.eIdx,pl_ptr.refContext.fCtxIdx, c_EPTF_LGenBase_bIdx, c_EPTF_LGenBase_ILog_appDataIdForShortChainIdId);
+  if(vl_shortChainId != -1) {
+    f_EPTF_LGenBase_setAppDataItemOfFsmCtx(
+      pl_ptr.eIdx,
+      pl_ptr.refContext.fCtxIdx,
+      c_EPTF_LGenBase_bIdx,
+      c_EPTF_LGenBase_ILog_appDataIdForEnableShortLogId,
+      c_EPTF_LGenBase_ILog_enableShortLog
+    );    
+  } else {
+    f_EPTF_Common_warning(%definitionId & c_EPTF_LGenBase_ILog_noValidWarning);
+  }
+}
+
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_LGenBase_ILog_disableShortLog
+// 
+//  Purpose:
+//    disableShortLog STEP
+//    Disable short log: sets an element of the application data assigned to the FSM context.
+//
+//  Parameters:
+//    pl_eAbsIdx    - *in* integer - entity absolute index
+//    pl_fsmCtx     - *in* integer - FSM ctx index
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_LGenBase_ILog_disableShortLogBase( 
+  in integer pl_eAbsIdx,
+  in integer pl_fsmCtx)
+runs on EPTF_LGenBase_Private_CT{
+  var integer vl_shortChainId := f_EPTF_LGenBase_getAppDataItemOfFsmCtx(pl_eAbsIdx, pl_fsmCtx, c_EPTF_LGenBase_bIdx, c_EPTF_LGenBase_ILog_appDataIdForShortChainIdId);
+    if(vl_shortChainId != -1) {
+     f_EPTF_LGenBase_setAppDataItemOfFsmCtx(
+      pl_eAbsIdx,
+      pl_fsmCtx,
+      c_EPTF_LGenBase_bIdx,
+      c_EPTF_LGenBase_ILog_appDataIdForEnableShortLogId,
+      c_EPTF_LGenBase_ILog_disableShortLog
+    );   
+  } else {
+    f_EPTF_LGenBase_loggingDebugTraffic(%definitionId & c_EPTF_LGenBase_ILog_noValidWarning);
+  }
+}
+
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_LGenBase_ILog_disableShortLog
+// 
+//  Purpose:
+//    Calls the f_EPTF_LGenBase_ILog_disableShortLogBase function to disable short log.
+//
+//  Parameters:
+//    pl_ptr     - *in* <EPTF_LGenBase_TestStepArgs> - record type for test step arguments
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_LGenBase_ILog_disableShortLog(  in EPTF_LGenBase_TestStepArgs pl_ptr)
+runs on EPTF_LGenBase_Private_CT{
+  
+  var integer vl_eAbsIdx := pl_ptr.eIdx;
+  var integer vl_fsmCtx := pl_ptr.refContext.fCtxIdx;
+ 
+ f_EPTF_LGenBase_ILog_disableShortLogBase(vl_eAbsIdx, vl_fsmCtx);
+}
+
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_LGenBase_ILog_shortLogEnabled
+// 
+//  Purpose:
+//    gets short log enabled state
+//
+//  Parameters:
+//    pl_eAbsIdx    - *in* integer - entity absolute index
+//    pl_fsmCtx     - *in* integer - FSM ctx index
+//
+//  Return Value:
+//    *boolean* - true if short log enabled else returned false 
+//
+///////////////////////////////////////////////////////////
+private function f_EPTF_LGenBase_ILog_shortLogEnabled(
+  in integer pl_eAbsIdx,
+  in integer pl_fsmCtx
+)
+runs on EPTF_LGenBase_Private_CT
+return boolean{
+  if (f_EPTF_LGenBase_isvalueAppDataItemOfFsmCtx(
+    pl_eAbsIdx,
+    pl_fsmCtx,
+    c_EPTF_LGenBase_bIdx,
+    c_EPTF_LGenBase_ILog_appDataIdForEnableShortLogId
+  )) {
+    var integer vl_shortLogEnabled := f_EPTF_LGenBase_getAppDataItemOfFsmCtx(
+      pl_eAbsIdx,
+      pl_fsmCtx,
+      c_EPTF_LGenBase_bIdx,
+      c_EPTF_LGenBase_ILog_appDataIdForEnableShortLogId
+    );
+    return (vl_shortLogEnabled==c_EPTF_LGenBase_ILog_enableShortLog);
+  } else {return false;}
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_LGenBase_ILog_deleteChainIds
+// 
+//  Purpose:
+//    delete chain idxs in FSM context
+//
+//  Parameters:
+//    pl_eAbsIdx    - *in* integer - entity absolute index
+//    pl_fsmCtx     - *in* integer - FSM ctx index
+//
+///////////////////////////////////////////////////////////
+private function f_EPTF_LGenBase_ILog_deleteChainIds(
+  in integer pl_eAbsIdx,
+  in integer pl_fsmCtx
+)
+runs on EPTF_LGenBase_Private_CT{
+  f_EPTF_LGenBase_setAppDataItemOfFsmCtx(pl_eAbsIdx, pl_fsmCtx, c_EPTF_LGenBase_bIdx, c_EPTF_LGenBase_ILog_appDataIdForShortChainIdId, -1);
+  f_EPTF_LGenBase_setAppDataItemOfFsmCtx(pl_eAbsIdx, pl_fsmCtx, c_EPTF_LGenBase_bIdx, c_EPTF_LGenBase_ILog_appDataIdForDetailedChainIdId, -1);  
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_LGenBase_ILog_logHeaderDetailed
+// 
+//  Purpose:
+//    Callback function for creating log header for the detailed log chains. 
+//
+//  Parameters:
+//    pl_chainId         - *in* *integer*           - chain Id of the logged chain
+//    pl_param           - *in* <EPTF_IntegerList>  - parameter list for the logged chain
+//  
+///////////////////////////////////////////////////////////
+public function f_EPTF_LGenBase_ILog_logHeaderDetailed( in integer pl_chainId, in EPTF_IntegerList pl_param)
+runs on EPTF_LGenBase_Private_CT {
+    if(tsp_EPTF_ILog_logFileName != "") {
+      f_EPTF_LGenBase_ILog_logToFile("-------------------------- Detailed Log : chain#" & log2str(pl_chainId) & " " & log2str(f_EPTF_ILog_getName(pl_chainId)) & " of Traffic Case: " & log2str(f_EPTF_LGenBase_getTcUniqueNameByTcIdx(f_EPTF_LGenBase_tcIdxOfFSM(pl_param[0], pl_param[1]))) & ", of Entity#" & log2str(pl_param[0]) & " --------------------------", v_logFileName);
+      f_EPTF_LGenBase_ILog_logToFile("-------------------------- Details ---------------------------", v_logFileName);
+    }
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_LGenBase_ILog_logHeaderShort
+// 
+//  Purpose:
+//    Callback function for creating log header for the short log chains. 
+//
+//  Parameters:
+//    pl_chainId         - *in* *integer*           - chain Id of the logged chain
+//    pl_param           - *in* <EPTF_IntegerList>  - parameter list for the logged chain
+//  
+///////////////////////////////////////////////////////////
+public function f_EPTF_LGenBase_ILog_logHeaderShort( in integer pl_chainId, in EPTF_IntegerList pl_param)
+runs on EPTF_LGenBase_Private_CT {
+    if(tsp_EPTF_ILog_logFileName != "") {
+      f_EPTF_LGenBase_ILog_logToFile("---------------------------Short Log : chain#" & log2str(pl_chainId) & "--------------------------", v_logFileName);
+      f_EPTF_LGenBase_ILog_logToFile("-------------------------- TC: " & log2str(f_EPTF_LGenBase_getTcUniqueNameByTcIdx(f_EPTF_LGenBase_tcIdxOfFSM(pl_param[0], pl_param[1]))) & ", Entity#" & log2str(pl_param[0]) & " --------------------------", v_logFileName);
+    }
+}
+
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_LGenBase_ILog_logToFile
+// 
+//  Purpose:
+//    Function to write the ilog logitems to file. 
+//
+//  Parameters:
+//    pl_fileName         - *in* *charstring*           - name of the log file
+//    pl_logItem          - *in* *harstring*           - charstring to write to file
+//  
+///////////////////////////////////////////////////////////
+public function f_EPTF_LGenBase_ILog_logToFile( in charstring pl_logItem, in charstring pl_fileName := tsp_EPTF_ILog_logFileName)
+runs on EPTF_LGenBase_Private_CT {
+     f_EPTF_ILog_logToFile(pl_logItem, pl_fileName);
+   }
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Time
+// 
+//  Purpose:
+//    Create timestamp.
+//
+//  Parameters:
+//   --
+//  
+///////////////////////////////////////////////////////////
+public function f_EPTF_Time() runs on EPTF_LGenBase_Private_CT return charstring{
+  
+  return f_EPTF_ILog_Time();
+ 
+}
+
+} // module EPTF_LGenBase_ILog_Functions

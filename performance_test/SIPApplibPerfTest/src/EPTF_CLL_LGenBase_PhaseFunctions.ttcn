@@ -1,0 +1,1164 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_CLL_LGenBase_PhaseFunctions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 512
+//  Updated:  2010-04-12
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+//  Module: EPTF_CLL_LGenBase_PhaseFunctions
+// 
+//  Purpose:
+//    This module contains functions for EPTF_CLL_LGenBase phase 
+//      handling implementation.
+// 
+//  Module depends on:
+//      <EPTF_CLL_Common_Definitions>
+//      <EPTF_CLL_LGenBase_Definitions>
+//      <EPTF_CLL_LGenBase_PhaseDefinitions>
+//      <EPTF_CLL_LGenBase_ConfigDefinitions>
+//      <EPTF_CLL_LGenBase_ConfigFunctions>
+//      <EPTF_CLL_LGenBase_TrafficFunctions>
+//      <EPTF_CLL_HashMapStr2Int_Functions>
+//      <EPTF_CLL_FBQ_Functions>
+//      <EPTF_CLL_Base_Functions>
+//      <EPTF_CLL_Variable_Functions>
+// 
+//  Module Parameters:
+//    -
+//
+//  Current Owner:
+//    Bence Molnar (EBENMOL)
+// 
+//  Last Review Date:
+//    2009-02-16
+//
+//  Detailed Comments:
+//    This module contains functions for EPTF_CLL_LGenBase phase 
+//      handling implementation.
+//
+///////////////////////////////////////////////////////////////////////////////
+module EPTF_CLL_LGenBase_PhaseFunctions
+{
+import from EPTF_CLL_Common_Definitions all;  
+import from EPTF_CLL_LGenBase_Definitions all;
+import from EPTF_CLL_LGenBase_PhaseDefinitions all;
+import from EPTF_CLL_LGenBase_ConfigDefinitions all;
+import from EPTF_CLL_LGenBase_ConfigFunctions all;
+import from EPTF_CLL_LGenBase_TrafficFunctions all;    
+import from EPTF_CLL_LGenBase_LoggingFunctions all;    
+import from EPTF_CLL_HashMapStr2Int_Functions all;
+import from EPTF_CLL_FBQ_Functions all;
+import from EPTF_CLL_Base_Functions all;
+//import from EPTF_CLL_Variable_Functions all;
+
+friend module EPTF_CLL_LGenBase_Functions;// f_EPTF_LGenBase_Phase_init, f_EPTF_LGenBase_Phase_cleanUp
+
+
+///////////////////////////////////////////////////////////
+// Group: PhaseState
+//
+// Purpose:
+//   Functions for handling phase states 
+//
+///////////////////////////////////////////////////////////
+group PhaseState { 
+  
+  ///////////////////////////////////////////////////////////////////////////////
+  //  Function: f_EPTF_LGenBase_startPhase
+  // 
+  //  Purpose:
+  //    Starts a specified phase
+  //
+  //  Parameters:
+  //    - pl_eGrpName - *in* - *charstring* - entity group name
+  //    - pl_scName - *in* - *charstring* - scenario name
+  //    - pl_phase - *charstring* - name of the phase to be started
+  //    - pl_fn - <EPTF_LGenBase_PhaseFinished_FT> - phase finished handler callback function reference  
+  //    - pl_args - <EPTF_IntegerList> - args for the handler callback function   
+  //
+  //  Return Value:
+  //    - boolean: false if could not start
+  //
+  //  Errors & assertions:
+  //    -
+  //
+  //  Detailed Comments:
+  //    Starts a specified phase of a scenario by setting it to RUNNING state.
+  //    If state is already RUNNING then it does nothing.
+  //
+  ///////////////////////////////////////////////////////////////////////////////
+  public function f_EPTF_LGenBase_startPhase
+  (
+    in charstring pl_eGrpName,
+    in charstring pl_scName,
+    in charstring pl_phase,
+    in EPTF_LGenBase_PhaseFinished_FT pl_fn := null,
+    in EPTF_IntegerList pl_args := {}
+  )
+  runs on EPTF_LGenBase_Private_CT
+  return boolean
+  {
+    var boolean vl_success := false;
+    var charstring vl_actualPhase;
+    var EPTF_LGenBase_Phase_States vl_actualState;
+    var integer vl_eGrpIdx := f_EPTF_LGenBase_entityGrpNameIndex(pl_eGrpName);
+    var integer vl_scInGrpIdx := f_EPTF_LGenBase_scNameIndexInEG(vl_eGrpIdx, pl_scName);    
+    var integer vl_scIdx := f_EPTF_LGenBase_scenarioAbsIdxByName(pl_eGrpName, pl_scName);  
+    
+    if(not(f_EPTF_LGenBase_getActualPhase(vl_scIdx, vl_actualPhase, vl_actualState))) {     
+      return false;
+    }
+    
+    if(vl_actualState == RUNNING) {
+      if(vl_actualPhase == pl_phase) {
+        f_EPTF_LGenBase_loggingWarning(%definitionId&": Actual phase is already running in this scenario "&pl_eGrpName&", "&pl_scName&", "&pl_phase);
+        return true;
+      } else {
+        f_EPTF_LGenBase_loggingWarning(%definitionId&": There is already a running phase in this scenario"&pl_eGrpName&", "&pl_scName&", "&vl_actualPhase);
+        return false;      
+      }    
+    }
+    
+    v_LGenBase_entityGroups[vl_eGrpIdx].scenarios[vl_scInGrpIdx].phaseData.handlerFn := pl_fn; // adding handler function
+    v_LGenBase_entityGroups[vl_eGrpIdx].scenarios[vl_scInGrpIdx].phaseData.handlerArgs := pl_args;   
+    
+    vl_success := f_EPTF_LGenBase_setPhaseAndStateByIdx(vl_scIdx, pl_phase, RUNNING);    
+    
+    return vl_success;
+  }
+  
+  ///////////////////////////////////////////////////////////////////////////////
+  //  Function: f_EPTF_LGenBase_stopPhase
+  // 
+  //  Purpose:
+  //    Stops a specified phase
+  //
+  //  Parameters:
+  //    - pl_eGrpName - *in* - *charstring* - entity group name
+  //    - pl_scName - *in* - *charstring* - scenario name
+  //    - pl_phase - *charstring* - name of the phase to be stopped
+  //
+  //  Return Value:
+  //    - boolean: false if could not stop
+  //
+  //  Errors & assertions:
+  //    -
+  //
+  //  Detailed Comments:
+  //    Stops a specified phase of a scenario by setting it to STOPPING state.
+  //    If state is not RUNNING before the stopping action then it does nothing.
+  //
+  ///////////////////////////////////////////////////////////////////////////////
+  public function f_EPTF_LGenBase_stopPhase
+  (
+    in charstring pl_eGrpName,
+    in charstring pl_scName,
+    in charstring pl_phase
+  )
+  runs on EPTF_LGenBase_Private_CT
+  return boolean
+  {
+    var boolean vl_success := false;
+    var charstring vl_actualPhase;
+    var EPTF_LGenBase_Phase_States vl_actualState;
+    var integer vl_scIdx := f_EPTF_LGenBase_scenarioAbsIdxByName(pl_eGrpName, pl_scName);  
+    
+    if(not(f_EPTF_LGenBase_getActualPhase(vl_scIdx, vl_actualPhase, vl_actualState))) {     
+      return false;
+    }
+    
+    if(vl_actualState != RUNNING) {
+      f_EPTF_LGenBase_loggingWarning(%definitionId&": No phase is running in this scenario "&pl_eGrpName&", "&pl_scName&", "&vl_actualPhase);
+      return false;      
+    }
+    
+    vl_success := f_EPTF_LGenBase_setPhaseAndStateByIdx(vl_scIdx, pl_phase, STOPPING);    
+    
+    return vl_success;
+  }
+  
+  ///////////////////////////////////////////////////////////////////////////////
+  //  Function: f_EPTF_LGenBase_stopPhaseTest
+  // 
+  //  Purpose:
+  //    Stops a specified phase
+  //
+  //  Parameters:
+  //    - pl_eGrpName - *in* - *charstring* - entity group name
+  //    - pl_scName - *in* - *charstring* - scenario name
+  //    - pl_phase - *charstring* - name of the phase to be stopped
+  //
+  //  Return Value:
+  //    - boolean: false if could not stop
+  //
+  //  Errors & assertions:
+  //    -
+  //
+  //  Detailed Comments:
+  //    Stops a specified phase of a scenario by setting it to STOPPING state.
+  //    If state is not RUNNING before the stopping action then it does nothing.
+  //
+  ///////////////////////////////////////////////////////////////////////////////
+  public function f_EPTF_LGenBase_stopPhaseTest
+  (
+    in charstring pl_eGrpName,
+    in charstring pl_scName,
+    in charstring pl_phase
+  )
+  runs on EPTF_LGenBase_Private_CT
+  return boolean
+  {
+    var boolean vl_success := false;
+    var charstring vl_actualPhase;
+    var EPTF_LGenBase_Phase_States vl_actualState;
+    var integer vl_scIdx := f_EPTF_LGenBase_scenarioAbsIdxByName(pl_eGrpName, pl_scName);  
+    
+    if(not(f_EPTF_LGenBase_getActualPhase(vl_scIdx, vl_actualPhase, vl_actualState))) {     
+      return false;
+    }
+    
+    if(vl_actualState == IDLE) {
+      f_EPTF_LGenBase_loggingWarning(%definitionId&": No phase is running in this scenario "&pl_eGrpName&", "&pl_scName&", "&vl_actualPhase);
+      return false;      
+    }
+    
+    vl_success := f_EPTF_LGenBase_setPhaseAndStateByIdx(vl_scIdx, pl_phase, IDLE);    
+    
+    return vl_success;
+  }
+  
+  ///////////////////////////////////////////////////////////////////////////////
+  //  Function: f_EPTF_LGenBase_skipPhase
+  // 
+  //  Purpose:
+  //    Starts a specified phase
+  //
+  //  Parameters:
+  //    - pl_eGrpName - *in* - *charstring* - entity group name
+  //    - pl_scName - *in* - *charstring* - scenario name
+  //    - pl_phase - *charstring* - name of the phase to be started
+  //    - pl_fn - <EPTF_LGenBase_PhaseFinished_FT> - phase finished handler callback function reference  
+  //    - pl_args - <EPTF_IntegerList> - args for the handler callback function   
+  //
+  //  Return Value:
+  //    - boolean: false if could not skip
+  //
+  //  Errors & assertions:
+  //    -
+  //
+  //  Detailed Comments:
+  //    Starts a specified phase of a scenario by setting it to SKIPPING state.
+  //
+  ///////////////////////////////////////////////////////////////////////////////
+  public function f_EPTF_LGenBase_skipPhase
+  (
+    in charstring pl_eGrpName,
+    in charstring pl_scName,
+    in charstring pl_phase,
+    in EPTF_LGenBase_PhaseFinished_FT pl_fn := null,
+    in EPTF_IntegerList pl_args := {}
+  )
+  runs on EPTF_LGenBase_Private_CT
+  return boolean
+  {
+    var boolean vl_success := false;
+    var charstring vl_actualPhase;
+    var EPTF_LGenBase_Phase_States vl_actualState;
+    var integer vl_eGrpIdx := f_EPTF_LGenBase_entityGrpNameIndex(pl_eGrpName);
+    var integer vl_scInGrpIdx := f_EPTF_LGenBase_scNameIndexInEG(vl_eGrpIdx, pl_scName);    
+    var integer vl_scIdx := f_EPTF_LGenBase_scenarioAbsIdxByName(pl_eGrpName, pl_scName);  
+    
+    if(not(f_EPTF_LGenBase_getActualPhase(vl_scIdx, vl_actualPhase, vl_actualState))) {     
+      return false;
+    }
+    
+    if(vl_actualState == RUNNING or vl_actualState == STOPPING or vl_actualState == SKIPPING) {
+      if(vl_actualPhase == pl_phase) {
+        f_EPTF_LGenBase_loggingWarning(%definitionId&": Actual phase is already running in this scenario "&pl_eGrpName&", "&pl_scName&", "&pl_phase);
+        return true;
+      } else {
+        f_EPTF_LGenBase_loggingWarning(%definitionId&": There is already a running phase in this scenario "&pl_eGrpName&", "&pl_scName&", "&vl_actualPhase);
+        return false;      
+      }    
+    }
+    
+    v_LGenBase_entityGroups[vl_eGrpIdx].scenarios[vl_scInGrpIdx].phaseData.handlerFn := pl_fn; // adding handler function
+    v_LGenBase_entityGroups[vl_eGrpIdx].scenarios[vl_scInGrpIdx].phaseData.handlerArgs := pl_args;   
+    
+    vl_success := f_EPTF_LGenBase_setPhaseAndStateByIdx(vl_scIdx, pl_phase, SKIPPING);    
+    
+    return vl_success;
+  }
+  
+  ///////////////////////////////////////////////////////////////////////////////
+  //  Function: f_EPTF_LGenBase_resetPhase
+  // 
+  //  Purpose:
+  //    Stops a specified phase
+  //
+  //  Parameters:
+  //    - pl_eGrpName - *in* - *charstring* - entity group name
+  //    - pl_scName - *in* - *charstring* - scenario name
+  //    - pl_phase - *charstring* - name of the phase to be reset
+  //
+  //  Return Value:
+  //    - boolean: false if could not stop
+  //
+  //  Errors & assertions:
+  //    -
+  //
+  //  Detailed Comments:
+  //    Stops the scenario, then restores it, and sets the phases to their initial states.
+  //
+  ///////////////////////////////////////////////////////////////////////////////
+  public function f_EPTF_LGenBase_resetPhase
+  (
+    in charstring pl_eGrpName,
+    in charstring pl_scName,
+    in charstring pl_phase
+  )
+  runs on EPTF_LGenBase_Private_CT
+  return boolean
+  {
+    var integer vl_eGrpIdx := f_EPTF_LGenBase_entityGrpNameIndex(pl_eGrpName);
+    var integer vl_scInGrpIdx := f_EPTF_LGenBase_scNameIndexInEG(vl_eGrpIdx, pl_scName);    
+    var integer vl_scIdx := f_EPTF_LGenBase_scenarioAbsIdxByName(pl_eGrpName, pl_scName);
+    f_EPTF_Base_assert(%definitionId&": The specified phase is not valid.",f_EPTF_LGenBase_phaseIsValid(vl_scIdx, pl_phase));       
+    
+    f_EPTF_LGenBase_loggingDebugTraffic(%definitionId&": LGenBase reset phase: abortScenario")
+    f_EPTF_LGenBase_abortScenarioByIdx(vl_eGrpIdx, vl_scInGrpIdx);
+    
+    f_EPTF_LGenBase_loggingDebugTraffic(%definitionId&": LGenBase reset phase: restoreScenario")
+    if(not f_EPTF_LGenBase_restoreScenarioByIdx(vl_eGrpIdx, vl_scInGrpIdx, false)){
+      f_EPTF_LGenBase_loggingWarning(%definitionId&": Restoring scenario "&v_LGenBase_entityGroups[vl_eGrpIdx].scenarios[vl_scInGrpIdx].uniqueName&" failed.")
+    }
+    
+    f_EPTF_LGenBase_loggingDebugTraffic(%definitionId&": LGenBase reset phase: reseting phase states")
+    if(ispresent(v_LGenBase_entityGroups[vl_eGrpIdx].scenarios[vl_scInGrpIdx].phaseData))
+    {
+      v_LGenBase_entityGroups[vl_eGrpIdx].scenarios[vl_scInGrpIdx].phaseData.actualPhase := pl_phase; //setting phase
+      
+      for(var integer vl_i := 0; vl_i < sizeof(v_LGenBase_entityGroups[vl_eGrpIdx].scenarios[vl_scInGrpIdx].phaseData.phaseList); vl_i := vl_i + 1)
+      {
+        v_LGenBase_entityGroups[vl_eGrpIdx].scenarios[vl_scInGrpIdx].phaseData.phaseList[vl_i].actualState := IDLE; // setting state
+      }
+    } else {
+      // no phase data  
+      return false;
+    }    
+    
+    return true;    
+  }
+  
+} //PhaseState group
+
+///////////////////////////////////////////////////////////
+// Group: PhaseInfo
+//
+// Purpose:
+//   Functions for getting phase related informations (eg: phase finish conditions and phase actions)
+//
+///////////////////////////////////////////////////////////
+group PhaseInfo {
+  
+  ///////////////////////////////////////////////////////////////////////////////
+  //  Function: f_EPTF_LGenBase_getActualPhase
+  // 
+  //  Purpose:
+  //    Gets the actual phase in a scenario if possible
+  //
+  //  Parameters:
+  //    - pl_scIdx - *integer* - scenario index
+  //    - pl_phase - *charstring* - name of the actual phase
+  //    - pl_state - <EPTF_LGenBase_Phase_States> - actual state of the phase
+  //
+  //  Return Value:
+  //    - boolean: false in case of error
+  //
+  //  Errors & assertions:
+  //    -
+  //
+  //  Detailed Comments:
+  //    This function gets the actual phase and the state of this phase.
+  //    If no phase related information, then it returns false and the information returned will be false.
+  //
+  ///////////////////////////////////////////////////////////////////////////////
+  public function f_EPTF_LGenBase_getActualPhase
+  (
+    in integer pl_scIdx,
+    out charstring pl_phase,
+    out EPTF_LGenBase_Phase_States pl_state
+  )
+  runs on EPTF_LGenBase_Private_CT
+  return boolean
+  {
+    var integer vl_eGrpIdx;
+    var integer vl_scInGrpIdx;  
+    f_EPTF_Base_assert(%definitionId&": Invalid scenario index: "&int2str(pl_scIdx), -1 < pl_scIdx )
+    
+    f_EPTF_LGenBase_scenarioRelIdx(pl_scIdx , vl_eGrpIdx, vl_scInGrpIdx); 
+    
+    if(ispresent(v_LGenBase_entityGroups[vl_eGrpIdx].scenarios[vl_scInGrpIdx].phaseData)){
+      pl_phase := v_LGenBase_entityGroups[vl_eGrpIdx].scenarios[vl_scInGrpIdx].phaseData.actualPhase;
+      
+      for(var integer vl_i := 0; vl_i < sizeof(v_LGenBase_entityGroups[vl_eGrpIdx].scenarios[vl_scInGrpIdx].phaseData.phaseList); vl_i := vl_i + 1){
+        if(v_LGenBase_entityGroups[vl_eGrpIdx].scenarios[vl_scInGrpIdx].phaseData.phaseList[vl_i].name == pl_phase) {
+          pl_state := v_LGenBase_entityGroups[vl_eGrpIdx].scenarios[vl_scInGrpIdx].phaseData.phaseList[vl_i].actualState; 	              
+        }
+      }  
+    } else {
+      // no phase data 
+      pl_phase := "";
+      pl_state := IDLE;  
+      return false;
+    }
+    return true;
+  }   
+  
+  ///////////////////////////////////////////////////////////////////////////////
+  //  Function: f_EPTF_LGenBase_getPhaseActions
+  // 
+  //  Purpose:
+  //    Gets the phase actions of a specified phase in a specified state
+  //
+  //  Parameters:
+  //    - pl_scIdx - *integer* - scenario index
+  //    - pl_phase - *charstring* - name of the specified phase
+  //    - pl_state - <EPTF_LGenBase_Phase_States> - the specified state of the phase
+  //    - pl_actions - <EPTF_LGenBase_TcMgmt_PhaseActionDescList> - recommended phase change actions  
+  //
+  //  Return Value:
+  //    - boolean: false in case of error
+  //
+  //  Errors & assertions:
+  //    -
+  //
+  //  Detailed Comments:
+  //    This function gets the phase change actions in phase 'pl_phase' and returns true. If no phase data or phase actions in
+  //    the specified state it returns false.
+  //
+  ///////////////////////////////////////////////////////////////////////////////
+  public function f_EPTF_LGenBase_getPhaseActions
+  (
+    in integer pl_scIdx,
+    in charstring pl_phase,
+    in EPTF_LGenBase_Phase_States pl_state,
+    inout EPTF_LGenBase_TcMgmt_PhaseActionDescList pl_actions
+  )
+  runs on EPTF_LGenBase_Private_CT
+  return boolean
+  {
+    var integer vl_eGrpIdx;
+    var integer vl_scInGrpIdx;    
+    f_EPTF_Base_assert(%definitionId&": Invalid scenario index: "&int2str(pl_scIdx), -1 < pl_scIdx )
+    
+    f_EPTF_LGenBase_scenarioRelIdx(pl_scIdx , vl_eGrpIdx, vl_scInGrpIdx); 
+    
+    if(ispresent(v_LGenBase_entityGroups[vl_eGrpIdx].scenarios[vl_scInGrpIdx].phaseData)){    
+      
+      for(var integer vl_i := 0; vl_i < sizeof(v_LGenBase_entityGroups[vl_eGrpIdx].scenarios[vl_scInGrpIdx].phaseData.phaseList); vl_i := vl_i + 1){
+        if(v_LGenBase_entityGroups[vl_eGrpIdx].scenarios[vl_scInGrpIdx].phaseData.phaseList[vl_i].name == pl_phase) { // phase found
+          if(ispresent(v_LGenBase_entityGroups[vl_eGrpIdx].scenarios[vl_scInGrpIdx].phaseData.phaseList[vl_i].actionList)) {
+            for(var integer vl_j := 0; vl_j < sizeof(v_LGenBase_entityGroups[vl_eGrpIdx].scenarios[vl_scInGrpIdx].phaseData.phaseList[vl_i].actionList ); vl_j := vl_j + 1){
+              if(v_LGenBase_entityGroups[vl_eGrpIdx].scenarios[vl_scInGrpIdx].phaseData.phaseList[vl_i].actionList[vl_j].state == pl_state) { // state found
+                
+                pl_actions := v_LGenBase_entityGroups[vl_eGrpIdx].scenarios[vl_scInGrpIdx].phaseData.phaseList[vl_i].actionList[vl_j].actions;
+                
+              }
+            }
+          } else {
+            // no actionlist
+            return false;	  
+          }	              
+        }
+      }  
+    } else {
+      // no phase data
+      return false;
+    }
+    return true;
+  }
+  
+  ///////////////////////////////////////////////////////////////////////////////
+  //  Function: f_EPTF_LGenBase_getActualPhaseActions
+  // 
+  //  Purpose:
+  //    Gets the phase actions of the actual phase in the actual state
+  //
+  //  Parameters:
+  //    - pl_scIdx - *integer* - scenario index
+  //    - pl_actions - <EPTF_LGenBase_TcMgmt_PhaseActionDescList> - actual phase change actions
+  //
+  //  Return Value:
+  //    - boolean: false in case of error
+  //
+  //  Errors & assertions:
+  //    -
+  //
+  //  Detailed Comments:
+  //    This function gets the actual phase change actions and returns true. If no phase data or phase actions in
+  //    the actual state it returns false.
+  //
+  ///////////////////////////////////////////////////////////////////////////////
+  public function f_EPTF_LGenBase_getActualPhaseActions
+  (
+    in integer pl_scIdx,
+    inout EPTF_LGenBase_TcMgmt_PhaseActionDescList pl_actions
+  )
+  runs on EPTF_LGenBase_Private_CT
+  return boolean
+  {
+    var integer vl_eGrpIdx;
+    var integer vl_scInGrpIdx;   
+    var charstring vl_actualPhase;
+    var EPTF_LGenBase_Phase_States vl_actualState;
+    f_EPTF_Base_assert(%definitionId&": Invalid scenario index: "&int2str(pl_scIdx), -1 < pl_scIdx )
+    
+    f_EPTF_LGenBase_scenarioRelIdx(pl_scIdx , vl_eGrpIdx, vl_scInGrpIdx);  
+    
+    if(ispresent(v_LGenBase_entityGroups[vl_eGrpIdx].scenarios[vl_scInGrpIdx].phaseData)){    
+      vl_actualPhase := v_LGenBase_entityGroups[vl_eGrpIdx].scenarios[vl_scInGrpIdx].phaseData.actualPhase;
+      
+      for(var integer vl_i := 0; vl_i < sizeof(v_LGenBase_entityGroups[vl_eGrpIdx].scenarios[vl_scInGrpIdx].phaseData.phaseList); vl_i := vl_i + 1){
+        if(v_LGenBase_entityGroups[vl_eGrpIdx].scenarios[vl_scInGrpIdx].phaseData.phaseList[vl_i].name == vl_actualPhase) { // phase found
+          vl_actualState := v_LGenBase_entityGroups[vl_eGrpIdx].scenarios[vl_scInGrpIdx].phaseData.phaseList[vl_i].actualState;
+          
+          if(ispresent(v_LGenBase_entityGroups[vl_eGrpIdx].scenarios[vl_scInGrpIdx].phaseData.phaseList[vl_i].actionList)) {
+            for(var integer vl_j := 0; vl_j < sizeof(v_LGenBase_entityGroups[vl_eGrpIdx].scenarios[vl_scInGrpIdx].phaseData.phaseList[vl_i].actionList ); vl_j := vl_j + 1){
+              if(v_LGenBase_entityGroups[vl_eGrpIdx].scenarios[vl_scInGrpIdx].phaseData.phaseList[vl_i].actionList[vl_j].state == vl_actualState) { // state found
+                
+                pl_actions := v_LGenBase_entityGroups[vl_eGrpIdx].scenarios[vl_scInGrpIdx].phaseData.phaseList[vl_i].actionList[vl_j].actions;
+                
+              }
+            }
+          } else {
+            // no actionlist
+            return false;	  
+          }	              
+        }
+      }  
+    } else {
+      // no phase data
+      return false;
+    }
+    return true;
+  }      
+  
+  ///////////////////////////////////////////////////////////////////////////////
+  //  Function: f_EPTF_LGenBase_getPhaseFinishConditions
+  // 
+  //  Purpose:
+  //    Gets the phase finish conditions of a specified phase
+  //
+  //  Parameters:
+  //    - pl_scIdx - *integer* - scenario index
+  //    - pl_phase - *charstring* - name of the specified phase  
+  //    - pl_conditions - <EPTF_LGenBase_PhaseCondition_InstanceList> - finish conditions of the phase  
+  //
+  //  Return Value:
+  //    - boolean: false in case of error
+  //
+  //  Errors & assertions:
+  //    -
+  //
+  //  Detailed Comments:
+  //    This function gets the phase finish conditions in phase 'pl_phase' and returns true. If no phase data or phase finish conditions in
+  //    the specified phase it returns false.
+  //
+  ///////////////////////////////////////////////////////////////////////////////
+  public function f_EPTF_LGenBase_getPhaseFinishConditions
+  (
+    in integer pl_scIdx,
+    in charstring pl_phase,    
+    out EPTF_LGenBase_PhaseCondition_InstanceList pl_conditions
+  )
+  runs on EPTF_LGenBase_Private_CT
+  return boolean
+  {
+    var integer vl_eGrpIdx;
+    var integer vl_scInGrpIdx;    
+    f_EPTF_Base_assert(%definitionId&": Invalid scenario index: "&int2str(pl_scIdx), -1 < pl_scIdx )
+    
+    f_EPTF_LGenBase_scenarioRelIdx(pl_scIdx , vl_eGrpIdx, vl_scInGrpIdx);  
+    
+    if(ispresent(v_LGenBase_entityGroups[vl_eGrpIdx].scenarios[vl_scInGrpIdx].phaseData)){    
+      
+      for(var integer vl_i := 0; vl_i < sizeof(v_LGenBase_entityGroups[vl_eGrpIdx].scenarios[vl_scInGrpIdx].phaseData.phaseList); vl_i := vl_i + 1){
+        if(v_LGenBase_entityGroups[vl_eGrpIdx].scenarios[vl_scInGrpIdx].phaseData.phaseList[vl_i].name == pl_phase) { // phase found
+          
+          if(ispresent(v_LGenBase_entityGroups[vl_eGrpIdx].scenarios[vl_scInGrpIdx].phaseData.phaseList[vl_i].conditionList)) {
+            
+            pl_conditions := v_LGenBase_entityGroups[vl_eGrpIdx].scenarios[vl_scInGrpIdx].phaseData.phaseList[vl_i].conditionList;
+            
+          } else {
+            // no finish conditions
+            return false;	  
+          }	              
+        }
+      }  
+    } else {
+      // no phase data
+      return false;
+    }
+    return true;
+  } 
+  
+  ///////////////////////////////////////////////////////////////////////////////
+  //  Function: f_EPTF_LGenBase_getActualPhaseFinishConditions
+  // 
+  //  Purpose:
+  //    Gets the phase finish conditions of the actual phase
+  //
+  //  Parameters:
+  //    - pl_scIdx - *integer* - scenario absolute index
+  //    - pl_conditions - <EPTF_LGenBase_PhaseCondition_InstanceList> - finish conditions of the phase  
+  //
+  //  Return Value:
+  //    - boolean: false in case of error
+  //
+  //  Errors & assertions:
+  //    -
+  //
+  //  Detailed Comments:
+  //    This function gets the actual phase finish conditions and returns true. If no phase data or phase finish conditions in
+  //    the actual phase it returns false.
+  //
+  ///////////////////////////////////////////////////////////////////////////////
+  public function f_EPTF_LGenBase_getActualPhaseFinishConditions
+  (
+    in integer pl_scIdx,
+    out EPTF_LGenBase_PhaseCondition_InstanceList pl_conditions
+  )
+  runs on EPTF_LGenBase_Private_CT
+  return boolean
+  {
+    var charstring vl_actualPhase;
+    var integer vl_eGrpIdx;
+    var integer vl_scInGrpIdx;    
+    f_EPTF_Base_assert(%definitionId&": Invalid scenario index: "&int2str(pl_scIdx), -1 < pl_scIdx )
+    
+    f_EPTF_LGenBase_scenarioRelIdx(pl_scIdx , vl_eGrpIdx, vl_scInGrpIdx);    
+    
+    if(ispresent(v_LGenBase_entityGroups[vl_eGrpIdx].scenarios[vl_scInGrpIdx].phaseData)){    
+      vl_actualPhase := v_LGenBase_entityGroups[vl_eGrpIdx].scenarios[vl_scInGrpIdx].phaseData.actualPhase;
+      
+      for(var integer vl_i := 0; vl_i < sizeof(v_LGenBase_entityGroups[vl_eGrpIdx].scenarios[vl_scInGrpIdx].phaseData.phaseList); vl_i := vl_i + 1){
+        if(v_LGenBase_entityGroups[vl_eGrpIdx].scenarios[vl_scInGrpIdx].phaseData.phaseList[vl_i].name == vl_actualPhase) { // phase found
+          
+          if(ispresent(v_LGenBase_entityGroups[vl_eGrpIdx].scenarios[vl_scInGrpIdx].phaseData.phaseList[vl_i].conditionList)) {
+            
+            pl_conditions := v_LGenBase_entityGroups[vl_eGrpIdx].scenarios[vl_scInGrpIdx].phaseData.phaseList[vl_i].conditionList;
+            
+          } else {
+            // no finish conditions
+            return false;	  
+          }	              
+        }
+      }  
+    } else {
+      // no phase data
+      return false;
+    }
+    return true;
+  }
+  
+  ///////////////////////////////////////////////////////////////////////////////
+  //  Function: f_EPTF_LGenBase_phaseIsValid
+  // 
+  //  Purpose:
+  //    Checking if the phase is a valid phase
+  //
+  //  Parameters:
+  //    - pl_scIdx - *integer* - scenario absolute index
+  //    - pl_phase - *charstring* - name of the specified phase    
+  //
+  //  Return Value:
+  //    - boolean: false in case of error
+  //
+  //  Errors & assertions:
+  //    -
+  //
+  //  Detailed Comments:
+  //    This function checks if the phase is valid and declared in the specified scenario
+  //
+  ///////////////////////////////////////////////////////////////////////////////
+  public function f_EPTF_LGenBase_phaseIsValid
+  (
+    in integer pl_scIdx,
+    in charstring pl_phase
+  )
+  runs on EPTF_LGenBase_Private_CT
+  return boolean
+  {   
+    var boolean vl_isValid := false;
+    var integer vl_eGrpIdx;
+    var integer vl_scInGrpIdx;    
+    f_EPTF_Base_assert(%definitionId&": Invalid scenario index: "&int2str(pl_scIdx), -1 < pl_scIdx )
+    
+    f_EPTF_LGenBase_scenarioRelIdx(pl_scIdx , vl_eGrpIdx, vl_scInGrpIdx);    
+    
+    if(ispresent(v_LGenBase_entityGroups[vl_eGrpIdx].scenarios[vl_scInGrpIdx].phaseData)){ 
+      for(var integer vl_i := 0; vl_i < sizeof(v_LGenBase_entityGroups[vl_eGrpIdx].scenarios[vl_scInGrpIdx].phaseData.phaseList); vl_i := vl_i + 1){
+        if(v_LGenBase_entityGroups[vl_eGrpIdx].scenarios[vl_scInGrpIdx].phaseData.phaseList[vl_i].name == pl_phase) {
+	  vl_isValid := true;
+	}
+      }
+    } else {
+      // no phase data
+      return false;
+    }
+    return vl_isValid;
+  }
+  
+} //PhaseInfo
+
+
+///////////////////////////////////////////////////////////
+// Group: Private
+//
+// Purpose:
+//   Private Functions
+//
+///////////////////////////////////////////////////////////
+group Private {
+  
+  ///////////////////////////////////////////////////////////////////////////////
+  //  Function: f_EPTF_LGenBase_Phase_init
+  // 
+  //  Purpose:
+  //    Initializes the phase aspect of the EPTF_CLL_LGenBase feature
+  //
+  //  Parameters:
+  //    -
+  //
+  //  Return Value:
+  //    -
+  //
+  //  Errors & assertions:
+  //    -
+  //
+  //  Detailed Comments:
+  //    Inits the databases.
+  //
+  ///////////////////////////////////////////////////////////////////////////////  
+  friend function f_EPTF_LGenBase_Phase_init()
+  runs on EPTF_LGenBase_Private_CT{
+    f_EPTF_FBQ_initFreeBusyQueue(v_LGenBase_PhaseListDeclaratorDB.queue);
+    v_LGenBase_PhaseListDeclaratorDB.data :={}
+    v_LGenBase_PhaseListDeclaratorDB.hashRef := f_EPTF_str2int_HashMap_New(c_EPTF_LGenBase_PhaseListDeclaratorDB_HashName);
+    v_LGenBase_detectPhaseFinishFn := refers(f_EPTF_LGenBase_callPhaseFinishConditions)
+  }
+  
+  ///////////////////////////////////////////////////////////////////////////////
+  //  Function: f_EPTF_LGenBase_Phase_cleanUp
+  // 
+  //  Purpose:
+  //    Clean up function for the LGenBase phase aspect.
+  //
+  //  Parameters:
+  //    -
+  //
+  //  Return Value:
+  //    -
+  //
+  //  Errors & assertions:
+  //    -
+  //
+  //  Detailed Comments:
+  //    -
+  //
+  ///////////////////////////////////////////////////////////////////////////////  
+  friend function f_EPTF_LGenBase_Phase_cleanUp()
+  runs on EPTF_LGenBase_Private_CT
+  {
+    f_EPTF_FBQ_initFreeBusyQueue(v_LGenBase_PhaseListDeclaratorDB.queue);
+    v_LGenBase_PhaseListDeclaratorDB.data :={}
+    v_LGenBase_PhaseListDeclaratorDB.hashRef := -1;
+    f_EPTF_str2int_HashMap_Delete(c_EPTF_LGenBase_PhaseListDeclaratorDB_HashName);     
+  }  
+  
+  ///////////////////////////////////////////////////////////////////////////////
+  //  Function: f_EPTF_LGenBase_setPhaseAndState
+  // 
+  //  Purpose:
+  //    Sets the state and the phase of a scenario and tries to run the phase actions if possible
+  //
+  //  Parameters:
+  //    - pl_eGrpName - *in* - *charstring* - entity group name
+  //    - pl_scName - *in* - *charstring* - scenario name
+  //    - pl_phase - *charstring* - name of the phase
+  //    - pl_state - <EPTF_LGenBase_Phase_States> - state of the phase instance  
+  //
+  //  Return Value:
+  //    - boolean: false if could not set
+  //
+  //  Errors & assertions:
+  //    -
+  //
+  //  Detailed Comments:
+  //    It calls <f_EPTF_LGenBase_setPhaseAndStateByIdx>
+  //
+  ///////////////////////////////////////////////////////////////////////////////
+  private function f_EPTF_LGenBase_setPhaseAndState
+  (
+    in charstring pl_eGrpName,
+    in charstring pl_scName,
+    in charstring pl_phase,
+    in EPTF_LGenBase_Phase_States pl_state  
+  )
+  runs on EPTF_LGenBase_Private_CT
+  return boolean
+  {
+    var integer vl_scIdx;
+    var boolean vl_success := false;
+    vl_scIdx := f_EPTF_LGenBase_scenarioAbsIdxByName(pl_eGrpName,pl_scName);
+    if(vl_scIdx != -1) {
+      vl_success := f_EPTF_LGenBase_setPhaseAndStateByIdx(vl_scIdx, pl_phase, pl_state);
+    }
+    return vl_success;
+  }
+  
+  ///////////////////////////////////////////////////////////////////////////////
+  //  Function: f_EPTF_LGenBase_setPhaseAndStateByIdx
+  // 
+  //  Purpose:
+  //    Sets the state and the phase of a scenario determined by the scenario index and tries to run the phase actions if possible.
+  //
+  //  Parameters:
+  //    - pl_scIdx - *integer* - scenario index
+  //    - pl_phase - *charstring* - name of the phase
+  //    - pl_state - <EPTF_LGenBase_Phase_States> - state of the phase instance  
+  //
+  //  Return Value:
+  //    - boolean: false in case of error (e.g. phase list is neither IDLE nor FINISHED)
+  //
+  //  Errors & assertions:
+  //    -
+  //
+  //  Detailed Comments:
+  //    -
+  //
+  ///////////////////////////////////////////////////////////////////////////////
+  private function f_EPTF_LGenBase_setPhaseAndStateByIdx
+  (
+    in integer pl_scIdx,
+    in charstring pl_phase,
+    in EPTF_LGenBase_Phase_States pl_state  
+  )
+  runs on EPTF_LGenBase_Private_CT
+  return boolean
+  {
+    var integer vl_eGrpIdx;
+    var integer vl_scInGrpIdx;
+    f_EPTF_LGenBase_scenarioRelIdx(pl_scIdx , vl_eGrpIdx, vl_scInGrpIdx);
+    f_EPTF_Base_assert(%definitionId&": The specified phase is not valid.",f_EPTF_LGenBase_phaseIsValid(pl_scIdx, pl_phase)); 
+    
+    if(ispresent(v_LGenBase_entityGroups[vl_eGrpIdx].scenarios[vl_scInGrpIdx].phaseData)){   
+      v_LGenBase_entityGroups[vl_eGrpIdx].scenarios[vl_scInGrpIdx].phaseData.actualPhase := pl_phase; //setting phase
+      
+      for(var integer vl_i := 0; vl_i < sizeof(v_LGenBase_entityGroups[vl_eGrpIdx].scenarios[vl_scInGrpIdx].phaseData.phaseList); vl_i := vl_i + 1){
+        if(v_LGenBase_entityGroups[vl_eGrpIdx].scenarios[vl_scInGrpIdx].phaseData.phaseList[vl_i].name == pl_phase) {
+          if(not v_LGenBase_entityGroups[vl_eGrpIdx].scenarios[vl_scInGrpIdx].phaseData.phaseList[vl_i].enabled) {
+            if(not(pl_state == SKIPPING)) {
+              f_EPTF_LGenBase_loggingWarning(%definitionId&": Cannot set state. Phase is in SKIPPING state");
+              return false;
+            }
+	  } 
+          
+          v_LGenBase_entityGroups[vl_eGrpIdx].scenarios[vl_scInGrpIdx].phaseData.phaseList[vl_i].actualState := pl_state; // setting state
+          f_EPTF_LGenBase_callPhaseActions(pl_scIdx); // start actions
+          
+        }
+      }         
+    } else {
+      // no phase data    
+      return false;
+    }    
+    
+    
+    return true; 
+  }
+  
+  ///////////////////////////////////////////////////////////////////////////////
+  //  Function: f_EPTF_LGenBase_callPhaseActions
+  // 
+  //  Purpose:
+  //    Call and execute the phase actions of the actual phase in the actual state
+  //
+  //  Parameters:
+  //    - pl_scIdx - *integer* - scenario absolute index
+  //
+  //  Return Value:
+  //    - boolean: false in case of error
+  //
+  //  Errors & assertions:
+  //    -
+  //
+  //  Detailed Comments:
+  //    -
+  //
+  ///////////////////////////////////////////////////////////////////////////////
+  private function f_EPTF_LGenBase_callPhaseActions
+  (
+    in integer pl_scIdx
+  )
+  runs on EPTF_LGenBase_Private_CT
+  //return boolean
+  {
+    var integer vl_eGrpIdx;
+    var integer vl_scInGrpIdx;  
+    var integer vl_tcIdx;
+    var EPTF_LGenBase_TcMgmt_PhaseActionDescList vl_actions := {};    
+    v_LGenBase_dummyBool := f_EPTF_LGenBase_getActualPhaseActions(pl_scIdx,vl_actions); //If there are no actions, there will be no action in the for cycle
+    
+    f_EPTF_LGenBase_scenarioRelIdx(pl_scIdx , vl_eGrpIdx, vl_scInGrpIdx);
+    
+    var charstring vl_eGrpName := "";
+    var charstring vl_ScenarioName := "";
+    
+    f_EPTF_LGenBase_scenarioIdNames(vl_eGrpIdx, vl_scInGrpIdx, vl_eGrpName, vl_ScenarioName);
+    f_EPTF_LGenBase_loggingDebugTraffic(%definitionId&": vl actions: "&log2str(vl_actions)&" vl_eGrpName:"&vl_eGrpName&" vl_ScenarioName:"& vl_ScenarioName );
+    
+    for(var integer vl_j := 0; vl_j < sizeof(vl_actions); vl_j := vl_j + 1){
+      if(ischosen(vl_actions[vl_j].startTc)) // starting a traffic case
+      {
+        f_EPTF_LGenBase_loggingDebugTraffic(%definitionId&": LGenBase phase action startTc: "&log2str(vl_actions[vl_j].startTc))
+        f_EPTF_LGenBase_startTrafficCase(vl_eGrpName, vl_ScenarioName, vl_actions[vl_j].startTc);
+      }
+      else if(ischosen(vl_actions[vl_j].stopTc)) // stopping a traffic case
+      {
+        f_EPTF_LGenBase_loggingDebugTraffic(%definitionId&": LGenBase phase action stopTc: "&log2str(vl_actions[vl_j].stopTc))
+        vl_tcIdx := f_EPTF_LGenBase_trafficCaseId(vl_eGrpName, vl_ScenarioName, vl_actions[vl_j].stopTc);
+        if (-1 != vl_tcIdx)
+        {
+          f_EPTF_LGenBase_stopTrafficCase(vl_eGrpName, vl_ScenarioName, vl_actions[vl_j].stopTc);
+        }
+      }
+      else if(ischosen(vl_actions[vl_j].disableTc)) // disabling
+      {
+        f_EPTF_LGenBase_loggingDebugTraffic(%definitionId&": LGenBase phase action disableTc: "&log2str(vl_actions[vl_j].disableTc))
+        vl_tcIdx := f_EPTF_LGenBase_trafficCaseId(vl_eGrpName, vl_ScenarioName, vl_actions[vl_j].disableTc);
+        if (-1 != vl_tcIdx)
+        {
+          f_EPTF_LGenBase_finishTCByIdx(vl_tcIdx);
+        }
+      }
+      else if(ischosen(vl_actions[vl_j].restoreTc))
+      {
+        if (c_EPTF_Common_debugSwitch and f_EPTF_LGenBase_isEnabled(c_EPTF_LGenBase_loggingClassIdx_DebugTraffic)){
+          f_EPTF_LGenBase_loggingDebugTraffic(log2str(%definitionId&": LGenBase phase action restoreTc: ",vl_actions[vl_j].restoreTc)) 
+        }
+        vl_tcIdx := f_EPTF_LGenBase_trafficCaseId(vl_eGrpName, vl_ScenarioName, vl_actions[vl_j].restoreTc);
+        if (-1 != vl_tcIdx)
+        {	     
+          if(not f_EPTF_LGenBase_restoreTCbyIdx(vl_tcIdx)){
+            f_EPTF_LGenBase_loggingWarning("Restoring traffic case "&v_LGenBase_trafficCases[vl_tcIdx].uniqueName&" failed.")
+          }
+	}
+      }          
+      else if(ischosen(vl_actions[vl_j].customAction))
+      {
+        f_EPTF_LGenBase_loggingDebugTraffic(%definitionId&": LGenBase phase action customAction: "&log2str(vl_actions[vl_j].customAction))
+        var integer vl_fnIdx := f_EPTF_LGenBase_functionNameIndex(vl_actions[vl_j].customAction); // getting custom action from database
+        if (vl_fnIdx != -1) {     
+          v_LGenBase_functions[vl_fnIdx].customPhaseAction.apply(pl_scIdx);
+        }
+      }
+      else if(ischosen(vl_actions[vl_j].reportActualPhaseFinished))
+      {
+        f_EPTF_LGenBase_loggingDebugTraffic(%definitionId&": LGenBase phase action reportActualPhaseFinished: "&log2str(vl_actions[vl_j].reportActualPhaseFinished))
+        f_EPTF_LGenBase_setActualPhaseFinished(pl_scIdx);
+      }
+      else if(ischosen(vl_actions[vl_j].startScenario))
+      {
+        f_EPTF_LGenBase_loggingDebugTraffic(%definitionId&": LGenBase phase action startScenario: "&log2str(vl_actions[vl_j].startScenario)) 
+        f_EPTF_LGenBase_enableScenarioOnEntityGroup(vl_eGrpIdx, vl_scInGrpIdx, true);
+      }
+      else if(ischosen(vl_actions[vl_j].stopScenario))
+      {
+        f_EPTF_LGenBase_loggingDebugTraffic(%definitionId&": LGenBase phase action stopScenario: "&log2str(vl_actions[vl_j].stopScenario))
+        if(f_EPTF_LGenBase_isWeightedScenario(vl_eGrpIdx, vl_scInGrpIdx)) {
+          f_EPTF_LGenBase_stopWeightedScenarioByIdx(vl_eGrpIdx, vl_scInGrpIdx);
+        } else {
+          f_EPTF_LGenBase_stopScenarioByIdx(vl_eGrpIdx, vl_scInGrpIdx);
+        }
+      }
+      else if(ischosen(vl_actions[vl_j].restoreScenario))
+      {
+        f_EPTF_LGenBase_loggingDebugTraffic(%definitionId&": LGenBase phase action restoreScenario: "&log2str(vl_actions[vl_j].restoreScenario)) 
+        v_LGenBase_dummyBool := f_EPTF_LGenBase_restoreScenarioByIdx(vl_eGrpIdx, vl_scInGrpIdx, false);
+      }
+      else
+      {
+        // never reach
+        f_EPTF_Base_assert(%definitionId&"This phase action cannot be found.",false);       
+        //return false;
+      }
+    }
+    //return true;
+  }
+  
+  ///////////////////////////////////////////////////////////////////////////////
+  //  Function: f_EPTF_LGenBase_callPhaseFinishConditions
+  // 
+  //  Purpose:
+  //    Call and execute the phase finish conditions of the actual phase in the actual state
+  //
+  //  Parameters:
+  //    - pl_tcIdx - *integer* - traffic case index
+  //
+  //  Return Value:
+  //    - boolean: false in case of error
+  //
+  //  Errors & assertions:
+  //    -
+  //
+  //  Detailed Comments:
+  //    If a traffic case finished, this function checks whether the finish conditions met. If conditions met calls
+  //    <f_EPTF_LGenBase_setActualPhaseFinished> function, that finishes the actual phase.
+  //
+  ///////////////////////////////////////////////////////////////////////////////
+  private function f_EPTF_LGenBase_callPhaseFinishConditions
+  (
+    in integer pl_tcIdx
+  )
+  runs on EPTF_LGenBase_Private_CT
+  //return boolean
+  {
+    var integer vl_checkTcIdx;
+    var charstring vl_actualPhase;
+    var EPTF_LGenBase_Phase_States vl_actualState;    
+    var EPTF_LGenBase_PhaseCondition_InstanceList vl_conditions := {};     
+    var integer vl_scInGrpIdx := v_LGenBase_trafficCases[pl_tcIdx].eScenarioBackRef;
+    var integer vl_eGrpIdx := v_LGenBase_trafficCases[pl_tcIdx].eGroupBackref;        
+    var integer vl_scIdx := f_EPTF_LGenBase_scenarioAbsIdx(vl_eGrpIdx,vl_scInGrpIdx);
+    var boolean vl_allConditions := true; // checking, that all conditions met
+    
+    if(not f_EPTF_LGenBase_getActualPhase(vl_scIdx,vl_actualPhase,vl_actualState)){// no phase data, no conditions
+      return; //false
+    }
+    if(vl_actualState == IDLE) { // phase is not started finish conditions should not be checked
+      f_EPTF_LGenBase_loggingWarning(%definitionId&": Actual phase is in IDLE state (not started). Phase Finish Conditions won't be checked. Phase "&vl_actualPhase);
+      return; //false
+    }
+    
+    v_LGenBase_dummyBool := f_EPTF_LGenBase_getActualPhaseFinishConditions(vl_scIdx,vl_conditions);
+    
+    var charstring vl_eGrpName := "";
+    var charstring vl_ScenarioName := "";
+    
+    f_EPTF_LGenBase_scenarioIdNames(vl_eGrpIdx, vl_scInGrpIdx, vl_eGrpName, vl_ScenarioName);
+    f_EPTF_LGenBase_loggingDebugTraffic(%definitionId&": Checking conditions: "&log2str(vl_conditions))
+    
+    for(var integer vl_i := 0; vl_i < sizeof(vl_conditions); vl_i := vl_i + 1){
+      if(ischosen(vl_conditions[vl_i].condition.tcFinished))
+      {
+        vl_checkTcIdx := f_EPTF_LGenBase_trafficCaseId(vl_eGrpName, vl_ScenarioName, vl_conditions[vl_i].condition.tcFinished);
+        
+        if( v_LGenBase_trafficCases[vl_checkTcIdx].state != c_EPTF_LGenBase_tcStateTerminated) {  
+          vl_allConditions := false;
+        }
+      }
+      else if(ischosen(vl_conditions[vl_i].condition.tcStopped))
+      {
+        vl_checkTcIdx := f_EPTF_LGenBase_trafficCaseId(vl_eGrpName, vl_ScenarioName, vl_conditions[vl_i].condition.tcStopped);
+        
+        if( v_LGenBase_trafficCases[vl_checkTcIdx].state != c_EPTF_LGenBase_tcStateStopped) {
+          vl_allConditions := false;
+        }
+      }
+      else if(ischosen(vl_conditions[vl_i].condition.scenarioFinished))
+      {
+        //if(v_LGenBase_entityGroups[vl_eGrpIdx].scenarios[vl_scInGrpIdx].state != c_EPTF_LGenBase_tcStateTerminated) {	
+        if(v_LGenBase_entityGroups[vl_eGrpIdx].scenarios[vl_scInGrpIdx].startedTcs <=0) { //FIXME is this good?
+          vl_allConditions := false;
+        }	
+      }
+      else if(ischosen(vl_conditions[vl_i].condition.customFinishCondition))
+      {
+        //FIXME start custom finish function
+      }
+      else 
+      {
+        // never reach
+        f_EPTF_Base_assert(%definitionId&"This phase finish condition cannot be found.",false);       
+        return; //false
+      }
+    }
+    
+    if(vl_allConditions){ // all conditions met set to finished state
+      f_EPTF_LGenBase_loggingDebugTraffic(%definitionId&": All finish conditions fired");
+      f_EPTF_LGenBase_setActualPhaseFinished(vl_scIdx)
+    }
+  }
+  
+  ///////////////////////////////////////////////////////////////////////////////
+  //  Function: f_EPTF_LGenBase_setActualPhaseFinished
+  // 
+  //  Purpose:
+  //    Runs the phase finishing actions and finishes the actual phase 
+  //
+  //  Parameters:
+  //    - pl_scIdx - *integer* - scenario index
+  //
+  //  Return Value:
+  //    -
+  //
+  //  Errors & assertions:
+  //    -
+  //
+  //  Detailed Comments:
+  //    This funstion sets the state in the actual phase to finished and runs the handler function if is it set.
+  //
+  ///////////////////////////////////////////////////////////////////////////////
+  
+  private function f_EPTF_LGenBase_setActualPhaseFinished
+  (
+    in integer pl_scIdx
+  )
+  runs on EPTF_LGenBase_Private_CT
+  {
+    var charstring vl_actualPhase;
+    var EPTF_LGenBase_Phase_States vl_actualState;
+    var integer vl_scInGrpIdx;
+    var integer vl_eGrpIdx;
+    
+    if(f_EPTF_LGenBase_getActualPhase(pl_scIdx,vl_actualPhase,vl_actualState)){
+      f_EPTF_LGenBase_scenarioRelIdx(pl_scIdx , vl_eGrpIdx, vl_scInGrpIdx); 
+    for(var integer vl_j := 0; vl_j < sizeof(v_LGenBase_entityGroups[vl_eGrpIdx].scenarios[vl_scInGrpIdx].phaseData.phaseList); vl_j := vl_j + 1){
+      if(
+        v_LGenBase_entityGroups[vl_eGrpIdx].scenarios[vl_scInGrpIdx].phaseData.phaseList[vl_j].name == vl_actualPhase and
+        v_LGenBase_entityGroups[vl_eGrpIdx].scenarios[vl_scInGrpIdx].phaseData.phaseList[vl_j].actualState != FINISHED
+      )
+      {
+        v_LGenBase_entityGroups[vl_eGrpIdx].scenarios[vl_scInGrpIdx].phaseData.phaseList[vl_j].actualState := FINISHED; // set state to finished
+	f_EPTF_LGenBase_callPhaseActions(pl_scIdx); // start actions
+        if(
+          (v_LGenBase_testAborted == false) and 
+          (v_LGenBase_entityGroups[vl_eGrpIdx].scenarios[vl_scInGrpIdx].phaseData.handlerFn != null))
+        { // if stop button is not pressed and handler callback function exists call the callback
+          
+          v_LGenBase_entityGroups[vl_eGrpIdx].scenarios[vl_scInGrpIdx].phaseData.handlerFn.apply(
+            v_LGenBase_entityGroups[vl_eGrpIdx].name,	  
+            v_LGenBase_entityGroups[vl_eGrpIdx].scenarios[vl_scInGrpIdx].name,
+            vl_actualPhase,
+            v_LGenBase_entityGroups[vl_eGrpIdx].scenarios[vl_scInGrpIdx].phaseData.handlerArgs
+          );
+        }
+        break;
+        }
+      }
+    }
+  }
+  
+} //Private
+
+}

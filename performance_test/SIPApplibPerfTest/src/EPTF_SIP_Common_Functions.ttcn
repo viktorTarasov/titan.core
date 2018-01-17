@@ -1,0 +1,2138 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_SIP_Common_Functions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 522
+//  Updated:  2012-11-28
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////
+//  Module: EPTF_SIP_Common_Functions
+//
+//  Purpose:
+//     Basic function definitions that are used in the SIP AppLib.
+//
+//  Module depends on:
+//    <EPTF_CLL_Common_Definitions>
+//
+//    <EPTF_CLL_LGenBase_EventHandlingFunctions>
+//
+//    <EPTF_CLL_Logging_Functions>
+//
+//    <EPTF_CLL_HashMapStr2Int_Functions>
+//
+//    <EPTF_CLL_HashMapInt2Int_Functions>
+//
+//    <EPTF_CLL_Variable_Functions>
+//
+//    <EPTF_SIP_Common_Definitions>
+//
+//    <EPTF_SIP_Events>
+//
+//    <EPTF_SIP_LGen_Definitions>
+//
+//    <EPTF_SIP_Templates>
+//
+//    <EPTF_SIP_Transaction_Definitions>
+//
+//    <EPTF_SIP_UserDatabase_Definitions>
+//
+//    <Socket_API_Definitions>
+//
+//    <SIPmsg_Types>
+//
+//    <TCCSecurity_Functions>
+//
+//  Last review date:
+//    2012-11-08
+////////////////////////////////////////////////////
+module EPTF_SIP_Common_Functions {
+
+import from EPTF_CLL_Common_Definitions all;
+import from EPTF_CLL_LGenBase_EventHandlingFunctions all;
+import from EPTF_CLL_Logging_Functions all;
+import from EPTF_CLL_HashMapInt2Int_Functions all;
+import from EPTF_CLL_HashMapStr2Int_Functions all;
+import from EPTF_CLL_Variable_Functions all;
+
+import from EPTF_SIP_Common_Definitions all;
+import from EPTF_SIP_Events all;
+import from EPTF_SIP_LGen_Definitions all;
+import from EPTF_SIP_Templates all;
+import from EPTF_SIP_Transaction_Definitions all;
+import from EPTF_SIP_UserDatabase_Definitions all;
+
+import from Socket_API_Definitions all;
+
+import from SIPmsg_Types all;
+
+import from TCCSecurity_Functions all;
+import from TCCConversion_Functions all;
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_SIP_IntToMethod
+//
+//  Purpose:
+//    Converts an *integer* to a <Method>.
+//
+//  Parameters:
+//    - pl_int - *in integer* - the integer.
+//    - pl_method - *out* <Method> - the SIP method.
+//
+///////////////////////////////////////////////////////////
+external function f_EPTF_SIP_IntToMethod(
+  in integer pl_int,
+  out Method pl_pethod
+)
+
+external function f_EPTF_SIP_MethodToInt(
+  in Method pl_method,
+  inout integer pl_int);
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_SIP_isDigit
+//
+//  Purpose:
+//    Checks if a character is a single digit.
+//
+//  Parameters:
+//    - p_char - *in charstring* - the character.
+//
+//  Return Value:
+//    boolean - true, if the character is a single digit.
+///////////////////////////////////////////////////////////
+external function f_EPTF_SIP_isDigit(in charstring p_char) return boolean;
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_SIPUrl2str
+//
+//Purpose:
+//  Convers a <SipUrl> to a string.
+//
+//Parameters:
+//  - pl_url - *in* <SipUrl> - the SIP URI
+//  - pl_str - *inout* *charstring* - the string
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_SIPUrl2str(in SipUrl pl_url, inout charstring pl_str)
+{
+  var charstring vl_userInfo := ""
+  
+  if (omit != pl_url.userInfo)
+  {
+    vl_userInfo := pl_url.userInfo.userOrTelephoneSubscriber;
+    if (omit != pl_url.userInfo.password)
+    {
+      vl_userInfo := vl_userInfo & ":" & pl_url.userInfo.password;
+    }
+    
+    if (omit != pl_url.hostPort.host)
+    {
+      vl_userInfo := vl_userInfo & "@";
+    }
+  }
+  
+  var charstring vl_hostPort := "";
+  if (omit != pl_url.hostPort.host)
+  {
+    if( (-1 != f_strstr(pl_url.hostPort.host,":")) and ("[" != pl_url.hostPort.host[0]) ){
+      vl_hostPort := "[" & pl_url.hostPort.host & "]"
+    } else {
+      vl_hostPort := pl_url.hostPort.host
+    }
+  }
+  
+  if (omit != pl_url.hostPort.portField)
+  {
+    vl_hostPort := vl_hostPort & ":" & int2str(pl_url.hostPort.portField);
+  }
+  
+  var charstring vl_urlParams := "";
+  
+  if (omit != pl_url.urlParameters and sizeof(pl_url.urlParameters) > 0)
+  {
+    for (var integer i := 0; i < sizeof(pl_url.urlParameters); i := i + 1)
+    {
+      vl_urlParams := vl_urlParams & ";" & pl_url.urlParameters[i].id;
+      if (omit != pl_url.urlParameters[i].paramValue)
+      {
+        vl_urlParams := vl_urlParams & "=" & pl_url.urlParameters[i].paramValue
+      }
+    }
+  }
+
+  var charstring vl_headers := "";
+  
+  if (omit != pl_url.headers and sizeof(pl_url.headers) > 0)
+  {
+    vl_headers := "?" & pl_url.headers[0].id & "=";
+    if (omit != pl_url.headers[0].paramValue)
+    {
+      vl_headers := vl_headers & pl_url.headers[0].paramValue;
+    }
+    
+    for (var integer i := 1; i < sizeof(pl_url.headers); i := i + 1)
+    {
+      vl_headers := vl_headers & "&" & pl_url.headers[i].id & "=";
+      if (omit != pl_url.headers[i].paramValue)
+      {
+        vl_headers := vl_headers & pl_url.headers[i].paramValue;
+      }
+    }
+  }
+  
+  pl_str := pl_url.scheme & ":" & vl_userInfo & vl_hostPort& vl_urlParams & vl_headers;
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_SIP_SetParameter
+//
+//  Purpose:
+//    Sets if exists otherwise adds a parameter to a <SemicolonParam_List>.
+//
+//  Parameters:
+//    - pl_paramList - *inout* <SemicolonParam_List> - the parameter list
+//    - pl_paramName - *in* *charstring* - the name of the paramter to set
+//    - pl_paramValue - *in* *charstring* - the parameter value
+///////////////////////////////////////////////////////////
+function f_EPTF_SIP_SetParameter(
+  inout SemicolonParam_List pl_paramList,
+  in charstring pl_paramName,
+  in charstring pl_paramValue)
+{
+  for(var integer i := sizeof(pl_paramList) - 1; i >= 0; i := i - 1) {
+    if(pl_paramList[i].id == pl_paramName) {
+      if(pl_paramValue == "") {
+        pl_paramList[i].paramValue := omit;
+      } else {
+        pl_paramList[i].paramValue := pl_paramValue;
+      }
+      return;
+    }
+  }
+  if (pl_paramValue == ""){ 
+    pl_paramList[sizeof(pl_paramList)] := { pl_paramName, omit };
+  } else {
+    pl_paramList[sizeof(pl_paramList)] := { pl_paramName, pl_paramValue };
+  }
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_SIP_AddParameter
+//
+//  Purpose:
+//    Removes a parameter from a <SemicolonParam_List>.
+//
+//  Parameters:
+//    - pl_paramList - *inout* <SemicolonParam_List> - the parameter list
+//    - pl_paramName - *in* *charstring* - the name of the paramter to set
+//    - pl_paramValue - *in* *charstring* - the parameter value
+///////////////////////////////////////////////////////////
+function f_EPTF_SIP_AddParameter(
+  inout SemicolonParam_List pl_paramList,
+  in charstring pl_paramName,
+  in charstring pl_paramValue)
+{
+  pl_paramList[sizeof(pl_paramList)] := { pl_paramName, pl_paramValue };
+}
+
+function f_EPTF_SIP_RemoveParameter(
+  inout SemicolonParam_List pl_paramList,
+  in charstring pl_paramName
+)
+{
+  var SemicolonParam_List vl_new := {};
+  
+  for(var integer i := 0; i < sizeof(pl_paramList); i := i + 1) {
+    if(pl_paramList[i].id != pl_paramName)
+    {
+      vl_new[sizeof(vl_new)] := pl_paramList[i];
+    }
+  }
+  
+  pl_paramList := vl_new;
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_SIP_GetParameter
+// 
+//  Purpose:
+//    Gets a parameter from a parameter list of a SIP message
+// 
+//  Parameters:
+//    - pl_paramList - *in* <SemicolonParam_List> - the parameter list
+//    - pl_paramName - *in* *charstring* - the name of the paramter to get
+//    - pl_paramValue - *out* *charstring* - the returned parameter value
+// 
+///////////////////////////////////////////////////////////
+function f_EPTF_SIP_GetParameter(
+  in SemicolonParam_List pl_paramList,
+  in charstring pl_paramName,
+  out charstring pl_paramValue)
+{
+  for(var integer i := sizeof(pl_paramList) - 1; i >= 0 ; i := i - 1) {
+    if(pl_paramList[i].id == pl_paramName) {
+      if(ispresent(pl_paramList[i].paramValue)) {
+        pl_paramValue := pl_paramList[i].paramValue;
+      } else {
+        pl_paramValue := "";
+      }
+      return;
+    }
+  }
+  pl_paramValue := "";
+  return;
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_SIP_GetSecurityParameterAll
+// 
+//  Purpose:
+//    Gets the security machanisms
+// 
+//  Parameters:
+//    - pl_paramList - *in* <Security_mechanism_list> - the parameter list
+//    - pl_paramName - *in* *charstring* - the name of the paramter to get
+//    - pl_paramValue - *out* <EPTF_CharstringList> - the returned parameter values
+// 
+///////////////////////////////////////////////////////////
+function f_EPTF_SIP_GetSecurityParameterAll(
+  in Security_mechanism_list pl_paramList,
+  in charstring pl_paramName,
+  out EPTF_CharstringList pl_paramValues)
+{
+  pl_paramValues := {};
+  
+  for (var integer k := 0; k < sizeof(pl_paramList); k := k+1){
+    f_EPTF_SIP_GetParameter(pl_paramList[k].mechanism_params,
+      pl_paramName, pl_paramValues[sizeof(pl_paramValues)]);
+  }
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_SIP_GetUri
+// 
+//  Purpose:
+//    Gets the SIP URI from an <Addr_Union>
+// 
+//  Parameters:
+//    - pl_addr - *in* <Addr_Union> - the address data
+//    - pl_uri - *out* *SipUrl* - the returned SIP URI
+//
+///////////////////////////////////////////////////////////
+function f_EPTF_SIP_GetUri(in Addr_Union pl_addr, inout SipUrl pl_uri)
+{
+  if(ischosen(pl_addr.nameAddr)) {
+    pl_uri := pl_addr.nameAddr.addrSpec;
+  } else {
+    pl_uri := pl_addr.addrSpecUnion;
+  }
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_GetRequestUri
+//
+//Purpose:
+//  Gets the SIP URI from an <Addr_Union> and 
+//    sets the userInfo field of the <SipUrl> to omit.
+//
+//Parameters:
+//  - pl_addr - *in* <Addr_Union> - the address data
+//  - pl_uri - *inout* <SipUrl> - the returned SIP URI
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_GetRequestUri(in Addr_Union pl_addr, inout SipUrl pl_uri)
+{
+  f_EPTF_SIP_GetUri(pl_addr, pl_uri);
+  pl_uri.userInfo := omit;
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_SIP_GetTransactionId
+// 
+//  Purpose:
+//    Gets the transaction ID from a SIP message
+// 
+//  Parameters:
+//    - pl_msgHeader - *inout* <MessageHeader> - the SIP message header
+//    - pl_id - *inout* *charstring* - the transaction ID
+// 
+//
+//  Return Value:
+//    boolean - true if the transactio if is valid
+//
+//  Detailed Comments:
+//    The function extracts the transaction ID from the
+//      VIA branch ID parameter and removes the SIP branch cookie "z9hG4bK".
+///////////////////////////////////////////////////////////
+function f_EPTF_SIP_GetTransactionId(
+  inout MessageHeader pl_msgHeader,
+  inout charstring pl_id)
+runs on EPTF_SIP_LGen_CT
+{
+  pl_id := "";
+  var charstring branch := "";
+  var integer lenBranch;
+
+  if (omit == pl_msgHeader.via or sizeof(pl_msgHeader.via.viaBody) < 1)
+  {
+    return;
+  }
+  
+  if(ispresent(pl_msgHeader.via.viaBody[0].viaParams)) {
+    f_EPTF_SIP_GetParameter(pl_msgHeader.via.viaBody[0].viaParams,
+      c_SIP_BRANCH_ID, branch);
+  }
+
+  lenBranch := lengthof(branch);
+  if(lenBranch == 0) {
+    f_SIP_Logging_WARNING(%definitionId & ": top-most Via header field in header doesn't have branch parameter.");
+    pl_id := "";
+    return;
+  }
+  if( (lenBranch <= c_SIP_BRANCH_COOKIE_LEN)
+    or(substr(branch, 0, c_SIP_BRANCH_COOKIE_LEN) != c_SIP_BRANCH_COOKIE) ) {
+    f_SIP_Logging_WARNING(%definitionId & ": branch parameter in Via header is not RFC 3261 compliant : " & branch);
+    pl_id := "";
+    return;
+  }
+  pl_id := substr(branch, c_SIP_BRANCH_COOKIE_LEN,
+    lenBranch - c_SIP_BRANCH_COOKIE_LEN);
+  return;
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_SIP_DecodeId
+// 
+//  Purpose:
+//    Decodes a transaction ID or local tag
+// 
+//  Parameters:
+//    - pl_id - *in* *charstring* - the ID to decode
+// 
+//  Return Value:
+//    integer - the decoded ID
+// 
+//  Detailed Comments:
+//    The function converts the input charstring to an integer.
+//    This prevents warning messages that would be printed by
+//    calling str2int if the string contains leading zeros.
+///////////////////////////////////////////////////////////
+function f_EPTF_SIP_DecodeId(in charstring pl_id)
+runs on EPTF_SIP_LGen_CT
+return integer
+{
+  var integer i, c;
+  var integer retVal := 0;
+  for(i := 0; i < lengthof(pl_id); i := i + 1) {
+    if (f_EPTF_SIP_isDigit(pl_id[i]))
+    {
+      c := str2int(pl_id[i]);
+      retVal := retVal * 10;
+      retVal := retVal + c;
+    }
+    else
+    {
+      f_SIP_Logging_WARNING(%definitionId & ": undecodable id: " & pl_id);
+      return -1;
+    }
+  }
+  return retVal;
+//  return str2int(pl_id); // str2int prints warnings for leading 0s.
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_SIP_RecordRoute2Route
+// 
+//  Purpose:
+//    Sets the route set dialog state from the Record-Route header field.
+// 
+//  Parameters:
+//    - pl_recordRoute - *in* <RecordRoute> - received RecordRoute
+//    - pl_route - *out* <SIP_RouteBodyList> - Route body list
+// 
+//  Return Value:
+//    boolean - true if the first URI of the route-set contains the "lr" parameter
+//
+///////////////////////////////////////////////////////////
+function f_EPTF_SIP_RecordRoute2Route(
+  in RecordRoute pl_recordRoute,
+  inout SIP_RouteBodyList pl_route,
+  in boolean pl_isUAC
+) return boolean
+{
+  if (0 == sizeof(pl_recordRoute.routeBody))
+  {
+    return false;
+  }
+  
+  pl_route := {};
+  
+  for(var integer i := 0; i < sizeof(pl_recordRoute.routeBody); i := i + 1) {
+    pl_route[i] := {cg_FlatSipUrl_base, omit}
+    if (pl_isUAC)
+    {
+      f_EPTF_SIP_NameAddr2FlatSipUrl(pl_recordRoute.routeBody[sizeof(pl_recordRoute.routeBody) - i - 1].nameAddr, pl_route[i].routeAddr);
+      pl_route[i].rrParam := pl_recordRoute.routeBody[sizeof(pl_recordRoute.routeBody) - i - 1].rrParam;
+    }else{
+      f_EPTF_SIP_NameAddr2FlatSipUrl(pl_recordRoute.routeBody[i].nameAddr, pl_route[i].routeAddr);
+      pl_route[i].rrParam := pl_recordRoute.routeBody[i].rrParam;
+    }
+  }
+  if(sizeof(pl_route) > 0 and 
+      omit != pl_route[0].routeAddr.urlParameters) {
+    for(var integer i := 0; i < sizeof(pl_route[0].routeAddr.urlParameters); i := i + 1) {
+      if(pl_route[0].routeAddr.urlParameters[i].id == "lr") { return true; }
+    }
+  }
+  return false;
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_SIP_StripFirstRoute
+// 
+//  Purpose:
+//    Removes the first element of a route set.
+// 
+//  Parameters:
+//    - pl_route - *inout* <SIP_RouteBodyList> - the route set
+// 
+///////////////////////////////////////////////////////////
+function f_EPTF_SIP_StripFirstRouteBodyFlat(
+  inout SIP_RouteBodyList pl_route
+)
+{
+  var SIP_RouteBodyList newRoute := {}
+  
+  var integer i;
+  for(i := 1; i < sizeof(pl_route); i := i + 1) {
+    newRoute[i - 1] := pl_route[i];
+  }
+  pl_route := newRoute;
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_SIP_StripFirstRoute
+// 
+//  Purpose:
+//    Removes the first element of a route set.
+// 
+//  Parameters:
+//    - pl_route - *inout* <Route> - the route set
+// 
+///////////////////////////////////////////////////////////
+function f_EPTF_SIP_StripFirstRoute(
+  inout Route pl_route
+)
+{
+  var Route newRoute := {
+    fieldName := ROUTE_E,
+    routeBody := {}
+  }
+  var integer i;
+  for(i := 1; i < sizeof(pl_route.routeBody); i := i + 1) {
+    newRoute.routeBody[i - 1] := pl_route.routeBody[i];
+  }
+  pl_route := newRoute;
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_SIP_stripQuotes
+// 
+//  Purpose:
+//    Strip the quotation marks from the beginning and end of a charstring
+// 
+//  Parameters:
+//    - pl_str - *in* *charstring* - a string between ""s
+// 
+//  Return Value:
+//    charstring - the string without the quotation marks
+// 
+///////////////////////////////////////////////////////////
+function f_EPTF_SIP_stripQuotes(in charstring pl_str) return charstring
+{
+  var charstring result;
+  if (lengthof (pl_str) > 2)
+  {
+    result := substr (pl_str, 1, lengthof (pl_str) - 2);
+  } 
+  else
+  {
+    result :=""
+  }
+  return result;
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_SIP_calcDigest
+// 
+//  Purpose:
+//    Calculates the authentication digest from a challenge
+// 
+//  Parameters:
+//    - method - *in* *charstring* - the SIP method that will be used for authentication
+//    - username - *in* *charstring* - user name
+//    - uri - *in* *charstring* - SIP URI
+//    - password - *in* *charstring* - password of the user
+//    - ch - *in* <CommaParam_List> - challenge
+//    - nonceCount - *in* *charstring* - nonceCount parameter
+// 
+//  Return Value:
+//    Credentials - credentials that can be used for authentication
+///////////////////////////////////////////////////////////
+function f_EPTF_SIP_calcDigest
+(
+  in charstring method,
+  in charstring username,
+  in charstring uri,
+  in charstring password, 
+  in CommaParam_List ch,
+  in charstring nonceCount
+)
+return Credentials
+{
+  var Credentials result;
+  var charstring nonce := "";
+  var charstring cnonce := "0a4f113b";
+  var charstring realm;
+  var charstring algorithm;
+  var charstring qop := "auth";
+
+  // MD5 hash of empty entity body for qop=auth, for qop=auth-int a new hash for the body must be 
+  // calculated).
+  const charstring hEntity := "d41d8cd98f00b204e9800998ecf8427e"; //hash for empty string
+  var charstring response;
+  var charstring opaque;
+  f_EPTF_SIP_GetParameter(ch, c_SIP_PARAM_NONCE, nonce);
+  nonce := f_EPTF_SIP_stripQuotes(nonce);
+  f_EPTF_SIP_GetParameter(ch, c_SIP_PARAM_REALM, realm);
+  realm := f_EPTF_SIP_stripQuotes(realm);
+  f_EPTF_SIP_GetParameter(ch, c_SIP_PARAM_ALGORITHM, algorithm);
+  //qop := f_EPTF_SIP_stripQuotes(f_EPTF_SIP_getCommaParamValue("qop", ch));
+  f_EPTF_SIP_GetParameter(ch, c_SIP_PARAM_OPAQUE, opaque);
+  opaque := f_EPTF_SIP_stripQuotes(opaque);
+  response := f_calculateDigestResponse(nonce, cnonce, username, realm, password, algorithm, nonceCount, method, qop, uri, hEntity);
+  result.digestResponse := {};
+
+  f_EPTF_SIP_AddParameter(result.digestResponse, c_SIP_PARAM_USERNAME, """" & username & """");
+  f_EPTF_SIP_AddParameter(result.digestResponse, c_SIP_PARAM_REALM, """" & realm & """");
+  f_EPTF_SIP_AddParameter(result.digestResponse, c_SIP_PARAM_NONCE, """" & nonce & """");
+  f_EPTF_SIP_AddParameter(result.digestResponse, c_SIP_PARAM_URI, """" & uri & """");
+  f_EPTF_SIP_AddParameter(result.digestResponse, c_SIP_PARAM_RESPONSE, """" & response & """");
+  if(algorithm != "") { f_EPTF_SIP_AddParameter(result.digestResponse, c_SIP_PARAM_ALGORITHM, algorithm); }
+  f_EPTF_SIP_AddParameter(result.digestResponse, c_SIP_PARAM_CNONCE, """" & cnonce & """");
+  f_EPTF_SIP_AddParameter(result.digestResponse, c_SIP_PARAM_QOP, qop);
+  f_EPTF_SIP_AddParameter(result.digestResponse, c_SIP_PARAM_NC, nonceCount );
+  
+  if(opaque != "") {
+    f_EPTF_SIP_AddParameter(result.digestResponse, c_SIP_PARAM_OPAQUE, opaque);
+  }
+  return result;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_min
+//
+//Purpose:
+//  Compares two positive float values and returns the smaller.
+//  If one of the values is 0.0 the other will be returned
+//
+//Parameters:
+//  - pl_value1 - *in* *float* - 
+//  - pl_value2 - *in* *float* -
+//  - pl_min - *out* *float* - the minimum of the two values
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_min(in float pl_value1, in float pl_value2, out float pl_min)
+{
+  if (0.0 == pl_value1)
+  {
+    pl_min := pl_value2;
+  }else if (0.0 == pl_value2)
+  {
+    pl_min := pl_value1;
+  }else if (pl_value1 <= pl_value2)
+  {
+    pl_min := pl_value1
+  }else
+  {
+    pl_min := pl_value2;
+  }
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_str2method
+//
+//Purpose:
+//  Converts a string value to a <Method> 
+//
+//Parameters:
+//  - pl_str - *in* *charstring* -
+//  - pl_method - *inout* <Method> -
+//
+//Return Value:
+//  boolean - true if the string has been recognized as a SIP method
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_str2method(in charstring pl_str, inout Method pl_method)
+return boolean
+{
+  if ("BYE" == pl_str)
+  {
+    pl_method := BYE_E;
+  }else if ("CANCEL" == pl_str)
+  {
+    pl_method := CANCEL_E;
+  }else if ("INFO" == pl_str)
+  {
+    pl_method := INFO_E;
+  }else if ("INVITE" == pl_str)
+  {
+    pl_method := INVITE_E;
+  }else if("OPTIONS" == pl_str)
+  {
+    pl_method := OPTIONS_E;
+  }else if ("MESSAGE" == pl_str)
+  {
+    pl_method := MESSAGE_E;
+  }else if ("NOTIFY" == pl_str)
+  {
+    pl_method := NOTIFY_E;
+  }else if ("PRACK" == pl_str)
+  {
+    pl_method := PRACK_E;
+  }else if ("PUBLISH" == pl_str)
+  {
+    pl_method := PUBLISH_E;
+  }else if ("REFER" == pl_str)
+  {
+    pl_method := REFER_E;
+  }else if ("REGISTER" == pl_str)
+  {
+    pl_method := REGISTER_E;
+  }else if ("SUBSCRIBE" == pl_str)
+  {
+    pl_method := SUBSCRIBE_E
+  }else if ("UPDATE" == pl_str)
+  {
+    pl_method := UPDATE_E;
+  }else{
+    return false;
+  }
+
+  return true;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_method2str
+//
+//Purpose:
+//  Convers a <Method> value to a string.
+//
+//Parameters:
+//  - pl_method - *in* <Method> -
+//  - pl_str - *inout* *charstring* -
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_method2str(in Method pl_method, inout charstring pl_str)
+{
+  pl_str := c_SIP_Methods[enum2int(pl_method)];
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_genCallId
+//
+//Purpose:
+//  Generates a Call-ID value.
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_genCallId (
+  in integer pl_Idx,
+  in charstring  pl_host,
+  inout charstring pl_CallId)
+runs on EPTF_SIP_LGen_CT
+{
+  vcb_EPTF_SIP_getCallId.apply(pl_Idx, pl_host, pl_CallId);
+};
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_genCallId_default
+//
+//Purpose:
+//  Generates a Call-ID value.
+//
+//Parameters:
+//  - pl_idx - *in* *integer* - unique id on the component
+//  - pl_host - *in* *charstring* - the host id
+//  - pl_CallId - *inout* *charstring* - the generated Call-Id
+//
+//Detailed comments:  
+//    The generated ID will have the following format:
+//      "TTCN3" & six random digits & pl_Idx encoded in 6 digits, prefixed with "0"s if needed & "@" & pl_host
+////////////////////////////////////////////////////
+function f_EPTF_SIP_genCallId_default (
+  in integer pl_idx,
+  in charstring  pl_host,
+  inout charstring pl_callId)
+{
+  var charstring vl_prefix := int2str(float2int(1000000.0 * rnd()));
+  
+  pl_callId := int2str(pl_idx);
+  if (6 > lengthof(pl_callId))
+  {
+    pl_callId := "TTCN3" & vl_prefix &
+      substr("000000",0,6-lengthof(pl_callId)) & pl_callId & "@" & pl_host;
+  }else{
+    pl_callId := "TTCN3" & vl_prefix & pl_callId & "@" & pl_host;
+  }
+}
+
+function f_EPTF_SIP_registerCallIdGen(in fcb_EPTF_SIP_genCallId pl_func)
+runs on EPTF_SIP_LGen_CT
+{
+  vcb_EPTF_SIP_getCallId := pl_func
+}
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_User_FindByURI
+//
+//Purpose:
+//  Searches for a user in the v_db_users database.
+//
+//Parameters:
+//  - pl_message - *in* <PDU_SIP> - the incoming SIP message
+//  - pl_userIdx - *inout* *integer* - the found user index or -1
+//
+//Detailed comments:
+//  In case of an incoming request the user is searched by the 
+//  To header field of the request, or only in case of a REGISTER,
+//  by the SIP URI in the Request-Line.
+//
+//  In case of an incoming response the user is searched by the
+//  From header field of the request.
+//
+//  The user can add his own search function by setting the
+//  v_userSearchFunc call-back function.
+////////////////////////////////////////////////////
+function f_EPTF_SIP_User_FindByURI(
+  in PDU_SIP pl_message,
+  inout integer pl_userIdx)
+runs on EPTF_SIP_LGen_CT
+{
+  var SipUrl pl_targetUri;
+  if (ischosen(pl_message.request))
+  {
+    if (REGISTER_E == pl_message.request.requestLine.method)
+    {      
+      pl_targetUri := pl_message.request.requestLine.requestUri;
+    }else
+    {
+      f_EPTF_SIP_GetUri(pl_message.request.msgHeader.toField.addressField, pl_targetUri);
+    }
+  }else{
+    f_EPTF_SIP_GetUri(pl_message.response.msgHeader.fromField.addressField, pl_targetUri);
+  }
+
+  //search in hashmap
+  var charstring vl_targetUri_str := "";
+  pl_targetUri.urlParameters := omit;
+  pl_targetUri.headers := omit;
+  f_EPTF_SIP_SIPUrl2str(pl_targetUri, vl_targetUri_str);
+
+  //action("Incoming URI: ", vl_targetUri_str)
+  if (not f_EPTF_str2int_HashMap_Find(v_db_users.hashRef, vl_targetUri_str, pl_userIdx))
+  {
+    pl_userIdx := -1;
+    f_SIP_Logging_WARNING("User cannot be found: " & vl_targetUri_str);
+  }
+
+  //action("Find by URI (", vl_method_debugTMP, "): ", vl_targetUri_str, ": ", pl_userIdx);
+
+  /* linear search
+  var SipUrl pl_uri;
+
+  var integer vl_lentgthOf := 0;
+  
+  if (f_EPTF_FBQ_getBusyHeadIdx(pl_userIdx, v_db_users.queue))
+  {
+    vl_lentgthOf := f_EPTF_FBQ_getLengthOfBusyChain(v_db_users.queue);
+    for(var integer i := 0; i < vl_lentgthOf; i := i + 1)
+    {
+      for (var integer ii := 0; ii < sizeof(v_db_users.data[pl_userIdx].iD); ii := ii + 1)
+      {
+        f_EPTF_SIP_GetUri(v_db_users.data[pl_userIdx].iD[ii].addr,pl_uri);
+        if(pl_uri == pl_targetUri) {
+          log("Found user index: ", pl_userIdx);
+          return;
+        }
+      }
+      
+      f_EPTF_FBQ_getFwdBusyItemIdx(pl_userIdx, v_db_users.queue);
+    }
+  }
+
+  f_SIP_Logging_WARNING(log2str(
+    %definitionId, ": could not found user in database: ", pl_targetUri));
+
+  pl_userIdx := -1;
+  */
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_updateCredentials
+//
+//Purpose:
+//  Updates the credentials using a challenge.
+//
+//Parameters:
+//  - pl_userIdx - *in* *integer* - the index of the user in v_db_users
+//  - pl_method - *in* <Method> - the method of the request to put the credentials in
+//  - pl_userName - *in* *charstring* - the username to calculate the digest response with
+//  - pl_uri - *in* *charstring* - the SIP URI to calculate the digest response with
+//  - pl_password - *in* *charstring* - the password to calculate the digest response with
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_updateCredentials(
+  in integer pl_userIdx,
+  in Method pl_method, 
+  in charstring pl_userName, 
+  in charstring pl_uri,
+  in charstring pl_password)
+runs on EPTF_SIP_LGen_CT
+{
+  v_db_users.data[pl_userIdx].authData.credentials := 
+    f_EPTF_SIP_calcDigest
+    (
+      c_SIP_Methods[enum2int(pl_method)],
+      pl_userName,
+      pl_uri,
+      pl_password,
+      v_db_users.data[pl_userIdx].authData.challenge,
+      f_EPTF_SIP_getNonceCountString(v_db_users.data[pl_userIdx].authData.nonceCount)
+    );
+
+  v_db_users.data[pl_userIdx].authData.nonceCount := v_db_users.data[pl_userIdx].authData.nonceCount + 1;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_setNoncefromNextNonce
+//
+//Purpose:
+//  Stores the nonce value received in the Authentication-Info header field.
+//
+//Parameters:
+
+//  - pl_userIdx - *in* *integer* - the index of the user in v_db_users
+//  - pl_authInfo - *in* <AuthenticationInfo> - the header field
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_setNoncefromNextNonce(in integer pl_userIdx, in AuthenticationInfo pl_authInfo)
+runs on EPTF_SIP_LGen_CT
+{
+  var charstring vl_nonce;
+  var charstring vl_nextNonce;
+  f_EPTF_SIP_GetParameter(v_db_users.data[pl_userIdx].authData.credentials.digestResponse, "nonce", vl_nonce);
+  f_EPTF_SIP_GetParameter(pl_authInfo.ainfo, "nextnonce", vl_nextNonce);
+
+  if ("" != vl_nextNonce and vl_nextNonce != vl_nonce){
+    f_EPTF_SIP_SetParameter
+      (
+        v_db_users.data[pl_userIdx].authData.challenge,
+        "nonce",
+        vl_nextNonce
+      );
+
+    v_db_users.data[pl_userIdx].authData.nonceCount := 1;
+  }
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_updateContact
+//
+//Purpose:
+//  Returns a Contact header field containing the <Addr_Union> address.
+//
+//Parameters:
+//  - p_contact - *inout* <Contact> -
+//  - pl_addr - *in* <Addr_Union> -
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_updateContact(inout Contact p_contact, in Addr_Union pl_addr, in SemicolonParam_List pl_params := {} )
+runs on EPTF_SIP_LGen_CT
+{
+  if (sizeof(pl_params) == 0)
+  {
+    p_contact :=
+    {
+      fieldName := CONTACT_E,
+      contactBody :=
+      {
+        contactAddresses :=
+        {
+          {
+            addressField := pl_addr,
+            contactParams := omit
+          }
+        }
+      }
+    }
+  }else{
+    p_contact :=
+    {
+      fieldName := CONTACT_E,
+      contactBody :=
+      {
+        contactAddresses :=
+        {
+          {
+            addressField := pl_addr,
+            contactParams := pl_params
+          }
+        }
+      }
+    }
+  }
+}
+
+function f_EPTF_SIP_setContact(
+  inout Contact p_contact, 
+  in integer pl_userIdx, 
+  in SemicolonParam_List pl_params, 
+  in integer pl_contactId)
+runs on EPTF_SIP_LGen_CT
+{
+  if (pl_contactId < 0){return;}
+
+  v_db_users.data[pl_userIdx].regData.contactId := pl_contactId;
+  
+  p_contact :=
+  {
+    fieldName := CONTACT_E,
+    contactBody :=
+    {
+      contactAddresses :=
+      {
+        {
+//          addressField := v_db_users.data[pl_userIdx].iD[pl_contactId].addr,
+          contactParams := pl_params
+        }
+      }
+    }
+  }
+  f_EPTF_SIP_getUserData_id_addr(pl_userIdx, pl_contactId, p_contact.contactBody.contactAddresses[0].addressField);
+}
+
+function f_EPTF_SIP_FlatUserId2UserId(in SIP_FlatUserID pl_flat, out SIP_UserID pl_id)
+{
+  f_EPTF_SIP_FlatSipUrl2AddrUnion(pl_flat.addr, pl_id.addr);
+  pl_id.password := pl_flat.password;
+}
+
+function f_EPTF_SIP_FlatUserIdList2UserIdList(in SIP_FlatUserIDList pl_flat, out SIP_UserIDList pl_id)
+{
+  pl_id:={};
+  for(var integer i:=0; i<sizeof(pl_flat); i:=i+1) {
+    f_EPTF_SIP_FlatSipUrl2AddrUnion(pl_flat[i].addr, pl_id[i].addr);
+    pl_id[i].password := pl_flat[i].password;
+  }
+}
+
+function f_EPTF_SIP_SipUrl2FlatSipUrl(
+  in SipUrl pl_uri,
+  out SIP_FlatSipUrl pl_flat)
+{
+  pl_flat.displayName := omit;
+  pl_flat.scheme :=
+    pl_uri.scheme;
+  if(ispresent(pl_uri.userInfo)) {
+    pl_flat.username :=
+      pl_uri.userInfo.userOrTelephoneSubscriber;
+  } else {
+    pl_flat.username := "";
+  }
+  if(ispresent(pl_uri.hostPort.host)) {
+    pl_flat.hostname :=
+      pl_uri.hostPort.host;
+  } else {
+    pl_flat.hostname := "";
+  }
+  if(ispresent(pl_uri.hostPort.portField)) {
+    pl_flat.portField :=
+      pl_uri.hostPort.portField;
+  } else {
+    pl_flat.portField := -1;
+  }
+  pl_flat.urlParameters :=
+    pl_uri.urlParameters;
+}
+
+function f_EPTF_SIP_FlatSipUrl2SipUrl(
+  in SIP_FlatSipUrl pl_flat,
+  out SipUrl pl_uri)
+{
+  pl_uri.scheme := pl_flat.scheme;
+  if(pl_flat.username != "") {
+    pl_uri.userInfo := {
+      userOrTelephoneSubscriber := pl_flat.username,
+      password := omit
+    }
+  } else {
+    pl_uri.userInfo := omit;
+  }
+  if(pl_flat.hostname != "") {
+    pl_uri.hostPort.host := pl_flat.hostname;
+  } else {
+    pl_uri.hostPort.host := omit;
+  }
+  if(pl_flat.portField >= 0) {
+    pl_uri.hostPort.portField := pl_flat.portField;
+  } else {
+    pl_uri.hostPort.portField := omit;
+  }
+  pl_uri.urlParameters := pl_flat.urlParameters;
+  pl_uri.headers := omit;
+}
+
+function f_EPTF_SIP_AddrUnion2FlatSipUrl(
+  in Addr_Union pl_addr,
+  out SIP_FlatSipUrl pl_flat)
+{
+  if(ischosen(pl_addr.nameAddr)) {
+    f_EPTF_SIP_SipUrl2FlatSipUrl(pl_addr.nameAddr.addrSpec, pl_flat);
+    pl_flat.displayName := pl_addr.nameAddr.displayName;
+  } else {
+    f_EPTF_SIP_SipUrl2FlatSipUrl(pl_addr.addrSpecUnion, pl_flat);
+  }
+}
+
+function f_EPTF_SIP_FlatSipUrl2AddrUnion(
+  in SIP_FlatSipUrl pl_flat,
+  out Addr_Union pl_addr)
+{
+  if(pl_flat.displayName == omit) {
+    f_EPTF_SIP_FlatSipUrl2SipUrl(pl_flat, pl_addr.addrSpecUnion);
+  } else {
+    f_EPTF_SIP_FlatSipUrl2SipUrl(pl_flat, pl_addr.nameAddr.addrSpec);
+    pl_addr.nameAddr.displayName := pl_flat.displayName;
+  }
+}
+
+function f_EPTF_SIP_NameAddr2FlatSipUrl(
+  in NameAddr pl_addr,
+  out SIP_FlatSipUrl pl_flat)
+{
+  f_EPTF_SIP_SipUrl2FlatSipUrl(pl_addr.addrSpec, pl_flat);
+  pl_flat.displayName := pl_addr.displayName;
+}
+
+function f_EPTF_SIP_FlatSipUrl2NameAddr(
+  in SIP_FlatSipUrl pl_flat,
+  out NameAddr pl_addr)
+{
+  f_EPTF_SIP_FlatSipUrl2SipUrl(pl_flat, pl_addr.addrSpec);
+  pl_addr.displayName := pl_flat.displayName;
+}
+
+////////////////////////////////////////////////////
+// Group: EPTF_SIP_UserDatabase_AccessorFunctions
+//
+// Purpose:
+//    Accessor functions for the SIP User Database
+//    These functions should be in EPTF_SIP_UserDatabase_Functions
+//    (or a new module), but would cause circular import
+////////////////////////////////////////////////////
+group EPTF_SIP_UserDatabase_AccessorFunctions
+{
+  ////////////////////////////////////////////////////
+  //Function: f_EPTF_SIP_getUserData_id
+  //
+  //Purpose:  
+  //  Gets the user ids of a SIP user.
+  //
+  //Parameters:
+  //  - pl_userIdx - *in* *integer* - the index of the user in v_db_users
+  //  - pl_idx - *in* *integer* - the index of the user id. More than one id can belong to one user
+  //  - pl_addr - *out* <SIP_UserID> - the returned user id
+  //
+  ////////////////////////////////////////////////////
+  function f_EPTF_SIP_getUserData_id(in integer pl_userIdx, in integer pl_idx, out SIP_UserID pl_addr)
+  runs on EPTF_SIP_LGen_CT
+  {
+    f_EPTF_SIP_getUserData_id_addr(pl_userIdx, pl_idx, pl_addr.addr);
+    pl_addr.password := v_db_users.data[pl_userIdx].iD[pl_idx].password;
+  }
+
+  ////////////////////////////////////////////////////
+  //Function: f_EPTF_SIP_getUserData_id_addr
+  //
+  //Purpose:  
+  //  Gets the addr field of the user ids of a SIP user.
+  //
+  //Parameters:
+  //  - pl_userIdx - *in* *integer* - the index of the user in v_db_users
+  //  - pl_idx - *in* *integer* - the index of the user id. More than one id can belong to one user
+  //  - pl_addr - *out* <Addr_Union> - the returned user id
+  //
+  ////////////////////////////////////////////////////
+  function f_EPTF_SIP_getUserData_id_addr(in integer pl_userIdx, in integer pl_idx, out Addr_Union pl_addr)
+  runs on EPTF_SIP_LGen_CT
+  {
+    f_EPTF_SIP_FlatSipUrl2AddrUnion(v_db_users.data[pl_userIdx].iD[pl_idx].addr, pl_addr);
+  }
+
+  ////////////////////////////////////////////////////
+  //Function: f_EPTF_SIP_getUserData_nrOfIds
+  //
+  //Purpose:  
+  //  Gets the number of user ids of a SIP user.
+  //
+  //Parameters:
+  //  - pl_userIdx - *in* *integer* - the index of the user in v_db_users
+  //
+  ////////////////////////////////////////////////////
+  function f_EPTF_SIP_getUserData_nrOfIds(in integer pl_userIdx)
+  runs on EPTF_SIP_LGen_CT
+  return integer
+  {
+    return sizeof(v_db_users.data[pl_userIdx].iD);
+  }
+
+  function f_EPTF_SIP_getPortNumberSIP(in integer pl_userIdx)
+  runs on EPTF_SIP_LGen_CT
+  return integer
+  {
+    return v_db_users.data[pl_userIdx].sessions[0].port_us;
+  }
+} // group EPTF_SIP_UserDatabase_AccessorFunctions
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_Findstr2int
+//
+//Purpose:
+//  Same as <f_EPTF_str2int_HashMap_Find> and sets the inout parameter to
+//  -1 if the value has not been found.
+//
+//Parameters:
+//  - pl_hashRef - *in* *integer* - the ID of the hashmap
+//  - pl_key - *in* *charstring* - the key of the hashmap
+//  - pl_data - *inout* *integer* - the searched data
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_Findstr2int(
+  in integer pl_hashRef,
+  in charstring pl_key,
+  inout integer pl_data)
+{
+  if (not f_EPTF_str2int_HashMap_Find ( pl_hashRef,pl_key, pl_data ))
+  {
+    pl_data := -1;
+  }
+
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_getNonceCountString
+//
+//Purpose:
+//  Creates an 8-digit nonce count string.
+//
+//Parameters:
+//  - pl_nonceCount - *in* *integer* - the nonce count
+//
+//Return value:
+//  charstring - the nonce count string
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_getNonceCountString(in integer pl_nonceCount) runs on EPTF_SIP_LGen_CT
+  return charstring
+{
+  var charstring num := "";
+
+  num := int2str(pl_nonceCount);
+  num := substr("00000000", 0, 8 - lengthof(num)) & num;
+  return num;
+};
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_dispatchEvent
+//
+//Purpose:
+//  Dispatches and event.
+//
+//Parameters:
+//  - pl_eventIdx - *in* *integer* - the event index to dispatch
+//  - pl_user - *in* *integer* - the index of the user in v_db_users (can be -1)
+//  - pl_fsmCtx - *in* *integer* - the FSM context index (can be -1)
+//  - pl_reportedArgs - *in* <EPTF_IntegerList> - the arguments of the event
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_dispatchEvent(in integer pl_eventIdx, in integer pl_user, in integer pl_fsmCtx, in EPTF_IntegerList pl_reportedArgs)
+runs on EPTF_SIP_LGen_CT
+{
+  if (pl_user < 0)
+  {
+     f_EPTF_LGenBase_dispatchEvent( { 
+                                 {
+                                   v_SIP_myBIdx, 
+                                   pl_eventIdx,
+                                   omit, omit
+                                 },
+                                 pl_reportedArgs
+                               });
+  }else{
+    if (pl_user < sizeof (v_db_users.data) ) {
+      if (0 > pl_fsmCtx)
+      {
+       f_EPTF_LGenBase_dispatchEvent( { 
+                                     {
+                                     v_SIP_myBIdx, 
+                                     pl_eventIdx,
+                                     {
+                                       v_db_users.data[pl_user].eIdx,
+                                       omit
+                                     }, omit
+                                   },
+                                   pl_reportedArgs
+                              });
+      }else{
+        f_EPTF_LGenBase_dispatchEvent( { 
+                                     {
+                                     v_SIP_myBIdx, 
+                                     pl_eventIdx,
+                                     {
+                                       v_db_users.data[pl_user].eIdx,
+                                       pl_fsmCtx
+                                     }, omit
+                                   },
+                                   pl_reportedArgs
+                              });
+      }
+    }
+  }
+
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_dispatchError
+//
+//Purpose:
+//  Finds the user if neccessary and dispatches the given event.
+//
+//Parameters:
+//  - pl_eventIdx - *in* *integer* - the event index to dispatch
+//  - pl_reportedArgs - *in* <EPTF_IntegerList> - the arguments of the event
+//  - pl_errorMessage - *in* *charstring* - the error message place in the v_dropReason component variable
+//
+//Return value:
+//  boolean - false if the user has not been found
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_dispatchError(in integer pl_eventIdx, in EPTF_IntegerList pl_reportedArgs, in charstring pl_errorMessage)
+runs on EPTF_SIP_LGen_CT
+{
+  if (-1 == v_currentUser)
+  {
+    v_userSearchFunc.apply(v_msgToProcess, v_currentUser);
+  }
+
+  if (-1 == v_currentUser)
+  {
+    f_SIP_Logging_WARNING(%definitionId & ": " & c_SIP_eventName_userNotFound);
+  }else
+  {
+    f_EPTF_SIP_getSessionId(v_currentUser, v_SIP_transportParams.port_us, v_SIP_transportParams.port_pc, v_currentSession);
+  }
+
+  f_SIP_Logging_WARNING(%definitionId & ": " & pl_errorMessage);
+  f_EPTF_SIP_dispatchEvent(pl_eventIdx, v_currentUser, -1, pl_reportedArgs);
+  v_dropReason := pl_errorMessage;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_addInt2IntegerList
+//
+//Purpose:
+//  Adds an integer to an integer list. If the index is greater
+//  than the size of the list, -1 values are used as padding.
+//
+//Parameters:
+//  - pl_list - *inout* <EPTF_IntegerList> - the integer list
+//  - pl_index - *in* *integer* - the index of the value
+//  - pl_integerValue - *in* *integer* - the integer value
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_addInt2IntegerList(inout EPTF_IntegerList pl_list, in integer pl_index, in integer pl_integerValue)
+{
+  var integer vl_sizeof := sizeof(pl_list);
+
+  if (vl_sizeof < pl_index)
+  {
+    for (var integer i := vl_sizeof; i < pl_index; i := i + 1)
+    {
+      pl_list[i] := -1;
+    }
+  }
+
+  pl_list[pl_index] := pl_integerValue;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_getIntValue
+//
+//Purpose:
+//  Retrieves an integer value from an integer list.
+//
+//Parameters:
+//  - pl_intList - *inout* <EPTF_IntegerList> - the integer list
+//  - pl_number - *in* *integer* - the index of the value
+//  - pl_value - *inout* *integer* - the integer value
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_getIntValue(
+  in EPTF_IntegerList pl_intList,
+  in integer pl_number,
+  inout integer pl_value)
+{
+  if (sizeof(pl_intList) > pl_number)
+  {
+    pl_value := pl_intList[pl_number];
+  }
+}
+
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_getTransport
+//
+//Purpose:
+//  Converts a string value to a transport protocol.
+//
+//Parameters:
+//  - p_proto - *in* *charstring* - the string value
+//
+//Return value:
+//  SIP_Transport - the transport protocol
+//
+//Detailed comments:
+//  "TCP", "tcp" -> TCP
+//  "UDP", "udp" -> UDP
+//  "SSL", "ssl", "TLS", "tls" -> SSL
+//  default: UDP
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_getTransport(in charstring p_proto) return SIP_Transport
+{
+  if (p_proto == "TCP" or p_proto == "tcp")
+  { return TCP; }
+  else if (p_proto == "UDP" or p_proto == "udp")
+  { return UDP; }
+  else if (p_proto == "SSL" or p_proto == "ssl" or p_proto == "TLS" or p_proto == "tls")
+  { return SSL; }
+
+  return UDP;
+}
+
+function f_EPTF_SIP_SIPTransport2ProtoTuple(in SIP_Transport p_transport) return ProtoTuple
+{
+  if (p_transport == TCP)
+  { return {tcp := {}}; }
+  else if (p_transport == UDP)
+  { return {udp := {}}; }
+  else if (p_transport == SSL)
+  { return {ssl := {}}; }
+
+  return {udp := {}};
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_transport2str
+//
+//Purpose:  
+//
+//Parameters:
+//  - pl_transport - *in* *SIP_Transport* - the transport protocol
+//
+//Return value:
+//  charstring - the string value
+//
+//Detailed comments:
+//  TCP -> "TCP"
+//  UDP -> "UDP"
+//  default: "UDP"
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_transport2str(in SIP_Transport pl_transport) return charstring
+{
+  if (UDP == pl_transport) {
+    return "UDP"
+  } else if (TCP == pl_transport) {
+    return "TCP";
+  } else if (SSL == pl_transport) {
+    return "TLS";
+  }
+  
+  return "UDP"
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_SIP_genLocalTag
+// 
+//  Purpose:
+//    Generates a 6-character SIP tag
+// 
+//  Parameters:
+//    pl_Idx - *in integer* - the dialog to encode in the tag
+//    pl_LocalTag - *inout charstring* - the generated tag
+// 
+//  Detailed Comments:
+//    The generated ID will have the following format:
+//      six random digits & pl_TrIdx encoded in 6 digits, prefixed with "0"s if needed
+// 
+///////////////////////////////////////////////////////////
+function f_EPTF_SIP_genLocalTag (
+  in integer pl_Idx,
+  inout charstring pl_LocalTag)
+{
+  var charstring vl_prefix := int2str(float2int(1000000.0 * rnd()));
+
+  pl_LocalTag := vl_prefix & int2str(pl_Idx);
+//  pl_LocalTag := substr("000000",0,6-lengthof(pl_LocalTag)) & pl_LocalTag;
+//  pl_LocalTag := vl_prefix & pl_LocalTag;
+};
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_AddSupportedEventType
+//
+//Purpose:
+//
+//Parameters:
+//  - pl_eventType - *in* <Event_type> -
+//  - pl_supportedEventTypes - *inout* <SIP_SupportedEventTypes> -
+//
+//Return value:
+//  integer - 
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_AddSupportedEventType(
+  in Event_type pl_eventType,
+  inout SIP_SupportedEventTypes pl_supportedEventTypes
+) runs on EPTF_SIP_LGen_CT return integer
+{
+  for (var integer i := 0; i < sizeof(pl_supportedEventTypes); i := i + 1)
+  {
+    if (pl_eventType == pl_supportedEventTypes[i])
+    {
+      f_SIP_Logging_DEBUG(log2str(%definitionId,
+        ": adding event type already added: ", pl_eventType));
+      return i;
+    }
+  }
+
+  var integer idx := sizeof(pl_supportedEventTypes);
+  pl_supportedEventTypes[idx] := pl_eventType;
+  return idx;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_getRetryAfter
+//
+//Purpose:
+//  Retreives the retry after value from a SIP response.
+//
+//Return value:
+//  integer - the retry after time
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_getRetryAfter()
+runs on EPTF_SIP_LGen_CT
+return integer
+{
+  if (ischosen(v_msgToProcess.response))
+  {
+    if (ispresent(v_msgToProcess.response.msgHeader.retryAfter))
+    {
+        return str2int(v_msgToProcess.response.msgHeader.retryAfter.deltaSec);
+    }else{
+      return -1;
+    }
+  }
+
+  return -1;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_canonizeUri
+//
+//Purpose:
+//  Converts the SIP URI the a canonical from.
+//
+//Parameters:
+//  - pl_uri - *inout* <SipUrl> - the SIP URI to canonize
+//
+//Detailed comments:
+//  Currently only the URI parameters are removed!
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_canonizeUri(inout SipUrl pl_uri)
+{
+  pl_uri.urlParameters := omit;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_containsTag
+//
+//Purpose:
+//  Examines if an <OptionTag_List> contains an <OptionTag>.
+//
+//Parameters:
+//  - pl_list - *inout* <OptionTag_List>
+//  - pl_optionTag - *inout* <OptionTag>
+//
+//Detailed comments:
+//  boolean - search result
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_containsTag(in OptionTag_List pl_list, in OptionTag pl_optionTag)
+return boolean
+{
+  for (var integer i := 0; i < sizeof(pl_list); i := i + 1)
+  {
+    if (pl_list[i] == pl_optionTag)
+    {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_AddrUnion2str
+//
+//Purpose:
+//  Converts an <Addr_Union> to a character string.
+//
+//Parameters:
+//  - pl_addrUnion - *inout* <Addr_Union>
+//  - pl_str - *inout* *charstring*
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_AddrUnion2str(in Addr_Union pl_addrUnion, inout charstring pl_str)
+{
+  pl_str := "";
+  
+  if (ischosen(pl_addrUnion.nameAddr))
+  {
+    var charstring vl_url := "";
+    
+    if (ispresent(pl_addrUnion.nameAddr.displayName))
+    {
+      pl_str := pl_str & pl_addrUnion.nameAddr.displayName & " ";
+    }
+    f_EPTF_SIP_SIPUrl2str(pl_addrUnion.nameAddr.addrSpec, vl_url);
+    
+    pl_str := pl_str & "<" & vl_url & ">";
+  }else if (ischosen(pl_addrUnion.addrSpecUnion)){
+    f_EPTF_SIP_SIPUrl2str(pl_addrUnion.addrSpecUnion, pl_str);
+  }
+}
+
+function f_EPTF_SIP_getSessionId(in integer pl_userIdx, in integer pl_locPort, in integer pl_remPort, inout integer pl_sessionId)
+runs on EPTF_SIP_LGen_CT
+{
+  pl_sessionId := 0;
+  if(ispresent(v_db_users.data[pl_userIdx].imsAKAData))
+  {
+    if (pl_locPort == v_db_users.data[pl_userIdx].sessions[0].port_us)
+    {
+      return;
+    }
+    //find the SAs
+    for (var integer i := 0; i < sizeof(v_db_users.data[pl_userIdx].sessions); i := i + 1)
+    {
+      if (-1 != v_db_users.data[pl_userIdx].sessions[i].sessionId)
+      {
+        if (pl_locPort == v_db_users.data[pl_userIdx].sessions[i].port_us and
+              pl_remPort == v_db_users.data[pl_userIdx].sessions[i].port_pc)
+        {
+          pl_sessionId := i;
+          return;
+        }
+      }
+
+    }
+
+    f_SIP_Logging_WARNING(log2str(%definitionId,
+      ": could not find session for user(",pl_userIdx,"): locPort(",pl_locPort,") and remPort(",pl_remPort,") "));
+  }
+}
+
+function f_EPTF_SIP_SIPRouteBodyList2Route(in SIP_RouteBodyList pl_routeBodyList, inout RouteBody_List pl_route)
+{
+  var integer vl_idx := -1;
+  
+  for (var integer i := 0; i < sizeof(pl_routeBodyList); i := i + 1)
+  {
+    vl_idx := sizeof(pl_route);
+    
+    pl_route[vl_idx] := {{omit, cg_SipUrl_base}, omit};
+    f_EPTF_SIP_FlatSipUrl2NameAddr(pl_routeBodyList[i].routeAddr, pl_route[vl_idx].nameAddr);
+    pl_route[vl_idx].rrParam := pl_routeBodyList[i].rrParam;
+  }
+}
+
+function f_SIP_selectRoutingURI(in PDU_SIP_Request pl_request, inout SipUrl pl_routingURI )
+{
+  pl_routingURI := pl_request.requestLine.requestUri;
+
+  if (omit != pl_request.msgHeader.route and
+        0 < sizeof(pl_request.msgHeader.route.routeBody))
+  {
+    pl_routingURI := pl_request.msgHeader.route.routeBody[0].nameAddr.addrSpec;
+  }
+  
+}
+
+function f_SIP_getRequestTarget(in PDU_SIP_Request pl_request, inout charstring pl_target)
+{
+  var SipUrl vl_targetUri;
+  
+  f_SIP_selectRoutingURI(pl_request, vl_targetUri);
+
+  if (omit != vl_targetUri.urlParameters)
+  {
+    f_EPTF_SIP_GetParameter(vl_targetUri.urlParameters, c_SIP_MADDR_ID, pl_target);
+  }
+
+  if ("" == pl_target)
+  {
+    if (omit != vl_targetUri.hostPort.host)
+    {
+      pl_target := vl_targetUri.hostPort.host;
+    }
+  }
+}
+
+function f_SIP_Logging_WARNING(in charstring pl_message)
+runs on EPTF_SIP_LGen_CT
+{
+  f_EPTF_Logging_warningV2(pl_message, v_SIP_Logging_MaskId, {c_EPTF_SIP_Logging_WARNING});
+}
+
+function f_SIP_Logging_invalidMessage(in charstring pl_message)
+runs on EPTF_SIP_LGen_CT
+{
+  f_EPTF_Logging_warningV2(pl_message, v_SIP_Logging_MaskId, {c_EPTF_SIP_Logging_invalidMessage});
+}
+
+
+function f_SIP_Logging_DEBUG(in charstring pl_message)
+runs on EPTF_SIP_LGen_CT
+{
+  f_EPTF_Logging_debugV2(pl_message, v_SIP_Logging_MaskId, {c_EPTF_SIP_Logging_DEBUG});
+}
+
+function f_SIP_Logging_debugEnabled()
+runs on EPTF_SIP_LGen_CT
+return boolean
+{
+  return f_EPTF_Logging_isEnabled(v_SIP_Logging_MaskId, c_EPTF_SIP_Logging_DEBUG);
+}
+
+function f_SIP_Logging_3xx(in charstring pl_message)
+runs on EPTF_SIP_LGen_CT
+{
+  f_EPTF_Logging_operationalLogV2(pl_message, v_SIP_Logging_MaskId, {c_EPTF_SIP_Logging_3xx});
+}
+
+function f_SIP_Logging_4xx(in charstring pl_message)
+runs on EPTF_SIP_LGen_CT
+{
+  f_EPTF_Logging_operationalLogV2(pl_message, v_SIP_Logging_MaskId, {c_EPTF_SIP_Logging_4xx});
+}
+function f_SIP_Logging_5xx(in charstring pl_message)
+runs on EPTF_SIP_LGen_CT
+{
+  f_EPTF_Logging_operationalLogV2(pl_message, v_SIP_Logging_MaskId, {c_EPTF_SIP_Logging_5xx});
+}
+function f_SIP_Logging_6xx(in charstring pl_message)
+runs on EPTF_SIP_LGen_CT
+{
+  f_EPTF_Logging_operationalLogV2(pl_message, v_SIP_Logging_MaskId, {c_EPTF_SIP_Logging_6xx});
+}
+
+function f_SIP_Logging_3xxTo6xx(in charstring pl_message)
+runs on EPTF_SIP_LGen_CT
+{
+  f_EPTF_Logging_operationalLogV2(pl_message, v_SIP_Logging_MaskId, {c_EPTF_SIP_Logging_3xxTo6xx});
+}
+
+////////////////////////////////////////////////////
+//Function: Statistic update functions
+//
+//Purpose:
+//  To update message statistics.
+//
+//Elements:
+//  - f_EPTF_SIP_updateStat_incReq
+//  - f_EPTF_SIP_updateStat_incReqRetrans
+//  - f_EPTF_SIP_updateStat_outReq
+//  - f_EPTF_SIP_updateStat_outReqRetrans
+//  - f_EPTF_SIP_updateStat_incResp
+//  - f_EPTF_SIP_updateStat_incRespRetrans
+//  - f_EPTF_SIP_updateStat_outResp
+//  - f_EPTF_SIP_updateStat_outRespRetrans
+////////////////////////////////////////////////////
+function f_EPTF_SIP_updateStat_incReq(in Method pl_method)
+runs on EPTF_SIP_LGen_CT
+{
+  f_EPTF_Var_adjustContent(v_statistics.incoming.requests[enum2int(pl_method)].msgCounter_k,
+    { intVal := f_EPTF_Var_getIntValue(v_statistics.incoming.requests[enum2int(pl_method)].msgCounter_k) + 1 });
+}
+
+function f_EPTF_SIP_updateStat_incReqRetrans(in Method pl_method)
+runs on EPTF_SIP_LGen_CT
+{
+  f_EPTF_Var_adjustContent(v_statistics.incoming.requests[enum2int(pl_method)].retrans_k,
+    { intVal := f_EPTF_Var_getIntValue(v_statistics.incoming.requests[enum2int(pl_method)].retrans_k) + 1 });
+}
+
+function f_EPTF_SIP_updateStat_outReq(in Method pl_method)
+runs on EPTF_SIP_LGen_CT
+{
+  f_EPTF_Var_adjustContent(v_statistics.outgoing.requests[enum2int(pl_method)].msgCounter_k,
+    { intVal := f_EPTF_Var_getIntValue(v_statistics.outgoing.requests[enum2int(pl_method)].msgCounter_k) + 1 });
+}
+
+function f_EPTF_SIP_updateStat_outReqRetrans(in Method pl_method)
+runs on EPTF_SIP_LGen_CT
+{
+  f_EPTF_Var_adjustContent(v_statistics.outgoing.requests[enum2int(pl_method)].retrans_k,
+    { intVal := f_EPTF_Var_getIntValue(v_statistics.outgoing.requests[enum2int(pl_method)].retrans_k) + 1 });
+}
+
+function f_EPTF_SIP_updateStat_incResp(in integer pl_statusCode, in charstring pl_reasonPhrase)
+runs on EPTF_SIP_LGen_CT
+{
+  var integer vl_index;
+  
+  if (f_EPTF_int2int_HashMap_Find(v_statistics.statusCode2Idx, pl_statusCode, vl_index))
+  {
+    f_EPTF_Var_adjustContent(v_statistics.incoming.responses[vl_index].msgCounter_k,
+      { intVal := f_EPTF_Var_getIntValue(v_statistics.incoming.responses[vl_index].msgCounter_k) + 1 });
+  }else
+  {
+    f_SIP_Logging_WARNING(%definitionId & ": unknown status code: " & int2str(pl_statusCode));
+  }
+  
+  if(v_EPTF_SIP_responseStatEnabled) {
+    vl_index := f_EPTF_SIP_addResponseStat(pl_statusCode, pl_reasonPhrase);
+    f_EPTF_Var_adjustContent(v_statistics.incoming.responses[vl_index].msgCounter_k,
+      { intVal := f_EPTF_Var_getIntValue(v_statistics.incoming.responses[vl_index].msgCounter_k) + 1 });
+  }
+}
+
+function f_EPTF_SIP_updateStat_incRespRetrans(in integer pl_statusCode, in charstring pl_reasonPhrase)
+runs on EPTF_SIP_LGen_CT
+{
+  var integer vl_index;
+  
+  if (f_EPTF_int2int_HashMap_Find(v_statistics.statusCode2Idx, pl_statusCode, vl_index))
+  {
+    f_EPTF_Var_adjustContent(v_statistics.incoming.responses[vl_index].retrans_k,
+      { intVal := f_EPTF_Var_getIntValue(v_statistics.incoming.responses[vl_index].retrans_k) + 1 });
+  }else
+  {
+    f_SIP_Logging_WARNING(%definitionId & ": unknown status code: " & int2str(pl_statusCode));
+  }
+  
+  if(v_EPTF_SIP_responseStatEnabled) {
+    vl_index := f_EPTF_SIP_addResponseStat(pl_statusCode, pl_reasonPhrase);
+    f_EPTF_Var_adjustContent(v_statistics.incoming.responses[vl_index].retrans_k,
+      { intVal := f_EPTF_Var_getIntValue(v_statistics.incoming.responses[vl_index].retrans_k) + 1 });
+  }
+}
+
+function f_EPTF_SIP_updateStat_outResp(in integer pl_statusCode, in charstring pl_reasonPhrase)
+runs on EPTF_SIP_LGen_CT
+{
+  var integer vl_index;
+  
+  if (f_EPTF_int2int_HashMap_Find(v_statistics.statusCode2Idx, pl_statusCode, vl_index))
+  {
+    f_EPTF_Var_adjustContent(v_statistics.outgoing.responses[vl_index].msgCounter_k,
+      { intVal := f_EPTF_Var_getIntValue(v_statistics.outgoing.responses[vl_index].msgCounter_k) + 1 });
+  }else
+  {
+    f_SIP_Logging_WARNING(%definitionId & ": unknown status code: " & int2str(pl_statusCode));
+  }
+  
+  if(v_EPTF_SIP_responseStatEnabled) {
+    vl_index := f_EPTF_SIP_addResponseStat(pl_statusCode, pl_reasonPhrase);
+    f_EPTF_Var_adjustContent(v_statistics.outgoing.responses[vl_index].msgCounter_k,
+      { intVal := f_EPTF_Var_getIntValue(v_statistics.outgoing.responses[vl_index].msgCounter_k) + 1 });
+  }
+}
+
+function f_EPTF_SIP_updateStat_outRespRetrans(in integer pl_statusCode, in charstring pl_reasonPhrase)
+runs on EPTF_SIP_LGen_CT
+{
+  var integer vl_index;
+  
+  if (f_EPTF_int2int_HashMap_Find(v_statistics.statusCode2Idx, pl_statusCode, vl_index))
+  {
+    f_EPTF_Var_adjustContent(v_statistics.outgoing.responses[vl_index].retrans_k,
+      { intVal := f_EPTF_Var_getIntValue(v_statistics.outgoing.responses[vl_index].retrans_k) + 1 });
+  }else
+  {
+    f_SIP_Logging_WARNING(%definitionId & ": unknown status code: " & int2str(pl_statusCode));
+  }
+  
+  if(v_EPTF_SIP_responseStatEnabled) {
+    vl_index := f_EPTF_SIP_addResponseStat(pl_statusCode, pl_reasonPhrase);
+    f_EPTF_Var_adjustContent(v_statistics.outgoing.responses[vl_index].retrans_k,
+      { intVal := f_EPTF_Var_getIntValue(v_statistics.outgoing.responses[vl_index].retrans_k) + 1 });
+  }
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_SIP_addResponseStat
+//
+//  Purpose:
+//    Adds SIP response status code + reason phrase statistics
+//
+//  Parameters:
+//    - pl_statusCode - *in* *integer* - status code of the response
+//    - pl_reasonPhrase - *in* *charstring* - reason phrase of the response
+//
+//  Detailed Comments:
+//    Four statistics Variables are created: outgoing count,
+//    outgoing retransmissions, incoming count and incoming retransmissions.
+//    If the stats were created previously, an index is returned,
+//    otherwise the stats are created and the registered callback
+//    functions are called.
+///////////////////////////////////////////////////////////
+public function f_EPTF_SIP_addResponseStat(
+  in integer pl_statusCode,
+  in charstring pl_reasonPhrase)
+runs on EPTF_SIP_LGen_CT
+return integer
+{
+  var integer vl_idx := -1;
+  var charstring vl_key := int2str(pl_statusCode) & " " & pl_reasonPhrase;
+  if(f_EPTF_str2int_HashMap_Find(v_statistics.reasonPhrase2Idx, vl_key, vl_idx)) {
+    return vl_idx;
+  }
+
+  vl_idx := sizeof(v_statistics.outgoing.responses);
+  f_EPTF_str2int_HashMap_Insert(v_statistics.reasonPhrase2Idx, vl_key, vl_idx);
+
+  var charstring vl_namePrefix := v_EPTF_SIP_selfName & ".";
+  f_EPTF_Var_newInt(vl_namePrefix & "SIP_nofOut_" & vl_key, 0, v_statistics.outgoing.responses[vl_idx].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix & "SIP_nofOutRetrans_" & vl_key, 0, v_statistics.outgoing.responses[vl_idx].retrans_k);
+  f_EPTF_Var_newInt(vl_namePrefix & "SIP_nofIn_" & vl_key, 0, v_statistics.incoming.responses[vl_idx].msgCounter_k);
+  f_EPTF_Var_newInt(vl_namePrefix & "SIP_nofInRetrans_" & vl_key, 0, v_statistics.incoming.responses[vl_idx].retrans_k);
+  if(sizeof(vcb_EPTF_SIP_responseStatCreatedList) == 0) {
+    f_SIP_Logging_WARNING(%definitionId&": cannot notify user code, no callback function was registered.");
+    f_SIP_Logging_DEBUG(%definitionId&": status code of response: " & int2str(pl_statusCode));
+    f_SIP_Logging_DEBUG(%definitionId&": reason phrase of response: " & pl_reasonPhrase);
+  }
+  for(var integer i:=0; i<sizeof(vcb_EPTF_SIP_responseStatCreatedList); i:=i+1) {
+    vcb_EPTF_SIP_responseStatCreatedList[i].apply(
+      pl_statusCode,
+      pl_reasonPhrase,
+      v_statistics.outgoing.responses[vl_idx].msgCounter_k,
+      v_statistics.outgoing.responses[vl_idx].retrans_k,
+      v_statistics.incoming.responses[vl_idx].msgCounter_k,
+      v_statistics.incoming.responses[vl_idx].retrans_k);
+  }
+  return vl_idx;
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_SIP_enableResponseStat
+//
+//  Purpose:
+//    Enable or disable statistics generation for response status code + reason phrase.
+//
+//  Parameters:
+//    - pl_enable - *in* *boolean* - true to enable, false to disable
+///////////////////////////////////////////////////////////
+public function f_EPTF_SIP_enableResponseStat(in boolean pl_enable)
+runs on EPTF_SIP_LGen_CT
+{
+  v_EPTF_SIP_responseStatEnabled := pl_enable;
+}
+
+public function f_EPTF_SIP_setAutomaticProxyMode(in boolean pl_automaticProxyMode)
+runs on EPTF_SIP_LGen_CT
+{
+  vl_automaticProxyMode := pl_automaticProxyMode;
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_SIP_registerResponseStatCreated
+//
+//  Purpose:
+//    Register a callback function for notification about response stats creation
+//
+//  Parameters:
+//    - pl_fn - *in* <fcb_EPTF_SIP_LGen_ResponseStatCreated> - the callback function
+///////////////////////////////////////////////////////////
+public function f_EPTF_SIP_registerResponseStatCreated(
+  in fcb_EPTF_SIP_LGen_ResponseStatCreated pl_fn)
+runs on EPTF_SIP_LGen_CT
+{
+  if(pl_fn == null) {
+    f_SIP_Logging_WARNING(%definitionId&": null cannot be registered as a callback function.");
+    return;
+  }
+  vcb_EPTF_SIP_responseStatCreatedList[sizeof(vcb_EPTF_SIP_responseStatCreatedList)] := pl_fn;
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_SIP_deregisterResponseStatCreated
+//
+//  Purpose:
+//    Deregister a callback function for notification about response stats creation
+//
+//  Parameters:
+//    - pl_fn - *in* <fcb_EPTF_SIP_LGen_ResponseStatCreated> - the callback function
+///////////////////////////////////////////////////////////
+public function f_EPTF_SIP_deregisterResponseStatCreated(
+  in fcb_EPTF_SIP_LGen_ResponseStatCreated pl_fn)
+runs on EPTF_SIP_LGen_CT
+{
+  if(pl_fn == null) { return; }
+  var fcb_EPTF_SIP_LGen_ResponseStatCreatedList vl_tmp := vcb_EPTF_SIP_responseStatCreatedList;
+  vcb_EPTF_SIP_responseStatCreatedList := {};
+  for(var integer i:=0; i<sizeof(vl_tmp); i:=i+1) {
+    if(vl_tmp[i] != pl_fn) {
+      vcb_EPTF_SIP_responseStatCreatedList[sizeof(vcb_EPTF_SIP_responseStatCreatedList)] := vl_tmp[i];
+    }
+  }
+}
+
+
+function f_EPTF_SIP_increaseCSeq(in integer pl_seqNum)
+return integer
+{
+  return (pl_seqNum + 1) mod c_EPTF_SIP_CSeq_MAX;
+}
+
+function f_EPTF_SIP_genCSeq()
+return integer
+{
+  return float2int(c_EPTF_SIP_CSeq_MAX_float * rnd())
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_SIP_sipEncodeRequest
+//
+//  Purpose:
+//    SIP encode function for request messages
+//
+//  Parameters:
+//    - pl_request - *inout* <PDU_SIP_Request> - the request message to encode
+//
+//  Return value:
+//    octetstring - encoded message
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_SIP_sipEncodeRequest(inout PDU_SIP_Request pl_request)
+runs on EPTF_SIP_LGen_CT
+return octetstring
+{
+  return vcb_EPTF_SIP_sipEncodeRequest.apply(pl_request);
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_SIP_sipEncodeResponse
+//
+//  Purpose:
+//    SIP encode function for response messages
+//
+//  Parameters:
+//    - pl_response - *inout* <PDU_SIP_Response> - the response message to encode
+//
+//  Return value:
+//    octetstring - encoded message
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_SIP_sipEncodeResponse(inout PDU_SIP_Response pl_response)
+runs on EPTF_SIP_LGen_CT
+return octetstring
+{
+  return vcb_EPTF_SIP_sipEncodeResponse.apply(pl_response);
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_SIP_sipEncodeRequest_default
+//
+//  Purpose:
+//    Default registered SIP encode function for request messages
+//
+//  Parameters:
+//    - pl_pduSipRequest - *inout* <PDU_SIP_Request> - the request message to encode
+//
+//  Return value:
+//    octetstring - encoded message
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_SIP_sipEncodeRequest_default(inout PDU_SIP_Request pl_pduSipRequest) return octetstring
+{
+  return f_SIP_encode_binary({request := pl_pduSipRequest});
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_SIP_sipEncodeResponse_default
+//
+//  Purpose:
+//    Default registered SIP encode function for response messages
+//
+//  Parameters:
+//    - pl_pduSipResponse - *inout* <PDU_SIP_Response> - the response message to encode
+//
+//  Return value:
+//    octetstring - encoded message
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_SIP_sipEncodeResponse_default(inout PDU_SIP_Response pl_pduSipResponse) return octetstring
+{
+  return f_SIP_encode_binary({response := pl_pduSipResponse});
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_SIP_registerSipEncode
+//
+//  Purpose:
+//    Registers the user defined SIP encoder function.
+//
+//  Parameters:
+//    - pl_req - *in* <fcb_EPTF_SIP_sipEncodeRequest> - the function to encode SIP requests.
+//    - pl_resp - *in* <fcb_EPTF_SIP_sipEncodeResponse> - the function to encode SIP responses.
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_SIP_registerSipEncode(in fcb_EPTF_SIP_sipEncodeRequest pl_req, in fcb_EPTF_SIP_sipEncodeResponse pl_resp)
+runs on EPTF_SIP_LGen_CT
+{
+  if (null != pl_req)
+  {
+    vcb_EPTF_SIP_sipEncodeRequest := pl_req;
+  }
+  
+  if (null != pl_resp)
+  {
+    vcb_EPTF_SIP_sipEncodeResponse := pl_resp;
+  }
+}
+
+}//end of module
+with {
+extension "version <RnXnn>"
+}
+

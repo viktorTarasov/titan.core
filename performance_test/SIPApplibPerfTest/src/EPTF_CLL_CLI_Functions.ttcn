@@ -1,0 +1,1438 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_CLL_CLI_Functions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 512
+//  Updated:  2010-03-15
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////
+//  Module: EPTF_CLL_CLI_Functions
+// 
+//  Purpose:
+//    This module contains the implementation of generic EPTF_CLL_CLI functions.
+// 
+//  Module depends on:
+//    <EPTF_CLL_CLI_Definitions>
+//    <EPTF_CLL_Base_Functions>
+//    <EPTF_CLL_Semaphore_Functions>
+//    <EPTF_CLL_Variable_Definitions>
+//    <EPTF_CLL_Variable_Functions>
+//    <EPTF_CLL_Common_Definitions>
+//    <TELNETasp_PortType>
+//    <EPTF_CLL_Logging_Definitions>
+//    <EPTF_CLL_Logging_Functions>
+//    <TCCConversion_Functions>
+// 
+//  Current Owner:
+//    Jozsef Gyurusi (ETHJGI)
+// 
+//  Last Review Date:
+//    2010-03-22
+//
+//  Module Parameters:
+//    tsp_EPTF_CLL_CLI_ShowWelcome - boolean - if true: welcome message is shown at login on the terminals
+//       (defult: false)
+//    tsp_EPTF_CLI_Functions_debug - boolean - enables debug logs in CLI
+//    tsp_EPTF_CLI_Client_Functions_debug - boolean - enables debug logs in CLI Client
+//
+//  Detailed Comments:
+//    This module contains the interface functions for the EPTF_CLL_CLI and EPTF_CLL_CLI_Client.
+//
+//    Public functions of CLI:
+//      <f_EPTF_CLI_init_CT>
+//      <f_EPTF_CLI_getHelpTxt>
+//      <f_EPTF_CLI_getCommandHelp>
+//      <f_EPTF_CLI_executeCommand>
+//      <f_EPTF_CLI_closeTerminal>
+//      <f_EPTF_CLI_closeDisplayTerminal>
+//		<f_EPTF_CLI_setAliasTag>
+//
+//    Public functions of CLI_Client:
+//      <f_EPTF_CLI_Client_init_CT>
+//      <f_EPTF_CLI_Client_registerCommand>
+//      <f_EPTF_CLI_Client_sendCommandDisplay>
+//
+//    General functions:
+//      <f_EPTF_CLI_splitString>
+//
+///////////////////////////////////////////////////////////////
+
+module EPTF_CLL_CLI_Functions {
+
+import from EPTF_CLL_CLI_Definitions all;
+import from EPTF_CLL_Base_Functions all;
+import from EPTF_CLL_Semaphore_Functions all;
+import from EPTF_CLL_Variable_Definitions all;
+import from EPTF_CLL_Variable_Functions all;
+import from EPTF_CLL_Common_Definitions all;
+import from TELNETasp_PortType all;
+
+import from EPTF_CLL_Logging_Definitions all;
+import from EPTF_CLL_Logging_Functions all;
+import from TCCConversion_Functions all;
+
+import from EPTF_CLL_HashMap_Functions all;
+import from EPTF_CLL_HashMapStr2Int_Functions all;
+
+// CLI:
+group CLI {
+
+// show welcome message when logged in
+modulepar boolean tsp_EPTF_CLL_CLI_ShowWelcome := false;
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_CLI_init_CT
+// 
+//  Purpose:
+//    This function initializes the EPTF_CLI_CT component.
+//
+//  Parameters:
+//    in charstring pl_selfName - the name of the component
+//    in template ASP_TelnetPortParameters pl_telnetTestPortParameters := omit - the parameters of the telnet test port
+//        that belongs to the main terminal
+//    in template ASP_TelnetPortParameters pl_displayTelnetTestPortParameters := omit - the parameters of the telnet test port
+//        that belongs to the display terminal
+//
+//  Detailed Comments:
+//    This function should be called before any other EPTF_CLI_CT functions are used.
+//
+//    The pl_telnetTestPortParameters and pl_displayTelnetTestPortParameters
+//    arguments can be used to override the test port parameters defined in the
+//    configuration file.
+//    These parameters can be used to switch off the telnet ports by setting them to '*'.
+//    The telnet ports can be enabled with an additional call of this
+//    function with non-* arguments.
+//    
+///////////////////////////////////////////////////////////
+public function f_EPTF_CLI_init_CT(
+  in charstring pl_selfName,
+  in template ASP_TelnetPortParameters pl_telnetTestPortParameters := omit,
+  in template ASP_TelnetPortParameters pl_displayTelnetTestPortParameters := omit
+//   ,inout TELNETasp_PT pl_terminalPort := EPTF_CLI_TELNET_PCO,
+//   inout TELNETasp_PT pl_displayTerminalPort := EPTF_CLI_displayTELNET_PCO
+) runs on EPTF_CLI_CT {
+  // enable telnet ports, if they are disabled, even if init function was already called.
+  // but do not disable them if they were enabled
+  // This is needed if e.g. UIHandler_CLI_init is called after UIHandler_init:
+  if ((v_EPTF_CLI_terminalDisabled or not v_EPTF_CLI_initialized) and log2str(pl_telnetTestPortParameters)!="*") {
+    map(self:EPTF_CLI_TELNET_PCO, system:EPTF_CLI_TELNET_PCO);
+    v_EPTF_CLI_terminalDisabled := false;
+  } else {
+    // do not map the telnet port (CLI disabled)
+    if (not v_EPTF_CLI_initialized) {
+      v_EPTF_CLI_terminalDisabled := true;
+    }
+  }
+  if ((v_EPTF_CLI_displayTerminalDisabled or not v_EPTF_CLI_initialized) and log2str(pl_displayTelnetTestPortParameters)!="*") {
+    map(self:EPTF_CLI_displayTELNET_PCO, system:EPTF_CLI_displayTELNET_PCO);
+    v_EPTF_CLI_displayTerminalDisabled := false;
+  } else {
+    // do not map the display telnet port (CLI disabled)
+    if (not v_EPTF_CLI_initialized) {
+      v_EPTF_CLI_displayTerminalDisabled := true;
+    }
+  }
+  
+
+  if (v_EPTF_CLI_initialized) {
+    return;
+  }
+  f_EPTF_Base_init_CT(pl_selfName);
+  f_EPTF_Var_init_CT(pl_selfName);
+  f_EPTF_Semaphore_init_CT(pl_selfName);
+  f_EPTF_Logging_init_CT(pl_selfName);
+  f_EPTF_HashMap_init_CT(pl_selfName);
+  v_EPTF_CLI_commandAlias_HashMap := f_EPTF_str2int_HashMap_New(pl_selfName&".CommandAliasHashMap");
+  v_EPTF_CLI_commandAliases := {};
+  v_EPTF_CLI_RegisteredCommandList := {};
+  v_EPTF_CLI_commandResults := {};
+  v_EPTF_CLI_clientConnected := false;
+  v_EPTF_CLI_displayConnected := false;
+  
+  if (isvalue(pl_telnetTestPortParameters)) {
+    EPTF_CLI_TELNET_PCO.send(valueof(pl_telnetTestPortParameters));
+    unmap(self:EPTF_CLI_TELNET_PCO, system:EPTF_CLI_TELNET_PCO);
+    map(self:EPTF_CLI_TELNET_PCO, system:EPTF_CLI_TELNET_PCO);
+  }
+  if (isvalue(pl_displayTelnetTestPortParameters)) {
+    EPTF_CLI_displayTELNET_PCO.send(valueof(pl_displayTelnetTestPortParameters));
+    unmap(self:EPTF_CLI_displayTELNET_PCO, system:EPTF_CLI_displayTELNET_PCO);
+    map(self:EPTF_CLI_displayTELNET_PCO, system:EPTF_CLI_displayTELNET_PCO);
+  }
+  v_CLI_mainHandler := activate(as_EPTF_CLI_mainHandler());
+  f_EPTF_Base_registerCleanup(refers(f_EPTF_CLI_cleanup_CT));
+  v_EPTF_CLI_loggingMaskId := f_EPTF_Logging_registerComponentMasks(c_EPTF_CLI_loggingComponentMask, c_EPTF_CLI_loggingEventClasses, EPTF_Logging_CLL);
+  if(tsp_EPTF_CLI_Functions_debug) {
+    f_EPTF_Logging_enableLocalMask(v_EPTF_CLI_loggingMaskId, c_EPTF_CLI_loggingClassIdx_Debug);
+  } else {
+    f_EPTF_Logging_disableLocalMask(v_EPTF_CLI_loggingMaskId, c_EPTF_CLI_loggingClassIdx_Debug);
+  }
+  v_EPTF_CLI_initialized := true;
+}
+
+private function f_EPTF_CLI_cleanup_CT() runs on EPTF_CLI_CT {
+  if(not v_EPTF_CLI_initialized) {
+    return;
+  }
+  v_EPTF_CLI_initialized := false;
+  f_EPTF_str2int_HashMap_DeleteById(v_EPTF_CLI_commandAlias_HashMap);
+  deactivate(v_CLI_mainHandler);
+  v_CLI_mainHandler:= null;
+  if (not v_EPTF_CLI_displayTerminalDisabled) {
+    unmap(self:EPTF_CLI_displayTELNET_PCO, system:EPTF_CLI_displayTELNET_PCO);
+  }
+  if (not v_EPTF_CLI_terminalDisabled) {
+    unmap(self:EPTF_CLI_TELNET_PCO, system:EPTF_CLI_TELNET_PCO);
+  }
+  v_EPTF_CLI_terminalDisabled := true;
+  v_EPTF_CLI_displayTerminalDisabled := true;
+}
+
+private altstep as_EPTF_CLI_mainHandler() runs on EPTF_CLI_CT {
+  [] as_EPTF_CLI_handleMgmtMsgs();
+  [] as_EPTF_CLI_handleTELNETaspIf();
+  [] as_EPTF_CLI_handleDisplayTELNETaspIf();
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_CLI_getHelpTxt
+// 
+//  Purpose:
+//    Get help about a given command.
+//
+//  Parameters:
+//    in charstring pl_commandName := "" - the name of the command to get help about
+//
+//  Return Value:
+//    charstring - the help text for the command
+//
+//  Detailed Comments:
+//    If pl_commandName is not specified, returns the help about all available commands
+//    
+///////////////////////////////////////////////////////////
+public function f_EPTF_CLI_getHelpTxt(in charstring pl_commandName := "") runs on EPTF_CLI_CT return charstring {
+  var charstring vl_commandName := pl_commandName;
+  var charstring vl_helpText := "";
+  if (pl_commandName=="") {
+    // general help
+    vl_helpText := vl_helpText&
+    // TODO: ensure that the release script replaces the version number here:
+    "EPTF Command Line Interface version: <RnXnn>\n"&
+    "Usage: <command> [arguments]\n\n"&
+    "Executes the given command with the specified arguments.\n"&
+    "Lines starting with '#' or '//' are treated as comments and are ignored.\n"&
+    "\n"&
+    "Available commands:\n"&
+    "\n"&
+    "  alias - creates an alias to a command\n"&
+    "  unalias - removes an alias\n"&
+    "  lsalias - prints information about an alias\n"&
+    "  allalias - lists all alias - command pair\n"&
+    "  help - print this help message\n"&
+    "  exit - close the terminal\n"&
+    "  quit - close the terminal\n"&
+    "  stop - terminate execution, stop all TitanSim components\n"&
+    "  stopAll - terminate execution, stop all TitanSim components\n";
+    vl_commandName := "<command>";
+  } else {
+    // help about a specific comamnd
+    vl_helpText := vl_helpText&
+    "Help information about command: "&pl_commandName&"\n";
+  }
+  
+  var boolean vl_commandFound := false;
+  // built-in commands:
+  if (pl_commandName=="help") {
+    vl_helpText := vl_helpText&
+    "Syntax: help [<command name>|help]\n"&
+    "  Parameters:\n"&
+    "  <command name> - the name of the command to get help about.\n"&
+    "  help - prints this help message.\n"&
+    "\n"&
+    "If called without arguments general help message is printed\n"&
+    "\nThis command is owned by component "&f_EPTF_Base_selfName()&
+    " ("&log2str(self)&")";
+  } else if (pl_commandName=="exit" or f_putInLowercase(pl_commandName)=="quit") {
+    vl_helpText := vl_helpText&
+    "Syntax: "&pl_commandName&"\n"&
+    "  "&pl_commandName&" - exit from the terminal session.\n"&
+    "\nThis command is owned by component "&f_EPTF_Base_selfName()&
+    " ("&log2str(self)&")";
+    if (f_putInLowercase(pl_commandName)=="quit") {
+      vl_helpText := vl_helpText&
+      "\nThe command name is case insensitive!"
+    }
+  } else if (pl_commandName=="stopAll") {
+    vl_helpText := vl_helpText&
+    "Syntax: stopAll\n"&
+    "  stopAll - stops all TitanSim components and terminates test execution.\n"&
+    "\nThis command is owned by component "&f_EPTF_Base_selfName()&
+    " ("&log2str(self)&")";
+  } else if (f_putInLowercase(pl_commandName)=="stop") {
+    vl_helpText := vl_helpText&
+    "Syntax: "&pl_commandName&"\n"&
+    "  "&pl_commandName&" - stops all TitanSim components and terminates test execution.\n"&
+    "\nThis command is owned by component "&f_EPTF_Base_selfName()&
+    " ("&log2str(self)&")"&
+    "\nThe command name is case insensitive!";
+  } else if(pl_commandName=="alias"){
+    vl_helpText := vl_helpText&
+    "Syntax: alias <command name> <alias>\n"&
+    "  Parameters:\n"&
+    "  <command name> - the name of the command - or another alias - for which the alias will be registered.\n"&
+    "  <alias> - a string without any whitespaces that can be used insted of <command name>.\n"& 
+    "  It is possible to create alias for command parts also, but you have to signal them when used.\n"&
+    "  example: alias <xml format of data description> mydata\n"&
+    "  ds get $mydata$\n"&
+    "\nThis command is owned by component "&f_EPTF_Base_selfName()&
+    " ("&log2str(self)&")";
+  } else if(pl_commandName=="unalias"){
+    vl_helpText := vl_helpText&
+    "Syntax: unalias <alias>\n"&
+    "  Parameters:\n"&    
+    "  <alias> - Alias to be removed.\n"&     
+    "\nThis command is owned by component "&f_EPTF_Base_selfName()&
+    " ("&log2str(self)&")";
+  } else if(pl_commandName=="lsalias"){
+    vl_helpText := vl_helpText&
+    "Syntax: lsalias <alias>\n"&
+    "  Parameters:\n"&    
+    "  <alias> - Alias to be listed.\n"&     
+    "\nThis command is owned by component "&f_EPTF_Base_selfName()&
+    " ("&log2str(self)&")";
+  } else if(pl_commandName=="allalias"){
+    vl_helpText := vl_helpText&
+    "Syntax: allalias\n"&
+    "  List all aliases registered in the system."&
+    "\nThis command is owned by component "&f_EPTF_Base_selfName()&
+    " ("&log2str(self)&")";
+  }
+  else {
+    // registered commands:
+    for(var integer i:=0; i<sizeof(v_EPTF_CLI_RegisteredCommandList); i:=i+1) {
+      //print all help if (pl_commandName=="")
+      //print only the help of the specified command
+      if (pl_commandName==""
+        or pl_commandName==v_EPTF_CLI_RegisteredCommandList[i].commandName
+        or (v_EPTF_CLI_RegisteredCommandList[i].caseInsensitive 
+          and f_putInLowercase(pl_commandName)==v_EPTF_CLI_RegisteredCommandList[i].commandName)
+      ) {
+        vl_helpText := vl_helpText&
+        "  "&v_EPTF_CLI_RegisteredCommandList[i].commandName&" - "&v_EPTF_CLI_RegisteredCommandList[i].commandHelp&"\n";
+        if (pl_commandName!="") {
+          vl_commandFound := true;
+          // print the owner of the command if help is requested for a specific command:
+          vl_helpText := vl_helpText&
+          "\nThis command is owned by component "&v_EPTF_CLI_RegisteredCommandList[i].ownerCompName&
+          " ("&log2str(v_EPTF_CLI_RegisteredCommandList[i].ownerCompRef)&")\n";
+          if (v_EPTF_CLI_RegisteredCommandList[i].caseInsensitive) {
+            vl_helpText := vl_helpText&
+            "The command name is case insensitive!\n"
+          }
+          break;
+        }
+      }
+    }
+    if (vl_commandFound) {
+      // help about a specific command and command is found
+      vl_helpText := vl_helpText&"\n"&
+      "For more detailed information try:\n"&
+      vl_commandName&" help";
+    } else if (pl_commandName=="") {
+      // general help
+      vl_helpText := vl_helpText&"\n"&
+      "For more detailed information on a command try:\n"&
+      "help "&vl_commandName;
+    } else {
+      // help about a command that is not found
+      vl_helpText := vl_helpText&"\n"&
+      "No help available for command "&vl_commandName&": Command not found.";
+    }
+  }
+  return vl_helpText;
+}
+
+// returns the id of the command, -1 if not registered
+// searches the database case insesitively if the pl_caseInsensitive is true (default)
+private function f_EPTF_CLI_getCommandId(in charstring pl_commandName, in boolean pl_caseInsensitive := true) runs on EPTF_CLI_CT return integer {
+  for(var integer i:=0; i<sizeof(v_EPTF_CLI_RegisteredCommandList); i:=i+1) {
+    if (not pl_caseInsensitive and pl_commandName==v_EPTF_CLI_RegisteredCommandList[i].commandName) {
+      return i;
+    }
+    if (pl_caseInsensitive and f_putInLowercase(pl_commandName)==f_putInLowercase(v_EPTF_CLI_RegisteredCommandList[i].commandName)) {
+      // case insesitive command with same name exist,
+      // or an already registered case sensitive command name case insesitively matches with the new command name
+      return i;
+    }
+  }
+  return -1;
+}
+
+// returns true if the command is registered
+private function f_EPTF_CLI_isRegistered(in charstring pl_commandName, in boolean pl_caseInsensitive := true) runs on EPTF_CLI_CT return boolean {
+  return (f_EPTF_CLI_getCommandId(pl_commandName,pl_caseInsensitive)!=-1);
+}
+
+// returns the id of the command, -1 if not registered
+private function f_EPTF_CLI_findCommandId(in charstring pl_commandName) runs on EPTF_CLI_CT return integer {
+  for(var integer i:=0; i<sizeof(v_EPTF_CLI_RegisteredCommandList); i:=i+1) {
+    if (pl_commandName==v_EPTF_CLI_RegisteredCommandList[i].commandName) {
+      return i;
+    }
+    if (v_EPTF_CLI_RegisteredCommandList[i].caseInsensitive and f_putInLowercase(pl_commandName)==v_EPTF_CLI_RegisteredCommandList[i].commandName) {
+      return i;
+    }
+  }
+  return -1;
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_CLI_getCommandHelp
+// 
+//  Purpose:
+//    Returns the help of the command given at registration
+//
+//  Parameters:
+//    in charstring pl_commandName - the name of the command to get help about
+//
+//  Return Value:
+//    charstring - the registered help string for the command
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_CLI_getCommandHelp(in charstring pl_commandName) runs on EPTF_CLI_CT return charstring {
+  // search for the command:
+  var integer vl_commandId := f_EPTF_CLI_findCommandId(pl_commandName);
+  if (vl_commandId==-1) {
+    // command not found, or what is found is not case insensitive
+    return "No help available for command "&pl_commandName&": Command not found.";
+  }
+  return v_EPTF_CLI_RegisteredCommandList[vl_commandId].commandHelp;
+}
+
+private function f_EPTF_CLI_unlockSemaphore_PostProc(in integer pl_idx, in EPTF_IntegerList pl_argList) runs on EPTF_CLI_CT {
+  var charstring vl_resultValue := f_EPTF_Var_getCharstringValue(pl_idx); // format: "<pid> <commandResult>"
+  var charstring vl_commandPID := regexp(vl_resultValue,c_EPTF_CLI_anyWord&c_EPTF_CLI_everything,0); // trim down the command PID from the command value
+
+  var integer vl_executeSemaphoreId := pl_argList[0];
+  // if the result belongs to the executed command: store the result and unlock its semaphore:
+  if (str2int(vl_commandPID)==vl_executeSemaphoreId) {
+    f_EPTF_Semaphore_unlock(vl_executeSemaphoreId);
+    v_EPTF_CLI_commandResults[vl_executeSemaphoreId] := vl_resultValue;
+  }
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_CLI_executeCommand
+// 
+//  Purpose:
+//    Executes a built-in or registered command with the given arguments and returns the result
+//
+//  Parameters:
+//    in charstring pl_command - the command to execute
+//
+//  Return Value:
+//    charstring - the result returned by the command
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_CLI_executeCommand(in charstring pl_command) runs on EPTF_CLI_CT return charstring {
+  var charstring vl_commandName := regexp(pl_command,c_EPTF_CLI_anyWord&c_EPTF_CLI_everything,0); // trim down the command name from pl_command
+  var charstring vl_commandArgs := regexp(pl_command,c_EPTF_CLI_anyWord&c_EPTF_CLI_everything,1); // trim down the command args from pl_command  
+  var integer vl_idx := -1;
+  var charstring vl_ret := f_EPTF_CLI_preProcessAlias(vl_commandArgs);
+  if(vl_ret!="")
+  {
+    return vl_ret;
+  }
+  if(f_EPTF_str2int_HashMap_Find(v_EPTF_CLI_commandAlias_HashMap, vl_commandName, vl_idx))
+  {
+    return f_EPTF_CLI_executeCommand(v_EPTF_CLI_commandAliases[vl_idx]&" "&vl_commandArgs);
+  }
+  if (vl_commandName=="") {
+    return "";
+  }
+  if(vl_commandName=="alias"){
+    if(vl_commandArgs==""){
+      return f_EPTF_CLI_getHelpTxt("alias");
+    }
+    return f_EPTF_CLI_registerAlias(vl_commandArgs);
+  }
+  if(vl_commandName=="unalias"){
+    return f_EPTF_CLI_unalias(vl_commandArgs);
+  }
+  if(vl_commandName=="lsalias"){
+    return f_EPTF_CLI_lsalias(vl_commandArgs);
+  }
+  if(vl_commandName=="allalias"){
+    return f_EPTF_CLI_allalias();
+  }
+  if (vl_commandName=="help") {
+    return f_EPTF_CLI_getHelpTxt(vl_commandArgs);
+  }
+  if (vl_commandName=="exit" or f_putInLowercase(vl_commandName)=="quit") {
+    if (vl_commandArgs!="") {
+      return f_EPTF_CLI_getHelpTxt(vl_commandName);
+    }
+    f_EPTF_CLI_closeTerminal();
+    return "Command Line Interface terminal closed.";
+  }
+  if (vl_commandName=="stopAll" or f_putInLowercase(vl_commandName)=="stop") {
+    if (vl_commandArgs!="") {
+      return f_EPTF_CLI_getHelpTxt(vl_commandName);
+    }
+    f_EPTF_Base_stopAll(none);
+    return vl_commandName&" was already executed"; // this executed only if there was a stop before
+  }
+  var integer vl_commandVarIdx := f_EPTF_Var_getId("CLI."&vl_commandName&".command");
+  if (vl_commandVarIdx==-1) {
+    // case sensitive command not found.
+    // try case insesitively:
+    var integer vl_commandId := f_EPTF_CLI_findCommandId(vl_commandName);
+    if (vl_commandId==-1) {
+      // command not found
+      return vl_commandName&": Command not found.";
+    }
+    if (v_EPTF_CLI_RegisteredCommandList[vl_commandId].caseInsensitive) {
+      // command is case insensitive (always true here)
+      vl_commandName := f_putInLowercase(vl_commandName);
+      vl_commandVarIdx := f_EPTF_Var_getId("CLI."&vl_commandName&".command");
+    }
+  }
+  var integer vl_resultVarIdx := f_EPTF_Var_getId("CLI."&vl_commandName&".result");
+
+  // blocking the excution until response is received:
+  var integer vl_executeSemaphoreId := f_EPTF_Semaphore_new();
+  // add the postproc for the result variable to unlock the execute semaphore when the result is received:
+  f_EPTF_Var_addPostProcFn(
+    pl_idx := vl_resultVarIdx,
+    pl_postProcFn := {
+      funcRef := refers(f_EPTF_CLI_unlockSemaphore_PostProc),
+      argList := {vl_executeSemaphoreId}
+    }
+  );
+  // forward the command to the owner in the format: "<pid> <command>"
+  // the pid is needed to identify the result with the executed command
+  f_EPTF_Var_adjustContent(vl_commandVarIdx, {charstringVal := int2str(vl_executeSemaphoreId)&" "&vl_commandArgs});
+  // TODO: write the PID of the executed command to terminal: "[vl_executeSemaphoreId] started"
+  // wait until result arrives
+  if (f_EPTF_Semaphore_waitForUnlock(vl_executeSemaphoreId)) {/*remove the warning*/};
+  // TODO: write the PID of the executed command to terminal: "[vl_executeSemaphoreId] done"
+  // remove the post proc:
+  f_EPTF_Var_removePostProcFn(
+    pl_idx := vl_resultVarIdx,
+    pl_postProcFn := {
+      funcRef := refers(f_EPTF_CLI_unlockSemaphore_PostProc),
+      argList := {vl_executeSemaphoreId}
+    }
+  );
+  // return the result without the PID:
+  // the result value format: "<pid> <commandResult>"
+  return regexp(v_EPTF_CLI_commandResults[vl_executeSemaphoreId],c_EPTF_CLI_anyWord&c_EPTF_CLI_everything,1);
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_CLI_setAliasTag
+// 
+//  Purpose:
+//    Sets the tag that signs aliases to be replaced in commands
+//
+//  Parameters:
+//    in charstring pl_tag - the tag
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_CLI_setAliasTag(in charstring pl_tag) runs on EPTF_CLI_CT {
+  v_EPTF_CLI_aliasTag := pl_tag;
+}
+
+//  Blocking adjust:
+//  var integer vl_executeSemaphoreId := f_EPTF_Semaphore_new();
+//  f_EPTF_Var_adjustContent(vl_commandVarIdx, {charstringVal := pl_commandArgs}/*, {refers(f_EPTF_CLI_executeCommand_adjustHandler), {vl_executeSemaphoreId}}*/);
+//
+// private function f_EPTF_CLI_executeCommand_adjustHandler(in integer pl_idx, in EPTF_Var_DirectContent pl_content,in boolean pl_result, in EPTF_IntegerList pl_argList) runs on EPTF_CLI_CT {
+//   var integer vl_executeSemaphoreId := pl_argList[0];
+//   f_EPTF_Semaphore_unlock(vl_executeSemaphoreId);
+// }
+
+////////////////////////////////
+// CLI-CLI_Client IF handling:
+////////////////////////////////
+
+private function f_EPTF_CLI_handleRegisterCommand(in EPTF_CLI_Msg_RegisterCommand pl_msg, in EPTF_CLI_Client_CT pl_sender) runs on EPTF_CLI_CT {
+  // check if command can be registered:
+  var integer vl_commandId := f_EPTF_CLI_findCommandId(pl_msg.commandName);
+  if (pl_msg.caseInsensitive and vl_commandId==-1) {
+    vl_commandId := f_EPTF_CLI_getCommandId(pl_msg.commandName,pl_msg.caseInsensitive)
+  }
+  if (vl_commandId!=-1) {
+    // command already exists: registration failed
+    // send response with failed result:
+    EPTF_CLI_MgmtIf.send({
+      registerCommandResp := {
+        id := pl_msg.id,
+        result := registerFailed
+      }
+    }) to pl_sender;
+    return;
+  }
+  
+  // registration successful
+
+  // set command forwarding and help message for command
+  var integer vl_newCommandIdx := sizeof(v_EPTF_CLI_RegisteredCommandList);
+  v_EPTF_CLI_RegisteredCommandList[vl_newCommandIdx] := c_EPTF_CLI_RegisteredCommand_init;
+  v_EPTF_CLI_RegisteredCommandList[vl_newCommandIdx].commandName := pl_msg.commandName;
+  v_EPTF_CLI_RegisteredCommandList[vl_newCommandIdx].commandHelp := pl_msg.commandHelp;
+  v_EPTF_CLI_RegisteredCommandList[vl_newCommandIdx].ownerCompRef := pl_sender;
+  v_EPTF_CLI_RegisteredCommandList[vl_newCommandIdx].ownerCompName := pl_msg.ownerCompName;
+  v_EPTF_CLI_RegisteredCommandList[vl_newCommandIdx].caseInsensitive := pl_msg.caseInsensitive;
+  
+  // create the variables:
+  var integer vl_idx,vl_displayVarIdx;
+  f_EPTF_Var_newCharstring("CLI."&pl_msg.commandName&".command","",vl_idx);
+  f_EPTF_Var_newCharstring("CLI."&pl_msg.commandName&".result","",vl_idx);
+  f_EPTF_Var_newCharstring("CLI."&pl_msg.commandName&".display","",vl_displayVarIdx);
+  
+  // add the postproc for the display variable:
+  f_EPTF_Var_addPostProcFn(
+    pl_idx := vl_displayVarIdx,
+    pl_postProcFn := {
+      funcRef := refers(f_EPTF_CLI_showDisplay_PostProc),
+      argList := {}
+    }
+  );
+  
+  // send response with OK result:
+  EPTF_CLI_MgmtIf.send({
+    registerCommandResp := {
+      id := pl_msg.id,
+      result := registerOK
+    }
+  }) to pl_sender;
+}
+
+private function f_EPTF_CLI_showDisplay_PostProc(in integer pl_idx, in EPTF_IntegerList pl_argList) runs on EPTF_CLI_CT {
+  var charstring vl_displayValue := f_EPTF_Var_getCharstringValue(pl_idx);
+  f_EPTF_CLI_sendMessageToDisplayTelnetIf(vl_displayValue);
+}
+
+private altstep as_EPTF_CLI_handleMgmtMsgs() runs on EPTF_CLI_CT {
+  var EPTF_CLI_MgmtMsg vl_msg;
+  var EPTF_CLI_Client_CT vl_sender;
+  [] EPTF_CLI_MgmtIf.receive(?) -> value vl_msg sender vl_sender {
+    if (ischosen(vl_msg.registerCommand)) {
+      f_EPTF_CLI_handleRegisterCommand(vl_msg.registerCommand,vl_sender);
+      repeat;
+    }
+    repeat;
+  }
+}
+
+////////////////////////
+// TELNET IF Handling:
+////////////////////////
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_CLI_closeTerminal
+// 
+//  Purpose:
+//    Closes the terminal
+//
+//  Parameters:
+//    -
+//
+//  Return Value:
+//    -
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_CLI_closeTerminal() runs on EPTF_CLI_CT {
+  if (v_EPTF_CLI_terminalDisabled or not v_EPTF_CLI_initialized) {
+    // close terminal is not allowed after cleanup
+    return;
+  }
+  if (v_EPTF_CLI_clientConnected) {
+    EPTF_CLI_TELNET_PCO.send(ASP_TelnetClose:{});
+    v_EPTF_CLI_clientConnected:= false;
+  }
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_CLI_closeDisplayTerminal
+// 
+//  Purpose:
+//    Closes the display terminal
+//
+//  Parameters:
+//    -
+//
+//  Return Value:
+//    -
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_CLI_closeDisplayTerminal() runs on EPTF_CLI_CT {
+  if (v_EPTF_CLI_displayTerminalDisabled or not v_EPTF_CLI_initialized) {
+    // close display terminal is not allowed after cleanup
+    return;
+  }
+  if (v_EPTF_CLI_displayConnected) {
+    EPTF_CLI_displayTELNET_PCO.send(ASP_TelnetClose:{});
+    v_EPTF_CLI_displayConnected:= false;
+  }
+}
+
+///////////////////////////////////////////////////////////
+// Function: f_EPTF_CLI_sendMessageToTelnetIf
+// Purpose:
+//   Send a custom message to be displayed to the user. 
+///////////////////////////////////////////////////////////////
+private function f_EPTF_CLI_sendMessageToTelnetIf(
+  in charstring pl_msg)
+runs on EPTF_CLI_CT {
+  if (v_EPTF_CLI_terminalDisabled or not v_EPTF_CLI_initialized) {
+    // using the terminal is not allowed after cleanup
+    return;
+  }
+  if (v_EPTF_CLI_clientConnected) {
+    EPTF_CLI_TELNET_PCO.send(pl_msg);
+  } else {
+    f_EPTF_CLI_debug("Message "&pl_msg&" could not be sent to terminal: Terminal is not connected!");
+  }
+}
+
+private function f_EPTF_CLI_handleTELNETCommand(in charstring pl_command) runs on EPTF_CLI_CT {
+  // write result to telnet if:
+  f_EPTF_CLI_sendMessageToTelnetIf(f_EPTF_CLI_executeCommand(pl_command));
+}
+
+private altstep as_EPTF_CLI_handleTELNETaspIf() runs on EPTF_CLI_CT {
+  var charstring vl_msg;
+  [] EPTF_CLI_TELNET_PCO.receive(charstring:?) -> value vl_msg {
+    if (
+        (lengthof(vl_msg)>0 and substr(vl_msg,0,1) == "#") 
+      or (lengthof(vl_msg)>1 and substr(vl_msg,0,2) == "//")
+    ) {
+      repeat; // this line is treated as a comment
+    }
+    f_EPTF_CLI_handleTELNETCommand(vl_msg);
+    repeat;
+  }
+  //Handle login
+  [] EPTF_CLI_TELNET_PCO.receive(integer:?)
+  { 
+    if(v_EPTF_CLI_clientConnected){
+      f_EPTF_CLI_warning("Invalid ASP received from port EPTF_CLI_TELNET_PCO. Ignored.");
+    }else{
+      v_EPTF_CLI_clientConnected := true;
+      if(tsp_EPTF_CLL_CLI_ShowWelcome) {
+        f_EPTF_CLI_sendMessageToTelnetIf(
+          "\n\nWelcome to the Command Line Interface terminal!\n"&
+          "To get help about available commands use the ""help"" command.\n\n"
+        );
+      }
+    }
+    repeat;
+  }
+  [] EPTF_CLI_TELNET_PCO.receive
+  {
+    f_EPTF_CLI_warning("Invalid message received on CLI telnet port. Ignored");
+    repeat;
+  }
+}
+
+private function f_EPTF_CLI_sendMessageToDisplayTelnetIf(
+  in charstring pl_msg)
+runs on EPTF_CLI_CT {
+  if (v_EPTF_CLI_displayTerminalDisabled or not v_EPTF_CLI_initialized) {
+    // using the display terminal is not allowed after cleanup
+    return;
+  }
+  if (v_EPTF_CLI_displayConnected) {
+    EPTF_CLI_displayTELNET_PCO.send(pl_msg);
+  } else {
+    f_EPTF_CLI_debug("Message "&pl_msg&" could not be sent to display terminal: Display terminal is not connected!");
+  }
+}
+
+private function f_EPTF_CLI_handleDisplayTELNETCommand(in charstring pl_command) runs on EPTF_CLI_CT {
+  // write result to telnet if:
+  if (pl_command=="exit" or f_putInLowercase(pl_command)=="quit") {
+    f_EPTF_CLI_closeDisplayTerminal();
+    return;
+  }
+  // otherwise execute commands like in the normal terminal:
+  f_EPTF_CLI_sendMessageToDisplayTelnetIf(f_EPTF_CLI_executeCommand(pl_command));
+}
+
+private altstep as_EPTF_CLI_handleDisplayTELNETaspIf() runs on EPTF_CLI_CT {
+  var charstring vl_msg;
+  [] EPTF_CLI_displayTELNET_PCO.receive(charstring:?) -> value vl_msg {
+    if (
+        (lengthof(vl_msg)>0 and substr(vl_msg,0,1) == "#") 
+      or (lengthof(vl_msg)>1 and substr(vl_msg,0,2) == "//")
+    ) {
+      repeat; // this line is treated as a comment
+    }
+    f_EPTF_CLI_handleDisplayTELNETCommand(vl_msg);
+    repeat;
+  }
+  [] EPTF_CLI_displayTELNET_PCO.receive(integer:?)
+  { 
+    if(v_EPTF_CLI_displayConnected){
+      f_EPTF_CLI_warning("Invalid ASP received from port EPTF_CLI_displayTELNET_PCO. Ignored.");
+    }else{
+      v_EPTF_CLI_displayConnected := true;
+      if (tsp_EPTF_CLL_CLI_ShowWelcome) {
+        f_EPTF_CLI_sendMessageToDisplayTelnetIf(
+          "\n\nWelcome to the Command Line Interface display terminal!\n"&
+          "Messages sent to the display terminal are shown here.\n"&
+          "To get help about available commands use the ""help"" command.\n\n"
+        );
+      }
+    }
+    repeat;
+  }
+  [] EPTF_CLI_displayTELNET_PCO.receive
+  {
+    f_EPTF_CLI_warning("Invalid message received on CLI Display telnet port. Ignored.");
+    repeat;
+  }
+}
+
+  private function f_EPTF_CLI_registerAlias(in charstring pl_aliasArgs)
+  runs on EPTF_CLI_CT return charstring
+  {
+    var charstring vl_commandName:="", vl_commandAlias:="";
+    var integer vl_idx := -1;
+    vl_commandName := regexp(pl_aliasArgs, c_EPTF_CLI_everything&" "&c_EPTF_CLI_anyWord, 0);
+    vl_commandAlias := regexp(pl_aliasArgs, c_EPTF_CLI_everything&" "&c_EPTF_CLI_anyWord, 1);
+    if(vl_commandName=="" or vl_commandName==""){
+      return "Illegal argument error!\n"&f_EPTF_CLI_getHelpTxt("alias");
+    }
+    if(not f_EPTF_str2int_HashMap_Find(v_EPTF_CLI_commandAlias_HashMap, vl_commandAlias, vl_idx)){      
+      f_EPTF_str2int_HashMap_Insert(v_EPTF_CLI_commandAlias_HashMap, vl_commandAlias, sizeof(v_EPTF_CLI_commandAliases));
+      v_EPTF_CLI_commandAliases[sizeof(v_EPTF_CLI_commandAliases)] := vl_commandName;
+    }else{
+      return "Alias already used for command: "&v_EPTF_CLI_commandAliases[vl_idx];
+    }    
+    return "Alias registered! Command: "&vl_commandName&", alias: "&vl_commandAlias;
+  }
+    
+  private function f_EPTF_CLI_preProcessAlias(inout charstring pl_args)
+  runs on EPTF_CLI_CT return charstring //return "" if no error
+  {
+    var charstring vl_pre:="", vl_alias:="-", vl_post:="";
+    var integer vl_idx := -1;
+    while(vl_alias!="")
+    {
+      vl_pre:=regexp(pl_args, "(*)"&v_EPTF_CLI_aliasTag&"(*)"&v_EPTF_CLI_aliasTag&"(*)", 0); 
+      vl_alias:=regexp(pl_args, "(*)"&v_EPTF_CLI_aliasTag&"(*)"&v_EPTF_CLI_aliasTag&"(*)", 1); 
+      vl_post:=regexp(pl_args, "(*)"&v_EPTF_CLI_aliasTag&"(*)"&v_EPTF_CLI_aliasTag&"(*)", 2);
+      if(vl_alias==""){return ""}   
+      if(not f_EPTF_str2int_HashMap_Find(v_EPTF_CLI_commandAlias_HashMap, vl_alias, vl_idx))
+      {
+        return vl_alias&" is not a registered alias!";
+      }
+      pl_args := vl_pre&v_EPTF_CLI_commandAliases[vl_idx]&vl_post;
+    }
+    return "";    
+  }
+  
+  private function f_EPTF_CLI_unalias(in charstring pl_alias)
+  runs on EPTF_CLI_CT return charstring
+  {
+    var integer vl_idx := -1;
+    if(not f_EPTF_str2int_HashMap_Find(v_EPTF_CLI_commandAlias_HashMap, pl_alias, vl_idx)){
+      return pl_alias&" is not a registered alias!";
+    }
+    v_EPTF_CLI_commandAliases[vl_idx] := "";
+    f_EPTF_str2int_HashMap_Erase(v_EPTF_CLI_commandAlias_HashMap, pl_alias);
+    return "Alias removed!";
+  }
+  
+  private function f_EPTF_CLI_lsalias(in charstring pl_alias)
+  runs on EPTF_CLI_CT return charstring
+  {
+    var integer vl_idx := -1;
+    if(not f_EPTF_str2int_HashMap_Find(v_EPTF_CLI_commandAlias_HashMap, pl_alias, vl_idx)){
+      return pl_alias&" is not a registered alias!";
+    }    
+    return "Alias "&pl_alias&" is registered to command: "&v_EPTF_CLI_commandAliases[vl_idx];
+  }
+  
+  private function f_EPTF_CLI_allalias()
+  runs on EPTF_CLI_CT return charstring
+  {
+    var charstring vl_ret:="List of all aliases registered in the system(alias - command): \n", vl_iter:="";
+    var integer vl_idx:=-1;
+    if(f_EPTF_str2int_HashMap_Begin(v_EPTF_CLI_commandAlias_HashMap, vl_iter)){
+      do
+      {
+        f_EPTF_str2int_HashMap_Find(v_EPTF_CLI_commandAlias_HashMap, vl_iter, vl_idx);
+        vl_ret := vl_ret&"	"&vl_iter&" - "&v_EPTF_CLI_commandAliases[vl_idx]&"\n";
+      }
+      while(f_EPTF_str2int_HashMap_Next(v_EPTF_CLI_commandAlias_HashMap, vl_iter))
+    }else{
+      return "No aliases are registered yet! See 'help alias'!";
+    }
+    return vl_ret;
+  }
+
+group Logging {
+
+modulepar boolean tsp_EPTF_CLI_Functions_debug := false;
+
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_CLI_error
+  // 
+  //  Purpose:
+  //    Function to log an error from CLI feature.
+  //
+  //  Parameters:
+  //    - pl_message - *in* *charstring* - the message to log
+  //
+  //  Return Value:
+  //    -
+  //
+ ///////////////////////////////////////////////////////////
+  private function f_EPTF_CLI_error(in charstring pl_message)
+  runs on EPTF_CLI_CT
+  {
+    f_EPTF_Logging_error(true, c_EPTF_CLI_loggingComponentMask&": "&pl_message);
+    f_EPTF_Base_stopAll();
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_CLI_warning
+  // 
+  //  Purpose:
+  //    Function to log a warning from CLI feature.
+  //
+  //  Parameters:
+  //    - pl_message - *in* *charstring* - the message to log
+  //
+  //  Return Value:
+  //    -
+  //
+  ///////////////////////////////////////////////////////////
+  private function f_EPTF_CLI_warning(in charstring pl_message)
+  runs on EPTF_CLI_CT
+  {
+    f_EPTF_Logging_warning(true, c_EPTF_CLI_loggingComponentMask&": "&pl_message);
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_CLI_debug
+  // 
+  //  Purpose:
+  //    Function to log a debug message from CLI feature.
+  //
+  //  Parameters:
+  //    - pl_message - *in* *charstring* - the message to log
+  //
+  //  Return Value:
+  //    -
+  //
+  ///////////////////////////////////////////////////////////
+  private function f_EPTF_CLI_debug(in charstring pl_message)
+  runs on EPTF_CLI_CT
+  {
+    f_EPTF_Logging_debugV2(pl_message, v_EPTF_CLI_loggingMaskId, {c_EPTF_CLI_loggingClassIdx_Debug});
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_CLI_debugEnabled
+  // 
+  //  Purpose:
+  //    Function to check if debug is enabled for CLI
+  //
+  //  Parameters:
+  //    -
+  //
+  //  Return Value:
+  //    *boolean* - true if debug enalbed
+  //
+  ///////////////////////////////////////////////////////////
+  private function f_EPTF_CLI_debugEnabled()
+  runs on EPTF_CLI_CT
+  return boolean
+  {
+    return f_EPTF_Logging_isEnabled(v_EPTF_CLI_loggingMaskId, c_EPTF_CLI_loggingClassIdx_Debug);
+  }
+} // ~group Logging
+
+} //~group CLI
+
+// CLI_Client
+group CLI_Client {
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_CLI_Client_init_CT
+// 
+//  Purpose:
+//    This function initializes the EPTF_CLI_Client_CT component
+//
+//  Parameters:
+//    in charstring pl_selfName - name of the component
+//    in EPTF_CLI_CT pl_CLI_compRef := null - the CLI component reference used as a default
+//      to register the commands into
+//
+//  Return Value:
+//    -
+//
+//  Detailed Comments:
+//    This function should be called before any other EPTF_CLI_Client_CT functions are used.
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_CLI_Client_init_CT(
+  in charstring pl_selfName,
+  in EPTF_CLI_CT pl_CLI_compRef := null
+) runs on EPTF_CLI_Client_CT {
+  if (v_EPTF_CLI_Client_initialized) {
+    return;
+  }
+  f_EPTF_Base_init_CT(pl_selfName);
+  f_EPTF_Semaphore_init_CT(pl_selfName);
+  f_EPTF_Var_init_CT(pl_selfName);
+  f_EPTF_Logging_init_CT(pl_selfName);
+  v_CLI_Client_registerCommandResults := {};
+  v_EPTF_CLI_Client_RegisteredCommandList := {};
+  v_CLI_compRef := pl_CLI_compRef;
+  if (v_CLI_compRef!=null) {
+    connect(self:EPTF_CLI_Client_MgmtIf,v_CLI_compRef:EPTF_CLI_MgmtIf);
+  }
+  v_CLI_Client_handler := activate(as_EPTF_CLI_Client_handleMgmtMsgs());
+  f_EPTF_Base_registerCleanup(refers(f_EPTF_CLI_Client_cleanup_CT));
+  v_EPTF_CLI_Client_loggingMaskId := f_EPTF_Logging_registerComponentMasks(c_EPTF_CLI_Client_loggingComponentMask, c_EPTF_CLI_Client_loggingEventClasses, EPTF_Logging_CLL);
+  if(tsp_EPTF_CLI_Client_Functions_debug) {
+    f_EPTF_Logging_enableLocalMask(v_EPTF_CLI_Client_loggingMaskId, c_EPTF_CLI_Client_loggingClassIdx_Debug);
+  } else {
+    f_EPTF_Logging_disableLocalMask(v_EPTF_CLI_Client_loggingMaskId, c_EPTF_CLI_Client_loggingClassIdx_Debug);
+  }
+  v_EPTF_CLI_Client_initialized := true;
+}
+
+private function f_EPTF_CLI_Client_cleanup_CT() runs on EPTF_CLI_Client_CT {
+  if (not v_EPTF_CLI_Client_initialized) {
+    return;
+  }
+  v_EPTF_CLI_Client_initialized := false;
+  if (v_CLI_compRef!=null) {
+    disconnect(self:EPTF_CLI_Client_MgmtIf,v_CLI_compRef:EPTF_CLI_MgmtIf);
+  }
+  deactivate(v_CLI_Client_handler);
+  v_CLI_Client_handler:= null;
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_CLI_Client_registerCommand
+// 
+//  Purpose:
+//    Register a new command into the CommanLineInteface
+//
+//  Parameters:
+//    in charstring pl_commandName - name of the new command
+//    in charstring pl_commandHelp - short help information about the command
+//    in f_EPTF_CLI_Client_commandHandler_FT pl_commandHandler - the handler function to
+//       handle the command
+//    in EPTF_CLI_CT pl_CLI_compRef := null - the CLI component to register the new command into
+//    in boolean pl_caseInsensitiveCommand := true - specifies if the new command is case sensitive or not
+//
+//  Return Value:
+//    EPTF_CLI_RegisterCommandResult - tells if the registration was successful
+//
+//  Detailed Comments:
+//    The name of the command given in pl_commandName cannot contain spaces.
+//    The name should be unique on the given CLI.
+//
+//    The help string given in pl_commandHelp is printed when the help command is executed
+//    in the CLI terminal, or when all commands are listed. This is why it should be a short
+//    description of the command, if possible not exceeding 50 characters.
+//    More detailed help message can be given by implementing the handling of e.g. the "help"
+//    argument for the command. In this case more detailed help can be accessed by
+//    issuing "<command> help" on the terminal.
+//
+//    The pl_commandHandler function is called with the command arguments when the command was
+//    issued in the CLI terminal:  "<command name> <command args>"
+//    The CLI calls the handler assigned to the <command name>. The <command args> is
+//    passed to the handler in its pl_commandArgs argument. The pl_result of the
+//    handler is set to the <command name> when the handler is invoked.
+//    The handler should change this value. This value will appear on the CLI terminal.
+//    The handler function also should return an error code. The zero value means no error,
+//    any other positive value will appear on the CLI as the error code of the command.
+//    Negative error codes are not printed to the terminal (invisible error code).
+//
+//    The pl_CLI_compRef argument of f_EPTF_CLI_Client_registerCommand can be used
+//    to use a different CLI component that was given in the <f_EPTF_CLI_Client_init_CT>
+//    as default. If pl_CLI_compRef is not specified, CLI component given during init is used.
+//
+//    The argument pl_caseInsensitiveCommand can be used to specify if the command name
+//    is case sensitive or not. By default the command names will be registered
+//    case insensitively.
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_CLI_Client_registerCommand(
+  in charstring pl_commandName,
+  in charstring pl_commandHelp,
+  in f_EPTF_CLI_Client_commandHandler_FT pl_commandHandler,
+  in EPTF_CLI_CT pl_CLI_compRef := null,
+  in boolean pl_caseInsensitiveCommand := true
+) runs on EPTF_CLI_Client_CT return EPTF_CLI_RegisterCommandResult {
+  
+  if (not v_EPTF_CLI_Client_initialized) {
+    // registration is not allowed after cleanup
+    return registerFailed;
+  }
+
+  if (pl_commandHandler==null or pl_commandName == "" or pl_commandHelp == "") {
+    // null handlers, names, help are not accepted, registration not successful
+    return registerFailed;
+  }
+  if (pl_commandName == "help"
+    or pl_commandName == "stopAll" or f_putInLowercase(pl_commandName) == "stop"
+    or pl_commandName == "exit" or f_putInLowercase(pl_commandName) == "quit" ) {
+    // these commands are reserved by CLI, cannot be registered
+    return registerFailed;
+  }
+  
+  // check if command name contains spaces:
+  // regexp: any number of non-space + min 1 space + anything
+  var charstring vl_spaces := regexp(pl_commandName,"[^ ]#(,)([ ]#(1,))(*)",0);
+  if (vl_spaces!="") {
+    // command name contains space
+    return registerFailed;
+  }
+  
+  // if the pl_CLI_compRef was specified and is different from v_CLI_compRef
+  // use that as CLI to register the command, otherwise use the default
+  // CLI given in the init function:
+  var EPTF_CLI_CT vl_CLI_compRef := v_CLI_compRef;
+  if (pl_CLI_compRef!=null and pl_CLI_compRef!=v_CLI_compRef) {
+    vl_CLI_compRef := pl_CLI_compRef;
+    connect(self:EPTF_CLI_Client_MgmtIf,vl_CLI_compRef:EPTF_CLI_MgmtIf);
+  } else if (vl_CLI_compRef==null) {
+    // no CLI comp ref specified
+    return registerFailed;
+  }
+  
+  if (pl_caseInsensitiveCommand) {
+    pl_commandName := f_putInLowercase(pl_commandName);
+  }
+  
+  var integer vl_semaphoreIdx := f_EPTF_Semaphore_new();
+  EPTF_CLI_Client_MgmtIf.send({
+    registerCommand := {
+      id := vl_semaphoreIdx,
+      commandName := pl_commandName,
+      commandHelp := pl_commandHelp,
+      ownerCompName := f_EPTF_Base_selfName(),
+      caseInsensitive := pl_caseInsensitiveCommand
+    }
+  }) to vl_CLI_compRef;
+  if(f_EPTF_Semaphore_waitForUnlock(vl_semaphoreIdx)) {/*remove the warning*/};
+  var EPTF_CLI_RegisterCommandResult vl_result := v_CLI_Client_registerCommandResults[vl_semaphoreIdx];
+  // reset the result database to failed value:
+  v_CLI_Client_registerCommandResults[vl_semaphoreIdx] := registerFailed;
+  
+  // disconnect from the CLI if it was connected:
+  if (pl_CLI_compRef!=null and pl_CLI_compRef!=v_CLI_compRef) {
+    disconnect(self:EPTF_CLI_Client_MgmtIf,vl_CLI_compRef:EPTF_CLI_MgmtIf);
+  }
+
+  if (vl_result!=registerOK) {
+    // registration not successful
+    return vl_result;
+  }
+  
+  // registration is successful (vl_result==registerOK)
+
+  // store the command data:
+  var integer vl_newCommandId := sizeof(v_EPTF_CLI_Client_RegisteredCommandList);
+  v_EPTF_CLI_Client_RegisteredCommandList[vl_newCommandId] := c_EPTF_CLI_Client_RegisteredCommand_init;
+  v_EPTF_CLI_Client_RegisteredCommandList[vl_newCommandId].commandName := pl_commandName;
+  v_EPTF_CLI_Client_RegisteredCommandList[vl_newCommandId].commandHandler := pl_commandHandler;
+  v_EPTF_CLI_Client_RegisteredCommandList[vl_newCommandId].caseInsensitive := pl_caseInsensitiveCommand;
+
+  // create/subscibe to the variables:
+  // the local variable name has to contain the CLI compRef to allow
+  // to be able to register the same command into different CLI-s
+  var integer vl_commandVarIdx,vl_resultVarIdx,vl_displayVarIdx;
+  f_EPTF_Var_subscribeRemote(
+    vl_CLI_compRef,
+    "CLI."&pl_commandName&".command",
+    realtime,
+    vl_commandVarIdx,
+    pl_localName := "CLI_Client."&log2str(vl_CLI_compRef)&"."&pl_commandName&".command"
+  );
+  f_EPTF_Var_subscribeRemote(
+    vl_CLI_compRef,
+    "CLI."&pl_commandName&".result",
+    realtime,
+    vl_resultVarIdx,
+    pl_localName := "CLI_Client."&log2str(vl_CLI_compRef)&"."&pl_commandName&".result"
+  );
+  f_EPTF_Var_subscribeRemote(
+    vl_CLI_compRef,
+    "CLI."&pl_commandName&".display",
+    realtime,
+    vl_displayVarIdx,
+    pl_localName := "CLI_Client."&log2str(vl_CLI_compRef)&"."&pl_commandName&".display"
+  );
+  
+  v_EPTF_CLI_Client_RegisteredCommandList[vl_newCommandId].commandDisplayIdx := vl_displayVarIdx;
+  
+  // add the postproc for the command variable:
+  f_EPTF_Var_addPostProcFn(
+    pl_idx := vl_commandVarIdx,
+    pl_postProcFn := {
+      funcRef := refers(f_EPTF_CLI_Client_executeCommand_PostProc),
+      argList := {vl_newCommandId,vl_resultVarIdx}
+    }
+  );
+  
+  return vl_result;
+}
+
+private function f_EPTF_CLI_Client_executeCommand_PostProc(in integer pl_idx, in EPTF_IntegerList pl_argList) runs on EPTF_CLI_Client_CT {
+  if (not v_EPTF_CLI_Client_initialized) {
+    // command execution is not allowed after cleanup
+    return;
+  }
+  var charstring vl_commandValue := f_EPTF_Var_getCharstringValue(pl_idx);
+  var charstring vl_commandPID := regexp(vl_commandValue,c_EPTF_CLI_anyWord&c_EPTF_CLI_everything,0); // trim down the command PID from the command value
+  var charstring vl_commandParams := regexp(vl_commandValue,c_EPTF_CLI_anyWord&c_EPTF_CLI_everything,1); // trim down the command args from command value  
+
+  var integer vl_commandId := pl_argList[0];
+  var integer vl_resultVarIdx := pl_argList[1];
+  var charstring vl_result := v_EPTF_CLI_Client_RegisteredCommandList[vl_commandId].commandName;
+  var integer vl_exitCode := v_EPTF_CLI_Client_RegisteredCommandList[vl_commandId].commandHandler.apply(vl_commandParams, vl_result);
+  // if the handler does not change the result, "<command> done." is written to the terminal:
+  if (vl_result == v_EPTF_CLI_Client_RegisteredCommandList[vl_commandId].commandName) {
+    vl_result := vl_result&" done.";
+  }
+  // in case of error and positive error code, the exit code is shown:
+  if (vl_exitCode>0) {
+    vl_result := vl_result&"\n"&v_EPTF_CLI_Client_RegisteredCommandList[vl_commandId].commandName&" "&vl_commandParams&": Error code: "&int2str(vl_exitCode);
+  }
+  // format of the result value: "<pid> <commandResult>"
+  // the pid is needed to identify the result with the executed command
+  f_EPTF_Var_adjustContent(vl_resultVarIdx, {charstringVal := vl_commandPID&" "&vl_result});
+}
+
+private function f_EPTF_CLI_Client_handleRegisterCommandResp(in EPTF_CLI_Msg_RegisterCommandResp pl_msg) runs on EPTF_CLI_Client_CT {
+  v_CLI_Client_registerCommandResults[pl_msg.id] := pl_msg.result;
+  f_EPTF_Semaphore_unlock(pl_msg.id);
+}
+
+// returns the id of the command, -1 if not registered
+private function f_EPTF_CLI_Client_findCommandId(in charstring pl_commandName) runs on EPTF_CLI_Client_CT return integer {
+  for(var integer i:=0; i<sizeof(v_EPTF_CLI_Client_RegisteredCommandList); i:=i+1) {
+    if (pl_commandName==v_EPTF_CLI_Client_RegisteredCommandList[i].commandName) {
+      return i;
+    }
+    if (v_EPTF_CLI_Client_RegisteredCommandList[i].caseInsensitive and f_putInLowercase(pl_commandName)==v_EPTF_CLI_Client_RegisteredCommandList[i].commandName) {
+      return i;
+    }
+  }
+  return -1;
+}
+
+/*public function f_EPTF_CLI_Client_sendCommandResult(
+  in charstring pl_commandName,
+  in charstring pl_resultText
+) runs on EPTF_CLI_Client_CT {
+  if (not v_EPTF_CLI_Client_initialized) {
+    // terminal update is not allowed after cleanup
+    return;
+  }
+  var integer vl_idx := f_EPTF_Var_getId("CLI_Client."&pl_commandName&".result");
+  f_EPTF_Var_adjustContent(vl_idx, {charstringVal := pl_resultText});
+}*/
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_CLI_Client_sendCommandDisplay
+// 
+//  Purpose:
+//    Send message to the display terminal
+//
+//  Parameters:
+//    in charstring pl_commandName - the name of the command of which display should be used
+//    in charstring pl_displayText - the text to write to the display terminal
+//
+//  Return Value:
+//    -
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_CLI_Client_sendCommandDisplay(
+  in charstring pl_commandName,
+  in charstring pl_displayText
+) runs on EPTF_CLI_Client_CT {
+  if (not v_EPTF_CLI_Client_initialized) {
+    // display update is not allowed after cleanup
+    return;
+  }
+  // find the command id for the command:
+  var integer vl_commandId := f_EPTF_CLI_Client_findCommandId(pl_commandName);
+  if (vl_commandId==-1) {
+    f_EPTF_CLI_Client_warning(%definitionId&": Cannot send text to display: command not found: "&pl_commandName);
+    return; // command not found
+  }
+  f_EPTF_Var_adjustContent(v_EPTF_CLI_Client_RegisteredCommandList[vl_commandId].commandDisplayIdx, {charstringVal := pl_displayText});
+}
+
+private altstep as_EPTF_CLI_Client_handleMgmtMsgs() runs on EPTF_CLI_Client_CT {
+  var EPTF_CLI_MgmtMsg vl_msg;
+  [] EPTF_CLI_Client_MgmtIf.receive(?) -> value vl_msg {
+    if (ischosen(vl_msg.registerCommandResp)) {
+      f_EPTF_CLI_Client_handleRegisterCommandResp(vl_msg.registerCommandResp);
+      repeat;
+    }
+    repeat;
+  }
+}
+
+group Logging {
+
+modulepar boolean tsp_EPTF_CLI_Client_Functions_debug := false;
+
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_CLI_Client_error
+  // 
+  //  Purpose:
+  //    Function to log an error from CLI Client feature.
+  //
+  //  Parameters:
+  //    pl_message - *in* *charstring* - the message to log
+  //
+  //  Return Value:
+  //    -
+  //
+  ///////////////////////////////////////////////////////////
+  private function f_EPTF_CLI_Client_error(in charstring pl_message)
+  runs on EPTF_CLI_Client_CT
+  {
+    f_EPTF_Logging_error(true, c_EPTF_CLI_Client_loggingComponentMask&": "&pl_message);
+    f_EPTF_Base_stopAll();
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_CLI_Client_warning
+  // 
+  //  Purpose:
+  //    Function to log a warning from CLI Client feature.
+  //
+  //  Parameters:
+  //    - pl_message - *in* *charstring* - the message to log
+  //
+  //  Return Value:
+  //    -
+  //
+  ///////////////////////////////////////////////////////////
+  private function f_EPTF_CLI_Client_warning(in charstring pl_message)
+  runs on EPTF_CLI_Client_CT
+  {
+    f_EPTF_Logging_warning(true, c_EPTF_CLI_Client_loggingComponentMask&": "&pl_message);
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_CLI_Client_debug
+  // 
+  //  Purpose:
+  //    Function to log a debug message from CLI Client feature.
+  //
+  //  Parameters:
+  //    - pl_message - *in* *charstring* - the message to log
+  //
+  //  Return Value:
+  //    -
+  //
+  ///////////////////////////////////////////////////////////
+  private function f_EPTF_CLI_Client_debug(in charstring pl_message)
+  runs on EPTF_CLI_Client_CT
+  {
+    f_EPTF_Logging_debugV2(pl_message, v_EPTF_CLI_Client_loggingMaskId, {c_EPTF_CLI_Client_loggingClassIdx_Debug});
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_CLI_Client_debugEnabled
+  // 
+  //  Purpose:
+  //    Function to check if debug is enabled for CLI Client
+  //
+  //  Parameters:
+  //    -
+  //
+  //  Return Value:
+  //    *boolean* - true if debug enalbed
+  //
+  ///////////////////////////////////////////////////////////
+  private function f_EPTF_CLI_Client_debugEnabled()
+  runs on EPTF_CLI_Client_CT
+  return boolean
+  {
+    return f_EPTF_Logging_isEnabled(v_EPTF_CLI_Client_loggingMaskId, c_EPTF_CLI_Client_loggingClassIdx_Debug);
+  }
+} // ~group Logging
+
+} //~group CLI_Client
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_EPTF_CLI_splitString
+// 
+//  Purpose:
+//    Splits a string using a given separator
+//
+//  Parameters:
+//    pl_string - *in* *charstring* - input string
+//    pl_separator  - *in* *charstring* - separator (default: " \t" i.e space and tab)
+//    pl_multipleSeparators  - *in* *boolean* - true if multiple separators are allowed
+//      between elements (default). If it is false elements with "" value
+//      are generated between separators.
+// 
+//  Return Value:
+//    EPTF_CharstringList - the array of splitted elements
+//
+//  Errors:
+//    - 
+// 
+//  Detailed description:
+//    If the input string contains leading/trailing separator characters,
+//    one or all of them is trimmed before splitting depending on the
+//    pl_multipleSeparators parameter. For false only one, for true
+//    all of them is trimmed:
+//    f_EPTF_CLI_splitString("..AA..BB..",".") returns {"AA","BB"}
+//    f_EPTF_CLI_splitString("..AA..BB...",".",false) returns {"","AA","","BB","",""}
+//
+//    If pl_multipleSeparators is false then
+//    f_EPTF_CLI_splitString("AA...BB",".",false) will return {"AA","","","BB"}
+//    while if true:
+//    f_EPTF_CLI_splitString("AA...BB",".",true) will return {"AA","BB"}
+// 
+///////////////////////////////////////////////////////////////////////////////
+public function f_EPTF_CLI_splitString(
+  in charstring pl_string,
+  in charstring pl_separator := " \t",
+  in boolean pl_multipleSeparators := true
+) return EPTF_CharstringList {
+  var EPTF_CharstringList vl_result := {};
+  var charstring vl_everything := "(*)";
+  var charstring vl_separatorNumber := "(,)";
+  if (not pl_multipleSeparators) {
+    vl_separatorNumber := "(,1)";
+  }
+  var charstring vl_separatorRegexp := "["&pl_separator&"]#"&vl_separatorNumber;
+  var charstring vl_anyWordRegexp := "([^"&pl_separator&"]#(,))"; // can be "" also
+  for(
+    var charstring vl_currentString := regexp(pl_string,vl_separatorRegexp&vl_everything&vl_separatorRegexp,0);
+    vl_currentString != "";
+    vl_currentString := regexp(vl_currentString,vl_anyWordRegexp&vl_separatorRegexp&vl_everything,1)) {
+     vl_result[sizeof(vl_result)] := regexp(vl_currentString,vl_anyWordRegexp&vl_separatorRegexp&vl_everything,0);
+  }
+  return vl_result;
+}
+
+} //~EPTF_CLL_CLI_Functions

@@ -1,0 +1,1508 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************///  File:     EPTF_CLL_LGenBase_StepFunctions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 512
+//  Updated:  2009-11-13
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////
+//  Module: EPTF_CLL_LGenBase_StepFunctions
+// 
+//  Purpose:
+//    This module provides functions used in registered test steps of LGenBase
+//    feature of the TitanSim    
+// 
+//  Module Parameters:
+//    -
+// 
+//  Module depends on:
+//    <EPTF_CLL_Common_Definitions>
+//    <EPTF_CLL_Base_Functions>
+//    <EPTF_CLL_RBTScheduler_Functions>
+//    <EPTF_CLL_LGenBase_Definitions>
+//    <EPTF_CLL_LGenBase_ConfigFunctions>
+//    <EPTF_CLL_LGenBase_EventHandlingFunctions>
+//    <EPTF_CLL_LGenBase_TrafficFunctions>
+//    <EPTF_CLL_LGenBase_ExternalFunctions>
+//    <EPTF_CLL_Variable_Functions>
+//    <EPTF_CLL_Variable_Definitions>
+//    <TCCMaths_Functions>
+// 
+//  Current Owner:
+//    elszsku
+// 
+//  Last Review Date:
+//    2009-01-27
+// 
+//  Detailed Comments:
+// 
+///////////////////////////////////////////////////////////
+module EPTF_CLL_LGenBase_StepFunctions
+{
+import from EPTF_CLL_Common_Definitions all;
+import from EPTF_CLL_Base_Functions all;
+import from EPTF_CLL_RBTScheduler_Functions all;
+import from EPTF_CLL_LGenBase_Definitions all;
+import from EPTF_CLL_LGenBase_ConfigFunctions all;
+import from EPTF_CLL_LGenBase_EventHandlingFunctions all;
+import from EPTF_CLL_LGenBase_TrafficFunctions all;
+import from EPTF_CLL_LGenBase_ExternalFunctions all;
+import from EPTF_CLL_Variable_Functions all;
+import from EPTF_CLL_Variable_Definitions all;
+import from TCCMaths_Functions all;
+import from EPTF_CLL_StatMeasure_Functions all
+import from EPTF_CLL_LGenBase_LoggingFunctions all;
+
+///////////////////////////////////////////
+//  Function: f_EPTF_LGenBase_step_timerStart
+// 
+//  Purpose:
+//    Test step of LGenBase to start a locally-declared timer of an FSM
+//    context. It will be declared with  step-index
+//    <c_EPTF_LGenBase_stepIdx_timerStart> and step name
+//    <c_EPTF_LGenBase_stepName_timerStart> of behavior type with index <c_EPTF_LGenBase_bIdx>
+//
+//  Parameters:
+//    - pl_ptr - *in* <EPTF_LGenBase_TestStepArgs> -it shall be supplied as
+//      follows 
+//      - pl_ptr.refContext shall be present and refers a valid FSM context of
+//        the entity
+//      - pl_ptr.refContext.fRefArgs shall contain at the [0]th position a
+//        valid local-index for the timers of the FSM table referred by the FSM context
+//
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//  If the referred timer is already "running" (i.e., a respective
+//  <f_EPTF_LGenBase_TimerActionHandler> action is  scheduled in the event queue,
+//  then the timer is silently restarted, that is, cancelled then started.
+///////////////////////////////////////////////////////////
+public function f_EPTF_LGenBase_step_timerStart(in EPTF_LGenBase_TestStepArgs pl_ptr) 
+runs on EPTF_LGenBase_Private_CT { 
+  f_EPTF_Base_assert(%definitionId &" expects exactly 1 refArgs in refContext in TestStepArgs", 
+    sizeof(pl_ptr.refContext.fRefArgs)==1);
+
+  var integer eCtx:=pl_ptr.eIdx, fCtx:=pl_ptr.refContext.fCtxIdx, 
+  timerIdx := pl_ptr.refContext.fRefArgs[0],  
+  t:=v_LGenBase_entities[eCtx].fsmCtxList[fCtx].tableIdx;
+  f_EPTF_Base_assert(%definitionId&": Entity index", eCtx>=0 
+    and eCtx<sizeof(v_LGenBase_entities));
+  f_EPTF_Base_assert(%definitionId&": FSM context index", fCtx>=0 
+    and fCtx<sizeof(v_LGenBase_entities[eCtx].fsmCtxList));
+  f_EPTF_Base_assert(%definitionId&": FSM table index", t>=0 
+    and t<sizeof(v_LGenBase_fsmTables)); 
+  f_EPTF_Base_assert(%definitionId&": FSM timer index", timerIdx>=0 
+    and timerIdx<sizeof(v_LGenBase_fsmTables[t].timerList)); 
+
+  var float vl_duration
+  if (ischosen(v_LGenBase_entities[eCtx].fsmCtxList[fCtx].timerParams[timerIdx].static)) {
+    vl_duration:= v_LGenBase_entities[eCtx].fsmCtxList[fCtx].timerParams[timerIdx].static.startValue;
+  } else if (ischosen(v_LGenBase_entities[eCtx].fsmCtxList[fCtx].timerParams[timerIdx].random)) {
+    vl_duration := rnd() * 
+      (v_LGenBase_entities[eCtx].fsmCtxList[fCtx].timerParams[timerIdx].random.timeoutMax -
+      v_LGenBase_entities[eCtx].fsmCtxList[fCtx].timerParams[timerIdx].random.timeoutMin) +
+      v_LGenBase_entities[eCtx].fsmCtxList[fCtx].timerParams[timerIdx].random.timeoutMin;
+  } else if (ischosen(v_LGenBase_entities[eCtx].fsmCtxList[fCtx].timerParams[timerIdx].randomGauss)) {
+    vl_duration := f_EPTF_LGenBase_rnd_normal(
+      v_LGenBase_entities[eCtx].fsmCtxList[fCtx].timerParams[timerIdx].randomGauss.mean,
+      v_LGenBase_entities[eCtx].fsmCtxList[fCtx].timerParams[timerIdx].randomGauss.deviation);
+  }
+
+  if (f_EPTF_LGenBase_isFSMDebugEnabled(eCtx, fCtx)){
+    f_EPTF_LGenBase_loggingDebugFSM(eCtx, fCtx,log2str(%definitionId&
+        ": Received args:=",pl_ptr,
+        ": Will start timer "& v_LGenBase_fsmTables[t].timerList[timerIdx].name&
+        " entity: "& f_EPTF_LGenBase_getEntityName(eCtx)))
+  }
+  if (c_EPTF_Common_debugSwitch and f_EPTF_LGenBase_isEnabled(c_EPTF_LGenBase_loggingClassIdx_DebugTrafficVerbose)){
+    f_EPTF_LGenBase_loggingDebugTrafficVerbose(" FSM_context "&log2str(v_LGenBase_entities[eCtx].fsmCtxList[fCtx])& 
+      ", FSM_table:="& v_LGenBase_fsmTables[t].name)
+  }
+  if(f_EPTF_LGenBase_fsmTimerIsRunning(eCtx,fCtx,timerIdx))
+  /*if (v_LGenBase_entities[eCtx].fsmCtxList[fCtx].timerData[timerIdx]>-1
+  and f_EPTF_SchedulerComp_eventIsValid(
+  v_LGenBase_entities[eCtx].fsmCtxList[fCtx].timerData[timerIdx]))*/ 
+  {
+    f_EPTF_LGenBase_loggingWarning(%definitionId&": Start has been requested for a running FSM timer: "&
+      v_LGenBase_fsmTables[v_LGenBase_entities[eCtx].fsmCtxList[fCtx].tableIdx].timerList[timerIdx].name&
+      " The timer will be cancelled first!");
+    if(not f_EPTF_SchedulerComp_CancelEvent(v_LGenBase_entities[eCtx].fsmCtxList[fCtx].timerData[timerIdx])) {
+      f_EPTF_LGenBase_loggingWarning(%definitionId&": Cancelling timer failed.");
+    }
+    v_LGenBase_entities[eCtx].fsmCtxList[fCtx].timerData[timerIdx] := -1;
+  }
+  // cannot assert scheduling directly, 
+  // since f_EPTF_SchedulerComp_scheduleAction must be always executed!      
+  if(not f_EPTF_SchedulerComp_scheduleAction(
+      f_EPTF_Base_getRelTimeInSecs()+vl_duration, 
+      refers(f_EPTF_LGenBase_TimerActionHandler),
+      {eCtx,fCtx,timerIdx}, 
+      v_LGenBase_entities[eCtx].fsmCtxList[fCtx].timerData[timerIdx])) 
+  {
+    if (c_EPTF_Common_debugSwitch and f_EPTF_LGenBase_isEnabled(c_EPTF_LGenBase_loggingClassIdx_DebugTraffic)){
+      f_EPTF_LGenBase_loggingDebugTraffic(%definitionId&": Cannot schedule timer timeout! Received args:="&log2str(pl_ptr)& 
+        ", failed timer:="& v_LGenBase_fsmTables[t].timerList[timerIdx].name&
+        ", entity:="& f_EPTF_LGenBase_getEntityName(eCtx)&
+        ", FSM_context:="&log2str(v_LGenBase_entities[eCtx].fsmCtxList[fCtx])& 
+        ", FSM_table:="& v_LGenBase_fsmTables[t].name);
+    }
+    f_EPTF_Base_assert(%definitionId&": Event scheduling must be always successful", false)
+  }
+  if (c_EPTF_Common_debugSwitch and f_EPTF_LGenBase_isEnabled(c_EPTF_LGenBase_loggingClassIdx_DebugTraffic)){
+    f_EPTF_LGenBase_loggingDebugTraffic(%definitionId&": Finished scheduling timer:="& v_LGenBase_fsmTables[t].timerList[timerIdx].name&
+      " with duration "& float2str(vl_duration)&
+      " for entity:="& f_EPTF_LGenBase_getEntityName(eCtx)&
+      " for FSM context:="&log2str(v_LGenBase_entities[eCtx].fsmCtxList[fCtx])& 
+      " of FSM table:="& v_LGenBase_fsmTables[t].name);
+  }
+}
+
+///////////////////////////////////////////
+//  Function: f_EPTF_LGenBase_step_timerStartOrRestart
+// 
+//  Purpose:
+//    Test step of LGenBase to start or restart a locally-declared timer of an FSM
+//    context. Differs from f_EPTF_LGenBase_step_timerStart in the way, that it does not log a warning message if the timer is already running.
+//    It will be declared with  step-index
+//    <c_EPTF_LGenBase_stepIdx_timerStartOrRestart> and step name
+//    <c_EPTF_LGenBase_stepName_timerStartOrRestart> of behavior type with index <c_EPTF_LGenBase_bIdx>
+//
+//  Parameters:
+//    - pl_ptr - *in* <EPTF_LGenBase_TestStepArgs> -it shall be supplied as
+//      follows 
+//      - pl_ptr.refContext shall be present and refers a valid FSM context of
+//        the entity
+//      - pl_ptr.refContext.fRefArgs shall contain at the [0]th position a
+//        valid local-index for the timers of the FSM table referred by the FSM context
+//
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//  If the referred timer is already "running" (i.e., a respective
+//  <f_EPTF_LGenBase_TimerActionHandler> action is  scheduled in the event queue,
+//  then the timer is silently restarted, that is, cancelled then started.
+///////////////////////////////////////////////////////////
+public function f_EPTF_LGenBase_step_timerStartOrRestart(in EPTF_LGenBase_TestStepArgs pl_ptr) 
+runs on EPTF_LGenBase_Private_CT { 
+  f_EPTF_Base_assert(%definitionId &" expects exactly 1 refArgs in refContext in TestStepArgs", 
+    sizeof(pl_ptr.refContext.fRefArgs)==1);
+
+  var integer eCtx:=pl_ptr.eIdx, fCtx:=pl_ptr.refContext.fCtxIdx, 
+  timerIdx := pl_ptr.refContext.fRefArgs[0],  
+  t:=v_LGenBase_entities[eCtx].fsmCtxList[fCtx].tableIdx;
+  f_EPTF_Base_assert(%definitionId&": Entity index", eCtx>=0 
+    and eCtx<sizeof(v_LGenBase_entities));
+  f_EPTF_Base_assert(%definitionId&": FSM context index", fCtx>=0 
+    and fCtx<sizeof(v_LGenBase_entities[eCtx].fsmCtxList));
+  f_EPTF_Base_assert(%definitionId&": FSM table index", t>=0 
+    and t<sizeof(v_LGenBase_fsmTables)); 
+  f_EPTF_Base_assert(%definitionId&": FSM timer index", timerIdx>=0 
+    and timerIdx<sizeof(v_LGenBase_fsmTables[t].timerList)); 
+
+  var float vl_duration
+  if (ischosen(v_LGenBase_entities[eCtx].fsmCtxList[fCtx].timerParams[timerIdx].static)) {
+    vl_duration:= v_LGenBase_entities[eCtx].fsmCtxList[fCtx].timerParams[timerIdx].static.startValue;
+  } else if (ischosen(v_LGenBase_entities[eCtx].fsmCtxList[fCtx].timerParams[timerIdx].random)) {
+    vl_duration := rnd() * 
+      (v_LGenBase_entities[eCtx].fsmCtxList[fCtx].timerParams[timerIdx].random.timeoutMax -
+      v_LGenBase_entities[eCtx].fsmCtxList[fCtx].timerParams[timerIdx].random.timeoutMin) +
+      v_LGenBase_entities[eCtx].fsmCtxList[fCtx].timerParams[timerIdx].random.timeoutMin;
+  } else if (ischosen(v_LGenBase_entities[eCtx].fsmCtxList[fCtx].timerParams[timerIdx].randomGauss)) {
+    vl_duration := f_EPTF_LGenBase_rnd_normal(
+      v_LGenBase_entities[eCtx].fsmCtxList[fCtx].timerParams[timerIdx].randomGauss.mean,
+      v_LGenBase_entities[eCtx].fsmCtxList[fCtx].timerParams[timerIdx].randomGauss.deviation);
+  }
+
+  if (f_EPTF_LGenBase_isFSMDebugEnabled(eCtx, fCtx)){
+    f_EPTF_LGenBase_loggingDebugFSM(eCtx, fCtx,log2str(%definitionId&
+        ": Received args:=",pl_ptr,
+        ": Will start timer "& v_LGenBase_fsmTables[t].timerList[timerIdx].name&
+        " entity: "& f_EPTF_LGenBase_getEntityName(eCtx)))
+  }
+  if (c_EPTF_Common_debugSwitch and f_EPTF_LGenBase_isEnabled(c_EPTF_LGenBase_loggingClassIdx_DebugTrafficVerbose)){
+    f_EPTF_LGenBase_loggingDebugTrafficVerbose(" FSM_context "&log2str(v_LGenBase_entities[eCtx].fsmCtxList[fCtx])& 
+      ", FSM_table:="& v_LGenBase_fsmTables[t].name)
+  }
+
+  if(f_EPTF_LGenBase_fsmTimerIsRunning(eCtx,fCtx,timerIdx))
+  /*if (v_LGenBase_entities[eCtx].fsmCtxList[fCtx].timerData[timerIdx]>-1
+  and f_EPTF_SchedulerComp_eventIsValid(
+  v_LGenBase_entities[eCtx].fsmCtxList[fCtx].timerData[timerIdx]))*/ 
+  {
+    /*f_EPTF_LGenBase_loggingWarning(%definitionId&": Start has been requested for a running FSM timer: "&
+      v_LGenBase_fsmTables[v_LGenBase_entities[eCtx].fsmCtxList[fCtx].tableIdx].timerList[timerIdx].name&
+      " The timer will be cancelled first!");*/
+    if(not f_EPTF_SchedulerComp_CancelEvent(v_LGenBase_entities[eCtx].fsmCtxList[fCtx].timerData[timerIdx])) {
+      f_EPTF_LGenBase_loggingWarning(%definitionId&": Cancelling timer failed.");
+    }
+    v_LGenBase_entities[eCtx].fsmCtxList[fCtx].timerData[timerIdx] := -1;
+  }
+  // cannot assert scheduling directly, 
+  // since f_EPTF_SchedulerComp_scheduleAction must be always executed!      
+  if(not f_EPTF_SchedulerComp_scheduleAction(
+      f_EPTF_Base_getRelTimeInSecs()+vl_duration, 
+      refers(f_EPTF_LGenBase_TimerActionHandler),
+      {eCtx,fCtx,timerIdx}, 
+      v_LGenBase_entities[eCtx].fsmCtxList[fCtx].timerData[timerIdx])) 
+  {
+    if (c_EPTF_Common_debugSwitch and f_EPTF_LGenBase_isEnabled(c_EPTF_LGenBase_loggingClassIdx_DebugTraffic)){
+      f_EPTF_LGenBase_loggingDebugTraffic(%definitionId&": Cannot schedule timer timeout! Received args:="&log2str(pl_ptr)& 
+        ", failed timer:="& v_LGenBase_fsmTables[t].timerList[timerIdx].name&
+        ", entity:="& f_EPTF_LGenBase_getEntityName(eCtx)&
+        ", FSM_context:="&log2str(v_LGenBase_entities[eCtx].fsmCtxList[fCtx])& 
+        ", FSM_table:="& v_LGenBase_fsmTables[t].name);
+    }
+    f_EPTF_Base_assert(%definitionId&": Event scheduling must be always successful", false)
+  }
+  if (c_EPTF_Common_debugSwitch and f_EPTF_LGenBase_isEnabled(c_EPTF_LGenBase_loggingClassIdx_DebugTraffic)){
+    f_EPTF_LGenBase_loggingDebugTraffic(%definitionId&": Finished scheduling timer:="& v_LGenBase_fsmTables[t].timerList[timerIdx].name&
+      " with duration "& float2str(vl_duration)&
+      " for entity:="& f_EPTF_LGenBase_getEntityName(eCtx)&
+      " for FSM context:="&log2str(v_LGenBase_entities[eCtx].fsmCtxList[fCtx])& 
+      " of FSM table:="& v_LGenBase_fsmTables[t].name);
+  }
+}
+
+///////////////////////////////////////////
+//  Function: f_EPTF_LGenBase_step_timerCancel
+// 
+//  Purpose:
+//    Test step of LGenBase to cancel a locally-declared timer of an FSM
+//    context. It will be declared with  step-index
+//    <c_EPTF_LGenBase_stepIdx_timerCancel> and step name
+//    <c_EPTF_LGenBase_stepName_timerCancel> of behavior type with index <c_EPTF_LGenBase_bIdx>
+//
+//  Parameters:
+//    - pl_ptr - *in* <EPTF_LGenBase_TestStepArgs> -it shall be supplied as
+//      follows 
+//      - pl_ptr.refContext shall be present and refers a valid FSM context of
+//        the entity
+//      - pl_ptr.refContext.fRefArgs shall contain at the [0]th position a
+//        valid local-index for the timers of the FSM table referred by the FSM context
+//
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//  If the referred timer is not already "running" (i.e., a respective
+//  <f_EPTF_LGenBase_TimerActionHandler> action is not scheduled in the event queue,
+//  then currently a log statement is generated unconditionally and the
+//  function otherwise returns silently. 
+///////////////////////////////////////////////////////////
+public function f_EPTF_LGenBase_step_timerCancel(in EPTF_LGenBase_TestStepArgs pl_ptr) 
+runs on EPTF_LGenBase_Private_CT { 
+  f_EPTF_Base_assert(%definitionId &" expects exactly 1 refArgs in refContext in TestStepArgs", 
+    /*ispresent(pl_ptr.refContext.fRefArgs) 
+    and*/ sizeof(pl_ptr.refContext.fRefArgs)==1);
+  var integer eCtx:=pl_ptr.eIdx, fCtx:=pl_ptr.refContext.fCtxIdx, 
+  timerIdx := pl_ptr.refContext.fRefArgs[0],
+  t:=v_LGenBase_entities[eCtx].fsmCtxList[fCtx].tableIdx; 
+  f_EPTF_Base_assert(%definitionId&": Entity index", eCtx>=0 
+    and eCtx<sizeof(v_LGenBase_entities));
+  f_EPTF_Base_assert(%definitionId&": FSM context index", fCtx>=0 
+    and fCtx<sizeof(v_LGenBase_entities[eCtx].fsmCtxList));
+  f_EPTF_Base_assert(%definitionId&": FSM table index", t>=0 
+    and t<sizeof(v_LGenBase_fsmTables)); 
+  f_EPTF_Base_assert(%definitionId&": FSM timer index", timerIdx>=0 
+    and timerIdx<sizeof(v_LGenBase_fsmTables[t].timerList)); 
+
+  if (c_EPTF_Common_debugSwitch and f_EPTF_LGenBase_isEnabled(c_EPTF_LGenBase_loggingClassIdx_DebugTraffic)){
+    f_EPTF_LGenBase_loggingDebugTraffic(log2str(%definitionId&": Received args:=",pl_ptr))
+    f_EPTF_LGenBase_loggingDebugTraffic(log2str(%definitionId&": will cancel timer:=", v_LGenBase_fsmTables[t].timerList[timerIdx].name,
+        ", for entity:=", f_EPTF_LGenBase_getEntityName(eCtx),
+        ", for FSM context:=",v_LGenBase_entities[eCtx].fsmCtxList[fCtx], 
+        ", of FSM table:=", v_LGenBase_fsmTables[t].name
+      ))
+  }
+  if(f_EPTF_LGenBase_fsmTimerIsRunning(eCtx,fCtx,timerIdx)){
+    if(not f_EPTF_SchedulerComp_CancelEvent(
+        v_LGenBase_entities[eCtx].fsmCtxList[fCtx].timerData[timerIdx])) {
+      f_EPTF_LGenBase_loggingError(%definitionId&": Cancelling timer failed.");
+    }
+    v_LGenBase_entities[eCtx].fsmCtxList[fCtx].timerData[timerIdx]:=-1;
+    f_EPTF_LGenBase_loggingDebugEventDispatch(%definitionId&": Cancelled timer:="& v_LGenBase_fsmTables[t].timerList[timerIdx].name)
+  } else {
+    f_EPTF_LGenBase_loggingWarning(%definitionId&": Cancelling not running timer "&v_LGenBase_fsmTables[t].timerList[timerIdx].name&
+      " for entity "& f_EPTF_LGenBase_getEntityName(eCtx)&
+      " for FSM context# "&int2str(fCtx)& 
+      ", of FSM table "& v_LGenBase_fsmTables[t].name)
+  }
+}
+
+///////////////////////////////////////////
+//  Function: f_EPTF_LGenBase_step_timerCancelIfRunning
+// 
+//  Purpose:
+//    Test step of LGenBase to cancel a locally-declared timer of an FSM
+//    context. It will be declared with  step-index
+//    <c_EPTF_LGenBase_stepIdx_timerCancel> and step name
+//    <c_EPTF_LGenBase_stepName_timerCancel> of behavior type with index <c_EPTF_LGenBase_bIdx>
+//
+//  Parameters:
+//    - pl_ptr - *in* <EPTF_LGenBase_TestStepArgs> -it shall be supplied as
+//      follows 
+//      - pl_ptr.refContext shall be present and refers a valid FSM context of
+//        the entity
+//      - pl_ptr.refContext.fRefArgs shall contain at the [0]th position a
+//        valid local-index for the timers of the FSM table referred by the FSM context
+//
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//  If the referred timer is not already "running" then the function does not log a warning message. (unlike f_EPTF_LGenBase_step_timerCancel)
+///////////////////////////////////////////////////////////
+public function f_EPTF_LGenBase_step_timerCancelIfRunning(in EPTF_LGenBase_TestStepArgs pl_ptr) 
+runs on EPTF_LGenBase_Private_CT { 
+  f_EPTF_Base_assert(%definitionId &" expects exactly 1 refArgs in refContext in TestStepArgs", 
+    /*ispresent(pl_ptr.refContext.fRefArgs) 
+    and*/ sizeof(pl_ptr.refContext.fRefArgs)==1);
+  var integer eCtx:=pl_ptr.eIdx, fCtx:=pl_ptr.refContext.fCtxIdx, 
+  timerIdx := pl_ptr.refContext.fRefArgs[0],
+  t:=v_LGenBase_entities[eCtx].fsmCtxList[fCtx].tableIdx; 
+  f_EPTF_Base_assert(%definitionId&": Entity index", eCtx>=0 
+    and eCtx<sizeof(v_LGenBase_entities));
+  f_EPTF_Base_assert(%definitionId&": FSM context index", fCtx>=0 
+    and fCtx<sizeof(v_LGenBase_entities[eCtx].fsmCtxList));
+  f_EPTF_Base_assert(%definitionId&": FSM table index", t>=0 
+    and t<sizeof(v_LGenBase_fsmTables)); 
+  f_EPTF_Base_assert(%definitionId&": FSM timer index", timerIdx>=0 
+    and timerIdx<sizeof(v_LGenBase_fsmTables[t].timerList)); 
+
+  if (c_EPTF_Common_debugSwitch and f_EPTF_LGenBase_isEnabled(c_EPTF_LGenBase_loggingClassIdx_DebugTraffic)){
+    f_EPTF_LGenBase_loggingDebugTraffic(log2str(%definitionId&": Received args:=",pl_ptr))
+    f_EPTF_LGenBase_loggingDebugTraffic(log2str(%definitionId&": will cancel timer:=", v_LGenBase_fsmTables[t].timerList[timerIdx].name,
+        ", for entity:=", f_EPTF_LGenBase_getEntityName(eCtx),
+        ", for FSM context:=",v_LGenBase_entities[eCtx].fsmCtxList[fCtx], 
+        ", of FSM table:=", v_LGenBase_fsmTables[t].name
+      ))
+  }
+  if(f_EPTF_LGenBase_fsmTimerIsRunning(eCtx,fCtx,timerIdx)){
+    if(not f_EPTF_SchedulerComp_CancelEvent(
+        v_LGenBase_entities[eCtx].fsmCtxList[fCtx].timerData[timerIdx])) {
+      f_EPTF_LGenBase_loggingError(%definitionId&": Cancelling timer failed.");
+    }
+    v_LGenBase_entities[eCtx].fsmCtxList[fCtx].timerData[timerIdx]:=-1;
+    f_EPTF_LGenBase_loggingDebugEventDispatch(%definitionId&": Cancelled timer:="& v_LGenBase_fsmTables[t].timerList[timerIdx].name)
+  } /*else {
+    f_EPTF_LGenBase_loggingWarning(%definitionId&": Cancelling not running timer "&v_LGenBase_fsmTables[t].timerList[timerIdx].name&
+      " for entity "& f_EPTF_LGenBase_getEntityName(eCtx)&
+      " for FSM context# "&int2str(fCtx)& 
+      ", of FSM table "& v_LGenBase_fsmTables[t].name)
+  }*/
+}
+
+///////////////////////////////////////////
+//  Function: f_EPTF_LGenBase_step_cancelAllTimers
+// 
+//  Purpose:
+//    Test step of LGenBase to cancel all locally-declared timers of an FSM
+//    context. It will be declared with  step-index
+//    <c_EPTF_LGenBase_stepIdx_cancelAllTimers> and step name
+//    <c_EPTF_LGenBase_stepName_cancelAllTimers> of behavior type with index <c_EPTF_LGenBase_bIdx>
+//
+//  Parameters:
+//    - pl_ptr - *in* <EPTF_LGenBase_TestStepArgs> -it shall be supplied as
+//      follows 
+//      - pl_ptr.refContext shall be present and refers a valid FSM context of
+//        the entity
+//
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//    -
+///////////////////////////////////////////////////////////
+public function f_EPTF_LGenBase_step_cancelAllTimers(in EPTF_LGenBase_TestStepArgs pl_ptr) 
+runs on EPTF_LGenBase_Private_CT { 
+  var integer eCtx:=pl_ptr.eIdx, fCtx:=pl_ptr.refContext.fCtxIdx, 
+  t:=v_LGenBase_entities[eCtx].fsmCtxList[fCtx].tableIdx; 
+  f_EPTF_Base_assert(%definitionId&": Entity index", eCtx>=0 
+    and eCtx<sizeof(v_LGenBase_entities));
+  f_EPTF_Base_assert(%definitionId&": FSM context index", fCtx>=0 
+    and fCtx<sizeof(v_LGenBase_entities[eCtx].fsmCtxList));
+  f_EPTF_Base_assert(%definitionId&": FSM table index", t>=0 
+    and t<sizeof(v_LGenBase_fsmTables)); 
+  
+  if (c_EPTF_Common_debugSwitch and f_EPTF_LGenBase_isEnabled(c_EPTF_LGenBase_loggingClassIdx_DebugTraffic)){
+    f_EPTF_LGenBase_loggingDebugTraffic(log2str(%definitionId&": will cancel all timers:=", v_LGenBase_fsmTables[t].timerList,
+        ", for entity:=", f_EPTF_LGenBase_getEntityName(eCtx),
+        ", for FSM context:=",v_LGenBase_entities[eCtx].fsmCtxList[fCtx], 
+        ", of FSM table:=", v_LGenBase_fsmTables[t].name
+      ))
+  }
+  f_EPTF_LGenBase_cancelAllTimersOfFsm(eCtx, fCtx);
+}
+
+///////////////////////////////////////////
+//  Function: f_EPTF_LGenBase_step_trafficSuccess
+// 
+//  Purpose:
+//  Reports that the traffic has finished successfully.
+//
+//  Parameters:
+//    - pl_ptr - *in* <EPTF_LGenBase_TestStepArgs> -it shall be supplied as
+//      follows 
+//      - pl_ptr.refContext shall be present and refers a valid FSM context of
+//        the entity
+//      - pl_ptr.refContext.fRefArgs shall contain at the [0]th position a
+//        valid local-index for the timers of the FSM table referred by the FSM context
+///////////////////////////////////////////////////////////
+public function f_EPTF_LGenBase_step_trafficSuccess(in EPTF_LGenBase_TestStepArgs pl_ptr) 
+runs on EPTF_LGenBase_Private_CT {
+  f_EPTF_LGenBase_dispatchEvent({
+      {
+        bIdx := c_EPTF_LGenBase_bIdx,
+        iIdx := c_EPTF_LGenBase_inputIdx_testMgmt_finishedTcSuccess,
+        target := omit,
+        source := {pl_ptr.eIdx, pl_ptr.refContext.fCtxIdx}
+      },
+      {f_EPTF_LGenBase_tcIdxOfStep(pl_ptr),pl_ptr.eIdx}
+    });  
+}
+
+///////////////////////////////////////////
+//  Function: f_EPTF_LGenBase_step_trafficFailed
+// 
+//  Purpose:
+//  Reports that the traffic has finished with failure.
+//
+//  Parameters:
+//    - pl_ptr - *in* <EPTF_LGenBase_TestStepArgs> -it shall be supplied as
+//      follows 
+//      - pl_ptr.refContext shall be present and refers a valid FSM context of
+//        the entity
+//      - pl_ptr.refContext.fRefArgs shall contain at the [0]th position a
+//        valid local-index for the timers of the FSM table referred by the FSM context
+///////////////////////////////////////////////////////////
+public function f_EPTF_LGenBase_step_trafficFailed(in EPTF_LGenBase_TestStepArgs pl_ptr) 
+runs on EPTF_LGenBase_Private_CT {
+  f_EPTF_LGenBase_dispatchEvent({
+      {
+        bIdx := c_EPTF_LGenBase_bIdx,
+        iIdx := c_EPTF_LGenBase_inputIdx_testMgmt_finishedTcFail,
+        target := omit,
+        source := {pl_ptr.eIdx, pl_ptr.refContext.fCtxIdx}
+      },
+      {f_EPTF_LGenBase_tcIdxOfStep(pl_ptr),pl_ptr.eIdx}
+    });  
+}
+
+///////////////////////////////////////////
+//  Function: f_EPTF_LGenBase_step_trafficError
+// 
+//  Purpose:
+//  Reports that the traffic has finished with error.
+//
+//  Parameters:
+//    - pl_ptr - *in* <EPTF_LGenBase_TestStepArgs> -it shall be supplied as
+//      follows 
+//      - pl_ptr.refContext shall be present and refers a valid FSM context of
+//        the entity
+//      - pl_ptr.refContext.fRefArgs shall contain at the [0]th position a
+//        valid local-index for the timers of the FSM table referred by the FSM context
+///////////////////////////////////////////////////////////
+public function f_EPTF_LGenBase_step_trafficError(in EPTF_LGenBase_TestStepArgs pl_ptr) 
+runs on EPTF_LGenBase_Private_CT {
+  f_EPTF_LGenBase_dispatchEvent({
+      {
+        bIdx := c_EPTF_LGenBase_bIdx,
+        iIdx := c_EPTF_LGenBase_inputIdx_testMgmt_finishedTcError,
+        target := omit,
+        source := {pl_ptr.eIdx, pl_ptr.refContext.fCtxIdx}
+      },
+      {f_EPTF_LGenBase_tcIdxOfStep(pl_ptr),pl_ptr.eIdx}
+    });  
+}
+///////////////////////////////////////////
+//  Function: f_EPTF_LGenBase_step_trafficTimeout
+// 
+//  Purpose:
+//  Reports that the traffic has finished with timeout.
+//
+//  Parameters:
+//    - pl_ptr - *in* <EPTF_LGenBase_TestStepArgs> -it shall be supplied as
+//      follows 
+//      - pl_ptr.refContext shall be present and refers a valid FSM context of
+//        the entity
+//      - pl_ptr.refContext.fRefArgs shall contain at the [0]th position a
+//        valid local-index for the timers of the FSM table referred by the FSM context
+///////////////////////////////////////////////////////////
+public function f_EPTF_LGenBase_step_trafficTimeout(in EPTF_LGenBase_TestStepArgs pl_ptr) 
+runs on EPTF_LGenBase_Private_CT {
+  f_EPTF_LGenBase_dispatchEvent({
+      {
+        bIdx := c_EPTF_LGenBase_bIdx,
+        iIdx := c_EPTF_LGenBase_inputIdx_testMgmt_finishedTcTimeout,
+        target := omit,
+        source := {pl_ptr.eIdx, pl_ptr.refContext.fCtxIdx}
+      },
+      {f_EPTF_LGenBase_tcIdxOfStep(pl_ptr),pl_ptr.eIdx}
+    });  
+}
+///////////////////////////////////////////
+//  Function: f_EPTF_LGenBase_step_entityStopped
+// 
+//  Purpose:
+//  Reports that the entity has been stopped successfuly.
+//
+//  Parameters:
+//    - pl_ptr - *in* <EPTF_LGenBase_TestStepArgs> -it shall be supplied as
+//      follows 
+//      - pl_ptr.refContext shall be present and refers a valid FSM context of
+//        the entity
+//      - pl_ptr.refContext.fRefArgs shall contain at the [0]th position a
+//        valid local-index for the timers of the FSM table referred by the FSM context
+///////////////////////////////////////////////////////////
+public function f_EPTF_LGenBase_step_entityStopped(in EPTF_LGenBase_TestStepArgs pl_ptr) 
+runs on EPTF_LGenBase_Private_CT {
+  f_EPTF_LGenBase_dispatchEvent({
+      {
+        bIdx := c_EPTF_LGenBase_bIdx,
+        iIdx := c_EPTF_LGenBase_inputIdx_testMgmt_entityStopped,
+        target := omit,
+        source := {pl_ptr.eIdx, pl_ptr.refContext.fCtxIdx}
+      },
+      {f_EPTF_LGenBase_tcIdxOfStep(pl_ptr),pl_ptr.eIdx}
+    });  
+}
+
+///////////////////////////////////////////
+//  Function: f_EPTF_LGenBase_step_entityAborted
+// 
+//  Purpose:
+//  Reports that the entity has been aborted successfuly.
+//
+//  Parameters:
+//    - pl_ptr - *in* <EPTF_LGenBase_TestStepArgs> -it shall be supplied as
+//      follows 
+//      - pl_ptr.refContext shall be present and refers a valid FSM context of
+//        the entity
+//      - pl_ptr.refContext.fRefArgs shall contain at the [0]th position a
+//        valid local-index for the timers of the FSM table referred by the FSM context
+///////////////////////////////////////////////////////////
+public function f_EPTF_LGenBase_step_entityAborted(in EPTF_LGenBase_TestStepArgs pl_ptr) 
+runs on EPTF_LGenBase_Private_CT {
+  f_EPTF_LGenBase_dispatchEvent({
+      {
+        bIdx := c_EPTF_LGenBase_bIdx,
+        iIdx := c_EPTF_LGenBase_inputIdx_testMgmt_entityAborted,
+        target := omit,
+        source := {pl_ptr.eIdx, pl_ptr.refContext.fCtxIdx}
+      },
+      {f_EPTF_LGenBase_tcIdxOfStep(pl_ptr),pl_ptr.eIdx}
+    });  
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_LGenBase_step_startEntity
+// 
+//  Purpose:
+//    Processes the start of an entity.
+//
+//  Parameters:
+//    pl_ptr - *in* - *EPTF_LGenBase_TestStepArgs* - step arguments
+//
+//  Detailed Comments:
+//    Calls the <f_EPTF_LGenBase_startEntityInternal> function with
+//    pl_dispatchStartEvent := *true* parameter, so the
+//    function will dispatch the c_EPTF_LGenBase_inputIdx_testMgmt_startTC
+//    FSM event. Changes statistics of the traffic case, and
+//    executes the group finish conditions if necessary.
+///////////////////////////////////////////////////////////
+public function f_EPTF_LGenBase_step_startEntity(in EPTF_LGenBase_TestStepArgs pl_ptr)
+runs on EPTF_LGenBase_Private_CT
+{
+  v_LGenBase_dummyBool := f_EPTF_LGenBase_processStartStep(pl_ptr, true);
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_LGenBase_step_recordEntityStart
+// 
+//  Purpose:
+//    Administers the start of an entity.
+//
+//  Parameters:
+//    pl_ptr - *in* - *EPTF_LGenBase_TestStepArgs* - step arguments
+//
+//  Detailed Comments:
+//    Calls the <f_EPTF_LGenBase_startEntityInternal> function with
+//    pl_dispatchStartEvent := *false* parameter, so the
+//    function won't dispatch the c_EPTF_LGenBase_inputIdx_testMgmt_startTC
+//    FSM event. Changes statistics of the traffic case, and
+//    executes the group finish conditions if necessary.
+///////////////////////////////////////////////////////////
+public function f_EPTF_LGenBase_step_recordEntityStart(in EPTF_LGenBase_TestStepArgs pl_ptr)
+runs on EPTF_LGenBase_Private_CT
+{
+  v_LGenBase_dummyBool := f_EPTF_LGenBase_processStartStep(pl_ptr, false);
+}
+
+///////////////////////////////////////////
+//  Function: f_EPTF_LGenBase_step_testFinished
+// 
+//  Purpose:
+//  User reports that the test finished.
+//
+//  Parameters:
+//    - pl_ptr - *in* <EPTF_LGenBase_TestStepArgs> -it shall be supplied as
+//      follows 
+//      - pl_ptr.refContext shall be present and refers a valid FSM context of
+//        the entity
+//      - pl_ptr.refContext.fRefArgs shall contain at the [0]th position a
+//        valid local-index for the timers of the FSM table referred by the FSM context
+///////////////////////////////////////////////////////////
+public function f_EPTF_LGenBase_step_testFinished(in EPTF_LGenBase_TestStepArgs pl_ptr) 
+runs on EPTF_LGenBase_Private_CT {
+  f_EPTF_LGenBase_dispatchEvent({
+      {
+        bIdx := c_EPTF_LGenBase_bIdx,
+        iIdx := c_EPTF_LGenBase_inputIdx_testMgmt_testFinished,
+        target := omit,
+        source := {pl_ptr.eIdx, pl_ptr.refContext.fCtxIdx}
+      },
+      {f_EPTF_LGenBase_tcIdxOfStep(pl_ptr)}
+    });  
+}
+
+group varAndStat{
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_LGenBase_step_fsmVarInc
+  // 
+  //  Purpose:
+  //    Increments the content of an FSM variable with the given value.
+  //
+  //  Parameters:
+  //    pl_ptr - *in* - *EPTF_LGenBase_TestStepArgs* - step arguments
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_LGenBase_step_fsmVarInc(in EPTF_LGenBase_TestStepArgs pl_ptr)
+  runs on EPTF_LGenBase_Private_CT
+  {
+    var integer vl_varId;
+    var EPTF_Var_DirectContent vl_contentParam;
+    f_EPTF_LGenBase_fsmVarParamsFromStep(pl_ptr, vl_varId, vl_contentParam)
+    var EPTF_Var_DirectContent vl_content;
+    if (c_EPTF_Common_debugSwitch and f_EPTF_LGenBase_isEnabled(c_EPTF_LGenBase_loggingClassIdx_DebugFsmVars)){
+      f_EPTF_LGenBase_loggingDebugFsmVars(%definitionId&": varID: "&int2str(vl_varId)&" Name: "&f_EPTF_Var_getName(vl_varId)&" Content 2 add: "&log2str(vl_contentParam)& " Step args: "&log2str(pl_ptr))
+    }
+    f_EPTF_Var_getContent(vl_varId, vl_content);
+    if(ischosen(vl_content.intVal)){
+      if(ischosen(vl_contentParam.unknownVal)){
+        vl_content.intVal := vl_content.intVal + 1;
+      }else{
+        if(not ischosen(vl_contentParam.intVal)){
+          f_EPTF_Base_assert(%definitionId&": Invalid content type to set: "&log2str(vl_contentParam),false);
+        }
+        vl_content.intVal := vl_content.intVal + vl_contentParam.intVal;
+      }
+    }else{
+      if(ischosen(vl_content.floatVal)){
+        if(ischosen(vl_contentParam.unknownVal)){
+          vl_content.floatVal := vl_content.floatVal + 1.0;
+        }else{
+          if(not ischosen(vl_contentParam.floatVal)){
+            f_EPTF_Base_assert(%definitionId&": Invalid content type to set: "&log2str(vl_contentParam),false);
+          }
+          vl_content.floatVal := vl_content.floatVal + vl_contentParam.floatVal;
+        }
+      }else{
+        f_EPTF_Base_assert(%definitionId&": Invalid content type: "&log2str(vl_content),false);
+      }
+    }
+    f_EPTF_Var_adjustContent(vl_varId, vl_content);
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_LGenBase_step_fsmVarDec
+  // 
+  //  Purpose:
+  //    Decrements the content of an FSM variable with the given value.
+  //
+  //  Parameters:
+  //    pl_ptr - *in* - *EPTF_LGenBase_TestStepArgs* - step arguments
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_LGenBase_step_fsmVarDec(in EPTF_LGenBase_TestStepArgs pl_ptr)
+  runs on EPTF_LGenBase_Private_CT
+  {
+    var integer vl_varId;
+    var EPTF_Var_DirectContent vl_contentParam;
+    f_EPTF_LGenBase_fsmVarParamsFromStep(pl_ptr, vl_varId, vl_contentParam)
+    var EPTF_Var_DirectContent vl_content;
+    if (c_EPTF_Common_debugSwitch and f_EPTF_LGenBase_isEnabled(c_EPTF_LGenBase_loggingClassIdx_DebugFsmVars)){
+      f_EPTF_LGenBase_loggingDebugFsmVars(log2str(%definitionId&": varID: "&int2str(vl_varId)&" Name: "&f_EPTF_Var_getName(vl_varId)&" Content 2 add: ",vl_contentParam, " Step args: ",pl_ptr))
+    }
+    f_EPTF_Var_getContent(vl_varId, vl_content);
+    if(ischosen(vl_content.intVal)){
+      if(ischosen(vl_contentParam.unknownVal)){
+        vl_content.intVal := vl_content.intVal - 1;
+      }else{
+        if(not ischosen(vl_contentParam.intVal)){
+          f_EPTF_Base_assert(%definitionId&": Invalid content type to set: "&log2str(vl_contentParam),false);
+        }
+        vl_content.intVal := vl_content.intVal - vl_contentParam.intVal;
+      }
+    }else{
+      if(ischosen(vl_content.floatVal)){
+        if(ischosen(vl_contentParam.unknownVal)){
+          vl_content.floatVal := vl_content.floatVal - 1.0;
+        }else{
+          if(not ischosen(vl_contentParam.floatVal)){
+            f_EPTF_Base_assert(%definitionId&": Invalid content type to set: "&log2str(vl_contentParam),false);
+          }
+          vl_content.floatVal := vl_content.floatVal - vl_contentParam.floatVal;
+        }
+      }else{
+        f_EPTF_Base_assert(%definitionId&": Invalid content type: "&log2str(vl_content),false);
+      }
+    }
+    f_EPTF_Var_adjustContent(vl_varId, vl_content);
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_LGenBase_step_fsmVarReset
+  // 
+  //  Purpose:
+  //    Sets the content of an FSM variable to the given value.
+  //
+  //  Parameters:
+  //    pl_ptr - *in* - *EPTF_LGenBase_TestStepArgs* - step arguments
+  //
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_LGenBase_step_fsmVarReset(in EPTF_LGenBase_TestStepArgs pl_ptr)
+  runs on EPTF_LGenBase_Private_CT
+  {
+    var integer vl_varId := f_EPTF_LGenBase_fsmVarIdFromStep(pl_ptr)
+    var EPTF_Var_DirectContent vl_content;
+    f_EPTF_LGenBase_fsmVarInitValueFromStep(pl_ptr, vl_content);
+    if (c_EPTF_Common_debugSwitch and f_EPTF_LGenBase_isEnabled(c_EPTF_LGenBase_loggingClassIdx_DebugFsmVars)){
+      f_EPTF_LGenBase_loggingDebugFsmVars(%definitionId&": varID: "&int2str(vl_varId)&" Name: "&f_EPTF_Var_getName(vl_varId)&" Content 2 set: "&log2str(vl_content) &" Step args: "&log2str(pl_ptr))
+    }
+    f_EPTF_Var_adjustContent(vl_varId, vl_content);
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_LGenBase_step_fsmVarSet
+  // 
+  //  Purpose:
+  //    Sets the content of an FSM variable to the given value.
+  //
+  //  Parameters:
+  //    pl_ptr - *in* - *EPTF_LGenBase_TestStepArgs* - step arguments
+  //
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_LGenBase_step_fsmVarSet(in EPTF_LGenBase_TestStepArgs pl_ptr)
+  runs on EPTF_LGenBase_Private_CT
+  {
+    var integer vl_varId;
+    var EPTF_Var_DirectContent vl_content2Set;
+    f_EPTF_LGenBase_fsmVarParamsFromStep(pl_ptr, vl_varId, vl_content2Set)
+    var EPTF_Var_DirectContent vl_content;
+    if (c_EPTF_Common_debugSwitch and f_EPTF_LGenBase_isEnabled(c_EPTF_LGenBase_loggingClassIdx_DebugFsmVars)){
+      f_EPTF_LGenBase_loggingDebugFsmVars(%definitionId&": varID: "&int2str(vl_varId)&" Name: "&f_EPTF_Var_getName(vl_varId)&" Content 2 set: "&log2str(vl_content2Set)&" Step args: "&log2str(pl_ptr))
+    }
+    f_EPTF_Base_assert(%definitionId&": Missing parameter value.",isbound(vl_content2Set));
+    f_EPTF_Var_getContent(vl_varId, vl_content);
+    if(ischosen(vl_content.intVal)){
+      f_EPTF_Base_assert(%definitionId&": Invalid content type to set. Original: "&log2str(vl_content)&"Value to set: "&log2str(vl_content2Set),ischosen(vl_content2Set.intVal));
+      vl_content.intVal := vl_content2Set.intVal;
+    }else{
+      if(ischosen(vl_content.floatVal)){
+        if(not isbound(vl_content2Set)){
+          vl_content.floatVal := 1.0;
+        }else{
+          if(not ischosen(vl_content2Set.floatVal)){
+            f_EPTF_Base_assert(%definitionId&": Invalid content type to set: "&log2str(vl_content2Set),false);
+          }
+        }
+        vl_content.floatVal := vl_content2Set.floatVal;
+      }else{
+        f_EPTF_Base_assert(%definitionId&": Invalid content type: "&log2str(vl_content),false);
+      }
+    }
+    f_EPTF_Var_adjustContent(vl_varId, vl_content);
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_LGenBase_step_fsmVarAdd
+  // 
+  //  Purpose:
+  //    Summarises the content of FSM variables.
+  //
+  //  Parameters:
+  //    pl_ptr - *in* - *EPTF_LGenBase_TestStepArgs* - step arguments
+  //
+  //  Detailed Comments:
+  //    This step summarises the content of FSM variables. The first step argument is the output variable (index and scope), the
+  //    followings are the variables(index and scope) to add. At least 3 pairs of variable index and scope is required. 
+  //    The value of the first variable will be overwritten.
+  // 
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_LGenBase_step_fsmVarAdd(in EPTF_LGenBase_TestStepArgs pl_ptr)
+  runs on EPTF_LGenBase_Private_CT
+  {
+    var EPTF_IntegerList vl_varIds := {}
+    f_EPTF_LGenBase_fsmVarIdListFromStep(pl_ptr, vl_varIds);
+    if(sizeof(vl_varIds)<3){
+      f_EPTF_LGenBase_loggingError(%definitionId&": Invalid step arguments: "&log2str(pl_ptr.refContext.fRefArgs) 
+                                   & ". It should contain at least 3 pairs of variable index and scope");
+    }
+    if (c_EPTF_Common_debugSwitch and f_EPTF_LGenBase_isEnabled(c_EPTF_LGenBase_loggingClassIdx_DebugFsmVars)){
+      f_EPTF_LGenBase_loggingDebugFsmVars(log2str(%definitionId&": varIDList: ",vl_varIds, " Step args: ",pl_ptr))
+    }
+    var EPTF_Var_DirectContent vl_content2Add;
+    f_EPTF_Var_getContent(vl_varIds[1], vl_content2Add);
+    for ( var integer vl_i := 2; vl_i < sizeof(vl_varIds) ; vl_i := vl_i+1 ){
+      var EPTF_Var_DirectContent vl_contentTemp;
+      f_EPTF_Var_getContent(vl_varIds[vl_i], vl_contentTemp);
+      if (ischosen(vl_content2Add.intVal)){
+        if (not ischosen(vl_contentTemp.intVal)){
+          f_EPTF_LGenBase_loggingError(%definitionId&": Invalid parameter type: "&log2str(vl_content2Add));          
+        }
+        vl_content2Add.intVal := vl_content2Add.intVal + vl_contentTemp.intVal;
+      }else{
+        if (ischosen(vl_content2Add.floatVal)){
+          if (not ischosen(vl_contentTemp.floatVal)){
+            f_EPTF_LGenBase_loggingError(%definitionId&": Invalid parameter type: "&log2str(vl_content2Add));          
+          }
+          vl_content2Add.floatVal := vl_content2Add.floatVal + vl_contentTemp.floatVal;
+        }else{
+          f_EPTF_LGenBase_loggingError(%definitionId&": Invalid content type: "&log2str(vl_content2Add));
+        }
+      }
+      f_EPTF_Var_adjustContent(vl_varIds[0], vl_content2Add);
+    }
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_LGenBase_step_fsmVarSub
+  // 
+  //  Purpose:
+  //    Subtracts the content of FSM variables.
+  //
+  //  Parameters:
+  //    pl_ptr - *in* - *EPTF_LGenBase_TestStepArgs* - step arguments
+  //
+  //  Detailed Comments:
+  //    This step substracts the content of FSM variables. The first step argument is the output variable (index and scope), the
+  //    following two are the variables(index and scope) to substract from and with. Exactly 3 pairs of variable index and scope is required. 
+  //    The value of the first variable will be overwritten.
+  //
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_LGenBase_step_fsmVarSub(in EPTF_LGenBase_TestStepArgs pl_ptr)
+  runs on EPTF_LGenBase_Private_CT
+  {
+    var EPTF_IntegerList vl_varIds := {}
+    f_EPTF_LGenBase_fsmVarIdListFromStep(pl_ptr, vl_varIds);
+    if(sizeof(vl_varIds)<3){
+      f_EPTF_LGenBase_loggingError(%definitionId&": Invalid step arguments: "&log2str(pl_ptr.refContext.fRefArgs) 
+                                   & ". It should contain at least 3 pairs of variable index and scope");
+      
+    }
+    if (c_EPTF_Common_debugSwitch and f_EPTF_LGenBase_isEnabled(c_EPTF_LGenBase_loggingClassIdx_DebugFsmVars)){
+      f_EPTF_LGenBase_loggingDebugFsmVars(%definitionId&": varIDList: "&log2str(vl_varIds)& " Step args: "&log2str(pl_ptr))
+    }
+    var EPTF_Var_DirectContent vl_content;
+    var EPTF_Var_DirectContent vl_content1;
+    var EPTF_Var_DirectContent vl_content2;
+    f_EPTF_Var_getContent(vl_varIds[0], vl_content);
+    f_EPTF_Var_getContent(vl_varIds[1], vl_content1);
+    f_EPTF_Var_getContent(vl_varIds[2], vl_content2);
+    if (ischosen(vl_content.intVal)){
+      f_EPTF_Base_assert(%definitionId&": Invalid parameter type: "&log2str(vl_content1),ischosen(vl_content1.intVal));
+      f_EPTF_Base_assert(%definitionId&": Invalid parameter type: "&log2str(vl_content2),ischosen(vl_content2.intVal));
+      vl_content.intVal := vl_content1.intVal - vl_content2.intVal;
+    }else{
+      if (ischosen(vl_content.floatVal)){
+        f_EPTF_Base_assert(%definitionId&": Invalid parameter type: "&log2str(vl_content1),ischosen(vl_content1.floatVal));
+        f_EPTF_Base_assert(%definitionId&": Invalid parameter type: "&log2str(vl_content2),ischosen(vl_content2.floatVal));
+        vl_content.floatVal := vl_content1.floatVal - vl_content2.floatVal;
+      }else{
+        f_EPTF_LGenBase_loggingError(%definitionId&": Invalid content type: "&log2str(vl_content));
+      }
+    }
+    f_EPTF_Var_adjustContent(vl_varIds[0], vl_content);
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_LGenBase_step_fsmStartChrono
+  // 
+  //  Purpose:
+  //    Starts a chronometer statistic referred by the step arguments
+  //
+  //  Parameters:
+  //    pl_ptr - *in* - *EPTF_LGenBase_TestStepArgs* - step arguments
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_LGenBase_step_fsmStartChrono(in EPTF_LGenBase_TestStepArgs pl_ptr)
+  runs on EPTF_LGenBase_Private_CT
+  {
+    var integer vl_statIdx := f_EPTF_LGenBase_fsmStatMeasIdFromStep(pl_ptr)
+    if (c_EPTF_Common_debugSwitch and f_EPTF_LGenBase_isEnabled(c_EPTF_LGenBase_loggingClassIdx_DebugFsmVars)){
+      f_EPTF_LGenBase_loggingDebugFsmVars(%definitionId&": Chronometer ID: "&log2str(vl_statIdx))
+    }
+    f_EPTF_Base_assert(%definitionId&": Invalid statistic type: "&log2str(f_EPTF_StatMeasure_getStatType(vl_statIdx)),chrono == f_EPTF_StatMeasure_getStatType(vl_statIdx))
+    f_EPTF_StatMeasure_start_chrono(vl_statIdx) 
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_LGenBase_step_fsmStopChrono
+  // 
+  //  Purpose:
+  //    Stops a chronometer statistic referred by the step arguments
+  //
+  //  Parameters:
+  //    pl_ptr - *in* - *EPTF_LGenBase_TestStepArgs* - step arguments
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_LGenBase_step_fsmStopChrono(in EPTF_LGenBase_TestStepArgs pl_ptr)
+  runs on EPTF_LGenBase_Private_CT
+  {
+    var integer vl_statIdx := f_EPTF_LGenBase_fsmStatMeasIdFromStep(pl_ptr)
+    if (c_EPTF_Common_debugSwitch and f_EPTF_LGenBase_isEnabled(c_EPTF_LGenBase_loggingClassIdx_DebugFsmVars)){
+      f_EPTF_LGenBase_loggingDebugFsmVars(%definitionId&": Chronometer ID: "&log2str(vl_statIdx))
+    }
+    f_EPTF_Base_assert(%definitionId&": Invalid statistic type: "&log2str(f_EPTF_StatMeasure_getStatType(vl_statIdx)),chrono == f_EPTF_StatMeasure_getStatType(vl_statIdx))
+    f_EPTF_StatMeasure_stop_chrono(vl_statIdx) 
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_LGenBase_step_fsmResetChrono
+  // 
+  //  Purpose:
+  //    Resets a chronometer statistic referred by the step arguments
+  //
+  //  Parameters:
+  //    pl_ptr - *in* - *EPTF_LGenBase_TestStepArgs* - step arguments
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_LGenBase_step_fsmResetChrono(in EPTF_LGenBase_TestStepArgs pl_ptr)
+  runs on EPTF_LGenBase_Private_CT
+  {
+    var integer vl_statIdx := f_EPTF_LGenBase_fsmStatMeasIdFromStep(pl_ptr)
+    if (c_EPTF_Common_debugSwitch and f_EPTF_LGenBase_isEnabled(c_EPTF_LGenBase_loggingClassIdx_DebugFsmVars)){
+      f_EPTF_LGenBase_loggingDebugFsmVars(%definitionId&": Chronometer ID: "&log2str(vl_statIdx))
+    }
+    f_EPTF_Base_assert(%definitionId&": Invalid statistic type: "&log2str(f_EPTF_StatMeasure_getStatType(vl_statIdx)),chrono == f_EPTF_StatMeasure_getStatType(vl_statIdx))
+    f_EPTF_StatMeasure_resetStat_chrono(vl_statIdx) 
+  }
+}//varAndStat
+
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_LGenBase_step_dispatchEventToSibling
+// 
+//  Purpose:
+//    Reports an event to a sibling FSM referred in the step arguments
+//
+//  Parameters:
+//    pl_args - *in* - *EPTF_LGenBase_TestStepArgs* - step arguments
+///////////////////////////////////////////////////////////
+public function f_EPTF_LGenBase_step_dispatchEventToSibling(in EPTF_LGenBase_TestStepArgs pl_args)
+runs on EPTF_LGenBase_Private_CT
+{
+  //Retrieve data from step arguments
+  var integer vl_eIdx, 
+  vl_fsmCtxIdx, 
+  vl_behaviorIdx, 
+  vl_inputIdx, 
+  vl_varId
+  f_EPTF_LGenBase_fsmEventToSiblingFromStep(
+    pl_args, 
+    vl_eIdx, 
+    vl_fsmCtxIdx,
+    vl_behaviorIdx, 
+    vl_inputIdx, 
+    vl_varId)
+  //Dispatch the event
+  var EPTF_LGenBase_ReportedEventDescriptor vl_event := c_EPTF_LGenBase_emptyReportedEventDescriptor
+  vl_event.event.bIdx := vl_behaviorIdx
+  vl_event.event.iIdx := vl_inputIdx
+  vl_event.event.target.eIdx := vl_eIdx
+  vl_event.event.target.fsmCtxIdx := vl_fsmCtxIdx
+  vl_event.reportedArgs := {vl_varId}
+  
+  f_EPTF_LGenBase_dispatchEventFromStep(vl_event, pl_args);  
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_LGenBase_step_postEventToSibling
+// 
+//  Purpose:
+//    Posts an event to a sibling FSM referred in the step arguments
+//
+//  Parameters:
+//    pl_args - *in* - *EPTF_LGenBase_TestStepArgs* - step arguments
+///////////////////////////////////////////////////////////
+public function f_EPTF_LGenBase_step_postEventToSibling(in EPTF_LGenBase_TestStepArgs pl_args)
+runs on EPTF_LGenBase_Private_CT
+{
+  //Retrieve data from step arguments
+  var integer vl_eIdx, 
+  vl_fsmCtxIdx, 
+  vl_behaviorIdx, 
+  vl_inputIdx, 
+  vl_varId
+  f_EPTF_LGenBase_fsmEventToSiblingFromStep(
+    pl_args, 
+    vl_eIdx, 
+    vl_fsmCtxIdx,
+    vl_behaviorIdx, 
+    vl_inputIdx, 
+    vl_varId)
+  //Dispatch the event
+  var EPTF_LGenBase_ReportedEventDescriptor vl_event := c_EPTF_LGenBase_emptyReportedEventDescriptor
+  vl_event.event.bIdx := vl_behaviorIdx
+  vl_event.event.iIdx := vl_inputIdx
+  vl_event.event.target.eIdx := vl_eIdx
+  vl_event.event.target.fsmCtxIdx := vl_fsmCtxIdx
+  vl_event.reportedArgs := {vl_varId}
+  
+  f_EPTF_LGenBase_postEventFromStep(vl_event, pl_args);  
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_LGenBase_step_dispatchReplyFromSibling
+// 
+//  Purpose:
+//    Replies to the source referred in the step arguments
+//
+//  Parameters:
+//    pl_args - *in* - *EPTF_LGenBase_TestStepArgs* - step arguments
+///////////////////////////////////////////////////////////
+public function f_EPTF_LGenBase_step_dispatchReplyFromSibling(in EPTF_LGenBase_TestStepArgs pl_args)
+runs on EPTF_LGenBase_Private_CT
+{
+  //Retrieve data from step arguments
+  var integer vl_behaviorIdx, 
+  vl_inputIdx, 
+  vl_varId
+  f_EPTF_LGenBase_fsmReplyEventFromStep(
+    pl_args, 
+    vl_behaviorIdx, 
+    vl_inputIdx, 
+    vl_varId)
+  //Dispatch the event
+  var EPTF_LGenBase_ReportedEventDescriptor vl_event := c_EPTF_LGenBase_emptyReportedEventDescriptor
+  vl_event.event.bIdx := vl_behaviorIdx
+  vl_event.event.iIdx := vl_inputIdx
+  
+  vl_event.event.target.eIdx := pl_args.reportedEvent.event.source.eIdx
+  vl_event.event.target.fsmCtxIdx := pl_args.reportedEvent.event.source.fsmCtxIdx
+  vl_event.reportedArgs := {vl_varId}
+  f_EPTF_LGenBase_dispatchEventFromStep(vl_event, pl_args);  
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_LGenBase_step_postReplyFromSibling
+// 
+//  Purpose:
+//    Posts a reply to the source referred in the step arguments
+//
+//  Parameters:
+//    pl_args - *in* - *EPTF_LGenBase_TestStepArgs* - step arguments
+///////////////////////////////////////////////////////////
+public function f_EPTF_LGenBase_step_postReplyFromSibling(in EPTF_LGenBase_TestStepArgs pl_args)
+runs on EPTF_LGenBase_Private_CT
+{
+  //Retrieve data from step arguments
+  var integer vl_behaviorIdx, 
+  vl_inputIdx, 
+  vl_varId
+  f_EPTF_LGenBase_fsmReplyEventFromStep(
+    pl_args, 
+    vl_behaviorIdx, 
+    vl_inputIdx, 
+    vl_varId)
+  //Dispatch the event
+  var EPTF_LGenBase_ReportedEventDescriptor vl_event := c_EPTF_LGenBase_emptyReportedEventDescriptor
+  vl_event.event.bIdx := vl_behaviorIdx
+  vl_event.event.iIdx := vl_inputIdx
+  
+  vl_event.event.target.eIdx := pl_args.reportedEvent.event.source.eIdx
+  vl_event.event.target.fsmCtxIdx := pl_args.reportedEvent.event.source.fsmCtxIdx
+  vl_event.reportedArgs := {vl_varId}
+  
+  f_EPTF_LGenBase_postEventFromStep(vl_event, pl_args);
+}
+
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_LGenBase_step_pushEventToStack
+// 
+//  Purpose:
+//    Push the event on top of the stack - it can be replied to later with the step dispatchReplyToTopEventInStack or 
+//     the step postReplyToTopEventInStack
+//
+//  Parameters:
+//    pl_args - *in* - *EPTF_LGenBase_TestStepArgs* - step arguments
+///////////////////////////////////////////////////////////
+public function f_EPTF_LGenBase_step_pushEventToStack(in EPTF_LGenBase_TestStepArgs pl_args)
+runs on EPTF_LGenBase_Private_CT
+{
+  v_LGenBase_entities[pl_args.eIdx].fsmCtxList[pl_args.refContext.fCtxIdx].numOfEventsInStack := v_LGenBase_entities[pl_args.eIdx].fsmCtxList[pl_args.refContext.fCtxIdx].numOfEventsInStack+1;
+  v_LGenBase_entities[pl_args.eIdx].fsmCtxList[pl_args.refContext.fCtxIdx].eventStack[v_LGenBase_entities[pl_args.eIdx].fsmCtxList[pl_args.refContext.fCtxIdx].numOfEventsInStack] := pl_args.reportedEvent;
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_LGenBase_step_popEventFromStack
+// 
+//  Purpose:
+//    Pops the event from the top of the stack - it will be erased, therefore not available anymore in any kind of way.
+//
+//  Parameters:
+//    pl_args - *in* - *EPTF_LGenBase_TestStepArgs* - step arguments
+///////////////////////////////////////////////////////////
+public function f_EPTF_LGenBase_step_popEventFromStack(in EPTF_LGenBase_TestStepArgs pl_args)
+runs on EPTF_LGenBase_Private_CT
+{
+  f_EPTF_Base_assert(%definitionId &" -  - Pop event from stack step function has been called without previous Push event to stack step function (or less push than pop step exists or the order is wrong ) in the FSM "&f_EPTF_LGenBase_getFsmNameByCtxIdx(pl_args.eIdx, pl_args.refContext.fCtxIdx), 
+    v_LGenBase_entities[pl_args.eIdx].fsmCtxList[pl_args.refContext.fCtxIdx].numOfEventsInStack > -1);
+  v_LGenBase_entities[pl_args.eIdx].fsmCtxList[pl_args.refContext.fCtxIdx].numOfEventsInStack := v_LGenBase_entities[pl_args.eIdx].fsmCtxList[pl_args.refContext.fCtxIdx].numOfEventsInStack-1;  
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_LGenBase_step_dispatchReplyToTopEventInStack
+// 
+//  Purpose:
+//    Reply an event using dispatch method to the source of the event on top of the stack
+//    
+//
+//  Parameters:
+//    pl_args - *in* - *EPTF_LGenBase_TestStepArgs* - step arguments
+///////////////////////////////////////////////////////////
+public function f_EPTF_LGenBase_step_dispatchReplyToTopEventInStack(in EPTF_LGenBase_TestStepArgs pl_args)
+runs on EPTF_LGenBase_Private_CT
+{
+  f_EPTF_Base_assert(%definitionId &" -  - Dispatch Reply to Top event in stack step function has been called without previous Push event to stack step function (or less push than reply step exists or the order is wrong ) in the FSM "&f_EPTF_LGenBase_getFsmNameByCtxIdx(pl_args.eIdx, pl_args.refContext.fCtxIdx), 
+    v_LGenBase_entities[pl_args.eIdx].fsmCtxList[pl_args.refContext.fCtxIdx].numOfEventsInStack > -1);
+  
+  pl_args.reportedEvent.event.source := v_LGenBase_entities[pl_args.eIdx].fsmCtxList[pl_args.refContext.fCtxIdx].eventStack[v_LGenBase_entities[pl_args.eIdx].fsmCtxList[pl_args.refContext.fCtxIdx].numOfEventsInStack].event.source;
+  pl_args.reportedEvent.event.target := v_LGenBase_entities[pl_args.eIdx].fsmCtxList[pl_args.refContext.fCtxIdx].eventStack[v_LGenBase_entities[pl_args.eIdx].fsmCtxList[pl_args.refContext.fCtxIdx].numOfEventsInStack].event.target;
+  f_EPTF_LGenBase_step_dispatchReplyFromSibling(pl_args);
+}
+
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_LGenBase_step_postReplyToTopEventInStack
+// 
+//  Purpose:
+//    Reply an event using post method to the source of the event on top of the stack
+//
+//  Parameters:
+//    pl_args - *in* - *EPTF_LGenBase_TestStepArgs* - step arguments
+///////////////////////////////////////////////////////////
+public function f_EPTF_LGenBase_step_postReplyToTopEventInStack(in EPTF_LGenBase_TestStepArgs pl_args)
+runs on EPTF_LGenBase_Private_CT
+{
+  f_EPTF_Base_assert(%definitionId &" -  - Post Reply to Top event in stack step function has been called without previous Push event to stack step function (or less push than reply step exists or the order is wrong ) in the FSM "&f_EPTF_LGenBase_getFsmNameByCtxIdx(pl_args.eIdx, pl_args.refContext.fCtxIdx), 
+    v_LGenBase_entities[pl_args.eIdx].fsmCtxList[pl_args.refContext.fCtxIdx].numOfEventsInStack > -1);
+  
+  pl_args.reportedEvent := v_LGenBase_entities[pl_args.eIdx].fsmCtxList[pl_args.refContext.fCtxIdx].eventStack[v_LGenBase_entities[pl_args.eIdx].fsmCtxList[pl_args.refContext.fCtxIdx].numOfEventsInStack];
+  f_EPTF_LGenBase_step_postReplyFromSibling(pl_args);
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_LGenBase_step_dispatchEventToTC
+// 
+//  Purpose:
+//    Dispatch event to Traffic Case, all of the fsms in the traffic case will receive the event.
+//
+//  Parameters:
+//    pl_args - *in* - *EPTF_LGenBase_TestStepArgs* - step arguments
+///////////////////////////////////////////////////////////
+public function f_EPTF_LGenBase_step_dispatchEventToTC(in EPTF_LGenBase_TestStepArgs pl_args)
+runs on EPTF_LGenBase_Private_CT
+{
+  //Retrieve data from step arguments
+  var integer vl_eIdx, 
+  vl_fsmCtxIdx,
+  vl_behaviorIdx, 
+  vl_inputIdx, 
+  vl_varId
+  f_EPTF_LGenBase_fsmEventToTcFromStep(
+    pl_args,
+    vl_eIdx, 
+    vl_fsmCtxIdx,
+    vl_behaviorIdx, 
+    vl_inputIdx, 
+    vl_varId)
+  //Dispatch the event
+  var EPTF_LGenBase_ReportedEventDescriptor vl_event := c_EPTF_LGenBase_emptyReportedEventDescriptor
+  vl_event.event.bIdx := vl_behaviorIdx
+  vl_event.event.iIdx := vl_inputIdx
+  
+  vl_event.event.target.eIdx := vl_eIdx
+  vl_event.event.target.fsmCtxIdx := vl_fsmCtxIdx
+  vl_event.reportedArgs := {vl_varId}
+  
+  f_EPTF_LGenBase_dispatchEventFromStep(vl_event, pl_args);
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_LGenBase_step_postEventToTC
+// 
+//  Purpose:
+//    Post event to the Traffic Case, all of the fsms in the traffic case will receive the event.
+//
+//  Parameters:
+//    pl_args - *in* - *EPTF_LGenBase_TestStepArgs* - step arguments
+///////////////////////////////////////////////////////////
+public function f_EPTF_LGenBase_step_postEventToTC(in EPTF_LGenBase_TestStepArgs pl_args)
+runs on EPTF_LGenBase_Private_CT
+{
+  //Retrieve data from step arguments
+  var integer vl_eIdx, 
+  vl_fsmCtxIdx,
+  vl_behaviorIdx, 
+  vl_inputIdx, 
+  vl_varId
+  f_EPTF_LGenBase_fsmEventToTcFromStep(
+    pl_args,
+    vl_eIdx, 
+    vl_fsmCtxIdx,
+    vl_behaviorIdx, 
+    vl_inputIdx, 
+    vl_varId)
+  //Dispatch the event
+  var EPTF_LGenBase_ReportedEventDescriptor vl_event := c_EPTF_LGenBase_emptyReportedEventDescriptor
+  vl_event.event.bIdx := vl_behaviorIdx
+  vl_event.event.iIdx := vl_inputIdx
+  
+  vl_event.event.target.eIdx := vl_eIdx
+  vl_event.event.target.fsmCtxIdx := vl_fsmCtxIdx
+  vl_event.reportedArgs := {vl_varId}
+  f_EPTF_LGenBase_postEventFromStep(vl_event, pl_args);
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_LGenBase_step_dispatchEventOfFsmToSibling
+// 
+//  Purpose:
+//    Reports an event (defined in the same Fsm) to a sibling FSM referred by the step arguments
+//
+//  Parameters:
+//    pl_args - *in* - *EPTF_LGenBase_TestStepArgs* - step arguments
+///////////////////////////////////////////////////////////
+public function f_EPTF_LGenBase_step_dispatchEventOfFsmToSibling(in EPTF_LGenBase_TestStepArgs pl_args)
+runs on EPTF_LGenBase_Private_CT
+{
+  //Retrieve data from step arguments
+  var integer vl_eIdx, 
+  vl_fsmCtxIdx, 
+  vl_behaviorIdx, 
+  vl_inputIdx, 
+  vl_varId
+  f_EPTF_LGenBase_fsmEventOfFsmToSiblingFromStep(
+    pl_args, 
+    vl_eIdx, 
+    vl_fsmCtxIdx,
+    vl_behaviorIdx, 
+    vl_inputIdx, 
+    vl_varId)
+  //Dispatch the event
+  var EPTF_LGenBase_ReportedEventDescriptor vl_event := c_EPTF_LGenBase_emptyReportedEventDescriptor
+  vl_event.event.bIdx := vl_behaviorIdx
+  vl_event.event.iIdx := vl_inputIdx
+  vl_event.event.target.eIdx := vl_eIdx
+  vl_event.event.target.fsmCtxIdx := vl_fsmCtxIdx
+  vl_event.reportedArgs := {vl_varId}
+  
+  f_EPTF_LGenBase_dispatchEventFromStep(vl_event, pl_args);  
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_LGenBase_step_postEventOfFsmToSibling
+// 
+//  Purpose:
+//    Posts an event (defined in the same Fsm) to a sibling FSM referred by the step arguments
+//
+//  Parameters:
+//    pl_args - *in* - *EPTF_LGenBase_TestStepArgs* - step arguments
+///////////////////////////////////////////////////////////
+public function f_EPTF_LGenBase_step_postEventOfFsmToSibling(in EPTF_LGenBase_TestStepArgs pl_args)
+runs on EPTF_LGenBase_Private_CT
+{
+  //Retrieve data from step arguments
+  var integer vl_eIdx, 
+  vl_fsmCtxIdx, 
+  vl_behaviorIdx, 
+  vl_inputIdx, 
+  vl_varId
+  f_EPTF_LGenBase_fsmEventOfFsmToSiblingFromStep(
+    pl_args, 
+    vl_eIdx, 
+    vl_fsmCtxIdx,
+    vl_behaviorIdx, 
+    vl_inputIdx, 
+    vl_varId)
+  //Dispatch the event
+  var EPTF_LGenBase_ReportedEventDescriptor vl_event := c_EPTF_LGenBase_emptyReportedEventDescriptor
+  vl_event.event.bIdx := vl_behaviorIdx
+  vl_event.event.iIdx := vl_inputIdx
+  vl_event.event.target.eIdx := vl_eIdx
+  vl_event.event.target.fsmCtxIdx := vl_fsmCtxIdx
+  vl_event.reportedArgs := {vl_varId}
+  
+  f_EPTF_LGenBase_postEventFromStep(vl_event, pl_args);  
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_LGenBase_step_dispatchReplyWithEventOfFsmFromSibling
+// 
+//  Purpose:
+//    Replies an event (defined in the same Fsm) to the source referred in the step arguments
+//
+//  Parameters:
+//    pl_args - *in* - *EPTF_LGenBase_TestStepArgs* - step arguments
+///////////////////////////////////////////////////////////
+public function f_EPTF_LGenBase_step_dispatchReplyWithEventOfFsmFromSibling(in EPTF_LGenBase_TestStepArgs pl_args)
+runs on EPTF_LGenBase_Private_CT
+{
+  //Retrieve data from step arguments
+  var integer vl_behaviorIdx, 
+  vl_inputIdx, 
+  vl_varId
+  f_EPTF_LGenBase_eventOfFsmFromStep(
+    pl_args, 
+    vl_behaviorIdx, 
+    vl_inputIdx, 
+    vl_varId)
+  //Dispatch the event
+  var EPTF_LGenBase_ReportedEventDescriptor vl_event := c_EPTF_LGenBase_emptyReportedEventDescriptor
+  vl_event.event.bIdx := vl_behaviorIdx
+  vl_event.event.iIdx := vl_inputIdx
+  
+  vl_event.event.target.eIdx := pl_args.reportedEvent.event.source.eIdx
+  vl_event.event.target.fsmCtxIdx := pl_args.reportedEvent.event.source.fsmCtxIdx
+  vl_event.reportedArgs := {vl_varId}
+  f_EPTF_LGenBase_dispatchEventFromStep(vl_event, pl_args);  
+}
+
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_LGenBase_step_postReplyWithEventOfFsmFromSibling
+// 
+//  Purpose:
+//    Posts a reply event (defined in the same Fsm) to the source referred in the step arguments
+//
+//  Parameters:
+//    pl_args - *in* - *EPTF_LGenBase_TestStepArgs* - step arguments
+///////////////////////////////////////////////////////////
+public function f_EPTF_LGenBase_step_postReplyWithEventOfFsmFromSibling(in EPTF_LGenBase_TestStepArgs pl_args)
+runs on EPTF_LGenBase_Private_CT
+{
+  //Retrieve data from step arguments
+  var integer vl_behaviorIdx, 
+  vl_inputIdx, 
+  vl_varId
+  f_EPTF_LGenBase_eventOfFsmFromStep(
+    pl_args, 
+    vl_behaviorIdx, 
+    vl_inputIdx, 
+    vl_varId)
+  //post the event
+  var EPTF_LGenBase_ReportedEventDescriptor vl_event := c_EPTF_LGenBase_emptyReportedEventDescriptor
+  vl_event.event.bIdx := vl_behaviorIdx
+  vl_event.event.iIdx := vl_inputIdx
+  
+  vl_event.event.target.eIdx := pl_args.reportedEvent.event.source.eIdx
+  vl_event.event.target.fsmCtxIdx := pl_args.reportedEvent.event.source.fsmCtxIdx
+  vl_event.reportedArgs := {vl_varId}
+  
+  f_EPTF_LGenBase_postEventFromStep(vl_event, pl_args);
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_LGenBase_step__dispatchReplyOwnEventToTopEventInStack
+// 
+//  Purpose:
+//    Reply an event defined previously in the fsm to the source of the event on top of the stack using dispatch method 
+//    
+//
+//  Parameters:
+//    pl_args - *in* - *EPTF_LGenBase_TestStepArgs* - step arguments
+///////////////////////////////////////////////////////////
+public function f_EPTF_LGenBase_step_dispatchReplyOwnEventToTopEventInStack(in EPTF_LGenBase_TestStepArgs pl_args)
+runs on EPTF_LGenBase_Private_CT
+{
+  f_EPTF_Base_assert(%definitionId &" -  - Dispatch Reply to Own To Top event in stack step function has been called without previous Push event to stack step function (or less push than reply step exists or the order is wrong ) in the FSM "&f_EPTF_LGenBase_getFsmNameByCtxIdx(pl_args.eIdx, pl_args.refContext.fCtxIdx), 
+    v_LGenBase_entities[pl_args.eIdx].fsmCtxList[pl_args.refContext.fCtxIdx].numOfEventsInStack > -1);
+  
+  pl_args.reportedEvent := v_LGenBase_entities[pl_args.eIdx].fsmCtxList[pl_args.refContext.fCtxIdx].eventStack[v_LGenBase_entities[pl_args.eIdx].fsmCtxList[pl_args.refContext.fCtxIdx].numOfEventsInStack];
+  f_EPTF_LGenBase_step_dispatchReplyWithEventOfFsmFromSibling(pl_args);
+}
+
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_LGenBase_step_postReplyOwnEventToTopEventInStack
+// 
+//  Purpose:
+//    Reply an event defined previously in the fsm to the source of the event on top of the stack using post method 
+//
+//  Parameters:
+//    pl_args - *in* - *EPTF_LGenBase_TestStepArgs* - step arguments
+///////////////////////////////////////////////////////////
+public function f_EPTF_LGenBase_step_postReplyOwnEventToTopEventInStack(in EPTF_LGenBase_TestStepArgs pl_args)
+runs on EPTF_LGenBase_Private_CT
+{
+  f_EPTF_Base_assert(%definitionId &" -  - Post Reply to Own To Top event in stack step function has been called without previous Push event to stack step function (or less push than reply step exists or the order is wrong ) in the FSM "&f_EPTF_LGenBase_getFsmNameByCtxIdx(pl_args.eIdx, pl_args.refContext.fCtxIdx), 
+    v_LGenBase_entities[pl_args.eIdx].fsmCtxList[pl_args.refContext.fCtxIdx].numOfEventsInStack > -1);
+  
+  pl_args.reportedEvent := v_LGenBase_entities[pl_args.eIdx].fsmCtxList[pl_args.refContext.fCtxIdx].eventStack[v_LGenBase_entities[pl_args.eIdx].fsmCtxList[pl_args.refContext.fCtxIdx].numOfEventsInStack];
+  f_EPTF_LGenBase_step_postReplyWithEventOfFsmFromSibling(pl_args);
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_LGenBase_step_log
+// 
+//  Purpose:
+//    Logs the charstring received in the step arguments 
+//
+//  Parameters:
+//    pl_args - *in* - *EPTF_LGenBase_TestStepArgs* - step arguments
+///////////////////////////////////////////////////////////
+public function f_EPTF_LGenBase_step_log(in EPTF_LGenBase_TestStepArgs pl_args)
+runs on EPTF_LGenBase_Private_CT
+{
+  var charstring vl_log := f_EPTF_LGenBase_charstringValOfStep(pl_args);
+  log(vl_log)
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_LGenBase_step_hookpoint
+// 
+//  Purpose:
+//    Dummy step to describe a hookpoint in the FSM.
+//    A step list can be merged into the FSM before the hookpoint. 
+//
+//  Parameters:
+//    pl_args - *in* - *EPTF_LGenBase_TestStepArgs* - step arguments
+///////////////////////////////////////////////////////////
+public function f_EPTF_LGenBase_step_hookpoint(in EPTF_LGenBase_TestStepArgs pl_args)
+runs on EPTF_LGenBase_Private_CT
+{
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_LGenBase_step_setVerdict
+// 
+//  Purpose:
+//    Sets the verdict received in the step arguments 
+//
+//  Parameters:
+//    pl_args - *in* - *EPTF_LGenBase_TestStepArgs* - step arguments
+///////////////////////////////////////////////////////////
+public function f_EPTF_LGenBase_step_setVerdict(in EPTF_LGenBase_TestStepArgs pl_args)
+runs on EPTF_LGenBase_Private_CT
+{
+  var charstring vl_reason := "";
+  var verdicttype vl_verdict;
+  f_EPTF_LGenBase_verdictOfStep(pl_args, vl_verdict, vl_reason);
+  setverdict(vl_verdict, vl_reason)
+}
+}  // end of module

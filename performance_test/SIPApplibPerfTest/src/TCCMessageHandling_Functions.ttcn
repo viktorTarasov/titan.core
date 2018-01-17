@@ -1,0 +1,75 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//
+//  File:               TCCMessageHandling_Functions.ttcn
+//  Description:        TCC Useful Functions: MessageHandling Functions
+//  Rev:                <RnXnn>
+//  Prodnr:             CNL 113 472
+//  Updated:            2012-04-02
+//  Contact:            http://ttcn.ericsson.se
+//
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+//  Module: TCCMessageHandling_Functions
+// 
+//  Purpose:
+//    This module provide message handling functions
+// 
+//  Module Parameters:
+//      - 
+// 
+//  Module depends on:
+//    -
+// 
+//  Current Owner:
+//    Norbert Pinter (ENORPIN)
+// 
+//  Last Review Date:
+//    -
+// 
+///////////////////////////////////////////////////////////////////////////////
+module TCCMessageHandling_Functions {
+
+/* Function: f_TCCMessageHandling_getMessageLength
+
+   Function to get the length of the received message. 
+
+   Parameters:
+     -
+
+   Returns:
+     -  */
+external function f_TCCMessageHandling_getMessageLength(in octetstring stream)
+return integer;
+
+/* Function: f_TCCMessageHandling_getMessageLength4Diameter
+
+   Function to get the length of the received message. 
+
+   Parameters:
+     -
+
+   Returns:
+     -  */
+external function f_TCCMessageHandling_getMessageLength4Diameter(in octetstring stream)
+return integer;
+
+/* Function: f_TCCMessageHandling_getMessageLength4Radius
+
+   Function to get the length of the received message. 
+
+   Parameters:
+     -
+
+   Returns:
+     -  */
+external function f_TCCMessageHandling_getMessageLength4Radius(in octetstring stream)
+return integer;
+
+}

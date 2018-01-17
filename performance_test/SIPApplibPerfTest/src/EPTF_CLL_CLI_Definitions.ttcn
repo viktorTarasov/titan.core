@@ -1,0 +1,185 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_CLL_CLI_Definitions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 512
+//  Updated:  2010-03-15
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////
+//  Module: EPTF_CLL_CLI_Definitions
+// 
+//  Purpose:
+//    This module contains common type definitions for the EPTF Commandline Interface Components.
+// 
+//  Module Parameters:
+//    -
+//
+//  Module depends on:
+//    <EPTF_CLL_Base_Definitions>
+//    <EPTF_CLL_Semaphore_Definitions>
+//    <EPTF_CLL_Variable_Definitions>
+//    <TELNETasp_PortType>
+//    <EPTF_CLL_Common_Definitions>
+//    <EPTF_CLL_Logging_Definitions>
+// 
+//  Current Owner:
+//    Jozsef Gyurusi (ETHJGI)
+// 
+//  Last Review Date:
+//    2010-03-22
+//
+//  Detailed Comments:
+//    This module contains type definitions of the EPTF CLI and EPTF CLI Client.
+//
+///////////////////////////////////////////////////////////////
+
+module EPTF_CLL_CLI_Definitions {
+
+import from EPTF_CLL_Base_Definitions all;
+import from EPTF_CLL_Semaphore_Definitions all;
+import from EPTF_CLL_Variable_Definitions all;
+import from TELNETasp_PortType all;
+import from EPTF_CLL_Common_Definitions all;
+
+import from EPTF_CLL_Logging_Definitions all;
+
+import from EPTF_CLL_HashMap_Definitions all;
+
+// CLI:
+group CLI {
+
+// useful regexp expressions:
+const charstring c_EPTF_CLI_whitespace := c_EPTF_Var_whitespace; // whitespace
+const charstring c_EPTF_CLI_anyWord := c_EPTF_Var_anyWord; // pattern: "  any_word "
+const charstring c_EPTF_CLI_everything := c_EPTF_Var_everything; // everything
+const charstring c_EPTF_CLI_integerNumber := c_EPTF_Var_integerNumber; // integer number: "01230102", "+1122", "-0121"
+const charstring c_EPTF_CLI_floatNumber := c_EPTF_Var_floatNumber; // float number: "12.354", "-1.23", "+1.254"
+
+type record EPTF_CLI_Msg_RegisterCommand {
+  integer id,
+  charstring commandName,
+  charstring commandHelp,
+  charstring ownerCompName,
+  boolean caseInsensitive
+}
+
+type enumerated EPTF_CLI_RegisterCommandResult {
+  registerOK,
+  registerFailed
+}
+
+type record EPTF_CLI_Msg_RegisterCommandResp {
+  integer id,
+  EPTF_CLI_RegisterCommandResult result
+}
+
+type union EPTF_CLI_MgmtMsg {
+  EPTF_CLI_Msg_RegisterCommand registerCommand,
+  EPTF_CLI_Msg_RegisterCommandResp registerCommandResp
+}
+
+type port EPTF_CLI_Mgmt_PT message {
+  inout EPTF_CLI_MgmtMsg;
+} with {extension "internal"}
+
+type record EPTF_CLI_RegisteredCommand {
+  charstring commandName,
+  charstring commandHelp,
+  EPTF_CLI_Client_CT ownerCompRef,
+  charstring ownerCompName,
+  boolean caseInsensitive
+}
+
+const EPTF_CLI_RegisteredCommand c_EPTF_CLI_RegisteredCommand_init := {
+  commandName := "",
+  commandHelp := "",
+  ownerCompRef := null,
+  ownerCompName := "",
+  caseInsensitive := true
+}
+
+type record of EPTF_CLI_RegisteredCommand EPTF_CLI_RegisteredCommandList;
+
+// consts:
+const charstring c_EPTF_CLI_loggingComponentMask := "EPTF_CLI";
+const EPTF_Logging_EventClassPrefixList c_EPTF_CLI_loggingEventClasses := { "Debug" };
+const integer c_EPTF_CLI_loggingClassIdx_Debug := 0;
+
+type component EPTF_CLI_CT extends EPTF_Base_CT, EPTF_Var_CT, EPTF_Semaphore_CT, EPTF_Logging_CT, EPTF_HashMap_CT {
+  private port EPTF_CLI_Mgmt_PT EPTF_CLI_MgmtIf;
+  private var boolean v_EPTF_CLI_initialized := false;
+  private var EPTF_CLI_RegisteredCommandList v_EPTF_CLI_RegisteredCommandList := {};
+  private var default v_CLI_mainHandler := null;
+  private var EPTF_CharstringList v_EPTF_CLI_commandResults := {};
+  // the ports of the terminal:
+  private port TELNETasp_PT EPTF_CLI_TELNET_PCO;
+  private port TELNETasp_PT EPTF_CLI_displayTELNET_PCO;
+  private var boolean v_EPTF_CLI_clientConnected := false;
+  private var boolean v_EPTF_CLI_displayConnected := false;
+  private var boolean v_EPTF_CLI_terminalDisabled := true;
+  private var boolean v_EPTF_CLI_displayTerminalDisabled := true;
+
+  // logging
+  private var integer v_EPTF_CLI_loggingMaskId := c_EPTF_Logging_invalidMaskId;
+  
+  private var integer v_EPTF_CLI_commandAlias_HashMap := -1;
+  private var EPTF_CharstringList v_EPTF_CLI_commandAliases := {} 
+  private var charstring v_EPTF_CLI_aliasTag := "$"; 
+}
+
+} //~group CLI
+
+// CLI_Client
+group CLI_Client {
+
+type record of EPTF_CLI_RegisterCommandResult EPTF_CLI_RegisterCommandResultList;
+
+type record EPTF_CLI_Client_RegisteredCommand {
+  charstring commandName,
+  f_EPTF_CLI_Client_commandHandler_FT commandHandler,
+  integer commandDisplayIdx,
+  boolean caseInsensitive
+}
+
+const EPTF_CLI_Client_RegisteredCommand c_EPTF_CLI_Client_RegisteredCommand_init := {
+  commandName := "",
+  commandHandler := null,
+  commandDisplayIdx:=-1,
+  caseInsensitive := true
+}
+
+type record of EPTF_CLI_Client_RegisteredCommand EPTF_CLI_Client_RegisteredCommandList;
+
+// consts:
+const charstring c_EPTF_CLI_Client_loggingComponentMask := "EPTF_CLI_Client";
+const EPTF_Logging_EventClassPrefixList c_EPTF_CLI_Client_loggingEventClasses := { "Debug" };
+const integer c_EPTF_CLI_Client_loggingClassIdx_Debug := 0;
+
+type component EPTF_CLI_Client_CT extends EPTF_Base_CT, EPTF_Semaphore_CT, EPTF_Var_CT, EPTF_Logging_CT {
+  private port EPTF_CLI_Mgmt_PT EPTF_CLI_Client_MgmtIf;
+  private var boolean v_EPTF_CLI_Client_initialized := false;
+  private var EPTF_CLI_RegisterCommandResultList v_CLI_Client_registerCommandResults := {}; // database for the results of the registerCommand functions
+  private var EPTF_CLI_Client_RegisteredCommandList v_EPTF_CLI_Client_RegisteredCommandList := {}; //database for registered command handlers
+  private var default v_CLI_Client_handler := null;
+  private var EPTF_CLI_CT v_CLI_compRef := null;
+
+  // logging
+  private var integer v_EPTF_CLI_Client_loggingMaskId := c_EPTF_Logging_invalidMaskId;
+}
+
+// should run on a component that extends EPTF_CLI_Client_CT
+// pl_result : the result of the command (when called contains the name of the command to be executed)
+// return value is the exit code, 0: OK, nonzero: error
+// positive error codes will appear in the result
+type function f_EPTF_CLI_Client_commandHandler_FT(in charstring pl_commandArgs, inout charstring pl_result) runs on self return integer;
+
+} //~group CLI_Client
+
+} //~module EPTF_CLL_CLI_Definitions

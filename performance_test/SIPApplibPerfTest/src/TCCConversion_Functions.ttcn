@@ -1,0 +1,578 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//
+//  File:               TCCConversion_Functions.ttcn
+//  Description:        TCC Useful Functions: Conversion Functions
+//  Rev:                <RnXnn>
+//  Prodnr:             CNL 113 472
+//  Updated:            2013-02-15
+//  Contact:            http://ttcn.ericsson.se
+//
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+//  Module: TCCConversion_Functions
+//
+//  Purpose:
+//    This module supports string conversions
+//
+//  Module Parameters:
+//      -
+//
+//  Module depends on:
+//    -
+//
+///////////////////////////////////////////////////////////////////////////////
+module TCCConversion_Functions {
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_putInLowercase
+//
+//  Purpose:
+//    Put charstring to lowercase
+//
+//  Parameters:
+//    pl_string - *in* *charstring* - charstring
+//
+//  Return Value:
+//    charstring - converted value
+//
+//  Errors:
+//    -
+//
+//  Detailed description:
+//    -
+//
+///////////////////////////////////////////////////////////////////////////////
+  external function f_putInLowercase(charstring pl_string) return charstring;
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_putInUppercase
+//
+//  Purpose:
+//    Put charstring to uppercase
+//
+//  Parameters:
+//    pl_string - *in* *charstring* - charstring
+//
+//  Return Value:
+//    charstring - converted value
+//
+//  Errors:
+//    -
+//
+//  Detailed description:
+//    -
+//
+///////////////////////////////////////////////////////////////////////////////
+  external function f_putInUppercase(charstring pl_string) return charstring;
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_unichar2charstr
+//
+//  Purpose:
+//    Convert universal charstring 2 charstring
+//
+//  Parameters:
+//    p_unichar - *in* *charstring* - unichar 2 convert
+//
+//  Return Value:
+//    charstring - converted value
+//
+//  Errors:
+//    -
+//
+//  Detailed description:
+//    -
+//
+///////////////////////////////////////////////////////////////////////////////
+function f_unichar2charstr (in universal charstring p_unichar) return charstring
+{
+  var charstring vl_char := "";
+
+  if (lengthof(p_unichar)==0) {return ""}
+  for (var integer i:= 0;i<lengthof(p_unichar);i:=i+1)
+  {
+    vl_char := vl_char & int2char(unichar2int(p_unichar[i]));
+  }
+  return vl_char
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_charstr2unichar
+//
+//  Purpose:
+//    Convert charstring 2 universal charstring
+//
+//  Parameters:
+//    p_char - *in* *charstring* - char 2 convert
+//
+//  Return Value:
+//    universal charstring - converted value
+//
+//  Errors:
+//    -
+//
+//  Detailed description:
+//    -
+//
+///////////////////////////////////////////////////////////////////////////////
+function f_charstr2unichar (in  charstring p_char) return universal charstring
+{
+  var universal charstring vl_unichar := "";
+
+  if (lengthof(p_char)==0) { return "" }
+  for (var integer i:= 0;i<lengthof(p_char);i:=i+1)
+  {
+    vl_unichar := vl_unichar & int2unichar(char2int(p_char[i]));
+  }
+  return vl_unichar
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_replaceFirstOccurenceOfSubstring
+//
+//  Purpose:
+//    Replace first occurance of parSubStrA with parSubStrB in parInStr
+//
+//  Parameters:
+//    parInStr - *in* *charstring* - input string
+//    parSubStrA  - *in* *charstring* - string to replace
+//    parSubStrB  - *in* *charstring* - string to replace with
+//
+//  Return Value:
+//    charstring - modified input string
+//
+//  Errors:
+//    -
+//
+//  Detailed description:
+//    -
+//
+///////////////////////////////////////////////////////////////////////////////
+function f_replaceFirstOccurenceOfSubstring(
+  in charstring parInStr ,
+  in charstring parSubStrA,
+  in charstring parSubStrB) return charstring
+
+{
+  var integer i:=f_strstr(parInStr,parSubStrA);
+  var charstring OutStr;
+
+  if(i==-1){
+    return parInStr;
+  }
+  OutStr:=
+    substr(parInStr,0,i)&parSubStrB&
+    substr(parInStr,i+lengthof(parSubStrA),
+    lengthof(parInStr)-i-lengthof(parSubStrA));
+
+  return OutStr;
+
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_replaceEveryOccurenceOfSubstring
+//
+//  Purpose:
+//    Replace every occurance of parSubStrA with parSubStrB in parInStr
+//
+//  Parameters:
+//    parInStr - *in* *charstring* - input string
+//    parSubStrA  - *in* *charstring* - string to replace
+//    parSubStrB  - *in* *charstring* - string to replace with
+//
+//  Return Value:
+//    charstring - modified input string
+//
+//  Errors:
+//    -
+//
+//  Detailed description:
+//    -
+//
+///////////////////////////////////////////////////////////////////////////////
+function f_replaceEveryOccurenceOfSubstring(
+  in charstring parInStr,
+  in charstring parSubStrA,
+  in charstring parSubStrB) return charstring
+{
+  var integer i:=f_strstr(parInStr,parSubStrA);
+
+  var charstring OutStr := parInStr, tempStr:= parInStr;
+
+  while (i!=-1)
+  {
+    OutStr :=
+      substr(tempStr,0,i)&parSubStrB&
+      substr(tempStr,i+lengthof(parSubStrA),
+        lengthof(tempStr)-i-lengthof(parSubStrA));
+
+    //continue from saved pointer offset with the length of replacement string
+    i:=i+lengthof(parSubStrB);
+    tempStr:=OutStr;
+    i:=f_strstr(tempStr,parSubStrA,i);
+  }
+
+  return OutStr;
+
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_replaceFirstOccurenceOfPattern
+//
+//  Purpose:
+//    Replace first occurance of pattern parSubStrA with parSubStrB in parInStr
+//
+//  Parameters:
+//    parInStr - *in* *charstring* - input string
+//    parSubStrA  - *in* *charstring* - pattern to replace
+//    parSubStrB  - *in* *charstring* - string to replace with
+//
+//  Return Value:
+//    charstring - modified input string
+//
+//  Errors:
+//    -
+//
+//  Detailed description:
+//    -
+//
+///////////////////////////////////////////////////////////////////////////////
+function f_replaceFirstOccurenceOfPattern(
+  in charstring parInStr,
+  in charstring parSubStrA,
+  in charstring parSubStrB) return charstring
+
+{
+  var charstring v_SubStrA;
+
+  v_SubStrA:=regexp(parInStr, parSubStrA, 0);
+  if(v_SubStrA!="") {
+    return f_replaceFirstOccurenceOfSubstring(parInStr,v_SubStrA,parSubStrB);
+  }
+  else {
+    return parInStr;
+  };
+
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_replaceEveryOccurenceOfPattern
+//
+//  Purpose:
+//    Replace every occurance of pattern parSubStrA with parSubStrB in parInStr
+//
+//  Parameters:
+//    parInStr - *in* *charstring* - input string
+//    parSubStrA  - *in* *charstring* - string to replace
+//    parSubStrB  - *in* *charstring* - string to replace with
+//
+//  Return Value:
+//    charstring - modified input string
+//
+//  Errors:
+//    -
+//
+//  Detailed description:
+//    -
+//
+///////////////////////////////////////////////////////////////////////////////
+function f_replaceEveryOccurenceOfPattern(
+  in charstring parInStr,
+  in charstring parSubStrA,
+  in charstring parSubStrB) return charstring
+{
+  var charstring OutStr,v_SubStrA;
+  var charstring MyPattern:= parSubStrA;
+
+  OutStr := parInStr;
+  v_SubStrA:=regexp(OutStr,MyPattern,0);
+
+  while(v_SubStrA!="")
+  {
+    OutStr:=f_replaceEveryOccurenceOfSubstring(OutStr,v_SubStrA,parSubStrB);
+    v_SubStrA:=regexp(OutStr,MyPattern,0);
+  }
+
+  return OutStr;
+
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_addOctetstring
+//
+//  Purpose:
+//    Add two integer values represented in OCTETSTRING
+//
+//  Parameters:
+//    par1 - *in* *octetstring* - first octetstring value
+//    par2 - *in* *octetstring* - second octetstring value
+//
+//  Return Value:
+//    octetstring - sum of input
+//
+//  Errors:
+//    -
+//
+//  Detailed description:
+//    Negative values are unhandled!
+//
+///////////////////////////////////////////////////////////////////////////////
+external function f_addOctetstring(in octetstring par1, in octetstring par2)
+return octetstring;
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_subOctetstring
+//
+//  Purpose:
+//    Substract two integer values represented in OCTETSTRING
+//
+//  Parameters:
+//    par1 - *in* *octetstring* - first octetstring value
+//    par2 - *in* *octetstring* - second octetstring value
+//
+//  Return Value:
+//    octetstring - difference of input
+//
+//  Errors:
+//    -
+//
+//  Detailed description:
+//    Negative values are unhandled!
+//
+///////////////////////////////////////////////////////////////////////////////
+external function f_subOctetstring(in octetstring par1, in octetstring par2)
+return octetstring;
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_compOctetstring
+//
+//  Purpose:
+//    Compare two integer values represented in OCTETSTRING
+//
+//  Parameters:
+//    par1 - *in* *octetstring* - first octetstring value
+//    par2 - *in* *octetstring* - second octetstring value
+//
+//  Return Value:
+//    integer - 0: par1 = par2
+//              1: par1>par2
+//              2: par1<par2
+//
+//  Errors:
+//    -
+//
+//  Detailed description:
+//    Negative values are unhandled!
+//
+///////////////////////////////////////////////////////////////////////////////
+external function f_compOctetstring(in octetstring par1, in octetstring par2)
+return integer;
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_substr_token
+//
+//  Purpose:
+//    The function returns a substring from a value. The starting and the ending
+//    points are defined by the begin and end tokens.
+//
+//  Parameters:
+//    str - *in* *charstring* - the value
+//    begin_token - *in* *charstring* - begin token
+//    end_token - *in* *charstring* - end token
+//
+//  Return Value:
+//    charstring. If one of the tokens is not found it returns an empty string
+//
+//  Errors:
+//    -
+//
+//  Detailed description:
+//    If end_token is an empty string the function returns the part of the value
+//    after the begin_token.
+//    If begin_token is an empty string the function returns the part of the
+//    value until the end_token.
+//    If both of them empty string the function returns the part whole value
+//
+///////////////////////////////////////////////////////////////////////////////
+external function f_substr_token(in charstring str,
+                                 in charstring begin_token,
+                                 in charstring end_token) return charstring;
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_strstr
+//
+//  Purpose:
+//    The f_strstr function locates the first  occurrence  of  the string  s2
+//    in string s1 and returns an index of starting pont of the located string,
+//    or  -1 if the string is not found. If  s2 is an empty, the  func-
+//    tion returns 0.
+//
+//  Parameters:
+//    s1 - *in* *charstring* - input string
+//    s2 - *in* *charstring* - string to search
+//    offset - *in* *integer* - start offset.
+//
+//  Return Value:
+//    index of starting pont of the located string
+//
+//  Errors:
+//    -
+//
+//  Detailed description:
+//    The offset determines the starting point of the search. Any occurance of
+//    the s2 before the offset is ignored. The offset is optional
+//
+///////////////////////////////////////////////////////////////////////////////
+external function f_strstr(in charstring s1,
+                                 in charstring s2,
+                                 in integer offset:=0) return integer;
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_OctetIpv4
+//
+//  Purpose:
+//    convertes an IPv4 address given in dotted notation to its hex
+//    representation
+//
+//  Parameters:
+//    pl_ip - *in* *charstring* - input string
+//
+//  Return Value:
+//    hex value of the Ip in an octetstring
+//
+//  Errors:
+//    -
+//
+//  Detailed description:
+//
+///////////////////////////////////////////////////////////////////////////////
+//type record of integer IntegerList;
+function f_OctetIpv4(in charstring pl_ip) return octetstring{
+//  var IntegerList ret := {};
+  var octetstring oret := ''O;
+  var integer octet := 0;
+  var integer exp := 1;
+//  var integer k := 3;
+  for (var integer i:=lengthof(pl_ip)-1; i>-1;i:=i-1){
+    var integer ch := char2int(pl_ip[i]);
+    if (ch == 46){ // =="."
+      //ret[k] := octet;
+      oret := int2oct(octet,1) & oret;
+//      k:=k-1;
+      exp := 1;
+      octet := 0;
+    } else if(ch > 47 and ch < 58){ // isnum
+      octet := octet + str2int(pl_ip[i]) * exp;
+      if (i == 0) {
+        //ret[k] := octet;
+        oret := int2oct(octet,1) & oret;
+        break;
+      }
+      exp := exp * 10;
+    } else {
+      return ''O;
+    }
+  }
+  return oret;//(int2oct(ret[0],1) & int2oct(ret[1],1) & int2oct(ret[2],1) & int2oct(ret[3],1));
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_convertIPAddrToBinary
+//
+//  Purpose:
+//    Converts an IPv4 and IPv6 address to its hex representation.
+//    IPv6 address is assumed if the input string contains ':'
+//
+//  Parameters:
+//    pl_ip - *in* *charstring* - input string
+//
+//  Return Value:
+//    hex value of the Ip in an octetstring
+//
+//  Errors:
+//    -
+//
+//  Detailed description:
+//
+///////////////////////////////////////////////////////////////////////////////
+external function f_convertIPAddrToBinary(in charstring pl_ip) return octetstring;
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_oct2char_safe
+//
+//  Purpose:
+//    Fault tolerant version of the oct2str Titan built-in function.
+//
+//  Parameters:
+//    s1 - *in* *octetsttring* - input string
+//    s2 - *out* *charstring* - output string
+//
+//  Return Value:
+//    false on fault, ie. on unbound input or invalid character in input.
+//    true on success
+//
+//  Errors:
+//    -
+//
+//  Detailed description:
+//    On fault, the longest chunk that could be decoded is returned.
+//
+///////////////////////////////////////////////////////////////////////////////
+external function f_oct2char_safe(in octetstring par1, out charstring par2)
+return boolean;
+
+///////////////////////////////////////////////////////////
+//  Function: f_IPv6_literal
+// 
+//  Purpose:
+//    if parameter is an IPv6 string enclose it in "[" and "]" characters, otherwise do nothing
+// 
+//  Parameters:    
+//    pl_ip - *in* *charstring* - string to check
+//      
+//  Return Value:
+//    charstring - IPv6 string enclosed in "[" and "]" if parameter is an IPv6 string. Otherwise the string received as parameter. 
+// 
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//    according to RFC 2732 the IPv6 address should be enclosed in "[" and "]" characters within a URI
+//
+///////////////////////////////////////////////////////////
+
+function f_IPv6CreateLiteral(in charstring pl_ip)
+
+return charstring
+
+{
+  var charstring vl_ipAddress := pl_ip;
+  if (vl_ipAddress[0] != "[")
+  {
+    //if one of the first 5 characters is ":" we assume it is an IPv6 address
+
+   for (var integer i := 0; i < 5; i := i + 1)
+    {
+      if (vl_ipAddress[i] == ":")
+      {
+        vl_ipAddress := "[" & vl_ipAddress & "]";
+        break;
+      }
+    }
+  }
+ 
+  return vl_ipAddress;
+}
+
+
+} with {extension "version <RnXnn>"}

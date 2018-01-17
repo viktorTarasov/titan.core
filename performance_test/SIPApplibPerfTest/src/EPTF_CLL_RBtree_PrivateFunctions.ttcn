@@ -1,0 +1,505 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_CLL_RBtree_PrivateFunctions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 512
+//  Updated:  2010-07-21
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////
+//  Module: EPTF_CLL_RBtree_PrivateFunctions
+// 
+//  Purpose:
+//    This module contains private functions for TTCN-3 Red-Black tree implementation.
+// 
+//  Module depends on:
+//    <EPTF_CLL_Common_Functions>
+//    <EPTF_CLL_RBtree_Definitions>
+// 
+//  Current Owner:
+//    Rita Kovacs (ERITKOV)
+// 
+//  Last Review Date:
+//    2007-12-06
+///////////////////////////////////////////////////////////////
+
+module EPTF_CLL_RBtree_PrivateFunctions {
+
+import from EPTF_CLL_Common_Functions all;
+import from EPTF_CLL_RBtree_Definitions all;
+
+friend module EPTF_CLL_RBtree_Functions;
+friend module EPTF_CLL_RBtreeFloat_PrivateFunctions;
+friend module EPTF_CLL_RBtreeFloat_Functions;
+friend module EPTF_CLL_RBtreeInteger_PrivateFunctions;
+friend module EPTF_CLL_RBtreeInteger_Functions;
+
+///////////////////////////////////////////////////////////
+// Function: f_EPTF_RBTree_getFreeSlot
+// 
+// Purpose:
+//      Gets a slot from free chain if possible, otherwise allocates a brand new one.
+// 
+// Parameters:
+//   rb_treeNodes - *inout* <EPTF_RBTreeNodeList> - red-black-tree nodes' list
+//   pl_nodesCurMaxIndex - *inout* *integer* - end index of nodes array
+//   pl_freeHead - *inout* *integer* - head of free chain
+//   pl_freeTail - *inout* *integer* - tail of free chain
+// 
+// Return Value:
+//   integer - index of the allocated slot
+///////////////////////////////////////////////////////////
+
+friend function f_EPTF_RBTree_getFreeSlot(inout EPTF_RBTreeNodeList rb_treeNodes, inout integer pl_freeHead, inout integer pl_freeTail, inout integer pl_nodesCurMaxIndex) return integer{
+    
+    var integer vl_Result;  
+
+    // Are there any stored free slots?
+    if (pl_freeHead > -1) {        
+        vl_Result := pl_freeHead;
+
+        // Maintaining free chain: moving freeHead forward.
+        pl_freeHead := rb_treeNodes[pl_freeHead].right;
+        if (pl_freeHead != -1) {
+            rb_treeNodes[pl_freeHead].left := -1; 
+        }
+        if (pl_freeHead == -1) {
+            pl_freeTail := -1;
+        }
+    } else {
+        // Allocating a new slot
+        pl_nodesCurMaxIndex := pl_nodesCurMaxIndex + 1;
+        vl_Result := pl_nodesCurMaxIndex;
+    }
+    return vl_Result;
+}
+
+///////////////////////////////////////////////////////////
+// Function: f_EPTF_RBTree_insertNodeWithSameKey
+// 
+// Purpose:
+//      Function to insert the given event (node) to cluster chain.
+// 
+// Parameters:
+//   rb_treeNodes - *inout* <EPTF_RBTreeNodeList> - red-black-tree nodes' list
+//   pl_newNodeIndex - *in* *integer* - index of the tree node to insert
+//   pl_sameKeyIndex - *in* *integer* - index of the previous node in cluster chain
+// 
+// Return Value:
+//   (none)
+///////////////////////////////////////////////////////////
+friend function f_EPTF_RBTree_insertNodeWithSameKey(inout EPTF_RBTreeNodeList rb_treeNodes, in integer pl_newNodeIndex, in integer pl_sameKeyIndex) {
+
+    // pl_newNodeIndex is excepted not to be -1 ...       
+    // Appending element with the same key to the cluster           
+    // Searching for the last element in the cluster (will be "vl_i")
+/*    var integer vl_i := pl_sameKeyIndex;
+    while (rb_treeNodes[vl_i].fwd != -1) {
+        vl_i := rb_treeNodes[vl_i].fwd;
+    } // while
+                           */
+
+    var integer vl_i := rb_treeNodes[pl_sameKeyIndex].endOfClusterIdx;
+    if(vl_i == -1) { vl_i := pl_sameKeyIndex; }
+
+    // Appending...
+    rb_treeNodes[vl_i].fwd := pl_newNodeIndex;
+    rb_treeNodes[pl_newNodeIndex].bwd := vl_i;
+    rb_treeNodes[pl_newNodeIndex].color := incluster; // not in tree
+    rb_treeNodes[pl_newNodeIndex].fwd := -1; // Maybe not necessary
+    rb_treeNodes[pl_newNodeIndex].startOfClusterIdx := pl_sameKeyIndex;
+           
+    // The first node in the cluster is also in the tree. This is the
+    // head of the cluster.
+    rb_treeNodes[pl_sameKeyIndex].isHeadInSameKeysCluster := true;       
+
+    rb_treeNodes[pl_sameKeyIndex].endOfClusterIdx := pl_newNodeIndex;
+}
+
+///////////////////////////////////////////////////////////
+// Function: f_EPTF_RBTree_RBTreeInsert
+// 
+// Purpose:
+//      Function to insert the given new event (node) to the tree.
+//      x: the index of the created new Node in the Tree. This new node 
+//      is labelled red, and possibly destroys the red-black property. 
+//      The main loop moves up the tree, restoring the red-black property.
+// 
+// Parameters:
+//   rb_treeNodes - *inout* <EPTF_RBTreeNodeList> - red-black-tree nodes' list
+//   pl_x - *in* *integer* - the float node index to be inserted
+//   pl_root - *in* *integer* - root sentinel index of the red-black-tree
+//   pl_nil - *in* *integer* - nil index of the red-black-tree
+// Return Value:
+//   (none)
+///////////////////////////////////////////////////////////
+friend function f_EPTF_RBTree_RBTreeInsert(
+        inout EPTF_RBTreeNodeList rb_treeNodes,
+        in integer pl_root,
+        in integer pl_nil,
+        in integer pl_x)
+ {
+    var integer y;
+    rb_treeNodes[pl_x].color := red; // might not be necessary because of done during node creation
+
+    while (rb_treeNodes[rb_treeNodes[pl_x].parent].color == red) {
+        if (rb_treeNodes[pl_x].parent == rb_treeNodes[rb_treeNodes[rb_treeNodes[pl_x].parent].parent].left) {
+           y := rb_treeNodes[rb_treeNodes[rb_treeNodes[pl_x].parent].parent].right;
+           if (rb_treeNodes[y].color == red) {
+              rb_treeNodes[rb_treeNodes[pl_x].parent].color := black;
+              rb_treeNodes[y].color := black;
+              rb_treeNodes[rb_treeNodes[rb_treeNodes[pl_x].parent].parent].color := red;
+              pl_x := rb_treeNodes[rb_treeNodes[pl_x].parent].parent;
+           } else {
+              // y is a black node
+              if (pl_x ==  rb_treeNodes[rb_treeNodes[pl_x].parent].right) {
+                 pl_x := rb_treeNodes[pl_x].parent;
+                 f_EPTF_RBTree_leftRotate(rb_treeNodes, pl_x, pl_root, pl_nil);
+              } // if - case 2
+
+              // case 3
+              rb_treeNodes[rb_treeNodes[pl_x].parent].color := black;
+              rb_treeNodes[rb_treeNodes[rb_treeNodes[pl_x].parent].parent].color := red;
+              f_EPTF_RBTree_rightRotate(rb_treeNodes, rb_treeNodes[rb_treeNodes[pl_x].parent].parent, pl_root, pl_nil);
+           }
+        } else {
+           // repeating the "if" part with right and left exchanged
+           y := rb_treeNodes[rb_treeNodes[rb_treeNodes[pl_x].parent].parent].left;
+           if (rb_treeNodes[y].color == red) {
+              rb_treeNodes[rb_treeNodes[pl_x].parent].color := black;
+              rb_treeNodes[y].color := black;
+              rb_treeNodes[rb_treeNodes[rb_treeNodes[pl_x].parent].parent].color := red;
+              pl_x := rb_treeNodes[rb_treeNodes[pl_x].parent].parent;              
+           } else {
+              if (pl_x ==  rb_treeNodes[rb_treeNodes[pl_x].parent].left) {
+                 pl_x := rb_treeNodes[pl_x].parent;
+                 f_EPTF_RBTree_rightRotate(rb_treeNodes, pl_x, pl_root, pl_nil);
+              } // if - case 2
+
+              // case 3
+              rb_treeNodes[rb_treeNodes[pl_x].parent].color := black;
+              rb_treeNodes[rb_treeNodes[rb_treeNodes[pl_x].parent].parent].color := red;
+              f_EPTF_RBTree_leftRotate(rb_treeNodes, rb_treeNodes[rb_treeNodes[pl_x].parent].parent, pl_root, pl_nil);
+           }
+        } // else (first if)
+    } // while
+    rb_treeNodes[rb_treeNodes[pl_root].left].color := black;
+} // f_EPTF_RBTree_RBTreeInsert
+
+///////////////////////////////////////////////////////////
+// Function: f_EPTF_RBTree_leftRotate
+// 
+// Purpose:
+//      Rotates left as described in _Introduction_To_Algorithms by Cormen, Leiserson, Rivest (Chapter 14).
+// 
+// Parameters:
+//   rb_treeNodes - *inout* <EPTF_RBTreeNodeList> - red-black-tree nodes' list
+//   pl_x - *in* *integer* - the float node index to be inserted
+//   pl_root - *in* *integer* - root sentinel index of the red-black-tree
+//   pl_nil - *in* *integer* - leaf sentinel index of the red-black-tree
+// 
+// Return Value:
+//   (none)
+///////////////////////////////////////////////////////////
+
+private function f_EPTF_RBTree_leftRotate(
+      inout EPTF_RBTreeNodeList rb_treeNodes,
+      in integer pl_x,
+      in integer pl_root,
+      in integer pl_nil
+    )
+{
+    var integer y;
+
+    y := rb_treeNodes[pl_x].right;
+    rb_treeNodes[pl_x].right := rb_treeNodes[y].left;
+
+    if (rb_treeNodes[y].left != pl_nil) {
+       rb_treeNodes[rb_treeNodes[y].left].parent := pl_x;
+    }
+
+    rb_treeNodes[y].parent := rb_treeNodes[pl_x].parent;
+        
+    // we count on the root sentinel...
+    if (pl_x == rb_treeNodes[rb_treeNodes[pl_x].parent].left) {
+       rb_treeNodes[rb_treeNodes[pl_x].parent].left := y;
+    } else {
+       rb_treeNodes[rb_treeNodes[pl_x].parent].right := y;
+    }
+
+    rb_treeNodes[y].left := pl_x;
+    rb_treeNodes[pl_x].parent := y;
+} // f_EPTF_RBTree_leftRotate
+
+
+///////////////////////////////////////////////////////////
+// Function: f_EPTF_RBTree_rightRotate
+// 
+// Purpose:
+//      Rotates right as described in _Introduction_To_Algorithms by Cormen, Leiserson, Rivest (Chapter 14).
+// 
+// Parameters:
+//   rb_treeNodes - *inout* <EPTF_RBTreeNodeList> - red-black-tree nodes' list
+//   pl_y - *in* *integer* - the float node index to be inserted
+//   pl_root - *in* *integer* - root sentinel index of the red-black-tree
+//   pl_nil - *in* *integer* - leaf sentinel index of the red-black-tree
+// 
+// Return Value:
+//   (none)
+///////////////////////////////////////////////////////////
+
+private function f_EPTF_RBTree_rightRotate(
+      inout EPTF_RBTreeNodeList rb_treeNodes,
+      in integer pl_y,
+      in integer pl_root,
+      in integer pl_nil
+    )
+{
+    var integer x;
+
+    x := rb_treeNodes[pl_y].left;
+    rb_treeNodes[pl_y].left := rb_treeNodes[x].right;
+
+    if (rb_treeNodes[x].right != pl_nil) {
+       rb_treeNodes[rb_treeNodes[x].right].parent := pl_y;
+    }
+
+    rb_treeNodes[x].parent := rb_treeNodes[pl_y].parent;
+        
+    // we count on the root sentinel...
+    if (pl_y == rb_treeNodes[rb_treeNodes[pl_y].parent].left) {
+       rb_treeNodes[rb_treeNodes[pl_y].parent].left := x;
+    } else {
+       rb_treeNodes[rb_treeNodes[pl_y].parent].right := x;
+    }
+
+    rb_treeNodes[x].right := pl_y;
+    rb_treeNodes[pl_y].parent := x;
+} // f_EPTF_RBTree_rightRotate
+
+
+
+///////////////////////////////////////////////////////////
+// Function: f_EPTF_RBTree_getSuccessorOf
+// 
+// Purpose:
+//      returns the successor of x or -1 if no successor exists
+// 
+// Parameters:
+//   rb_treeNodes - *inout* <EPTF_RBTreeNodeList> - red-black-tree nodes' list
+//   pl_x - *in* *integer* - the float node index to be inserted
+//   pl_root - *in* *integer* - root sentinel index of the red-black-tree
+//   pl_nil - *in* *integer* - leaf sentinel index of the red-black-tree
+// 
+// Return Value:
+//   integer - index of successor node of the given node (x)
+///////////////////////////////////////////////////////////
+
+friend function f_EPTF_RBTree_getSuccessorOf (
+      inout EPTF_RBTreeNodeList rb_treeNodes,
+      in integer pl_x, 
+      in integer pl_root,
+      in integer pl_nil
+    ) return integer
+{
+  var integer y := -1;
+
+  y := rb_treeNodes[pl_x].right;
+  if (y != pl_nil) {
+     while (rb_treeNodes[y].left != pl_nil) {
+        y := rb_treeNodes[y].left;
+     }
+  } else {
+     y := rb_treeNodes[pl_x].parent;
+     while (pl_x == rb_treeNodes[y].right) {
+        pl_x := y;
+        y := rb_treeNodes[y].parent;
+     }
+     if (y==pl_root) {
+        y := -1;
+        f_EPTF_Common_user("DEBUG: no successor exists..."); 
+     }
+  }
+
+  return y;
+} // f_EPTF_RBTree_getSuccessorOf
+
+
+///////////////////////////////////////////////////////////
+// Function: f_EPTF_RBTree_helpTreeRemove
+// 
+// Purpose:
+//      Performs rotations and changes colors to restore red-black properties after a node is deleted. 
+//      The algorithm from this function is from _Introduction_To_Algorithms_ by Cormen et al.
+//      This function should only be called by <f_EPTF_RBTree_removeNode> () not by the user.
+// 
+// Parameters:
+//   rb_treeNodes - *inout* <EPTF_RBTreeNodeList> - red-black-tree nodes' list
+//   pl_x - *in* *integer* - index of the deleted node's child node (!!!!!)
+//   pl_root - *in* *integer* - root sentinel index of the red-black-tree
+//   pl_nil - *in* *integer* - nil sentinel index of the red-black-tree
+// 
+// Return Value:
+//   (none)
+///////////////////////////////////////////////////////////
+friend function f_EPTF_RBTree_helpTreeRemove(
+    inout EPTF_RBTreeNodeList rb_treeNodes,
+    in integer pl_x, 
+    inout integer pl_root,
+    in integer pl_nil
+   )
+{
+   var integer root := rb_treeNodes[pl_root].left; // The real node index.
+   var integer w; 
+
+   while ((rb_treeNodes[pl_x].color == black) and (root != pl_x)) {
+       if (pl_x == rb_treeNodes[rb_treeNodes[pl_x].parent].left) {
+          w := rb_treeNodes[rb_treeNodes[pl_x].parent].right;
+          if (rb_treeNodes[w].color == red) {
+             rb_treeNodes[w].color := black;
+             rb_treeNodes[rb_treeNodes[pl_x].parent].color := red;
+             f_EPTF_RBTree_leftRotate(rb_treeNodes, rb_treeNodes[pl_x].parent, pl_root, pl_nil);
+             w := rb_treeNodes[rb_treeNodes[pl_x].parent].right;
+          }
+          if (rb_treeNodes[rb_treeNodes[w].right].color == black and
+               rb_treeNodes[rb_treeNodes[w].left].color == black) {
+             rb_treeNodes[w].color := red;
+             pl_x := rb_treeNodes[pl_x].parent;
+          } else {
+             if (rb_treeNodes[rb_treeNodes[w].right].color == black) {
+                rb_treeNodes[rb_treeNodes[w].left].color := black;
+                rb_treeNodes[w].color := red;
+                f_EPTF_RBTree_rightRotate(rb_treeNodes, w, pl_root, pl_nil);
+                w := rb_treeNodes[rb_treeNodes[pl_x].parent].right;
+             }
+             rb_treeNodes[w].color := rb_treeNodes[rb_treeNodes[pl_x].parent].color;
+             rb_treeNodes[rb_treeNodes[pl_x].parent].color := black;
+             rb_treeNodes[rb_treeNodes[w].right].color := black;
+             f_EPTF_RBTree_leftRotate(rb_treeNodes, rb_treeNodes[pl_x].parent, pl_root, pl_nil);
+             pl_x := root; // this is to exit while loop
+          }
+       } else { // the code below is has left and right switched from above
+          w := rb_treeNodes[rb_treeNodes[pl_x].parent].left;
+          if (rb_treeNodes[w].color == red) {
+             rb_treeNodes[w].color := black;
+             rb_treeNodes[rb_treeNodes[pl_x].parent].color := red;
+             f_EPTF_RBTree_rightRotate(rb_treeNodes, rb_treeNodes[pl_x].parent, pl_root, pl_nil);
+             w := rb_treeNodes[rb_treeNodes[pl_x].parent].left;
+          }
+          if (rb_treeNodes[rb_treeNodes[w].right].color == black and
+               rb_treeNodes[rb_treeNodes[w].left].color == black) {
+             rb_treeNodes[w].color := red;
+             pl_x := rb_treeNodes[pl_x].parent;
+          } else {
+             if (rb_treeNodes[rb_treeNodes[w].left].color == black) {
+                rb_treeNodes[rb_treeNodes[w].right].color := black;
+                rb_treeNodes[w].color := red;
+                f_EPTF_RBTree_leftRotate(rb_treeNodes, w, pl_root, pl_nil);
+                w := rb_treeNodes[rb_treeNodes[pl_x].parent].left;
+             }
+             rb_treeNodes[w].color := rb_treeNodes[rb_treeNodes[pl_x].parent].color;
+             rb_treeNodes[rb_treeNodes[pl_x].parent].color := black;
+             rb_treeNodes[rb_treeNodes[w].left].color := black;
+             f_EPTF_RBTree_rightRotate(rb_treeNodes, rb_treeNodes[pl_x].parent, pl_root, pl_nil);
+             pl_x := root; // this is to exit while loop
+          }
+       } // else
+   } // while
+
+   rb_treeNodes[pl_x].color := black; // root is black
+
+} // f_EPTF_RBTree_helpTreeRemove
+
+
+///////////////////////////////////////////////////////////
+// Function: f_EPTF_RBTree_destroyNode
+// 
+// Purpose:
+//      removes node from the tree (colors 'unused') and places it to FIFO free chain.
+// 
+// Parameters:
+//   rb_treeNodes - *inout* <EPTF_RBTreeNodeList> - red-black-tree nodes' list
+//   pl_z - *in* *integer* - index of node to delete
+//   pl_freeHead - *inout* *integer* - head of free chain
+//   pl_freeTail - *inout* *integer* - tail of free chain
+// 
+// Return Value:
+//   (none)
+///////////////////////////////////////////////////////////
+
+friend function f_EPTF_RBTree_destroyNode(inout EPTF_RBTreeNodeList rb_treeNodes, inout integer pl_freeHead, inout integer pl_freeTail, in integer pl_z) {
+
+  rb_treeNodes[pl_z].color := unused;   //free
+
+  //put removed node to free queue
+  if (pl_freeHead == -1) {
+       // This is the first free element.
+       pl_freeHead := pl_z;
+       pl_freeTail := pl_z;
+       rb_treeNodes[pl_freeHead].left := -1;
+       rb_treeNodes[pl_freeHead].right := -1;
+  } else {
+       rb_treeNodes[pl_freeTail].right := pl_z;
+       rb_treeNodes[pl_z].left := pl_freeTail;
+       pl_freeTail := pl_z;
+       rb_treeNodes[pl_freeTail].right := -1;
+  }
+}
+
+///////////////////////////////////////////////////////////
+// Function: f_EPTF_RBTree_invalidateNode
+// 
+// Purpose:
+//      sets node of the given index (z) invalid 
+// 
+// Parameters:
+//   rb_treeNodes - *inout* <EPTF_RBTreeNodeList> - red-black-tree nodes' list
+//   pl_z - *in* *integer* - index of the tree node to invalidate
+// 
+// Return Value:
+//   (none)
+///////////////////////////////////////////////////////////
+
+friend function f_EPTF_RBTree_invalidateNode(inout EPTF_RBTreeNodeList rb_treeNodes, in integer pl_z) {
+    rb_treeNodes[pl_z].color := invalid;       
+}
+
+///////////////////////////////////////////////////////////
+// Function: f_EPTF_RBTree_destroyInvalidNode
+// 
+// Purpose:
+//      deletes invalid node
+// 
+// Parameters:
+//   rb_treeNodes - *inout* <EPTF_RBTreeNodeList> - red-black-tree nodes' list
+//   pl_z - *in* *integer* - index of the invalid float tree node to delete
+//   pl_freeHead - *inout* *integer* - head of free chain
+//   pl_freeTail - *inout* *integer* - tail of free chain
+// 
+// Return Value:
+//   boolean - success
+///////////////////////////////////////////////////////////
+
+friend function f_EPTF_RBTree_destroyInvalidNode(inout EPTF_RBTreeNodeList rb_treeNodes, inout integer pl_freeHead, inout integer pl_freeTail, in integer pl_z) return boolean {
+    
+    var boolean vl_result := false;
+    if (pl_z == -1) {
+        return false;
+    }
+    if (rb_treeNodes[pl_z].color == invalid) {
+        f_EPTF_RBTree_destroyNode(rb_treeNodes, pl_freeHead, pl_freeTail, pl_z);
+        vl_result := true;
+    } else {
+    	vl_result := false;
+    }
+    
+    return vl_result;
+}
+
+} //module

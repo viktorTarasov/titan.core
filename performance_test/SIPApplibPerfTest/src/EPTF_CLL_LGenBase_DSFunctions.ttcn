@@ -1,0 +1,1633 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_CLL_LGenBase_DSFunctions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 512
+//  Updated:  2011-06-17
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////
+//  Module: EPTF_CLL_LGenBase_DSFunctions
+// 
+//  Purpose:
+//    This module contains the implementation of EPTF_CLL_LGenBase_DSFunctions functions.
+// 
+//  Module depends on:
+//    <EPTF_CLL_Common_Definitions>
+//    <EPTF_CLL_DataSource_Definitions>
+//    <EPTF_CLL_DataSourceClient_Functions>
+//    <EPTF_CLL_Variable_Functions>
+//
+//  Module Parameters:
+//
+//  Current Owner:
+//    Janos Zoltan Svaner (ejnosvn)
+// 
+//  Last Review Date:
+//    2011-06-17
+//
+//  Detailed Comments:
+//
+//    Public functions:
+//       -
+//
+//    All other functions in this module are private! 
+//
+///////////////////////////////////////////////////////////////
+
+module EPTF_CLL_LGenBase_DSFunctions {
+
+//=========================================================================
+// Import Part
+//=========================================================================
+import from EPTF_CLL_Common_Definitions all;
+import from EPTF_CLL_LGenBase_Definitions all;
+import from EPTF_CLL_DataSource_Definitions all;
+import from EPTF_CLL_Variable_Functions all;
+import from EPTF_CLL_LGenBase_LoggingFunctions all;
+import from EPTF_CLL_LGenBase_ConfigFunctions all;
+import from EPTF_CLL_LGenBaseStats_Definitions all;
+
+friend module EPTF_CLL_LGenBase_Functions;
+//=========================================================================
+// Functions
+//========================================================================
+
+///////////////////////////////////////////////////////////
+//  Group: DataSourceClient
+// 
+//  Purpose:
+//    Functions related to DataSourceClient feature of the LGenBase
+//
+///////////////////////////////////////////////////////////
+group DataSourceClient {
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_LGenBase_DSProcessData
+  // 
+  //  Purpose:
+  //    Processes the incoming Data requests - iterators and external data elements - and gives back a variable name.
+  //    It should be registered in the LGenBase_init_CT. Type function fcb_EPTF_DataSourceClient_dataHandler
+  //
+  //  Parameters:
+  //    *out charstring pl_dataVarName* - this variable contains the value of the data or the iterator result
+  //    *in charstring pl_source* - the name of the data source 'feature'
+  //    *in charstring pl_ptcName* - the name of the ptc (ID of the PTC)  
+  //    *in charstring pl_element* - the name of the data element
+  //    *in* <EPTF_DataSource_Params> *pl_params* - the parameters
+  //      of the data for the dataElement
+  //
+  //  Return Value:
+  //    integer - error code (0 of OK, non zero if unsuccessful: e.g. invalid parameters given in pl_params)
+  //
+  //  Detailed Comments: 
+  //    -
+  //
+  ///////////////////////////////////////////////////////////
+  friend function f_EPTF_LGenBase_DSProcessData(out charstring pl_dataVarName,
+                                                in charstring pl_source,
+                                                in charstring pl_ptcName,
+                                                in charstring pl_element,
+                                                in EPTF_DataSource_Params pl_params)
+  runs on EPTF_LGenBase_Private_CT return integer{
+ 
+    var EPTF_CharstringList vl_cList := {}
+    var EPTF_CharstringList pl_result := {}
+    
+    var integer vl_idx := 0;
+    pl_dataVarName := "";
+
+    select(pl_element){
+     case(c_LGenBase_dataElementTcNrOfStarts){
+		var charstring vl_entityGrpName := "",vl_scenarioName := "",vl_trafficCaseName := "";
+        if(0 == f_EPTF_LGenBase_getParams(pl_params, {c_LGenBase_paramNameEntityGroup,c_LGenBase_paramNameScenario,c_LGenBase_paramNameTrafficCase}, pl_result)){
+           vl_entityGrpName := pl_result[0];
+           vl_scenarioName := pl_result[1];
+           vl_trafficCaseName := pl_result[2];
+           var integer vl_eGrpIdx := f_EPTF_LGenBase_getEntityGroupIdx(vl_entityGrpName);
+		   var integer vl_scIdx := f_EPTF_LGenBase_getScenarioIdx(vl_eGrpIdx, vl_scenarioName);
+		   var integer vl_tcIdx := f_EPTF_LGenBase_getTrafficCaseIdx(vl_eGrpIdx, vl_scIdx, vl_trafficCaseName);
+           if(vl_eGrpIdx > -1 and vl_scIdx > -1 and vl_tcIdx > -1){
+    	  	   pl_dataVarName := f_EPTF_LGenBase_getNamePrefix(vl_entityGrpName,vl_scenarioName,vl_trafficCaseName) & c_EPTF_LGenBaseStats_nameOfTcNrOfStarts
+           } else {
+			  if(vl_eGrpIdx == -1){
+               f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong for data element : " & c_LGenBase_dataElementTcNrOfStarts & "." &
+                "\n" & c_LGenBase_paramNameEntityGroup & ": " & vl_entityGrpName);
+			  } else {
+    			  if(vl_scIdx == -1){
+                   f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong."&
+                    "\n" & c_LGenBase_paramNameScenario & ": " & vl_scenarioName );
+    			  } else {
+        			  if(vl_tcIdx == -1){
+                       f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong."&
+                        "\n" & c_LGenBase_paramNameTrafficCase & ": " & vl_trafficCaseName);
+        			  }
+    			  }
+			  }
+           }
+       }
+     }
+     case(c_LGenBase_dataElementTcNrOfSuccesses){
+		var charstring vl_entityGrpName := "",vl_scenarioName := "",vl_trafficCaseName := "";
+        if(0 == f_EPTF_LGenBase_getParams(pl_params, {c_LGenBase_paramNameEntityGroup,c_LGenBase_paramNameScenario,c_LGenBase_paramNameTrafficCase}, pl_result)){
+           vl_entityGrpName := pl_result[0];
+           vl_scenarioName := pl_result[1];
+           vl_trafficCaseName := pl_result[2];
+           var integer vl_eGrpIdx := f_EPTF_LGenBase_getEntityGroupIdx(vl_entityGrpName);
+		   var integer vl_scIdx := f_EPTF_LGenBase_getScenarioIdx(vl_eGrpIdx, vl_scenarioName);
+		   var integer vl_tcIdx := f_EPTF_LGenBase_getTrafficCaseIdx(vl_eGrpIdx, vl_scIdx, vl_trafficCaseName);
+           if(vl_eGrpIdx > -1 and vl_scIdx > -1 and vl_tcIdx > -1){
+    	  	   pl_dataVarName := f_EPTF_LGenBase_getNamePrefix(vl_entityGrpName,vl_scenarioName,vl_trafficCaseName) & c_EPTF_LGenBaseStats_nameOfTcNrOfSuccesses
+           } else {
+			  if(vl_eGrpIdx == -1){
+               f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong for data element : " & c_LGenBase_dataElementTcNrOfSuccesses & "." &
+                "\n" & c_LGenBase_paramNameEntityGroup & ": " & vl_entityGrpName);
+			  } else {
+    			  if(vl_scIdx == -1){
+                   f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong."&
+                    "\n" & c_LGenBase_paramNameScenario & ": " & vl_scenarioName );
+    			  } else {
+        			  if(vl_tcIdx == -1){
+                       f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong."&
+                        "\n" & c_LGenBase_paramNameTrafficCase & ": " & vl_trafficCaseName);
+        			  }
+    			  }
+			  }
+           }
+       }
+     }
+     case(c_LGenBase_dataElementTcNrOfFails){
+		var charstring vl_entityGrpName := "",vl_scenarioName := "",vl_trafficCaseName := "";
+        if(0 == f_EPTF_LGenBase_getParams(pl_params, {c_LGenBase_paramNameEntityGroup,c_LGenBase_paramNameScenario,c_LGenBase_paramNameTrafficCase}, pl_result)){
+           vl_entityGrpName := pl_result[0];
+           vl_scenarioName := pl_result[1];
+           vl_trafficCaseName := pl_result[2];
+           var integer vl_eGrpIdx := f_EPTF_LGenBase_getEntityGroupIdx(vl_entityGrpName);
+		   var integer vl_scIdx := f_EPTF_LGenBase_getScenarioIdx(vl_eGrpIdx, vl_scenarioName);
+		   var integer vl_tcIdx := f_EPTF_LGenBase_getTrafficCaseIdx(vl_eGrpIdx, vl_scIdx, vl_trafficCaseName);
+           if(vl_eGrpIdx > -1 and vl_scIdx > -1 and vl_tcIdx > -1){
+    	  	   pl_dataVarName := f_EPTF_LGenBase_getNamePrefix(vl_entityGrpName,vl_scenarioName,vl_trafficCaseName) & c_EPTF_LGenBaseStats_nameOfTcNrOfFails
+           } else {
+			  if(vl_eGrpIdx == -1){
+               f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong for data element : " & c_LGenBase_dataElementTcNrOfFails & "." &
+                "\n" & c_LGenBase_paramNameEntityGroup & ": " & vl_entityGrpName);
+			  } else {
+    			  if(vl_scIdx == -1){
+                   f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong."&
+                    "\n" & c_LGenBase_paramNameScenario & ": " & vl_scenarioName );
+    			  } else {
+        			  if(vl_tcIdx == -1){
+                       f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong."&
+                        "\n" & c_LGenBase_paramNameTrafficCase & ": " & vl_trafficCaseName);
+        			  }
+    			  }
+			  }
+           }
+       }
+     }
+     case(c_LGenBase_dataElementTcNrOfNotFinishedEntities){
+		var charstring vl_entityGrpName := "",vl_scenarioName := "",vl_trafficCaseName := "";
+        if(0 == f_EPTF_LGenBase_getParams(pl_params, {c_LGenBase_paramNameEntityGroup,c_LGenBase_paramNameScenario,c_LGenBase_paramNameTrafficCase}, pl_result)){
+           vl_entityGrpName := pl_result[0];
+           vl_scenarioName := pl_result[1];
+           vl_trafficCaseName := pl_result[2];
+           var integer vl_eGrpIdx := f_EPTF_LGenBase_getEntityGroupIdx(vl_entityGrpName);
+		   var integer vl_scIdx := f_EPTF_LGenBase_getScenarioIdx(vl_eGrpIdx, vl_scenarioName);
+		   var integer vl_tcIdx := f_EPTF_LGenBase_getTrafficCaseIdx(vl_eGrpIdx, vl_scIdx, vl_trafficCaseName);
+           if(vl_eGrpIdx > -1 and vl_scIdx > -1 and vl_tcIdx > -1){
+    	  	   pl_dataVarName := f_EPTF_LGenBase_getNamePrefix(vl_entityGrpName,vl_scenarioName,vl_trafficCaseName) & c_EPTF_LGenBaseStats_nameOfTcNrOfNotFinishedEntities
+           } else {
+			  if(vl_eGrpIdx == -1){
+               f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong for data element : " & c_LGenBase_dataElementTcNrOfNotFinishedEntities & "." &
+                "\n" & c_LGenBase_paramNameEntityGroup & ": " & vl_entityGrpName);
+			  } else {
+    			  if(vl_scIdx == -1){
+                   f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong."&
+                    "\n" & c_LGenBase_paramNameScenario & ": " & vl_scenarioName );
+    			  } else {
+        			  if(vl_tcIdx == -1){
+                       f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong."&
+                        "\n" & c_LGenBase_paramNameTrafficCase & ": " & vl_trafficCaseName);
+        			  }
+    			  }
+			  }
+           }
+       }
+     }
+     case(c_LGenBase_dataElementTcNrOfAllEntities){
+		var charstring vl_entityGrpName := "",vl_scenarioName := "",vl_trafficCaseName := "";
+        if(0 == f_EPTF_LGenBase_getParams(pl_params, {c_LGenBase_paramNameEntityGroup,c_LGenBase_paramNameScenario,c_LGenBase_paramNameTrafficCase}, pl_result)){
+           vl_entityGrpName := pl_result[0];
+           vl_scenarioName := pl_result[1];
+           vl_trafficCaseName := pl_result[2];
+           var integer vl_eGrpIdx := f_EPTF_LGenBase_getEntityGroupIdx(vl_entityGrpName);
+		   var integer vl_scIdx := f_EPTF_LGenBase_getScenarioIdx(vl_eGrpIdx, vl_scenarioName);
+		   var integer vl_tcIdx := f_EPTF_LGenBase_getTrafficCaseIdx(vl_eGrpIdx, vl_scIdx, vl_trafficCaseName);
+           if(vl_eGrpIdx > -1 and vl_scIdx > -1 and vl_tcIdx > -1){
+    	  	   pl_dataVarName := f_EPTF_LGenBase_getNamePrefix(vl_entityGrpName,vl_scenarioName,vl_trafficCaseName) & c_EPTF_LGenBaseStats_nameOfTcNrOfAllEntities
+           } else {
+			  if(vl_eGrpIdx == -1){
+               f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong for data element : " & c_LGenBase_dataElementTcNrOfAllEntities & "." &
+                "\n" & c_LGenBase_paramNameEntityGroup & ": " & vl_entityGrpName);
+			  } else {
+    			  if(vl_scIdx == -1){
+                   f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong."&
+                    "\n" & c_LGenBase_paramNameScenario & ": " & vl_scenarioName );
+    			  } else {
+        			  if(vl_tcIdx == -1){
+                       f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong."&
+                        "\n" & c_LGenBase_paramNameTrafficCase & ": " & vl_trafficCaseName);
+        			  }
+    			  }
+			  }
+           }
+       }
+     }
+     case(c_LGenBase_dataElementTcNrOfRunningEntities){
+		var charstring vl_entityGrpName := "",vl_scenarioName := "",vl_trafficCaseName := "";
+        if(0 == f_EPTF_LGenBase_getParams(pl_params, {c_LGenBase_paramNameEntityGroup,c_LGenBase_paramNameScenario,c_LGenBase_paramNameTrafficCase}, pl_result)){
+           vl_entityGrpName := pl_result[0];
+           vl_scenarioName := pl_result[1];
+           vl_trafficCaseName := pl_result[2];
+           var integer vl_eGrpIdx := f_EPTF_LGenBase_getEntityGroupIdx(vl_entityGrpName);
+		   var integer vl_scIdx := f_EPTF_LGenBase_getScenarioIdx(vl_eGrpIdx, vl_scenarioName);
+		   var integer vl_tcIdx := f_EPTF_LGenBase_getTrafficCaseIdx(vl_eGrpIdx, vl_scIdx, vl_trafficCaseName);
+           if(vl_eGrpIdx > -1 and vl_scIdx > -1 and vl_tcIdx > -1){
+    	  	   pl_dataVarName := f_EPTF_LGenBase_getNamePrefix(vl_entityGrpName,vl_scenarioName,vl_trafficCaseName) & c_EPTF_LGenBaseStats_nameOfTcNrOfRunningEntities
+           } else {
+			  if(vl_eGrpIdx == -1){
+               f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong for data element : " & c_LGenBase_dataElementTcNrOfRunningEntities & "." &
+                "\n" & c_LGenBase_paramNameEntityGroup & ": " & vl_entityGrpName);
+			  } else {
+    			  if(vl_scIdx == -1){
+                   f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong."&
+                    "\n" & c_LGenBase_paramNameScenario & ": " & vl_scenarioName );
+    			  } else {
+        			  if(vl_tcIdx == -1){
+                       f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong."&
+                        "\n" & c_LGenBase_paramNameTrafficCase & ": " & vl_trafficCaseName);
+        			  }
+    			  }
+			  }
+           }
+       }
+     }
+     case(c_LGenBase_dataElementTcNrOfAvailableEntities){
+		var charstring vl_entityGrpName := "",vl_scenarioName := "",vl_trafficCaseName := "";
+        if(0 == f_EPTF_LGenBase_getParams(pl_params, {c_LGenBase_paramNameEntityGroup,c_LGenBase_paramNameScenario,c_LGenBase_paramNameTrafficCase}, pl_result)){
+           vl_entityGrpName := pl_result[0];
+           vl_scenarioName := pl_result[1];
+           vl_trafficCaseName := pl_result[2];
+           var integer vl_eGrpIdx := f_EPTF_LGenBase_getEntityGroupIdx(vl_entityGrpName);
+		   var integer vl_scIdx := f_EPTF_LGenBase_getScenarioIdx(vl_eGrpIdx, vl_scenarioName);
+		   var integer vl_tcIdx := f_EPTF_LGenBase_getTrafficCaseIdx(vl_eGrpIdx, vl_scIdx, vl_trafficCaseName);
+           if(vl_eGrpIdx > -1 and vl_scIdx > -1 and vl_tcIdx > -1){
+    	  	   pl_dataVarName := f_EPTF_LGenBase_getNamePrefix(vl_entityGrpName,vl_scenarioName,vl_trafficCaseName) & c_EPTF_LGenBaseStats_nameOfTcNrOfAvailableEntities
+           } else {
+			  if(vl_eGrpIdx == -1){
+               f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong for data element : " & c_LGenBase_dataElementTcNrOfAvailableEntities & "." &
+                "\n" & c_LGenBase_paramNameEntityGroup & ": " & vl_entityGrpName);
+			  } else {
+    			  if(vl_scIdx == -1){
+                   f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong."&
+                    "\n" & c_LGenBase_paramNameScenario & ": " & vl_scenarioName );
+    			  } else {
+        			  if(vl_tcIdx == -1){
+                       f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong."&
+                        "\n" & c_LGenBase_paramNameTrafficCase & ": " & vl_trafficCaseName);
+        			  }
+    			  }
+			  }
+           }
+       }
+     }
+     case(c_LGenBase_dataElementTcState){
+		var charstring vl_entityGrpName := "",vl_scenarioName := "",vl_trafficCaseName := "";
+        if(0 == f_EPTF_LGenBase_getParams(pl_params, {c_LGenBase_paramNameEntityGroup,c_LGenBase_paramNameScenario,c_LGenBase_paramNameTrafficCase}, pl_result)){
+           vl_entityGrpName := pl_result[0];
+           vl_scenarioName := pl_result[1];
+           vl_trafficCaseName := pl_result[2];
+           var integer vl_eGrpIdx := f_EPTF_LGenBase_getEntityGroupIdx(vl_entityGrpName);
+		   var integer vl_scIdx := f_EPTF_LGenBase_getScenarioIdx(vl_eGrpIdx, vl_scenarioName);
+		   var integer vl_tcIdx := f_EPTF_LGenBase_getTrafficCaseIdx(vl_eGrpIdx, vl_scIdx, vl_trafficCaseName);
+           if(vl_eGrpIdx > -1 and vl_scIdx > -1 and vl_tcIdx > -1){
+    	  	   pl_dataVarName := f_EPTF_LGenBase_getNamePrefix(vl_entityGrpName,vl_scenarioName,vl_trafficCaseName) & c_EPTF_LGenBaseStats_nameOfTcState
+           } else {
+			  if(vl_eGrpIdx == -1){
+               f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong for data element : " & c_LGenBase_dataElementTcState & "." &
+                "\n" & c_LGenBase_paramNameEntityGroup & ": " & vl_entityGrpName);
+			  } else {
+    			  if(vl_scIdx == -1){
+                   f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong."&
+                    "\n" & c_LGenBase_paramNameScenario & ": " & vl_scenarioName );
+    			  } else {
+        			  if(vl_tcIdx == -1){
+                       f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong."&
+                        "\n" & c_LGenBase_paramNameTrafficCase & ": " & vl_trafficCaseName);
+        			  }
+    			  }
+			  }
+           }
+       }
+     }
+     case(c_LGenBase_dataElementTcStateName){
+		var charstring vl_entityGrpName := "",vl_scenarioName := "",vl_trafficCaseName := "";
+        if(0 == f_EPTF_LGenBase_getParams(pl_params, {c_LGenBase_paramNameEntityGroup,c_LGenBase_paramNameScenario,c_LGenBase_paramNameTrafficCase}, pl_result)){
+           vl_entityGrpName := pl_result[0];
+           vl_scenarioName := pl_result[1];
+           vl_trafficCaseName := pl_result[2];
+           var integer vl_eGrpIdx := f_EPTF_LGenBase_getEntityGroupIdx(vl_entityGrpName);
+		   var integer vl_scIdx := f_EPTF_LGenBase_getScenarioIdx(vl_eGrpIdx, vl_scenarioName);
+		   var integer vl_tcIdx := f_EPTF_LGenBase_getTrafficCaseIdx(vl_eGrpIdx, vl_scIdx, vl_trafficCaseName);
+           if(vl_eGrpIdx > -1 and vl_scIdx > -1 and vl_tcIdx > -1){
+    	  	   pl_dataVarName := f_EPTF_LGenBase_getNamePrefix(vl_entityGrpName,vl_scenarioName,vl_trafficCaseName) & c_EPTF_LGenBaseStats_nameOfTcStateName
+           } else {
+			  if(vl_eGrpIdx == -1){
+               f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong for data element : " & c_LGenBase_dataElementTcStateName & "." &
+                "\n" & c_LGenBase_paramNameEntityGroup & ": " & vl_entityGrpName);
+			  } else {
+    			  if(vl_scIdx == -1){
+                   f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong."&
+                    "\n" & c_LGenBase_paramNameScenario & ": " & vl_scenarioName );
+    			  } else {
+        			  if(vl_tcIdx == -1){
+                       f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong."&
+                        "\n" & c_LGenBase_paramNameTrafficCase & ": " & vl_trafficCaseName);
+        			  }
+    			  }
+			  }
+           }
+       }
+     }
+     case(c_LGenBase_dataElementTcUserData){
+		var charstring vl_entityGrpName := "",vl_scenarioName := "",vl_trafficCaseName := "";
+        if(0 == f_EPTF_LGenBase_getParams(pl_params, {c_LGenBase_paramNameEntityGroup,c_LGenBase_paramNameScenario,c_LGenBase_paramNameTrafficCase}, pl_result)){
+           vl_entityGrpName := pl_result[0];
+           vl_scenarioName := pl_result[1];
+           vl_trafficCaseName := pl_result[2];
+           var integer vl_eGrpIdx := f_EPTF_LGenBase_getEntityGroupIdx(vl_entityGrpName);
+		   var integer vl_scIdx := f_EPTF_LGenBase_getScenarioIdx(vl_eGrpIdx, vl_scenarioName);
+		   var integer vl_tcIdx := f_EPTF_LGenBase_getTrafficCaseIdx(vl_eGrpIdx, vl_scIdx, vl_trafficCaseName);
+           if(vl_eGrpIdx > -1 and vl_scIdx > -1 and vl_tcIdx > -1){
+    	  	   pl_dataVarName := f_EPTF_LGenBase_getNamePrefix(vl_entityGrpName,vl_scenarioName,vl_trafficCaseName) & c_EPTF_LGenBaseStats_nameOfTcUserData
+           } else {
+			  if(vl_eGrpIdx == -1){
+               f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong for data element : " & c_LGenBase_dataElementTcUserData & "." &
+                "\n" & c_LGenBase_paramNameEntityGroup & ": " & vl_entityGrpName);
+			  } else {
+    			  if(vl_scIdx == -1){
+                   f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong."&
+                    "\n" & c_LGenBase_paramNameScenario & ": " & vl_scenarioName );
+    			  } else {
+        			  if(vl_tcIdx == -1){
+                       f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong."&
+                        "\n" & c_LGenBase_paramNameTrafficCase & ": " & vl_trafficCaseName);
+        			  }
+    			  }
+			  }
+           }
+       }
+     }
+     case(c_LGenBase_dataElementTcSentMessages){
+		var charstring vl_entityGrpName := "",vl_scenarioName := "",vl_trafficCaseName := "";
+        if(0 == f_EPTF_LGenBase_getParams(pl_params, {c_LGenBase_paramNameEntityGroup,c_LGenBase_paramNameScenario,c_LGenBase_paramNameTrafficCase}, pl_result)){
+           vl_entityGrpName := pl_result[0];
+           vl_scenarioName := pl_result[1];
+           vl_trafficCaseName := pl_result[2];
+           var integer vl_eGrpIdx := f_EPTF_LGenBase_getEntityGroupIdx(vl_entityGrpName);
+		   var integer vl_scIdx := f_EPTF_LGenBase_getScenarioIdx(vl_eGrpIdx, vl_scenarioName);
+		   var integer vl_tcIdx := f_EPTF_LGenBase_getTrafficCaseIdx(vl_eGrpIdx, vl_scIdx, vl_trafficCaseName);
+           if(vl_eGrpIdx > -1 and vl_scIdx > -1 and vl_tcIdx > -1){
+    	  	   pl_dataVarName := f_EPTF_LGenBase_getNamePrefix(vl_entityGrpName,vl_scenarioName,vl_trafficCaseName) & c_EPTF_LGenBaseStats_nameOfTcSentMessages
+           } else {
+			  if(vl_eGrpIdx == -1){
+               f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong for data element : " & c_LGenBase_dataElementTcSentMessages & "." &
+                "\n" & c_LGenBase_paramNameEntityGroup & ": " & vl_entityGrpName);
+			  } else {
+    			  if(vl_scIdx == -1){
+                   f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong."&
+                    "\n" & c_LGenBase_paramNameScenario & ": " & vl_scenarioName );
+    			  } else {
+        			  if(vl_tcIdx == -1){
+                       f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong."&
+                        "\n" & c_LGenBase_paramNameTrafficCase & ": " & vl_trafficCaseName);
+        			  }
+    			  }
+			  }
+           }
+       }
+     }
+     case(c_LGenBase_dataElementTcReceivedAnswers){
+		var charstring vl_entityGrpName := "",vl_scenarioName := "",vl_trafficCaseName := "";
+        if(0 == f_EPTF_LGenBase_getParams(pl_params, {c_LGenBase_paramNameEntityGroup,c_LGenBase_paramNameScenario,c_LGenBase_paramNameTrafficCase}, pl_result)){
+           vl_entityGrpName := pl_result[0];
+           vl_scenarioName := pl_result[1];
+           vl_trafficCaseName := pl_result[2];
+           var integer vl_eGrpIdx := f_EPTF_LGenBase_getEntityGroupIdx(vl_entityGrpName);
+		   var integer vl_scIdx := f_EPTF_LGenBase_getScenarioIdx(vl_eGrpIdx, vl_scenarioName);
+		   var integer vl_tcIdx := f_EPTF_LGenBase_getTrafficCaseIdx(vl_eGrpIdx, vl_scIdx, vl_trafficCaseName);
+           if(vl_eGrpIdx > -1 and vl_scIdx > -1 and vl_tcIdx > -1){
+    	  	   pl_dataVarName := f_EPTF_LGenBase_getNamePrefix(vl_entityGrpName,vl_scenarioName,vl_trafficCaseName) & c_EPTF_LGenBaseStats_nameOfTcReceivedAnswers
+           } else {
+			  if(vl_eGrpIdx == -1){
+               f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong for data element : " & c_LGenBase_dataElementTcReceivedAnswers & "." &
+                "\n" & c_LGenBase_paramNameEntityGroup & ": " & vl_entityGrpName);
+			  } else {
+    			  if(vl_scIdx == -1){
+                   f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong."&
+                    "\n" & c_LGenBase_paramNameScenario & ": " & vl_scenarioName );
+    			  } else {
+        			  if(vl_tcIdx == -1){
+                       f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong."&
+                        "\n" & c_LGenBase_paramNameTrafficCase & ": " & vl_trafficCaseName);
+        			  }
+    			  }
+			  }
+           }
+       }
+     }
+     case(c_LGenBase_dataElementTcRangeLoops){
+		var charstring vl_entityGrpName := "",vl_scenarioName := "",vl_trafficCaseName := "";
+        if(0 == f_EPTF_LGenBase_getParams(pl_params, {c_LGenBase_paramNameEntityGroup,c_LGenBase_paramNameScenario,c_LGenBase_paramNameTrafficCase}, pl_result)){
+           vl_entityGrpName := pl_result[0];
+           vl_scenarioName := pl_result[1];
+           vl_trafficCaseName := pl_result[2];
+           var integer vl_eGrpIdx := f_EPTF_LGenBase_getEntityGroupIdx(vl_entityGrpName);
+		   var integer vl_scIdx := f_EPTF_LGenBase_getScenarioIdx(vl_eGrpIdx, vl_scenarioName);
+		   var integer vl_tcIdx := f_EPTF_LGenBase_getTrafficCaseIdx(vl_eGrpIdx, vl_scIdx, vl_trafficCaseName);
+           if(vl_eGrpIdx > -1 and vl_scIdx > -1 and vl_tcIdx > -1){
+    	  	   pl_dataVarName := f_EPTF_LGenBase_getNamePrefix(vl_entityGrpName,vl_scenarioName,vl_trafficCaseName) & c_EPTF_LGenBaseStats_nameOfTcRangeLoops
+           } else {
+			  if(vl_eGrpIdx == -1){
+               f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong for data element : " & c_LGenBase_dataElementTcRangeLoops & "." &
+                "\n" & c_LGenBase_paramNameEntityGroup & ": " & vl_entityGrpName);
+			  } else {
+    			  if(vl_scIdx == -1){
+                   f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong."&
+                    "\n" & c_LGenBase_paramNameScenario & ": " & vl_scenarioName );
+    			  } else {
+        			  if(vl_tcIdx == -1){
+                       f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong."&
+                        "\n" & c_LGenBase_paramNameTrafficCase & ": " & vl_trafficCaseName);
+        			  }
+    			  }
+			  }
+           }
+       }
+     }
+     case(c_LGenBase_dataElementTcCpsToReach){
+		var charstring vl_entityGrpName := "",vl_scenarioName := "",vl_trafficCaseName := "";
+        if(0 == f_EPTF_LGenBase_getParams(pl_params, {c_LGenBase_paramNameEntityGroup,c_LGenBase_paramNameScenario,c_LGenBase_paramNameTrafficCase}, pl_result)){
+           vl_entityGrpName := pl_result[0];
+           vl_scenarioName := pl_result[1];
+           vl_trafficCaseName := pl_result[2];
+           var integer vl_eGrpIdx := f_EPTF_LGenBase_getEntityGroupIdx(vl_entityGrpName);
+		   var integer vl_scIdx := f_EPTF_LGenBase_getScenarioIdx(vl_eGrpIdx, vl_scenarioName);
+		   var integer vl_tcIdx := f_EPTF_LGenBase_getTrafficCaseIdx(vl_eGrpIdx, vl_scIdx, vl_trafficCaseName);
+           if(vl_eGrpIdx > -1 and vl_scIdx > -1 and vl_tcIdx > -1){
+    	  	   pl_dataVarName := f_EPTF_LGenBase_getNamePrefix(vl_entityGrpName,vl_scenarioName,vl_trafficCaseName) & c_EPTF_LGenBaseStats_nameOfTcCpsToReach
+           } else {
+			  if(vl_eGrpIdx == -1){
+               f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong for data element : " & c_LGenBase_dataElementTcCpsToReach & "." &
+                "\n" & c_LGenBase_paramNameEntityGroup & ": " & vl_entityGrpName);
+			  } else {
+    			  if(vl_scIdx == -1){
+                   f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong."&
+                    "\n" & c_LGenBase_paramNameScenario & ": " & vl_scenarioName );
+    			  } else {
+        			  if(vl_tcIdx == -1){
+                       f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong."&
+                        "\n" & c_LGenBase_paramNameTrafficCase & ": " & vl_trafficCaseName);
+        			  }
+    			  }
+			  }
+           }
+       }
+     }
+     case(c_LGenBase_dataElementTcLastCps){
+		var charstring vl_entityGrpName := "",vl_scenarioName := "",vl_trafficCaseName := "";
+        if(0 == f_EPTF_LGenBase_getParams(pl_params, {c_LGenBase_paramNameEntityGroup,c_LGenBase_paramNameScenario,c_LGenBase_paramNameTrafficCase}, pl_result)){
+           vl_entityGrpName := pl_result[0];
+           vl_scenarioName := pl_result[1];
+           vl_trafficCaseName := pl_result[2];
+           var integer vl_eGrpIdx := f_EPTF_LGenBase_getEntityGroupIdx(vl_entityGrpName);
+		   var integer vl_scIdx := f_EPTF_LGenBase_getScenarioIdx(vl_eGrpIdx, vl_scenarioName);
+		   var integer vl_tcIdx := f_EPTF_LGenBase_getTrafficCaseIdx(vl_eGrpIdx, vl_scIdx, vl_trafficCaseName);
+           if(vl_eGrpIdx > -1 and vl_scIdx > -1 and vl_tcIdx > -1){
+    	  	   pl_dataVarName := f_EPTF_LGenBase_getNamePrefix(vl_entityGrpName,vl_scenarioName,vl_trafficCaseName) & c_EPTF_LGenBaseStats_nameOfTcLastCps
+           } else {
+			  if(vl_eGrpIdx == -1){
+               f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong for data element : " & c_LGenBase_dataElementTcLastCps & "." &
+                "\n" & c_LGenBase_paramNameEntityGroup & ": " & vl_entityGrpName);
+			  } else {
+    			  if(vl_scIdx == -1){
+                   f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong."&
+                    "\n" & c_LGenBase_paramNameScenario & ": " & vl_scenarioName );
+    			  } else {
+        			  if(vl_tcIdx == -1){
+                       f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong."&
+                        "\n" & c_LGenBase_paramNameTrafficCase & ": " & vl_trafficCaseName);
+        			  }
+    			  }
+			  }
+           }
+       }
+     }
+     case(c_LGenBase_dataElementTcName){
+		var charstring vl_entityGrpName := "",vl_scenarioName := "",vl_trafficCaseName := "";
+        if(0 == f_EPTF_LGenBase_getParams(pl_params, {c_LGenBase_paramNameEntityGroup,c_LGenBase_paramNameScenario,c_LGenBase_paramNameTrafficCase}, pl_result)){
+           vl_entityGrpName := pl_result[0];
+           vl_scenarioName := pl_result[1];
+           vl_trafficCaseName := pl_result[2];
+           var integer vl_eGrpIdx := f_EPTF_LGenBase_getEntityGroupIdx(vl_entityGrpName);
+		   var integer vl_scIdx := f_EPTF_LGenBase_getScenarioIdx(vl_eGrpIdx, vl_scenarioName);
+		   var integer vl_tcIdx := f_EPTF_LGenBase_getTrafficCaseIdx(vl_eGrpIdx, vl_scIdx, vl_trafficCaseName);
+           if(vl_eGrpIdx > -1 and vl_scIdx > -1 and vl_tcIdx > -1){
+    	  	   pl_dataVarName := f_EPTF_LGenBase_getNamePrefix(vl_entityGrpName,vl_scenarioName,vl_trafficCaseName) & c_EPTF_LGenBaseStats_nameOfTcName
+           } else {
+			  if(vl_eGrpIdx == -1){
+               f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong for data element : " & c_LGenBase_dataElementTcName & "." &
+                "\n" & c_LGenBase_paramNameEntityGroup & ": " & vl_entityGrpName);
+			  } else {
+    			  if(vl_scIdx == -1){
+                   f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong."&
+                    "\n" & c_LGenBase_paramNameScenario & ": " & vl_scenarioName );
+    			  } else {
+        			  if(vl_tcIdx == -1){
+                       f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong."&
+                        "\n" & c_LGenBase_paramNameTrafficCase & ": " & vl_trafficCaseName);
+        			  }
+    			  }
+			  }
+           }
+       }
+     }
+     case(c_LGenBase_dataElementTcUniqueName){
+		var charstring vl_entityGrpName := "",vl_scenarioName := "",vl_trafficCaseName := "";
+        if(0 == f_EPTF_LGenBase_getParams(pl_params, {c_LGenBase_paramNameEntityGroup,c_LGenBase_paramNameScenario,c_LGenBase_paramNameTrafficCase}, pl_result)){
+           vl_entityGrpName := pl_result[0];
+           vl_scenarioName := pl_result[1];
+           vl_trafficCaseName := pl_result[2];
+           var integer vl_eGrpIdx := f_EPTF_LGenBase_getEntityGroupIdx(vl_entityGrpName);
+		   var integer vl_scIdx := f_EPTF_LGenBase_getScenarioIdx(vl_eGrpIdx, vl_scenarioName);
+		   var integer vl_tcIdx := f_EPTF_LGenBase_getTrafficCaseIdx(vl_eGrpIdx, vl_scIdx, vl_trafficCaseName);
+           if(vl_eGrpIdx > -1 and vl_scIdx > -1 and vl_tcIdx > -1){
+    	  	   pl_dataVarName := f_EPTF_LGenBase_getNamePrefix(vl_entityGrpName,vl_scenarioName,vl_trafficCaseName) & c_EPTF_LGenBaseStats_nameOfTcUniqueName
+           } else {
+			  if(vl_eGrpIdx == -1){
+               f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong for data element : " & c_LGenBase_dataElementTcUniqueName & "." &
+                "\n" & c_LGenBase_paramNameEntityGroup & ": " & vl_entityGrpName);
+			  } else {
+    			  if(vl_scIdx == -1){
+                   f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong."&
+                    "\n" & c_LGenBase_paramNameScenario & ": " & vl_scenarioName );
+    			  } else {
+        			  if(vl_tcIdx == -1){
+                       f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong."&
+                        "\n" & c_LGenBase_paramNameTrafficCase & ": " & vl_trafficCaseName);
+        			  }
+    			  }
+			  }
+           }
+       }
+     }
+     case(c_LGenBase_dataElementTcEnabled){
+		var charstring vl_entityGrpName := "",vl_scenarioName := "",vl_trafficCaseName := "";
+        if(0 == f_EPTF_LGenBase_getParams(pl_params, {c_LGenBase_paramNameEntityGroup,c_LGenBase_paramNameScenario,c_LGenBase_paramNameTrafficCase}, pl_result)){
+           vl_entityGrpName := pl_result[0];
+           vl_scenarioName := pl_result[1];
+           vl_trafficCaseName := pl_result[2];
+           var integer vl_eGrpIdx := f_EPTF_LGenBase_getEntityGroupIdx(vl_entityGrpName);
+		   var integer vl_scIdx := f_EPTF_LGenBase_getScenarioIdx(vl_eGrpIdx, vl_scenarioName);
+		   var integer vl_tcIdx := f_EPTF_LGenBase_getTrafficCaseIdx(vl_eGrpIdx, vl_scIdx, vl_trafficCaseName);
+           if(vl_eGrpIdx > -1 and vl_scIdx > -1 and vl_tcIdx > -1){
+    	  	   pl_dataVarName := f_EPTF_LGenBase_getNamePrefix(vl_entityGrpName,vl_scenarioName,vl_trafficCaseName) & c_EPTF_LGenBaseStats_nameOfTcEnabled
+           } else {
+			  if(vl_eGrpIdx == -1){
+               f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong for data element : " & c_LGenBase_dataElementTcEnabled & "." &
+                "\n" & c_LGenBase_paramNameEntityGroup & ": " & vl_entityGrpName);
+			  } else {
+    			  if(vl_scIdx == -1){
+                   f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong."&
+                    "\n" & c_LGenBase_paramNameScenario & ": " & vl_scenarioName );
+    			  } else {
+        			  if(vl_tcIdx == -1){
+                       f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong."&
+                        "\n" & c_LGenBase_paramNameTrafficCase & ": " & vl_trafficCaseName);
+        			  }
+    			  }
+			  }
+           }
+       }
+     }
+     case(c_LGenBase_dataElementTcMinAvailable){
+		var charstring vl_entityGrpName := "",vl_scenarioName := "",vl_trafficCaseName := "";
+        if(0 == f_EPTF_LGenBase_getParams(pl_params, {c_LGenBase_paramNameEntityGroup,c_LGenBase_paramNameScenario,c_LGenBase_paramNameTrafficCase}, pl_result)){
+           vl_entityGrpName := pl_result[0];
+           vl_scenarioName := pl_result[1];
+           vl_trafficCaseName := pl_result[2];
+           var integer vl_eGrpIdx := f_EPTF_LGenBase_getEntityGroupIdx(vl_entityGrpName);
+		   var integer vl_scIdx := f_EPTF_LGenBase_getScenarioIdx(vl_eGrpIdx, vl_scenarioName);
+		   var integer vl_tcIdx := f_EPTF_LGenBase_getTrafficCaseIdx(vl_eGrpIdx, vl_scIdx, vl_trafficCaseName);
+           if(vl_eGrpIdx > -1 and vl_scIdx > -1 and vl_tcIdx > -1){
+    	  	   pl_dataVarName := f_EPTF_LGenBase_getNamePrefix(vl_entityGrpName,vl_scenarioName,vl_trafficCaseName) & c_EPTF_LGenBaseStats_nameOfTcMinAvailable
+           } else {
+			  if(vl_eGrpIdx == -1){
+               f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong for data element : " & c_LGenBase_dataElementTcMinAvailable & "." &
+                "\n" & c_LGenBase_paramNameEntityGroup & ": " & vl_entityGrpName);
+			  } else {
+    			  if(vl_scIdx == -1){
+                   f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong."&
+                    "\n" & c_LGenBase_paramNameScenario & ": " & vl_scenarioName );
+    			  } else {
+        			  if(vl_tcIdx == -1){
+                       f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong."&
+                        "\n" & c_LGenBase_paramNameTrafficCase & ": " & vl_trafficCaseName);
+        			  }
+    			  }
+			  }
+           }
+       }
+     }
+     case(c_LGenBase_dataElementTcMaxRunning){
+		var charstring vl_entityGrpName := "",vl_scenarioName := "",vl_trafficCaseName := "";
+        if(0 == f_EPTF_LGenBase_getParams(pl_params, {c_LGenBase_paramNameEntityGroup,c_LGenBase_paramNameScenario,c_LGenBase_paramNameTrafficCase}, pl_result)){
+           vl_entityGrpName := pl_result[0];
+           vl_scenarioName := pl_result[1];
+           vl_trafficCaseName := pl_result[2];
+           var integer vl_eGrpIdx := f_EPTF_LGenBase_getEntityGroupIdx(vl_entityGrpName);
+		   var integer vl_scIdx := f_EPTF_LGenBase_getScenarioIdx(vl_eGrpIdx, vl_scenarioName);
+		   var integer vl_tcIdx := f_EPTF_LGenBase_getTrafficCaseIdx(vl_eGrpIdx, vl_scIdx, vl_trafficCaseName);
+           if(vl_eGrpIdx > -1 and vl_scIdx > -1 and vl_tcIdx > -1){
+    	  	   pl_dataVarName := f_EPTF_LGenBase_getNamePrefix(vl_entityGrpName,vl_scenarioName,vl_trafficCaseName) & c_EPTF_LGenBaseStats_nameOfTcMaxRunning
+           } else {
+			  if(vl_eGrpIdx == -1){
+               f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong for data element : " & c_LGenBase_dataElementTcMaxRunning & "." &
+                "\n" & c_LGenBase_paramNameEntityGroup & ": " & vl_entityGrpName);
+			  } else {
+    			  if(vl_scIdx == -1){
+                   f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong."&
+                    "\n" & c_LGenBase_paramNameScenario & ": " & vl_scenarioName );
+    			  } else {
+        			  if(vl_tcIdx == -1){
+                       f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong."&
+                        "\n" & c_LGenBase_paramNameTrafficCase & ": " & vl_trafficCaseName);
+        			  }
+    			  }
+			  }
+           }
+       }
+     }
+     case(c_LGenBase_dataElementTcMaxBusy){
+		var charstring vl_entityGrpName := "",vl_scenarioName := "",vl_trafficCaseName := "";
+        if(0 == f_EPTF_LGenBase_getParams(pl_params, {c_LGenBase_paramNameEntityGroup,c_LGenBase_paramNameScenario,c_LGenBase_paramNameTrafficCase}, pl_result)){
+           vl_entityGrpName := pl_result[0];
+           vl_scenarioName := pl_result[1];
+           vl_trafficCaseName := pl_result[2];
+           var integer vl_eGrpIdx := f_EPTF_LGenBase_getEntityGroupIdx(vl_entityGrpName);
+		   var integer vl_scIdx := f_EPTF_LGenBase_getScenarioIdx(vl_eGrpIdx, vl_scenarioName);
+		   var integer vl_tcIdx := f_EPTF_LGenBase_getTrafficCaseIdx(vl_eGrpIdx, vl_scIdx, vl_trafficCaseName);
+           if(vl_eGrpIdx > -1 and vl_scIdx > -1 and vl_tcIdx > -1){
+    	  	   pl_dataVarName := f_EPTF_LGenBase_getNamePrefix(vl_entityGrpName,vl_scenarioName,vl_trafficCaseName) & c_EPTF_LGenBaseStats_nameOfTcMaxBusy
+           } else {
+			  if(vl_eGrpIdx == -1){
+               f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong for data element : " & c_LGenBase_dataElementTcMaxBusy & "." &
+                "\n" & c_LGenBase_paramNameEntityGroup & ": " & vl_entityGrpName);
+			  } else {
+    			  if(vl_scIdx == -1){
+                   f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong."&
+                    "\n" & c_LGenBase_paramNameScenario & ": " & vl_scenarioName );
+    			  } else {
+        			  if(vl_tcIdx == -1){
+                       f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong."&
+                        "\n" & c_LGenBase_paramNameTrafficCase & ": " & vl_trafficCaseName);
+        			  }
+    			  }
+			  }
+           }
+       }
+     }
+     case(c_LGenBase_dataElementTcWeight){
+		var charstring vl_entityGrpName := "",vl_scenarioName := "",vl_trafficCaseName := "";
+        if(0 == f_EPTF_LGenBase_getParams(pl_params, {c_LGenBase_paramNameEntityGroup,c_LGenBase_paramNameScenario,c_LGenBase_paramNameTrafficCase}, pl_result)){
+           vl_entityGrpName := pl_result[0];
+           vl_scenarioName := pl_result[1];
+           vl_trafficCaseName := pl_result[2];
+           var integer vl_eGrpIdx := f_EPTF_LGenBase_getEntityGroupIdx(vl_entityGrpName);
+		   var integer vl_scIdx := f_EPTF_LGenBase_getScenarioIdx(vl_eGrpIdx, vl_scenarioName);
+		   var integer vl_tcIdx := f_EPTF_LGenBase_getTrafficCaseIdx(vl_eGrpIdx, vl_scIdx, vl_trafficCaseName);
+           if(vl_eGrpIdx > -1 and vl_scIdx > -1 and vl_tcIdx > -1){
+    	  	   pl_dataVarName := f_EPTF_LGenBase_getNamePrefix(vl_entityGrpName,vl_scenarioName,vl_trafficCaseName) & c_EPTF_LGenBaseStats_nameOfTcWeight
+           } else {
+			  if(vl_eGrpIdx == -1){
+               f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong for data element : " & c_LGenBase_dataElementTcWeight & "." &
+                "\n" & c_LGenBase_paramNameEntityGroup & ": " & vl_entityGrpName);
+			  } else {
+    			  if(vl_scIdx == -1){
+                   f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong."&
+                    "\n" & c_LGenBase_paramNameScenario & ": " & vl_scenarioName );
+    			  } else {
+        			  if(vl_tcIdx == -1){
+                       f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong."&
+                        "\n" & c_LGenBase_paramNameTrafficCase & ": " & vl_trafficCaseName);
+        			  }
+    			  }
+			  }
+           }
+       }
+     }
+     case(c_LGenBase_dataElementTcTrafficType){
+		var charstring vl_entityGrpName := "",vl_scenarioName := "",vl_trafficCaseName := "";
+        if(0 == f_EPTF_LGenBase_getParams(pl_params, {c_LGenBase_paramNameEntityGroup,c_LGenBase_paramNameScenario,c_LGenBase_paramNameTrafficCase}, pl_result)){
+           vl_entityGrpName := pl_result[0];
+           vl_scenarioName := pl_result[1];
+           vl_trafficCaseName := pl_result[2];
+           var integer vl_eGrpIdx := f_EPTF_LGenBase_getEntityGroupIdx(vl_entityGrpName);
+		   var integer vl_scIdx := f_EPTF_LGenBase_getScenarioIdx(vl_eGrpIdx, vl_scenarioName);
+		   var integer vl_tcIdx := f_EPTF_LGenBase_getTrafficCaseIdx(vl_eGrpIdx, vl_scIdx, vl_trafficCaseName);
+           if(vl_eGrpIdx > -1 and vl_scIdx > -1 and vl_tcIdx > -1){
+    	  	   pl_dataVarName := f_EPTF_LGenBase_getNamePrefix(vl_entityGrpName,vl_scenarioName,vl_trafficCaseName) & c_EPTF_LGenBaseStats_nameOfTcTrafficType
+           } else {
+			  if(vl_eGrpIdx == -1){
+               f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong for data element : " & c_LGenBase_dataElementTcTrafficType & "." &
+                "\n" & c_LGenBase_paramNameEntityGroup & ": " & vl_entityGrpName);
+			  } else {
+    			  if(vl_scIdx == -1){
+                   f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong."&
+                    "\n" & c_LGenBase_paramNameScenario & ": " & vl_scenarioName );
+    			  } else {
+        			  if(vl_tcIdx == -1){
+                       f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong."&
+                        "\n" & c_LGenBase_paramNameTrafficCase & ": " & vl_trafficCaseName);
+        			  }
+    			  }
+			  }
+           }
+       }
+     }
+	 case(c_LGenBase_dataElementTcNrOfErrors){
+		var charstring vl_entityGrpName := "",vl_scenarioName := "",vl_trafficCaseName := "";
+        if(0 == f_EPTF_LGenBase_getParams(pl_params, {c_LGenBase_paramNameEntityGroup,c_LGenBase_paramNameScenario,c_LGenBase_paramNameTrafficCase}, pl_result)){
+           vl_entityGrpName := pl_result[0];
+           vl_scenarioName := pl_result[1];
+           vl_trafficCaseName := pl_result[2];
+           var integer vl_eGrpIdx := f_EPTF_LGenBase_getEntityGroupIdx(vl_entityGrpName);
+		   var integer vl_scIdx := f_EPTF_LGenBase_getScenarioIdx(vl_eGrpIdx, vl_scenarioName);
+		   var integer vl_tcIdx := f_EPTF_LGenBase_getTrafficCaseIdx(vl_eGrpIdx, vl_scIdx, vl_trafficCaseName);
+           if(vl_eGrpIdx > -1 and vl_scIdx > -1 and vl_tcIdx > -1){
+    	  	   pl_dataVarName := f_EPTF_LGenBase_getNamePrefix(vl_entityGrpName,vl_scenarioName,vl_trafficCaseName) & c_EPTF_LGenBaseStats_nameOfTcNrOfErrors
+           } else {
+			  if(vl_eGrpIdx == -1){
+               f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong for data element : " & c_LGenBase_dataElementTcNrOfErrors & "." &
+                "\n" & c_LGenBase_paramNameEntityGroup & ": " & vl_entityGrpName);
+			  } else {
+    			  if(vl_scIdx == -1){
+                   f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong."&
+                    "\n" & c_LGenBase_paramNameScenario & ": " & vl_scenarioName );
+    			  } else {
+        			  if(vl_tcIdx == -1){
+                       f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong."&
+                        "\n" & c_LGenBase_paramNameTrafficCase & ": " & vl_trafficCaseName);
+        			  }
+    			  }
+			  }
+           }
+       }
+     }
+     case(c_LGenBase_dataElementTcNrOfTimeouts){
+		var charstring vl_entityGrpName := "",vl_scenarioName := "",vl_trafficCaseName := "";
+        if(0 == f_EPTF_LGenBase_getParams(pl_params, {c_LGenBase_paramNameEntityGroup,c_LGenBase_paramNameScenario,c_LGenBase_paramNameTrafficCase}, pl_result)){
+           vl_entityGrpName := pl_result[0];
+           vl_scenarioName := pl_result[1];
+           vl_trafficCaseName := pl_result[2];
+           var integer vl_eGrpIdx := f_EPTF_LGenBase_getEntityGroupIdx(vl_entityGrpName);
+		   var integer vl_scIdx := f_EPTF_LGenBase_getScenarioIdx(vl_eGrpIdx, vl_scenarioName);
+		   var integer vl_tcIdx := f_EPTF_LGenBase_getTrafficCaseIdx(vl_eGrpIdx, vl_scIdx, vl_trafficCaseName);
+           if(vl_eGrpIdx > -1 and vl_scIdx > -1 and vl_tcIdx > -1){
+    	  	   pl_dataVarName := f_EPTF_LGenBase_getNamePrefix(vl_entityGrpName,vl_scenarioName,vl_trafficCaseName) & c_EPTF_LGenBaseStats_nameOfTcNrOfTimeouts
+           } else {
+			  if(vl_eGrpIdx == -1){
+               f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong for data element : " & c_LGenBase_dataElementTcNrOfTimeouts & "." &
+                "\n" & c_LGenBase_paramNameEntityGroup & ": " & vl_entityGrpName);
+			  } else {
+    			  if(vl_scIdx == -1){
+                   f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong."&
+                    "\n" & c_LGenBase_paramNameScenario & ": " & vl_scenarioName );
+    			  } else {
+        			  if(vl_tcIdx == -1){
+                       f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong."&
+                        "\n" & c_LGenBase_paramNameTrafficCase & ": " & vl_trafficCaseName);
+        			  }
+    			  }
+			  }
+           }
+       }
+     }
+     case(c_LGenBase_dataElementScName){
+		var charstring vl_entityGrpName := "",vl_scenarioName := "";
+        if(0 == f_EPTF_LGenBase_getParams(pl_params, {c_LGenBase_paramNameEntityGroup,c_LGenBase_paramNameScenario}, pl_result)){
+           vl_entityGrpName := pl_result[0];
+           vl_scenarioName := pl_result[1];
+           var integer vl_eGrpIdx := f_EPTF_LGenBase_getEntityGroupIdx(vl_entityGrpName);
+		   var integer vl_scIdx := f_EPTF_LGenBase_getScenarioIdx(vl_eGrpIdx, vl_scenarioName);
+           if(vl_eGrpIdx > -1 and vl_scIdx > -1){
+    	  	   pl_dataVarName := f_EPTF_LGenBase_getScNamePrefix(vl_entityGrpName,vl_scenarioName) & c_EPTF_LGenBaseStats_nameOfScName
+           } else {
+			  if(vl_eGrpIdx == -1){
+               f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong for data element : " & c_LGenBase_dataElementScName & "." &
+                "\n" & c_LGenBase_paramNameEntityGroup & ": " & vl_entityGrpName);
+			  } else {
+    			  if(vl_scIdx == -1){
+                   f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong."&
+                    "\n" & c_LGenBase_paramNameScenario & ": " & vl_scenarioName );
+    			  }
+			  }
+           }
+       }
+     }
+     case(c_LGenBase_dataElementScEnabled){
+		var charstring vl_entityGrpName := "",vl_scenarioName := "";
+        if(0 == f_EPTF_LGenBase_getParams(pl_params, {c_LGenBase_paramNameEntityGroup,c_LGenBase_paramNameScenario}, pl_result)){
+           vl_entityGrpName := pl_result[0];
+           vl_scenarioName := pl_result[1];
+           var integer vl_eGrpIdx := f_EPTF_LGenBase_getEntityGroupIdx(vl_entityGrpName);
+		   var integer vl_scIdx := f_EPTF_LGenBase_getScenarioIdx(vl_eGrpIdx, vl_scenarioName);
+           if(vl_eGrpIdx > -1 and vl_scIdx > -1){
+    	  	   pl_dataVarName := f_EPTF_LGenBase_getScNamePrefix(vl_entityGrpName,vl_scenarioName) & c_EPTF_LGenBaseStats_nameOfScEnabled
+           } else {
+			  if(vl_eGrpIdx == -1){
+               f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong for data element : " & c_LGenBase_dataElementScEnabled & "." &
+                "\n" & c_LGenBase_paramNameEntityGroup & ": " & vl_entityGrpName);
+			  } else {
+    			  if(vl_scIdx == -1){
+                   f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong."&
+                    "\n" & c_LGenBase_paramNameScenario & ": " & vl_scenarioName );
+    			  }
+			  }
+           }
+       }
+     }
+     case(c_LGenBase_dataElementScState){
+		var charstring vl_entityGrpName := "",vl_scenarioName := "";
+        if(0 == f_EPTF_LGenBase_getParams(pl_params, {c_LGenBase_paramNameEntityGroup,c_LGenBase_paramNameScenario}, pl_result)){
+           vl_entityGrpName := pl_result[0];
+           vl_scenarioName := pl_result[1];
+           var integer vl_eGrpIdx := f_EPTF_LGenBase_getEntityGroupIdx(vl_entityGrpName);
+		   var integer vl_scIdx := f_EPTF_LGenBase_getScenarioIdx(vl_eGrpIdx, vl_scenarioName);
+           if(vl_eGrpIdx > -1 and vl_scIdx > -1){
+    	  	   pl_dataVarName := f_EPTF_LGenBase_getScNamePrefix(vl_entityGrpName,vl_scenarioName) & c_EPTF_LGenBaseStats_nameOfScState
+           } else {
+			  if(vl_eGrpIdx == -1){
+               f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong for data element : " & c_LGenBase_dataElementScState & "." &
+                "\n" & c_LGenBase_paramNameEntityGroup & ": " & vl_entityGrpName);
+			  } else {
+    			  if(vl_scIdx == -1){
+                   f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong."&
+                    "\n" & c_LGenBase_paramNameScenario & ": " & vl_scenarioName );
+    			  }
+			  }
+           }
+       }
+     }  
+     case(c_LGenBase_dataElementScStateName){
+		var charstring vl_entityGrpName := "",vl_scenarioName := "";
+        if(0 == f_EPTF_LGenBase_getParams(pl_params, {c_LGenBase_paramNameEntityGroup,c_LGenBase_paramNameScenario}, pl_result)){
+           vl_entityGrpName := pl_result[0];
+           vl_scenarioName := pl_result[1];
+           var integer vl_eGrpIdx := f_EPTF_LGenBase_getEntityGroupIdx(vl_entityGrpName);
+		   var integer vl_scIdx := f_EPTF_LGenBase_getScenarioIdx(vl_eGrpIdx, vl_scenarioName);
+           if(vl_eGrpIdx > -1 and vl_scIdx > -1){
+    	  	   pl_dataVarName := f_EPTF_LGenBase_getScNamePrefix(vl_entityGrpName,vl_scenarioName) & c_EPTF_LGenBaseStats_nameOfScStateName
+           } else {
+			  if(vl_eGrpIdx == -1){
+               f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong for data element : " & c_LGenBase_dataElementScStateName & "." &
+                "\n" & c_LGenBase_paramNameEntityGroup & ": " & vl_entityGrpName);
+			  } else {
+    			  if(vl_scIdx == -1){
+                   f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong."&
+                    "\n" & c_LGenBase_paramNameScenario & ": " & vl_scenarioName );
+    			  }
+			  }
+           }
+       }
+     }     
+     case(c_LGenBase_dataElementScLockCPS){
+		var charstring vl_entityGrpName := "",vl_scenarioName := "";
+        if(0 == f_EPTF_LGenBase_getParams(pl_params, {c_LGenBase_paramNameEntityGroup,c_LGenBase_paramNameScenario}, pl_result)){
+           vl_entityGrpName := pl_result[0];
+           vl_scenarioName := pl_result[1];
+           var integer vl_eGrpIdx := f_EPTF_LGenBase_getEntityGroupIdx(vl_entityGrpName);
+		   var integer vl_scIdx := f_EPTF_LGenBase_getScenarioIdx(vl_eGrpIdx, vl_scenarioName);
+           if(vl_eGrpIdx > -1 and vl_scIdx > -1){
+    	  	   pl_dataVarName := f_EPTF_LGenBase_getScNamePrefix(vl_entityGrpName,vl_scenarioName) & c_EPTF_LGenBaseStats_nameOfScLockCPS
+           } else {
+			  if(vl_eGrpIdx == -1){
+               f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong for data element : " & c_LGenBase_dataElementScLockCPS & "." &
+                "\n" & c_LGenBase_paramNameEntityGroup & ": " & vl_entityGrpName);
+			  } else {
+    			  if(vl_scIdx == -1){
+                   f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong."&
+                    "\n" & c_LGenBase_paramNameScenario & ": " & vl_scenarioName );
+    			  }
+			  }
+           }
+       }
+     }
+     case(c_LGenBase_dataElementScCpsToReach){
+		var charstring vl_entityGrpName := "",vl_scenarioName := "";
+        if(0 == f_EPTF_LGenBase_getParams(pl_params, {c_LGenBase_paramNameEntityGroup,c_LGenBase_paramNameScenario}, pl_result)){
+           vl_entityGrpName := pl_result[0];
+           vl_scenarioName := pl_result[1];
+           var integer vl_eGrpIdx := f_EPTF_LGenBase_getEntityGroupIdx(vl_entityGrpName);
+		   var integer vl_scIdx := f_EPTF_LGenBase_getScenarioIdx(vl_eGrpIdx, vl_scenarioName);
+           if(vl_eGrpIdx > -1 and vl_scIdx > -1){
+    	  	   pl_dataVarName := f_EPTF_LGenBase_getScNamePrefix(vl_entityGrpName,vl_scenarioName) & c_EPTF_LGenBaseStats_nameOfTcCpsToReach
+           } else {
+			  if(vl_eGrpIdx == -1){
+               f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong for data element : " & c_LGenBase_dataElementScCpsToReach & "." &
+                "\n" & c_LGenBase_paramNameEntityGroup & ": " & vl_entityGrpName);
+			  } else {
+    			  if(vl_scIdx == -1){
+                   f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong."&
+                    "\n" & c_LGenBase_paramNameScenario & ": " & vl_scenarioName );
+    			  }
+			  }
+           }
+       }
+     }
+     case(c_LGenBase_dataElementTcStartBtn){
+		var charstring vl_entityGrpName := "",vl_scenarioName := "",vl_trafficCaseName := "";
+        if(0 == f_EPTF_LGenBase_getParams(pl_params, {c_LGenBase_paramNameEntityGroup,c_LGenBase_paramNameScenario,c_LGenBase_paramNameTrafficCase}, pl_result)){
+           vl_entityGrpName := pl_result[0];
+           vl_scenarioName := pl_result[1];
+           vl_trafficCaseName := pl_result[2];
+           var integer vl_eGrpIdx := f_EPTF_LGenBase_getEntityGroupIdx(vl_entityGrpName);
+		   var integer vl_scIdx := f_EPTF_LGenBase_getScenarioIdx(vl_eGrpIdx, vl_scenarioName);
+		   var integer vl_tcIdx := f_EPTF_LGenBase_getTrafficCaseIdx(vl_eGrpIdx, vl_scIdx, vl_trafficCaseName);
+           if(vl_eGrpIdx > -1 and vl_scIdx > -1 and vl_tcIdx > -1){
+    	  	   pl_dataVarName := f_EPTF_LGenBase_getNamePrefix(vl_entityGrpName,vl_scenarioName,vl_trafficCaseName) & c_EPTF_LGenBaseStats_nameOfStartBtn
+           } else {
+			  if(vl_eGrpIdx == -1){
+               f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong for data element : " & c_LGenBase_dataElementTcStartBtn & "." &
+                "\n" & c_LGenBase_paramNameEntityGroup & ": " & vl_entityGrpName);
+			  } else {
+    			  if(vl_scIdx == -1){
+                   f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong."&
+                    "\n" & c_LGenBase_paramNameScenario & ": " & vl_scenarioName );
+    			  } else {
+        			  if(vl_tcIdx == -1){
+                       f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong."&
+                        "\n" & c_LGenBase_paramNameTrafficCase & ": " & vl_trafficCaseName);
+        			  }
+    			  }
+			  }
+           }
+       }
+     }
+     case(c_LGenBase_dataElementTcStopBtn){
+		var charstring vl_entityGrpName := "",vl_scenarioName := "",vl_trafficCaseName := "";
+        if(0 == f_EPTF_LGenBase_getParams(pl_params, {c_LGenBase_paramNameEntityGroup,c_LGenBase_paramNameScenario,c_LGenBase_paramNameTrafficCase}, pl_result)){
+           vl_entityGrpName := pl_result[0];
+           vl_scenarioName := pl_result[1];
+           vl_trafficCaseName := pl_result[2];
+           var integer vl_eGrpIdx := f_EPTF_LGenBase_getEntityGroupIdx(vl_entityGrpName);
+		   var integer vl_scIdx := f_EPTF_LGenBase_getScenarioIdx(vl_eGrpIdx, vl_scenarioName);
+		   var integer vl_tcIdx := f_EPTF_LGenBase_getTrafficCaseIdx(vl_eGrpIdx, vl_scIdx, vl_trafficCaseName);
+           if(vl_eGrpIdx > -1 and vl_scIdx > -1 and vl_tcIdx > -1){
+    	  	   pl_dataVarName := f_EPTF_LGenBase_getNamePrefix(vl_entityGrpName,vl_scenarioName,vl_trafficCaseName) & c_EPTF_LGenBaseStats_nameOfStopBtn
+           } else {
+			  if(vl_eGrpIdx == -1){
+               f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong for data element : " & c_LGenBase_dataElementTcStopBtn & "." &
+                "\n" & c_LGenBase_paramNameEntityGroup & ": " & vl_entityGrpName);
+			  } else {
+    			  if(vl_scIdx == -1){
+                   f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong."&
+                    "\n" & c_LGenBase_paramNameScenario & ": " & vl_scenarioName );
+    			  } else {
+        			  if(vl_tcIdx == -1){
+                       f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong."&
+                        "\n" & c_LGenBase_paramNameTrafficCase & ": " & vl_trafficCaseName);
+        			  }
+    			  }
+			  }
+           }
+       }
+     }
+     case(c_LGenBase_dataElementTcAbortBtn){
+		var charstring vl_entityGrpName := "",vl_scenarioName := "",vl_trafficCaseName := "";
+        if(0 == f_EPTF_LGenBase_getParams(pl_params, {c_LGenBase_paramNameEntityGroup,c_LGenBase_paramNameScenario,c_LGenBase_paramNameTrafficCase}, pl_result)){
+           vl_entityGrpName := pl_result[0];
+           vl_scenarioName := pl_result[1];
+           vl_trafficCaseName := pl_result[2];
+           var integer vl_eGrpIdx := f_EPTF_LGenBase_getEntityGroupIdx(vl_entityGrpName);
+		   var integer vl_scIdx := f_EPTF_LGenBase_getScenarioIdx(vl_eGrpIdx, vl_scenarioName);
+		   var integer vl_tcIdx := f_EPTF_LGenBase_getTrafficCaseIdx(vl_eGrpIdx, vl_scIdx, vl_trafficCaseName);
+           if(vl_eGrpIdx > -1 and vl_scIdx > -1 and vl_tcIdx > -1){
+    	  	   pl_dataVarName := f_EPTF_LGenBase_getNamePrefix(vl_entityGrpName,vl_scenarioName,vl_trafficCaseName) & c_EPTF_LGenBaseStats_nameOfAbortBtn
+           } else {
+			  if(vl_eGrpIdx == -1){
+               f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong for data element : " & c_LGenBase_dataElementTcAbortBtn & "." &
+                "\n" & c_LGenBase_paramNameEntityGroup & ": " & vl_entityGrpName);
+			  } else {
+    			  if(vl_scIdx == -1){
+                   f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong."&
+                    "\n" & c_LGenBase_paramNameScenario & ": " & vl_scenarioName );
+    			  } else {
+        			  if(vl_tcIdx == -1){
+                       f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong."&
+                        "\n" & c_LGenBase_paramNameTrafficCase & ": " & vl_trafficCaseName);
+        			  }
+    			  }
+			  }
+           }
+       }
+     }
+     case(c_LGenBase_dataElementTcRestoreBtn){
+		var charstring vl_entityGrpName := "",vl_scenarioName := "",vl_trafficCaseName := "";
+        if(0 == f_EPTF_LGenBase_getParams(pl_params, {c_LGenBase_paramNameEntityGroup,c_LGenBase_paramNameScenario,c_LGenBase_paramNameTrafficCase}, pl_result)){
+           vl_entityGrpName := pl_result[0];
+           vl_scenarioName := pl_result[1];
+           vl_trafficCaseName := pl_result[2];
+           var integer vl_eGrpIdx := f_EPTF_LGenBase_getEntityGroupIdx(vl_entityGrpName);
+		   var integer vl_scIdx := f_EPTF_LGenBase_getScenarioIdx(vl_eGrpIdx, vl_scenarioName);
+		   var integer vl_tcIdx := f_EPTF_LGenBase_getTrafficCaseIdx(vl_eGrpIdx, vl_scIdx, vl_trafficCaseName);
+           if(vl_eGrpIdx > -1 and vl_scIdx > -1 and vl_tcIdx > -1){
+    	  	   pl_dataVarName := f_EPTF_LGenBase_getNamePrefix(vl_entityGrpName,vl_scenarioName,vl_trafficCaseName) & c_EPTF_LGenBaseStats_nameOfRestoreBtn
+           } else {
+			  if(vl_eGrpIdx == -1){
+               f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong for data element : " & c_LGenBase_dataElementTcRestoreBtn & "." &
+                "\n" & c_LGenBase_paramNameEntityGroup & ": " & vl_entityGrpName);
+			  } else {
+    			  if(vl_scIdx == -1){
+                   f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong."&
+                    "\n" & c_LGenBase_paramNameScenario & ": " & vl_scenarioName );
+    			  } else {
+        			  if(vl_tcIdx == -1){
+                       f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong."&
+                        "\n" & c_LGenBase_paramNameTrafficCase & ": " & vl_trafficCaseName);
+        			  }
+    			  }
+			  }
+           }
+       }
+     }
+     case(c_LGenBase_dataElementTcPauseBtn){
+		var charstring vl_entityGrpName := "",vl_scenarioName := "",vl_trafficCaseName := "";
+        if(0 == f_EPTF_LGenBase_getParams(pl_params, {c_LGenBase_paramNameEntityGroup,c_LGenBase_paramNameScenario,c_LGenBase_paramNameTrafficCase}, pl_result)){
+           vl_entityGrpName := pl_result[0];
+           vl_scenarioName := pl_result[1];
+           vl_trafficCaseName := pl_result[2];
+           var integer vl_eGrpIdx := f_EPTF_LGenBase_getEntityGroupIdx(vl_entityGrpName);
+		   var integer vl_scIdx := f_EPTF_LGenBase_getScenarioIdx(vl_eGrpIdx, vl_scenarioName);
+		   var integer vl_tcIdx := f_EPTF_LGenBase_getTrafficCaseIdx(vl_eGrpIdx, vl_scIdx, vl_trafficCaseName);
+           if(vl_eGrpIdx > -1 and vl_scIdx > -1 and vl_tcIdx > -1){
+    	  	   pl_dataVarName := f_EPTF_LGenBase_getNamePrefix(vl_entityGrpName,vl_scenarioName,vl_trafficCaseName) & c_EPTF_LGenBaseStats_nameOfPauseBtn
+           } else {
+			  if(vl_eGrpIdx == -1){
+               f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong for data element : " & c_LGenBase_dataElementTcPauseBtn & "." &
+                "\n" & c_LGenBase_paramNameEntityGroup & ": " & vl_entityGrpName);
+			  } else {
+    			  if(vl_scIdx == -1){
+                   f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong."&
+                    "\n" & c_LGenBase_paramNameScenario & ": " & vl_scenarioName );
+    			  } else {
+        			  if(vl_tcIdx == -1){
+                       f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong."&
+                        "\n" & c_LGenBase_paramNameTrafficCase & ": " & vl_trafficCaseName);
+        			  }
+    			  }
+			  }
+           }
+       }
+     }
+     case(c_LGenBase_dataElementTcSingleShotBtn){
+		var charstring vl_entityGrpName := "",vl_scenarioName := "",vl_trafficCaseName := "";
+        if(0 == f_EPTF_LGenBase_getParams(pl_params, {c_LGenBase_paramNameEntityGroup,c_LGenBase_paramNameScenario,c_LGenBase_paramNameTrafficCase}, pl_result)){
+           vl_entityGrpName := pl_result[0];
+           vl_scenarioName := pl_result[1];
+           vl_trafficCaseName := pl_result[2];
+           var integer vl_eGrpIdx := f_EPTF_LGenBase_getEntityGroupIdx(vl_entityGrpName);
+		   var integer vl_scIdx := f_EPTF_LGenBase_getScenarioIdx(vl_eGrpIdx, vl_scenarioName);
+		   var integer vl_tcIdx := f_EPTF_LGenBase_getTrafficCaseIdx(vl_eGrpIdx, vl_scIdx, vl_trafficCaseName);
+           if(vl_eGrpIdx > -1 and vl_scIdx > -1 and vl_tcIdx > -1){
+    	  	   pl_dataVarName := f_EPTF_LGenBase_getNamePrefix(vl_entityGrpName,vl_scenarioName,vl_trafficCaseName) & c_EPTF_LGenBaseStats_nameOfSingleShotBtn
+           } else {
+			  if(vl_eGrpIdx == -1){
+               f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong for data element : " & c_LGenBase_dataElementTcSingleShotBtn & "." &
+                "\n" & c_LGenBase_paramNameEntityGroup & ": " & vl_entityGrpName);
+			  } else {
+    			  if(vl_scIdx == -1){
+                   f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong."&
+                    "\n" & c_LGenBase_paramNameScenario & ": " & vl_scenarioName );
+    			  } else {
+        			  if(vl_tcIdx == -1){
+                       f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong."&
+                        "\n" & c_LGenBase_paramNameTrafficCase & ": " & vl_trafficCaseName);
+        			  }
+    			  }
+			  }
+           }
+       }
+     }
+
+     case(c_LGenBase_dataElementScStartBtn){
+		var charstring vl_entityGrpName := "",vl_scenarioName := "";
+        if(0 == f_EPTF_LGenBase_getParams(pl_params, {c_LGenBase_paramNameEntityGroup,c_LGenBase_paramNameScenario}, pl_result)){
+           vl_entityGrpName := pl_result[0];
+           vl_scenarioName := pl_result[1];
+           var integer vl_eGrpIdx := f_EPTF_LGenBase_getEntityGroupIdx(vl_entityGrpName);
+		   var integer vl_scIdx := f_EPTF_LGenBase_getScenarioIdx(vl_eGrpIdx, vl_scenarioName);
+           if(vl_eGrpIdx > -1 and vl_scIdx > -1){   
+    	  	   pl_dataVarName := f_EPTF_LGenBase_getScNamePrefix(vl_entityGrpName, vl_scenarioName) & c_EPTF_LGenBaseStats_nameOfStartBtn
+           } else {
+			  if(vl_eGrpIdx == -1){
+               f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong for data element : " & c_LGenBase_dataElementScStartBtn & "." &
+                "\n" & c_LGenBase_paramNameEntityGroup & ": " & vl_entityGrpName);
+			  } else {
+    			  if(vl_scIdx == -1){
+                   f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong."&
+                    "\n" & c_LGenBase_paramNameScenario & ": " & vl_scenarioName );
+    			  } 
+			  }
+           }
+       }
+     }
+     
+     case(c_LGenBase_dataElementScStopBtn){
+		var charstring vl_entityGrpName := "",vl_scenarioName := "";
+        if(0 == f_EPTF_LGenBase_getParams(pl_params, {c_LGenBase_paramNameEntityGroup,c_LGenBase_paramNameScenario}, pl_result)){
+           vl_entityGrpName := pl_result[0];
+           vl_scenarioName := pl_result[1];
+           var integer vl_eGrpIdx := f_EPTF_LGenBase_getEntityGroupIdx(vl_entityGrpName);
+		   var integer vl_scIdx := f_EPTF_LGenBase_getScenarioIdx(vl_eGrpIdx, vl_scenarioName);
+           if(vl_eGrpIdx > -1 and vl_scIdx > -1){   
+    	  	   pl_dataVarName := f_EPTF_LGenBase_getScNamePrefix(vl_entityGrpName, vl_scenarioName) & c_EPTF_LGenBaseStats_nameOfStopBtn
+           } else {
+			  if(vl_eGrpIdx == -1){
+               f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong for data element : " & c_LGenBase_dataElementScStopBtn & "." &
+                "\n" & c_LGenBase_paramNameEntityGroup & ": " & vl_entityGrpName);
+			  } else {
+    			  if(vl_scIdx == -1){
+                   f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong."&
+                    "\n" & c_LGenBase_paramNameScenario & ": " & vl_scenarioName );
+    			  } 
+			  }
+           }
+       }
+     }
+
+
+
+
+
+
+     case(c_LGenBase_dataElementScRestoreBtn){
+		var charstring vl_entityGrpName := "",vl_scenarioName := "";
+        if(0 == f_EPTF_LGenBase_getParams(pl_params, {c_LGenBase_paramNameEntityGroup,c_LGenBase_paramNameScenario}, pl_result)){
+           vl_entityGrpName := pl_result[0];
+           vl_scenarioName := pl_result[1];
+           var integer vl_eGrpIdx := f_EPTF_LGenBase_getEntityGroupIdx(vl_entityGrpName);
+		   var integer vl_scIdx := f_EPTF_LGenBase_getScenarioIdx(vl_eGrpIdx, vl_scenarioName);
+           if(vl_eGrpIdx > -1 and vl_scIdx > -1){   
+    	  	   pl_dataVarName := f_EPTF_LGenBase_getScNamePrefix(vl_entityGrpName, vl_scenarioName) & c_EPTF_LGenBaseStats_nameOfRestoreBtn
+           } else {
+			  if(vl_eGrpIdx == -1){
+               f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong for data element : " & c_LGenBase_dataElementScRestoreBtn & "." &
+                "\n" & c_LGenBase_paramNameEntityGroup & ": " & vl_entityGrpName);
+			  } else {
+    			  if(vl_scIdx == -1){
+                   f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong."&
+                    "\n" & c_LGenBase_paramNameScenario & ": " & vl_scenarioName );
+    			  } 
+			  }
+           }
+       }
+     }
+     case(c_LGenBase_dataElementScPauseBtn){
+		var charstring vl_entityGrpName := "",vl_scenarioName := "";
+        if(0 == f_EPTF_LGenBase_getParams(pl_params, {c_LGenBase_paramNameEntityGroup,c_LGenBase_paramNameScenario}, pl_result)){
+           vl_entityGrpName := pl_result[0];
+           vl_scenarioName := pl_result[1];
+           var integer vl_eGrpIdx := f_EPTF_LGenBase_getEntityGroupIdx(vl_entityGrpName);
+		   var integer vl_scIdx := f_EPTF_LGenBase_getScenarioIdx(vl_eGrpIdx, vl_scenarioName);
+           if(vl_eGrpIdx > -1 and vl_scIdx > -1){   
+    	  	   pl_dataVarName := f_EPTF_LGenBase_getScNamePrefix(vl_entityGrpName, vl_scenarioName) & c_EPTF_LGenBaseStats_nameOfPauseBtn
+           } else {
+			  if(vl_eGrpIdx == -1){
+               f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong for data element : " & c_LGenBase_dataElementScPauseBtn & "." &
+                "\n" & c_LGenBase_paramNameEntityGroup & ": " & vl_entityGrpName);
+			  } else {
+    			  if(vl_scIdx == -1){
+                   f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong."&
+                    "\n" & c_LGenBase_paramNameScenario & ": " & vl_scenarioName );
+    			  } 
+			  }
+           }
+       }
+     }
+     case(c_LGenBase_dataElementScAbortBtn){
+		var charstring vl_entityGrpName := "",vl_scenarioName := "";
+        if(0 == f_EPTF_LGenBase_getParams(pl_params, {c_LGenBase_paramNameEntityGroup,c_LGenBase_paramNameScenario}, pl_result)){
+           vl_entityGrpName := pl_result[0];
+           vl_scenarioName := pl_result[1];
+           var integer vl_eGrpIdx := f_EPTF_LGenBase_getEntityGroupIdx(vl_entityGrpName);
+		   var integer vl_scIdx := f_EPTF_LGenBase_getScenarioIdx(vl_eGrpIdx, vl_scenarioName);
+           if(vl_eGrpIdx > -1 and vl_scIdx > -1){   
+    	  	   pl_dataVarName := f_EPTF_LGenBase_getScNamePrefix(vl_entityGrpName, vl_scenarioName) & c_EPTF_LGenBaseStats_nameOfAbortBtn
+           } else {
+			  if(vl_eGrpIdx == -1){
+               f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong for data element : " & c_LGenBase_dataElementScAbortBtn & "." &
+                "\n" & c_LGenBase_paramNameEntityGroup & ": " & vl_entityGrpName);
+			  } else {
+    			  if(vl_scIdx == -1){
+                   f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong."&
+                    "\n" & c_LGenBase_paramNameScenario & ": " & vl_scenarioName );
+    			  } 
+			  }
+           }
+       }
+     }
+     case(c_LGenBase_dataElementScSingleShotBtn){
+		var charstring vl_entityGrpName := "",vl_scenarioName := "";
+        if(0 == f_EPTF_LGenBase_getParams(pl_params, {c_LGenBase_paramNameEntityGroup,c_LGenBase_paramNameScenario}, pl_result)){
+           vl_entityGrpName := pl_result[0];
+           vl_scenarioName := pl_result[1];
+           var integer vl_eGrpIdx := f_EPTF_LGenBase_getEntityGroupIdx(vl_entityGrpName);
+		   var integer vl_scIdx := f_EPTF_LGenBase_getScenarioIdx(vl_eGrpIdx, vl_scenarioName);
+           if(vl_eGrpIdx > -1 and vl_scIdx > -1){   
+    	  	   pl_dataVarName := f_EPTF_LGenBase_getScNamePrefix(vl_entityGrpName, vl_scenarioName) & c_EPTF_LGenBaseStats_nameOfSingleShotBtn
+           } else {
+			  if(vl_eGrpIdx == -1){
+               f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong for data element : " & c_LGenBase_dataElementScSingleShotBtn & "." &
+                "\n" & c_LGenBase_paramNameEntityGroup & ": " & vl_entityGrpName);
+			  } else {
+    			  if(vl_scIdx == -1){
+                   f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong."&
+                    "\n" & c_LGenBase_paramNameScenario & ": " & vl_scenarioName );
+    			  } 
+			  }
+           }
+       }
+     }
+     case(c_LGenBase_dataElementTcEnabledAtStartup){
+        var charstring vl_entityGrpName := "",vl_scenarioName := "",vl_trafficCaseName := "";
+        if(0 == f_EPTF_LGenBase_getParams(pl_params, {c_LGenBase_paramNameEntityGroup,c_LGenBase_paramNameScenario,c_LGenBase_paramNameTrafficCase}, pl_result)){
+          vl_entityGrpName := pl_result[0];
+          vl_scenarioName := pl_result[1];
+          vl_trafficCaseName := pl_result[2];
+          var integer vl_eGrpIdx := f_EPTF_LGenBase_getEntityGroupIdx(vl_entityGrpName);
+          var integer vl_scIdx := f_EPTF_LGenBase_getScenarioIdx(vl_eGrpIdx, vl_scenarioName);
+          var integer vl_tcIdx := f_EPTF_LGenBase_getTrafficCaseIdx(vl_eGrpIdx, vl_scIdx, vl_trafficCaseName);
+          if(vl_eGrpIdx > -1 and vl_scIdx > -1 and vl_tcIdx > -1){
+                pl_dataVarName := f_EPTF_LGenBase_getNamePrefix(vl_entityGrpName,vl_scenarioName,vl_trafficCaseName) & c_LGenBase_dataElementTcEnabledAtStartup
+          } else {
+              if(vl_eGrpIdx == -1){
+              f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong for data element : " & c_LGenBase_dataElementTcEnabledAtStartup & "." &
+                "\n" & c_LGenBase_paramNameEntityGroup & ": " & vl_entityGrpName);
+              } else {
+                  if(vl_scIdx == -1){
+                  f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong."&
+                    "\n" & c_LGenBase_paramNameScenario & ": " & vl_scenarioName );
+                  } else {
+                      if(vl_tcIdx == -1){
+                      f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong."&
+                        "\n" & c_LGenBase_paramNameTrafficCase & ": " & vl_trafficCaseName);
+                      }
+                  }
+              }
+          }
+      }
+    }
+
+
+     case(c_LGenBase_iteratorEntityGroups){
+       if(sizeof(pl_params) == 0){
+         pl_dataVarName := c_LGenBase_iteratorVar_prefix & c_LGenBase_iteratorEntityGroups_varName
+       } else {
+         f_EPTF_LGenBase_loggingWarning(log2str(%definitionId, ": Parameter not needed." ));
+       }
+     }
+     case(c_LGenBase_iteratorScenarios){
+		var charstring vl_entityGrpName := "";
+         if(0 == f_EPTF_LGenBase_getParams(pl_params, {c_LGenBase_paramNameEntityGroup}, pl_result)){
+           vl_entityGrpName := pl_result[0];
+           var integer vl_eGrpIdx := f_EPTF_LGenBase_getEntityGroupIdx(vl_entityGrpName);
+           if(vl_eGrpIdx > -1){
+             pl_dataVarName := c_LGenBase_iteratorVar_prefix & c_LGenBase_iteratorScenarios_varName & tsp_LGenBase_nameSeparator & vl_entityGrpName;
+           } else {
+             f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong."&
+                "\n" & c_LGenBase_paramNameEntityGroup & ": " & vl_entityGrpName );
+           }
+     	}
+     }
+     case(c_LGenBase_iteratorTrafficCases){
+		var charstring vl_entityGrpName := "";
+		var charstring vl_scenarioName := "";
+         if(0 == f_EPTF_LGenBase_getParams(pl_params, {c_LGenBase_paramNameEntityGroup, c_LGenBase_paramNameScenario}, pl_result)){
+           vl_entityGrpName := pl_result[0];
+           var integer vl_eGrpIdx := f_EPTF_LGenBase_getEntityGroupIdx(vl_entityGrpName);
+           vl_scenarioName := pl_result[1];
+           var integer vl_scIdx := f_EPTF_LGenBase_getScenarioIdx(vl_eGrpIdx, vl_scenarioName);
+           if(vl_eGrpIdx > -1 and vl_scIdx > -1 ){
+             pl_dataVarName := c_LGenBase_iteratorVar_prefix & c_LGenBase_iteratorTrafficCases_varName & tsp_LGenBase_nameSeparator & vl_entityGrpName & tsp_LGenBase_nameSeparator & vl_scenarioName;
+           } else {
+             f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter(s) is/are wrong."&
+                "\n" & c_LGenBase_paramNameEntityGroup & ": " & vl_entityGrpName &
+                "\n" & c_LGenBase_paramNameScenario & ": " & vl_scenarioName );
+           }
+     	}
+
+     }
+     case else {  //error, no rule for that
+        pl_dataVarName := "";
+        f_EPTF_LGenBase_loggingWarning(%definitionId& ": unhandled element: "& pl_element);
+        return -1;
+     }
+    }
+      
+    var integer vl_iteratorVarIdx := f_EPTF_Var_getId(pl_dataVarName);
+    if(vl_iteratorVarIdx == -1){
+      f_EPTF_LGenBase_loggingWarning(%definitionId&": Invalid iterator or externalData or parameter: "&
+        "\nSource: "&pl_source&
+        "\nPTC : "&pl_ptcName &
+        "\nElement Name : " &pl_element&
+        "\nParams: " & log2str(pl_params));  
+      return -1;
+    }
+    return 0;
+  }
+
+private function f_EPTF_LGenBase_getEntityGroupIdx( in charstring pl_entityGroupName )
+runs on EPTF_LGenBase_Private_CT return integer {
+   for(var integer vl_ret := 0; vl_ret < f_EPTF_LGenBase_getEGrpCount(); vl_ret := vl_ret + 1){
+      if(v_LGenBase_entityGroups[vl_ret].name == pl_entityGroupName){
+        return vl_ret;
+      }
+   }
+   return -1;
+}
+   
+private function f_EPTF_LGenBase_getScenarioIdx( in integer pl_eGrpIdx, in charstring pl_scenarioName )
+runs on EPTF_LGenBase_Private_CT return integer {
+   if(pl_eGrpIdx == -1){return -1}
+   for ( var integer vl_ret := 0; vl_ret < f_EPTF_LGenBase_getScCountOfEGrp(pl_eGrpIdx) ; vl_ret := vl_ret+1 ){
+      if(v_LGenBase_entityGroups[pl_eGrpIdx].scenarios[vl_ret].name == pl_scenarioName){
+        return vl_ret;
+      }
+   }
+   return -1;
+}
+  
+private function f_EPTF_LGenBase_getTrafficCaseIdx( in integer pl_eGrpIdx, in integer pl_scIdx,  in charstring pl_trafficCaseName )
+runs on EPTF_LGenBase_Private_CT return integer {
+   if(pl_eGrpIdx == -1){return -1}
+   if(pl_scIdx == -1){return -1}
+   for ( var integer vl_ret := 0; vl_ret < f_EPTF_LGenBase_getTcCountOfSc(pl_eGrpIdx, pl_scIdx) ; vl_ret := vl_ret+1 ){
+      if( f_EPTF_LGenBase_getTcNameByTcIdx(v_LGenBase_entityGroups[pl_eGrpIdx].scenarios[pl_scIdx].tcIdxList[vl_ret]) == pl_trafficCaseName){
+        return vl_ret;
+      }
+   }
+   return -1;
+}  
+  
+private function f_EPTF_LGenBase_getParams(in EPTF_DataSource_Params pl_params,
+                                           in EPTF_CharstringList pl_needed,
+                                           out EPTF_CharstringList pl_result,
+                                           in boolean pl_noWarning := false)
+runs on EPTF_LGenBase_Private_CT return integer {
+  pl_result := {};
+  if(sizeof(pl_params) == sizeof(pl_needed)){
+     for(var integer j := 0; j < sizeof(pl_needed); j := j + 1){
+       for(var integer i := 0; i < sizeof(pl_params); i:= i + 1){
+         if(pl_params[i].paramName == pl_needed[j]){
+           pl_result[sizeof(pl_result)] := pl_params[i].paramValue;
+         }
+       }
+     }
+     if(sizeof(pl_result) != sizeof(pl_needed)){
+       if(not pl_noWarning){
+         var EPTF_CharstringList vl_error := {};
+         for(var integer i := 0; i < sizeof(pl_params); i:= i + 1){
+           vl_error[i] := pl_params[i].paramName;
+         }
+         f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameters are not correct: "&
+         "\nReceived: "& log2str(vl_error)&
+         "\nNeeded  : "& log2str(pl_needed) );
+       }
+       return -1;
+     }
+     return 0;
+  } else{
+    if(not pl_noWarning){
+        var EPTF_CharstringList vl_error := {};
+        for(var integer i := 0; i < sizeof(pl_params); i:= i + 1){
+          vl_error[i] := pl_params[i].paramName;
+        }
+        if(sizeof(pl_params) < sizeof(pl_needed)){
+           f_EPTF_LGenBase_loggingWarning(%definitionId& ": Too few parameter is given: "&
+           "\nReceived: "& log2str(vl_error)&
+           "\nNeeded  : "& log2str(pl_needed));
+        } else { 
+           f_EPTF_LGenBase_loggingWarning(%definitionId& ": Too many parameters are given: "&
+           "\nReceived: "& log2str(vl_error)&
+           "\nNeeded  : "& log2str(pl_needed));
+        }
+    }
+    return -1;
+  }
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_LGenBase_conditionHandler_isWeightedSc
+// 
+//  Purpose:
+//    Callback function type to handle condition for isWeighted.
+//    The type of this function is <fcb_EPTF_DataSourceClient_conditionHandler>
+//
+//  Parameters:
+//    *out boolean pl_conditionValue* - true if the given scenario is weighted
+//    *in charstring pl_source* - the name of the data source 'feature' (now <c_LGenBase_DataSource_sourceId>)
+//    *in charstring pl_ptcName* - the name of the ptc (ID of the PTC) (now "f_EPTF_Base_selfName())  
+//    *in charstring pl_method* - the name of the method (now: <c_LGenBase_conditionIsWeightedSc>)
+//    *in* <EPTF_DataSource_Params> *pl_params* - the parameters
+//      of the data for the dataElement (now <c_LGenBase_paramNameEntityGroup>, and <c_LGenBase_paramNameScenario>)
+//
+//  Return Value:
+//    integer - error code (0 of OK, non zero if unsuccessful:
+//     e.g. invalid parameters given in pl_params)
+//
+//  Detailed Comments:
+//    This function is called when <f_EPTF_DataSource_getCondition> is requested
+//    for the specified pl_source,pl_ptcName and pl_method.
+//    Its return value (error code) and pl_conditionValue is forwarded
+//    to <f_EPTF_DataSource_getCondition>.
+///////////////////////////////////////////////////////////
+friend function f_EPTF_LGenBase_conditionHandler_isWeightedSc(
+  out boolean pl_conditionValue,
+  in charstring pl_source,
+  in charstring pl_ptcName,
+  in charstring pl_method,
+  in EPTF_DataSource_Params pl_params
+) runs on EPTF_LGenBase_Private_CT return integer {
+  var EPTF_CharstringList pl_result := {};
+  var charstring vl_entityGrpName := "";
+  var charstring vl_scName := "";
+  if(0 == f_EPTF_LGenBase_getParams( pl_params,
+                                     {c_LGenBase_paramNameEntityGroup, c_LGenBase_paramNameScenario},
+                                     pl_result)){
+    vl_entityGrpName := pl_result[0];
+    vl_scName        := pl_result[1];
+    var integer vl_egrpidx := f_EPTF_LGenBase_getEntityGroupIdx(vl_entityGrpName)
+    if( -1 ==vl_egrpidx ){
+       f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong."&
+         "\n" & c_LGenBase_paramNameEntityGroup & ": " & vl_entityGrpName );
+       return 1;
+    }
+    var integer vl_scIdx := f_EPTF_LGenBase_getScenarioIdx(vl_egrpidx, vl_scName);
+    if( -1 == vl_scIdx){
+       f_EPTF_LGenBase_loggingWarning(%definitionId& ": Parameter is wrong."&
+         "\n" & c_LGenBase_paramNameScenario & ": " & vl_scName );
+       return 2;
+    }
+    if( -1 != vl_scIdx ){
+      pl_conditionValue :=  f_EPTF_LGenBase_isWeightedScenario(vl_egrpidx, vl_scIdx);
+      return 0;
+    }
+  }
+  return -1;
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_LGenBase_conditionHandler_isTcPresent
+// 
+//  Purpose:
+//    Callback function type to handle condition for isTcPresent.
+//    The type of this function is <fcb_EPTF_DataSourceClient_conditionHandler>
+//
+//  Parameters:
+//    *out boolean pl_conditionValue* - true if the given scenario is weighted
+//    *in charstring pl_source* - the name of the data source 'feature' (now <c_LGenBase_DataSource_sourceId>)
+//    *in charstring pl_ptcName* - the name of the ptc (ID of the PTC) (now "f_EPTF_Base_selfName())  
+//    *in charstring pl_method* - the name of the method (now: <c_LGenBase_conditionIsTcPresent>)
+//    *in* <EPTF_DataSource_Params> *pl_params* - the parameters
+//      of the data for the dataElement (now <c_LGenBase_paramNameEntityGroup>, <c_LGenBase_paramNameScenario> and <c_LGenBase_paramNameTrafficCase>)
+//
+//  Return Value:
+//    integer - error code (0 of OK, non zero if unsuccessful:
+//     e.g. invalid parameters given in pl_params)
+//
+//  Detailed Comments:
+//    This function is called when <f_EPTF_DataSource_getCondition> is requested
+//    for the specified pl_source,pl_ptcName and pl_method.
+//    Its return value (error code) and pl_conditionValue is forwarded
+//    to <f_EPTF_DataSource_getCondition>.
+///////////////////////////////////////////////////////////
+friend function f_EPTF_LGenBase_conditionHandler_isTcPresent(
+  out boolean pl_conditionValue,
+  in charstring pl_source,
+  in charstring pl_ptcName,
+  in charstring pl_method,
+  in EPTF_DataSource_Params pl_params
+) runs on EPTF_LGenBase_Private_CT return integer {
+  var EPTF_CharstringList pl_result := {};
+  var charstring vl_entityGrpName := "";
+  var charstring vl_scName := "";
+  var charstring vl_tcName := "";
+  if(0 == f_EPTF_LGenBase_getParams( pl_params,
+                                    {c_LGenBase_paramNameEntityGroup, c_LGenBase_paramNameScenario,c_LGenBase_paramNameTrafficCase},
+                                    pl_result)){
+    vl_entityGrpName := pl_result[0];
+    vl_scName        := pl_result[1];
+    vl_tcName        := pl_result[2];
+    var integer vl_egrpidx := f_EPTF_LGenBase_getEntityGroupIdx(vl_entityGrpName)
+    if( -1 ==vl_egrpidx ){
+      pl_conditionValue :=  false;
+      return 0;
+    }
+    var integer vl_scIdx := f_EPTF_LGenBase_getScenarioIdx(vl_egrpidx, vl_scName);
+    if( -1 == vl_scIdx){
+      pl_conditionValue :=  false;
+      return 0;
+    }
+    var integer vl_tcIdx := f_EPTF_LGenBase_getTrafficCaseIdx( vl_egrpidx, vl_scIdx, vl_tcName )
+    if( -1 == vl_tcIdx ){
+      pl_conditionValue :=  false;
+      return 0;
+    }
+    else
+    {
+      pl_conditionValue :=  true;
+      return 0;
+    }
+  }
+  return -1;
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_LGenBase_conditionHandler_isScPresent
+// 
+//  Purpose:
+//    Callback function type to handle condition for isScPresent.
+//    The type of this function is <fcb_EPTF_DataSourceClient_conditionHandler>
+//
+//  Parameters:
+//    *out boolean pl_conditionValue* - true if the given scenario is weighted
+//    *in charstring pl_source* - the name of the data source 'feature' (now <c_LGenBase_DataSource_sourceId>)
+//    *in charstring pl_ptcName* - the name of the ptc (ID of the PTC) (now "f_EPTF_Base_selfName())  
+//    *in charstring pl_method* - the name of the method (now: <c_LGenBase_conditionIsScPresent>)
+//    *in* <EPTF_DataSource_Params> *pl_params* - the parameters
+//      of the data for the dataElement (now <c_LGenBase_paramNameEntityGroup>, and <c_LGenBase_paramNameScenario>)
+//
+//  Return Value:
+//    integer - error code (0 of OK, non zero if unsuccessful:
+//     e.g. invalid parameters given in pl_params)
+//
+//  Detailed Comments:
+//    This function is called when <f_EPTF_DataSource_getCondition> is requested
+//    for the specified pl_source,pl_ptcName and pl_method.
+//    Its return value (error code) and pl_conditionValue is forwarded
+//    to <f_EPTF_DataSource_getCondition>.
+///////////////////////////////////////////////////////////
+friend function f_EPTF_LGenBase_conditionHandler_isScPresent(
+  out boolean pl_conditionValue,
+  in charstring pl_source,
+  in charstring pl_ptcName,
+  in charstring pl_method,
+  in EPTF_DataSource_Params pl_params
+) runs on EPTF_LGenBase_Private_CT return integer {
+  var EPTF_CharstringList pl_result := {};
+  var charstring vl_entityGrpName := "";
+  var charstring vl_scName := "";
+  if(0 == f_EPTF_LGenBase_getParams( pl_params,
+                                    {c_LGenBase_paramNameEntityGroup, c_LGenBase_paramNameScenario},
+                                    pl_result)){
+    vl_entityGrpName := pl_result[0];
+    vl_scName        := pl_result[1];
+    var integer vl_egrpidx := f_EPTF_LGenBase_getEntityGroupIdx(vl_entityGrpName)
+    if( -1 ==vl_egrpidx ){
+      pl_conditionValue :=  false;
+      return 0;
+    }
+    var integer vl_scIdx := f_EPTF_LGenBase_getScenarioIdx(vl_egrpidx, vl_scName);
+    if( -1 == vl_scIdx){
+      pl_conditionValue :=  false;
+      return 0;
+    } else
+    {
+      pl_conditionValue :=  true;
+      return 0;
+    }
+  }
+  return -1;
+}
+
+
+} // group
+
+} // module

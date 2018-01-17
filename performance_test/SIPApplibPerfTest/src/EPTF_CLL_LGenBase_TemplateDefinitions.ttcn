@@ -1,0 +1,317 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_CLL_LGenBaseTemplates_Definitions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 512
+//  Updated:  2009-06-18
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////
+//  Module: EPTF_CLL_LGenBase_TemplateDefinitions
+// 
+//  Purpose:
+//    This module provides data types for handling templates on TitanSim load generator
+// 
+//  Module Parameters:
+//    -
+// 
+//  Module depends on:
+//    <EPTF_CLL_Common_Definitions>
+// 
+//  Current Owner:    EISTFAL
+// 
+//  Last Review Date:
+//    2009-02-12
+// 
+//  Detailed Comments:
+// 
+///////////////////////////////////////////////////////////
+module EPTF_CLL_LGenBase_TemplateDefinitions
+{
+  import from EPTF_CLL_Common_Definitions all;
+
+  ///////////////////////////////////////////////////////////
+  // Module parameter: 
+  //   tsp_LGenBase_extTemplLoadList
+  //
+  // Detailed description:
+  //    This parameter defines the initial list of external templates,
+  //    which are loded by initialising of component.
+  ///////////////////////////////////////////////////////////
+  modulepar EPTF_LGenBase_ExtTemplLoadList tsp_LGenBase_extTemplLoadList := {}
+
+  ///////////////////////////////////////////////////////////
+  // Module parameter: 
+  //   tsp_LGenBase_templParamOpentoken
+  //   tsp_LGenBase_templParamClosetoken
+  //
+  // Detailed description:
+  //    This parameter defines the opening and closing strings
+  //    of template parameters
+  ///////////////////////////////////////////////////////////
+  modulepar charstring tsp_LGenBase_templParamOpentoken := "$(";
+  modulepar charstring tsp_LGenBase_templParamClosetoken := ")";
+
+  ///////////////////////////////////////////////////////////
+  // Type: EPTF_LGenBase_ExtTemplateList
+  //
+  // Purpose:
+  //   Type for storing loaded external templates. 
+  //
+  ///////////////////////////////////////////////////////////
+  type record of EPTF_LGenBase_ExtTemplate EPTF_LGenBase_ExtTemplateList;
+
+  ///////////////////////////////////////////////////////////
+  // Type: EPTF_LGenBase_ExtTemplate
+  //
+  // Purpose:
+  //   Type for describing an external template. 
+  //
+  ///////////////////////////////////////////////////////////
+  type record EPTF_LGenBase_ExtTemplate
+  {
+    charstring name,
+    EPTF_LGenBase_ExtTemplateRepr repr
+  }
+  
+  ///////////////////////////////////////////////////////////
+  // Type: EPTF_LGenBase_ExtTemplateRepr
+  //
+  // Purpose:
+  //   Type for parsed representation of an external template. 
+  ///////////////////////////////////////////////////////////
+  type record EPTF_LGenBase_ExtTemplateRepr
+  {
+    EPTF_LGenBase_ExtTemplateFragment_List fragmentList,
+    charstring lastFragment,
+    EPTF_CharstringList paramNames
+  }
+
+  // list of fragments
+  type record of EPTF_LGenBase_ExtTemplateFragment EPTF_LGenBase_ExtTemplateFragment_List;
+  
+  ///////////////////////////////////////////////////////////
+  // Type: EPTF_LGenBase_ExtTemplateFragment
+  //
+  // Purpose:
+  //   Type for representing one fraggment of an external template. 
+  ///////////////////////////////////////////////////////////
+  type record EPTF_LGenBase_ExtTemplateFragment
+  {
+    charstring text,       // text fragmment
+    integer paramPosition  // true if it will be replaced, false if it won't
+  }
+  
+  ///////////////////////////////////////////////////////////
+  // Type: EPTF_LGenBase_ExtTemplLoadList
+  //
+  // Purpose:
+  //   Type for defining a list of external templates to load from file system. 
+  //
+  ///////////////////////////////////////////////////////////
+  type record of EPTF_LGenBase_ExtTemplLoadItem  EPTF_LGenBase_ExtTemplLoadList;
+
+  ///////////////////////////////////////////////////////////
+  // Type: EPTF_LGenBase_ExtTemplLoadItem
+  //
+  // Purpose:
+  //   Type for defining an external template to load from file system. 
+  //
+  ///////////////////////////////////////////////////////////
+  type record EPTF_LGenBase_ExtTemplLoadItem
+  {
+    charstring name,
+    charstring path,
+    boolean convertLF2CRLF
+  }
+
+  ///////////////////////////////////////////////////////////
+  // Type: EPTF_LGenBase_TemplateTypeList
+  //
+  // Purpose:
+  //   Type for storing declared template types. 
+  //
+  ///////////////////////////////////////////////////////////
+  type record of EPTF_LGenBase_TemplateTypeDeclaration EPTF_LGenBase_TemplateTypeList
+
+  ///////////////////////////////////////////////////////////
+  // Type: EPTF_LGenBase_TemplateTypeDeclaration
+  //
+  // Purpose:
+  //   Type for internal representation of a template type declaration. 
+  //
+  ///////////////////////////////////////////////////////////
+  type record EPTF_LGenBase_TemplateTypeDeclaration
+  {
+    EPTF_LGenBase_TemplateTypeKey templateTypeKey,
+    EPTF_LGenBase_TemplateParameterList compulsoryParams,
+    EPTF_LGenBase_TemplateParameterList optionalParams,
+    EPTF_LGenBase_TemplateCallback startCallback optional,
+    EPTF_LGenBase_TemplateCallback finishCallback optional
+  }
+
+  ///////////////////////////////////////////////////////////
+  // Type: EPTF_LGenBase_TemplateTypeKey
+  //
+  // Purpose:
+  //   Type for defineing a template type key.
+  //   A template type is defined by behaviour type and template name.
+  //
+  ///////////////////////////////////////////////////////////
+  type record EPTF_LGenBase_TemplateTypeKey
+  {
+    charstring behaviourType,
+    charstring templateName
+  }
+
+  ///////////////////////////////////////////////////////////
+  // Type: EPTF_LGenBase_TemplateCallback
+  //
+  // Purpose:
+  //   Function type can be used for defining start and finish 
+  //   callback by substitution of templates
+  ///////////////////////////////////////////////////////////
+  type function EPTF_LGenBase_TemplateCallback(inout EPTF_IntegerList pl_contextArgs, inout EPTF_CharstringList pl_params) runs on self;
+
+  ///////////////////////////////////////////////////////////
+  // Type: EPTF_LGenBase_TemplateParameterCallback
+  //
+  // Purpose:
+  //   Function type can be used for defining callback 
+  //   by substitution of a parameter of a template
+  ///////////////////////////////////////////////////////////
+  type function EPTF_LGenBase_TemplateParameterCallback(inout EPTF_IntegerList pl_contextArgs, inout charstring pl_param) runs on self;
+
+  ///////////////////////////////////////////////////////////
+  // Type: EPTF_LGenBase_TemplateParameterCallbackList
+  //
+  // Purpose:
+  //   List of <EPTF_LGenBase_TemplateParameterCallback>
+  ///////////////////////////////////////////////////////////
+  type record of  EPTF_LGenBase_TemplateParameterCallback EPTF_LGenBase_TemplateParameterCallbackList;
+
+  ///////////////////////////////////////////////////////////
+  // Type: EPTF_LGenBase_TemplateParameter
+  //
+  // Purpose:
+  //   Type for defining a parameter name and a callback for it 
+  ///////////////////////////////////////////////////////////
+  type record EPTF_LGenBase_TemplateParameter
+  {
+    charstring parameter,
+    EPTF_LGenBase_TemplateParameterCallback callback optional 
+  }
+
+  ///////////////////////////////////////////////////////////
+  // Type: EPTF_LGenBase_TemplateParameterList
+  //
+  // Purpose:
+  //   List of template parameters 
+  ///////////////////////////////////////////////////////////
+  type record of EPTF_LGenBase_TemplateParameter EPTF_LGenBase_TemplateParameterList;
+
+  ///////////////////////////////////////////////////////////
+  // Type: EPTF_LGenBase_TemplateSetList
+  //
+  // Purpose:
+  //   Type for storing template sets. 
+  //
+  ///////////////////////////////////////////////////////////
+  type record of EPTF_LGenBase_TemplateSet EPTF_LGenBase_TemplateSetList;
+
+  ///////////////////////////////////////////////////////////
+  // Type: EPTF_LGenBase_TemplateSet
+  //
+  // Purpose:
+  //   Type to define a template set. 
+  //
+  ///////////////////////////////////////////////////////////
+  type record of EPTF_LGenBase_TemplateSetItem EPTF_LGenBase_TemplateSet;
+
+  ///////////////////////////////////////////////////////////
+  // Type: EPTF_LGenBase_TemplateSetItem
+  //
+  // Purpose:
+  //   Type to define an item of template set. 
+  //
+  ///////////////////////////////////////////////////////////
+  type record EPTF_LGenBase_TemplateSetItem
+  {
+    integer templateTypeIdx,
+    integer externalTemplateIdx,
+    EPTF_LGenBase_PositionJumpList posJumpTable
+  }
+  
+  ///////////////////////////////////////////////////////////
+  // Type: EPTF_EPTF_LGenBase_PositionJumpList
+  //
+  // Purpose:
+  //   Jump table for supporting conversion of parameter posisitions. 
+  ///////////////////////////////////////////////////////////
+  type record of integer EPTF_LGenBase_PositionJumpList;
+  
+  ///////////////////////////////////////////////////////////
+  // Type: EPTF_LGenBase_TemplateList
+  //
+  // Purpose:
+  //   Allows configuration of a template set. 
+  //
+  ///////////////////////////////////////////////////////////
+  type record of EPTF_LGenBase_AssignedTemplate EPTF_LGenBase_TemplateList;
+
+  ///////////////////////////////////////////////////////////
+  // Type: EPTF_LGenBase_TemplParamSubstList
+  //
+  // Purpose:
+  //   Defines a list of parameter substitutions in a template. 
+  //
+  ///////////////////////////////////////////////////////////
+  type record EPTF_LGenBase_AssignedTemplate
+  {
+    charstring behaviourType,
+    charstring templateName,
+    charstring externalTemplateName
+  }
+  
+  ///////////////////////////////////////////////////////////
+  // Type: EPTF_LGenBase_TemplParamSubstList
+  //
+  // Purpose:
+  //   Defines a list of parameter substitutions in a template. 
+  //
+  ///////////////////////////////////////////////////////////
+  type record of EPTF_LGenBase_TemplParamSubst EPTF_LGenBase_TemplParamSubstList;
+
+  ///////////////////////////////////////////////////////////
+  // Type: EPTF_LGenBase_TemplParamSubst
+  //
+  // Purpose:
+  //   Defines a parameter substitution in a template. 
+  //
+  ///////////////////////////////////////////////////////////
+  type record EPTF_LGenBase_TemplParamSubst
+  {
+    charstring paramName,
+    charstring paramValue
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Constants: 
+  //  - c_EPTF_LGenBase_extTemplHashMapName - *charstring* - 
+  //            name of hasmap for storing external template names
+  //  - c_EPTF_LGenBase_templTypeHashMapName - *charstring* -
+  //            name of hasmap for storing template type names
+  //  - c_EPTF_LGenBase_hashKeyDelimiter *charstring* - 
+  //            delimiter pattern used in template type keys
+  ////////////////////////////////////////////////////////////
+  const charstring c_EPTF_LGenBase_extTemplHashMapName := "LGenBase_externalTemplateHashMap";
+  const charstring c_EPTF_LGenBase_templTypeHashMapName := "LGenBase_templateTypeHashMap";
+  const charstring c_EPTF_LGenBase_hashKeyDelimiter := "###";
+
+} // end of module

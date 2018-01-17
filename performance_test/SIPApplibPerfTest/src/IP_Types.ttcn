@@ -1,0 +1,249 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//
+//  File:               IP_Types.ttcn
+//  Description:        IP
+//  Rev:                <RnXnn>
+//  Prodnr:             CNL 113 418
+//  Updated:            2010-05-19
+//  Contact:            http://ttcn.ericsson.se
+//
+module IP_Types {
+
+import from General_Types all;
+
+// ================= Common data part =================
+
+type bitstring BIT7_BO_LAST length (7) with {variant "BYTEORDER(last)"};
+
+
+// ================= Common part for IPv4 and IPv6 =================
+
+// IANA protocol numbers
+const LIN1 c_ip_proto_ipv4 := 4;
+const LIN1 c_ip_proto_ipv6 := 41;
+const LIN1 c_ip_proto_gre2 := 47;
+const LIN1 c_ip_proto_esp := 50;
+const LIN1 c_ip_proto_ah := 51;
+const LIN1 c_ip_proto_mine := 55;
+// IPv6 extension headers according to RFC 1883
+const LIN1 c_ip_proto_ipv6_hopopt := 0;  // Hop by hop options header
+const LIN1 c_ip_proto_ipv6_route := 43;  // Routing header
+const LIN1 c_ip_proto_ipv6_frag := 44;   // Fragment header
+const LIN1 c_ip_proto_ipv6_dest := 60;   // Destination options header
+const LIN1 c_ip_proto_ipv6_nonext := 59; // No next header
+const LIN1 c_ip_proto_udp := 17;
+const LIN1 c_ip_proto_tcp := 6;
+//IPv6 mobility header according to RFC 3775
+const LIN1 c_ip_proto_mobility := 135;
+// IANA Ethertypes (used in the GRE header) 
+const LIN2_BO_LAST c_ip_gre_proto_ipv4 := oct2int('0800'O);
+const LIN2_BO_LAST c_ip_gre_proto_ipv6 := oct2int('86DD'O);
+// IP version numbers
+const LIN1 c_ip_version_ipv4 := 4;
+const LIN1 c_ip_version_ipv6 := 6;
+// ICMP and ICMPv6 definitions (CR_TR00017206)
+const LIN1 c_ip_proto_icmp := 1;
+const LIN1 c_ip_proto_icmpv6 := 58;
+
+type record IP_MINE_header {
+  LIN1 protocol,
+  BIT1 s_bit,
+  BIT7_BO_LAST reserved,
+  LIN2_BO_LAST cksum,
+  OCT4 dstaddr,
+  OCT4 srcaddr optional
+} with { 
+  variant "FIELDORDER(msb)"; 
+  variant (srcaddr)  "PRESENCE(s_bit = '1'B)";
+}
+
+type record IP_AH_header {
+  LIN1 next_hdr,
+  LIN1 payload_len,
+  OCT2 reserved,
+  LIN4_BO_LAST spi,
+  BIT32_BO_LAST sn,
+  octetstring auth_data 
+} with {
+  variant (payload_len) "LENGTHTO(sn, auth_data)";
+  variant (payload_len) "UNIT(dword32)"
+}
+
+type record IP_ESP_header_part {
+  LIN4_BO_LAST spi,
+  BIT32_BO_LAST sn
+}
+
+type record IP_ESP_NULL_tail {
+  octetstring padding optional,
+  LIN1 pad_length,
+  LIN1 next_hdr,
+  OCT12n auth_data
+} with {
+  variant (pad_length) "LENGTHTO(padding)";
+  variant (pad_length) "UNIT(octets)"
+}
+
+type union IP_ESP_tail_part {
+  IP_ESP_NULL_tail esp_null_tail,
+  octetstring raw_data
+}
+
+type record IP_ESP_header {
+  IP_ESP_header_part  header,
+  IP_ESP_tail_part    tail
+}
+
+type record IP_GRE2_header {
+  BIT1 c,
+  BIT1 reserved_bit,
+  BIT1 k,
+  BIT1 s,
+  BIT9 reserved0,
+  BIT3 version,
+  LIN2_BO_LAST protocol_type,
+  LIN2_BO_LAST checksum optional,
+  LIN2_BO_LAST reserved1 optional,
+  LIN4_BO_LAST key optional,
+  BIT32_BO_LAST sn optional
+} with {
+  variant "FIELDORDER(msb)";
+  variant (checksum)  "PRESENCE(c = '1'B)";
+  variant (reserved1) "PRESENCE(c = '1'B)";
+  variant (key)       "PRESENCE(k = '1'B)";
+  variant (sn)        "PRESENCE(s = '1'B)"
+}
+
+// ================= End of common part for IPv4 and IPv6 =================
+
+
+
+// ================= IPv4 =================
+
+external function f_IPv4_enc(in IPv4_packet pdu) return octetstring;
+external function f_IPv4_enc_eth(in IPv4_packet pdu) return octetstring;
+external function f_IPv4_dec(in octetstring data) return IPv4_packet;
+external function f_IPv4_checksum(in octetstring data) return OCT2;
+external function f_IPv4_addr_enc(in IPV4ADDR cs_addr) return octetstring;
+external function f_IPv4_addr_dec(in octetstring os_addr) return IPV4ADDR;
+
+type record of IPv4_extension_header IPv4_extension_headers;
+
+type union IPv4_extension_header {
+  IP_MINE_header mine_hdr,
+  IP_AH_header ah_hdr,
+  IP_ESP_header esp_hdr,
+  IP_GRE2_header gre2_hdr,
+  octetstring raw_hdr
+}
+
+type charstring IPV4ADDR length (7..15);
+
+type record IPv4_header {
+  INT4b ver,
+  INT4b hlen,
+  LIN1 tos,
+  LIN2_BO_LAST tlen,
+  LIN2_BO_LAST id,
+  BIT1 res,
+  BIT1 dfrag,
+  BIT1 mfrag,
+  INT13b_BO_LAST foffset,
+  LIN1 ttl,
+  LIN1 proto,
+  LIN2_BO_LAST cksum,
+  OCT4 srcaddr,
+  OCT4 dstaddr  
+} with { variant "FIELDORDER(msb)" }
+
+type record IPv4_packet {
+  IPv4_header header,
+  IPv4_extension_headers ext_headers optional,
+  octetstring payload optional
+} with { variant "FIELDORDER(msb)" }
+
+type port IPv4msg_SP_PT message {
+  inout IPv4_packet;
+}  with { extension "internal" }
+
+type record ASP_IPv4 {
+  IPv4_packet ipv4_packet,
+  boolean cksum_calc
+}
+
+type port IPv4_ASP_SP_PT message {
+  inout ASP_IPv4;
+}  with { extension "internal" }
+
+
+
+// ================= IPv6 =================
+
+external function f_IPv6_enc(in IPv6_packet pdu) return octetstring;
+external function f_IPv6_dec(in octetstring data) return IPv6_packet;
+external function f_IPv6_addr_enc(in charstring cs_addr) return octetstring;
+external function f_IPv6_addr_dec(in octetstring os_addr) return charstring;
+
+type record IPv6_Fragment_header
+{
+  LIN1  next_hdr,
+  OCT1  reserved,
+  integer  fragmentOffset,
+  BIT2  reserved2,
+  BIT1  mFlag,
+  OCT4  identification
+} with { variant (fragmentOffset) "FIELDLENGTH(13)";
+         variant (fragmentOffset,reserved2,mFlag)"FIELDORDER (msb)";
+         variant (fragmentOffset) "BYTEORDER(last)"; 
+         
+}           
+
+type record of IPv6_extension_header IPv6_extension_headers;
+
+type union IPv6_extension_header {
+  IP_AH_header ah_hdr,
+  IP_ESP_header esp_hdr,
+  IP_GRE2_header gre2_hdr,
+  IPv6_general_IPv6_extension_header general_exthdr,
+  IPv6_Fragment_header iPv6_Fragment_header,
+  octetstring raw_hdr
+}
+
+type record IPv6_general_IPv6_extension_header {
+  LIN1 next_header,
+  integer exthdr_length (-1..255),//automatic calc. during encoding only if user gives dummy value -1
+  octetstring data   //automatically padded to 8 octet boundary during encoding 
+} with { variant (exthdr_length) "FIELDLENGTH(8)" };
+
+type record IPv6_header {
+  INT4b ver,
+  LIN1 trclass,
+  INT20b_BO_LAST flabel,
+  LIN2_BO_LAST plen,
+  LIN1 nexthead,
+  LIN1 hlim,
+  OCT16 srcaddr,
+  OCT16 dstaddr
+} with { 
+  variant "FIELDORDER(msb)";
+  variant (trclass) "BYTEORDER(last)";
+}
+
+type record IPv6_packet {
+  IPv6_header header,
+  IPv6_extension_headers ext_headers optional,
+  octetstring payload optional
+} with { variant "FIELDORDER(msb)" }
+
+type port IPv6msg_SP_PT message {
+  inout IPv6_packet;
+}  with { extension "internal" }
+
+
+} with { encode "RAW"}

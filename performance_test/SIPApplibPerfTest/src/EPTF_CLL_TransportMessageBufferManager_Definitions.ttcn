@@ -1,0 +1,114 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_CLL_TransportMessageBufferManager_Definitions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 512
+//  Updated:  2011-10-12
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////
+//  Module: EPTF_CLL_TransportMessageBufferManager_Definitions
+// 
+//  Purpose:
+//    -
+// 
+//  Module Parameters:
+//    -
+// 
+//  Module depends on:
+//    <EPTF_CLL_FBQ_Definitions>
+//    <EPTF_CLL_Base_Definitions>
+//    <EPTF_CLL_Logging_Definitions>
+//    <EPTF_CLL_HashMap_Definitions>
+// 
+//  Current Owner:
+//    ENORPIN (EBENMOL)
+// 
+//  Last Review Date:
+//    2008-06-16 
+// 
+//  Detailed Comments:
+// 
+///////////////////////////////////////////////////////////
+module EPTF_CLL_TransportMessageBufferManager_Definitions
+{
+
+import from EPTF_CLL_FBQ_Definitions all;
+import from EPTF_CLL_Base_Definitions all;
+import from EPTF_CLL_Logging_Definitions all;
+import from EPTF_CLL_HashMap_Definitions all;
+
+//=========================================================================
+// Data Types
+//=========================================================================
+group MessageBufferManager_Definitions {
+  //////////////////////////////////////////////////////////
+  // Type: EPTF_MessageBufferManager_MessageQueueElement
+  //
+  // Purpose:
+  //   Type to store the outgoing octetstring messages and
+  //   other charstring information.
+  //
+  // Elements:
+  //   charstring StoreInformation
+  //   octetstring Message
+  //   boolean Valid
+  ///////////////////////////////////////////////////////////
+  type record EPTF_MessageBufferManager_MessageQueueElement {
+    charstring 	StoreInformation,
+    octetstring Message,
+    boolean Valid
+  }
+  //////////////////////////////////////////////////////////
+  // Type: EPTF_MessageBufferManager_MessageQueueList
+  //
+  // Purpose:
+  //   Type to store the outgoing octetstring messages
+  //
+  // Elements:
+  //   octetstring messages
+  ///////////////////////////////////////////////////////////
+  type record of EPTF_MessageBufferManager_MessageQueueElement EPTF_MessageBufferManager_MessageQueueList;
+
+  //////////////////////////////////////////////////////////
+  // Type: EPTF_MessageBufferManager_MessageQueue
+  //
+  // Purpose:
+  //   Type to store the list of outgoing octetstring messages
+  //
+  // Elements:
+  //   EPTF_MessageBufferManager_MessageQueueList
+  ///////////////////////////////////////////////////////////
+  type record of EPTF_MessageBufferManager_MessageQueueList EPTF_MessageBufferManager_MessageQueue;
+
+  //////////////////////////////////////////////////////////
+  // Type: EPTF_MessageBufferManager_CT
+  //
+  // Purpose:
+  //   Component type to store outgoing messages
+  //
+  // Elements:
+  //   v_EPTF_MessageBufferManager_messages - <EPTF_MessageBufferManager_MessageQueue> - Variable to store the outgoing messages
+  //   v_EPTF_MessageBufferManager_messageFreeBusyQueue - <EPTF_FreeBusyQueue> - Queue to store the list of messages
+  //   v_EPTF_MessageBufferManager_keyToMessageRecord - *integer* - HashMap to find the message record from the key
+  //   v_EPTF_MessageBufferManager_maxBufferSize - *integer* - maximum buffersize
+  //   v_EPTF_MessageBufferManager_initialized - *boolean* - guard flag to the init function
+  ///////////////////////////////////////////////////////////
+  type component EPTF_MessageBufferManager_CT
+  extends EPTF_Base_CT, EPTF_Logging_CT, EPTF_HashMap_CT, EPTF_FBQ_CT
+  {
+    private var EPTF_MessageBufferManager_MessageQueue          v_EPTF_MessageBufferManager_messages := {};
+    private var EPTF_FreeBusyQueue                              v_EPTF_MessageBufferManager_messageFreeBusyQueue;  
+    private var integer                                         v_EPTF_MessageBufferManager_keyToMessageRecord := -1;
+    private var integer                                         v_EPTF_MessageBufferManager_maxBufferSize;
+    private var boolean                                         v_EPTF_MessageBufferManager_initialized := false;
+  }
+}
+
+}  // end of module

@@ -1,0 +1,852 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_CLL_StatHandler_Definitions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 512
+//  Updated:  2012-02-17
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////
+//  Module: EPTF_CLL_StatHandler_Definitions
+// 
+//  Purpose:
+//    This module contains type definitions for StatHandler.
+// 
+//  Module depends on:
+//    <EPTF_CLL_Common_Definitions>
+//    <EPTF_CLL_FBQ_Definitions>
+//    <EPTF_CLL_StatHandlerLogging_Definitions>
+//    <EPTF_CLL_Variable_Definitions>
+//    <EPTF_CLL_HashMap_Definitions>
+//
+//  Module Parameters:
+//    tsp_EPTF_StatHandler_nameSeparator - *charstring*
+//
+//  Current Owner:
+//    Gabor Tatarka (EGBOTAT)
+// 
+//  Last Review Date:
+//    -
+//
+//  Detailed Comments:
+//    This module contains type definitions for StatHandler.
+//
+///////////////////////////////////////////////////////////////
+
+module EPTF_CLL_StatHandler_Definitions {
+
+import from EPTF_CLL_Common_Definitions all;
+import from EPTF_CLL_FBQ_Definitions all;
+import from EPTF_CLL_StatHandlerLogging_Definitions all;
+import from EPTF_CLL_Variable_Definitions all;
+import from EPTF_CLL_DataSource_Definitions all;
+import from EPTF_CLL_HashMap_Definitions all;
+
+modulepar charstring tsp_EPTF_StatHandler_nameSeparator := ".";
+
+/////////////////////////////////////////////////////////////////////////
+//  Component: EPTF_StatHandler_CT
+//
+//  Purpose:
+//    Component type for StatHandler
+//
+//  Elements:
+//    v_EPTF_StatHandler_initialized - *boolean*
+//    v_EPTF_StatHandler_aggregatedStats - <EPTF_StatHandler_AggregatedStatDatabase>
+//    vd_EPTF_StatHandler_behavior - *default*
+//    v_EPTF_StatHandler_resetButtonVarIdx - *integer*
+//    v_EPTF_StatHandler_resetComponents - <EPTF_StatHandler_resetAckComponentList>
+//    v_EPTF_StatHandler_nofPendingResets - *integer*
+//    v_EPTF_StatHandler_statDeclaredCallbackFns - <EPTF_StatHandler_statDeclared_FTList>
+//    v_EPTF_StatHandler_bindStatToWidgetFn - <EPTF_StatHandler_bindStatToWidget_FT>
+//    v_EPTF_StatHandler_nameSeparator - *charstring*
+//    v_EPTF_StatHandler_MgmtPCO - <EPTF_StatHandler_MgmtPT>
+//
+//  Detailed Comments:
+//    Extends EPTF_StatHandlerLogging_CT, EPTF_Var_CT
+/////////////////////////////////////////////////////////////////////////
+type component EPTF_StatHandler_CT extends EPTF_StatHandlerLogging_CT, EPTF_Var_CT, EPTF_DataSourceClient_CT, EPTF_HashMap_CT, EPTF_FBQ_CT
+{
+  private var boolean v_EPTF_StatHandler_initialized := false;
+  private var EPTF_StatHandler_AggregatedStatDatabase v_EPTF_StatHandler_aggregatedStats := c_empty_EPTF_StatHandler_AggregatedStatDatabase;
+  private var default vd_EPTF_StatHandler_behavior := null;
+
+  private var integer v_EPTF_StatHandler_resetButtonVarIdx := -1;
+  private var EPTF_StatHandler_resetAckComponentList v_EPTF_StatHandler_resetComponents := {};
+  private var integer v_EPTF_StatHandler_nofPendingResets := 0;
+
+  private var EPTF_StatHandler_statDeclared_FTList v_EPTF_StatHandler_statDeclaredCallbackFns := {};
+  private var EPTF_StatHandler_bindStatToWidget_FT v_EPTF_StatHandler_bindStatToWidgetFn := null;
+
+  private var charstring v_EPTF_StatHandler_nameSeparator := tsp_EPTF_StatHandler_nameSeparator;
+
+  private port EPTF_StatHandler_MgmtPT v_EPTF_StatHandler_MgmtPCO;
+}
+
+
+///////////////////////////////////////////////////////////
+//  Group: EPTF_StatHandler_Database
+//
+//  Purpose:
+//    Group for types used for internal database of StatHandler
+//
+//  Detailed Comments:
+//    -
+///////////////////////////////////////////////////////////
+group EPTF_StatHandler_Database {
+
+  /////////////////////////////////////////////////////////////////////////
+  //  Type: EPTF_StatHandler_StatOfComponent
+  //
+  //  Purpose:
+  //    Type for storing the variable indices subscribing to data sources at a client component
+  //
+  //  Elements:
+  //    compRef - <EPTF_Var_CT>
+  //    varIdxList - <EPTF_IntegerList>
+  //    varNameList - <EPTF_CharstringList>
+  //    resetPending - *boolean*
+  //    lastResetTimestamp - *float*
+  //    resetCompIdx - *integer*
+  //    resetSourceIdx - *integer*
+  //    uniqueId - *integer*
+  /////////////////////////////////////////////////////////////////////////
+  type record EPTF_StatHandler_StatOfComponent {
+    EPTF_Var_CT compRef,
+    EPTF_IntegerList varIdxList, // this should contain indices to local subscribing vars if compRef != self (see IP)
+    EPTF_CharstringList varNameList, // added for selective deregister
+    boolean resetPending,
+    float lastResetTimestamp,
+    integer resetCompIdx,
+    integer resetSourceIdx,
+    integer uniqueId
+  }
+
+  /////////////////////////////////////////////////////////////////////////
+  //  Type: EPTF_StatHandler_StatOfComponentList
+  //
+  //  Purpose:
+  //    Type for storing a list of data sources
+  //
+  //  Elements:
+  //    record of <EPTF_StatHandler_StatOfComponent>
+  /////////////////////////////////////////////////////////////////////////
+  type record of EPTF_StatHandler_StatOfComponent EPTF_StatHandler_StatOfComponentList;
+
+  /////////////////////////////////////////////////////////////////////////
+  //  Type: EPTF_StatHandler_AggregatedStat
+  //
+  //  Purpose:
+  //    Type for storing data related to an aggregated statistic
+  //
+  //  Elements:
+  //    statName - *charstring*
+  //    statMethod - *charstring*
+  //    statVarIdx - *integer*
+  //    auxStats - <EPTF_IntegerList>
+  //    auxVars - <EPTF_IntegerList>
+  //    providerVars - <EPTF_IntegerList>
+  //    statResetValue - <EPTF_Var_DirectContent>
+  //    parentIdx - *integer*
+  //    resetPending - *boolean*
+  //    sources - <EPTF_StatHandler_StatOfComponentList>
+  //    sourceQueue - <EPTF_FreeBusyQueue>
+  /////////////////////////////////////////////////////////////////////////
+  type record EPTF_StatHandler_AggregatedStat {
+    charstring statName,
+    charstring statMethod,
+    integer statVarIdx,
+    EPTF_IntegerList auxStats,
+    EPTF_IntegerList auxVars,
+    EPTF_IntegerList providerVars,// indices of variables that are used as providers if this stat is a source for another stat
+    EPTF_Var_DirectContent statResetValue,
+    integer parentIdx,
+    boolean resetPending,
+    EPTF_StatHandler_StatOfComponentList sources,
+    EPTF_FreeBusyQueue sourceQueue
+  }
+
+  /////////////////////////////////////////////////////////////////////////
+  //  Type: EPTF_StatHandler_AggregatedStatList
+  //
+  //  Purpose:
+  //    Type for storing a list of aggregated statistic
+  //
+  //  Elements:
+  //    record of <EPTF_StatHandler_AggregatedStat>
+  /////////////////////////////////////////////////////////////////////////
+  type record of EPTF_StatHandler_AggregatedStat EPTF_StatHandler_AggregatedStatList;
+
+  /////////////////////////////////////////////////////////////////////////
+  //  Type: EPTF_StatHandler_AggregatedStatDatabase
+  //
+  //  Purpose:
+  //    Type for storing the aggregated statistics database
+  //
+  //  Elements:
+  //    data - <EPTF_StatHandler_AggregatedStatList>
+  //    hashmap_name2Idx - *integer*
+  /////////////////////////////////////////////////////////////////////////
+  type record EPTF_StatHandler_AggregatedStatDatabase {
+    EPTF_StatHandler_AggregatedStatList data,
+    integer hashmap_name2Idx
+  }
+
+  /////////////////////////////////////////////////////////////////////////
+  //  Type: EPTF_StatHandler_sourceRef
+  //
+  //  Purpose:
+  //    Type for storing a reference to a data source within the stat database
+  //
+  //  Elements:
+  //    statIdx - *integer*
+  //    sourceIdx - *integer*
+  /////////////////////////////////////////////////////////////////////////
+  type record EPTF_StatHandler_sourceRef {
+    integer statIdx,
+    integer sourceIdx
+  }
+
+  /////////////////////////////////////////////////////////////////////////
+  //  Type: EPTF_StatHandler_sourceRefList
+  //
+  //  Purpose:
+  //    Type for storing a list of references to data sources within the stat database
+  //
+  //  Elements:
+  //    record of <EPTF_StatHandler_sourceRef>
+  /////////////////////////////////////////////////////////////////////////
+  type record of EPTF_StatHandler_sourceRef EPTF_StatHandler_sourceRefList;
+
+  /////////////////////////////////////////////////////////////////////////
+  //  Type: EPTF_StatHandler_resetAckComponent
+  //
+  //  Purpose:
+  //    Type for storing component and its data source references - used for reset acknowledgement
+  //
+  //  Elements:
+  //    compRef - <EPTF_StatHandlerLogging_CT>
+  //    sources - <EPTF_StatHandler_sourceRefList>
+  //    nofSources - *integer*
+  /////////////////////////////////////////////////////////////////////////
+  type record EPTF_StatHandler_resetAckComponent {
+    EPTF_StatHandlerLogging_CT compRef, // note: using the actual EPTF_StatHandlerClient_CT would cause circular import
+    EPTF_StatHandler_sourceRefList sources,
+    integer nofSources
+  }
+
+  /////////////////////////////////////////////////////////////////////////
+  //  Type: EPTF_StatHandler_resetAckComponentList
+  //
+  //  Purpose:
+  //    Type for storing a list of components with their data source references
+  //
+  //  Elements:
+  //    record of <EPTF_StatHandler_resetAckComponent>
+  /////////////////////////////////////////////////////////////////////////
+  type record of EPTF_StatHandler_resetAckComponent EPTF_StatHandler_resetAckComponentList;
+
+  /////////////////////////////////////////////////////////////////////////
+  //  Type: EPTF_StatHandler_statDeclared_FT
+  //
+  //  Purpose:
+  //    Type for declareStat callback function, useful for e.g. setting up statCapture or GUI for stats
+  /////////////////////////////////////////////////////////////////////////
+  type function EPTF_StatHandler_statDeclared_FT(
+    in charstring pl_statName,
+    in charstring pl_statMethod,
+    in integer pl_statVarIdx)
+  runs on self;
+
+  /////////////////////////////////////////////////////////////////////////
+  //  Type: EPTF_StatHandler_statDeclared_FTList
+  //
+  //  Purpose:
+  //    Type for storing a list of declareStat callback function references
+  //
+  //  Elements:
+  //    record of <EPTF_StatHandler_statDeclared_FT>
+  /////////////////////////////////////////////////////////////////////////
+  type record of EPTF_StatHandler_statDeclared_FT EPTF_StatHandler_statDeclared_FTList;
+
+  /////////////////////////////////////////////////////////////////////////
+  //  Type: EPTF_StatHandler_bindStatToWidget_FT
+  //
+  //  Purpose:
+  //    Type for bindStatToWidget management message callback function,
+  //    used by the StatHandlerUI
+  /////////////////////////////////////////////////////////////////////////
+  type function EPTF_StatHandler_bindStatToWidget_FT(
+    in charstring pl_statName,
+    in charstring pl_widgetId,
+    in boolean pl_additionalWidget,
+    in EPTF_Var_SubscriptionMode pl_subscriptionMode,
+    in integer pl_refreshRate := 0)
+  runs on self
+  return boolean;
+
+} // group EPTF_StatHandler_Database
+
+
+///////////////////////////////////////////////////////////
+//  Group: EPTF_StatHandler_MgmtMsgs
+//
+//  Purpose:
+//    Group for management messages.
+//
+//  Detailed Comments:
+//    Group for management messages used in the internal
+//    communication between StatHandlerClient and StatHandler
+//
+///////////////////////////////////////////////////////////
+group EPTF_StatHandler_MgmtMsgs {
+
+  /////////////////////////////////////////////////////////////////////////
+  //  Type: EPTF_StatHandler_MgmtPT
+  //
+  //  Purpose:
+  //    Management port type
+  /////////////////////////////////////////////////////////////////////////
+  type port EPTF_StatHandler_MgmtPT message {
+    inout
+      EPTF_StatHandler_MgmtMsg_Request,
+      EPTF_StatHandler_MgmtMsg_Response
+  } with { extension "internal" }
+
+  /////////////////////////////////////////////////////////////////////////
+  //  Type: EPTF_StatHandler_MgmtMsg_Request
+  //
+  //  Purpose:
+  //    Request message for StatHandler management port
+  //
+  //  Elements:
+  //    sIdx - *integer* - semaphore index
+  //    request - <EPTF_StatHandler_MgmtMsg_RequestUnion>
+  /////////////////////////////////////////////////////////////////////////
+  type record EPTF_StatHandler_MgmtMsg_Request {
+    integer sIdx,
+    EPTF_StatHandler_MgmtMsg_RequestUnion request
+  }
+
+  /////////////////////////////////////////////////////////////////////////
+  //  Type: EPTF_StatHandler_MgmtMsg_RequestUnion
+  //
+  //  Purpose:
+  //    Union of request messages
+  //
+  //  Elements:
+  //    getResetVarNameReq - <EPTF_StatHandler_MgmtMsg_GetResetVarName>
+  //    declareReq - <EPTF_StatHandler_MgmtMsg_DeclareStat>
+  //    registerReq - <EPTF_StatHandler_MgmtMsg_RegisterStat>
+  //    deregisterReq - <EPTF_StatHandler_MgmtMsg_DeregisterStat>
+  //    getVarReq - <EPTF_StatHandler_MgmtMsg_GetStatVarRef>
+  //    resetAck - <EPTF_StatHandler_MgmtMsg_ResetAck>
+  //    bindStatToWidget - <EPTF_StatHandler_MgmtMsg_BindStatToWidget>
+  /////////////////////////////////////////////////////////////////////////
+  type union EPTF_StatHandler_MgmtMsg_RequestUnion {
+    EPTF_StatHandler_MgmtMsg_GetResetVarName getResetVarNameReq,
+    EPTF_StatHandler_MgmtMsg_DeclareStat declareReq,
+    EPTF_StatHandler_MgmtMsg_RegisterStat registerReq,
+    EPTF_StatHandler_MgmtMsg_DeregisterStat deregisterReq,
+    EPTF_StatHandler_MgmtMsg_GetProviderVars getProviderVars,
+    EPTF_StatHandler_MgmtMsg_GetStatVarRef getVarReq,
+    EPTF_StatHandler_MgmtMsg_ResetAck resetAck,
+    EPTF_StatHandler_MgmtMsg_BindStatToWidget bindStatToWidget
+  }
+
+  /////////////////////////////////////////////////////////////////////////
+  //  Type: EPTF_StatHandler_MgmtMsg_Response
+  //
+  //  Purpose:
+  //    Response message for StatHandler management port
+  //
+  //  Elements:
+  //    sIdx - *integer*
+  //    response - <EPTF_StatHandler_MgmtMsg_ResponseUnion>
+  /////////////////////////////////////////////////////////////////////////
+  type record EPTF_StatHandler_MgmtMsg_Response {
+    integer sIdx,
+    EPTF_StatHandler_MgmtMsg_ResponseUnion response
+  }
+
+  /////////////////////////////////////////////////////////////////////////
+  //  Type: EPTF_StatHandler_MgmtMsg_ResponseUnion
+  //
+  //  Purpose:
+  //    Union of response messages
+  //
+  //  Elements:
+  //    resetVarNameResp - <EPTF_StatHandler_MgmtMsg_ConnectAck>
+  //    statusResp - <EPTF_StatHandler_MgmtMsg_StatusResponse>
+  //    deregisterResp - <EPTF_StatHandler_MgmtMsg_DeregisterResponse>
+  //    getVarResp - <EPTF_StatHandler_MgmtMsg_GetStatVarRefResponse>
+  /////////////////////////////////////////////////////////////////////////
+  type union EPTF_StatHandler_MgmtMsg_ResponseUnion {
+    EPTF_StatHandler_MgmtMsg_ResetVarNameResponse resetVarNameResp,
+    EPTF_StatHandler_MgmtMsg_StatusResponse statusResp,
+    EPTF_StatHandler_MgmtMsg_DeregisterResponse deregisterResp,
+    EPTF_StatHandler_MgmtMsg_ProviderVarsResponse providerVarsResp,
+    EPTF_StatHandler_MgmtMsg_GetStatVarRefResponse getVarResp
+  }
+
+  /////////////////////////////////////////////////////////////////////////
+  //  Type: EPTF_StatHandler_MgmtMsg_GetResetVarName
+  //
+  //  Purpose:
+  //    PDU for getting the reset button's Var name
+  //
+  //  Elements:
+  //    -
+  /////////////////////////////////////////////////////////////////////////
+  type record EPTF_StatHandler_MgmtMsg_GetResetVarName {
+  }
+
+  /////////////////////////////////////////////////////////////////////////
+  //  Type: EPTF_StatHandler_MgmtMsg_ResetVarNameResponse
+  //
+  //  Purpose:
+  //    Response PDU for getting the reset button's Var name
+  //
+  //  Elements:
+  //    resetVarName - *charstring*
+  //    resetVarComp - <EPTF_Var_CT>
+  /////////////////////////////////////////////////////////////////////////
+  type record EPTF_StatHandler_MgmtMsg_ResetVarNameResponse {
+    charstring resetVarName,
+    EPTF_Var_CT resetVarComp
+  }
+
+//  type record EPTF_StatHandler_MgmtMsg_Disconnect {
+//  }
+//
+//  type record EPTF_StatHandler_MgmtMsg_DisconnectAck {
+//  }
+
+  /////////////////////////////////////////////////////////////////////////
+  //  Type: EPTF_StatHandler_MgmtMsg_DeclareStat
+  //
+  //  Purpose:
+  //    Stat declaration PDU
+  //
+  //  Elements:
+  //    statName - *charstring*
+  //    statMethod - *charstring*
+  //    statResetValue - <EPTF_Var_DirectContent>
+  /////////////////////////////////////////////////////////////////////////
+  type record EPTF_StatHandler_MgmtMsg_DeclareStat {
+    charstring  statName,
+    charstring  statMethod,
+    EPTF_Var_DirectContent statResetValue
+  }
+
+  /////////////////////////////////////////////////////////////////////////
+  //  Type: EPTF_StatHandler_MgmtMsg_RegisterStat
+  //
+  //  Purpose:
+  //    Stat datasource registration PDU
+  //
+  //  Elements:
+  //    sourceCompRef - <EPTF_Var_CT>
+  //    providerVarList - <EPTF_CharstringList>
+  //    subscriptionMode - <EPTF_Var_SubscriptionMode>
+  //    targetStatName - *charstring*
+  //    refreshRate - *integer*
+  /////////////////////////////////////////////////////////////////////////
+  type record EPTF_StatHandler_MgmtMsg_RegisterStat {
+    EPTF_Var_CT sourceCompRef,
+    EPTF_CharstringList providerVarList,
+    EPTF_Var_SubscriptionMode subscriptionMode,
+    charstring targetStatName,
+    integer refreshRate
+  }
+
+  /////////////////////////////////////////////////////////////////////////
+  //  Type: EPTF_StatHandler_MgmtMsg_DeregisterStat
+  //
+  //  Purpose:
+  //    Stat datasource deregistration PDU
+  //
+  //  Elements:
+  //    sourceCompRef - <EPTF_Var_CT>
+  //    providerVarList - <EPTF_CharstringList>
+  //    targetStatName - *charstring*
+  /////////////////////////////////////////////////////////////////////////
+  type record EPTF_StatHandler_MgmtMsg_DeregisterStat {
+    EPTF_Var_CT sourceCompRef,
+    EPTF_CharstringList providerVarList,
+    charstring targetStatName
+  }
+
+  /////////////////////////////////////////////////////////////////////////
+  //  Type: EPTF_StatHandler_MgmtMsg_DeregisterResponse
+  //
+  //  Purpose:
+  //    Stat deregistration response PDU
+  //
+  //  Elements:
+  //    -
+  /////////////////////////////////////////////////////////////////////////
+  type record EPTF_StatHandler_MgmtMsg_DeregisterResponse {
+  }
+
+  /////////////////////////////////////////////////////////////////////////
+  //  Type: EPTF_StatHandler_MgmtMsg_GetProviderVars
+  //
+  //  Purpose:
+  //    PDU for getting provider variable names for a stat
+  //
+  //  Elements:
+  //    statName - *charstring*
+  /////////////////////////////////////////////////////////////////////////
+  type record EPTF_StatHandler_MgmtMsg_GetProviderVars {
+    charstring statName
+  }
+
+  /////////////////////////////////////////////////////////////////////////
+  //  Type: EPTF_StatHandler_MgmtMsg_GetProviderVars
+  //
+  //  Purpose:
+  //    Response PDU for provider variable names
+  //
+  //  Elements:
+  //    providerVars - <EPTF_CharstringList>
+  /////////////////////////////////////////////////////////////////////////
+  type record EPTF_StatHandler_MgmtMsg_ProviderVarsResponse {
+    EPTF_CharstringList providerVars
+  }
+
+  /////////////////////////////////////////////////////////////////////////
+  //  Type: EPTF_StatHandler_MgmtMsg_StatusResponse
+  //
+  //  Purpose:
+  //    Status response PDU
+  //
+  //  Elements:
+  //    result - *boolean*
+  /////////////////////////////////////////////////////////////////////////
+  type record EPTF_StatHandler_MgmtMsg_StatusResponse {
+    boolean result
+  }
+
+  /////////////////////////////////////////////////////////////////////////
+  //  Type: EPTF_StatHandler_MgmtMsg_GetStatVarRef
+  //
+  //  Purpose:
+  //    GetStatVarRef PDU
+  //
+  //  Elements:
+  //    statName - *charstring*
+  /////////////////////////////////////////////////////////////////////////
+  type record EPTF_StatHandler_MgmtMsg_GetStatVarRef {
+    charstring statName
+  }
+
+  /////////////////////////////////////////////////////////////////////////
+  //  Type: EPTF_StatHandler_MgmtMsg_GetStatVarRefResponse
+  //
+  //  Purpose:
+  //    GetStatVarRef response PDU
+  //
+  //  Elements:
+  //    statVarName - *charstring*
+  /////////////////////////////////////////////////////////////////////////
+  type record EPTF_StatHandler_MgmtMsg_GetStatVarRefResponse {
+    charstring statVarName
+  }
+
+  /////////////////////////////////////////////////////////////////////////
+  //  Type: EPTF_StatHandler_MgmtMsg_ResetAck
+  //
+  //  Purpose:
+  //    Reset acknowledgement PDU (sent from client to master, needs no response)
+  //
+  //  Elements:
+  //    resetTimestamp - *float*
+  /////////////////////////////////////////////////////////////////////////
+  type record EPTF_StatHandler_MgmtMsg_ResetAck {
+    float resetTimestamp
+  }
+
+  /////////////////////////////////////////////////////////////////////////
+  //  Type: EPTF_StatHandler_MgmtMsg_BindStatToWidget
+  //
+  //  Purpose:
+  //    Request to bind stat to a widget (for StatHandlerUI)
+  //
+  //  Elements:
+  //    statName - *charstring*
+  //    widgetId - *charstring*
+  /////////////////////////////////////////////////////////////////////////
+  type record EPTF_StatHandler_MgmtMsg_BindStatToWidget {
+    charstring statName,
+    charstring widgetId,
+    boolean additionalWidget,
+    EPTF_Var_SubscriptionMode subscriptionMode,
+    integer refreshRate
+  }
+
+} // group EPTF_StatHandler_MgmtMsgs
+
+/////////////////////////////////////////////////////////////////////////
+// Constant: c_empty_EPTF_StatHandler_StatOfComponent
+//
+// Purpose:
+//    Initialization value for instances of type EPTF_StatHandler_StatOfComponent
+/////////////////////////////////////////////////////////////////////////
+const EPTF_StatHandler_StatOfComponent c_empty_EPTF_StatHandler_StatOfComponent := {
+  compRef := null,
+  varIdxList := {},
+  varNameList := {},
+  resetPending := false,
+  lastResetTimestamp := -1.0,
+  resetCompIdx := -1,
+  resetSourceIdx := -1,
+  uniqueId := -1
+}
+
+
+/////////////////////////////////////////////////////////////////////////
+// Constant: c_empty_EPTF_StatHandler_AggregatedStat
+//
+// Purpose:
+//    Initialization value for the aggregated statistics element
+/////////////////////////////////////////////////////////////////////////
+const EPTF_StatHandler_AggregatedStat c_empty_EPTF_StatHandler_AggregatedStat := {
+  statName := "",
+  statMethod := "",
+  statVarIdx := -1,
+  auxStats := {},
+  auxVars := {},
+  providerVars := {},
+  statResetValue := {intVal := -1},
+  parentIdx := -1,
+  resetPending := false,
+  sources := {},
+  sourceQueue := c_EPTF_emptyFreeBusyQueue
+}
+
+/////////////////////////////////////////////////////////////////////////
+// Constant: c_empty_EPTF_StatHandler_AggregatedStatDatabase
+//
+// Purpose:
+//    Initialization value for the aggregated statistics database
+/////////////////////////////////////////////////////////////////////////
+const EPTF_StatHandler_AggregatedStatDatabase c_empty_EPTF_StatHandler_AggregatedStatDatabase := {
+  data := {},
+  hashmap_name2Idx := -1
+}
+
+/////////////////////////////////////////////////////////////////////////
+// Constant: c_EPTF_StatHandler_HashMapName2Idx
+//
+// Purpose:
+//    Name of the hashmap used for searching in the stats database by stat name.
+/////////////////////////////////////////////////////////////////////////
+const charstring c_EPTF_StatHandler_HashMapName2Idx := "Name2Idx";
+
+/////////////////////////////////////////////////////////////////////////
+// Constant: c_EPTF_StatHandler_VarNamePrefix
+//
+// Purpose:
+//    Prefix for the subscribing variable's names.
+/////////////////////////////////////////////////////////////////////////
+const charstring c_EPTF_StatHandler_VarNamePrefix := "EPTF_StatHandler";
+
+/////////////////////////////////////////////////////////////////////////
+// Constant: c_EPTF_StatHandler_ResetVarName
+//
+// Purpose:
+//    Name of the reset button variable.
+/////////////////////////////////////////////////////////////////////////
+const charstring c_EPTF_StatHandler_ResetVarName := "EPTF_StatHandler_ResetButton";
+
+/////////////////////////////////////////////////////////////////////////
+// Constant: c_EPTF_StatHandler_loggingComponentMask
+//
+// Purpose:
+//    Logging component class for StatHandler
+/////////////////////////////////////////////////////////////////////////
+const charstring c_EPTF_StatHandler_loggingComponentMask := "EPTF_StatHandler";
+
+
+/////////////////////////////////////////////////////////////////////////
+// Constant: c_EPTF_StatHandler_auxVarName
+//
+// Purpose:
+//    Name suffixes for auxiliary variables used by stats.
+//
+// Other values:
+//    - c_EPTF_StatHandler_auxVarName_mean
+//    - c_EPTF_StatHandler_auxVarName_boundaries
+/////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////
+// Constant: c_EPTF_StatHandler_auxVarIdx
+//
+// Purpose:
+//    Indices for auxiliary variables used by stats.
+//
+// Other values:
+//    - c_EPTF_StatHandler_auxVarIdx_mean
+//    - c_EPTF_StatHandler_auxVarIdx_boundaries
+/////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////
+// Constant: c_EPTF_StatHandler_auxStatName
+//
+// Purpose:
+//    Name suffixes for auxiliary stats used by stats.
+//
+// Other values:
+//    - c_EPTF_StatHandler_auxStatName_density
+//    - c_EPTF_StatHandler_auxStatName_max
+/////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////
+// Constant: c_EPTF_StatHandler_auxStatIdx
+//
+// Purpose:
+//    Indices for auxiliary stats used by stats.
+//
+// Other values:
+//    - c_EPTF_StatHandler_auxStatIdx_density
+//    - c_EPTF_StatHandler_auxStatIdx_max
+/////////////////////////////////////////////////////////////////////////
+
+// auxiliary data
+
+// For standard deviation:
+const charstring c_EPTF_StatHandler_auxVarName_mean := "mean";
+const integer c_EPTF_StatHandler_auxVarIdx_mean := 0;
+
+// For density:
+const charstring c_EPTF_StatHandler_auxVarName_boundaries := "boundaries";
+const integer c_EPTF_StatHandler_auxVarIdx_boundaries := 0;
+
+// For Percentile95:
+const charstring c_EPTF_StatHandler_auxStatName_density := "density";
+const integer c_EPTF_StatHandler_auxStatIdx_density := 0;
+const charstring c_EPTF_StatHandler_auxStatName_max := "max";
+const integer c_EPTF_StatHandler_auxStatIdx_max := 1;
+
+// For PercentileP:
+const charstring c_EPTF_StatHandler_auxVarName_pValue := "pValue";
+const integer c_EPTF_StatHandler_auxVarIdx_pValue := 0;
+
+
+/////////////////////////////////////////////////////////////////////////
+// Constant: v_EPTF_StatHandler_sourceVarIdx
+//
+// Purpose:
+//    Data source variable indices
+//
+// Other values:
+//    - c_EPTF_StatHandler_sourceVarIdx_single
+//    - c_EPTF_StatHandler_sourceVarIdx_density
+//    - c_EPTF_StatHandler_sourceVarIdx_boundaries
+//    - c_EPTF_StatHandler_sourceVarIdx_mean
+//    - c_EPTF_StatHandler_sourceVarIdx_nofSamples
+//    - c_EPTF_StatHandler_sourceVarIdx_S
+//    - c_EPTF_StatHandler_sourceVarIdx_sum
+//    - c_EPTF_StatHandler_sourceVarIdx_elementNumber
+//    - c_EPTF_StatHandler_sourceVarIdx_max
+//    - c_EPTF_StatHandler_sourceVarIdx_pValue
+/////////////////////////////////////////////////////////////////////////
+// for min, max and sum
+const integer c_EPTF_StatHandler_sourceVarIdx_single := 0;
+
+// For density
+const integer c_EPTF_StatHandler_sourceVarIdx_density := 0;
+const integer c_EPTF_StatHandler_sourceVarIdx_boundaries := 1;
+
+// mean
+const integer c_EPTF_StatHandler_sourceVarIdx_mean := 0;
+const integer c_EPTF_StatHandler_sourceVarIdx_nofSamples := 1;
+
+//standard deviation
+//const integer c_EPTF_StatHandler_sourceVarIdx_mean := 0;
+//const integer c_EPTF_StatHandler_sourceVarIdx_nofSamples := 1;
+const integer c_EPTF_StatHandler_sourceVarIdx_S := 2;
+
+// gloabal average
+const integer c_EPTF_StatHandler_sourceVarIdx_sum := 0;
+const integer c_EPTF_StatHandler_sourceVarIdx_elementNumber := 1;
+
+// Precentile95
+//const integer c_EPTF_StatHandler_sourceVarIdx_density := 0;
+//const integer c_EPTF_StatHandler_sourceVarIdx_boundaries := 1;
+const integer c_EPTF_StatHandler_sourceVarIdx_max := 2;
+// PrecentileP
+const integer c_EPTF_StatHandler_sourceVarIdx_pValue := 3;
+
+
+group DSconstants{
+///////////////////////////////////////////////////////////////////////////////
+// Constant: c_StatHandler_DataSource_sourceId
+//
+// Purpose:
+//   This constant defines the identifier which should be written into the datasource 
+//   requests in order to tell the DataSource server that the requests belong to StatHandler,
+//   so send it to the StatHandler in order to process.
+//
+///////////////////////////////////////////////////////////////////////////////
+const charstring c_StatHandler_DataSource_sourceId := "StatHandler";
+
+///////////////////////////////////////////////////////////////////////////////
+// Constant: c_StatHandler_iteratorVar_prefix
+//
+// Purpose:
+//  The names of the variables, which are made to represent the iterators, 
+//	are made with the use of this constant.
+//
+///////////////////////////////////////////////////////////////////////////////
+const charstring c_StatHandler_iteratorVar_prefix := "StatHandler_iterator_";
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Constant: c_StatHandler_dataElementResetComponent
+//
+// Purpose:
+//   This constant defines what to write into the gui xml in order to get the 
+//   following data element back : ResetComponent, type integer
+//
+// Parameters:
+//   c_StatHandler_paramNameComponent	  - Component name
+//
+///////////////////////////////////////////////////////////////////////////////
+const charstring c_StatHandler_dataElementResetComponent := "ResetComponent";
+
+///////////////////////////////////////////////////////////////////////////////
+// Constant: c_StatHandler_dataElementResetAll
+//
+// Purpose:
+//   This constant defines what to write into the gui xml in order to get the 
+//   following data element back : ResetAll, type integer
+//
+// Parameters:
+//   -
+//
+///////////////////////////////////////////////////////////////////////////////
+const charstring c_StatHandler_dataElementResetAll := "ResetAll";
+
+/////////////////////////////////////////////////////////////////////////
+// Constant: c_EPTF_StatHandler_ResetVarNameLocal
+//
+// Purpose:
+//    Local reset button Var name
+/////////////////////////////////////////////////////////////////////////
+const charstring c_EPTF_StatHandler_ResetVarNameLocal := "EPTF_StatHandlerUI_resetButtonVarLocal";
+/////////////////////////////////////////////////////////////////////////
+// Constant: c_EPTF_StatHandler_ResetVarNameGlobal
+//
+// Purpose:
+//    Global reset button Var name
+/////////////////////////////////////////////////////////////////////////
+const charstring c_EPTF_StatHandler_ResetVarNameGlobal := "EPTF_StatHandlerUI_resetButtonVarGlobal";
+
+
+}
+} // end of module

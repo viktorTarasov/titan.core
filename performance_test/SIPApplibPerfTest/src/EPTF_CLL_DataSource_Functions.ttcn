@@ -1,0 +1,1694 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_CLL_DataSource_Functions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 512
+//  Updated:  2012-12-21
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////
+//  Module: EPTF_CLL_DataSource_Functions
+// 
+//  Purpose:
+//    This module contains the implementation of EPTF_CLL_DataSource functions.
+// 
+//  Module depends on:
+//    <EPTF_CLL_Base_Functions>
+//    <EPTF_CLL_Common_Functions>
+//    <EPTF_CLL_Common_Definitions>
+//    <EPTF_CLL_Variable_Functions>
+//    <EPTF_CLL_Variable_Definitions>
+//    <EPTF_CLL_DataSource_Definitions>
+//    <EPTF_CLL_Semaphore_Functions>
+//    <EPTF_CLL_HashMapStr2Int_Functions>
+//    <EPTF_CLL_HashMap_Functions>
+//
+//  Module Parameters:
+//    tsp_EPTF_DataSource_maxWaitTime - float - max wait time for response (dafault:10.0)
+//
+//  Current Owner:
+//    Jozsef Gyurusi (ethjgi)
+// 
+//  Last Review Date:
+//    2011-02-03
+//
+//  Detailed Comments:
+//    This module contains the interface functions for the EPTF_CLL_DataSource.
+//    The DataSource feature makes it possible to access application data
+//    remotely using "feature name", "ptc name" as the dataSource ID and
+//    "data element" and "parameters" to get the data for a given data type.
+//    The data value is a variable name that contains the value of the data.
+//    The variable is created locally in the background with the given refresh rate.
+//    An example:
+//    ExecCtrl registers itself as a dataSource with "ExecCtrl" as the feature name
+//    and "MyExecCtrl" as ptc name. Its handler function can provide data for example
+//    for the Scenarios in a given entity group. This means that the <f_EPTF_DataSource_getData>
+//    function will return a variable name that contains this list of scenarios. The dataElement
+//    parameter in this case is "ScenariosOfEGrp" and the parameter can be "EG1" to get the scenario list
+//    for this entity group. The handler function registered in ExecCtrl has to be able to
+//    process the "ScenariosOfEGrp" dataelement with the "EG1" as parameter.
+//
+//    Public functions:
+//       <f_EPTF_DataSource_init_CT>
+//       <f_EPTF_DataSource_getData>
+//       <f_EPTF_DataSource_checkData>
+//       <f_EPTF_DataSource_getCondition>
+//       <f_EPTF_DataSource_getParams>
+//       <f_EPTF_DataSource_extractParams>
+//
+//    DataSource with CLI:
+//       <f_EPTF_DataSource_CLI_init_CT>
+//
+//    All other functions in this module are private! 
+//
+///////////////////////////////////////////////////////////////
+
+module EPTF_CLL_DataSource_Functions {
+
+import from EPTF_CLL_Base_Functions all;
+//import from EPTF_CLL_Common_Functions all;
+import from EPTF_CLL_Common_Definitions all;
+import from EPTF_CLL_Variable_Functions all;
+import from EPTF_CLL_Variable_Definitions all;
+import from EPTF_CLL_DataSource_Definitions all;
+import from EPTF_CLL_Semaphore_Functions all;
+import from EPTF_CLL_HashMapStr2Int_Functions all;
+import from EPTF_CLL_Logging_Functions all;
+import from EPTF_CLL_HashMap_Functions all;
+import from EPTF_CLL_Logging_Definitions all;
+import from EPTF_CLL_CLI_Definitions all;
+import from EPTF_CLL_CLI_Functions all;
+import from ttcn_ericsson_se_protocolModules_xtdp_xtdl all;
+
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_DataSource_init_CT
+// 
+//  Purpose:
+//    Init function for DataSource_CT
+//
+//  Parameters:
+//    *in charstring pl_selfName* - the name of the component
+//
+//  Detailed Comments:
+//    Has to be called before any other DataSource
+//    function is used
+///////////////////////////////////////////////////////////
+public function f_EPTF_DataSource_init_CT(in charstring pl_selfName) runs on EPTF_DataSource_CT {
+  if (v_EPTF_DataSource_initialized) {
+    return;
+  }
+  f_EPTF_Base_init_CT(pl_selfName);
+  f_EPTF_Var_init_CT(pl_selfName);
+  f_EPTF_Semaphore_init_CT(pl_selfName);
+  f_EPTF_HashMap_init_CT(pl_selfName);
+
+  v_DataSource_handler := activate(as_EPTF_DataSource_EventHandler());
+  v_EPTF_DataSource_initialized := true;
+  f_EPTF_Base_registerCleanup(refers(f_EPTF_DataSource_cleanup_CT));
+
+  v_EPTF_DataSource_DataHandler_List := {};
+  v_EPTF_DataSource_DataHandlerHash := f_EPTF_str2int_HashMap_New(c_EPTF_DataSource_dataHandlerHashName);
+  v_EPTF_DataSource_DataHandlerHash_NoPTCName := f_EPTF_str2int_HashMap_New(c_EPTF_DataSource_dataHandlerHashName_NoPTCName);
+  v_EPTF_DataSource_dataValue_List := {};
+  v_EPTF_DataSource_dataValueHash := f_EPTF_str2int_HashMap_New(c_EPTF_DataSource_dataValueHashName);
+
+  // create the iterator variable for c_EPTF_DataSource_dataElement_Sources, initial value: my source name (I am also a dataSource):
+  var integer vl_varIdx;
+  f_EPTF_Var_newCharstringlist(c_EPTF_DataSource_externalDataVar_prefix&"."&c_EPTF_DataSource_dataElement_Sources, {c_EPTF_DataSource_sourceId}, vl_varIdx);
+  // create the PTCs variable for DataSource itself:
+  var charstring pl_dataVarName := c_EPTF_DataSource_externalDataVar_prefix&"."&c_EPTF_DataSource_dataElement_PTCs&"."&c_EPTF_DataSource_sourceId;
+  f_EPTF_Var_newCharstringlist(pl_dataVarName, {f_EPTF_Base_selfName()}, vl_varIdx); 
+
+
+  v_EPTF_DataSource_Msg_List := {};
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_EPTF_DataSource_compare
+// 
+//  Purpose:
+//    Compares two EPTF_DataSource_Param arguments by their paramName.
+//
+//  Parameters:
+//    *in* <EPTF_DataSource_Param> *pl_par1* - the first parameter to compare
+//    *in* <EPTF_DataSource_Param> *pl_par2* - the second parameter to compare
+//
+//  Return Value:
+//    integer - The function returns an integer greater than, equal to, or
+//      less than 0, if the string pointed to by pl_par1.paramName is greater
+//      than, equal to, or less than the string pointed to by pl_par2.paramName
+//      respectively.
+//
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//    Works similar to strcmp. For more details see its man page (man strcmp).
+//    
+///////////////////////////////////////////////////////////////////////////////
+private external function f_EPTF_DataSource_compare(in EPTF_DataSource_Param pl_par1, in EPTF_DataSource_Param pl_par2) return integer;
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_EPTF_DataSource_bubblesort
+// 
+//  Purpose:
+//    Sorts the argument in increasing order using the bubble-sort algorithm.
+//
+//  Parameters:
+//    *inout* <EPTF_DataSource_Params> *pl_list* - the list of parameters to sort,
+//      When the function returns it will be sorted by a bubble-sort algorithm.
+//
+//  Return Value:
+//    -
+//
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//    The parameters are sorted by thier paramNames lexically.
+//    
+///////////////////////////////////////////////////////////////////////////////
+private function f_EPTF_DataSource_bubblesort(inout EPTF_DataSource_Params pl_list) {
+  var integer n := sizeof(pl_list);
+  var integer k;
+  var integer bound := n-1;
+  var EPTF_DataSource_Param t;
+  var integer last_swap;
+
+  while (bound!=0) {
+    last_swap := 0;
+    for ( k:=0; k<bound; k:=k+1 ) {
+      t := pl_list[k]; // t is a maximum of A[0]..A[k] 
+      if ( f_EPTF_DataSource_compare(t,pl_list[k+1])>0 ) {
+        pl_list[k] := pl_list[k+1]; pl_list[k+1] := t; //swap
+        last_swap := k; // mark the last swap position 
+      }//if
+    }//for
+    bound:=last_swap; // elements after bound already sorted        
+  }//while
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_DataSource_sortParams
+// 
+//  Purpose:
+//    Orders the given parameters lexicographically with respect to the paramNames;
+//
+//  Parameters:
+//    *inout* <EPTF_DataSource_Params> *pl_params* - contains the parameters to sort.
+//       When the function returns it will be sorted
+//
+//  Return Value:
+//    -
+//
+//  Detailed Comments:
+//    -
+///////////////////////////////////////////////////////////
+private function f_EPTF_DataSource_sortParams(inout EPTF_DataSource_Params pl_params) {
+  f_EPTF_DataSource_bubblesort(pl_params);
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_DataSource_getData
+// 
+//  Purpose:
+//    To get the value of a given data
+//
+//  Parameters:
+//    *out charstring pl_dataVarName* - this is the name of the variable
+//       that stores the values of the data on the local component
+//    *in charstring pl_source* - the name of the dataSource 'feature'
+//    *in charstring pl_ptcName* - the name of the PTC
+//         (dataSource+ptcName should be a unigue id of the data). Default: "" (i.e. PTC name is ignored)
+//    *in charstring pl_element* - the type of data
+//    *in* <EPTF_DataSource_Params> *pl_params* - additional parameters (default: {})
+//       The parameters are sorted lexicographically according to the paramNames
+//    *in* <EPTF_Var_SubscriptionMode> - pl_subscriptionMode - subscription mode: sampled or timeLine: buffered; realtime: non-buffered
+//       Default: tsp_EPTF_DataSource_subscriptionMode
+//    *in integer* - pl_refreshRate - the refresh rate for the subscription.
+//      default: tsp_EPTF_DataSource_refreshRate
+//
+//  Return Value:
+//    integer - 0 if OK, nonzero if pl_dataVarName is not valid
+//
+//  Detailed Comments:
+//    The handler function registered by <f_EPTF_DataSourceClient_registerData>
+//    for the given pl_source and pl_ptcName is called
+//    on the component that registered the source and ptc name.
+//    The pl_params are passed to it as additional arguments.
+//    The handler function returns a charstring which is set in the pl_dataVarName
+//    argument. The error code returned by the handler function is returned by this function
+///////////////////////////////////////////////////////////
+public function f_EPTF_DataSource_getData(
+  out charstring pl_dataVarName,
+  in charstring pl_source,
+  in charstring pl_ptcName := "",
+  in charstring pl_element,
+  in EPTF_DataSource_Params pl_params := {},
+  in EPTF_Var_SubscriptionMode pl_subscriptionMode := tsp_EPTF_DataSource_subscriptionMode,
+  in integer pl_refreshRate := tsp_EPTF_DataSource_refreshRate
+) runs on EPTF_DataSource_CT return integer {
+  f_EPTF_DataSource_sortParams(pl_params);
+
+  if (pl_source==c_EPTF_DataSource_sourceId) {
+    return f_EPTF_DataSource_handleBuiltInDataElements(
+      pl_dataVarName,
+      pl_source,
+      pl_ptcName,
+      pl_element,
+      pl_params
+    ); // internal elements handled successfully, or an error occured
+  }
+
+  pl_dataVarName := "";
+  var charstring vl_remoteDataVarName;  // for nonzero error code it contains the error message
+  //find if pl_dataVarName already exists
+  var charstring vl_dataValueIdStr := pl_source&"@"&pl_ptcName&"."&pl_element&":"&log2str(pl_params);
+  var integer vl_dataValueId;
+  if (f_EPTF_str2int_HashMap_Find(v_EPTF_DataSource_dataValueHash,vl_dataValueIdStr,vl_dataValueId)) {
+    vl_remoteDataVarName := v_EPTF_DataSource_dataValue_List[vl_dataValueId].dataVarName;
+    pl_dataVarName := "EPTF_DataSource_"&vl_remoteDataVarName&"."&vl_dataValueIdStr;
+    
+    // check if var exists: it is needed because checkData does not create it, but stores it in the hashMap
+    // if var does not exist subscribe is needed => no error if variable is not found
+    if(f_EPTF_Var_getId(pl_dataVarName)!=-1) {
+      return 0;
+    }
+  }
+
+  // find handler compref:
+  var charstring vl_handlerIdStr := pl_source&"@"&pl_ptcName;
+  var integer vl_handlerId := -1;
+  if (not f_EPTF_str2int_HashMap_Find(v_EPTF_DataSource_DataHandlerHash,vl_handlerIdStr,vl_handlerId)) {
+    // try to find without PTC name if pl_ptcName=="":
+    var integer vl_counter;
+    if (pl_ptcName=="") {
+      if (not f_EPTF_str2int_HashMap_Find(v_EPTF_DataSource_DataHandlerHash_NoPTCName,"Counter."&pl_source,vl_counter)) {
+        f_EPTF_DataSource_warning(log2str(%definitionId&": Cannot get source component for dataSource ",pl_source, ": Source is not registered"));
+        return 3;
+      } else {
+        if (vl_counter>1) {
+          f_EPTF_DataSource_warning(log2str(%definitionId&": Cannot get data for dataSource ",pl_source, " and ptcName ",pl_ptcName,
+              ": More than one source component exists with this dataSource, PTC name should be specified"));
+          return 2;
+        } else {
+          // this is always successful:
+          if (f_EPTF_str2int_HashMap_Find(v_EPTF_DataSource_DataHandlerHash_NoPTCName,pl_source,vl_handlerId)) {/*remove warning*/};
+
+          // find if pl_dataVarName already exists
+          pl_ptcName := v_EPTF_DataSource_DataHandler_List[vl_handlerId].ptcName;
+          vl_dataValueIdStr := pl_source&"@"&pl_ptcName&
+          "."&pl_element&":"&log2str(pl_params);
+          if (f_EPTF_str2int_HashMap_Find(v_EPTF_DataSource_dataValueHash,vl_dataValueIdStr,vl_dataValueId)) {
+            vl_remoteDataVarName := v_EPTF_DataSource_dataValue_List[vl_dataValueId].dataVarName;
+            pl_dataVarName := "EPTF_DataSource_"&vl_remoteDataVarName&"."&vl_dataValueIdStr;
+            // check if var exists: it is needed because checkData does not create it, but stores it in the hashMap
+            // if var does not exist subscribe is needed => no error if variable is not found
+            if(f_EPTF_Var_getId(pl_dataVarName)!=-1) {
+              return 0;
+            }
+          }
+        }
+      }
+    } else {
+      if (not f_EPTF_str2int_HashMap_Find(v_EPTF_DataSource_DataHandlerHash_NoPTCName,"Counter."&pl_source,vl_counter)) {
+        f_EPTF_DataSource_warning(log2str(%definitionId&": Cannot get source component for dataSource ",pl_source, " and ptcName ",pl_ptcName, ": Source is not registered"));
+        return 4;
+      }
+      f_EPTF_DataSource_warning(log2str(%definitionId&": Cannot get source component for dataSource ",pl_source, " and ptcName ",pl_ptcName,
+          ": Source with the given PTC name is not registered"));
+      return 1;
+    }
+  }
+
+  // here if pl_dataVarName != "" : only subscribe required (local var does not exist)
+  // if pl_dataVarName == "" : have to send message to client, because no local data was found
+
+  var integer vl_errorCode := 0;
+  if (pl_dataVarName=="") {
+    // dataVarName was not found in hashMaps, have to sent request to client:
+    var integer vl_getDataId := f_EPTF_Semaphore_new();
+    f_EPTF_DataSource_sendMsg(EPTF_DataSource_Msg:{getData:={
+          vl_getDataId,
+          pl_source,
+          pl_ptcName,
+          pl_element,
+          pl_params
+        }},v_EPTF_DataSource_DataHandler_List[vl_handlerId].ownerCompRef);
+    // wait for response
+    if (f_EPTF_Semaphore_waitForUnlock(vl_getDataId,tsp_EPTF_DataSource_maxWaitTime)) {
+      // max wait time expired before response received:
+      f_EPTF_DataSource_warning(log2str(%definitionId&": Communication error: No response received for getData message: ",vl_getDataId));
+      pl_dataVarName := "";
+      return -1;
+    }
+
+    // copy the values from the message database because it might be possible that they will be overwritten because
+    // the semaphore is released and there is a blocking statement before they are used:
+    vl_errorCode := v_EPTF_DataSource_Msg_List[vl_getDataId].dataValue.errorCode;
+    //var EPTF_DataSourceClient_CT vl_ownerCompRef := v_EPTF_DataSource_Msg_List[vl_getDataId].dataValue.ownerCompRef; // value in message is not used
+    vl_remoteDataVarName := v_EPTF_DataSource_Msg_List[vl_getDataId].dataValue.dataVarName;
+    var charstring vl_localVarName := "EPTF_DataSource_"&vl_remoteDataVarName&"."&vl_dataValueIdStr;
+    pl_dataVarName := vl_localVarName;
+  }
+
+  // if returned error code is 0 (no error) subscibe to the provider data variable:
+  if (vl_errorCode==0) {
+    var integer vl_localVarIdx;
+//     // The presence of the variable is not checked. It is assumed to be there here.
+//     // If the variable is not there, the DataSource_Ready was not sent/waited properly.
+//     // The Variable subscribe will fail.
+//     if (not f_EPTF_Var_isPresentRemote(
+//       v_EPTF_DataSource_DataHandler_List[vl_handlerId].ownerCompRef,
+//       vl_remoteDataVarName
+//     )) {
+//       f_EPTF_DataSource_warning(log2str(%definitionId&": Cannot get the value of the dataSource: "&
+//         "The variable does not exist for dataSource ",pl_source, " ptcName ",pl_ptcName, " element ", pl_element, " params ", pl_params));
+//       pl_dataVarName := "";
+//       return 5;
+//     }
+
+    if(f_EPTF_Var_getId(pl_dataVarName)!=-1) {
+      return 0;
+    }
+
+    f_EPTF_Var_subscribeRemote(
+      v_EPTF_DataSource_DataHandler_List[vl_handlerId].ownerCompRef,
+      vl_remoteDataVarName,
+      pl_subscriptionMode,
+      vl_localVarIdx,
+      pl_dataVarName,
+      pl_refreshRate
+    );
+  } else {
+    pl_dataVarName := vl_remoteDataVarName; // pass on the error message
+    //append general text:
+    pl_dataVarName := log2str(%definitionId&": Invalid iterator or externalData or parameter: ",
+      "\nSource: ",pl_source,
+      "\nPTC : ",pl_ptcName ,
+      "\nElement Name : " ,pl_element,
+      "\nParams: " , pl_params)&"\n:"&pl_dataVarName;
+    f_EPTF_DataSource_warning(pl_dataVarName);
+    pl_dataVarName := "";
+  }
+
+  return vl_errorCode;
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_DataSource_checkData
+// 
+//  Purpose:
+//    To check if the value of a given data exists. Returns the variable name
+//    of the dataSource.
+//
+//  Parameters:
+//    *out charstring pl_dataVarName* - this is the name of the variable
+//       that stores the values of the data on the local component
+//    *in charstring pl_source* - the name of the dataSource 'feature'
+//    *in charstring pl_ptcName* - the name of the PTC
+//         (dataSource+ptcName should be a unigue id of the data). Default: "" (i.e. PTC name is ignored)
+//    *in charstring pl_element* - the type of data
+//    *in* <EPTF_DataSource_Params> *pl_params* - additional parameters (default: {})
+//       The parameters are sorted lexicographically according to the paramNames
+//
+//  Return Value:
+//    integer - 0 of OK, nonzero if pl_dataVarName is not valid
+//
+//  Detailed Comments:
+//    This function is almost the same as <f_EPTF_DataSource_getData>, but
+//    does not subscribe to the provider variable and does not check the subscription.
+//    It only checks if the source variable is there on the source component.
+//    The returned variable might not exist even if the error code is zero.
+//    For non-zero error code, pl_dataVarName contains the error message
+///////////////////////////////////////////////////////////
+public function f_EPTF_DataSource_checkData(
+  out charstring pl_dataVarName,
+  in charstring pl_source,
+  in charstring pl_ptcName := "",
+  in charstring pl_element,
+  in EPTF_DataSource_Params pl_params := {}
+) runs on EPTF_DataSource_CT return integer {
+  f_EPTF_DataSource_sortParams(pl_params);
+
+  if (pl_source==c_EPTF_DataSource_sourceId) {
+    return f_EPTF_DataSource_handleBuiltInDataElements(
+      pl_dataVarName,
+      pl_source,
+      pl_ptcName,
+      pl_element,
+      pl_params
+    ); // internal elements handled successfully, or an error occured
+  }
+
+  //find if pl_dataVarName already exists
+  var charstring vl_dataValueIdStr := pl_source&"@"&pl_ptcName&"."&pl_element&":"&log2str(pl_params);
+  var integer vl_dataValueId;
+  if (f_EPTF_str2int_HashMap_Find(v_EPTF_DataSource_dataValueHash,vl_dataValueIdStr,vl_dataValueId)) {
+    pl_dataVarName := "EPTF_DataSource_"&v_EPTF_DataSource_dataValue_List[vl_dataValueId].dataVarName&"."&vl_dataValueIdStr;
+    return 0;
+  }
+
+  // find handler compref:
+  var charstring vl_handlerIdStr := pl_source&"@"&pl_ptcName;
+  var integer vl_handlerId := -1;
+  pl_dataVarName := "";
+  if (not f_EPTF_str2int_HashMap_Find(v_EPTF_DataSource_DataHandlerHash,vl_handlerIdStr,vl_handlerId)) {    
+    // try to find without PTC name if pl_ptcName=="":
+    var integer vl_counter;
+    if (pl_ptcName=="") {
+      if (not f_EPTF_str2int_HashMap_Find(v_EPTF_DataSource_DataHandlerHash_NoPTCName,"Counter."&pl_source,vl_counter)) {
+        pl_dataVarName := log2str(%definitionId&": Cannot get source component for dataSource ",pl_source, ": Source is not registered");
+        f_EPTF_DataSource_debug(pl_dataVarName);
+        return 3;
+      } else {
+        if (vl_counter>1) {
+          pl_dataVarName := log2str(%definitionId&": Cannot get data for dataSource ",pl_source, " and ptcName ",pl_ptcName,
+              ": More than one source component exists with this dataSource, PTC name should be specified");
+          f_EPTF_DataSource_debug(pl_dataVarName);
+          return 2;
+        } else {
+          // this is always successful:
+          if (f_EPTF_str2int_HashMap_Find(v_EPTF_DataSource_DataHandlerHash_NoPTCName,pl_source,vl_handlerId)) {/*remove warning*/};
+
+          // find if pl_dataVarName already exists
+          pl_ptcName := v_EPTF_DataSource_DataHandler_List[vl_handlerId].ptcName;
+          vl_dataValueIdStr := pl_source&"@"&pl_ptcName&
+          "."&pl_element&":"&log2str(pl_params);
+          if (f_EPTF_str2int_HashMap_Find(v_EPTF_DataSource_dataValueHash,vl_dataValueIdStr,vl_dataValueId)) {
+            pl_dataVarName := "EPTF_DataSource_"&v_EPTF_DataSource_dataValue_List[vl_dataValueId].dataVarName&"."&vl_dataValueIdStr;
+            if (f_EPTF_Var_getId(pl_dataVarName)!=-1) {
+              return 0; // local var exists (subscription was successful)
+            }
+          }
+        }
+      }
+    } else {
+      if (not f_EPTF_str2int_HashMap_Find(v_EPTF_DataSource_DataHandlerHash_NoPTCName,"Counter."&pl_source,vl_counter)) {
+        pl_dataVarName := log2str(%definitionId&": Cannot get source component for dataSource ",pl_source, " and ptcName ",pl_ptcName, ": Source is not registered");
+        f_EPTF_DataSource_debug(pl_dataVarName);
+        return 4;
+      }
+      pl_dataVarName := log2str(%definitionId&": Cannot get source component for dataSource ",pl_source, " and ptcName ",pl_ptcName,
+          ": Source with the given PTC name is not registered");
+      f_EPTF_DataSource_debug(pl_dataVarName);
+      return 1;
+    }
+  }
+
+  var integer vl_getDataId := f_EPTF_Semaphore_new();
+  f_EPTF_DataSource_sendMsg(EPTF_DataSource_Msg:{getData:={
+        vl_getDataId,
+        pl_source,
+        pl_ptcName,
+        pl_element,
+        pl_params
+      }},v_EPTF_DataSource_DataHandler_List[vl_handlerId].ownerCompRef);
+  // wait for response
+  if (f_EPTF_Semaphore_waitForUnlock(vl_getDataId,tsp_EPTF_DataSource_maxWaitTime)) {
+    // max wait time expired before response received:
+    f_EPTF_DataSource_debug(log2str(%definitionId&": Communication error: No response received for getData message: ",vl_getDataId));
+    pl_dataVarName := "";
+    return -1;
+  }
+
+  // copy the values from the message database because it might be possible that they will be overwritten because
+  // the semaphore is released and there is a blocking statement before they are used:
+  var integer vl_errorCode := v_EPTF_DataSource_Msg_List[vl_getDataId].dataValue.errorCode;
+  //var EPTF_DataSourceClient_CT vl_ownerCompRef := v_EPTF_DataSource_Msg_List[vl_getDataId].dataValue.ownerCompRef; // value in message is not used
+  var charstring vl_remoteDataVarName := v_EPTF_DataSource_Msg_List[vl_getDataId].dataValue.dataVarName;
+
+//   // remove the stored data from the dataBase:
+//   // by removing the returned varname from a hashmap, and clearing the stored variable name:
+//   if(vl_errorCode==0) {
+//     vl_dataValueIdStr2 := v_EPTF_DataSource_Msg_List[vl_getDataId].dataValue.dataSource&"@"&v_EPTF_DataSource_Msg_List[vl_getDataId].dataValue.ptcName&
+//     "."&v_EPTF_DataSource_Msg_List[vl_getDataId].dataValue.dataElement&":"&log2str(v_EPTF_DataSource_Msg_List[vl_getDataId].dataValue.params);
+// 
+//     if(f_EPTF_str2int_HashMap_Find(v_EPTF_DataSource_dataValueHash,vl_dataValueIdStr2,vl_dataValueId)) {
+//       f_EPTF_str2int_HashMap_Erase(v_EPTF_DataSource_dataValueHash,vl_dataValueIdStr2);
+//       v_EPTF_DataSource_dataValue_List[vl_dataValueId] := {""};
+//     }
+//   }
+//   
+
+  // if returned error code is 0 (no error) check if the data variable is present on the provider:
+  if (vl_errorCode==0) {
+    var charstring vl_localVarName := "EPTF_DataSource_"&vl_remoteDataVarName&"."&vl_dataValueIdStr;
+    var integer vl_localVarIdx;
+    if (not f_EPTF_Var_isPresentRemote(
+      v_EPTF_DataSource_DataHandler_List[vl_handlerId].ownerCompRef,
+      vl_remoteDataVarName
+    )) {
+      pl_dataVarName := log2str(%definitionId&": Cannot find the data variable of the dataSource: "&
+        "The variable does not exist for dataSource ",pl_source, " ptcName ",pl_ptcName, " element ", pl_element, " params ", pl_params);
+      f_EPTF_DataSource_debug(pl_dataVarName);
+      return 5;
+    }
+    pl_dataVarName := vl_localVarName;
+  } else {
+    pl_dataVarName := vl_remoteDataVarName; // pass on the error message
+    //append general text:
+    pl_dataVarName := log2str(%definitionId&": Invalid iterator or externalData or parameter: ",
+      "\nSource: ",pl_source,
+      "\nPTC : ",pl_ptcName ,
+      "\nElement Name : " ,pl_element,
+      "\nParams: " , pl_params)&"\n:"&pl_dataVarName;
+    f_EPTF_DataSource_debug(pl_dataVarName);  
+  }
+  return vl_errorCode;
+}
+
+private function f_EPTF_DataSource_getHandlerId(
+  in charstring pl_source,
+  in charstring pl_ptcName := "",
+  in charstring pl_element,
+  in EPTF_DataSource_Params pl_params := {}
+) runs on EPTF_DataSource_CT return integer {
+  // find handler compref:
+  var charstring vl_handlerIdStr := pl_source&"@"&pl_ptcName;
+  var integer vl_handlerId := -1;
+  if (not f_EPTF_str2int_HashMap_Find(v_EPTF_DataSource_DataHandlerHash,vl_handlerIdStr,vl_handlerId)) {    
+    // try to find without PTC name if pl_ptcName=="":
+    var integer vl_counter;
+    if (pl_ptcName=="") {
+      if (not f_EPTF_str2int_HashMap_Find(v_EPTF_DataSource_DataHandlerHash_NoPTCName,"Counter."&pl_source,vl_counter)) {
+        f_EPTF_DataSource_debug(log2str(%definitionId&": Cannot get source component for dataSource ",pl_source, ": Source is not registered"));
+        return -3;
+      } else {
+        if (vl_counter>1) {
+          f_EPTF_DataSource_debug(log2str(%definitionId&": Cannot get data for dataSource ",pl_source, " and ptcName ",pl_ptcName,
+              ": More than one source component exists with this dataSource, PTC name should be specified"));
+          return -2;
+        } else {
+          // this is always successful:
+          if (f_EPTF_str2int_HashMap_Find(v_EPTF_DataSource_DataHandlerHash_NoPTCName,pl_source,vl_handlerId)) {/*remove warning*/};
+        }
+      }
+    } else {
+      if (not f_EPTF_str2int_HashMap_Find(v_EPTF_DataSource_DataHandlerHash_NoPTCName,"Counter."&pl_source,vl_counter)) {
+        f_EPTF_DataSource_debug(log2str(%definitionId&": Cannot get source component for dataSource ",pl_source, " and ptcName ",pl_ptcName, ": Source is not registered"));
+        return -4;
+      }
+      f_EPTF_DataSource_debug(log2str(%definitionId&": Cannot get source component for dataSource ",pl_source, " and ptcName ",pl_ptcName,
+          ": Source with the given PTC name is not registered"));
+      return -1;
+    }
+  }
+  return vl_handlerId;
+}
+
+private function f_EPTF_DataSource_handleBuiltInDataElements(
+  out charstring pl_dataVarName,
+  in charstring pl_source,
+  in charstring pl_ptcName := "",
+  in charstring pl_element,
+  in EPTF_DataSource_Params pl_params := {}
+) runs on EPTF_DataSource_CT return integer {
+  if (pl_source!=c_EPTF_DataSource_sourceId) {
+    return -20; // not DataSource element
+  }
+
+  pl_dataVarName := ""; // set it to invalid
+  var EPTF_CharstringList pl_result := {}
+  select( pl_element )
+  {
+    // data element: c_EPTF_DataSource_dataElement_PTCs
+    case(c_EPTF_DataSource_dataElement_PTCs) {
+      if (0 == f_EPTF_DataSource_getParams(pl_params,
+                                          {c_EPTF_DataSource_paramNameSource}, 
+                                          pl_result, 
+                                          refers(f_EPTF_DataSource_DScheckParams))) {
+        var charstring vl_source := pl_result[0];
+        pl_dataVarName := c_EPTF_DataSource_externalDataVar_prefix&"."&c_EPTF_DataSource_dataElement_PTCs&"."&vl_source;
+
+        // automatically create var if does not exist:
+        var integer vl_varIdx := f_EPTF_Var_getId(pl_dataVarName);
+        if(vl_varIdx == -1) {
+          f_EPTF_Var_newCharstringlist(pl_dataVarName, {}, vl_varIdx); 
+        }
+      } else {
+        // this is just to write previous warning messages as well
+        if (sizeof(pl_params)!=1) {
+          pl_dataVarName := log2str(%definitionId&": Invalid number of parameters for dataSource ",pl_source, " and element ",pl_element,
+              ": Only one parameter has to be specified");
+          f_EPTF_DataSource_warning(pl_dataVarName);
+          //return 1; // invalid number of params
+        } else if(pl_params[0].paramName != c_EPTF_DataSource_paramNameSource) {
+          pl_dataVarName := log2str(%definitionId&": Invalid name of parameter for dataSource ",pl_source, " and element ",pl_element,
+              ": The name of parameter should be ",c_EPTF_DataSource_paramNameSource);
+          f_EPTF_DataSource_warning(pl_dataVarName);
+          //return 2; // invalid name of params
+        }
+      }
+    }
+    case(c_EPTF_DataSource_dataElement_Sources) {
+      if (0 == f_EPTF_DataSource_getParams(pl_params,
+                                          {},
+                                          pl_result,
+                                          refers(f_EPTF_DataSource_DScheckParams))) {
+        pl_dataVarName := c_EPTF_DataSource_externalDataVar_prefix&"."&c_EPTF_DataSource_dataElement_Sources;
+        var integer vl_varIdx := f_EPTF_Var_getId(pl_dataVarName);
+        
+        // automatically create var if does not exist:
+        if(vl_varIdx == -1) {
+          // cannot be reached, var is created in init function
+          f_EPTF_Var_newCharstringlist(pl_dataVarName, {c_EPTF_DataSource_sourceId}, vl_varIdx); 
+        }
+      } else {
+        // this is just to write previous warning messages as well
+        if (sizeof(pl_params)!=0) {
+          pl_dataVarName := log2str(%definitionId&": Invalid number of parameters for dataSource ",pl_source, " and element ",pl_element,
+              ": No parameter has to be specified");
+          f_EPTF_DataSource_warning(pl_dataVarName);
+          //return 1; // invalid number of params
+        }
+      }
+    }
+    case else
+    {
+      // invalid element
+      pl_dataVarName := log2str(%definitionId&": Invalid dataElement for dataSource ",pl_source, ": ",pl_element,
+          ": Should be one of: ", EPTF_CharstringList:{c_EPTF_DataSource_dataElement_PTCs, c_EPTF_DataSource_dataElement_Sources});
+      f_EPTF_DataSource_warning(pl_dataVarName);
+      return -22; // invalid element
+    }
+  }
+  var integer vl_dataElementVarIdx := f_EPTF_Var_getId(pl_dataVarName);
+  if(vl_dataElementVarIdx == -1){
+    pl_dataVarName := log2str(%definitionId&": Invalid iterator or externalData or parameter: ",
+      "\nSource: ",pl_source,
+      "\nPTC : ",pl_ptcName ,
+      "\nElement Name : " ,pl_element,
+      "\nParams: " , pl_params)&"\n:"&pl_dataVarName;
+    f_EPTF_DataSource_warning(pl_dataVarName);  
+    return -1;
+  }
+  return 0;
+}
+
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_DataSource_getCondition
+// 
+//  Purpose:
+//    To get the value of a given condition specified by the method
+//
+//  Parameters:
+//    *out boolean pl_conditionValue* - this is the value the given method
+//       returned for the condition
+//    *in charstring pl_source* - the name of the dataSource 'feature'
+//    *in charstring pl_ptcName* - the name of the PTC
+//         (dataSource+ptcName should be a unigue id of the data). Default: "" (i.e. PTC name is ignored)
+//    *in charstring pl_method* - the method that should be called to get the condition
+//    *in* <EPTF_DataSource_Params> *pl_params* - additional parameters to pass to the method (default: {})
+//       The parameters are sorted lexicographically according to the paramNames (does not apply for built-in conditions)
+//
+//  Return Value:
+//    integer - 0 of OK, nonzero if pl_conditionValue is not valid
+//
+//  Detailed Comments:
+//    The function associated for the given method is called
+//    on the component that registered the source and ptc name.
+//    The params are passed to it as additional arguments.
+//    The handler function returns a boolean which is set in the pl_conditionValue
+//    argument. The error code returned by the handler function is returned by this function
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_DataSource_getCondition(
+  out boolean pl_conditionValue,
+  in charstring pl_source,
+  in charstring pl_ptcName := "",
+  in charstring pl_method,
+  in EPTF_DataSource_Params pl_params := {}
+) runs on EPTF_DataSource_CT return integer {
+  // do not change the order of the parameters for built-in conditions!
+  if (pl_source==c_EPTF_DataSource_sourceId) {
+    return f_EPTF_DataSource_handleBuiltInConditions(
+      pl_conditionValue,
+      pl_source,
+      pl_ptcName,
+      pl_method,
+      pl_params
+    ); // internal commands handled successfully, or an error occured
+  }
+
+  f_EPTF_DataSource_sortParams(pl_params);
+  //find if pl_dataVarName already exists
+
+  // find handler compref:
+  var charstring vl_handlerIdStr := pl_source&"@"&pl_ptcName;
+  var integer vl_handlerId := -1;
+  if (not f_EPTF_str2int_HashMap_Find(v_EPTF_DataSource_DataHandlerHash,vl_handlerIdStr,vl_handlerId)) {
+    // try to find without PTC name if pl_ptcName=="":
+    if (pl_ptcName=="") {
+      var integer vl_counter;
+      if (not f_EPTF_str2int_HashMap_Find(v_EPTF_DataSource_DataHandlerHash_NoPTCName,"Counter."&pl_source,vl_counter)) {
+        f_EPTF_DataSource_warning(log2str(%definitionId&": Cannot get source component for dataSource ",pl_source, " and ptcName ",pl_ptcName,": Source is not registered"));
+        return 3;
+      } else {
+        if (vl_counter>1) {
+          f_EPTF_DataSource_warning(log2str(%definitionId&": Cannot get data for dataSource ",pl_source, " and ptcName ",pl_ptcName,
+              ": More than one source component exists with this dataSource, PTC name should be specified"));
+          return 2;
+        } else {
+          // this is always successful:
+          if (f_EPTF_str2int_HashMap_Find(v_EPTF_DataSource_DataHandlerHash_NoPTCName,pl_source,vl_handlerId)) {/*remove warning*/};
+          pl_ptcName := v_EPTF_DataSource_DataHandler_List[vl_handlerId].ptcName;
+        }
+      }
+    } else {
+      f_EPTF_DataSource_warning(log2str(%definitionId&": Cannot get source component for dataSource ",pl_source, " and ptcName ",pl_ptcName,": Source is not registered"));
+      return 1;
+    }
+  }
+
+  var integer vl_getDataId := f_EPTF_Semaphore_new();
+  f_EPTF_DataSource_sendMsg(EPTF_DataSource_Msg:{getCondition:={
+        vl_getDataId,
+        pl_source,
+        pl_ptcName,
+        pl_method,
+        pl_params
+      }},v_EPTF_DataSource_DataHandler_List[vl_handlerId].ownerCompRef);
+  // wait for response
+  if (f_EPTF_Semaphore_waitForUnlock(vl_getDataId,tsp_EPTF_DataSource_maxWaitTime)) {
+    // max wait time expired before response received:
+    f_EPTF_DataSource_warning(log2str(%definitionId&": Communication error: No response received for getData message: ",vl_getDataId));
+    return -1;
+  }
+
+  // if returned error code is 0 (no error) set the result:
+  if (v_EPTF_DataSource_Msg_List[vl_getDataId].conditionValue.errorCode==0) {
+    pl_conditionValue := v_EPTF_DataSource_Msg_List[vl_getDataId].conditionValue.conditionValue;
+  }
+
+  return v_EPTF_DataSource_Msg_List[vl_getDataId].conditionValue.errorCode;
+}
+
+private external function f_EPTF_DataSource_str2float(in charstring pl_str, out float pl_float) return integer;
+
+private function f_EPTF_DataSource_handleBuiltInConditions(
+  out boolean pl_conditionValue,
+  in charstring pl_source,
+  in charstring pl_ptcName := "",
+  in charstring pl_method,
+  in EPTF_DataSource_Params pl_params := {}
+) runs on EPTF_DataSource_CT return integer {
+  if (pl_source!=c_EPTF_DataSource_sourceId) {
+    return -10; // not DataSource command
+  }
+  // internal command: "match"
+  var charstring vl_titanBugHack //It's moved out from the blocks to avoid compiler warnings
+  select( pl_method )
+  {
+    // internal command: "=="
+    case (c_EPTF_DataSource_condition_equal) {
+      if (sizeof(pl_params)!=2) {
+        return 1; // invalid number of params
+      }
+      pl_conditionValue := (pl_params[0].paramValue == pl_params[1].paramValue);
+      return 0;
+    }
+    // internal command: "!="
+    case (c_EPTF_DataSource_condition_notEqual) {
+      if (sizeof(pl_params)!=2) {
+        return 1; // invalid number of params
+      }
+      pl_conditionValue := (pl_params[0].paramValue != pl_params[1].paramValue);
+      return 0;
+    }
+    // internal command: ">"
+    case (c_EPTF_DataSource_condition_more) {
+      if (sizeof(pl_params)!=2) {
+        return 1; // invalid number of params
+      }
+      var float vl_f1,vl_f2;
+      if (0!=f_EPTF_DataSource_str2float(pl_params[0].paramValue, vl_f1)) {
+        return 2; // invalid param format
+      }
+      if (0!=f_EPTF_DataSource_str2float(pl_params[1].paramValue, vl_f2)) {
+        return 2; // invalid param format
+      }
+      pl_conditionValue := (vl_f1 > vl_f2);
+      return 0;
+    }
+    // internal command: ">="
+    case (c_EPTF_DataSource_condition_notLess) {
+      if (sizeof(pl_params)!=2) {
+        return 1; // invalid number of params
+      }
+      var float vl_f1,vl_f2;
+      if (0!=f_EPTF_DataSource_str2float(pl_params[0].paramValue, vl_f1)) {
+        return 2; // invalid param format
+      }
+      if (0!=f_EPTF_DataSource_str2float(pl_params[1].paramValue, vl_f2)) {
+        return 2; // invalid param format
+      }
+      pl_conditionValue := (vl_f1 >= vl_f2);
+      return 0;
+    }
+    // internal command: "<"
+    case (c_EPTF_DataSource_condition_less) {
+      if (sizeof(pl_params)!=2) {
+        return 1; // invalid number of params
+      }
+      var float vl_f1,vl_f2;
+      if (0!=f_EPTF_DataSource_str2float(pl_params[0].paramValue, vl_f1)) {
+        return 2; // invalid param format
+      }
+      if (0!=f_EPTF_DataSource_str2float(pl_params[1].paramValue, vl_f2)) {
+        return 2; // invalid param format
+      }
+      pl_conditionValue := (vl_f1 < vl_f2);
+      return 0;
+    }
+    // internal command: "<="
+    case (c_EPTF_DataSource_condition_notMore) {
+      if (sizeof(pl_params)!=2) {
+        return 1; // invalid number of params
+      }
+      var float vl_f1,vl_f2;
+      if (0!=f_EPTF_DataSource_str2float(pl_params[0].paramValue, vl_f1)) {
+        return 2; // invalid param format
+      }
+      if (0!=f_EPTF_DataSource_str2float(pl_params[1].paramValue, vl_f2)) {
+        return 2; // invalid param format
+      }
+      pl_conditionValue := (vl_f1 <= vl_f2);
+      return 0;
+    }
+    // internal command: "match"
+    case (c_EPTF_DataSource_condition_match) {
+      if (sizeof(pl_params)!=2) {
+        return 1; // invalid number of params
+      }
+      vl_titanBugHack := pl_params[1].paramValue;
+      pl_conditionValue := match(pl_params[0].paramValue, pattern vl_titanBugHack);
+      return 0;
+    }
+    // internal command: "not match"
+    case (c_EPTF_DataSource_condition_notMatch) {
+      if (sizeof(pl_params)!=2) {
+        return 1; // invalid number of params
+      }
+      vl_titanBugHack := pl_params[1].paramValue;
+      pl_conditionValue := not match(pl_params[0].paramValue, pattern vl_titanBugHack);
+      return 0;
+    }
+    // internal command: "and"
+    case (c_EPTF_DataSource_condition_and) {
+      if (sizeof(pl_params)!=2) {
+        return 1; // invalid number of params
+      }
+      pl_conditionValue := (pl_params[0].paramValue == "true" and pl_params[1].paramValue == "true");
+      return 0;
+    }
+    // internal command: "or"
+    case (c_EPTF_DataSource_condition_or) {
+      if (sizeof(pl_params)!=2) {
+        return 1; // invalid number of params
+      }
+      pl_conditionValue := (pl_params[0].paramValue == "true" or pl_params[1].paramValue == "true");
+      return 0;
+    }
+    // internal command: "not"
+    case (c_EPTF_DataSource_condition_not) {
+      if (sizeof(pl_params)!=1) {
+        return 1; // invalid number of params
+      }
+      pl_conditionValue := (pl_params[0].paramValue == "false");
+      return 0;
+    }
+    // internal command: "dataElementPresent"
+    case (c_EPTF_DataSource_condition_dataElementPresent) {
+      var EPTF_CharstringList vl_result;
+      f_EPTF_DataSource_extractParams(pl_params,
+                                     {c_EPTF_DataSource_paramNameSource,
+                                     c_EPTF_DataSource_paramNamePTCName,
+                                     c_EPTF_DataSource_paramNameElement},
+                                     vl_result);
+      var charstring vl_source := vl_result[0];
+      var charstring vl_ptcName := vl_result[1];
+      var charstring vl_element := vl_result[2];
+      
+      // extract the params:
+      var EPTF_DataSource_Params vl_params := {};
+      for(var integer i:=0; i<sizeof(pl_params); i:=i+1) {
+        if (pl_params[i].paramName == c_EPTF_DataSource_paramNameParamName) {
+          vl_params[sizeof(vl_params)] := {paramName := pl_params[i].paramValue, paramValue := ""};
+          i:=i+1; // jump to the next item which should be paramValue:
+          if (pl_params[i].paramName == c_EPTF_DataSource_paramNameParamValue) {
+            vl_params[sizeof(vl_params)-1].paramValue := pl_params[i].paramValue
+          } else {
+            f_EPTF_DataSource_warning(%definitionId& ": "&c_EPTF_DataSource_paramNameParamValue&" is not specified for "&
+              c_EPTF_DataSource_paramNameParamName&": "&pl_params[i-1].paramValue&" in the condition "&c_EPTF_DataSource_condition_dataElementPresent);
+            f_EPTF_DataSource_warning(%definitionId&": Invalid condition or parameter: "&
+              "\nSource: "&pl_source&
+              "\nPTC : "&pl_ptcName &
+              "\nMethod : " &pl_method&
+              "\nParams: " & log2str(pl_params));  
+            return 1; // invalid parameters
+          }
+        }
+      }
+      var charstring vl_dataVarName := "";
+      pl_conditionValue := (0 == f_EPTF_DataSource_checkData(vl_dataVarName,vl_source,vl_ptcName,vl_element,vl_params));
+      return 0;
+    }
+    case else
+    {
+      //Just to avoid compile-time warnings. Hope, it never called.
+      return 11; // unknown internal method
+    }
+  }
+  return 12; // unknown method
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_DataSource_registerReadyCallback
+// 
+//  Purpose:
+//    To register a callback function for notify when the DataSource is ready.
+//
+//  Parameter:
+//    *in* <EPTF_DataSource_Ready_FT> *pl_function* -
+//
+//  Return Value:
+//    -
+//
+//  Detailed Comments:
+//    -
+///////////////////////////////////////////////////////////
+public function f_EPTF_DataSource_registerReadyCallback(
+  in EPTF_DataSource_Ready_FT pl_function)
+runs on EPTF_DataSource_CT{
+  v_EPTF_DataSource_ready_functions[sizeof(v_EPTF_DataSource_ready_functions)] := pl_function;
+}
+
+// ///////////////////////////////////////////////////////////
+// //  Function: f_EPTF_DataSource_getIterator
+// // 
+// //  Purpose:
+// //    To get the value of a given iterator
+// //
+// //  Parameters:
+// //    *in charstring pl_source* - the name of the dataSource 'feature'
+// //    *in charstring pl_ptcName* - the name of the PTC
+// //         (dataSource+ptcName should be a unigue id of the iterator)
+// //    *in charstring pl_element* - the type of data
+// //    *in* <EPTF_DataSource_Params> *pl_params* - additional parameters (default: {})
+// //    *out charstring pl_iteratorVarName* - this the name of the variable
+// //       that stores the values of the iterator
+// //
+// //  Return Value:
+// //    integer - 0 of OK, nonzero if pl_iteratorVarName is not valid
+// //
+// //  Detailed Comments:
+// //    -
+// ///////////////////////////////////////////////////////////
+// public function f_EPTF_DataSource_getIterator(
+//   in charstring pl_source,
+//   in charstring pl_ptcName,
+//   in charstring pl_element,
+//   in EPTF_DataSource_Params pl_params := {},
+//   out charstring pl_iteratorVarName,
+//   in EPTF_Var_SubscriptionMode pl_subscriptionMode := realtime,
+//   in integer pl_refreshRate := -1
+// ) runs on EPTF_DataSource_CT return integer {
+//   return f_EPTF_DataSource_getData(pl_source,pl_ptcName,pl_element,pl_params,pl_iteratorVarName,pl_subscriptionMode,pl_refreshRate)
+// }
+
+private function f_EPTF_DataSource_cleanup_CT() runs on EPTF_DataSource_CT {
+  if (not v_EPTF_DataSource_initialized) {
+    return;
+  }
+  v_EPTF_DataSource_initialized := false;
+  //disconnect(pl_sourceCompRef:EPTF_DataSourceIf,self:EPTF_DataSourceIf);
+  deactivate(v_DataSource_handler);
+  v_DataSource_handler := null;
+  if (v_EPTF_DataSource_DataHandlerHash!=-1) {
+    v_EPTF_DataSource_DataHandlerHash := -1;
+    f_EPTF_str2int_HashMap_Delete(c_EPTF_DataSource_dataHandlerHashName);
+  }
+  if (v_EPTF_DataSource_DataHandlerHash_NoPTCName!=-1) {
+    v_EPTF_DataSource_DataHandlerHash_NoPTCName := -1;
+    f_EPTF_str2int_HashMap_Delete(c_EPTF_DataSource_dataHandlerHashName_NoPTCName);
+  }
+  if (v_EPTF_DataSource_dataValueHash!=-1) {
+    v_EPTF_DataSource_dataValueHash := -1;
+    f_EPTF_str2int_HashMap_Delete(c_EPTF_DataSource_dataValueHashName);
+  }
+}
+
+private function f_EPTF_DataSource_handleRegisterData(
+  in EPTF_DataSource_Msg_RegisterData pl_registerData,
+  in EPTF_DataSourceClient_CT pl_ownerCompRef
+) runs on EPTF_DataSource_CT {
+
+  // find handler:
+  var charstring vl_handlerIdStr := pl_registerData.dataSource&"@"&pl_registerData.ptcName;
+  var integer vl_handlerId := -1;
+  if (not f_EPTF_str2int_HashMap_Find(v_EPTF_DataSource_DataHandlerHash,vl_handlerIdStr,vl_handlerId)) {
+    vl_handlerId := sizeof(v_EPTF_DataSource_DataHandler_List);
+    v_EPTF_DataSource_DataHandler_List[vl_handlerId] := {
+      pl_registerData.dataSource,
+      pl_registerData.ptcName,
+      pl_ownerCompRef
+    };
+    f_EPTF_str2int_HashMap_Insert(v_EPTF_DataSource_DataHandlerHash,vl_handlerIdStr,vl_handlerId);
+  } else {
+    f_EPTF_DataSource_warning(log2str(%definitionId&": Data ",pl_registerData,
+        " already registered with sender:", v_EPTF_DataSource_DataHandler_List[vl_handlerId].ownerCompRef));
+    if (pl_ownerCompRef!=v_EPTF_DataSource_DataHandler_List[vl_handlerId].ownerCompRef) {
+      f_EPTF_DataSource_error(log2str(%definitionId&": Cannot register data ",pl_registerData," to the sender:",pl_ownerCompRef,
+          ": Already registered to a different owner component: ", v_EPTF_DataSource_DataHandler_List[vl_handlerId].ownerCompRef));
+      f_EPTF_Base_stopAll();
+    }
+    return;
+  }  
+  var integer vl_tmp;
+  if (not f_EPTF_str2int_HashMap_Find(v_EPTF_DataSource_DataHandlerHash_NoPTCName,pl_registerData.dataSource,vl_tmp)) {
+    f_EPTF_str2int_HashMap_Insert(v_EPTF_DataSource_DataHandlerHash_NoPTCName,pl_registerData.dataSource,vl_handlerId);
+    f_EPTF_str2int_HashMap_Insert(v_EPTF_DataSource_DataHandlerHash_NoPTCName,"Counter."&pl_registerData.dataSource,1);
+  } else {
+    var integer vl_counter;
+    if(f_EPTF_str2int_HashMap_Find(v_EPTF_DataSource_DataHandlerHash_NoPTCName,"Counter."&pl_registerData.dataSource,vl_counter)) {
+      f_EPTF_str2int_HashMap_Erase(v_EPTF_DataSource_DataHandlerHash_NoPTCName,"Counter."&pl_registerData.dataSource);
+    }
+    vl_counter := vl_counter +1;
+    f_EPTF_str2int_HashMap_Insert(v_EPTF_DataSource_DataHandlerHash_NoPTCName,"Counter."&pl_registerData.dataSource,vl_counter);
+  }
+
+  //Create or adjust the variable of that contains the registered PTC names of the data source
+  var integer vl_varIdx := f_EPTF_Var_getId(c_EPTF_DataSource_externalDataVar_prefix&"."&c_EPTF_DataSource_dataElement_PTCs&"."&pl_registerData.dataSource);
+  if(vl_varIdx == -1) {
+    f_EPTF_Var_newCharstringlist(c_EPTF_DataSource_externalDataVar_prefix&"."&c_EPTF_DataSource_dataElement_PTCs&"."&pl_registerData.dataSource, {pl_registerData.ptcName}, vl_varIdx)
+  } else {
+    f_EPTF_Var_adjustContent(vl_varIdx, { charstringlistVal:= f_EPTF_Var_getCharstringlistValue(vl_varIdx)&{pl_registerData.ptcName} })
+  }
+
+  //Create or adjust the variable of that contains the registered Sources
+  vl_varIdx := f_EPTF_Var_getId(c_EPTF_DataSource_externalDataVar_prefix&"."&c_EPTF_DataSource_dataElement_Sources);
+  if(vl_varIdx == -1) {
+    // cannot be reached, var is created in init function
+    f_EPTF_Var_newCharstringlist(c_EPTF_DataSource_externalDataVar_prefix&"."&c_EPTF_DataSource_dataElement_Sources, {c_EPTF_DataSource_sourceId,pl_registerData.dataSource}, vl_varIdx)
+  } else {
+    // check if the source is already there:
+    var EPTF_CharstringList vl_currentSources := f_EPTF_Var_getCharstringlistValue(vl_varIdx);
+    var boolean vl_found := false;
+    for (var integer i:=0; i<sizeof(vl_currentSources);i:=i+1) {
+      if (vl_currentSources[i]==pl_registerData.dataSource) {
+        vl_found:=true;
+        break;
+      }
+    }
+    // if does not exit, add:
+    if(not vl_found) {
+      f_EPTF_Var_adjustContent(vl_varIdx, { charstringlistVal:= f_EPTF_Var_getCharstringlistValue(vl_varIdx)&{pl_registerData.dataSource} })
+    }
+  }
+}
+
+private function f_EPTF_DataSource_handleGetData(
+  in EPTF_DataSource_Msg_GetData pl_getData,
+  in EPTF_DataSourceClient_CT pl_sourceCompRef
+) runs on EPTF_DataSource_CT {
+  var charstring vl_dataVarName;
+  var integer vl_errorCode := f_EPTF_DataSource_checkData(
+    pl_dataVarName := vl_dataVarName,
+    pl_source := pl_getData.dataSource,
+    pl_ptcName := pl_getData.ptcName,
+    pl_element := pl_getData.dataElement,
+    pl_params := pl_getData.params
+  );
+  // replace DataVarName (which is currently set to the local variable) with the variable name on the remote component:
+  //find if pl_dataVarName already exists
+  f_EPTF_DataSource_sortParams(pl_getData.params);
+  var charstring vl_dataValueIdStr := pl_getData.dataSource&"@"&pl_getData.ptcName&"."&pl_getData.dataElement&":"&log2str(pl_getData.params);
+  var integer vl_dataValueId;
+  if (f_EPTF_str2int_HashMap_Find(v_EPTF_DataSource_dataValueHash,vl_dataValueIdStr,vl_dataValueId)) {
+    vl_dataVarName := v_EPTF_DataSource_dataValue_List[vl_dataValueId].dataVarName; // remote var name (on the source component)
+  }
+
+  var EPTF_DataSourceClient_CT vl_ownerCompRef := null;
+  // set the source comp ref if the source is the DataSource itself:
+  if (pl_getData.dataSource==c_EPTF_DataSource_sourceId) {
+    vl_ownerCompRef := null; // cannot set self, because I am not a EPTF_DataSourceClient_CT! The value null means this.
+  } else if (vl_errorCode==0) {
+  // if checkData successful:
+
+    // set the owner component:
+    var integer vl_handlerId := f_EPTF_DataSource_getHandlerId(
+      pl_source := pl_getData.dataSource,
+      pl_ptcName := pl_getData.ptcName,
+      pl_element := pl_getData.dataElement,
+      pl_params := pl_getData.params
+    );
+    if (vl_handlerId<0) {
+      vl_errorCode := -vl_handlerId; //no handler found: owner not registered
+    } else {
+      vl_ownerCompRef := v_EPTF_DataSource_DataHandler_List[vl_handlerId].ownerCompRef;
+
+      // for empty PTC name we have to set the dataVarName, reading the PTC name from dataBase
+      var charstring vl_ptcName := v_EPTF_DataSource_DataHandler_List[vl_handlerId].ptcName;
+      vl_dataValueIdStr := pl_getData.dataSource&"@"&vl_ptcName&"."&pl_getData.dataElement&":"&log2str(pl_getData.params);
+      if (f_EPTF_str2int_HashMap_Find(v_EPTF_DataSource_dataValueHash,vl_dataValueIdStr,vl_dataValueId)) {
+        vl_dataVarName := v_EPTF_DataSource_dataValue_List[vl_dataValueId].dataVarName; // remote var name (on the source component)
+      }
+    }
+  }
+
+  // send response:
+  f_EPTF_DataSource_sendMsg(EPTF_DataSource_Msg:{dataValue:={
+      pl_getData.transactionId,
+      pl_getData.dataSource,
+      pl_getData.ptcName,
+      pl_getData.dataElement,
+      pl_getData.params,
+      vl_dataVarName,
+      vl_errorCode,
+      vl_ownerCompRef
+    }},
+    pl_sourceCompRef
+  );
+}
+
+private function f_EPTF_DataSource_handleDataValue(in EPTF_DataSource_Msg_DataValue pl_dataValue)
+runs on EPTF_DataSource_CT {
+  v_EPTF_DataSource_Msg_List[pl_dataValue.transactionId] := {dataValue := pl_dataValue};
+  // store the returned varname in a hashmap:
+  if(pl_dataValue.errorCode==0) {
+    var charstring vl_dataValueIdStr := pl_dataValue.dataSource&"@"&pl_dataValue.ptcName&
+    "."&pl_dataValue.dataElement&":"&log2str(pl_dataValue.params);
+
+    var integer vl_dataValueId := sizeof(v_EPTF_DataSource_dataValue_List);
+    v_EPTF_DataSource_dataValue_List[vl_dataValueId] := {pl_dataValue.dataVarName};
+    f_EPTF_str2int_HashMap_Insert(v_EPTF_DataSource_dataValueHash,vl_dataValueIdStr,vl_dataValueId);
+  }
+  f_EPTF_Semaphore_unlock(pl_dataValue.transactionId);
+}
+
+private function f_EPTF_DataSource_handleConditionValue(in EPTF_DataSource_Msg_ConditionValue pl_conditionValue)
+runs on EPTF_DataSource_CT {
+  v_EPTF_DataSource_Msg_List[pl_conditionValue.transactionId] := {conditionValue := pl_conditionValue};
+  f_EPTF_Semaphore_unlock(pl_conditionValue.transactionId);
+}
+
+private function f_EPTF_DataSource_handleReadyEvent(in EPTF_DataSource_Msg_ReadyEvent pl_readyEvent)
+runs on EPTF_DataSource_CT {
+  for ( var integer i := 0; i < sizeof(v_EPTF_DataSource_ready_functions) ; i := i+1 )
+  {
+    v_EPTF_DataSource_ready_functions[i].apply(pl_readyEvent.dataSource, pl_readyEvent.ptcName);
+  }
+
+}
+
+private function f_EPTF_DataSource_sendMsg(in EPTF_DataSource_Msg pl_msg, in EPTF_DataSourceClient_CT pl_to) runs on EPTF_DataSource_CT {
+  EPTF_DataSourceIf.send(pl_msg) to pl_to;
+}
+
+private altstep as_EPTF_DataSource_EventHandler() runs on EPTF_DataSource_CT {
+  var EPTF_DataSource_Msg vl_msg;
+  var EPTF_DataSourceClient_CT vl_sender;
+  [] EPTF_DataSourceIf.receive(EPTF_DataSource_Msg:?) -> value vl_msg sender vl_sender {
+    if (ischosen(vl_msg.registerData)) {
+      f_EPTF_DataSource_handleRegisterData(vl_msg.registerData, vl_sender);
+    } else if (ischosen(vl_msg.dataValue)) {
+      f_EPTF_DataSource_handleDataValue(vl_msg.dataValue);
+    } else if (ischosen(vl_msg.conditionValue)) {
+      f_EPTF_DataSource_handleConditionValue(vl_msg.conditionValue);
+    } else if (ischosen(vl_msg.getData)) {
+      f_EPTF_DataSource_handleGetData(vl_msg.getData, vl_sender);
+    } else if (ischosen(vl_msg.clientReady)) {
+      f_EPTF_DataSource_handleReadyEvent(vl_msg.clientReady);
+    }
+    repeat;
+  }
+}
+
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_DataSource_getParams
+// 
+//  Purpose:
+//    General function to extract the needed parameters from the pl_params list.
+//    Returns positive error code if params are not correct
+//    Returns -1 if params are wrong syntactically
+//
+//  Parameters:
+//    *in* <EPTF_DataSource_Params> *pl_params* - the actual parameters
+//    *in* <EPTF_CharstringList> *pl_needed* - the parameters needed
+//    *in* <EPTF_CharstringList> *pl_result* - the value of the needed parameters
+//    *in* <f_EPTF_DataSource_DScheckParams_FT> *pl_checkParams* - function to check the parameters
+//
+//  Returns:
+//     integer - 0 if OK, nonzero on error: number of params is not the same as pl_needed,
+//                 or one or more params in pl_needed are not found
+//
+//  Detailed Comments:
+//    Can to be called on <EPTF_DataSource_CT> and on <EPTF_DataSourceClient_CT> both.
+//    Typical usage is in the dataElement handler
+///////////////////////////////////////////////////////////
+public function f_EPTF_DataSource_getParams(in EPTF_DataSource_Params pl_params,
+                                           in EPTF_CharstringList pl_needed,
+                                           out EPTF_CharstringList pl_result,
+                                           in f_EPTF_DataSource_DScheckParams_FT pl_checkParams := null)
+runs on EPTF_Logging_CT return integer {
+  pl_result := {};
+  if(sizeof(pl_params) == sizeof(pl_needed)){
+    for(var integer j := 0; j < sizeof(pl_needed); j := j + 1){
+      for(var integer i := 0; i < sizeof(pl_params); i:= i + 1){
+        if(pl_params[i].paramName == pl_needed[j]){
+          pl_result[sizeof(pl_result)] := pl_params[i].paramValue;
+        }
+      }
+    }
+    if(sizeof(pl_result) != sizeof(pl_needed)){
+      var EPTF_CharstringList vl_error := {};
+      for(var integer i := 0; i < sizeof(pl_params); i:= i + 1){
+        vl_error[i] := pl_params[i].paramName;
+      }
+      f_EPTF_Logging_warning(true,%definitionId& ": Invalid DataSource parameter: Parameters are not correct: "&
+      "\nReceived: "& log2str(vl_error)&
+      "\nNeeded  : "& log2str(pl_needed) );
+      return -1;
+    }
+    if (pl_checkParams!=null) {
+      return pl_checkParams.apply(pl_params);
+    } else {
+      return 0;
+    }
+  } else{
+    var EPTF_CharstringList vl_error := {};
+    for(var integer i := 0; i < sizeof(pl_params); i:= i + 1){
+      vl_error[i] := pl_params[i].paramName;
+    }
+    if(sizeof(pl_params) < sizeof(pl_needed)){
+      f_EPTF_Logging_warning(true,%definitionId& ": Invalid DataSource parameter: Too few parameters are given: "&
+      "\nReceived: "& log2str(vl_error)&
+      "\nNeeded  : "& log2str(pl_needed));
+    } else { 
+      f_EPTF_Logging_warning(true,%definitionId& ": Invalid DataSource parameter: Too many parameters are given: "&
+      "\nReceived: "& log2str(vl_error)&
+      "\nNeeded  : "& log2str(pl_needed));
+    }
+    return -1;
+  }
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_DataSource_extractParams
+// 
+//  Purpose:
+//    Extracts the needed parameters from the params.
+//    It returns "" for values of params that are not found.
+//
+//  Parameters:
+//    *in* <EPTF_DataSource_Params> *pl_params* - the actual parameters
+//    *in* <EPTF_CharstringList> *pl_needed* - the parameters needed
+//    *in* <EPTF_CharstringList> *pl_result* - the value of the needed parameters
+//
+//  Detailed Comments:
+//    Can be called in the dataElement handler or DScheckParams function
+///////////////////////////////////////////////////////////
+public function f_EPTF_DataSource_extractParams(in EPTF_DataSource_Params pl_params,
+                                           in EPTF_CharstringList pl_needed,
+                                           out EPTF_CharstringList pl_result) {
+  pl_result := {};
+  for(var integer j := 0; j < sizeof(pl_needed); j := j + 1){
+    pl_result[j] := "";
+    for(var integer i := 0; i < sizeof(pl_params); i:= i + 1){
+      if(pl_params[i].paramName == pl_needed[j]){
+        pl_result[j] := pl_params[i].paramValue;
+        break;
+      }
+    }
+  }
+}
+
+// returns positive error code if params are not correct
+// 0 if parameters are correct
+private function f_EPTF_DataSource_DScheckParams(
+  in EPTF_DataSource_Params pl_params)
+runs on EPTF_DataSource_CT return integer {
+
+  return 0;
+
+}
+
+//Commandline Interface commands:
+group DataSource_CLI {
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_DataSource_CLI_init_CT
+// 
+//  Purpose:
+//    Init function for DataSource_CLI_CT
+//
+//  Parameters:
+//    *in charstring pl_selfName* - the name of the component
+//    *in* <EPTF_CLI_CT> pl_CLI_compRef - the component reference of the CLI (default: null)
+//
+//  Detailed Comments:
+//    Has to be called to initialize DataSource_CLI component.
+//    DataSource commands can be executed in the Command Line Interface
+//    after this function was called.
+///////////////////////////////////////////////////////////
+public function f_EPTF_DataSource_CLI_init_CT(in charstring pl_selfName, in EPTF_CLI_CT pl_CLI_compRef := null) runs on EPTF_DataSource_CLI_CT {
+
+  f_EPTF_DataSource_init_CT(pl_selfName);
+  
+  // initialize DataSource_CLI:
+  f_EPTF_CLI_Client_init_CT(pl_selfName, pl_CLI_compRef);
+  f_EPTF_CLI_Client_registerCommand(
+    c_EPTF_DataSource_CLI_commandName,
+    c_EPTF_DataSource_CLI_commandHelp,
+    refers(f_EPTF_DataSource_CLI_commandHandler)
+  );
+
+}
+
+external function dec_datadescription (in octetstring pl_oct, out Datadescription pl_dataDescription) return integer
+with {extension "prototype(backtrack) decode (XER:XER_EXTENDED) errorbehavior(ALL:WARNING)"}
+
+external function enc_datadescription (in Datadescription pl_dataDescription) return octetstring
+with {extension "prototype(convert) encode (XER:XER_EXTENDED)"}
+
+external function dec_datadescriptionlist (in octetstring pl_oct, out Datadescriptionlist pl_dataDescriptionlist) return integer
+with {extension "prototype(backtrack) decode (XER:XER_EXTENDED) errorbehavior(ALL:WARNING)"}
+
+external function enc_datadescriptionlist (in Datadescriptionlist pl_dataDescriptionlist) return octetstring
+with {extension "prototype(convert) encode (XER:XER_EXTENDED)"}
+
+private  function f_EPTF_DataSource_CLI_unichar2charstring(in universal charstring pl_uni)
+return charstring{
+  var charstring vl_char := "";
+  for (var integer vl_i:= 0;vl_i<lengthof(pl_uni);vl_i:=vl_i+1)
+  {
+    vl_char := vl_char & int2char(unichar2int(pl_uni[vl_i]));
+  }
+  return vl_char
+}
+
+private function f_EPTF_DataSource_CLI_result_from_Datadescription(in Datadescription pl_dataDescription, out charstring pl_result) 
+runs on EPTF_DataSource_CLI_CT return integer{
+    // copy ptcName:
+    var charstring vl_ptcName := "";
+    if (ispresent(pl_dataDescription.ptcname)) {
+      vl_ptcName := f_EPTF_DataSource_CLI_unichar2charstring(pl_dataDescription.ptcname);
+    }
+
+    // convert params from vl_dataDescription to EPTF_DataSource_Params:
+    var EPTF_DataSource_Params vl_params := {};
+    for(var integer i:=0; ispresent(pl_dataDescription.params) and i<sizeof(pl_dataDescription.params.dataparam_list); i:=i+1) {
+      vl_params[i] := {
+        f_EPTF_DataSource_CLI_unichar2charstring(pl_dataDescription.params.dataparam_list[i].name),
+        f_EPTF_DataSource_CLI_unichar2charstring(pl_dataDescription.params.dataparam_list[i].value_)
+      }
+    }
+
+    var charstring vl_dataVarName;
+    var integer vl_returnCode := f_EPTF_DataSource_getData(
+      pl_dataVarName := vl_dataVarName,
+      pl_source := f_EPTF_DataSource_CLI_unichar2charstring(pl_dataDescription.source),
+      pl_ptcName := vl_ptcName,
+      pl_element := f_EPTF_DataSource_CLI_unichar2charstring(pl_dataDescription.element),
+      pl_params := vl_params
+    );
+    if (vl_returnCode==0) {
+      // value of variable:
+      var integer vl_idx := f_EPTF_Var_getId(vl_dataVarName);
+      if (vl_idx!=-1) {
+        pl_result := f_EPTF_Var_content2str(vl_idx);
+      } else {
+        pl_result := "Invalid datasource parameters "&log2str(pl_dataDescription)&": Variable with name "&vl_dataVarName&" for DataSource does not exist";
+      }
+    } else {
+      pl_result := "Invalid datasource parameters "&log2str(pl_dataDescription)&": DataSource does not exist";
+    }
+    return vl_returnCode;
+}
+
+private function f_EPTF_DataSource_CLI_commandHandler(in charstring pl_commandArgs, inout charstring pl_result)
+runs on EPTF_DataSource_CLI_CT return integer {
+
+  if (pl_commandArgs=="help") {
+    pl_result := pl_result&" - executes DataSource commands\n"&
+    "Usage: "&pl_result&" <help|get|set|getCondition|getVarName> {parameters}\n"&
+    "\n"&
+    "  help                                         - print this help message\n"&
+    "  get <xml format of Datadescription>          - request the value of a dataElement\n"&
+    "  getlist <xml format of DatadescriptionList>  - request the value of a dataElementList\n"&
+    "  set <xml format of Datadescription> <value>  - set the value of a dataElement\n"&
+    "  getCondition <xml format of Datadescription> - request the value of a condition\n"&
+    "  getVarName <xml format of Datadescription>   - request the variable name of a dataElement\n"&
+    "\n"&
+    "Where\n"&
+    "Xml format of <Datadescription> is something like:\n"&
+    "  <datadescription xmlns='http://ttcn.ericsson.se/protocolModules/xtdp/xtdl' element='Sources' source='DataSource'> </datadescription>\n"&
+    "  or\n"&
+    "  <datadescription xmlns='http://ttcn.ericsson.se/protocolModules/xtdp/xtdl' element='PTCs' source='DataSource'> <params> <dataparam name='Source' value='StatManager'/> </params> </datadescription>\n"&
+    "  or\n"&
+    "  <datadescription xmlns='http://ttcn.ericsson.se/protocolModules/xtdp/xtdl' element='PTCs' source='DataSource' ptcname='myPTC'> <params> <dataparam name='Source' value='StatManager'/> </params> </datadescription>\n"&
+    "  Note, that the 'element' field in the Datadescription corresponds to the 'method' for Conditions.\n"&
+    "  This format is similar to the one used in the custom GUI XML.\n"&
+    "Xml format of <Datadescriptionlist> (example): \n"&
+    "  <datadescriptionlist xmlns='http://ttcn.ericsson.se/protocolModules/xtdp/xtdl'>\n"&
+    "    <datadescription element='Sources' source='DataSource'> </datadescription>\n"&
+    "    <datadescription element='PTCs' source='DataSource'> <params> <dataparam name='Source' value='StatManager'/> </params> </datadescription>\n"&
+    "  </datadescriptionlist>\n"&
+    "<value>:\n"&
+    "  should be in the same format as the value returned by the get command";
+    return 0; // OK
+  }
+
+  var charstring vl_firstArg := regexp(pl_commandArgs,c_EPTF_CLI_anyWord&c_EPTF_CLI_everything,0);
+  if (vl_firstArg=="get") {
+    var charstring vl_subCommandArgs := regexp(pl_commandArgs,c_EPTF_CLI_anyWord&c_EPTF_CLI_everything,1);
+    // decode subcommand:
+    var Datadescription vl_dataDescription;
+    if (0 != dec_datadescription(char2oct(vl_subCommandArgs),vl_dataDescription)) {
+      // error
+      pl_result := "Syntax error in argument "&vl_subCommandArgs&": Expecting XML format of the Datadescription";
+      return 1;
+    };
+
+    var integer vl_returnCode;
+    vl_returnCode := f_EPTF_DataSource_CLI_result_from_Datadescription(vl_dataDescription, pl_result);
+    return vl_returnCode;
+
+  } else if (vl_firstArg=="getlist") {
+    var charstring vl_subCommandArgs := regexp(pl_commandArgs,c_EPTF_CLI_anyWord&c_EPTF_CLI_everything,1);
+    // decode subcommand:
+    var Datadescriptionlist vl_dataDescriptionlist;
+    if (0 != dec_datadescriptionlist(char2oct(vl_subCommandArgs),vl_dataDescriptionlist)) {
+      // error
+      pl_result := "Syntax error in argument "&vl_subCommandArgs&": Expecting XML format of the Datadescriptionlist";
+      return 1;
+    };
+   
+    var integer vl_returnCode := 0, vl_dummy;
+    var integer vl_size := sizeof(vl_dataDescriptionlist.datadescription_list);
+    var charstring vl_result;
+    pl_result := "";
+    for (var integer vl_i := 0; vl_i < vl_size; vl_i := vl_i + 1) {
+      if (vl_returnCode != 0) {
+        vl_dummy := f_EPTF_DataSource_CLI_result_from_Datadescription(vl_dataDescriptionlist.datadescription_list[vl_i], vl_result);
+      } else {
+        vl_returnCode := f_EPTF_DataSource_CLI_result_from_Datadescription(vl_dataDescriptionlist.datadescription_list[vl_i], vl_result);
+      }
+      pl_result := pl_result & vl_result & "\n";
+    }
+    return vl_returnCode;
+
+  } else if (vl_firstArg=="set") {
+    var charstring vl_subCommandArgs := regexp(pl_commandArgs,c_EPTF_CLI_anyWord&c_EPTF_CLI_everything&"</datadescription>"&c_EPTF_CLI_everything,1)&"</datadescription>";
+    // decode subcommand:
+    var Datadescription vl_dataDescription := {
+	element := "elementName",
+	ptcname := "ptcName",
+	source := "sourceName",
+	params := {{
+          {name:="param1Name", value_:="param1Value"},
+          {name:="param2Name", value_:="param2Value"}
+        }}
+    };
+    if (0 != dec_datadescription(char2oct(vl_subCommandArgs),vl_dataDescription)) {
+      // error
+      pl_result := "Syntax error in argument "&vl_subCommandArgs&": Expecting XML format of the Datadescription";
+      return 1;
+    };
+
+    // copy ptcName:
+    var charstring vl_ptcName := "";
+    if (ispresent(vl_dataDescription.ptcname)) {
+      vl_ptcName := f_EPTF_DataSource_CLI_unichar2charstring(vl_dataDescription.ptcname);
+    }
+
+    // convert params from vl_dataDescription to EPTF_DataSource_Params:
+    var EPTF_DataSource_Params vl_params := {};
+    for(var integer i:=0; ispresent(vl_dataDescription.params) and i<sizeof(vl_dataDescription.params.dataparam_list); i:=i+1) {
+      vl_params[i] := {
+        f_EPTF_DataSource_CLI_unichar2charstring(vl_dataDescription.params.dataparam_list[i].name),
+        f_EPTF_DataSource_CLI_unichar2charstring(vl_dataDescription.params.dataparam_list[i].value_)
+      }
+    }
+
+    var charstring vl_dataVarName;
+    var integer vl_returnCode := f_EPTF_DataSource_getData(
+      pl_dataVarName := vl_dataVarName,
+      pl_source := f_EPTF_DataSource_CLI_unichar2charstring(vl_dataDescription.source),
+      pl_ptcName := vl_ptcName,
+      pl_element := f_EPTF_DataSource_CLI_unichar2charstring(vl_dataDescription.element),
+      pl_params := vl_params
+    );
+    if (vl_returnCode==0) {
+      // value of variable:
+      var integer vl_idx := f_EPTF_Var_getId(vl_dataVarName);
+      if (vl_idx!=-1) {
+        if(not f_EPTF_Var_getSubsCanAdjust(vl_idx)) {
+          // variable is read only
+          pl_result := "Cannot change the value of the dataElement "&log2str(vl_dataDescription)&": DataElement is read-only!";
+          return 2; // error: read-only var
+        };
+        var charstring vl_variableValue := regexp(pl_commandArgs,c_EPTF_CLI_anyWord&c_EPTF_CLI_everything&"</datadescription>"&c_EPTF_CLI_everything,2);
+        vl_returnCode := f_EPTF_Var_str2content(vl_idx,vl_variableValue);
+        if (vl_returnCode == 0) {
+          pl_result := "Value set to data: "& vl_variableValue;
+        } else {
+          pl_result := "Syntax error in the value, or value is incompatible with the type of the data. Cannot set value: "&vl_variableValue;
+        }
+      } else {
+        pl_result := "Invalid datasource parameters "&log2str(vl_dataDescription)&": Variable with name "&vl_dataVarName&" for DataSource does not exist";
+      }
+    } else {
+      pl_result := "Invalid datasource parameters "&log2str(vl_dataDescription)&": DataSource does not exist";
+    }
+    return vl_returnCode;
+
+  } else if (vl_firstArg=="getCondition") {
+    var charstring vl_subCommandArgs := regexp(pl_commandArgs,c_EPTF_CLI_anyWord&c_EPTF_CLI_everything,1);
+    // decode subcommand:
+    var Datadescription vl_dataDescription := {
+	element := "elementName",
+	ptcname := "ptcName",
+	source := "sourceName",
+	params := {{
+          {name:="param1Name", value_:="param1Value"},
+          {name:="param2Name", value_:="param2Value"}
+        }}
+    };
+    if (0 != dec_datadescription(char2oct(vl_subCommandArgs),vl_dataDescription)) {
+      // error
+      pl_result := "Syntax error in argument "&vl_subCommandArgs&": Expecting XML format of the Datadescription";
+      return 1;
+    };
+
+    // copy ptcName:
+    var charstring vl_ptcName := "";
+    if (ispresent(vl_dataDescription.ptcname)) {
+      vl_ptcName := f_EPTF_DataSource_CLI_unichar2charstring(vl_dataDescription.ptcname);
+    }
+
+    // convert params from vl_dataDescription to EPTF_DataSource_Params:
+    var EPTF_DataSource_Params vl_params := {};
+    for(var integer i:=0; ispresent(vl_dataDescription.params) and i<sizeof(vl_dataDescription.params.dataparam_list); i:=i+1) {
+      vl_params[i] := {
+        f_EPTF_DataSource_CLI_unichar2charstring(vl_dataDescription.params.dataparam_list[i].name),
+        f_EPTF_DataSource_CLI_unichar2charstring(vl_dataDescription.params.dataparam_list[i].value_)
+      }
+    }
+
+    var boolean vl_conditionValue;
+    var integer vl_returnCode := f_EPTF_DataSource_getCondition(
+      pl_conditionValue := vl_conditionValue,
+      pl_source := f_EPTF_DataSource_CLI_unichar2charstring(vl_dataDescription.source),
+      pl_ptcName := vl_ptcName,
+      pl_method := f_EPTF_DataSource_CLI_unichar2charstring(vl_dataDescription.element),
+      pl_params := vl_params
+    );
+    if (vl_returnCode==0) {
+      // value of the condition:
+      pl_result := log2str(vl_conditionValue);
+    } else {
+      pl_result := "Invalid condition parameters "&log2str(vl_dataDescription)&": Condition does not exist";
+    }
+    return vl_returnCode;
+    
+  } else if (vl_firstArg=="getVarName") {
+    var charstring vl_subCommandArgs := regexp(pl_commandArgs,c_EPTF_CLI_anyWord&c_EPTF_CLI_everything,1);
+    // decode subcommand:
+    var Datadescription vl_dataDescription := {
+	element := "elementName",
+	ptcname := "ptcName",
+	source := "sourceName",
+	params := {{
+          {name:="param1Name", value_:="param1Value"},
+          {name:="param2Name", value_:="param2Value"}
+        }}
+    };
+    if (0 != dec_datadescription(char2oct(vl_subCommandArgs),vl_dataDescription)) {
+      // error
+      pl_result := "Syntax error in argument "&vl_subCommandArgs&": Expecting XML format of the Datadescription";
+      return 1;
+    };
+
+    // copy ptcName:
+    var charstring vl_ptcName := "";
+    if (ispresent(vl_dataDescription.ptcname)) {
+      vl_ptcName := f_EPTF_DataSource_CLI_unichar2charstring(vl_dataDescription.ptcname);
+    }
+
+    // convert params from vl_dataDescription to EPTF_DataSource_Params:
+    var EPTF_DataSource_Params vl_params := {};
+    for(var integer i:=0; ispresent(vl_dataDescription.params) and i<sizeof(vl_dataDescription.params.dataparam_list); i:=i+1) {
+      vl_params[i] := {
+        f_EPTF_DataSource_CLI_unichar2charstring(vl_dataDescription.params.dataparam_list[i].name),
+        f_EPTF_DataSource_CLI_unichar2charstring(vl_dataDescription.params.dataparam_list[i].value_)
+      }
+    }
+
+    var charstring vl_dataVarName;
+    var integer vl_returnCode := f_EPTF_DataSource_getData(
+      pl_dataVarName := vl_dataVarName,
+      pl_source := f_EPTF_DataSource_CLI_unichar2charstring(vl_dataDescription.source),
+      pl_ptcName := vl_ptcName,
+      pl_element := f_EPTF_DataSource_CLI_unichar2charstring(vl_dataDescription.element),
+      pl_params := vl_params
+    );
+    if (vl_returnCode==0) {
+      // name of variable:
+      pl_result := vl_dataVarName;
+    } else {
+      pl_result := "Invalid datasource parameters "&log2str(vl_dataDescription)&": DataSource does not exist";
+    }
+    return vl_returnCode;
+
+  }
+  pl_result := "Syntax error in argument "&vl_firstArg&": Expecting <help|get|set|getCondition|getVarName>";
+  return 1; // error;  
+}
+
+}// group DataSource_CLI
+
+private function f_EPTF_DataSource_error(in charstring pl_msg) runs on EPTF_DataSource_CT {
+  f_EPTF_Logging_error(true,"Error: "&pl_msg);
+}
+
+private function f_EPTF_DataSource_warning(in charstring pl_msg) runs on EPTF_DataSource_CT {
+  f_EPTF_Logging_warning(true,"Warning: "&pl_msg);
+}
+
+private function f_EPTF_DataSource_debug(in charstring pl_msg) runs on EPTF_DataSource_CT {
+  f_EPTF_Logging_debug(true,"Debug: "&pl_msg);
+}
+
+} // module EPTF_CLL_DataSource_Functions

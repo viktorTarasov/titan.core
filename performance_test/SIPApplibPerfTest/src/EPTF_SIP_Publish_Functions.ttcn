@@ -1,0 +1,533 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_SIP_Publish_Functions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 522
+//  Updated:  2012-11-28
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////
+//  Module: EPTF_SIP_Publish_Functions
+//
+//  Module depends on:  
+//    <EPTF_CLL_Common_Definitions>
+//
+//    <EPTF_CLL_LGenBase_ConfigFunctions>
+//
+//    <EPTF_CLL_FBQ_Functions>
+//
+//    <EPTF_CLL_HashMapStr2Int_Functions>
+//
+//    <EPTF_CLL_Base_Functions>
+//
+//    <EPTF_SIP_Common_Definitions>
+//
+//    <EPTF_SIP_Common_Functions>
+//
+//    <EPTF_SIP_LGen_Definitions>
+//
+//    <EPTF_SIP_Publish_Definitions>
+//
+//    <EPTF_SIP_UserDatabase_Functions>
+//
+//    <SIPmsg_Types>
+//
+//  Last review date:  
+//    2009-04-20
+////////////////////////////////////////////////////
+module EPTF_SIP_Publish_Functions
+{
+
+import from EPTF_CLL_Common_Definitions all
+import from EPTF_CLL_LGenBase_ConfigFunctions all;
+import from EPTF_CLL_FBQ_Functions all;
+import from EPTF_CLL_HashMapStr2Int_Functions all;
+import from EPTF_CLL_Base_Functions all;
+
+import from EPTF_SIP_Common_Definitions all
+import from EPTF_SIP_Common_Functions all
+import from EPTF_SIP_LGen_Definitions all;
+import from EPTF_SIP_Publish_Definitions all;
+import from EPTF_SIP_UserDatabase_Functions all;
+
+import from SIPmsg_Types all;
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_Publish_InitDatabase
+//
+//Purpose:                                                                           
+//  Initializes a SIP publish database                                           
+//                                                                                   
+//Detailed Comments:                                                                 
+//  The function initializes the EPTF_FreeBusyQueue and creates a number of free     
+//  slots in advance.                                                                
+////////////////////////////////////////////////////
+function f_EPTF_SIP_Publish_InitDatabase()
+runs on EPTF_SIP_LGen_CT
+{
+  f_EPTF_FBQ_initFreeBusyQueue(v_db_publish.queue);
+  v_db_publish.data := {};
+  v_db_publish.supportedEventTypes := {};
+  
+  var integer i, dummy;
+  for(i := 0; i < 1000; i := i + 1) {
+    dummy := f_EPTF_FBQ_getOrCreateFreeSlot(v_db_publish.queue);
+    f_EPTF_FBQ_moveFromFreeHeadToBusyTail(v_db_publish.queue);
+  }
+  for(i := 0; i < 1000; i := i + 1) {
+    f_EPTF_FBQ_moveFromBusyToFreeTail(i, v_db_publish.queue);
+  }
+  
+  f_EPTF_FBQ_initFreeBusyQueue(v_db_published.queue);
+  v_db_published.hashRef := f_EPTF_str2int_HashMap_New(c_SIP_Publish_hashMapName_RequestURI2Idx);
+  v_db_published.data := {};
+  for(i := 0; i < 1000; i := i + 1) {
+    dummy := f_EPTF_FBQ_getOrCreateFreeSlot(v_db_published.queue);
+    f_EPTF_FBQ_moveFromFreeHeadToBusyTail(v_db_published.queue);
+  }
+  for(i := 0; i < 1000; i := i + 1) {
+    f_EPTF_FBQ_moveFromBusyToFreeTail(i, v_db_published.queue);
+  }
+}
+
+function f_EPTF_SIP_Publish_cleanUpDatabase()
+runs on EPTF_SIP_LGen_CT
+{
+  f_EPTF_FBQ_initFreeBusyQueue(v_db_publish.queue);
+  v_db_publish.data := {};
+  v_db_publish.supportedEventTypes := {};
+  
+  f_EPTF_FBQ_initFreeBusyQueue(v_db_published.queue);
+  v_db_published.data := {};
+  f_EPTF_str2int_HashMap_Delete(c_SIP_Publish_hashMapName_RequestURI2Idx);
+  v_db_published.hashRef := -1;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_Publish_Create
+//
+//Purpose:
+//  Creates a new publish.
+//
+//Parameters:
+//  - pl_publishIdx - *inout* *integer* - the index of the newly created publish in the
+//      v_db_publish database
+//  - pl_eventTypeIdx - *in* *integer* - the event type index returned by <f_EPTF_SIP_Publish_AddSupportedEventType>
+//  - pl_userIdx - *in* *integer* - the index of the user in v_db_users
+//  - pl_fsmCtx - *in* *integer* - the FSM context index
+//  - pl_FSMIdx - *in* *integer* - the FSM context data index
+//  - pl_escURI - *in* <AddrIndex> - the index of the URI of the Event State Creator
+//
+//Errors:
+//
+//Detailed comments:  
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_Publish_Create(
+  inout integer pl_publishIdx,
+  in integer  pl_eventTypeIdx,
+  in integer pl_userIdx,
+  in integer pl_fsmCtx,
+  in integer pl_FSMIdx,
+  in AddrIndex pl_escURI)
+runs on EPTF_SIP_LGen_CT
+{
+  f_EPTF_SIP_Publish_GetNewIdx(pl_publishIdx);
+
+  v_db_publish.data[pl_publishIdx].userIdx := pl_userIdx;
+  f_EPTF_SIP_setUserData_FSMs_fsmCtx(pl_userIdx, pl_FSMIdx, pl_fsmCtx);
+  v_db_publish.data[pl_publishIdx].FSMIdx := pl_FSMIdx;
+  v_db_publish.data[pl_publishIdx].eventType := v_db_publish.supportedEventTypes[pl_eventTypeIdx];
+  v_db_publish.data[pl_publishIdx].escURI := pl_escURI;
+  v_db_publish.data[pl_publishIdx].creationtime := f_EPTF_Base_getRelTimeInSecs();
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_Publish_Remove
+//
+//Purpose:
+//  Removes a publish.
+//
+//Parameters:
+//  - pl_publishIdx - *in* *integer* - the index of the publish in v_db_publish.
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_Publish_Remove(in integer pl_publishIdx)
+runs on EPTF_SIP_LGen_CT
+{
+  f_EPTF_FBQ_moveFromBusyToFreeTail(pl_publishIdx, v_db_publish.queue);
+
+//  v_db_publish.data[pl_publishIdx] := c_SIP_PublishData_init; -- removed for speed optimization
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_Publish_GetNewIdx
+//
+//Purpose:
+//  This function sets its integer parameter to an index number that points to a free
+//  publish in the publish database.
+// 
+//  Parameters:
+//    pl_publishIdx - *inout* *integer* - the returned publish index
+// 
+//  Detailed Comments:
+//    This function either returns with an index to a free publish in the publish database
+//    or creates and initializes a new publish in the database and returns with its index.
+//    The data element corresponding to the returned index is initialized with a constant.
+////////////////////////////////////////////////////
+function f_EPTF_SIP_Publish_GetNewIdx(inout integer pl_publishIdx)
+runs on EPTF_SIP_LGen_CT
+{
+  //get new free slot 
+  pl_publishIdx := f_EPTF_FBQ_getOrCreateFreeSlot(v_db_publish.queue);
+
+  if(c_EPTF_Common_debugSwitch and f_SIP_Logging_debugEnabled() and pl_publishIdx >= sizeof(v_db_publish.data))
+  {
+    f_SIP_Logging_DEBUG(log2str(
+      %definitionId,"needed to allocate new publish idx"," at idx: ",pl_publishIdx));
+  }
+
+  v_db_publish.data[pl_publishIdx] := c_SIP_PublishData_init;
+
+  f_EPTF_FBQ_moveFromFreeHeadToBusyTail(v_db_publish.queue);
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_checkPublish
+//
+//Purpose:
+//  Checks if a publish index is still valid in the v_db_publish database.
+//
+//Parameters:
+//  - pl_publishIdx - *in* *integer* - the index of the publish
+//
+//Return value:
+//  boolean - true if valid
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_checkPublish(in integer pl_publishIdx)
+runs on EPTF_SIP_LGen_CT
+return boolean
+{
+  if (0 > pl_publishIdx or sizeof(v_db_publish.data) <= pl_publishIdx or f_EPTF_FBQ_itemIsFree(pl_publishIdx, v_db_publish.queue))
+  {
+    return false;
+  }
+
+  return true;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_Publish_setExpire
+//
+//Purpose:
+//  Sets the expire time of the publication in the given FSM.
+//
+//Parameters:
+//  - pl_entityIdx - *in* *integer* - index of the entity
+//  - pl_fsmCtx - *in* *integer* - the FSM context index
+//  - pl_expInt - *in* *integer* - the expire interval
+//
+//Detailed comments:
+//  If there is no publication in the given FSM context data, the time will
+//  not be set.
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_Publish_setExpire(in integer pl_entityIdx, in integer pl_fsmCtx, in integer pl_expInt)
+runs on EPTF_SIP_LGen_CT
+{  
+  var integer vl_publishIdx := -1;
+
+  if (f_EPTF_SIP_getPublish(pl_entityIdx, pl_fsmCtx, vl_publishIdx))
+  {
+    v_db_publish.data[vl_publishIdx].expireInterval := pl_expInt;
+  }
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_Publish_getExpire
+//
+//Purpose:
+//  Sets the expire time of the publication in the given FSM.
+//
+//Parameters:
+//  - pl_entityIdx - *in* *integer* - index of the entity
+//  - pl_fsmCtx - *in* *integer* - the FSM context index
+//  - pl_expInt - *inout* *integer* - the expire interval
+//
+//Detailed comments:
+//  If there is no publication in the given FSM context data, 0 will be returned.
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_Publish_getExpire(in integer pl_entityIdx, in integer pl_fsmCtx, inout integer pl_expInt)
+runs on EPTF_SIP_LGen_CT
+{  
+  var integer vl_publishIdx := -1;
+  pl_expInt := 0;
+
+  if (f_EPTF_SIP_getPublish(pl_entityIdx, pl_fsmCtx, vl_publishIdx))
+  {
+    pl_expInt := v_db_publish.data[vl_publishIdx].expireInterval;
+  }
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_getPublish
+//
+//Purpose:
+//  Gets the index of the publiscation in v_db_publish in the given FSM.
+//
+//Parameters:
+//  - pl_entityIdx - *in* *integer* - index of the entity
+//  - pl_fsmCtx - *in* *integer* - the FSM context index
+//  - pl_publishIdx - *inout* *integer* - the retrieved index
+//
+//Detailed comments:
+// If there is no publication in the given FSM context data, pl_publishIdx remains unchanged.
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_getPublish(in integer pl_entityIdx, in integer pl_fsmCtx, inout integer pl_publishIdx)
+runs on EPTF_SIP_LGen_CT
+return boolean
+{
+  var integer vl_FSMIdx := -1;
+  pl_publishIdx := -1;
+
+  if (not f_EPTF_SIP_FSMInitialized(pl_entityIdx, pl_fsmCtx, vl_FSMIdx))
+  {
+    f_SIP_Logging_WARNING(log2str(
+      %definitionId,": FSM has not been initialized."));
+    return false;
+  }
+
+  pl_publishIdx := v_db_users.data[f_EPTF_LGenBase_getBehaviorCtxItem(pl_entityIdx, v_SIP_myBIdx, 0)].FSMs.data[vl_FSMIdx].publishIdx;
+
+  if (not f_EPTF_SIP_checkPublish(pl_publishIdx))
+  {
+    f_SIP_Logging_WARNING(log2str(
+      %definitionId,": invalid publish index in FSM context data."));
+    return false;
+  }
+
+  return true;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_Publish_AddSupportedEventType
+//
+//Purpose:
+//  Adds a supported event type to the publiscation database.
+//
+//Parameters:
+//  - pl_eventType - *in* <Event_type> - the event type
+//
+//Return value:
+//  integer - the index of the type, can be used the index the supported event type list
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_Publish_AddSupportedEventType(
+  in Event_type pl_eventType
+) runs on EPTF_SIP_LGen_CT return integer
+{
+  return f_EPTF_SIP_AddSupportedEventType(pl_eventType, v_db_publish.supportedEventTypes);
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_Publish_addPublishIdx
+//
+//Purpose:  
+//  Adds a publish reference to the <SIP_PublishedDataList> publish reference list.
+//  
+//Parameters:
+//  - pl_list - *inout* <SIP_PublishedDataList> - the publish reference list
+//  - pl_publishIdx - *in* *integer* - the publish reference
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_Publish_addPublishIdx(
+  inout SIP_PublishIdxList pl_idxList,
+  in integer pl_publishIdx)
+runs on EPTF_SIP_LGen_CT
+{
+  if(c_EPTF_Common_debugSwitch and f_SIP_Logging_debugEnabled()) {
+    f_SIP_Logging_DEBUG(log2str(%definitionId,
+    ": adding publish reference ",pl_publishIdx," to list."));
+
+    f_SIP_Logging_DEBUG(log2str(%definitionId,
+      ": the publish reference list: ", pl_idxList));
+  }
+
+  pl_idxList[sizeof(pl_idxList)] := pl_publishIdx;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_Publish_removePublishIdx
+//
+//Purpose:  
+//  Removes a publish reference from the <SIP_PublishedDataList> publish reference list.
+//
+//Parameters:
+//  - pl_list - *inout* <SIP_PublishedDataList> - the publish reference list
+//  - pl_publishIdx - *in* *integer* - the publish reference
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_Publish_removePublishIdx(
+  inout SIP_PublishIdxList pl_idxList,
+  in integer pl_publishIdx)
+runs on EPTF_SIP_LGen_CT
+{
+  if(c_EPTF_Common_debugSwitch and f_SIP_Logging_debugEnabled()) {
+    f_SIP_Logging_DEBUG(log2str(%definitionId,
+      ": removing publish reference ",pl_publishIdx," from database"));
+
+    f_SIP_Logging_DEBUG(log2str(%definitionId,
+      ": the transaction reference database: ", pl_idxList));
+  }
+
+  var SIP_PublishIdxList vl_new := {};
+  var boolean vl_elementNotFound := true;
+  for (var integer i := 0; i < sizeof(pl_idxList); i := i + 1)
+  {
+    if (pl_publishIdx == pl_idxList[i])
+    {
+      vl_elementNotFound := false;
+    }else
+    {
+      vl_new[sizeof(vl_new)] := pl_idxList[i];
+    }
+  }
+  
+  pl_idxList := vl_new;
+
+  if (vl_elementNotFound)
+  {
+    f_SIP_Logging_WARNING(log2str(
+      %definitionId,": publish has not been found: ",pl_publishIdx));
+  }
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_Publish_getPublishIdxByIfMatch
+//
+//Purpose:  
+//  Get publish index by SIP-If-Match value from the published database
+//
+//Parameters:
+//  - pl_publishedIdx - *in* *integer* - the published idex
+//  - pl_ifMatch - *in* *charstring* - the SIP-If-Match value
+//  - pl_publishIdx - *out* *integer* - the publish index
+//
+//Detailed Comments:
+//  Gives back -1 in "pl_publishIdx" if no match found.
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_Publish_getPublishIdxByIfMatch(
+  in integer pl_publishedIdx,
+  in charstring pl_ifMatch,
+  out integer pl_publishIdx)
+runs on EPTF_SIP_LGen_CT
+{
+  pl_publishIdx := -1;
+  for(var integer vl_i := 0; vl_i < sizeof(v_db_published.data[pl_publishedIdx].publishIdxList); vl_i := vl_i + 1)
+  {
+    var integer vl_publishIdx := v_db_published.data[pl_publishedIdx].publishIdxList[vl_i];
+    
+    if(f_EPTF_SIP_checkPublish(vl_publishIdx) and
+        pl_ifMatch == v_db_publish.data[vl_publishIdx].eTag)
+    {
+      pl_publishIdx := vl_publishIdx;
+      return;
+    }
+  }
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_Publish_checkIfPublishExpired
+//
+//Purpose:  
+//  Checks if publish expired.
+//
+//Parameters:
+//  - pl_publishIdx - *in* *integer* - the publish index
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_Publish_checkIfPublishExpired(
+  in integer pl_publishIdx)
+runs on EPTF_SIP_LGen_CT
+return boolean
+{
+  var float vl_currenttime := f_EPTF_Base_getRelTimeInSecs();
+  if(v_db_publish.data[pl_publishIdx].creationtime + int2float(v_db_publish.data[pl_publishIdx].expireInterval) < vl_currenttime)
+  {
+    return true;
+  }
+  
+  return false;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_Publish_generateETag
+//
+//Purpose:  
+//  Generate entity-tag.
+//
+//Parameters:
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_Publish_generateETag()
+runs on EPTF_SIP_LGen_CT
+return charstring
+{
+  var charstring vl_eTag := v_eTagPrefix & int2str(v_currentETag);
+  if(v_currentETag > 99999)
+  {
+    v_eTagPrefix := v_eTagPrefix & int2str(v_currentETag);
+    v_currentETag := 0;
+  }
+  else
+  {
+    v_currentETag := v_currentETag + 1;
+  }
+  return vl_eTag;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_Publish_createNewPublishedData
+//
+//Purpose:
+//  Creates a new published data entry.
+// 
+//  Parameters:
+//    pl_published_idx - *inout* *integer* - the returned published index
+//    pl_requestUri - *in* *charstring* - the associated Request-URI
+// 
+//  Detailed Comments:
+//    This function either returns with an index to a free published data in the published database
+//    or creates and initializes a new published data in the database and returns with its index.
+//    The data element corresponding to the returned index is initialized with a constant.
+////////////////////////////////////////////////////
+function f_EPTF_SIP_Publish_getNewIdx4Published(
+  inout integer pl_published_idx)
+runs on EPTF_SIP_LGen_CT
+{
+  pl_published_idx := f_EPTF_FBQ_getOrCreateFreeSlot(v_db_published.queue);
+  if(c_EPTF_Common_debugSwitch and f_SIP_Logging_debugEnabled() and pl_published_idx >= sizeof(v_db_published.data))
+  {
+    f_SIP_Logging_DEBUG(log2str(
+      %definitionId,"needed to allocate new published idx"," at idx: ",pl_published_idx));
+  }
+  
+  v_db_published.data[pl_published_idx] := c_SIP_PublishedData_init;
+  f_EPTF_FBQ_moveFromFreeHeadToBusyTail(v_db_published.queue);
+}
+
+}//end of module
+with {
+extension "version <RnXnn>"
+}
+

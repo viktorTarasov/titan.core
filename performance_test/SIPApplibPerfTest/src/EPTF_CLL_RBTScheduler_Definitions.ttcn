@@ -1,0 +1,150 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_CLL_RBTScheduler_Definitions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 512
+//  Updated:  2011-09-28
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////
+//  Module: EPTF_CLL_RBTScheduler_Definitions
+// 
+//  Purpose:
+//    This module supports definitions for scheduled event handling in a generic way
+// 
+//  Module Parameters:
+//
+//  Module depends on:
+//    <EPTF_CLL_RBT_Definitions>
+//    <EPTF_CLL_Common_Definitions>
+//    <EPTF_CLL_Scheduler_Definitions>
+//    <EPTF_CLL_Base_Definitions>
+//    <EPTF_CLL_Logging_Definitions>
+// 
+//  Current Owner:
+//    Gabor Ziegler (EGBOZIE)
+// 
+//  Last Review Date:
+//    2007-06-19
+// 
+//  Detailed Comments:
+//    This module contains generic definitions for <EPTF_RBT> 
+//    based event scheduling. 
+// 
+//    It defines the type of the event queue as an EPTF Red-Black tree.
+//    And it also defines the <EPTF_Scheduler_CT> scheduler component
+//    which uses the RBT scheduler definitions.
+// 
+///////////////////////////////////////////////////////////
+module EPTF_CLL_RBTScheduler_Definitions 
+{
+
+//=========================================================================
+// Import Part
+//=========================================================================
+import from EPTF_CLL_RBT_Definitions all;
+import from EPTF_CLL_Common_Definitions all;
+import from EPTF_CLL_Scheduler_Definitions all;
+import from EPTF_CLL_Base_Definitions all;
+import from EPTF_CLL_Logging_Definitions all;
+
+//=========================================================================
+// Module Parameters
+//=========================================================================
+
+//=========================================================================
+//Component Types
+//=========================================================================
+
+///////////////////////////////////////////////////////////
+//  Component:  EPTF_Scheduler_CT
+// 
+//  Purpose:
+//    This component defines the EPTF Scheduler component.
+//    It is intended for extension. It has an <EPTF_EventQueue> plus suitable timers
+// 
+//  Elements:
+//    - v_Scheduler_initialized - *boolean* - true if scheduler init function was called. Prevents multiple execution of the init function
+//    - v_EPTF_eventQueue - <EPTF_EventQueue> - contains the event queue. You is initialized
+//                       by <f_EPTF_SchedulerComp_InitScheduler> ()
+//    - T_EPTF_nextEvent - *timer* - is used for measuring the differential delay 
+//                         up to the next event, if necessary to actually sleep
+//    - v_EPTF_nextEventIsActive - *boolean* - true if the T_EPTF_nextEvent is active.  
+//                         (workaround for the limitations of the timer.running operator of the TTCN-3 language)
+//    - v_EPTF_snapshotTime - *float* - is used for storing the "snapshot" of T_EPTF_componentClock
+//                         that is, the "wall clock time" upon the component "awakes" either
+//                         due to the T_EPTF_nextEvent.timeout, or due to an incoming msg.
+// 
+// Detailed Comments:
+//    This component must be initialized with the <f_EPTF_SchedulerComp_InitScheduler> function.
+// 
+///////////////////////////////////////////////////////////
+type component EPTF_Scheduler_CT extends EPTF_Logging_CT, EPTF_RBT_CT
+{
+  private var boolean v_Scheduler_initialized := false;
+  // scheduler database. 
+  private var EPTF_EventQueue v_EPTF_eventQueue ;
+  //timer to expire when next event shall be generated
+  private timer T_EPTF_nextEvent := tsp_EPTF_ELEMENTARY_TIMESTEP_PARAM;
+  private var boolean v_EPTF_nextEventIsActive := false;
+  //for storin  the real time measured by t_componentClock when T_EPTF_nextEvent has been expired
+  private var float v_EPTF_snapshotTime := 0.0;
+  private var default v_EPTF_Scheduler_def := null;
+
+  // logging
+  private var integer v_Scheduler_loggingMaskId := c_EPTF_Logging_invalidMaskId;
+};
+
+//=========================================================================
+// Data Types
+//=========================================================================
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_EventQueue
+// 
+//  Purpose:
+//    This datastructure is the base data type for the scheduler functions
+// 
+//  Elements:
+//    - schedulerRunsFor - *float* - contains the absolute time value for which 
+//      the scheduler was last started. The invalid setting is "-1.0"
+//
+//    - order - <EPTF_Float_RedBlackTree> - contains the ordering of events in the 
+//              busy chain.
+//
+//    - events- <EPTF_ScheduledActionList> - contains the events to be scheduled. 
+// 
+// Detailed Comments:
+//    Encloses the <EPTF_Float_RedBlackTree> and the corresponding <EPTF_ScheduledActionList>.
+//    This array of actions to be scheduled is used together with a 
+//    <EPTF_Float_RedBlackTree>, which defines the ordering of the events efficiently
+// 
+///////////////////////////////////////////////////////////
+type record EPTF_EventQueue {
+  float schedulerRunsFor,
+  EPTF_RBT_TreeId order, 
+  EPTF_ScheduledActionList events
+}
+
+//=========================================================================
+// Constants
+//=========================================================================
+///////////////////////////////////////////////////////////
+// Constant: c_EPTF_emptyEventQueue
+//
+// Purpose:
+//   useful constant to init an EPTF_EventQueue at once
+//
+// References:
+//   <EPTF_EventQueue> := {order:= <c_EPTF_emptyFloatRBTree>, events := {}}
+//
+///////////////////////////////////////////////////////////
+const EPTF_EventQueue c_EPTF_emptyEventQueue := {-1.0, -1 ,{}}
+
+}  // end of module

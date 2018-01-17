@@ -1,0 +1,80 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//
+//  File:               EPTF_CLL_Common_RndDefinitions.ttcn
+//  Description:        Rnd Id generator facility component
+//                      Any component can be extended with it to inherit it properties
+//  Rev:                <RnXnn>
+//  Prodnr:             CNL 113 512
+//  Updated:            2009-05-26
+//  Contact:            http://ttcn.ericsson.se
+//  Author:             ETH/RZD Norbert Pinter
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////
+//  Module: EPTF_CLL_Common_RndDefinitions
+// 
+//  Purpose:
+//    This module contains definitions for RndValues component
+// 
+//  Module Parameters:
+//    -
+//
+//  Module depends on:
+//    <EPTF_CLL_Common_Definitions>
+// 
+//  Current Owner:
+//    ENORPIN
+// 
+//  Last Review Date:
+//    2007-xx-xx
+//
+//  Detailed Comments:
+//    This module contains type definitions for EPTF_CLL_Common_RndValues_Definitions implementation.
+// 
+///////////////////////////////////////////////////////////////
+module EPTF_CLL_Common_RndDefinitions
+{
+
+import from EPTF_CLL_Common_Definitions all;
+
+//=========================================================================
+//Component Types
+//=========================================================================
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Common_RndValues_CT
+// 
+//  Purpose:
+//   The component that implements the EPTF Random Value Pool feature
+// 
+//  Elements:
+//    v_EPTF_Common_RndValues_rndNumberList - <EPTF_FloatList> - the generated random numbers
+//    v_EPTF_Common_RndValues_actualIndex - *integer* - the index of the actual random number  
+//    v_EPTF_Common_RndValues_initialized - *boolean* - initialization indicator
+//
+//  Detailed Comments:
+//   Provides random float values which are greater than equal to zero an less than 1.
+//   The sequence can be absolutely random /non-deterministic random/ (the repeated runnings of the program give different sequenses)
+//   or pseudo-random /deterministic random/ depending on the value tsp_random_behaviour but always is the same sequence for each running 
+//   of the program.
+//   The number of available values is stored in the module parameters tsp_randomValues_numberOfRndValues
+//   The module parameters are belonging to module EPTF_RndValues_Functions
+//   The functions belonging to this component:
+//   f_EPTF_Common_RndValues_init_CT()
+//   f_EPTF_Common_RndValues_getNextRndValue()
+///////////////////////////////////////////////////////////
+type component EPTF_Common_RndValues_CT
+{
+  var EPTF_FloatList 				v_EPTF_Common_RndValues_rndNumberList := {};
+  var integer 				  	v_EPTF_Common_RndValues_actualIndex := 0; 
+  var boolean 					v_EPTF_Common_RndValues_initialized :=false;
+  var integer                   v_EPTF_Common_RndValues_numberOfRndValues := -1;
+  var float                     v_EPTF_Common_RndValues_behaviour := 0.0;
+}
+
+}//module

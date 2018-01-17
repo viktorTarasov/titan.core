@@ -1,0 +1,651 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_SIP_Transport_Definitions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 522
+//  Updated:  2012-11-28
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////
+//  Module: EPTF_SIP_Transport_Definitions
+//
+//  Purpose:  
+//
+//  Module paramters:
+//    - tsp_EPTF_SIP_LocalTransport_loggingEnabled - *boolean* - if true the outgoing/incoming
+//      SIP PDUs will be sent to the Logger component of the transport layer
+//
+//  Module depends on:  
+//    <EPTF_CLL_Common_Definitions>
+//
+//    <EPTF_CLL_Base_Definitions>
+//
+//    <EPTF_CLL_Logging_Definitions>
+//
+//    <EPTF_CLL_FBQ_Definitions>
+//
+//    <EPTF_CLL_Scheduler_Definitions>
+//
+//    <EPTF_CLL_RBTScheduler_Definitions>
+//
+//    <EPTF_CLL_RBTScheduler_Functions>
+//
+//    <EPTF_CLL_Transport_Definitions>
+//
+//    <EPTF_CLL_Transport_CommonDefinitions>
+//
+//    <EPTF_CLL_TransportRouting_Definitions>
+//
+//    <EPTF_SIP_Common_Definitions>
+//
+//    <EPTF_SIP_LGen_Definitions>
+//
+//    <EPTF_SIP_Logger_Definitions>
+//
+//    <Socket_API_Definitions>
+//
+//    <IPL4asp_Types> // FIXME: change to Socket_API_Definitions
+//
+//    <SIPmsg_Types>
+//
+//  Last review date:
+//    2012-10-16
+////////////////////////////////////////////////////
+module EPTF_SIP_Transport_Definitions
+{
+import from EPTF_CLL_Common_Definitions all;
+import from EPTF_CLL_Base_Definitions all;
+import from EPTF_CLL_Logging_Definitions all;
+import from EPTF_CLL_FBQ_Definitions all;
+import from EPTF_CLL_RBTScheduler_Definitions all;
+import from EPTF_CLL_Transport_Definitions all;
+import from EPTF_CLL_Transport_CommonDefinitions all;
+import from EPTF_CLL_TransportRouting_Definitions all;
+
+import from EPTF_SIP_LGen_Definitions all;
+import from EPTF_SIP_Logger_Definitions all;
+import from EPTF_CLL_DataSource_Definitions all;
+
+import from Socket_API_Definitions all;
+import from IPL4asp_Types all; // fixme: remove when ASP_RecvFrom is removed from STUNHandler
+
+modulepar boolean tsp_EPTF_SIP_LocalTransport_debugEnabled := false;
+modulepar charstring tsp_EPTF_SIP_Transport_loggingComponentMask := "SIP_Transport_Logging";
+
+modulepar boolean tsp_EPTF_SIP_useRemotePortInRemoteTargetResolution := false;
+modulepar boolean tsp_EPTF_SIP_useTransportProtocolInRemoteTargetResolution := false;
+
+///////////////////////////////////////////////////////////
+// Type: fcb_EPTF_SIP_Transport_ASPEvent
+//
+// Purpose:
+//
+///////////////////////////////////////////////////////////
+type function fcb_EPTF_SIP_Transport_ASPEvent(in integer p_user, in Socket_API_Definitions.PortEvent p_event, in float p_time) runs on self;
+
+type function fcb_EPTF_SIP_Transport_ConnectionClosed(in EPTF_IntegerList pl_sipUsers) runs on self;
+type function fcb_EPTF_SIP_Transport_PortError(in EPTF_IntegerList pl_sipUsers, in Socket_API_Definitions.Result pl_result) runs on self;
+
+// obsolete type aliases for backward compatibility
+type fcb_EPTF_SIP_Transport_ASPEvent fcb_EPTF_SIP_IPL4_ASPEvent;
+type fcb_EPTF_SIP_Transport_ConnectionClosed fcb_EPTF_SIP_IPL4_ConnectionClosed;
+type fcb_EPTF_SIP_Transport_PortError fcb_EPTF_SIP_IPL4_PortError;
+
+type function fcb_EPTF_SIP_STUNHandler(inout ASP_RecvFrom p_payload) runs on self; // FIXME: change RecvFrom, and remove import IPL4asp_Types
+
+/////////////////////////////////////////////////////////////////////////
+//  Type: EPTF_SIP_LocalTransport_CT
+//
+//  Purpose:
+//
+//  Elements:
+//
+//  Detailed Comments:
+//    extends EPTF_SIP_LoggerClient_CT, EPTF_Transport_Common_CT, EPTF_Scheduler_CT, EPTF_Base_CT, EPTF_SIP_Transport_Logging_CT, EPTF_DataSourceClient_CT
+/////////////////////////////////////////////////////////////////////////
+type component EPTF_SIP_LocalTransport_CT
+  extends EPTF_SIP_LoggerClient_CT, EPTF_Scheduler_CT, EPTF_Base_CT, EPTF_SIP_Transport_Logging_CT, EPTF_Transport_CT, EPTF_DataSourceClient_CT
+{
+  var fcb_EPTF_SIP_ReceiveMessage_FT  vf_EPTF_SIP_LocalTransport_receive := null;
+  var boolean                         v_EPTF_SIP_LocalTransport_initialized := false;
+
+  var EPTF_SIP_Message_IN v_SIP_message;
+
+  // parameters:
+  var charstring                    vg_preferredTransport;
+  var charstring                    vg_proxyName;
+  var integer                       vg_proxyPort;
+
+  // statistics:
+  var EPTF_SIP_IPL4asp_Statistics   vg_EPTF_SIP_IPL4asp_stats; // obsolete
+  var EPTF_SIP_Transport_Statistics v_EPTF_SIP_Transport_stats;
+
+  // database:
+  var ConnectionDB v_connections;
+  var EPTF_SIP_Transport_UserDB vg_SIP_userDB := {};
+  var EPTF_SIP_IncomingConnectionDB   vg_incomingConnections;
+
+  // Buffer:
+  var SIP_MessageBuffer                 vg_messageBuffer;
+
+  // Event handler hook points:
+  var fcb_EPTF_SIP_Transport_ASPEvent          vg_hook_ASP_Event := null;
+  var fcb_EPTF_SIP_Transport_ConnectionClosed  vf_EPTF_SIP_LocalTransport_connectionClosed := null;
+  var fcb_EPTF_SIP_Transport_PortError         vf_EPTF_SIP_LocalTransport_portError := null;
+
+  // Port:
+  var integer                         v_EPTF_SIP_LocalTransport_incomingMessageConnId := -1;
+  var integer                         v_EPTF_SIP_LocalTransport_outgoingMessageConnId := -1;
+
+  var boolean v_useUserMapping := false;
+  var boolean v_resolveTarget := false;
+  var integer v_userIdx2TransportUserIdx := -1;
+  var integer v_userIdx2IdxInTransportUserData := -1;
+  
+  var SIP_Transport_MapperRoutingDB v_mapperRoutingDB;
+  
+  var SIP_Transport_RoutingDB v_routingDB;
+  
+  //STUN
+  var fcb_EPTF_SIP_STUNHandler vcb_EPTF_SIP_STUNHandler := null;
+}
+
+///////////////////////////////////////////////////////////
+// Type: EPTF_SIP_Transport_PT
+//
+// Purpose:
+//   Defines the internal port between the Mapper and RemoteTransport component 
+//
+// Elements:
+//   - *inout* <EPTF_SIP_Message_IN> - 
+//   - *inout* <EPTF_SIP_Message_OUT> - 
+//
+///////////////////////////////////////////////////////////
+type port EPTF_SIP_Transport_PT message
+{
+  inout EPTF_SIP_Message_IN;
+  inout EPTF_SIP_Message_OUT;
+  inout EPTF_SIP_Transport_Login;
+} with {extension "internal"}
+
+type record EPTF_SIP_Transport_Login
+{
+  integer offset
+}
+///////////////////////////////////////////////////////////
+// Type: EPTF_SIP_RemoteTransport_CT
+//
+// Purpose:
+//   Definines the RemoteTransport component 
+//
+// Elements:
+//   - SIP_PCO - <EPTF_SIP_Transport_PT> - Communication port between the RemoteTransport and Mapper components
+//   - v_EPTF_SIP_RemoteTransport_message - <EPTF_SIP_Message_IN> - The Recevied message from the SIP Applib
+//   - v_EPTF_SIP_RemoteTransport_default - *default* - The default altstep reference
+//   - vf_EPTF_SIP_RemoteTransport_handleReceive - <fcb_EPTF_SIP_MessageProcess_FT> - Function reference to the registered handleReceive function  
+//   - v_EPTF_SIP_RemoteTransport_initialized - *boolean* - The component initialized variable
+///////////////////////////////////////////////////////////  
+type component EPTF_SIP_RemoteTransport_CT 
+extends EPTF_SIP_Transport_Logging_CT, EPTF_Base_CT, EPTF_SIP_LoggerClient_CT
+{
+  port EPTF_SIP_Transport_PT          SIP_PCO;
+  
+  var EPTF_SIP_Message_IN             v_EPTF_SIP_RemoteTransport_message;
+  var default                         vd_EPTF_SIP_RemoteTransport_default;
+  var fcb_EPTF_SIP_ReceiveMessage_FT  vf_EPTF_SIP_RemoteTransport_handleReceive := null;
+  var boolean                         v_EPTF_SIP_RemoteTransport_initialized := false;
+  var integer                         v_EPTF_SIP_offset := -1;
+}
+
+///////////////////////////////////////////////////////////
+// Type: EPTF_SIP_Mapper_CT
+//
+// Purpose:
+//   Defines the Mapper component .
+//
+// Elements:
+//   - SIP_PCO - <EPTF_SIP_Transport_PT> - Communication port between the RemoteTransport and Mapper components
+//   - v_EPTF_SIP_Mapper_connecionId - *integer* - 
+//   v_EPTF_SIP_Mapper_default - *default* - The default altstep
+//   v_EPTF_SIP_Mapper_message - <EPTF_SIP_Message_OUT> - The received SIP message
+//   vc_EPTF_SIP_Mapper_componentRef - <EPTF_Base_CT> - The component reference of the recevied message sender
+//   v_EPTF_SIP_Mapper_hashMapIdx - *integer* - HashMap to find the component id from the connection id
+//   v_EPTF_SIP_Mapper_initialized - *boolean* - The component initialized variable
+///////////////////////////////////////////////////////////
+type component EPTF_SIP_Mapper_CT extends 
+  EPTF_SIP_LocalTransport_CT, 
+  EPTF_Routing_CT,
+  EPTF_Base_CT
+{
+  port EPTF_SIP_Transport_PT  SIP_PCO;
+  var integer                 v_EPTF_SIP_Mapper_lGenId;
+  var default                 vd_EPTF_SIP_Mapper_default;
+  
+  var EPTF_SIP_Message_OUT    v_EPTF_SIP_Mapper_message;
+  var EPTF_SIP_Transport_Login  v_EPTF_SIP_Mapper_login;
+  
+  var EPTF_Base_CT            vc_EPTF_SIP_Mapper_componentRef;
+  var integer                 v_EPTF_SIP_Mapper_trId2LGen_hashMapIdx := -1;
+  var boolean                 v_EPTF_SIP_Mapper_initialized := false;
+  
+  var EPTF_IntegerList        v_LGens := {};
+  var EPTF_IntegerList        v_offsets := {};
+  
+  var integer                 v_currentLGen := 0;
+}
+
+
+////////////////////////////////////////////////////
+//Type: EPTF_SIP_IPL4asp_Statistics
+//
+//Purpose:  
+//
+//Elements:
+//  - nofOpenConnections - *integer* -
+//  - nofTransportWarnings - *integer* -
+//  - nofReceivedMessages - *float* -
+//  - nofSentMessages - *float* -
+//  - nofReceivedBytes - *float* -
+//  - nofSentBytes - *float* -
+//
+//Detailed Comments:
+//  obsolete
+////////////////////////////////////////////////////
+type record EPTF_SIP_IPL4asp_Statistics
+{
+  integer   nofOpenConnections,
+  integer   nofTransportWarnings,
+  float     nofReceivedMessages,
+  float     nofSentMessages,
+  float     nofReceivedBytes,
+  float     nofSentBytes
+}
+
+///////////////////////////////////////////////////////////
+// Constant: c_EPTF_SIP_IPL4asp_Statistics_empty
+//
+// Purpose:
+//   Contains initialization data for <EPTF_SIP_IPL4asp_Statistics>.
+//
+///////////////////////////////////////////////////////////
+const EPTF_SIP_IPL4asp_Statistics c_EPTF_SIP_IPL4asp_Statistics_empty :=
+{ 
+  nofOpenConnections := 0,
+  nofTransportWarnings := 0,
+  nofReceivedMessages := 0.0,
+  nofSentMessages := 0.0,
+  nofReceivedBytes := 0.0,
+  nofSentBytes := 0.0
+}
+
+////////////////////////////////////////////////////
+//Type: EPTF_SIP_Transport_Statistics
+//
+//Purpose:  
+//
+//Elements:
+//  - nofOpenConnections_k - *integer* -
+//  - nofTransportWarnings_k - *integer* -
+//  - nofReceivedMessages_k - *integer* -
+//  - nofSentMessages_k - *integer* -
+//  - nofReceivedBytes_k - *integer* -
+//  - nofSentBytes_k - *integer* -
+//
+////////////////////////////////////////////////////
+type record EPTF_SIP_Transport_Statistics
+{
+  integer   nofOpenConnections_k,
+  integer   nofTransportWarnings_k,
+  integer   nofReceivedMessages_k,
+  integer   nofSentMessages_k,
+  integer   nofReceivedBytes_k,
+  integer   nofSentBytes_k
+}
+
+///////////////////////////////////////////////////////////
+// Constant: c_EPTF_SIP_Transport_Statistics_empty
+//
+// Purpose:
+//   Contains initialization data for <EPTF_SIP_IPL4asp_Statistics>.
+//
+///////////////////////////////////////////////////////////
+const EPTF_SIP_Transport_Statistics c_EPTF_SIP_Transport_Statistics_empty :=
+{
+  nofOpenConnections_k := -1,
+  nofTransportWarnings_k := -1,
+  nofReceivedMessages_k := -1,
+  nofSentMessages_k := -1,
+  nofReceivedBytes_k := -1,
+  nofSentBytes_k := -1
+}
+
+const charstring c_EPTF_SIP_Transport_statName_root := "SIP_Transport_"
+
+const charstring c_EPTF_SIP_Transport_statName_nofOpenConnections := c_EPTF_SIP_Transport_statName_root & "nofOpenConnections";
+const charstring c_EPTF_SIP_Transport_statName_nofTransportWarnings := c_EPTF_SIP_Transport_statName_root & "nofTransportWarnings";
+const charstring c_EPTF_SIP_Transport_statName_nofReceivedMessages := c_EPTF_SIP_Transport_statName_root & "nofReceivedMessages";
+const charstring c_EPTF_SIP_Transport_statName_nofSentMessages := c_EPTF_SIP_Transport_statName_root & "nofSentMessages";
+const charstring c_EPTF_SIP_Transport_statName_nofReceivedBytes := c_EPTF_SIP_Transport_statName_root & "nofReceivedBytes";
+const charstring c_EPTF_SIP_Transport_statName_nofSentBytes := c_EPTF_SIP_Transport_statName_root & "nofSentBytes";
+
+////////////////////////////////////////////////////
+//Type: EPTF_SIP_Transport_User
+//
+//Purpose:  
+//
+//Elements:
+//  - localIP - *charstring* - local IP address
+//  - sipUserIdxList - <EPTF_IntegerList> - indeices of SIP users related to this transport user
+//  - nofSipUsers - *integer* - number of SIP users related to this transport user
+//  - ports - *integer* - defaul listeing port and default source port for outgoing tcp connections
+//  - udp - <ConnectionTuple> - paramters of the UDP socket
+//  - tcp_listen - <ConnectionTuple> - paramters of the listening UDP socket
+//  - tcp - <ConnectionTuple_List> - parameters of the outgoing TCP connections
+//  - proxyProto - <TransportType> - preferred transport protocol to send request to the proxy
+//  - proxyName - *charstring* - the host of the proxy
+//  - proxyPort - *integer* - the port of the proxy
+//
+////////////////////////////////////////////////////
+type set EPTF_SIP_Transport_UserData
+{
+  charstring            localIP,
+  EPTF_IntegerList      sipUserIdxList,
+  integer               nofSipUsers,
+  EPTF_IntegerList      localPorts,
+  charstring            proxyName,
+  Socket_API_Definitions.ProtoTuple            proxyProto,
+  integer               proxyPort,
+  integer               proxyClientPort,
+  EPTF_IntegerList      udp,
+  EPTF_IntegerList      tcp,
+  integer               currentTCP,
+  boolean               roundRobinPool,
+  integer               poolSize,
+  boolean               notListening,
+  EPTF_Transport_TransportType transportType
+}
+
+////////////////////////////////////////////////////
+//Type: EPTF_SIP_Transport_UserConnections
+//
+//Purpose:  
+//  Defines a container for <EPTF_SIP_Transport_UserConnection>.
+////////////////////////////////////////////////////
+type record of EPTF_SIP_Transport_UserData EPTF_SIP_Transport_UserDB;
+
+// obsolete type aliases for backward compatibility
+type EPTF_SIP_Transport_UserData EPTF_SIP_IPL4_UserData;
+type EPTF_SIP_Transport_UserDB EPTF_SIP_IPL4_UserDB;
+
+type enumerated SIP_ConnectionState
+{
+  NOTUSED,
+  CLOSED,
+  OPENED,
+  TEMPORARY_UNAVAILABLE
+}
+
+type union ConnectionType
+{
+  ConnType_Outgoing outgoing,
+  ConnType_Incoming incoming,
+  ConnType_Listening listening
+}
+
+type record ConnType_Outgoing {}
+type record ConnType_Incoming {}
+type record ConnType_Listening {}
+////////////////////////////////////////////////////
+//Type: ConnectionTuple
+//
+//Purpose:  
+//
+//Elements:
+//  - loc_host - <HostName> -
+//  - loc_port - <PortNumber> -
+//  - rem_host - *optional* <HostName> -
+//  - rem_port - *optional* <PortNumber> -
+//  - connId - <ConnectionId> -
+//  - proto - <ProtoTuple> -
+//  - sentBy - <HostPort> -
+//
+////////////////////////////////////////////////////
+type record ConnectionTuple
+{
+  Socket_API_Definitions.HostName        loc_host,
+  Socket_API_Definitions.PortNumber      loc_port,
+  Socket_API_Definitions.HostName        rem_host,
+  Socket_API_Definitions.PortNumber      rem_port,
+  Socket_API_Definitions.ConnectionId    connId,
+  Socket_API_Definitions.ProtoTuple      proto,
+  ConnectionType  connType,
+  SIP_ConnectionState connState,
+  charstring connIdStr,
+  EPTF_Transport_TransportType transportType/*,
+  boolean         removeIfClosed*/
+}
+
+const ConnectionTuple c_Transport_initConnectionTuple :=
+{
+  loc_host := "",
+  loc_port := 0,
+  rem_host := "",
+  rem_port := 0,
+  connId   := -1,
+  proto    := { udp:= {} },
+  connType := {listening := {}},
+  connState := NOTUSED,
+  connIdStr := "",
+  transportType := IPL4/*,
+  removeIfClosed := false*/
+}
+
+////////////////////////////////////////////////////
+//Type: ConnectionTuple_List
+//
+//Purpose:  
+//  Defines a container for <ConnectionTuple>.
+////////////////////////////////////////////////////
+type record of ConnectionTuple ConnectionTuple_List;
+
+type record ConnectionDB
+{
+  EPTF_FreeBusyQueue queue,
+  ConnectionTuple_List data,
+  integer hashRefConnId,
+  integer hashRefConnection,
+  integer hashRefListen
+}
+
+////////////////////////////////////////////////////
+//Type: EPTF_SIP_IncomingConnectionDB
+//
+//Purpose:  
+//
+//Elements:
+//  - queue - <EPTF_FreeBusyQueue> -
+//  - data - <ConnectionDatabaseEntry_List> -
+//  - hashRefTr - *integer* -
+//  - hashRefConn - *integer* -
+//
+////////////////////////////////////////////////////
+type record EPTF_SIP_IncomingConnectionDB
+{
+  EPTF_FreeBusyQueue        queue, 
+  IncomingConnection_List   data,
+  integer                   hashRefTr
+}
+
+////////////////////////////////////////////////////
+//Type: IncomingConnection
+//
+//Purpose:  
+//
+//Elements:
+//  - connection - <ConnectionTuple> -
+//  - transactionId - *charstring* -
+//  - timerId - *integer* -
+//
+////////////////////////////////////////////////////
+type record IncomingConnection
+{
+  integer       connectionId,
+  charstring    transactionId,
+  integer       timerId
+}
+
+///////////////////////////////////////////////////////////
+// Constant: c_empty_ConnectionDatabaseEntry
+//
+// Purpose:
+//   Contains initialization data for <ConnectionDatabaseEntry>.
+//
+///////////////////////////////////////////////////////////
+const IncomingConnection c_empty_IncomingConnection :=
+{
+  connectionId := -1,
+  transactionId := "",
+  timerId := -1
+}
+
+////////////////////////////////////////////////////
+//Type: ConnectionDatabaseEntry_List
+//
+//Purpose:  
+//  Defines a container for <ConnectionDatabaseEntry>.
+////////////////////////////////////////////////////
+type record of IncomingConnection IncomingConnection_List;
+
+type record SIP_MessageBuffer_Message
+{
+  integer     userId,
+  octetstring msg
+}
+
+type record of SIP_MessageBuffer_Message SIP_MessageBuffer_MessageList;
+
+type SIP_MessageBuffer_MessageList SIP_MessageBuffer_Element
+
+type record of SIP_MessageBuffer_Element SIP_MessageBuffer_ElementsList;
+
+type record SIP_MessageBuffer
+{
+  EPTF_FreeBusyQueue  queue,
+  SIP_MessageBuffer_ElementsList data,
+  integer connectionIdHash
+}
+
+type record SIP_Transport_MapperRoutingDB
+{
+  integer uri2lgenIdxHash
+}
+
+type record SIP_Transport_RoutingEntry
+{
+  integer transportUserIdx,
+  integer portPs
+}
+
+const SIP_Transport_RoutingEntry c_SIP_Transport_initRoutingEntry :=
+{
+  transportUserIdx := -1,
+  portPs := -1
+}
+
+type record of SIP_Transport_RoutingEntry SIP_Transport_RoutingEntryList;
+
+type record SIP_Transport_RoutingDB
+{
+  integer target2routeIdx,
+  SIP_Transport_RoutingEntryList routingTable
+}
+
+const charstring c_SIP_Transport_LGenType := "SIP_Transport";
+
+const integer c_SIP_Transport_listeningPort := 0;
+const integer c_SIP_Transport_outgoingPort := 1;
+
+const integer c_SIP_Transport_UDP := 0;
+const integer c_SIP_Transport_TCP := 1;
+
+// constants for HashMap names
+const charstring c_SIP_Transport_hashMapName_connIdHash := "SIP:ConnIdHash";
+const charstring c_SIP_Transport_hashMapName_connectionHash := "SIP:ConnectionHash";
+const charstring c_SIP_Transport_hashMapName_trIdHash := "SIP:TrIdHash";
+const charstring c_SIP_Transport_hashMapName_userIdx2TransportUserIdx := "SIP:UserIdx2TransportUserIdx";
+const charstring c_SIP_Transport_hashMapName_userIdx2IdxInTransportUserData := "SIP:UserIdx2IdxInTransportUserData";
+const charstring c_SIP_Transport_hashMapName_sipKeyToMessageRecord := "SIP:Key to Message Record";
+const charstring c_SIP_Transport_hashMapName_target2routeIdx := "SIP:Target2RouteIdx";
+const charstring c_SIP_Transport_hashMapName_trId2LGen := "SIP:transactionId2LGen";
+const charstring c_SIP_Transport_hashMapName_uri2idxHash := "SIP: uri2Idx";
+const charstring c_SIP_Transport_hashMapName_listenHash := "SIP:listenHash"
+
+///////////////////////////////////////////////////////////////////////////////
+  // Type: EPTF_HTTP_Transport_Logging_CT
+  //
+  // Purpose:
+  //   Common logging component for Local/Remote transport
+  //
+  // Extends:
+  //   EPTF_Logging_CT
+  //
+  // Ports:
+  //   -
+  //
+  // Timers:
+  //   -
+  //
+  // Elements:
+  //   v_SIP_Transport_Logging_MaskId - *integer* - logging mask id 
+  //
+///////////////////////////////////////////////////////////////////////////////
+type component EPTF_SIP_Transport_Logging_CT extends EPTF_Logging_CT 
+{
+  // logging
+  var integer v_SIP_Transport_Logging_MaskId := c_EPTF_Logging_invalidMaskId;  
+}
+
+////////////////////////////////////////////////////
+//Constant: Indices to identify the logging levels in the SIP Transport
+//
+//Elements:
+//  - c_SIP_Transport_Logging_WARNING
+//  - c_SIP_Transport_Logging_DEBUG
+//
+//Detailed comments:
+//  -
+////////////////////////////////////////////////////
+const integer c_SIP_Transport_Logging_WARNING := 0;
+const integer c_SIP_Transport_Logging_DEBUG := 1;
+
+///////////////////////////////////////////////////////////////////////////////
+  //  Constant: c_EPTF_SIP_Transport_loggingEventClasses
+  // 
+  //  Purpose:
+  //    list of logging event class names used on the EPTF SIP 
+  //    Transport component
+  // 
+  //  Detailed Comments:
+  //    <EPTF_Logging_EventClassPrefixList> {"WARNING", "DEBUG"}
+///////////////////////////////////////////////////////////////////////////////
+const EPTF_Logging_EventClassPrefixList c_EPTF_SIP_Transport_loggingEventClasses := {"WARNING", "DEBUG"};
+
+///////////////////////////////////////////////////////////////////////////////
+// Constant: c_EPTF_SIP_Transport_DS_sourceId
+//
+// Purpose:
+//   SIP Transport iterators and data elements belong to this dataSource name
+//
+///////////////////////////////////////////////////////////////////////////////
+const charstring c_EPTF_SIP_Transport_DS_sourceId := "SIP_Transport_DS";
+}//end of module
+with {
+extension "version <RnXnn>"
+}
+

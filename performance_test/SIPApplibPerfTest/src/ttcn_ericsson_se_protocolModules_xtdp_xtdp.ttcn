@@ -1,0 +1,525 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************///
+//  File:          ttcn_ericsson_se_protocolModules_xtdp_xtdp.ttcn
+//  Description:
+//  References:
+//  Rev:           <RnXnn>
+//  Prodnr:        CNL 113 663
+//  Updated:       Tue Aug 28 16:20:17 2012
+//  Contact:       http://ttcn.ericsson.se
+//
+////////////////////////////////////////////////////////////////////////////////
+//
+//	Generated from file(s):
+//
+//	- XTDP-Message.xsd
+//			/* xml version = "1.0" encoding = "UTF-8" standalone = "no" */
+//			/* targetnamespace = "http://ttcn.ericsson.se/protocolModules/xtdp/xtdp" */
+//
+////////////////////////////////////////////////////////////////////////////////
+
+
+module ttcn_ericsson_se_protocolModules_xtdp_xtdp {
+
+
+import from XSD all;
+
+
+import from ttcn_ericsson_se_protocolModules_xtdp_xtdl all;
+
+
+/* ethgry: version is removed from targetNamespace: ttcn file names are generated from the namespace
+	             and having the version in it could cause project and importing problems later */
+
+
+/* ethgry: targetNamespace and xtdl prefixes are added, the xul: namespace
+                is removed and all xul: prefixes are changed to xtdl:;
+                the default namespace is set to this document; */
+
+
+/* ***********************************************************************
+***********************************************************************
+**            THE VERSION OF THIS XTDP DOCUMENT IS 1.0               **
+**      VERSION SHALL BE INCREASED WHEN ANY NEW INFORMATION OR       **
+**  MESSAGES ARE ADDED OR A NON-BACKWARD COMPATIBLE CHANGE IS DONE!  **
+***********************************************************************
+*********************************************************************** */
+
+
+/* ***********************************************************************
+     *                        XTDP ELEMENT TYPES                           *
+     *********************************************************************** */
+
+
+/* Corrected by ethgry from: "(\p{L}|\d|_|\-|\.|\/){1,}"/> */
+/* FIXME: IDENTIFIER CONVENSION IS CHANGED! FIRST CHARACTER SHALL NOT BE "_" "-" OR "."; IS IT OK? */
+type XSD.String XTDP_Identifier (pattern "[a-zA-Z0-9]([a-zA-Z0-9]|_| |\-|.|/)#(1,)")
+with {
+variant "name as 'XTDP-Identifier'";
+};
+
+
+type record XTDP_Widget
+{
+	XTDP_Identifier widgetId,
+	Widgettype widgetType
+}
+with {
+variant "name as 'XTDP-Widget'";
+};
+
+
+/* ***********************************************************************
+ *                        XTDP INFORMATION ELEMENTS                    *
+ *********************************************************************** */
+
+
+/* ethgry: this is added only as Titan currently does not enforce pattern subtyping */
+type XSD.Decimal XTDP_Version (1.0 .. infinity)
+with {
+variant "name as 'XTDP-Version'";
+};
+
+
+/* ethgry: XTDP-Request has been completely re-designed: arguments of each action has been defined precisely */
+
+
+type record XTDP_Request
+{
+	XSD.PositiveInteger requestId,
+	XTDP_Actions action_
+}
+with {
+variant "name as 'XTDP-Request'";
+variant (action_) "name as 'action'";
+};
+
+
+/* NOTE: AN OMITTED widget ELEMENT MEANS THE WHOLE DISPLAY AREA */
+/* end get */
+/* end put */
+/* ethgry: if argument is omitted, value shall be increased by 1 or 1.0 */
+/* end increase */
+/* ethgry: if argument is omitted, value shall be increased by 1 or 1.0 */
+/* end decrease */
+/* end enable */
+/* end disable */
+/* end getfocus */
+/* end setfocus */
+/* end gettooltip */
+/* end settooltip */
+/* end replaceimage */
+type record XTDP_Actions
+{
+	union {
+		record {
+			XTDP_Widget widget optional
+		} get,
+		record {
+			XTDP_Widget widget,
+			record length(1 .. infinity) of XSD.String argument_list
+		} put,
+		record {
+			XTDP_Widget widget,
+			record of XSD.String argument_list
+		} increase,
+		record {
+			XTDP_Widget widget,
+			record of XSD.String argument_list
+		} decrease,
+		record {
+			XTDP_Widget widget optional
+		} enable,
+		record {
+			XTDP_Widget widget optional
+		} disable,
+		XSD.AnySimpleType getfocus,
+		record {
+			XTDP_Widget widget optional
+		} setfocus,
+		record {
+			XTDP_Widget widget optional
+		} gettooltip,
+		record {
+			XTDP_Widget widget optional,
+			record length(1 .. infinity) of XSD.String argument_list
+		} settooltip,
+		record {
+			XTDP_Widget widget optional,
+			record of XSD.String argument_list
+		} replaceimage
+	} choice
+}
+with {
+variant "name as 'XTDP-Actions'";
+variant (choice) "untagged";
+variant (choice.put.argument_list) "untagged";
+variant (choice.put.argument_list[-]) "name as 'argument'";
+variant (choice.increase.argument_list) "untagged";
+variant (choice.increase.argument_list[-]) "name as 'argument'";
+variant (choice.decrease.argument_list) "untagged";
+variant (choice.decrease.argument_list[-]) "name as 'argument'";
+variant (choice.settooltip.argument_list) "untagged";
+variant (choice.settooltip.argument_list[-]) "name as 'argument'";
+variant (choice.replaceimage.argument_list) "untagged";
+variant (choice.replaceimage.argument_list[-]) "name as 'argument'";
+};
+
+
+/* end XTDP-Actiontypes */
+
+
+type enumerated XTDP_Result
+{
+	error_,
+	pending,
+	success
+}
+with {
+variant "text 'error_' as 'error'";
+variant "name as 'XTDP-Result'";
+};
+
+
+type enumerated XTDP_ErrorSource
+{
+	other,
+	requestor,
+	responder,
+	thirdParty
+}
+with {
+variant "name as 'XTDP-ErrorSource'";
+};
+
+
+type enumerated XTDP_ActionErrorCode
+{
+	illegalAction,
+	illegalArgument,
+	illegalWidget,
+	syntaxError,
+	timeOut
+}
+with {
+variant "name as 'XTDP-ActionErrorCode'";
+};
+
+
+type enumerated XTDP_ARErrorCode
+{
+	illegalWidget,
+	parentWidgetDoesNotExists,
+	timeOut
+}
+with {
+variant "name as 'XTDP-ARErrorCode'";
+};
+
+
+/* ethgry: added for the version compatibility procedure */
+
+
+type enumerated XTDP_CompatibilityErrorCode
+{
+	directionUnsupported,
+	procedureUnsupported,
+	xtdlIncompatibleVersion,
+	xtdpIncompatibleVersion
+}
+with {
+variant "name as 'XTDP-CompatibilityErrorCode'";
+};
+
+
+type record XTDP_Response
+{
+	XSD.PositiveInteger requestId,
+	XTDP_Result responseCode,
+	XSD.String argument optional,
+	XTDP_ErrorSource errorSource optional,
+	XTDP_ActionErrorCode errorCode optional,
+	XSD.String errorMessage optional
+}
+with {
+variant "name as 'XTDP-Response'";
+};
+
+
+type record XTDP_AddRequest
+{
+	XSD.PositiveInteger requestId,
+	XTDP_Identifier parentWidgetId optional,
+	Widgets widgets
+}
+with {
+variant "name as 'XTDP-AddRequest'";
+variant (widgets) "namespace as 'http://ttcn.ericsson.se/protocolModules/xtdp/xtdl' prefix 'xtdl'";
+};
+
+
+type record XTDP_RemoveRequest
+{
+	XSD.PositiveInteger requestId,
+	XTDP_Identifier widgetId optional
+}
+with {
+variant "name as 'XTDP-RemoveRequest'";
+};
+
+
+type record XTDP_ARResponse
+{
+	XSD.PositiveInteger requestId,
+	XTDP_Result responseCode,
+	XTDP_ErrorSource errorSource optional,
+	XTDP_ARErrorCode errorCode optional,
+	XSD.String errorMessage optional
+}
+with {
+variant "name as 'XTDP-ARResponse'";
+};
+
+
+/* FIXME: ethgry: where these types are used (not referenced in this document!)? */
+
+
+type XSD.String XTDL_Config length(0 .. infinity)
+with {
+variant "name as 'XTDL-Config'";
+};
+
+
+type record XTDP_AuthData
+{
+	XTDP_Identifier guiID,
+	XSD.String guiAuth optional
+}
+with {
+variant "name as 'XTDP-AuthData'";
+};
+
+
+type enumerated TTCN3Types
+{
+	bitstring_,
+	charstring_,
+	hexstring_,
+	octetsring,
+	universalCharstring
+}
+with {
+variant "text 'bitstring_' as 'bitstring'";
+variant "text 'charstring_' as 'charstring'";
+variant "text 'hexstring_' as 'hexstring'";
+};
+
+
+/* ***********************************************************************
+*                                   XTDP MESSAGES                     *
+*********************************************************************** */
+
+
+/* ********************************************************************
+*    THIS ELEMENT SHALL NEVER BE USED FOR SENDING INFORMATION!     *
+*  The only purpose of having it in the spec. is to allow entities *
+*  supporting this version of the protocol accepting any future    *
+*          additions without XML validation failure                *
+******************************************************************** */
+type record XTDP_HandshakeRequest
+{
+	XTDP_Version xtdpRequiredVersion,
+	XTDP_Version xtdlRequiredVersion optional,
+	XTDP_Version xtdpMyVersion optional,
+	XTDP_Version xtdlMyVersion optional,
+	record of XSD.String elem_list
+}
+with {
+variant "name as 'XTDP-HandshakeRequest'";
+variant (elem_list) "untagged";
+variant (elem_list[-]) "anyElement from 'http://ttcn.ericsson.se/protocolModules/xtdp/xtdp'";
+};
+
+
+/* ********************************************************************
+*    THIS ELEMENT SHALL NEVER BE USED FOR SENDING INFORMATION!     *
+*  The only purpose of having it in the spec. is to allow entities *
+*  supporting this version of the protocol accepting any future    *
+*          additions without XML validation failure                *
+******************************************************************** */
+type record XTDP_Outcome
+{
+	XTDP_Result responseCode,
+	record length(0 .. 2) of XTDP_CompatibilityErrorCode errorCode_list,
+	XSD.String errorMessage optional,
+	record of XSD.String elem_list
+}
+with {
+variant "name as 'XTDP-Outcome'";
+variant (errorCode_list) "untagged";
+variant (errorCode_list[-]) "name as 'errorCode'";
+variant (elem_list) "untagged";
+variant (elem_list[-]) "anyElement from 'http://ttcn.ericsson.se/protocolModules/xtdp/xtdp'";
+};
+
+
+/* ethgry: minOccurs="0" changed to "1": there shall be at least one Request */
+/* ethgry: ackRequested is added to identify acknowledged procedure;
+                     default is unacknowledged; clarify if needed at all */
+type record XTDP_Requests
+{
+	XSD.Boolean ackRequested optional,
+	record length(1 .. infinity) of XTDP_Request xTDP_Request_list
+}
+with {
+variant "name as 'XTDP-Requests'";
+variant (ackRequested) "defaultForEmpty as 'false'";
+variant (ackRequested) "attribute";
+variant (xTDP_Request_list) "untagged";
+variant (xTDP_Request_list[-]) "name as 'XTDP-Request'";
+};
+
+
+/* ethgry: minOccurs="0" changed to "1": there shall be at least one Response */
+type record XTDP_Responses
+{
+	record length(1 .. infinity) of XTDP_Response xTDP_Response_list
+}
+with {
+variant "name as 'XTDP-Responses'";
+variant (xTDP_Response_list) "untagged";
+variant (xTDP_Response_list[-]) "name as 'XTDP-Response'";
+};
+
+
+/* ethgry: requestId element removed: what is it used for, when there is only one request? */
+type record XTDP_LayoutRequest
+{
+	XTDP_Identifier widgetId optional
+}
+with {
+variant "name as 'XTDP-LayoutRequest'";
+};
+
+
+/* ethgry: requestId element removed, once deleted in the request */
+type record XTDP_LayoutResponse
+{
+	Widgets widgets
+}
+with {
+variant "name as 'XTDP-LayoutResponse'";
+variant (widgets) "namespace as 'http://ttcn.ericsson.se/protocolModules/xtdp/xtdl' prefix 'xtdl'";
+};
+
+
+type record XTDP_AddRequests
+{
+	record length(1 .. infinity) of XTDP_AddRequest xTDP_AddRequest_list
+}
+with {
+variant "name as 'XTDP-AddRequests'";
+variant (xTDP_AddRequest_list) "untagged";
+variant (xTDP_AddRequest_list[-]) "name as 'XTDP-AddRequest'";
+};
+
+
+type record XTDP_RemoveRequests
+{
+	record length(1 .. infinity) of XTDP_RemoveRequest xTDP_RemoveRequest_list
+}
+with {
+variant "name as 'XTDP-RemoveRequests'";
+variant (xTDP_RemoveRequest_list) "untagged";
+variant (xTDP_RemoveRequest_list[-]) "name as 'XTDP-RemoveRequest'";
+};
+
+
+type record XTDP_ARResponses
+{
+	record length(1 .. infinity) of XTDP_ARResponse xTDP_ARResponse_list
+}
+with {
+variant "name as 'XTDP-ARResponses'";
+variant (xTDP_ARResponse_list) "untagged";
+variant (xTDP_ARResponse_list[-]) "name as 'XTDP-ARResponse'";
+};
+
+
+type record XTDP_Container
+{
+	record of record {
+		union {
+			TTCN3Types ttcn3Type,
+			XSD.String other
+		} choice
+	} contentType_list,
+	union {
+		XSD.String textual,
+		XSD.HexBinary binary
+	} choice
+}
+with {
+variant "name as 'XTDP-Container'";
+variant (contentType_list) "untagged";
+variant (contentType_list[-]) "name as 'contentType'";
+variant (contentType_list[-].choice) "untagged";
+variant (choice) "untagged";
+};
+
+
+/* this message allows using XTDP for any user-defined protocol, even not using XTDL at all */
+/* ethgry: "noNamespaceSchemaLocation" is deleted; how to know about this attribute,
+            if the schema is not available? */
+/* ethgry: transactionID is added to allow handling several procedures at the same time */
+type record XTDP_Message
+{
+	XSD.NonNegativeInteger transactionID optional,
+	union {
+		XTDP_HandshakeRequest xTDP_HandshakeRequest,
+		XTDP_Outcome xTDP_Outcome,
+		XTDP_Requests xTDP_Requests,
+		XTDP_Responses xTDP_Responses,
+		XTDP_LayoutRequest xTDP_LayoutRequest,
+		XTDP_LayoutResponse xTDP_LayoutResponse,
+		XTDP_AddRequests xTDP_AddRequests,
+		XTDP_RemoveRequests xTDP_RemoveRequests,
+		XTDP_ARResponses xTDP_ARResponses,
+		XSD.String xTDP_AuthChallenge,
+		XSD.String xTDP_AuthResponse,
+		XTDP_Container xTDP_Container,
+		XSD.String xTDP_Bye
+	} choice
+}
+with {
+variant "name as 'XTDP-Message'";
+variant "element";
+variant (transactionID) "attribute";
+variant (choice) "untagged";
+variant (choice.xTDP_HandshakeRequest) "name as 'XTDP-HandshakeRequest'";
+variant (choice.xTDP_Outcome) "name as 'XTDP-Outcome'";
+variant (choice.xTDP_Requests) "name as 'XTDP-Requests'";
+variant (choice.xTDP_Responses) "name as 'XTDP-Responses'";
+variant (choice.xTDP_LayoutRequest) "name as 'XTDP-LayoutRequest'";
+variant (choice.xTDP_LayoutResponse) "name as 'XTDP-LayoutResponse'";
+variant (choice.xTDP_AddRequests) "name as 'XTDP-AddRequests'";
+variant (choice.xTDP_RemoveRequests) "name as 'XTDP-RemoveRequests'";
+variant (choice.xTDP_ARResponses) "name as 'XTDP-ARResponses'";
+variant (choice.xTDP_AuthChallenge) "name as 'XTDP-AuthChallenge'";
+variant (choice.xTDP_AuthResponse) "name as 'XTDP-AuthResponse'";
+variant (choice.xTDP_Container) "name as 'XTDP-Container'";
+variant (choice.xTDP_Bye) "name as 'XTDP-Bye'";
+};
+
+
+}
+with {
+encode "XML";
+variant "namespace as 'http://ttcn.ericsson.se/protocolModules/xtdp/xtdp'";
+variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+}

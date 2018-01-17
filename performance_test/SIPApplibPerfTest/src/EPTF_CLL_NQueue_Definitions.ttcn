@@ -1,0 +1,121 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_CLL_NQueue_Definitions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 512
+//  Updated:  2011-03-17
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+// Module: EPTF_CLL_NQueue_Definitions
+//
+// Purpose:
+//  This module contains the type and constant definitions of the EPTF NQueue feature
+//
+// Module Parameters:
+//  -
+//
+// Module depends on:
+//  <EPTF_CLL_Base_Definitions>
+//  <EPTF_CLL_Common_Definitions>
+//
+// Current Owner:
+//  Gabor Tatarka (EGBOTAT)
+//
+// Last Review Date:
+//  2011-02-03
+//
+///////////////////////////////////////////////////////////////////////////////
+
+module EPTF_CLL_NQueue_Definitions {
+
+import from EPTF_CLL_Base_Definitions all;
+import from EPTF_CLL_Common_Definitions all;
+
+///////////////////////////////////////////////////////////
+// Type: EPTF_NQueue_QueueId
+// 
+// Purpose:
+//  Type definition of a queue ID
+//
+// Elements:
+//  type alias for *integer*
+///////////////////////////////////////////////////////////
+type integer EPTF_NQueue_QueueId;
+
+///////////////////////////////////////////////////////////
+// Type: EPTF_NQueue_ChainId
+// 
+// Purpose:
+//  Type definition of a chain ID
+//
+// Elements:
+//  type alias for *integer*
+///////////////////////////////////////////////////////////
+type integer EPTF_NQueue_ChainId;
+
+///////////////////////////////////////////////////////////
+// Type: EPTF_NQueue_ItemIdx
+// 
+// Purpose:
+//  Type definition of an item index
+//
+// Elements:
+//  type alias for *integer*
+///////////////////////////////////////////////////////////
+type integer EPTF_NQueue_ItemIdx;
+
+///////////////////////////////////////////////////////////
+// Type: EPTF_NQueue_CT
+// 
+// Purpose:
+//  Component type definition of the NQueue feature
+//
+// Detailed Comments:
+//  This component has to be extended by the component
+//  that wishes to use EPTF NQueue.
+///////////////////////////////////////////////////////////
+type component EPTF_NQueue_CT extends EPTF_Base_CT {
+  private var boolean v_EPTF_NQueue_initialized := false;
+}
+
+///////////////////////////////////////////////////////////
+// Constant: c_EPTF_NQueue_QueueId_init
+// 
+// Purpose:
+//  Constant to initialize a queue ID
+// 
+// Detailed Comments:
+//  *-1*
+///////////////////////////////////////////////////////////
+const EPTF_NQueue_QueueId c_EPTF_NQueue_QueueId_init := -1;
+
+///////////////////////////////////////////////////////////
+// Constant: c_EPTF_NQueue_ChainId_init
+// 
+// Purpose:
+//   Constant to initialize a chain ID
+// 
+// Detailed Comments:
+//  *-1*
+///////////////////////////////////////////////////////////
+const EPTF_NQueue_ChainId c_EPTF_NQueue_ChainId_init := -1;
+
+///////////////////////////////////////////////////////////
+// Constant: c_EPTF_NQueue_ItemIdx_init
+// 
+// Purpose:
+//  Constant to initialize a item index
+// 
+// Detailed Comments:
+//  *-1*
+///////////////////////////////////////////////////////////
+const EPTF_NQueue_ItemIdx c_EPTF_NQueue_ItemIdx_init := -1;
+
+} // module

@@ -1,0 +1,1017 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_SIP_CreateRemove_Functions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 522
+//  Updated:  2012-11-28
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////
+//  Module: EPTF_SIP_CreateRemove_Functions
+//
+//  Purpose:
+//    Contains functions that create/remove cross references in internal databases on
+//    creating new elements.
+//
+//  Module depends on:  
+//    <EPTF_CLL_Definitions>
+//
+//    <EPTF_CLL_Logging_Definitions>
+//
+//    <EPTF_CLL_Logging_Functions>
+//
+//    <EPTF_CLL_QueueMgmt_Functions>
+//
+//    <EPTF_CLL_RBTScheduler_Functions>
+//
+//    <EPTF_CLL_Scheduler_Definitions>
+//
+//    <EPTF_SIP_Common_Definitions>
+//
+//    <EPTF_SIP_Common_Functions>
+//
+//    <EPTF_SIP_Dialog_Definitions>
+//
+//    <EPTF_SIP_Dialog_Functions>
+//
+//    <EPTF_SIP_EventNotification_Definitions>
+//
+//    <EPTF_SIP_EventNotification_Functions>
+//
+//    <EPTF_SIP_LGen_Definitions>
+//
+//    <EPTF_SIP_Publish_Definitions>
+//
+//    <EPTF_SIP_Publish_Functions>
+//
+//    <EPTF_SIP_Transaction_Definitions>
+//
+//    <EPTF_SIP_Transaction_Functions>
+//
+//    <EPTF_SIP_UserDatabase_Definitions>
+//
+//    <EPTF_SIP_UserDatabase_Functions>
+//
+//    <SIPmsg_Types>
+//
+//    <TCCIPsec_Definitions>
+//
+//    <EPTF_CLL_Logging_Macros>
+//
+//  Last review date:  
+//    2012-10-08
+////////////////////////////////////////////////////
+module EPTF_SIP_CreateRemove_Functions
+{
+import from EPTF_CLL_Common_Definitions all;
+//import from EPTF_CLL_Logging_Definitions all;
+//import from EPTF_CLL_Logging_Functions all;
+//import from EPTF_CLL_FBQ_Functions all;
+//import from EPTF_CLL_RBTScheduler_Functions all;
+//import from EPTF_CLL_Scheduler_Definitions all;
+
+import from EPTF_SIP_Common_Definitions all;
+import from EPTF_SIP_Common_Functions all;
+import from EPTF_SIP_Dialog_Definitions all;
+import from EPTF_SIP_Dialog_Functions all;
+import from EPTF_SIP_EventNotification_Definitions all;
+import from EPTF_SIP_EventNotification_Functions all;
+import from EPTF_SIP_LGen_Definitions all;
+import from EPTF_SIP_Publish_Definitions all;
+import from EPTF_SIP_Publish_Functions all;
+import from EPTF_SIP_Transaction_Definitions all;
+import from EPTF_SIP_Transaction_Functions all;
+//import from EPTF_SIP_UserDatabase_Definitions all;
+import from EPTF_SIP_UserDatabase_Functions all;
+
+import from SIPmsg_Types all;
+
+//import from TCCIPsec_Definitions all;
+
+//ELIMINATE DIALOG WATCHDOG
+//modulepar float tsp_SIP_watchdogForDialog := 3600.0;
+
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_CreateNewUACInDialog
+//
+//Purpose:
+//  Creates a new UAC transaction inside a dialog and stores the cross reference to
+//    the transaction in the internal databases
+//
+//Parameters:
+//  - pl_trIdx - *inout* *integer* - the index of the newly created UAC transaction 
+//      in v_db_UAC
+//  - pl_method - *in* <Method> - the SIP method
+//  - pl_fsmCtx - *in* *integer* - the FSM context index
+//  - pl_FSMIdx - *in* *integer* - the FSM context data index
+//  - pl_dialogIdx - *in* *integer* - the index of the dialog in v_db_dialog
+//  - pl_transport - *in* <SIP_Transport> - the transport protocol
+//  - pl_subscriptionIdx - *in* *integer* - the index of the subscription in v_db_subscription, 
+//      if the transaction belongs to a subscription
+//  - pl_transactionId - *in* *charstring* - the transaction id of the UAC
+//  - pl_createDialog - *in* *boolean* - true if the request creates a new dialog
+//
+//Detailed comments:
+//  The reference of the created UAC is stored in the FSM context data.
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_CreateNewUACInDialog(
+  inout integer pl_trIdx,
+  in    Method  pl_method,
+  in    integer pl_sessionIdx,
+  in    integer pl_userIdx,
+  in    integer pl_fsmCtx,
+  in    integer pl_FSMIdx,
+  in    SIP_Transport pl_transport,
+  in    charstring pl_transactionId,
+  in    integer pl_dialogIdx,
+  in    SIP_TransactionInDialog   pl_trInDialog)
+runs on EPTF_SIP_LGen_CT
+{
+  f_EPTF_SIP_CreateNewUAC(
+    pl_trIdx,
+    pl_method,
+    pl_sessionIdx,
+    pl_userIdx,
+    pl_fsmCtx,
+    pl_FSMIdx,
+    pl_transport,
+    pl_transactionId);
+
+  v_db_UAC.data[pl_trIdx].dialogIdx := pl_dialogIdx;
+  v_db_UAC.data[pl_trIdx].trInDialog := pl_trInDialog;
+
+  // HN63629
+  if(pl_method == SUBSCRIBE_E and v_db_dialog.data[pl_dialogIdx].subscriptionIdx >= 0) {
+    //f_SIP_Logging_DEBUG(%definitionId&": set subscribeUACIdx of subscribe " &
+    //  int2str(v_db_dialog.data[pl_dialogIdx].subscriptionIdx) & " to " &
+    //  int2str(pl_trIdx));
+    v_db_subscription.data[v_db_dialog.data[pl_dialogIdx].subscriptionIdx].subscribeUACIdx := pl_trIdx;
+  }
+
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_createNewUASinDialog
+//
+//Purpose:  
+//  Creates a new UAS transaction inside a dialog and stores the cross reference to
+//    the transaction in the internal databases
+//
+//Parameters:
+//  - pl_msg - *inout* <PDU_SIP> - the request that creates the UAS
+//  - pl_trIdx - *inout* *integer* - the index of the newly created UAS transaction 
+//      in v_db_UAS
+//  - pl_dialogIdx - *in* *integer* - the index of the dialog in v_db_dialog
+//  - pl_fsmCtx - *in* *integer* - the FSM context index
+//  - pl_FSMIdx - *in* *integer* - the FSM context data index
+//  - pl_subscriptionIdx - *in* *integer* - the index of the subscription in v_db_subscription, 
+//      if the transaction belongs to a subscription
+//  - pl_createDialog - *in* *boolean* - true if the request creates a new dialog
+//
+//Detailed comments:
+//  The reference of the created UAS is stored in the FSM context data.
+////////////////////////////////////////////////////
+function f_EPTF_SIP_createNewUASinDialog(
+  inout PDU_SIP pl_msg,
+  inout integer pl_trIdx,
+  in integer pl_sessionIdx,
+  in integer pl_userIdx,
+  in integer pl_fsmCtx,
+  in integer pl_FSMIdx,
+  in integer pl_dialogIdx,
+  in SIP_TransactionInDialog   pl_trInDialog)
+runs on EPTF_SIP_LGen_CT
+{
+
+  f_EPTF_SIP_createNewUAS(
+    pl_msg,
+    pl_trIdx,
+    pl_sessionIdx,
+    pl_userIdx,
+    pl_fsmCtx,
+    pl_FSMIdx);
+
+  v_db_UAS.data[pl_trIdx].dialogIdx := pl_dialogIdx;
+  v_db_UAS.data[pl_trIdx].trInDialog := pl_trInDialog;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_CreateNewUAC
+//
+//Purpose:  
+//  Creates a new UAC transaction outside of a dialog and stores the cross reference to
+//    the transaction in the internal databases
+//
+//Parameters:
+//  - pl_trIdx - *inout* *integer* - the index of the newly created UAC transaction 
+//      in v_db_UAC
+//  - pl_method - *in* <Method> - the SIP method
+//  - pl_userIdx - *in* *integer* - the index of the user in v_db_users
+//  - pl_fsmCtx - *in* *integer* - the FSM context index
+//  - pl_FSMIdx - *in* *integer* - the FSM context data index
+//  - pl_transport - *in* <SIP_Transport> - the transport protocol
+//  - pl_transactionId - *in* *charstring* - the transaction id of the UAC
+//
+//Detailed comments:
+//  The reference of the created UAS is stored in the FSM context data.
+////////////////////////////////////////////////////
+function f_EPTF_SIP_CreateNewUAC(
+  inout integer pl_trIdx,
+  in    Method  pl_method,
+  in    integer pl_sessionIdx,
+  in    integer pl_userIdx,
+  in    integer pl_fsmCtx,
+  in    integer pl_FSMIdx,
+  in    SIP_Transport pl_transport,
+  in    charstring pl_transactionId)
+runs on EPTF_SIP_LGen_CT
+{
+  f_EPTF_SIP_Transaction_CreateNewUAC(
+    pl_trIdx,
+    pl_method,
+    pl_sessionIdx,
+    pl_userIdx,
+    pl_fsmCtx,
+    pl_FSMIdx,
+    pl_transport,
+    pl_transactionId);
+
+  f_EPTF_SIP_addTransactionIdx(v_db_users.data[pl_userIdx].FSMs.data[pl_FSMIdx].UACs, pl_trIdx);
+
+  v_db_users.data[pl_userIdx].FSMs.data[pl_FSMIdx].UACidx := pl_trIdx;
+
+  v_currentUAC := pl_trIdx;
+
+  v_db_users.data[pl_userIdx].sessions[pl_sessionIdx].nofTransactions := 
+  v_db_users.data[pl_userIdx].sessions[pl_sessionIdx].nofTransactions + 1;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_createNewUAS
+//
+//Purpose:  
+//  Creates a new UAS transaction outside of a dialog and stores the cross reference to
+//    the transaction in the internal databases
+//
+//Parameters:
+//  - pl_msg - *inout* <PDU_SIP> - the request that creates the UAS transaction
+//  - pl_trIdx - *inout* *integer* - the index of the newly created UAS transaction 
+//      in v_db_UAS.
+//  - pl_userIdx - *in* *integer* - the index of the user in v_db_users
+//  - pl_fsmCtx - *in* *integer* - the FSM context index
+//  - pl_FSMIdx - *in* *integer* - the FSM context data index
+//
+//Detailed comments:
+//  The reference of the created UAS is stored in the FSM context data.
+////////////////////////////////////////////////////
+function f_EPTF_SIP_createNewUAS(
+  inout PDU_SIP pl_msg,
+  inout integer pl_trIdx,
+  in integer pl_sessionIdx,
+  in integer pl_userIdx,
+  in integer pl_fsmCtx,
+  in integer pl_FSMIdx)
+runs on EPTF_SIP_LGen_CT
+{
+  f_EPTF_SIP_Transaction_CreateNewUAS(
+    pl_msg,
+    pl_trIdx,
+    pl_sessionIdx,
+    pl_userIdx,
+    pl_fsmCtx,
+    pl_FSMIdx);
+
+  v_db_UAS.data[pl_trIdx].connId := v_SIP_transportParams.connId;
+
+  f_EPTF_SIP_addTransactionIdx(v_db_users.data[pl_userIdx].FSMs.data[pl_FSMIdx].UASs, pl_trIdx);
+
+  v_db_users.data[pl_userIdx].FSMs.data[pl_FSMIdx].UASidx := pl_trIdx;
+
+  v_currentUAS := pl_trIdx;
+
+  v_db_users.data[pl_userIdx].sessions[pl_sessionIdx].nofTransactions := 
+  v_db_users.data[pl_userIdx].sessions[pl_sessionIdx].nofTransactions + 1;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_CreateOutgoingDialog
+//
+//Purpose:
+//  Creates a new outgoing dialog and stores the cross reference to
+//    the dialog in the internal databases
+//
+//Parameters:
+//  - pl_dialogIdx - *inout* *integer* - the index of the newly created dialog in v_db_dialog
+//  - pl_userIdx - *in* *integer* - the index of the user in v_db_users
+//  - pl_fsmCtx - *in* *integer* - the FSM context index
+//  - pl_FSMIdx - *in* *integer* - the FSM context data index
+//  - pl_localUserUri - *in* <Addr_Union> - the local URI
+//  - pl_remoteUserUri - *in* <Addr_Union> - the remote URI
+//  - pl_method - *in* <Method> - the SIP method creating the dialog (e.g. INVITE, SUBSCRIBE) 
+//  - pl_earlyDialog - *in* *boolean* - true if early dialogs should be created
+//
+//Detailed comments:
+//  The reference of the created dialog is stored in the in the
+//  FSM context data.
+////////////////////////////////////////////////////
+function f_EPTF_SIP_CreateOutgoingDialog(
+  inout integer pl_dialogIdx,
+  in integer pl_userIdx,
+  in integer pl_FSMIdx,
+  in Addr_Union pl_localUserUri,
+  in Addr_Union pl_remoteUserUri,
+  in Method pl_method,
+  in boolean pl_earlyDialog := false)
+runs on EPTF_SIP_LGen_CT
+{
+  f_EPTF_SIP_Dialog_CreateOutgoing(
+    pl_dialogIdx,
+    pl_userIdx,
+    pl_FSMIdx,
+    pl_localUserUri,
+    pl_remoteUserUri,
+    pl_method);
+
+  //in case of a retryAfter, a dialog in a terminated state should be removed
+  if (-1 != v_db_users.data[pl_userIdx].FSMs.data[pl_FSMIdx].dialogIdx)
+  {
+    f_EPTF_SIP_removeDialog(v_db_users.data[pl_userIdx].FSMs.data[pl_FSMIdx].dialogIdx);
+  }
+
+  v_db_users.data[pl_userIdx].FSMs.data[pl_FSMIdx].dialogIdx := pl_dialogIdx;
+
+  //ELIMINATE DIALOG WATCHDOG
+  /*  if (not f_EPTF_SIP_StartT_Dialog(pl_dialogIdx, c_SIP_TimerIdxDialog_Watchdog, tsp_SIP_watchdogForDialog))
+
+  {
+  f_SIP_Logging_WARNING(log2str(%definitionId,": could not start dialog watchdog timer  ", pl_dialogIdx));
+  }
+  */
+  v_db_dialog.data[pl_dialogIdx].earlyDialog := pl_earlyDialog;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_CreateIncomingDialog
+//
+//Purpose:  
+//  Creates a new incoming dialog and stores the cross reference to
+//    the dialog in other internal databases
+//
+//Parameters:
+//  - pl_request - *in* <PDU_SIP_Request> - the request that creates the dialog
+//  - pl_dialogIdx - *inout* *integer* - the index of the newly created dialog in v_db_dialog
+//  - pl_userIdx - *in* *integer* - the index of the user in v_db_users
+//  - pl_FSMIdx - *in* *integer* - the FSM context data index
+//
+//Detailed comments:
+//  The reference of the created dialog is stored in the
+//  FSM context data.
+////////////////////////////////////////////////////
+function f_EPTF_SIP_CreateIncomingDialog(
+  in PDU_SIP_Request  pl_request,
+  inout integer       pl_dialogIdx,
+  in integer          pl_userIdx,
+  in integer          pl_FSMIdx)
+runs on EPTF_SIP_LGen_CT
+{
+  f_EPTF_SIP_Dialog_CreateIncoming(
+    pl_request,
+    pl_dialogIdx,
+    pl_userIdx,
+    pl_FSMIdx);
+
+  //in case of a retryAfter, a dialog in a terminated state should be removed
+  if (-1 != v_db_users.data[pl_userIdx].FSMs.data[pl_FSMIdx].dialogIdx)
+  {
+    if(not tsp_EPTF_SIP_removeDialogsOnlyOnTermination) {
+      f_EPTF_SIP_removeDialog(v_db_users.data[pl_userIdx].FSMs.data[pl_FSMIdx].dialogIdx);
+    }
+  }
+  v_db_users.data[pl_userIdx].FSMs.data[pl_FSMIdx].dialogIdx := pl_dialogIdx;
+
+  //ELIMINATE DIALOG WATCHDOG
+  /*if (not f_EPTF_SIP_StartT_Dialog(pl_dialogIdx, c_SIP_TimerIdxDialog_Watchdog, tsp_SIP_watchdogForDialog))
+
+  {
+  f_SIP_Logging_WARNING(log2str(%definitionId,": could not start dialog watchdog timer ", pl_dialogIdx));
+  }*/
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_CreateSubscription
+//
+//Purpose:
+//  Creates a new subscription and stores the cross refernce to the subscription
+//    in the internal databases
+//
+//Parameters:
+//  - pl_subscriptionIdx - *inout* *integer* - the index of the newly created 
+//      subscription in v_db_subscription
+//  - pl_dialogIdx - *in* *integer* - the index of the dialog in v_db_dialog
+//      in which the subscription is created
+//  - pl_FSMIdx - *in* *integer* - the FSM context data index
+//  - pl_eventTypeIdx - *in* *integer* - the event type index returned by <f_EPTF_SIP_Subscription_AddSupportedEventType>
+//  - pl_id - *in* *charstring* - the event id
+//  - pl_callId - *in* <CallidString> - an identifier of the dialog of the subscription
+//  - pl_localTag - *in* *charstring* - an identifier of the dialog of the subscription
+//  - pl_remoteTag - *in* *charstring* - an identifier of the dialog of the subscription
+//
+//Detailed comments:
+//  The reference of the created subscription is stored in the dialog
+//    database and in the FSM context.
+////////////////////////////////////////////////////
+function f_EPTF_SIP_CreateSubscription(
+  inout integer pl_subscriptionIdx,
+  in integer    pl_dialogIdx,
+  in integer    pl_FSMIdx,
+  in integer    pl_eventTypeIdx,
+  in charstring pl_id,
+  in CallidString pl_callId,
+  in charstring pl_localTag,
+  in charstring pl_remoteTag)
+runs on EPTF_SIP_LGen_CT
+{
+  f_EPTF_SIP_Subscription_Create(
+    pl_subscriptionIdx,
+    pl_dialogIdx,
+    pl_FSMIdx,
+    pl_eventTypeIdx,
+    pl_id,
+    pl_callId,
+    pl_localTag,
+    pl_remoteTag);
+
+  v_db_dialog.data[pl_dialogIdx].subscriptionIdx  := pl_subscriptionIdx;
+
+  v_db_users.data[v_db_dialog.data[pl_dialogIdx].userIdx].FSMs.data[pl_FSMIdx].subscriptionIdx := pl_subscriptionIdx;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_CreatePublish
+//
+//Purpose:
+//  Creates a new publish and stores the cross reference in the
+//    internal databases. 
+//
+//Parameters:
+//  - pl_publishIdx - *inout* *integer* - the index of the newly created publish in the
+//      v_db_publish database
+//  - pl_eventTypeIdx - *in* *integer* - the event type index returned by <f_EPTF_SIP_Publish_AddSupportedEventType>
+//  - pl_userIdx - *in* *integer* - the index of the user in v_db_users
+//  - pl_fsmCtx - *in* *integer* - the FSM context index
+//  - pl_FSMIdx - *in* *integer* - the FSM context data index
+//  - pl_escURI - *in* <AddrIndex> - the index of the URI of the Event State Creator
+//
+//Detailed comments:  
+//  The reference of the created publish is stored in the
+//    FSM context data.
+////////////////////////////////////////////////////
+function f_EPTF_SIP_CreatePublish(
+  inout integer pl_publishIdx,
+  in integer pl_eventTypeIdx,
+  in integer pl_userIdx,
+  in integer pl_fsmCtx,
+  in integer pl_FSMIdx,
+  in AddrIndex pl_escURI)
+runs on EPTF_SIP_LGen_CT
+{
+  f_EPTF_SIP_Publish_Create(
+    pl_publishIdx,
+    pl_eventTypeIdx,
+    pl_userIdx,
+    pl_fsmCtx,
+    pl_FSMIdx,
+    pl_escURI);
+
+  v_db_users.data[pl_userIdx].FSMs.data[pl_FSMIdx].publishIdx := pl_publishIdx;
+}
+
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_UACTerminated
+//
+//Purpose:
+//  Must be called if the UAC terminates
+//
+//Parameters:
+//  - pl_trIdx - *in* *integer* - the index of the UAC transaction in v_db_UAC
+////////////////////////////////////////////////////
+function f_EPTF_SIP_UACTerminated(in integer pl_trIdx)
+runs on EPTF_SIP_LGen_CT
+{
+  var integer vl_sessionIdx := v_db_UAC.data[pl_trIdx].sessionIdx;
+  var integer vl_userIdx := v_db_UAC.data[pl_trIdx].userIdx;
+
+  // HN63629
+  var integer vl_subscriptionIdx := v_db_UAC.data[pl_trIdx].subscriptionIdx;
+  if(v_db_UAC.data[pl_trIdx].method == SUBSCRIBE_E and vl_subscriptionIdx >= 0) {
+    //f_SIP_Logging_DEBUG(%definitionId&": reset subscribeUACIdx of subscribe" &
+    //  int2str(v_db_dialog.data[pl_dialogIdx].subscriptionIdx));
+    v_db_subscription.data[vl_subscriptionIdx].subscribeUACIdx := -1;
+  }
+
+  v_db_users.data[vl_userIdx].sessions[vl_sessionIdx].nofTransactions := 
+  v_db_users.data[vl_userIdx].sessions[vl_sessionIdx].nofTransactions - 1;
+
+  if (v_db_users.data[vl_userIdx].sessions[vl_sessionIdx].terminate and
+    0 == v_db_users.data[vl_userIdx].sessions[vl_sessionIdx].nofTransactions)
+  {
+    f_EPTF_SIP_eraseSession(vl_userIdx, vl_sessionIdx);
+  }
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_UASTerminated
+//
+//Purpose:
+//  Must be called if the UAS terminates
+//
+//Parameters:
+//  - pl_trIdx - *in* *integer* - the index of the UAS transaction in v_db_UAS
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_UASTerminated(in integer pl_trIdx)
+runs on EPTF_SIP_LGen_CT
+{
+  var integer vl_sessionIdx := v_db_UAS.data[pl_trIdx].sessionIdx;
+  var integer vl_userIdx := v_db_UAS.data[pl_trIdx].userIdx;
+
+  v_db_users.data[vl_userIdx].sessions[vl_sessionIdx].nofTransactions := 
+  v_db_users.data[vl_userIdx].sessions[vl_sessionIdx].nofTransactions - 1;
+
+  if (v_db_users.data[vl_userIdx].sessions[vl_sessionIdx].terminate and
+    0 == v_db_users.data[vl_userIdx].sessions[vl_sessionIdx].nofTransactions)
+  {
+    f_EPTF_SIP_eraseSession(vl_userIdx, vl_sessionIdx);
+  }
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_eraseDialog
+//
+//Purpose:
+//  Erases the cross reference of a dialog from the internal databases
+//
+//Parameters:
+//  - pl_dialogIdx - *in* *integer* - the index of the dialog in v_db_dialog
+//
+////////////////////////////////////////////////////
+
+//not necesarry, index in FSM database is always erased after f_EPTF_SIP_removeDialog
+/*
+function f_EPTF_SIP_eraseDialog(in integer pl_dialogIdx)
+runs on EPTF_SIP_LGen_CT
+{
+var integer vl_dialog := -1;
+
+vl_dialog := v_db_users.data[v_db_dialog.data[pl_dialogIdx].userIdx].FSMs.data[v_db_dialog.data[pl_dialogIdx].FSMIdx].dialogIdx;
+
+if (vl_dialog == pl_dialogIdx)
+{
+v_db_users.data[v_db_dialog.data[pl_dialogIdx].userIdx].FSMs.data[v_db_dialog.data[pl_dialogIdx].FSMIdx].dialogIdx := -1;
+}else{
+f_SIP_Logging_WARNING(%definitionId&": could not found dialog in FSM database!");
+}
+}
+*/
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_eraseSubscription
+//
+//Purpose:
+//  Erases the cross reference of a subscription from the internal databases
+//
+//Parameters:
+//  - pl_subscriptionIdx - *in* *integer* - the index of the subscription in the
+//      v_db_subsctiption database
+//  - pl_dialogIdx - *in* *integer* - the index of the dialog in the
+//      v_db_dialog database
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_eraseSubscription(in integer pl_subscriptionIdx, in integer pl_dialogIdx)
+runs on EPTF_SIP_LGen_CT
+{
+  var integer vl_subscription;
+
+  if (-1 < pl_dialogIdx)
+  {
+    v_db_dialog.data[pl_dialogIdx].subscriptionIdx := -1;
+  }
+
+  // TODO FIXME ethecs:
+  // since many subscriptions are handled in one FSM in the PGM Simulator, and each dialog already stores its subscription,
+  // the FSMs.data[FSMIdx].subscriptionIdx has no use. so let's just set it to -1, later it could be removed.
+  v_db_users.data[v_db_subscription.data[pl_subscriptionIdx].userIdx].FSMs.data[v_db_subscription.data[pl_subscriptionIdx].FSMIdx].subscriptionIdx := -1;
+
+  /*vl_subscription := 
+  v_db_users.data[v_db_subscription.data[pl_subscriptionIdx].userIdx].FSMs.data[v_db_subscription.data[pl_subscriptionIdx].FSMIdx].subscriptionIdx;
+
+  if (vl_subscription == pl_subscriptionIdx)
+  {
+  v_db_users.data[v_db_subscription.data[pl_subscriptionIdx].userIdx].FSMs.data[v_db_subscription.data[pl_subscriptionIdx].FSMIdx].subscriptionIdx := -1;
+  }else{
+  log("vl_subscription: ", vl_subscription, ", pl_subscriptionIdx: ", pl_subscriptionIdx);
+  f_SIP_Logging_WARNING(%definitionId&": could not found subscription in FSM database!");
+  }*/
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_erasePublish
+//
+//Purpose:
+//  Erases the cross reference of a publish from the internal databases
+//
+//Parameters:
+//  - pl_publishIdx - *in* *integer* - the index of the publish in the 
+//      v_db_publish database
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_erasePublish(in integer pl_publishIdx)
+runs on EPTF_SIP_LGen_CT
+{
+  var integer vl_publish := v_db_users.data[v_db_publish.data[pl_publishIdx].userIdx].FSMs.data[v_db_publish.data[pl_publishIdx].FSMIdx].publishIdx;
+
+  if (vl_publish == pl_publishIdx)
+  {
+    v_db_users.data[v_db_publish.data[pl_publishIdx].userIdx].FSMs.data[v_db_publish.data[pl_publishIdx].FSMIdx].publishIdx := -1;
+  }else{
+    f_SIP_Logging_WARNING(%definitionId&": could not found publish in FSM database!");
+  }
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_removeUAC
+//
+//Purpose:
+//  Removes an UAC transaction.
+//
+//Parameters:
+//  - pl_trIdx - *in* *integer* - the index of the UAC transaction in v_db_UAC
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_removeUAC(in integer pl_trIdx)
+runs on EPTF_SIP_LGen_CT
+{
+  if (not f_EPTF_SIP_checkTransaction(v_db_UAC, pl_trIdx))
+  {
+    f_SIP_Logging_WARNING(%definitionId&": invalid trasaction index.");
+    return;
+  }
+
+  if (not v_db_UAC.data[pl_trIdx].cleanedUp)
+  {
+    f_EPTF_SIP_removeTransactionIdx(v_db_users.data[v_db_UAC.data[pl_trIdx].userIdx].FSMs.data[v_db_UAC.data[pl_trIdx].FSMIdx].UACs, pl_trIdx);
+  }
+
+  f_EPTF_SIP_UACTerminated(pl_trIdx);
+
+  f_EPTF_SIP_Transaction_RemoveUAC(pl_trIdx);
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_removeUAS
+//
+//Purpose:
+//  Removes an UAS transaction
+//
+//Parameters:
+//  - pl_trIdx - *in* *integer* - the index of the UAS transaction in v_db_UAS
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_removeUAS(in integer pl_trIdx)
+runs on EPTF_SIP_LGen_CT
+{
+  if (not f_EPTF_SIP_checkTransaction(v_db_UAS, pl_trIdx))
+  {
+    f_SIP_Logging_WARNING(%definitionId&": invalid trasaction index.");
+    return;
+  }
+
+  if (not v_db_UAS.data[pl_trIdx].cleanedUp)
+  {
+    f_EPTF_SIP_removeTransactionIdx(v_db_users.data[v_db_UAS.data[pl_trIdx].userIdx].FSMs.data[v_db_UAS.data[pl_trIdx].FSMIdx].UASs, pl_trIdx);
+  }
+
+  f_EPTF_SIP_UASTerminated(pl_trIdx);
+
+  f_EPTF_SIP_Transaction_RemoveUAS(pl_trIdx);
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_removeDialog
+//
+//Purpose:
+//  Removes a dialog.
+//
+//Parameters:
+//  - pl_dialogIdx - *in* *integer* - the index of the dialog in v_db_dialog
+//  - pl_ignore - *in* *boolean* - true if no need warning log
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_removeDialog(in integer pl_dialogIdx, in boolean pl_ignore := false)
+runs on EPTF_SIP_LGen_CT
+{
+  if (c_SIP_DlgState_Terminated != v_db_dialog.data[pl_dialogIdx].state and pl_ignore == false)
+  {
+    f_SIP_Logging_WARNING(%definitionId&": removing a dialog not in the terminating state!");
+  }
+
+  var integer vl_FSMIdx := v_db_dialog.data[pl_dialogIdx].FSMIdx;
+
+  v_db_dialog.data[pl_dialogIdx].nofRefs := v_db_dialog.data[pl_dialogIdx].nofRefs - 1;
+
+  if (0 == v_db_dialog.data[pl_dialogIdx].nofRefs)
+  {
+    //not necesarry, index in FSM database is always set after f_EPTF_SIP_removeDialog
+    //f_EPTF_SIP_eraseDialog(pl_dialogIdx);
+    f_EPTF_SIP_Dialog_Remove(pl_dialogIdx);
+  }
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_removeSubscription
+//
+//Purpose:
+//  Removes a subsctiption,
+//
+//Parameters:
+//  - pl_subscriptionIdx - *in* *integer* - the index of the subscription in v_db_subscription
+//  - pl_dialogIdx - *in* *integer* - the index of the dialog in v_db_dialog
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_removeSubscription(in integer pl_subscriptionIdx, in integer pl_dialogIdx)
+runs on EPTF_SIP_LGen_CT
+{
+  if (c_SIP_Subscribe_State_terminated != v_db_subscription.data[pl_subscriptionIdx].state)
+  {
+    f_SIP_Logging_WARNING(%definitionId&": removing a subscription not in the terminating state!");
+  }
+
+  // HN63629
+  var integer vl_uacIdx := v_db_subscription.data[pl_subscriptionIdx].subscribeUACIdx;
+  if(vl_uacIdx >= 0) {
+    // by resetting the subscriptionIdx of the SUBSCRIBE UAC transaction, the 200 OK will still be passed to the FSM when it is recevied
+    //f_SIP_Logging_DEBUG(%definitionId&": reset subscriptionIdx of subscribe UAC "&int2str(vl_uacIdx));
+    f_SIP_Logging_DEBUG(%definitionId&": terminating NOTIFY received before 200 OK (SUBSCRIBE)");
+    v_db_UAC.data[vl_uacIdx].subscriptionIdx := -1;
+  }
+
+  f_EPTF_SIP_eraseSubscription(pl_subscriptionIdx, pl_dialogIdx);
+  f_EPTF_SIP_Subscription_Remove(pl_subscriptionIdx);
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_removePublish
+//
+//Purpose:
+//  Removes a publish.
+//
+//Parameters:
+//  - pl_publishIdx - *in* *integer* - the index of the publish in v_db_publish
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_removePublish(in integer pl_publishIdx)
+runs on EPTF_SIP_LGen_CT
+{
+  if(c_EPTF_Common_debugSwitch and f_SIP_Logging_debugEnabled() and c_SIP_Publish_State_terminated != v_db_publish.data[pl_publishIdx].state)
+  {
+    f_SIP_Logging_DEBUG(log2str(%definitionId, ": removing a publish not in the terminating state", v_db_publish.data[pl_publishIdx]));
+  }
+
+  f_EPTF_SIP_erasePublish(pl_publishIdx);
+  f_EPTF_SIP_Publish_Remove(pl_publishIdx);
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_cleanUpTransactions
+//
+//Purpose:  
+//  Cleans up UAC transactions belonging to an FSM context.
+//
+//Parameters:
+//  - pl_userIdx - *in* *integer* - the index of the user in v_db_users
+//  - pl_FSMIdx - *in* *integer* - the FSM context data index
+//
+//Detailed comments:
+//  Clean up means to erase the cross references from the internal databases and to 
+//  remove the transaction if it is not in the Completed (UAC) or Completed/Confirmed (UAS)
+//  state.
+//    
+////////////////////////////////////////////////////
+function f_EPTF_SIP_cleanUpTransactions(in integer pl_userIdx,in integer pl_FSMIdx)
+runs on EPTF_SIP_LGen_CT
+{
+  var integer i;
+
+  for (i := 0; i < sizeof(v_db_users.data[pl_userIdx].FSMs.data[pl_FSMIdx].UACs.data); i := i + 1)
+  {
+    f_EPTF_SIP_cleanUpUAC(v_db_users.data[pl_userIdx].FSMs.data[pl_FSMIdx].UACs.data[i]);
+  }
+  v_db_users.data[pl_userIdx].FSMs.data[pl_FSMIdx].UACs.data := {};
+
+  for (i := 0; i < sizeof(v_db_users.data[pl_userIdx].FSMs.data[pl_FSMIdx].UASs.data); i := i + 1)
+  {
+    f_EPTF_SIP_cleanUpUAS(v_db_users.data[pl_userIdx].FSMs.data[pl_FSMIdx].UASs.data[i]);
+  }
+  v_db_users.data[pl_userIdx].FSMs.data[pl_FSMIdx].UASs.data := {};
+
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_cleanUpUAS
+//
+//Purpose:
+//  Cleans up an UAS transaction.
+//
+//Parameters:
+//  - pl_trIdx - *in* *integer* - the index of the UAS transaction in v_db_UAS
+//
+//Detailed comments:  
+//  Clean up an UAS transaction means to erase the cross references from the internal databases and to 
+//  remove the transaction if it is not in the Completed/Confirmed state.
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_cleanUpUAS(in integer pl_trIdx)
+runs on EPTF_SIP_LGen_CT
+{
+
+  //  v_db_UAS.data[pl_trIdx].fsmCtx := -1;
+  // note: don't set the fsmCtx in the FSMs field of the user to -1 as the dialog uses it!
+  v_db_UAS.data[pl_trIdx].FSMIdx := -1;
+  v_db_UAS.data[pl_trIdx].cleanedUp := true;
+
+  if (c_SIP_TrState_Terminated != v_db_UAS.data[pl_trIdx].state and
+    c_SIP_TrState_Completed != v_db_UAS.data[pl_trIdx].state and
+    c_SIP_TrState_Confirmed != v_db_UAS.data[pl_trIdx].state)
+  {
+    v_nofCleanedUpUASs := v_nofCleanedUpUASs + 1;
+
+    f_SIP_Logging_WARNING(%definitionId&": cleaning up running UAS!");
+
+    f_EPTF_SIP_removeUAS(pl_trIdx);
+  }
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_cleanUpUAC
+//
+//Purpose:
+//  Cleans up an UAC transaction.
+//
+//Parameters:
+//  - pl_trIdx - *in* *integer* - the index of the UAC transaction in v_db_UAC
+//
+//Detailed comments:  
+//  Clean up an UAC transaction means to erase the cross references from the internal databases and to 
+//  remove the transaction if it is not in the Completed state.
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_cleanUpUAC(in integer pl_trIdx)
+runs on EPTF_SIP_LGen_CT
+{
+  //  v_db_UAC.data[pl_trIdx].fsmCtx := -1;
+  // note: don't set the fsmCtx in the FSMs field of the user to -1 as the dialog uses it!
+  v_db_UAC.data[pl_trIdx].FSMIdx := -1;
+  v_db_UAC.data[pl_trIdx].cleanedUp := true;
+
+  if (c_SIP_TrState_Terminated != v_db_UAC.data[pl_trIdx].state and
+    c_SIP_TrState_Completed != v_db_UAC.data[pl_trIdx].state)
+  {
+    v_nofCleanedUpUACs := v_nofCleanedUpUACs + 1;
+
+    f_SIP_Logging_WARNING(%definitionId&": cleaning up running UAC!");
+
+    f_EPTF_SIP_removeUAC(pl_trIdx);
+  }
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_checkDialogInSubscription
+//
+//Purpose:  
+//  Checks if a dialog index in the subscrition is valid and belongs to the subsctiption.
+//
+//Parameters:
+//  - pl_dialogIdx - *in* *integer* - the index of the dialog in v_db_dialog
+//  - pl_subscriptionIdx - *in* *integer* - the index of the subscription in v_db_subscription
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_checkDialogInSubscription(in integer pl_dialogIdx, in integer pl_subscriptionIdx)
+runs on EPTF_SIP_LGen_CT
+return boolean
+{
+  return f_EPTF_SIP_checkDialog(pl_dialogIdx) and 
+  v_db_dialog.data[pl_dialogIdx].callId == v_db_subscription.data[pl_subscriptionIdx].callId and
+  v_db_dialog.data[pl_dialogIdx].localTag == v_db_subscription.data[pl_subscriptionIdx].localTag and
+  v_db_dialog.data[pl_dialogIdx].remoteTag == v_db_subscription.data[pl_subscriptionIdx].remoteTag;
+
+
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_SIP_StartT_Dialog
+// 
+//  Purpose:
+//    Starts a dialog timer.
+// 
+//  Parameters:
+//    - pl_dialogIdx - *in integer* - the index of the dialog in v_db_dialog
+//    - pl_timerId - *in integer* - index of dialog timer
+//    - pl_deltaSec - *in float* - the relative schedule time
+// 
+//  Errors:
+//    -*timer #id is already running for dialog #idx*
+// 
+//  Return Value:
+//    boolean - false if operation failed
+///////////////////////////////////////////////////////////
+//ELIMINATE DIALOG WATCHDOG
+/*function f_EPTF_SIP_StartT_Dialog(in integer pl_dialogIdx, in integer pl_timerId, in float pl_deltaSec) 
+runs on EPTF_SIP_LGen_CT 
+return boolean
+{
+var boolean retval;
+var EPTF_ActionId vl_actionId;
+
+vl_actionId[c_AIdx_DialogIdx] := pl_dialogIdx;
+vl_actionId[c_AIdx_DialogTimerId] := pl_timerId;
+
+if(c_EPTF_Common_debugSwitch and f_SIP_Logging_debugEnabled()) {
+f_SIP_Logging_DEBUG(log2str(%definitionId,": starting timer with idx ", pl_timerId,"(",pl_deltaSec,"s) for dialog ", pl_dialogIdx));
+}
+
+if (v_db_dialog.data[pl_dialogIdx].timers[pl_timerId] >= 0)
+{ 
+f_SIP_Logging_WARNING(log2str(%definitionId,": timer " & int2str(pl_timerId) & " is already running for dialog ", pl_dialogIdx));
+return false;
+}
+
+retval := f_EPTF_SchedulerComp_scheduleAction(v_EPTF_snapshotTime + pl_deltaSec,
+refers(f_EPTF_SIP_TimerHandler_Dialog), vl_actionId,
+v_db_dialog.data[pl_dialogIdx].timers[pl_timerId]);
+
+return retval;
+} */
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_TimerHandler_Dialog
+//
+//Purpose:
+//  Handles dialog timer events
+//
+//Parameters:
+//  - pl_action - *in* <EPTF_ScheduledAction> - the scheduled action
+//  - pl_eventIndex - *in* *integer* - the index of the scheduled action in the event queue
+//
+//Errors:
+//  - *dialog index is not valid anymore*: the dialog has already been removed
+//  - *timer #id not running*
+//  - *could not start dialog retransmission timer*
+//  - *could not cancel dialog retransmission timer*
+////////////////////////////////////////////////////
+//ELIMINATE DIALOG WATCHDOG
+/*function f_EPTF_SIP_TimerHandler_Dialog(in EPTF_ScheduledAction pl_action, in integer pl_eventIndex)
+runs on EPTF_SIP_LGen_CT
+return boolean
+{
+var integer vl_dialog := pl_action.actionId[c_AIdx_DialogIdx];
+var integer vl_timerId := pl_action.actionId[c_AIdx_DialogTimerId];
+
+if (not f_EPTF_SIP_checkDialog(vl_dialog))
+{
+f_SIP_Logging_WARNING(log2str(%definitionId,": dialog index is not valid anymore."));
+return false;
+}
+
+if(c_EPTF_Common_debugSwitch and f_SIP_Logging_debugEnabled()) {
+f_SIP_Logging_DEBUG(log2str(%definitionId,": handling timer ",vl_timerId," for dialog ", vl_dialog));
+}
+
+if (0 <= v_db_dialog.data[vl_dialog].timers[vl_timerId])
+{
+v_db_dialog.data[vl_dialog].timers[vl_timerId] := -1;
+}else{
+f_SIP_Logging_WARNING(log2str(%definitionId,": timer ", vl_timerId, " not running"));
+return false;
+}
+
+if (c_SIP_TimerIdxDialog_Watchdog == vl_timerId)
+{
+f_EPTF_SIP_removeDialog(vl_dialog);
+}
+
+return true;
+}*/
+
+}//end of module
+with {
+extension "version <RnXnn>"
+}
+

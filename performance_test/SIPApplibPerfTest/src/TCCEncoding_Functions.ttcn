@@ -1,0 +1,670 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//
+//  File:               TCCEncoding_Functions.ttcn
+//  Description:        TCC Useful Functions: Message Encoding Functions.
+//  Rev:                <RnXnn>
+//  Prodnr:             CNL 113 472
+//  Updated:            2013-02-14
+//  Contact:            http://ttcn.ericsson.se
+//
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+//  Module: TCCEncoding_Functions
+// 
+//  Purpose:
+//    This module supports message based encoding of certain types
+// 
+//  Module Parameters:
+//      - 
+// 
+//  Module depends on:
+//    -
+//
+///////////////////////////////////////////////////////////////////////////////
+module TCCEncoding_Functions {
+
+
+// 24.008  10.5.4.7
+// Q.763   3.9
+type enumerated NumberPlan
+{
+  unknownSpare(0),       // MobileL3 unknown / ISUP spare
+  ISDN_E_164(1),         // 
+  spare1(2),             // MobileL3 - / ISUP spare 
+  data(3),               // 
+  telex(4),              //   
+  reserved1(5),          // MobileL3 - / ISUP reserved for national use
+  reserved2(6),          // MobileL3 - / ISUP reserved for national use  
+  spare2(7),             // MobileL3 - / ISUP spare
+  national(8),           // MobileL3 national numbering plan / ISUP -
+  private_(9),           // MobileL3 private numbering plan  / ISUP - 
+  reservedCTS(11),       // MobileL3 reserved for CTS / ISUP - 
+  reservedExtension(15)  // MobileL3 reserved for extension  / ISUP - 
+}
+
+
+// Q.763   3.9
+type enumerated ISUP_NatureOfAddress
+{
+  spare(0),
+  subscriberNumber(1),
+  unknown(2),
+  nationalNumber(3),
+  internationalNumber(4), 
+  networkRoutingNumber(5),
+  networkRoutingNumberNationalNrFormat(6),
+  networkRoutingNumberNetworkSpecificNrFormat(7),
+  networkRoutingNumberConcatenatedWith_CDN(8)   
+}
+
+// Q.763   3.9
+type enumerated ISUP_NumberingIncompleteIndicator
+{
+  numberComplete(0),   // 0
+  numberIncomplete(1)  // 1
+}
+
+// Q.763   3.9
+type record ISUP_Called_Party_Number
+{
+  ISUP_NatureOfAddress               natureOfAddressIndicator, 
+  NumberPlan                         numberingPlanIndicator,
+  ISUP_NumberingIncompleteIndicator  iNN, 
+  hexstring                          addressSignalDigits
+} 
+
+// Q.763   3.10
+type enumerated ISUP_ScreeningIndicator
+{
+  user_provided_not_verified(0),    // 00
+  user_provided_verified_passed(1), // 01
+  user_provided_verified_failed(2), // 10
+  network_provided(3)               // 11
+}
+
+// Q.763   3.10
+type enumerated ISUP_AddressPresentationRestrictedIndicator
+{
+  presentation_allowed(0),                     // 00
+  presentation_restricted(1),                  // 01
+  address_not_available(2),                    // 10
+  reserved(3)                                  // 11            
+}
+
+// Q.763   3.10
+type record ISUP_Calling_Party_Number
+{
+  ISUP_NatureOfAddress               natureOfAddressIndicator, 
+  ISUP_ScreeningIndicator            screening_indicator,
+  ISUP_AddressPresentationRestrictedIndicator address_presentation_restricted_indicator,
+  NumberPlan                         numberingPlanIndicator,
+  ISUP_NumberingIncompleteIndicator  iNN, 
+  hexstring                          addressSignalDigits
+} 
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_encode_ISUP_Called_Party_Number
+// 
+//  Purpose:
+//      Function for encoding ISUP_Called_Party_Number type to octetstring
+//      Q.763   3.9
+// 
+//  Parameters:
+//    pl_ISUP_Called_Party_Number - *in* <ISUP_Called_Party_Number> -
+//
+//  Return Value:
+//    *octetstring* - the converted number in octetstring format
+// 
+//  Errors:
+//    -
+// 
+//  Detailed Comments:
+//   -
+///////////////////////////////////////////////////////////////////////////////
+function f_encode_ISUP_Called_Party_Number
+(in ISUP_Called_Party_Number pl_ISUP_Called_Party_Number) return octetstring 
+{ 
+  if(enum2int(pl_ISUP_Called_Party_Number.numberingPlanIndicator) > 7)
+  {
+   log("Error : Invalid numberingPlanIndicator")
+   return(''O)
+  }
+
+  var integer vl_i;
+  var octetstring vl_oct;
+  var hexstring vl_digits := pl_ISUP_Called_Party_Number.addressSignalDigits; 
+  var integer vl_size := lengthof(pl_ISUP_Called_Party_Number.addressSignalDigits);
+  var bitstring vl_oddEvenIndicator := '0'B;
+  if((vl_size mod 2) == 1) {
+    vl_oddEvenIndicator := '1'B;
+    vl_digits :=  vl_digits & '0'H;
+    vl_size := vl_size + 1;
+  } 
+
+  vl_oct := bit2oct(vl_oddEvenIndicator & 
+            int2bit(enum2int(pl_ISUP_Called_Party_Number.natureOfAddressIndicator), 7) &  
+	    int2bit(enum2int(pl_ISUP_Called_Party_Number.iNN), 1) &  
+	    int2bit(enum2int(pl_ISUP_Called_Party_Number.numberingPlanIndicator), 3) &  
+            '0000'B)
+			  			  
+  vl_size := vl_size / 2;
+  
+  for (vl_i := 0; vl_i < vl_size; vl_i := vl_i + 1)
+  {
+    vl_oct := vl_oct & hex2oct(vl_digits[(2*vl_i) + 1] & vl_digits[2*vl_i]);
+  }
+
+  return(vl_oct)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_encode_ISUP_Calling_Party_Number
+// 
+//  Purpose:
+//      Function for encoding ISUP_Calling_Party_Number type to octetstring
+//      Q.763   3.10
+// 
+//  Parameters:
+//    pl_ISUP_Calling_Party_Number - *in* <ISUP_Calling_Party_Number> -
+//
+//  Return Value:
+//    *octetstring* - the converted number in octetstring format
+// 
+//  Errors:
+//    -
+// 
+//  Detailed Comments:
+//   -
+///////////////////////////////////////////////////////////////////////////////
+function f_encode_ISUP_Calling_Party_Number
+(in ISUP_Calling_Party_Number pl_ISUP_Calling_Party_Number) return octetstring 
+{ 
+  if(enum2int(pl_ISUP_Calling_Party_Number.numberingPlanIndicator) > 7)
+  {
+   log("Error : Invalid numberingPlanIndicator")
+   return(''O)
+  }
+
+  var integer vl_i;
+  var octetstring vl_oct;
+  var hexstring vl_digits := pl_ISUP_Calling_Party_Number.addressSignalDigits; 
+  var integer vl_size := lengthof(pl_ISUP_Calling_Party_Number.addressSignalDigits);
+  var bitstring vl_oddEvenIndicator := '0'B;
+  if((vl_size mod 2) == 1) {
+    vl_oddEvenIndicator := '1'B;
+    vl_digits :=  vl_digits & '0'H;
+    vl_size := vl_size + 1;
+  } 
+
+  vl_oct := bit2oct(vl_oddEvenIndicator & 
+            int2bit(enum2int(pl_ISUP_Calling_Party_Number.natureOfAddressIndicator), 7) &
+        int2bit(enum2int(pl_ISUP_Calling_Party_Number.iNN), 1) &
+        int2bit(enum2int(pl_ISUP_Calling_Party_Number.numberingPlanIndicator), 3) &
+        int2bit(enum2int(pl_ISUP_Calling_Party_Number.address_presentation_restricted_indicator), 2) &
+        int2bit(enum2int(pl_ISUP_Calling_Party_Number.screening_indicator), 2))
+                          
+  vl_size := vl_size / 2;
+  
+  for (vl_i := 0; vl_i < vl_size; vl_i := vl_i + 1)
+  {
+    vl_oct := vl_oct & hex2oct(vl_digits[(2*vl_i) + 1] & vl_digits[2*vl_i]);
+  }
+
+  return(vl_oct)
+}
+
+// 24.008  10.5.4.7
+type enumerated MobileL3_TypeOfNumber
+{
+  unknown(0),
+  internationalNumber(1),
+  nationalNumber(2),
+  networkSpecificNumber(3),
+  dedicatedAccess(4),
+  reserved1(5),
+  reserved2(6),
+  reservedForExtension(7)  
+}
+
+// 24.008  10.5.4.7
+type record MobileL3_CalledPartyBCDNumber
+{
+ NumberPlan              numberingPlanIdentification,
+ MobileL3_TypeOfNumber   typeOfNumber,
+ hexstring               numberDigits 
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_encode_MobileL3_CalledPartyBCDNumber
+// 
+//  Purpose:
+//      Function for encoding MobileL3_CalledPartyBCDNumber type to octetstring
+//      24.008  10.5.4.7
+// 
+//  Parameters:
+//    pl_MobileL3_CalledPartyBCDNumber - *in* <MobileL3_CalledPartyBCDNumber> -
+//
+//  Return Value:
+//    *octetstring* - the converted number in octetstring format
+// 
+//  Errors:
+//    -
+// 
+//  Detailed Comments:
+//   -
+///////////////////////////////////////////////////////////////////////////////
+function f_encode_MobileL3_CalledPartyBCDNumber
+(in MobileL3_CalledPartyBCDNumber pl_MobileL3_CalledPartyBCDNumber) return octetstring 
+{
+  var integer vl_i;
+  var octetstring vl_oct;
+  var hexstring vl_digits := pl_MobileL3_CalledPartyBCDNumber.numberDigits; 
+  var integer vl_size := lengthof(pl_MobileL3_CalledPartyBCDNumber.numberDigits);
+  if((vl_size mod 2) == 1) {    
+    vl_digits :=  vl_digits & 'F'H;
+    vl_size := vl_size + 1;
+  }   
+  
+  vl_oct :=   bit2oct('1'B &   
+              int2bit(enum2int(pl_MobileL3_CalledPartyBCDNumber.typeOfNumber), 3) & 
+              int2bit(enum2int(pl_MobileL3_CalledPartyBCDNumber.numberingPlanIdentification), 4))
+
+  vl_size := vl_size / 2;
+  
+  for (vl_i := 0; vl_i < vl_size; vl_i := vl_i + 1)
+  {
+    vl_oct := vl_oct & hex2oct(vl_digits[(2*vl_i) + 1] & vl_digits[2*vl_i]);
+  }
+  return (vl_oct);
+}
+
+////////////////////////////
+// MIME Base64 (RFC 2045) //
+////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: enc_MIME_Base64
+// 
+//  Purpose:
+//    Encode message to MIME Base64 format (RFC 2045)
+//
+//  Parameters:
+//    p_msg - *in* *octetstring* - message to encode
+// 
+//  Return Value:
+//    charstring - encoded message
+//
+//  Errors:
+//    - 
+// 
+//  Detailed description:
+//    -
+// 
+///////////////////////////////////////////////////////////////////////////////
+external function enc_MIME_Base64(in octetstring p_msg) return charstring;
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: dec_MIME_Base64
+// 
+//  Purpose:
+//    Decode message from MIME Base64 format (RFC 2045)
+//
+//  Parameters:
+//    p_b64 - *in* *charstring* - message to decode
+// 
+//  Return Value:
+//    octetstring - decoded message
+//
+//  Errors:
+//    - 
+// 
+//  Detailed description:
+//    -
+// 
+///////////////////////////////////////////////////////////////////////////////
+external function dec_MIME_Base64(in charstring p_b64) return octetstring;
+
+////////////////////////////
+// LDIF Base64 (RFC 2849) //
+////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: enc_LDIF_Base64
+// 
+//  Purpose:
+//    Encode message to LDIF Base64 format (RFC 2849)
+//
+//  Parameters:
+//    p_msg - *in* *octetstring* - message to encode
+// 
+//  Return Value:
+//    charstring - encoded message
+//
+//  Errors:
+//    - 
+// 
+//  Detailed description:
+//    -
+// 
+///////////////////////////////////////////////////////////////////////////////
+external function enc_LDIF_Base64(in octetstring p_msg) return charstring;
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: dec_LDIF_Base64
+// 
+//  Purpose:
+//    Decode message from LDIF Base64 format (RFC 2849)
+//
+//  Parameters:
+//    p_b64 - *in* *charstring* - message to decode
+// 
+//  Return Value:
+//    octetstring - decoded message
+//
+//  Errors:
+//    - 
+// 
+//  Detailed description:
+//    -
+// 
+///////////////////////////////////////////////////////////////////////////////
+external function dec_LDIF_Base64(in charstring p_b64) return octetstring;
+
+
+//////////////////////////////////////////////////////////
+//  Function: f_encGSM7bit
+//
+//  Purpose:
+//    GSM 7-bit encoding (GSM 03.38)
+//
+//  Parameters:
+//    pl_str - *in* *universal charstring* - USSD string
+//
+//  Return value:
+//    *ocetstring* - encoded string
+//
+//  Detailed Comments:
+//    -
+//
+///////////////////////////////////////////////////////////
+function f_encGSM7bit(in universal charstring pl_str) return octetstring {  
+  var integer vl_len, i, v_unichar_code;
+  var bitstring vl_ret :=''B, vl_ret2 := ''B, vl_padstr := ''B, vl_bitstr := ''B;
+
+  for (i := 0; i < lengthof(pl_str); i := i + 1) 
+  {              
+    v_unichar_code := unichar2int(pl_str[i])
+    if( v_unichar_code <= 255 )
+    {
+      if(c_GSM_7_bit_Default_Alphabet_Encoder[v_unichar_code] != ''B)
+      {
+        vl_ret := vl_ret & c_GSM_7_bit_Default_Alphabet_Encoder[v_unichar_code]
+      }
+      else
+      {
+        log("Warning : Invalid character ", pl_str[i], " will be encoded as space!")
+	vl_ret := vl_ret & '0000010'B;
+      }
+    } 
+    else if ((v_unichar_code >= 915) and (v_unichar_code <= 937))  // greek 
+    {            
+      if(c_GSM_7_bit_Greek_Encoder[v_unichar_code-915] != ''B)
+      {   
+        vl_ret := vl_ret & c_GSM_7_bit_Greek_Encoder[v_unichar_code-915] 
+      }
+      else
+      {
+	log("Warning : Invalid character ", pl_str[i], " will be encoded as space!")
+	vl_ret := vl_ret & '0000010'B;
+      }    
+    }
+    else if (v_unichar_code == 8364)    // euro
+    {      
+      vl_ret := vl_ret & '11011001010011'B
+    }
+    else
+    {
+      log("Warning : Invalid character ", pl_str[i], " will be encoded as space!");
+      vl_ret := vl_ret & '0000010'B;
+    }        
+  }
+
+  if(lengthof(vl_ret) mod 8 != 1) {
+    vl_padstr := int2bit(0, 8 - lengthof(vl_ret) mod 8); 
+  } else {
+    vl_padstr := '1011000'B;
+  }
+
+  vl_ret := vl_ret & vl_padstr;
+  vl_len := lengthof(vl_ret)/8;
+   
+
+  for (i := 0; i < vl_len; i := i + 1) 
+  {
+    vl_bitstr := substr(vl_ret, i*8, 8);   
+    vl_ret2 := vl_ret2 & vl_bitstr[7] & vl_bitstr[6] & vl_bitstr[5] & vl_bitstr[4] & vl_bitstr[3] & vl_bitstr[2] & vl_bitstr[1] & vl_bitstr[0];
+  } 
+
+  return bit2oct(vl_ret2);
+}
+
+//////////////////////////////////////////////////////////
+//  Function: f_decGSM7bit
+//
+//  Purpose:
+//    GSM 7-bit decoding (GSM 03.38)
+//
+//  Parameters:
+//    pl_gsm7bit - *in* *ocetstring* - GSM 7bit encoded string
+//
+//  Return value:
+//    *universal charstring* - decoded string
+//
+//  Detailed Comments:
+//    -
+//
+///////////////////////////////////////////////////////////
+function f_decGSM7bit(in octetstring pl_gsm7bit) return universal charstring {  
+  var bitstring vl_7bitstr := oct2bit(pl_gsm7bit);
+  var bitstring vl_reversed := ''B;
+  var bitstring vl_8bits := ''B;
+  var bitstring vl_7bits := ''B;
+  var universal charstring vl_ret := "";
+  var universal charstring vl_char := "";
+  var integer vl_index;
+
+  for (var integer i := 0; i < lengthof(vl_7bitstr); i := i + 8) {
+    vl_8bits := substr(vl_7bitstr, i, 8);
+    vl_reversed := vl_reversed & vl_8bits[7] & vl_8bits[6] & vl_8bits[5] & vl_8bits[4] & vl_8bits[3] & vl_8bits[2] & vl_8bits[1] & vl_8bits[0];
+  } 
+
+  var integer vl_septets := lengthof(vl_reversed) / 7;
+
+  for (var integer i := 0; i < vl_septets; i := i + 1) {
+    vl_7bits := substr(vl_reversed, i * 7, 7);
+    vl_index := bit2int('0'B & vl_7bits[6] & vl_7bits[5] & vl_7bits[4] & vl_7bits[3] & vl_7bits[2] & vl_7bits[1] & vl_7bits[0]);
+    
+    if(vl_index < sizeof(c_GSM_7_bit_Default_Alphabet_Decoder)) {
+      if (vl_index != 27)
+      {    
+        vl_char := c_GSM_7_bit_Default_Alphabet_Decoder[vl_index];
+      } 
+      else // extension character
+      {
+        vl_7bits := substr(vl_reversed, (i+1) * 7, 7);
+        vl_index := bit2int('0'B & vl_7bits[6] & vl_7bits[5] & vl_7bits[4] & vl_7bits[3] & vl_7bits[2] & vl_7bits[1] & vl_7bits[0]); 
+        vl_char := c_GSM_7_bit_Default_Alphabet_Extensions_Decoder[vl_index];
+	if (vl_char == "")
+	{
+	  vl_char := " ";
+	  log("Warning : Unknown extension character ",vl_index," will be decoded as space!")  
+	}	
+	i:= i+1;
+      }   
+    } 
+   
+    vl_ret := vl_ret & vl_char;
+  } 
+
+  return vl_ret;
+}
+
+///////////////////////////////////////////
+// Constants needed for GSM 7-bit encoding
+///////////////////////////////////////////
+type record of bitstring BitstringList;
+
+const BitstringList c_GSM_7_bit_Default_Alphabet_Encoder := {
+''B,''B,''B,''B,''B,''B,''B,''B,''B,''B,  // 0-9
+'0101000'B,''B,'11011000101000'B,'1011000'B,''B,''B,''B,''B,''B,''B,  // 10-19
+''B,''B,''B,''B,''B,''B,''B,''B,''B,''B,  // 20-29
+''B,''B,'0000010'B,'1000010'B,'0100010'B,'1100010'B,'0100000'B,'1010010'B,'0110010'B,'1110010'B,  // 30-39
+'0001010'B,'1001010'B,'0101010'B,'1101010'B,'0011010'B,'1011010'B,'0111010'B,'1111010'B,'0000110'B,'1000110'B,  // 40-49
+'0100110'B,'1100110'B,'0010110'B,'1010110'B,'0110110'B,'1110110'B,'0001110'B,'1001110'B,'0101110'B,'1101110'B,  // 50-59
+'0011110'B,'1011110'B,'0111110'B,'1111110'B,'0000000'B,'1000001'B,'0100001'B,'1100001'B,'0010001'B,'1010001'B,  // 60-69
+'0110001'B,'1110001'B,'0001001'B,'1001001'B,'0101001'B,'1101001'B,'0011001'B,'1011001'B,'0111001'B,'1111001'B,  // 70-79
+'0000101'B,'1000101'B,'0100101'B,'1100101'B,'0010101'B,'1010101'B,'0110101'B,'1110101'B,'0001101'B,'1001101'B,  // 80-89
+'0101101'B,'11011000011110'B,'11011001111010'B,'11011000111110'B,'11011000010100'B,'1000100'B,''B,'1000011'B,'0100011'B,'1100011'B,  // 90-99
+'0010011'B,'1010011'B,'0110011'B,'1110011'B,'0001011'B,'1001011'B,'0101011'B,'1101011'B,'0011011'B,'1011011'B,  //100-109
+'0111011'B,'1111011'B,'0000111'B,'1000111'B,'0100111'B,'1100111'B,'0010111'B,'1010111'B,'0110111'B,'1110111'B, //110-119
+'0001111'B,'1001111'B,'0101111'B,'11011000001010'B,'11011000000001'B,'11011001001010'B,'11011001011110'B,''B,''B,''B,  //120-129
+''B,''B,''B,''B,''B,''B,''B,''B,''B,''B,  //130-139
+''B,''B,''B,''B,''B,''B,''B,''B,''B,''B,  //140-149
+''B,''B,''B,''B,''B,''B,''B,''B,''B,''B,  //150-159
+''B,'0010000'B,''B,'1000000'B,'0010010'B,'1100000'B,''B,'1111101'B,''B,''B,  //160-169
+''B,''B,''B,''B,''B,''B,''B,''B,''B,''B,  //170-179
+''B,''B,''B,''B,''B,''B,''B,''B,''B,''B,  //180-189
+''B,'0000011'B,''B,''B,''B,''B,'1101101'B,'0111000'B,'0011100'B,'1001000'B,  //190-199
+''B,'1111100'B,''B,''B,''B,''B,''B,''B,''B,'1011101'B,  //200-209
+''B,''B,''B,''B,'0011101'B,''B,'1101000'B,''B,''B,''B,  //210-219
+'0111101'B,''B,''B,'0111100'B,'1111111'B,''B,''B,''B,'1101111'B,'1111000'B,  //220-229
+'1011100'B,''B,'0010000'B,'1010000'B,''B,''B,'1110000'B,''B,''B,''B,  //230-239
+''B,'1011111'B,'0001000'B,''B,''B,''B,'0011111'B,''B,'0011000'B,'0110000'B,  //240-249
+''B,''B,'0111111'B,''B,''B,''B                   //250-255
+}
+
+const BitstringList c_GSM_7_bit_Greek_Encoder :=
+{
+  '1100100'B,   //gamma
+  '0000100'B,   //delta
+  ''B,''B,''B,
+  '1001100'B,   //theta
+  ''B,''B,
+  '0010100'B,   //lambda
+  ''B,''B,
+  '0101100'B,   //xi
+  ''B,
+  '0110100'B,   //pi
+  ''B,''B,
+  '0001100'B,   //sigma
+  ''B,''B,
+  '0100100'B,   //phi
+  ''B,
+  '1110100'B,   //psi
+  '1010100'B    //omega
+}
+
+
+type record of universal charstring Extension_List;
+  
+const Extension_List c_GSM_7_bit_Default_Alphabet_Extensions_Decoder:= 
+ {  "","","","","","","","","","",       //0-9
+    "\f","","","","","","","","","",     //10-19
+    "^","","","","","","","","","",      //20-29
+    "","","","","","","","","","",       //30-39
+    "{","}","","","","","","\\","","",   //40-49
+    "","","","","","","","","","",       //50-59
+    "[","~","]", "","|", "","","","","", //60-69
+    "","","","","","","","","","",       //70-79
+    "","","","","","","","","","",       //80-89
+    "","","","","","","","","","",       //90-99 
+    "",char(0,0,32,172), "","","","","","","","",  //100-109
+    "","","","","","","","","","",       //110-119
+    "","","","","","","",""             //120-127
+ } 
+
+
+type record of universal charstring UnicharList;
+
+const UnicharList c_GSM_7_bit_Default_Alphabet_Decoder :=
+{
+"@", "£", "$","¥", "è", "é", "ù", "ì", "ò", "Ç",
+"\n", "Ø",  "ø",  "\r",  "Å",  "å", char(0,0,3,148),  "_", char(0,0,3,166),  char(0,0,3,147),
+char(0,0,3,155), char(0,0,3,169), char(0,0,3,160), char(0,0,3,168), char(0,0,3,163), char(0,0,3,152), char(0,0,3,158), "27 extension", "Æ", "æ",
+"ß","É"," ","!","\"","#","¤","%","&","''", 
+"(", ")", "*", "+", ",", "-", ".", "/", "0", "1",
+"2", "3", "4","5","6","7","8","9",":",";",
+"<", "=", ">", "?", "¡", "A", "B", "C", "D", "E", 
+"F", "G", "H", "I", "J", "K", "L", "M", "N", "O", 
+"P","Q","R","S","T","U","V","W","X","Y",
+"Z","Ä","Ö","Ñ","Ü","§","¿","a","b","c",
+"d", "e", "f", "g", "h", "i", "j", "k", "l", "m",
+"n", "o","p","q","r","s","t","u","v","w",
+"x","y","z","ä","ö","ñ","ü","à"
+}
+
+// ISO10646
+// http://www.unicode.org/
+// char(0,0,3,148) greek capital letter delta
+// char(0,0,3,166) greek capital letter phi
+// char(0,0,3,147) greek capital letter gamma
+// char(0,0,3,155) greek capital letter lambda
+// char(0,0,3,169) greek capital letter omega
+// char(0,0,3,160) greek capital letter pi
+// char(0,0,3,168) greek capital letter psi
+// char(0,0,3,163) greek capital letter sigma
+// char(0,0,3,152) greek capital letter theta
+// char(0,0,3,158) greek capital letter xi
+// char(0,0,32,172) euro sign
+
+
+//////////////////////////////////////////////////////////////////////////////
+//  Function: f_enc_TBCD
+// 
+//  Purpose:
+//    Encode charstring to TBCD
+//
+//  Parameters:
+//    pl_char - *in* *charstring* - message to encode
+// 
+//  Return Value:
+//    octetstring - TBCD encoding
+//
+//  Errors:
+//    - 
+// 
+//  Detailed description:
+//    -
+// 
+///////////////////////////////////////////////////////////////////////////////
+external function f_enc_TBCD(in charstring pl_char) return octetstring;
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_dec_TBCD
+// 
+//  Purpose:
+//    Decode octetstring from TBCD encoding
+//
+//  Parameters:
+//    pl_oct - *in* *octetstring* - message to decode
+// 
+//  Return Value:
+//    charstring - decoded message
+//
+//  Errors:
+//    - 
+// 
+//  Detailed description:
+//    -
+// 
+///////////////////////////////////////////////////////////////////////////////
+external function f_dec_TBCD(in octetstring pl_oct) return charstring;
+
+} with {extension "version <RnXnn>"}

@@ -1,0 +1,1654 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_CLL_Logging_Functions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 512
+//  Updated:  2011-06-29
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////
+//  Module: EPTF_CLL_Logging_Functions
+// 
+//  Purpose:
+//    This module contains the implementation of generic EPTF logging functions.
+// 
+//  Module depends on:
+//    <EPTF_CLL_Common_Functions>
+//    <EPTF_CLL_Base_Functions>
+//    <EPTF_CLL_Logging_Definitions>
+//    <EPTF_CLL_Common_Definitions>
+// 
+//  Current Owner:
+//    EFLOATT
+// 
+//  Last Review Date:
+//    2010-xx-xx
+//
+//  Detailed Comments:
+//    This module contains the interface functions for the EPTF_Logging.
+//
+//    Public Functions:
+//      <f_EPTF_Logging_init_CT>
+//      <f_EPTF_Logging_errorV2>
+//      <f_EPTF_Logging_warningV2>
+//      <f_EPTF_Logging_debugV2>
+//      <f_EPTF_Logging_operationalLogV2>
+//      <f_EPTF_Logging_error>
+//      <f_EPTF_Logging_warning>
+//      <f_EPTF_Logging_debug>
+//      <f_EPTF_Logging_debugM>
+//      <f_EPTF_Logging_debugV>
+//      <f_EPTF_Logging_debugLevelM>
+//      <f_EPTF_Logging_debugLevelV>
+//      <f_EPTF_Logging_log>
+//      <f_EPTF_log>
+//      <f_EPTF_Logging_registerComponentMasks>
+//      <f_EPTF_Logging_myMaskId>
+//      <f_EPTF_Logging_enableAllLocal>
+//      <f_EPTF_Logging_disableAllLocal>
+//      <f_EPTF_Logging_enableLocal>
+//      <f_EPTF_Logging_disableLocal>
+//      <f_EPTF_Logging_enableLocalMask>
+//      <f_EPTF_Logging_disableLocalMask>
+//      <f_EPTF_Logging_isEnabledList>
+//      <f_EPTF_Logging_isEnabled>
+//      <f_EPTF_Logging_maskIsEnabled>
+//      <f_EPTF_Logging_registerGUICallbacks>
+//      <f_EPTF_Logging_logAll>
+//      <f_EPTF_Logging_nofErrorMsgs>
+//      <f_EPTF_Logging_getErrorMsg>
+//      <f_EPTF_Logging_setExpectedErrorMsg>
+//      <f_EPTF_Logging_checkExpectedError>
+//      <f_EPTF_Logging_registerPreambleFn>
+//      <f_EPTF_Logging_removePreambleFn>
+//
+///////////////////////////////////////////////////////////////
+
+module EPTF_CLL_Logging_Functions {
+
+import from EPTF_CLL_Common_Functions all;
+import from EPTF_CLL_Base_Functions all;
+import from EPTF_CLL_Logging_Definitions all;
+import from EPTF_CLL_Common_Definitions all; // EPTF_IntegerList, c_EPTF_Common_debugSwitch
+
+friend module EPTF_CLL_LoggingUIClient_Functions;
+
+//////////////////////////////////////////////////////////
+//  Function: f_EPTF_Logging_errorV2
+// 
+//  Purpose:
+//    Function to log an error if the logging mask/class permits.
+// 
+//  Parameters:
+//    pl_message - *in* *charstring* - The message to be logged
+//    pl_EPTF_Logging_maskId - *in* *integer* - logging mask ID
+//    pl_event_classIdxList - *in* <EPTF_IntegerList> - list of logging classes
+//
+//  Return Value:
+//    -
+// 
+//  Errors:
+//    -
+// 
+//  Detailed Comments:
+//    The logged event will have an event type "ERROR" in the logfile.
+// 
+///////////////////////////////////////////////////////////
+public function f_EPTF_Logging_errorV2(
+  in charstring pl_message,
+  in integer pl_EPTF_Logging_maskId,
+  in EPTF_IntegerList pl_event_classIdxList)
+runs on EPTF_Logging_CT
+{
+  f_EPTF_Logging_logSelection(pl_EPTF_Logging_maskId, pl_event_classIdxList, pl_message, refers(f_EPTF_Logging_errorPrivate), false);
+}
+
+//////////////////////////////////////////////////////////
+//  Function: f_EPTF_Logging_warningV2
+// 
+//  Purpose:
+//    Function to log a warning if the logging mask/class permits.
+// 
+//  Parameters:
+//    pl_message - *in* *charstring* - The message to be logged
+//    pl_EPTF_Logging_maskId - *in* *integer* - logging mask ID
+//    pl_event_classIdxList - *in* <EPTF_IntegerList> - list of logging classes
+//
+//  Return Value:
+//    -
+// 
+//  Errors:
+//    -
+// 
+//  Detailed Comments:
+//    The logged event will have an event type "WARNING" in the logfile.
+// 
+///////////////////////////////////////////////////////////
+public function f_EPTF_Logging_warningV2(
+  in charstring pl_message,
+  in integer pl_EPTF_Logging_maskId,
+  in EPTF_IntegerList pl_event_classIdxList)
+runs on EPTF_Logging_CT
+{
+  f_EPTF_Logging_logSelection(pl_EPTF_Logging_maskId, pl_event_classIdxList, pl_message, refers(f_EPTF_Logging_warningPrivate));
+}
+
+//////////////////////////////////////////////////////////
+//  Function: f_EPTF_Logging_debugV2
+// 
+//  Purpose:
+//    Function to log a debug message if the logging mask/class permits.
+// 
+//  Parameters:
+//    pl_message - *in* *charstring* - The message to be logged
+//    pl_EPTF_Logging_maskId - *in* *integer* - logging mask ID
+//    pl_event_classIdxList - *in* <EPTF_IntegerList> - list of logging classes
+//
+//  Return Value:
+//    -
+// 
+//  Errors:
+//    -
+// 
+//  Detailed Comments:
+//    The logged event will have an event type "USER" in the logfile.
+//    Can be completely deactivated via optimization by defining the compiler flag -O2 and not using the flag -EPTF_DEBUG 
+// 
+///////////////////////////////////////////////////////////
+public function f_EPTF_Logging_debugV2(
+  in charstring pl_message,
+  in integer pl_EPTF_Logging_maskId,
+  in EPTF_IntegerList pl_event_classIdxList)
+runs on EPTF_Logging_CT
+{
+  if(c_EPTF_Common_debugSwitch) {
+    f_EPTF_Logging_logSelection(pl_EPTF_Logging_maskId, pl_event_classIdxList, pl_message);
+  }
+}
+
+//////////////////////////////////////////////////////////
+//  Function: f_EPTF_Logging_operationalLogV2
+// 
+//  Purpose:
+//    Function to log an operational message if the logging mask/class permits.
+// 
+//  Parameters:
+//    pl_message - *in* *charstring* - The message to be logged
+//    pl_EPTF_Logging_maskId - *in* *integer* - logging mask ID
+//    pl_event_classIdxList - *in* <EPTF_IntegerList> - list of logging classes
+//
+//  Return Value:
+//    -
+// 
+//  Errors:
+//    -
+// 
+//  Detailed Comments:
+//    The logged event will have an event type "USER" in the logfile.
+// 
+///////////////////////////////////////////////////////////
+public function f_EPTF_Logging_operationalLogV2(
+  in charstring pl_message,
+  in integer pl_EPTF_Logging_maskId,
+  in EPTF_IntegerList pl_event_classIdxList)
+runs on EPTF_Logging_CT
+{
+  f_EPTF_Logging_logSelection(pl_EPTF_Logging_maskId, pl_event_classIdxList, pl_message);
+}
+
+
+
+//////////////////////////////////////////////////////////
+//  Function: f_EPTF_Logging_error
+// 
+//  Purpose:
+//    function to log a charstring argument as an "Error" if EPTF logging conditions permit
+// 
+//  Parameters:
+//    pl_message - *in* *charstring* - The message to be logged
+//
+//  Return Value:
+//    -
+// 
+//  Errors:
+//  - (none) 
+// 
+//  Detailed Comments:
+// 
+///////////////////////////////////////////////////////////
+public function f_EPTF_Logging_error(in boolean pl_enable, 
+  in charstring pl_message) runs on EPTF_Logging_CT
+{
+  if(pl_enable) 
+  {
+    f_EPTF_Logging_callPreambleFns("Error: "&pl_message);
+    f_EPTF_Common_error("Error: "&pl_message);
+  }
+}
+
+//////////////////////////////////////////////////////////
+//  Function: f_EPTF_Logging_warning
+// 
+//  Purpose:
+//    function to log a charstring argument as a "Warning" if EPTF logging conditions permit
+// 
+//  Parameters:
+//    pl_enable - *in* *boolean* - a local condition for logging
+//    pl_message - *in* *charstring* - The message to be logged
+//
+//  Return Value:
+//    -
+// 
+//  Errors:
+//  - (none) 
+// 
+//  Detailed Comments:
+//    This function is obsolete, declared for backward comptibility.
+// 
+///////////////////////////////////////////////////////////
+public function f_EPTF_Logging_warning(in boolean pl_enable, 
+  in charstring pl_message) runs on EPTF_Logging_CT
+{
+  if(pl_enable) {
+    f_EPTF_Logging_warningV2(pl_message, v_EPTF_Logging_myMaskId, {EPTF_Logging_WARNING});
+  }
+}
+
+//////////////////////////////////////////////////////////
+//  Function: f_EPTF_Logging_debug
+// 
+//  Purpose:
+//    function to log a charstring argument as a "Debug" if EPTF logging conditions permit
+// 
+//  Parameters:
+//    pl_enable - *in* *boolean* - a local condition for logging
+//    pl_message - *in* *charstring* - The message to be logged
+//
+//  Return Value:
+//    -
+// 
+//  Errors:
+//  - (none) 
+// 
+//  Detailed Comments:
+//    This function is obsolete, declared for backward comptibility.
+// 
+///////////////////////////////////////////////////////////
+public function f_EPTF_Logging_debug(in boolean pl_enable, 
+  in charstring pl_message) runs on EPTF_Logging_CT
+{
+  if(c_EPTF_Common_debugSwitch and pl_enable) {
+    f_EPTF_Logging_debugV2(pl_message, v_EPTF_Logging_myMaskId, {EPTF_Logging_DEBUG});
+  }
+}
+
+//////////////////////////////////////////////////////////
+//  Function: f_EPTF_Logging_debugM
+// 
+//  Purpose:
+//    function to log a charstring argument as a  "DebugM" if EPTF logging conditions permit
+// 
+//  Parameters:
+//    pl_enable - *in* *boolean* - a local condition for logging
+//    pl_message - *in* *charstring* - The message to be logged
+//
+//  Return Value:
+//    -
+// 
+//  Errors:
+//  - (none) 
+// 
+//  Detailed Comments:
+//    This function is obsolete, declared for backward comptibility.
+// 
+///////////////////////////////////////////////////////////
+public function f_EPTF_Logging_debugM(in boolean pl_enable, 
+  in charstring pl_message) runs on EPTF_Logging_CT
+{
+  if(c_EPTF_Common_debugSwitch and pl_enable) {
+    f_EPTF_Logging_debugV2(pl_message, v_EPTF_Logging_myMaskId, {EPTF_Logging_DEBUGM});
+  }
+}
+
+//////////////////////////////////////////////////////////
+//  Function: f_EPTF_Logging_debugV
+// 
+//  Purpose:
+//    function to log a charstring argument as a "DebugV" if EPTF logging conditions permit
+// 
+//  Parameters:
+//    pl_enable - *in* *boolean* - a local condition for logging
+//    pl_message - *in* *charstring* - The message to be logged
+//
+//  Return Value:
+//    -
+// 
+//  Errors:
+//  - (none) 
+// 
+//  Detailed Comments:
+//    This function is obsolete, declared for backward comptibility.
+// 
+///////////////////////////////////////////////////////////
+public function f_EPTF_Logging_debugV(in boolean pl_enable, 
+  in charstring pl_message) runs on EPTF_Logging_CT
+{
+  if(c_EPTF_Common_debugSwitch and pl_enable) {
+    f_EPTF_Logging_debugV2(pl_message, v_EPTF_Logging_myMaskId, {EPTF_Logging_DEBUGV});
+  }
+}
+
+//////////////////////////////////////////////////////////
+//  Function: f_EPTF_Logging_debugLevelM
+// 
+//  Purpose:
+//    function to log a charstring argument as a "Debug" and "DebugM" if EPTF logging conditions permit
+// 
+//  Parameters:
+//    pl_enable - *in* *boolean* - a local condition for logging
+//    pl_message - *in* *charstring* - The message to be logged
+//
+//  Return Value:
+//    -
+// 
+//  Errors:
+//  - (none) 
+// 
+//  Detailed Comments:
+//    This function is obsolete, declared for backward comptibility.
+// 
+///////////////////////////////////////////////////////////
+public function f_EPTF_Logging_debugLevelM(in boolean pl_enable, 
+  in charstring pl_message) runs on EPTF_Logging_CT
+{
+  if(c_EPTF_Common_debugSwitch and pl_enable) {
+    var EPTF_IntegerList vl_maskList := {EPTF_Logging_DEBUG,EPTF_Logging_DEBUGM};
+    f_EPTF_Logging_debugV2(pl_message, v_EPTF_Logging_myMaskId, vl_maskList);
+  }
+}
+
+//////////////////////////////////////////////////////////
+//  Function: f_EPTF_Logging_debugLevelV
+// 
+//  Purpose:
+//    function to log a charstring argument as a "Debug" and "DebugM" and "DebugV" if EPTF logging conditions permit
+// 
+//  Parameters:
+//    pl_enable - *in* *boolean* - a local condition for logging
+//    pl_message - *in* *charstring* - The message to be logged
+//
+//  Return Value:
+//    -
+// 
+//  Errors:
+//  - (none) 
+// 
+//  Detailed Comments:
+//    This function is obsolete, declared for backward comptibility.
+// 
+///////////////////////////////////////////////////////////
+public function f_EPTF_Logging_debugLevelV(in boolean pl_enable, 
+  in charstring pl_message) runs on EPTF_Logging_CT
+{
+  if(c_EPTF_Common_debugSwitch and pl_enable) {
+    var EPTF_IntegerList vl_maskList := {EPTF_Logging_DEBUG,EPTF_Logging_DEBUGM,EPTF_Logging_DEBUGV};
+    f_EPTF_Logging_debugV2(pl_message, v_EPTF_Logging_myMaskId, vl_maskList);
+  }
+}
+
+//////////////////////////////////////////////////////////
+//  Function: f_EPTF_Logging_log
+// 
+//  Purpose:
+//    function to log a charstring argument if EPTF logging conditions permit
+// 
+//  Parameters:
+//    pl_enable - *in* *boolean* - a local condition for logging
+//    pl_EPTF_Logging_maskId - *in* *boolean* - the ID of the feature mask
+//    pl_event_classIdxList - *in* <EPTF_IntegerList> - the list of event
+//      classes of the given feature that this log statement belongs to.
+//      If more than one log class is specified the message will be logged
+//      if any of the masks is enabled. 
+//
+//    pl_message - *in* *charstring* - The message to be logged
+//
+//  Return Value:
+//    -
+// 
+//  Errors:
+//  - (none) 
+// 
+//  Detailed Comments:
+//    This function is obsolete, declared for backward comptibility.
+// 
+///////////////////////////////////////////////////////////
+public function f_EPTF_Logging_log(in boolean pl_enable, in integer pl_EPTF_Logging_maskId, in EPTF_IntegerList pl_event_classIdxList, 
+  in charstring pl_message) runs on EPTF_Logging_CT
+{
+  if(pl_enable) {
+    f_EPTF_Logging_operationalLogV2(pl_message, pl_EPTF_Logging_maskId, pl_event_classIdxList);
+  }
+}
+
+//////////////////////////////////////////////////////////
+//  Function: f_EPTF_log
+// 
+//  Purpose:
+//    function to log a charstring argument if EPTF logging conditions permit by the default logging classes
+// 
+//  Parameters:
+//    pl_enable - *in* *boolean* - a local condition for logging
+//    pl_event_classIdxList - *in* <EPTF_IntegerList> - the list of event
+//      classes of the EPTF_Logging feature that this log statement belongs to.
+//      If more than one log class is specified the message will be logged
+//      if any of the masks is enabled. 
+//
+//    pl_message - *in* *charstring* - The message to be logged
+//
+//  Return Value:
+//    -
+// 
+//  Errors:
+//  - (none) 
+// 
+//  Detailed Comments:
+//    This function is obsolete, declared for backward comptibility.
+// 
+///////////////////////////////////////////////////////////
+public function f_EPTF_log(in boolean pl_enable, in EPTF_IntegerList pl_event_classIdxList, 
+  in charstring pl_message) runs on EPTF_Logging_CT
+{
+  if(pl_enable) {
+    f_EPTF_Logging_operationalLogV2(pl_message, v_EPTF_Logging_myMaskId, pl_event_classIdxList);
+  }
+}
+
+//////////////////////////////////////////////////////////
+//  Function: f_EPTF_Logging_init_CT
+// 
+//  Purpose:
+//    function to initialize EPTF Logging on <EPTF_Logging_CT>
+// 
+//  Parameters:
+//    pl_selfName - *in* *charstring* - EPTF self name of the component
+//
+//  Return Value:
+//    -
+// 
+//  Errors:
+//  - (none) 
+// 
+//  Detailed Comments:
+//    This function must be called before using EPTF Logging functionality on 
+//    any component that extends <EPTF_Logging_CT>.
+//    It initializes its variables.
+// 
+///////////////////////////////////////////////////////////
+public function f_EPTF_Logging_init_CT(in charstring pl_selfName) runs on EPTF_Logging_CT {
+  if (v_EPTF_Logging_initialized) {
+    return; // already initialized
+  }
+
+  f_EPTF_Base_init_CT(pl_selfName);
+  v_Logging_selectionList := {"EPTF_CLL", "EPTF_User"};
+  v_EPTF_Logging_allComponentGlobalEnable := true;
+  v_EPTF_Logging_allComponentLocalEnable :=  true;
+  v_EPTF_Logging_ComponentMask_List := {}; 
+  f_EPTF_Common_init(); //v_EPTF_Logging_errorMsgs := {};
+  v_EPTF_Logging_preambleFnList := {};
+  v_EPTF_Logging_isRegisteredPreambleFn := false;
+  f_loggingUI_refreshVar := null;
+  f_loggingUI_update := null;
+
+
+  // create my log masks:
+  v_EPTF_Logging_myMaskId := f_EPTF_Logging_registerComponentMasks("EPTF_Logging", {"Warning", "Debug", "DebugM", "DebugV"}, EPTF_Logging_CLL);
+
+  // switch on ERROR and WARNING:
+  v_EPTF_Logging_ComponentMask_List[v_EPTF_Logging_myMaskId].componentGlobalEnable := true;
+  v_EPTF_Logging_ComponentMask_List[v_EPTF_Logging_myMaskId].componentLocalEnable := true;
+  v_EPTF_Logging_ComponentMask_List[v_EPTF_Logging_myMaskId].componentGlobalMask[EPTF_Logging_WARNING] := true;
+  v_EPTF_Logging_ComponentMask_List[v_EPTF_Logging_myMaskId].componentLocalMask[EPTF_Logging_WARNING ] := true;
+
+  if(tsp_EPTF_Logging_debug) {
+    f_EPTF_Logging_enableLocalMask(v_EPTF_Logging_myMaskId, EPTF_Logging_DEBUG);
+  } else {
+    f_EPTF_Logging_disableLocalMask(v_EPTF_Logging_myMaskId, EPTF_Logging_DEBUG);
+  }
+  if(tsp_EPTF_Logging_debugV) {
+    f_EPTF_Logging_enableLocalMask(v_EPTF_Logging_myMaskId, EPTF_Logging_DEBUGV);
+  } else {
+    f_EPTF_Logging_disableLocalMask(v_EPTF_Logging_myMaskId, EPTF_Logging_DEBUGV);
+  }
+  if(tsp_EPTF_Logging_debugM) {
+    f_EPTF_Logging_enableLocalMask(v_EPTF_Logging_myMaskId, EPTF_Logging_DEBUGM);
+  } else {
+    f_EPTF_Logging_disableLocalMask(v_EPTF_Logging_myMaskId, EPTF_Logging_DEBUGM);
+  }
+  f_EPTF_Base_registerCleanup(refers(f_EPTF_Logging_cleanup_CT));
+
+  v_EPTF_Logging_initialized := true;
+  f_EPTF_Logging_debug(true,"----EPTF Logging initialized-----");
+}
+
+//////////////////////////////////////////////////////////
+//  Function: f_EPTF_Logging_cleanup_CT
+// 
+//  Purpose:
+//    Cleanup function for EPTF_Logging
+// 
+//  Parameters:
+//    -
+//
+//  Return Value:
+//    -
+// 
+//  Errors:
+//    -
+// 
+//  Detailed Comments:
+//    -
+// 
+///////////////////////////////////////////////////////////
+private function f_EPTF_Logging_cleanup_CT()
+runs on EPTF_Logging_CT
+{
+  if (not v_EPTF_Logging_initialized) 
+  {
+    return;
+  }
+  v_EPTF_Logging_ComponentMask_List := {};
+  v_EPTF_Logging_preambleFnList := {};
+  v_EPTF_Logging_isRegisteredPreambleFn := false;
+  f_loggingUI_refreshVar := null;
+  f_loggingUI_update := null;
+  if (v_EPTF_Logging_expectedError!="") 
+  { // only check if it was specified
+    if (f_EPTF_Logging_checkExpectedError(v_EPTF_Logging_expectedError)) 
+    {
+      setverdict(pass);
+    }
+    else
+    {
+      setverdict(fail);
+    }
+  }
+  v_Logging_selectionList := {"EPTF_CLL", "EPTF_User"};
+  v_EPTF_Logging_initialized := false;
+}
+
+//////////////////////////////////////////////////////////
+//  Function: f_EPTF_Logging_registerComponentMasks
+// 
+//  Purpose:
+//    Function to register a new logging Mask for a new component type
+// 
+//  Parameters:
+//    pl_componentTypeName - *in* *charstring* - name of the new component type
+//    pl_eventClassNames - *in* <EPTF_Logging_EventClassPrefixList> - the new logging Mask
+//    pl_selection - *in* *integer* - the selection ID, EPTF_Logging_CLL/EPTF_Logging_user 
+//
+//  Return Value:
+//    integer - the index of the registered new component masks
+// 
+//  Errors:
+//  - (none) 
+// 
+//  Detailed Comments:
+//    This function all logging related parameters for a new component type
+// 
+///////////////////////////////////////////////////////////
+public function f_EPTF_Logging_registerComponentMasks(
+  in charstring pl_componentTypeName,
+  in EPTF_Logging_EventClassPrefixList pl_eventClassNames,
+  in integer pl_selection := EPTF_Logging_user)
+runs on EPTF_Logging_CT
+return integer {
+  if (pl_componentTypeName!="EPTF_Logging") {
+    f_EPTF_Logging_debug(true,log2str("*********** "& %definitionId &": "& pl_componentTypeName &" ***************"));
+  }
+  // create component parameters
+  var integer vl_componentMaskId := f_EPTF_Logging_newCompMasks(pl_selection,pl_componentTypeName,pl_eventClassNames);
+  if (f_loggingUI_update != null) {
+    f_loggingUI_update.apply(vl_componentMaskId);
+  }
+  return vl_componentMaskId;
+}
+
+private function f_EPTF_Logging_newCompMasks(
+  in integer pl_selection,
+  in charstring pl_componentTypeName,
+  in EPTF_Logging_EventClassPrefixList pl_eventClassNames)
+runs on EPTF_Logging_CT
+return integer {
+  // check if is already added:
+  var integer vl_newCompMaskId := f_EPTF_Logging_findComp(pl_componentTypeName);
+  if (vl_newCompMaskId!=-1) {
+    return vl_newCompMaskId; //already added: there is a comp mask for this comp type
+  }
+  // if not found create new comp compMask:
+  vl_newCompMaskId := sizeof(v_EPTF_Logging_ComponentMask_List);
+  v_EPTF_Logging_ComponentMask_List[vl_newCompMaskId] := {
+    selection := pl_selection,
+    componentTypeName := pl_componentTypeName,  // name of the componentType
+    eventClassNames := pl_eventClassNames,   // logmasks names defined for this component type
+
+    componentGlobalEnable := true,          // disables all logging on the components with the same type
+    componentGlobalMask := {},  // disables a given logging class on the components with the same type
+
+    componentLocalEnable := true,           // disables all logging on the current component
+    componentLocalMask := {} // disables a given logging class on the current component
+  }
+
+  // initialize the flags:
+  for (var integer i:=0; i<sizeof(pl_eventClassNames); i:=i+1) {
+    v_EPTF_Logging_ComponentMask_List[vl_newCompMaskId].componentGlobalMask[i] := true;
+  }
+  for (var integer i:=0; i<sizeof(pl_eventClassNames); i:=i+1) {
+    v_EPTF_Logging_ComponentMask_List[vl_newCompMaskId].componentLocalMask[i] := true;
+  }
+
+  return vl_newCompMaskId;
+}
+
+//////////////////////////////////////////////////////////
+//  Function: f_EPTF_Logging_myMaskId
+// 
+//  Purpose:
+//    Returns the mask ID of the logging feature
+// 
+//  Parameters:
+//    -
+//
+//  Return Value:
+//    integer -  the mask id of the loging feature
+// 
+//  Errors:
+//  - (none) 
+// 
+//  Detailed Comments:
+//    -
+// 
+///////////////////////////////////////////////////////////
+public function f_EPTF_Logging_myMaskId() runs on EPTF_Logging_CT return integer {
+  return v_EPTF_Logging_myMaskId;
+}
+
+//////////////////////////////////////////////////////////
+//  Function: f_EPTF_Logging_enableAllLocal
+// 
+//  Purpose:
+//    function to enable EPTF Logging of all features on the current component (that extends EPTF_Logging_CT)
+// 
+//  Parameters:
+//    -
+//
+//  Return Value:
+//    -
+// 
+//  Errors:
+//  - (none) 
+// 
+//  Detailed Comments:
+//    Calling this function will enable EPTF logging on this component.
+// 
+///////////////////////////////////////////////////////////
+public function f_EPTF_Logging_enableAllLocal() runs on EPTF_Logging_CT {
+  v_EPTF_Logging_allComponentLocalEnable := true;
+  f_EPTF_Logging_refreshUIVar(v_EPTF_Logging_allComponentLocalEnable);
+}
+
+//////////////////////////////////////////////////////////
+//  Function: f_EPTF_Logging_disableAllLocal
+// 
+//  Purpose:
+//    function to disable EPTF User Logging of all features on the current component (that extends EPTF_Logging_CT)
+// 
+//  Parameters:
+//    -
+//
+//  Return Value:
+//    -
+// 
+//  Errors:
+//  - (none) 
+// 
+//  Detailed Comments:
+//    Calling this function will disable EPTF logging on this component.
+// 
+///////////////////////////////////////////////////////////
+public function f_EPTF_Logging_disableAllLocal() runs on EPTF_Logging_CT {
+  v_EPTF_Logging_allComponentLocalEnable := false;
+  f_EPTF_Logging_refreshUIVar(v_EPTF_Logging_allComponentLocalEnable);
+}
+
+//////////////////////////////////////////////////////////
+//  Function: f_EPTF_Logging_enableLocal
+// 
+//  Purpose:
+//    function to enable EPTF Logging of the given feature on the current component (that extends EPTF_Logging_CT)
+// 
+//  Parameters:
+//    pl_compTypeId - *in* *integer* - the ID of the feature mask
+//
+//  Return Value:
+//    -
+// 
+//  Errors:
+//  - (none) 
+// 
+//  Detailed Comments:
+// 
+///////////////////////////////////////////////////////////
+public function f_EPTF_Logging_enableLocal(in integer pl_compTypeId) runs on EPTF_Logging_CT {
+  v_EPTF_Logging_ComponentMask_List[pl_compTypeId].componentLocalEnable := true;
+  f_EPTF_Logging_refreshUIVar(v_EPTF_Logging_ComponentMask_List[pl_compTypeId].componentLocalEnable);
+}
+
+//////////////////////////////////////////////////////////
+//  Function: f_EPTF_Logging_disableLocal
+// 
+//  Purpose:
+//    function to disable EPTF  Logging of the given feature on the current component (that extends EPTF_Logging_CT)
+// 
+//  Parameters:
+//    pl_compTypeId - *in* *integer* - the ID of the feature mask
+//
+//  Return Value:
+//    -
+// 
+//  Errors:
+//  - (none) 
+// 
+//  Detailed Comments:
+// 
+///////////////////////////////////////////////////////////
+public function f_EPTF_Logging_disableLocal(in integer pl_compTypeId) runs on EPTF_Logging_CT {
+  v_EPTF_Logging_ComponentMask_List[pl_compTypeId].componentLocalEnable := false;
+  f_EPTF_Logging_refreshUIVar(v_EPTF_Logging_ComponentMask_List[pl_compTypeId].componentLocalEnable);
+}
+
+//////////////////////////////////////////////////////////
+//  Function: f_EPTF_Logging_enableLocalMask
+// 
+//  Purpose:
+//    function to enable an EPTF Logging event class of the given feature on the current component (that extends EPTF_Logging_CT)
+// 
+//  Parameters:
+//    pl_compTypeId - *in* *integer* - the ID of the feature mask
+//    pl_eventClass - *in* * integer* - index of the event class
+//
+//  Return Value:
+//    -
+// 
+//  Errors:
+//  - (none) 
+// 
+//  Detailed Comments:
+//    Calling this function will enable the given EPTF logging event class on this component.
+//    The pl_eventClass is the index of the event class defined by <tsp_EPTF_UserEventClassPrefixList>.
+// 
+///////////////////////////////////////////////////////////
+public function f_EPTF_Logging_enableLocalMask(in integer pl_compTypeId,in integer pl_eventClass) runs on EPTF_Logging_CT {
+  v_EPTF_Logging_ComponentMask_List[pl_compTypeId].componentLocalMask[pl_eventClass] := true;
+  f_EPTF_Logging_refreshUIVar(v_EPTF_Logging_ComponentMask_List[pl_compTypeId].componentLocalMask[pl_eventClass]);
+}
+
+//////////////////////////////////////////////////////////
+//  Function: f_EPTF_Logging_disableLocalMask
+// 
+//  Purpose:
+//    function to disable an EPTF Logging event class of the given feature on the current component (that extends EPTF_Logging_CT)
+// 
+//  Parameters:
+//    pl_compTypeId - *in* *integer* - the ID of the feature mask
+//    pl_eventClass - *in* * integer* - index of the event class
+//
+//  Return Value:
+//    -
+// 
+//  Errors:
+//  - (none) 
+// 
+//  Detailed Comments:
+//    Calling this function will disable the given EPTF logging event class on this component.
+//    The pl_eventClass is the index of the event class defined by <tsp_EPTF_UserEventClassPrefixList>.
+// 
+///////////////////////////////////////////////////////////
+public function f_EPTF_Logging_disableLocalMask(in integer pl_compTypeId,in integer pl_eventClass) runs on EPTF_Logging_CT {
+  v_EPTF_Logging_ComponentMask_List[pl_compTypeId].componentLocalMask[pl_eventClass] := false;
+  f_EPTF_Logging_refreshUIVar(v_EPTF_Logging_ComponentMask_List[pl_compTypeId].componentLocalMask[pl_eventClass]);
+}
+
+/*
+//////////////////////////////////////////////////////////
+//  Function: f_EPTF_enableLog
+// 
+//  Purpose:
+//    function to enable EPTF Logging of the give feature on all components
+// 
+//  Parameters:
+//    -
+//
+//  Return Value:
+//    -
+// 
+//  Errors:
+//  - (none) 
+// 
+//  Detailed Comments:
+// 
+///////////////////////////////////////////////////////////
+function f_EPTF_enableComponentLog(in integer pl_compTypeId) runs on EPTF_Logging_CT {
+v_EPTF_Logging_ComponentMask_List[pl_compTypeId].componentGlobalEnable := true;
+f_EPTF_Logging_refreshUIVar(v_EPTF_Logging_ComponentMask_List[pl_compTypeId].componentGlobalEnable);
+}
+
+//////////////////////////////////////////////////////////
+//  Function: f_EPTF_disableComponentLog
+// 
+//  Purpose:
+//    function to disable EPTF Logging of the give feature on all components
+// 
+//  Parameters:
+//    -
+//
+//  Return Value:
+//    -
+// 
+//  Errors:
+//  - (none) 
+// 
+//  Detailed Comments:
+// 
+///////////////////////////////////////////////////////////
+function f_EPTF_disableComponentLog(in integer pl_compTypeId) runs on EPTF_Logging_CT {
+v_EPTF_Logging_ComponentMask_List[pl_compTypeId].componentGlobalEnable := false;
+f_EPTF_Logging_refreshUIVar(v_EPTF_Logging_ComponentMask_List[pl_compTypeId].componentGlobalEnable);
+}
+
+//////////////////////////////////////////////////////////
+//  Function: f_EPTF_enableComponentLogEvent
+// 
+//  Purpose:
+//    function to enable EPTF Logging of an event class of the give feature on all components
+// 
+//  Parameters:
+//    pl_eventClass - *in* * integer* - index of the event class
+//
+//  Return Value:
+//    -
+// 
+//  Errors:
+//  - (none) 
+// 
+//  Detailed Comments:
+//    Calling this function will enable the global log mask for the given EPTF logging event class.
+//    The pl_eventClass is the index of the event class defined by <tsp_EPTF_UserEventClassPrefixList>.
+// 
+///////////////////////////////////////////////////////////
+function f_EPTF_enableComponentLogEvent(in integer pl_compTypeId,in integer pl_eventClass) runs on EPTF_Logging_CT {
+v_EPTF_Logging_ComponentMask_List[pl_compTypeId].componentGlobalMask[pl_eventClass] := true;
+f_EPTF_Logging_refreshUIVar(v_EPTF_Logging_ComponentMask_List[pl_compTypeId].componentGlobalMask[pl_eventClass]);
+}
+
+//////////////////////////////////////////////////////////
+//  Function: f_EPTF_disableComponentLogEvent
+// 
+//  Purpose:
+//    function to disable EPTF Logging of an event class of the give feature on all components
+// 
+//  Parameters:
+//    pl_eventClass - *in* * integer* - index of the event class
+//
+//  Return Value:
+//    -
+// 
+//  Errors:
+//  - (none) 
+// 
+//  Detailed Comments:
+//    Calling this function will disable the global log mask for the given EPTF logging event class.
+//    The pl_eventClass is the index of the event class defined by <tsp_EPTF_UserEventClassPrefixList>.
+// 
+///////////////////////////////////////////////////////////
+function f_EPTF_disableComponentLogEvent(in integer pl_compTypeId,in integer pl_eventClass) runs on EPTF_Logging_CT {
+v_EPTF_Logging_ComponentMask_List[pl_compTypeId].componentGlobalMask[pl_eventClass] := false;
+f_EPTF_Logging_refreshUIVar(v_EPTF_Logging_ComponentMask_List[pl_compTypeId].componentGlobalMask[pl_eventClass]);
+}
+
+//////////////////////////////////////////////////////////
+//  Function: f_EPTF_enableLog
+// 
+//  Purpose:
+//    function to enable EPTF Logging of all features in all components
+// 
+//  Parameters:
+//    -
+//
+//  Return Value:
+//    -
+// 
+//  Errors:
+//  - (none) 
+// 
+//  Detailed Comments:
+//    Calling this function will enable EPTF logging by enabling the global log mask.
+// 
+///////////////////////////////////////////////////////////
+function f_EPTF_enableAllComponentLog() runs on EPTF_Logging_CT {
+v_EPTF_Logging_allComponentGlobalEnable := true;
+f_EPTF_Logging_refreshUIVar(v_EPTF_Logging_allComponentGlobalEnable);
+}
+
+//////////////////////////////////////////////////////////
+//  Function: f_EPTF_disableLog
+// 
+//  Purpose:
+//    function to disable EPTF Logging of all features in all components
+// 
+//  Parameters:
+//    -
+//
+//  Return Value:
+//    -
+// 
+//  Errors:
+//  - (none) 
+// 
+//  Detailed Comments:
+//    Calling this function will disable EPTF logging by disabling the global log mask.
+// 
+///////////////////////////////////////////////////////////
+function f_EPTF_disableAllComponentLog() runs on EPTF_Logging_CT {
+v_EPTF_Logging_allComponentGlobalEnable := false;
+f_EPTF_Logging_refreshUIVar(v_EPTF_Logging_allComponentGlobalEnable);
+}
+
+*/
+
+//////////////////////////////////////////////////////////
+//  Function: f_EPTF_Logging_isEnabledList
+// 
+//  Purpose:
+//    function to check if user log is enabled for one of the given event classes
+// 
+//  Parameters:
+//    pl_EPTF_Logging_maskId - *in* *integer* - the ID of the feature mask
+//    pl_event_classIdxList - *in* <EPTF_IntegerList> - list of indexes of the event classes
+//
+//  Return Value:
+//    boolean - true if user log is enabled for one of the given event classes
+// 
+//  Errors:
+//  - (none) 
+// 
+//  Detailed Comments:
+//    This function checks if the <f_EPTF_Logging_log> function would log.
+// 
+///////////////////////////////////////////////////////////
+public function f_EPTF_Logging_isEnabledList(in integer pl_EPTF_Logging_maskId, in EPTF_IntegerList pl_event_classIdxList) runs on EPTF_Logging_CT return boolean {
+
+  if (not v_EPTF_Logging_initialized) {
+    return true;
+  } else {
+    f_EPTF_Base_assert(%definitionId&": pl_EPTF_Logging_maskId is invalid",
+      pl_EPTF_Logging_maskId >= 0 and pl_EPTF_Logging_maskId < sizeof(v_EPTF_Logging_ComponentMask_List));
+    if (    v_EPTF_Logging_allComponentGlobalEnable and v_EPTF_Logging_allComponentLocalEnable
+      and v_EPTF_Logging_ComponentMask_List[pl_EPTF_Logging_maskId].componentGlobalEnable
+      and v_EPTF_Logging_ComponentMask_List[pl_EPTF_Logging_maskId].componentLocalEnable) {
+      if(sizeof(v_EPTF_Logging_ComponentMask_List[pl_EPTF_Logging_maskId].eventClassNames) < 1) {
+        return true;
+      } else {
+        f_EPTF_Base_assert(%definitionId&": size of componentGlobalMask, componentLocalMask and eventClassNames differs for compnent "&
+          v_EPTF_Logging_ComponentMask_List[pl_EPTF_Logging_maskId].componentTypeName,
+          sizeof(v_EPTF_Logging_ComponentMask_List[pl_EPTF_Logging_maskId].componentGlobalMask) ==
+          sizeof(v_EPTF_Logging_ComponentMask_List[pl_EPTF_Logging_maskId].eventClassNames) and
+          sizeof(v_EPTF_Logging_ComponentMask_List[pl_EPTF_Logging_maskId].componentLocalMask) ==
+          sizeof(v_EPTF_Logging_ComponentMask_List[pl_EPTF_Logging_maskId].eventClassNames));
+
+        var integer vl_maxIdx := sizeof(v_EPTF_Logging_ComponentMask_List[pl_EPTF_Logging_maskId].eventClassNames);
+        for (var integer EPTF_CORE_LOGGING_LOCAL_i := 0; EPTF_CORE_LOGGING_LOCAL_i<sizeof(pl_event_classIdxList); EPTF_CORE_LOGGING_LOCAL_i:=EPTF_CORE_LOGGING_LOCAL_i+1) {
+          var integer pl_event_classIdx := pl_event_classIdxList[EPTF_CORE_LOGGING_LOCAL_i];
+          if(pl_event_classIdx < 0 or pl_event_classIdx > vl_maxIdx) { continue; }
+          if(v_EPTF_Logging_ComponentMask_List[pl_EPTF_Logging_maskId].componentGlobalMask[pl_event_classIdx]
+            and v_EPTF_Logging_ComponentMask_List[pl_EPTF_Logging_maskId].componentLocalMask[pl_event_classIdx]) {
+            return true;
+          }
+        }
+      }
+    }
+  }
+
+  return false;
+}
+
+//////////////////////////////////////////////////////////
+//  Function: f_EPTF_Logging_isEnabled
+// 
+//  Purpose:
+//    function to check if user log is enabled for the given event class
+// 
+//  Parameters:
+//    pl_EPTF_Logging_maskId - *in* *integer* - the ID of the feature mask
+//    pl_event_classIdx - *in* * integer* - index of the event class
+//
+//  Return Value:
+//    boolean - true if user log is enabled for the given event class
+// 
+//  Errors:
+//  - (none) 
+// 
+//  Detailed Comments:
+//    This function checks if the <f_EPTF_Logging_log> function would log for the given class.
+// 
+///////////////////////////////////////////////////////////
+public function f_EPTF_Logging_isEnabled(in integer pl_EPTF_Logging_maskId, in integer pl_event_classIdx) runs on EPTF_Logging_CT return boolean {
+  if (not v_EPTF_Logging_initialized) {
+    return true;
+  } else {
+    f_EPTF_Base_assert(%definitionId&": pl_EPTF_Logging_maskId is invalid",
+      pl_EPTF_Logging_maskId >= 0 and pl_EPTF_Logging_maskId < sizeof(v_EPTF_Logging_ComponentMask_List));
+    if (    v_EPTF_Logging_allComponentGlobalEnable
+      and v_EPTF_Logging_allComponentLocalEnable
+      and v_EPTF_Logging_ComponentMask_List[pl_EPTF_Logging_maskId].componentGlobalEnable
+      and v_EPTF_Logging_ComponentMask_List[pl_EPTF_Logging_maskId].componentLocalEnable) {
+      if(sizeof(v_EPTF_Logging_ComponentMask_List[pl_EPTF_Logging_maskId].eventClassNames) < 1) {
+        return true;
+      } else if(v_EPTF_Logging_ComponentMask_List[pl_EPTF_Logging_maskId].componentGlobalMask[pl_event_classIdx]
+        and v_EPTF_Logging_ComponentMask_List[pl_EPTF_Logging_maskId].componentLocalMask[pl_event_classIdx]) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+//////////////////////////////////////////////////////////
+//  Function: f_EPTF_Logging_maskIsEnabled
+// 
+//  Purpose:
+//    function to check if component log mask is enabled for the given class
+// 
+//  Parameters:
+//    pl_EPTF_Logging_maskId - *in* *integer* - the ID of the feature mask
+//    pl_event_classIdx - *in* * integer* - index of the event class
+//
+//  Return Value:
+//    boolean - true if component log mask is enabled for the given user event class
+// 
+//  Errors:
+//  - (none) 
+// 
+//  Detailed Comments:
+//    Checks only the given component user-log mask.
+// 
+///////////////////////////////////////////////////////////
+public function f_EPTF_Logging_maskIsEnabled(in integer pl_EPTF_Logging_maskId, in integer pl_event_classIdx) runs on EPTF_Logging_CT return boolean {
+  if (not v_EPTF_Logging_initialized) {
+    return true;
+  } else {
+    if(c_EPTF_Common_debugSwitch){
+      f_EPTF_Base_assert(%definitionId&": pl_EPTF_Logging_maskId is invalid",
+        pl_EPTF_Logging_maskId >= 0 and pl_EPTF_Logging_maskId < sizeof(v_EPTF_Logging_ComponentMask_List));
+    }
+    if(0 == sizeof(v_EPTF_Logging_ComponentMask_List[pl_EPTF_Logging_maskId].eventClassNames) ) {
+      return true;
+    } else {
+      if (v_EPTF_Logging_ComponentMask_List[pl_EPTF_Logging_maskId].componentLocalMask[pl_event_classIdx]) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+//////////////////////////////////////////////////////////
+//  Function: f_EPTF_Logging_registerGUICallbacks
+// 
+//  Purpose:
+//    Registeres the callback functions f_loggingUI_update, and f_loggingUI_refreshVar
+// 
+//  Parameters:
+//    pl_f_loggingUI_update - *in fcb_EPTF_LoggingUI_update_FT*
+//    pl_f_loggingUI_refreshVar - *in fcb_EPTF_LoggingUI_refreshVar_FT*
+//
+//  Return Value:
+//    -
+// 
+//  Errors:
+//    - (none) 
+// 
+//  Detailed Comments:
+// 
+///////////////////////////////////////////////////////////
+
+public function f_EPTF_Logging_registerGUICallbacks(
+  in fcb_EPTF_LoggingUI_update_FT pl_f_loggingUI_update,
+  in fcb_EPTF_LoggingUI_refreshVar_FT pl_f_loggingUI_refreshVar,
+  in EPTF_Logging_SelectionUpdate_FT pl_selectionUpdate := null
+) runs on EPTF_Logging_CT {
+  f_loggingUI_update:=pl_f_loggingUI_update;
+  f_loggingUI_refreshVar:=pl_f_loggingUI_refreshVar;
+  v_Logging_selectionUpdate := pl_selectionUpdate;
+}
+
+//////////////////////////////////////////////////////////
+//  Function: f_EPTF_Logging_registerPreambleFn
+// 
+//  Purpose:
+//    Registeres a callback function into v_EPTF_Logging_preambleFnList
+// 
+//  Parameters:
+//    pl_f_EPTF_Logging_preamble - *in EPTF_Logging_preamble_FT*
+//
+//  Return Value:
+//    -
+// 
+//  Errors:
+//    - (none) 
+// 
+//  Detailed Comments:
+// 
+///////////////////////////////////////////////////////////
+public function f_EPTF_Logging_registerPreambleFn(in EPTF_Logging_preamble_FT pl_f_EPTF_Logging_preamble)
+runs on EPTF_Logging_CT 
+{
+  for(var integer i := 0; i < sizeof(v_EPTF_Logging_preambleFnList); i := i + 1)
+  {
+    if(v_EPTF_Logging_preambleFnList[i] == pl_f_EPTF_Logging_preamble) 
+    {
+      return; // already added
+    }
+  }
+  v_EPTF_Logging_preambleFnList[sizeof(v_EPTF_Logging_preambleFnList)] := pl_f_EPTF_Logging_preamble;
+  v_EPTF_Logging_isRegisteredPreambleFn := true;
+}
+
+
+
+//////////////////////////////////////////////////////////
+//  Function: f_EPTF_Logging_removePreambleFn
+// 
+//  Purpose:
+//    removes the callback function f_EPTF_Logging_preamble
+// 
+//  Parameters:
+//    -
+//
+//  Return Value:
+//    -
+// 
+//  Errors:
+//    - (none) 
+// 
+//  Detailed Comments:
+// 
+///////////////////////////////////////////////////////////
+public function f_EPTF_Logging_removePreambleFn(in EPTF_Logging_preamble_FT pl_f_EPTF_Logging_preamble)
+runs on EPTF_Logging_CT 
+{
+  v_EPTF_Logging_isRegisteredPreambleFn := false;
+
+  for(var integer i := 0; i < sizeof(v_EPTF_Logging_preambleFnList); i := i + 1)
+  {
+    if(v_EPTF_Logging_preambleFnList[i] == pl_f_EPTF_Logging_preamble) 
+    {
+      v_EPTF_Logging_preambleFnList[i] := null;
+      //      return;
+    }
+    if(v_EPTF_Logging_preambleFnList[i] != null) 
+    {
+      v_EPTF_Logging_isRegisteredPreambleFn := true;
+    }
+  }
+}
+
+//////////////////////////////////////////////////////////
+//  Function: f_EPTF_Logging_logAll
+// 
+//  Purpose:
+//    Writes out the boolean parameter values
+// 
+//  Parameters:
+//    -
+//  Return Value:
+//    -
+// 
+//  Errors:
+//    - (none) 
+// 
+//  Detailed Comments:
+//    Writes out the boolean parameter values. The boolean variables are called with their non EPTF variables names.
+//    We use this function for debugging only.
+// 
+///////////////////////////////////////////////////////////
+
+public function f_EPTF_Logging_logAll() runs on EPTF_Logging_CT {
+
+  f_EPTF_Common_user("***********"&%definitionId&"***************");
+  f_EPTF_Common_user(log2str("EPTF_allComponentGlobalEnable: ",v_EPTF_Logging_allComponentGlobalEnable));
+  f_EPTF_Common_user(log2str("v_EPTF_Logging_allComponentLocalEnable: ",v_EPTF_Logging_allComponentLocalEnable));
+
+  for(var integer j:=0; j<sizeof(v_EPTF_Logging_ComponentMask_List) ; j:=j+1) {
+
+    f_EPTF_Common_user("-----------------------------------");
+    f_EPTF_Common_user(log2str("componentTypeName: ",v_EPTF_Logging_ComponentMask_List[j].componentTypeName));
+    f_EPTF_Common_user(log2str("selection: ",v_Logging_selectionList[v_EPTF_Logging_ComponentMask_List[j].selection]));
+    f_EPTF_Common_user(log2str("EPTF_componentGlobalEnable: ",v_EPTF_Logging_ComponentMask_List[j].componentGlobalEnable));
+    f_EPTF_Common_user(log2str("EPTF_componentLocalEnable: ",v_EPTF_Logging_ComponentMask_List[j].componentLocalEnable));
+
+    for(var integer i:=0; i<sizeof(v_EPTF_Logging_ComponentMask_List[j].eventClassNames); i:=i+1) {
+      f_EPTF_Common_user(log2str("eventClass: ", v_EPTF_Logging_ComponentMask_List[j].eventClassNames[i]));
+      f_EPTF_Common_user(log2str("EPTF_componentLocalMask: ",v_EPTF_Logging_ComponentMask_List[j].componentLocalMask[i]));
+      f_EPTF_Common_user(log2str("EPTF_componentGlobalMask: ",v_EPTF_Logging_ComponentMask_List[j].componentGlobalMask[i]));
+    }
+  }
+
+}
+
+//////////////////////////////////////////////////////////
+//  Function: f_EPTF_Logging_Selection2Str
+// 
+//  Purpose:
+//    Function to convert CORE/USER selectionID into charstring
+// 
+//  Parameters:
+//    pl_selection - *in* *integer* the ID of selection
+//
+//  Return Value:
+//    *charstring*
+// 
+//  Errors:
+//  - (none) 
+// 
+//  Detailed Comments:
+//    The generated string is used in widgetIds.
+//    0=CORE, 1=USER as in <EPTF_Logging_SelectionList>
+// 
+///////////////////////////////////////////////////////////
+
+public function f_EPTF_Logging_Selection2Str(in EPTF_Logging_Selection pl_selection)
+runs on EPTF_Logging_CT 
+return charstring {
+  return v_Logging_selectionList[pl_selection];
+} 
+
+//////////////////////////////////////////////////////////
+//  Function: f_EPTF_Logging_selectionIdx
+// 
+//  Purpose:
+//    Returns the index of the selection type
+//////////////////////////////////////////////////////////
+public function f_EPTF_Logging_selectionIdx(in charstring pl_name)
+runs on EPTF_Logging_CT 
+return integer{
+  for ( var integer vl_i := 0, vl_size := sizeof(v_Logging_selectionList); vl_i < vl_size; vl_i := vl_i+1 ){
+    if(pl_name == v_Logging_selectionList[vl_i]){
+      return vl_i;
+    }
+  }
+  return -1;
+}
+
+//////////////////////////////////////////////////////////
+//  Function: f_EPTF_Logging_registerSelection
+// 
+//  Purpose:
+//    Function to register a new selection type
+//////////////////////////////////////////////////////////
+public function f_EPTF_Logging_registerSelection(in charstring pl_name)
+runs on EPTF_Logging_CT 
+return integer{
+  var integer vl_idx := f_EPTF_Logging_selectionIdx(pl_name);
+  if(-1 < vl_idx){
+    return vl_idx;
+  }
+  var integer vl_newSelIdx := sizeof(v_Logging_selectionList);
+  v_Logging_selectionList[vl_newSelIdx] := pl_name;
+  if(null != v_Logging_selectionUpdate){
+    v_Logging_selectionUpdate.apply(vl_newSelIdx)
+  }
+  return vl_newSelIdx;
+} 
+
+public function f_EPTF_Logging_getSelectionList(out EPTF_CharstringList pl_selectionList)
+runs on EPTF_Logging_CT{
+  pl_selectionList := v_Logging_selectionList;
+}
+
+///////////////////////////////////////////////////////////
+// Group: Private
+//
+// Purpose:
+//   Private functions. These functions must not be used by the user of <EPTF_Logging_CT>
+//
+// Elements:
+///////////////////////////////////////////////////////////
+group Private {
+
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_Logging_callPreambleFns
+  // 
+  //  Purpose:
+  //    Calls the preamble functions
+  //
+  //  Parameters:
+  //    pl_message - *in* *charstring* - message to log
+  //
+  //  Return Value:
+  //    -
+  //
+  //  Errors:
+  //    -
+  //
+  //  Detailed Comments:
+  //    
+  ///////////////////////////////////////////////////////////
+  private function f_EPTF_Logging_callPreambleFns(in charstring pl_message) 
+  runs on EPTF_Logging_CT 
+  {
+    if(v_EPTF_Logging_isRegisteredPreambleFn)
+    {
+      for(var integer i := 0; i < sizeof(v_EPTF_Logging_preambleFnList); i := i + 1) 
+      {
+        if(v_EPTF_Logging_preambleFnList[i] != null)
+        {
+          v_EPTF_Logging_preambleFnList[i].apply(pl_message);
+        }
+      }
+    }
+  }
+
+  //////////////////////////////////////////////////////////
+  //  Function: f_EPTF_Logging_findComp
+  // 
+  //  Purpose:
+  //    Searches the comp database for a given compTypeName. returns -1 if not found, else its idx
+  // 
+  //  Parameters:
+  //    pl_componentTypeName - *in* *charstring* - name of the component type
+  //
+  //  Return Value:
+  //    integer - the ID of the feature mask
+  // 
+  //  Errors:
+  //  - (none) 
+  // 
+  //  Detailed Comments:
+  //    Calling this function will enable EPTF logging on this component.
+  // 
+  ///////////////////////////////////////////////////////////
+  private function f_EPTF_Logging_findComp(in charstring pl_componentTypeName) runs on EPTF_Logging_CT return integer {
+    for (var integer i:=0; i<sizeof(v_EPTF_Logging_ComponentMask_List); i:=i+1) {
+      if (v_EPTF_Logging_ComponentMask_List[i].componentTypeName == pl_componentTypeName) {
+        return i
+      }
+    }
+    return -1;
+  }
+
+
+  friend function f_EPTF_Logging_refreshUIVar(inout boolean pl_compVar) runs on EPTF_Logging_CT {
+    if (f_loggingUI_refreshVar!=null) {
+      f_loggingUI_refreshVar.apply(pl_compVar);
+    }
+  }
+
+
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_Logging_addErrorMsg
+  // 
+  //  Purpose:
+  //   Adds the message to the error messages list.
+  // 
+  //  Parameters:
+  //    pl_newMsg - *in charstring* - message to add
+  //
+  //  Return Value:
+  //    -
+  //
+  ///////////////////////////////////////////////////////////
+  //private function f_EPTF_Logging_addErrorMsg(in charstring pl_newMsg) runs on EPTF_Logging_CT {
+  //  v_EPTF_Logging_errorMsgs[sizeof(v_EPTF_Logging_errorMsgs)] := pl_newMsg;
+  //}
+
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_Logging_nofErrorMsgs
+  // 
+  //  Purpose:
+  //    Returns the number of error messages generated by previous <f_EPTF_Logging_error> function calls.
+  // 
+  //  Parameters:
+  //    -
+  //
+  //  Return Value:
+  //    integer - the number of error messages
+  //
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_Logging_nofErrorMsgs() runs on EPTF_Logging_CT return integer {
+    return f_EPTF_Common_nofErrorMsgs();
+    //return sizeof(v_EPTF_Logging_errorMsgs);
+  }
+
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_Logging_getErrorMsg
+  // 
+  //  Purpose:
+  //   Returns an error message from the previous error messages.
+  // 
+  //  Parameters:
+  //    pl_errorNum - *in integer* - the id of the error message (0 for the first message)
+  //
+  //  Return Value:
+  //    charstring - the error message, "" if not found
+  //
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_Logging_getErrorMsg(in integer pl_errorNum := 0) runs on EPTF_Logging_CT return charstring {
+    return f_EPTF_Common_getErrorMsg(pl_errorNum);
+    //   if (sizeof(v_EPTF_Logging_errorMsgs)==0) {
+    //     return "";
+    //   }
+    //   if (sizeof(v_EPTF_Logging_errorMsgs)<=pl_errorNum or pl_errorNum<0) {
+    //     return "";
+    //   }
+    //   return v_EPTF_Logging_errorMsgs[pl_errorNum];
+  }
+
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_Logging_setExpectedErrorMsg
+  // 
+  //  Purpose:
+  //   Sets the error message that is checked in cleanup if this was the first error message.
+  // 
+  //  Parameters:
+  //    pl_expectedError - *in charstring* - the error message pattern to expect as the first error
+  //
+  //  Return Value:
+  //    -
+  //
+  //  Detailed Comments:
+  //    The expected error pattern is automatically checked in <f_EPTF_Logging_cleanup_CT>,
+  //    and the verdict is set automatically to pass if that matches with the first error, and fail if it does not.
+  //
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_Logging_setExpectedErrorMsg(in charstring pl_expectedError) runs on EPTF_Logging_CT {
+    v_EPTF_Logging_expectedError := pl_expectedError;
+  }
+
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_Logging_checkExpectedError
+  // 
+  //  Purpose:
+  //   Checks if the expectedError message pl_expectedError was the error message at pl_errorNum or not
+  // 
+  //  Parameters:
+  //    pl_expectedError - *in charstring* - the expected error pattern
+  //    pl_errorNum - *in integer* - the id of the error message (0 for the first message)
+  //
+  //  Return Value:
+  //    boolean - true if the expected error pattern matches with the given error
+  //
+  //  Detailed Comments:
+  //   This function is called automatically in the <f_EPTF_Logging_cleanup_CT>
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_Logging_checkExpectedError(in charstring pl_expectedError, in integer pl_errorNum := 0)
+  runs on EPTF_Logging_CT return boolean {
+    return f_EPTF_Common_checkExpectedError(pl_expectedError,pl_errorNum);
+  }
+
+
+  type function FT_EPTF_Logging_doLog(in charstring pl_message) runs on EPTF_Logging_CT;
+  /*external function f_EPTF_Logging_errorPrivate(in charstring pl_message);
+  external function f_EPTF_Logging_warningPrivate(in charstring pl_message);
+  external function f_EPTF_Logging_userPrivate(in charstring pl_message);*/
+  private function f_EPTF_Logging_errorPrivate(in charstring pl_message) runs on EPTF_Logging_CT
+  {
+    //f_EPTF_Logging_addErrorMsg(pl_message); // done inside f_EPTF_Common_error
+    f_EPTF_Common_error(pl_message)
+  }
+
+  private function f_EPTF_Logging_warningPrivate(in charstring pl_message) runs on EPTF_Logging_CT
+  {
+    f_EPTF_Common_warning(pl_message)
+  }
+
+  private function f_EPTF_Logging_userPrivate(in charstring pl_message) runs on EPTF_Logging_CT
+  {
+    f_EPTF_Common_user(pl_message)
+  }
+
+
+  private function f_EPTF_Logging_logSelection(
+    in integer pl_EPTF_Logging_maskId,
+    in EPTF_IntegerList pl_event_classIdxList,
+    in charstring pl_message,
+    in FT_EPTF_Logging_doLog pl_doLog := refers(f_EPTF_Logging_userPrivate),
+    in boolean pl_check := true
+  ) runs on EPTF_Logging_CT
+  {
+    f_EPTF_Base_assert(%definitionId&": pl_doLog == null", pl_doLog != null);
+    if (not v_EPTF_Logging_initialized) 
+    {
+      // logging not (yet?) initialized - unconditionally log the message only
+      f_EPTF_Logging_callPreambleFns(pl_message);
+      pl_doLog.apply(pl_message);
+    } 
+    else 
+    {
+      f_EPTF_Base_assert(%definitionId&": pl_EPTF_Logging_maskId is invalid",
+        pl_EPTF_Logging_maskId >= 0 and pl_EPTF_Logging_maskId < sizeof(v_EPTF_Logging_ComponentMask_List));
+
+      if (    v_EPTF_Logging_allComponentGlobalEnable and v_EPTF_Logging_allComponentLocalEnable
+        and v_EPTF_Logging_ComponentMask_List[pl_EPTF_Logging_maskId].componentGlobalEnable
+        and v_EPTF_Logging_ComponentMask_List[pl_EPTF_Logging_maskId].componentLocalEnable) 
+      {
+        if(sizeof(v_EPTF_Logging_ComponentMask_List[pl_EPTF_Logging_maskId].eventClassNames) < 1) 
+        {
+          // component didn't define any logging classes
+          //  log the component type and the message if the component type and instance is permitted to log
+          f_EPTF_Logging_callPreambleFns(v_EPTF_Logging_ComponentMask_List[pl_EPTF_Logging_maskId].componentTypeName&
+            ": "& pl_message);
+          pl_doLog.apply(v_EPTF_Logging_ComponentMask_List[pl_EPTF_Logging_maskId].componentTypeName&
+            ": "& pl_message);
+        } 
+        else 
+        {
+          f_EPTF_Base_assert(%definitionId&": size of componentGlobalMask, componentLocalMask and eventClassNames differs for compnent "&
+            v_EPTF_Logging_ComponentMask_List[pl_EPTF_Logging_maskId].componentTypeName,
+            sizeof(v_EPTF_Logging_ComponentMask_List[pl_EPTF_Logging_maskId].componentGlobalMask) ==
+            sizeof(v_EPTF_Logging_ComponentMask_List[pl_EPTF_Logging_maskId].eventClassNames) and
+            sizeof(v_EPTF_Logging_ComponentMask_List[pl_EPTF_Logging_maskId].componentLocalMask) ==
+            sizeof(v_EPTF_Logging_ComponentMask_List[pl_EPTF_Logging_maskId].eventClassNames));
+
+          // check if one of the event class indices in pl_event_classIdxList
+          // is active in both the global and local masks of the component
+          // if true, log the component type, event class name and the message
+          var integer vl_maxIdx := sizeof(v_EPTF_Logging_ComponentMask_List[pl_EPTF_Logging_maskId].eventClassNames);
+
+          for(var integer EPTF_CORE_LOGGING_LOCAL_i := 0; EPTF_CORE_LOGGING_LOCAL_i<sizeof(pl_event_classIdxList); EPTF_CORE_LOGGING_LOCAL_i:=EPTF_CORE_LOGGING_LOCAL_i+1) 
+          {
+            var integer pl_event_classIdx := pl_event_classIdxList[EPTF_CORE_LOGGING_LOCAL_i];
+
+            if(pl_event_classIdx < 0 or pl_event_classIdx > vl_maxIdx) { continue; }
+
+            if(not pl_check or (v_EPTF_Logging_ComponentMask_List[pl_EPTF_Logging_maskId].componentGlobalMask[pl_event_classIdx]
+                and v_EPTF_Logging_ComponentMask_List[pl_EPTF_Logging_maskId].componentLocalMask[pl_event_classIdx])) 
+            {
+              f_EPTF_Logging_callPreambleFns(v_EPTF_Logging_ComponentMask_List[pl_EPTF_Logging_maskId].componentTypeName& ":"&
+                v_EPTF_Logging_ComponentMask_List[pl_EPTF_Logging_maskId].eventClassNames[pl_event_classIdx]&
+                ": "& pl_message);
+              pl_doLog.apply(v_EPTF_Logging_ComponentMask_List[pl_EPTF_Logging_maskId].componentTypeName& ":"&
+                v_EPTF_Logging_ComponentMask_List[pl_EPTF_Logging_maskId].eventClassNames[pl_event_classIdx]&
+                ": "& pl_message);
+              EPTF_CORE_LOGGING_LOCAL_i:=sizeof(pl_event_classIdxList); /*end for cycle*/
+            }
+          }
+        }
+      }
+    }
+  }
+
+
+  //////////////////////////////////////////////////////////
+  //  Function: f_EPTF_Logging_create_component_params
+  // 
+  //  Purpose:
+  //    function to init the logging parameters
+  // 
+  //  Parameters:
+  //    pl_selection - *in* *integer* - c_EPTF_USER for USER GUI, c_EPTF_CORE for core GUI
+  //
+  //  Return Value:
+  //    -
+  // 
+  //  Errors:
+  //    - (none) 
+  // 
+  //  Detailed Comments:
+  //    -
+  // 
+  ///////////////////////////////////////////////////////////
+  /*
+  function f_EPTF_Logging_init_params(
+  in integer pl_selection,
+  in EPTF_Logging_EventClassPrefixList pl_EventClassPrefixList
+  )  runs on EPTF_Logging_CT {
+
+  v_EPTF_LoggerDataList[pl_selection].v_EventClassPrefixList := pl_EventClassPrefixList;
+  // global mask:
+  var boolean vl_paramValue := false;
+  if (pl_selection==c_EPTF_CORE) {
+  vl_paramValue :=  true;
+  }
+  v_EPTF_LoggerDataList[pl_selection].EPTF_globalLogIsEnabled := vl_paramValue;
+  for(var integer i:=0; i<sizeof(v_EPTF_LoggerDataList[pl_selection].v_EventClassPrefixList); i:=i+1) {
+  if (pl_selection==c_EPTF_CORE and (i==CORE_ERROR or i==CORE_WARNING)) {
+  vl_paramValue := true;
+  } else {
+  vl_paramValue := false;
+  }
+  v_EPTF_LoggerDataList[pl_selection].EPTF_globalLogMask_List[i] := vl_paramValue;
+  }
+
+  // component flags:
+  vl_paramValue := false;
+  if (pl_selection==c_EPTF_CORE) {
+  vl_paramValue :=  true;
+  }
+  v_EPTF_LoggerDataList[pl_selection].EPTF_componentLogIsEnabled := vl_paramValue;
+  for(var integer i:=0; i<sizeof(v_EPTF_LoggerDataList[pl_selection].v_EventClassPrefixList); i:=i+1) {
+  v_EPTF_LoggerDataList[pl_selection].EPTF_componentLogMask_List[i] := true;
+  }
+  }
+  */
+
+} // group Private
+
+} // end of module EPTF_Logging

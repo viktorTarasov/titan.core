@@ -1,0 +1,2591 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_CLL_LGenBase_ConfigDefinitions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 512
+//  Updated:  2009-02-18
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////
+//  Module: EPTF_CLL_LGenBase_ConfigDefinitions
+// 
+//  Purpose:
+//    This module provides common data structures in TitanSim load generators
+//    necessary to describe or process test descriptions from config files
+// 
+//  Module Parameters:
+//    -
+// 
+//  Module depends on:
+//    <EPTF_CLL_Common_Definitions>
+//    <EPTF_CLL_LGenBase_TemplateDefinitions>
+// 
+//  Current Owner:
+//    ELSZSKU
+// 
+//  Last Review Date:
+//    2009-01-27
+// 
+//  Detailed Comments:
+//    Using this definition module the features that want to process config 
+//    descriptions but won't extend LGenBase, don't have to import the whole
+//    definitions of the LGenBase, but only this definition module. 
+///////////////////////////////////////////////////////////
+module EPTF_CLL_LGenBase_ConfigDefinitions
+{
+import from EPTF_CLL_Common_Definitions all;
+import from EPTF_CLL_LGenBase_PhaseDefinitions all;
+import from EPTF_CLL_LGenBase_TemplateDefinitions all;
+import from EPTF_CLL_Variable_Definitions all;
+import from EPTF_CLL_StatMeasure_Definitions all;
+import from EPTF_CLL_StatHandlerClient_Definitions all;
+
+modulepar EPTF_CharstringList tsp_LGenBase_FSMDefaultEvents := c_EPTF_LGenBase_DefaultFSMEvents;
+///////////////////////////////////////////////////////////
+// Type: EPTF_LGenBase_EntityGrpDeclarator
+//
+// Purpose:
+//   Used in declaring an entity group in TITAN config file.
+//
+// Elements:
+//   - name - *charstring* - the name of the entity group
+//   - eType - *charstring* - the type of the entities within the group
+//   - cCount - *integer* - the amount of entities within the group
+// 
+// Detailed Comments:
+//   Entity types should be declared during the init phase 
+//   via f_EPTF_LGenBase_declareEntityType()
+///////////////////////////////////////////////////////////
+type record EPTF_LGenBase_EntityGrpDeclarator {
+  charstring name,
+  charstring eType,
+  integer    eCount
+}
+
+///////////////////////////////////////////////////////////
+// Type: EPTF_LGenBase_EntityGrpDeclaratorList
+//
+// Purpose:
+//   Record of <EPTF_LGenBase_EntityGrpDeclarator> to provide a container for
+//   arbitrary number of <EPTF_LGenBase_EntityGrpDeclarator> values
+//
+// Elements:
+//   record of <EPTF_LGenBase_EntityGrpDeclarator>
+//////////////////////////////////////////////////////////
+type record of EPTF_LGenBase_EntityGrpDeclarator EPTF_LGenBase_TcMgmt_EntityGrpDeclaratorList;
+
+///////////////////////////////////////////////////////////
+// Type: EPTF_LGenBase_Scenario2Grp
+//
+// Purpose:
+//   Contains an entity group - scenario association record
+//
+// Elements:
+//   - eGrpName - *charstring* - refers the name of the entity group
+//   - scenarioName - *charstring* - refers the name of the traffic scenario
+//
+// Detailed Comments:
+//   OBSOLETE, kept only for compatibility reasons, use 
+//   <EPTF_LGenBase_Scenarios2Grp> instead!
+// 
+///////////////////////////////////////////////////////////
+type record EPTF_LGenBase_Scenario2Grp{
+  charstring eGrpName, //name of the group
+  charstring scenarioName
+}
+
+///////////////////////////////////////////////////////////
+// Type: EPTF_LGenBase_Scenario2GrpList
+//
+// Purpose:
+//   Record of <EPTF_LGenBase_Scenario2Grp> to provide a container for
+//   arbitrary number of <EPTF_LGenBase_Scenario2Grp> values
+//
+// Elements:
+//   record of <EPTF_LGenBase_Scenario2Grp>
+//
+// Detailed Comments:
+//   OBSOLETE, kept only for compatibility reasons, use 
+//   <EPTF_LGenBase_Scenarios2GrpList> instead!
+//////////////////////////////////////////////////////////
+type record of EPTF_LGenBase_Scenario2Grp EPTF_LGenBase_Scenario2GrpList;
+
+///////////////////////////////////////////////////////////
+// Group: unionDecl
+//
+// Purpose:
+//   Type definitions to declare a FSM-s.
+//
+// Developer comments:
+//   The main purpose was to create declarators which are
+//   flexible enough to allow extending them with new declarators.
+//   The other goal of this type of declaration is that the users
+//   don't have to write down parameters which have default
+//   initial values.
+///////////////////////////////////////////////////////////
+group unionDecl{
+  group TrafficCase{
+    ///////////////////////////////////////////////////////////
+    // Type: EPTF_LGenBase_TrafficCaseTypeParams
+    //
+    // Purpose:
+    //   The collection of the available parameters of a traffic case type
+    //
+    // Elements:
+    //   customEntitySucc - *charstring* - the registered name of
+    //       a user-defined function to evaluate the state of the entity
+    //       at the end of a traffic. If it's empty, the 
+    //       <f_EPTF_LGenBase_successSucNoFail> will be called.
+    ///////////////////////////////////////////////////////////
+    type union EPTF_LGenBase_TrafficCaseTypeParams{
+      charstring customEntitySucc
+    }
+    
+    type record of EPTF_LGenBase_TrafficCaseTypeParams EPTF_LGenBase_TrafficCaseTypeParamsList;
+    ///////////////////////////////////////////////////////////
+    // Type: EPTF_LGenBase_TrafficCaseTypeDeclarator
+    //
+    // Purpose:
+    //   Used to declare a traffic case type in TITAN config file and in
+    //   <f_EPTF_LGenBase_declareTrafficCaseType> function. 
+    // 
+    // Elements:
+    //   name - *charstring* - the name of the traffic case type
+    //   fsmName - *charstring* - FSM table name of the TC
+    //   entityType - *charstring* - the type of the entity executing the traffic case
+    //   tcParams - <EPTF_LGenBase_TrafficCaseTypeParamsList> - the parameters of the traffic case type
+    //
+    // Detailed Comments:
+    //   The customEntitySucc must contain the name of a previously declared 
+    //   <EPTF_LGenBase_evaluateSuccess4EntityAtEntityGroup2_FT> function or can be empty.
+    ///////////////////////////////////////////////////////////
+    type record EPTF_LGenBase_TrafficCaseTypeDeclarator {
+      charstring name,
+      charstring fsmName,
+      charstring entityType,
+      EPTF_LGenBase_TrafficCaseTypeParamsList tcParams
+    }
+    
+    ///////////////////////////////////////////////////////////
+    // Type: EPTF_LGenBase_TrafficCaseTypeDeclaratorList
+    //
+    // Purpose: List of <EPTF_LGenBase_TrafficCaseTypeDeclarator> records.
+    ///////////////////////////////////////////////////////////
+    type record of EPTF_LGenBase_TrafficCaseTypeDeclarator EPTF_LGenBase_TrafficCaseTypeDeclaratorList;
+    
+    ///////////////////////////////////////////////////////////
+    // Type: EPTF_LGenBase_NrOfExecStart
+    //
+    // Purpose:
+    //   Declares the required amount of starts of the entities in a traffic case
+    //   and the actions to be executed when the condition becomes true.  
+    //
+    // Elements:
+    //   count - *integer* - the amount of starts
+    //   actions - <EPTF_LGenBase_TcMgmt_GroupActionsList> - the actions to be executed
+    ///////////////////////////////////////////////////////////
+    type record EPTF_LGenBase_NrOfExecStart{
+      integer count,
+      EPTF_LGenBase_TcMgmt_GroupActionsList actions
+    }
+    
+    ///////////////////////////////////////////////////////////
+    // Type: EPTF_LGenBase_NrOfSuccesses
+    //
+    // Purpose:
+    //   Declares the required amount of successful execution of the entities in a traffic case
+    //   and the actions to be executed when the condition becomes true.  
+    //
+    // Elements:
+    //   count - *integer* - the amount of successful executions
+    //   actions - <EPTF_LGenBase_TcMgmt_GroupActionsList> - the actions to be executed
+    ///////////////////////////////////////////////////////////
+    type record EPTF_LGenBase_NrOfSuccesses{
+      integer count,
+      EPTF_LGenBase_TcMgmt_GroupActionsList actions
+    }
+    
+    ///////////////////////////////////////////////////////////
+    // Type: EPTF_LGenBase_NrOfFails
+    //
+    // Purpose:
+    //   Declares the required amount of failed execution of the entities in a traffic case
+    //   and the actions to be executed when the condition becomes true.  
+    //
+    // Elements:
+    //   count - *integer* - the amount of failed executions
+    //   actions - <EPTF_LGenBase_TcMgmt_GroupActionsList> - the actions to be executed
+    ///////////////////////////////////////////////////////////
+    type record EPTF_LGenBase_NrOfFails{
+      integer count,
+      EPTF_LGenBase_TcMgmt_GroupActionsList actions
+    }
+    
+    ///////////////////////////////////////////////////////////
+    // Type: EPTF_LGenBase_NrOfErrors
+    //
+    // Purpose:
+    //   Declares the required amount of errorous execution of the entities in a traffic case
+    //   and the actions to be executed when the condition becomes true.  
+    //
+    // Elements:
+    //   count - *integer* - the amount of errorous executions
+    //   actions - <EPTF_LGenBase_TcMgmt_GroupActionsList> - the actions to be executed
+    ///////////////////////////////////////////////////////////
+    type record EPTF_LGenBase_NrOfErrors{
+      integer count,
+      EPTF_LGenBase_TcMgmt_GroupActionsList actions
+    }
+    
+    ///////////////////////////////////////////////////////////
+    // Type: EPTF_LGenBase_NrOfTimeouts
+    //
+    // Purpose:
+    //   Declares the required amount of timed out execution of the entities in a traffic case
+    //   and the actions to be executed when the condition becomes true.  
+    //
+    // Elements:
+    //   count - *integer* - the amount of timed out executions
+    //   actions - <EPTF_LGenBase_TcMgmt_GroupActionsList> - the actions to be executed
+    ///////////////////////////////////////////////////////////
+    type record EPTF_LGenBase_NrOfTimeouts{
+      integer count,
+      EPTF_LGenBase_TcMgmt_GroupActionsList actions
+    }
+    
+    ///////////////////////////////////////////////////////////
+    // Type: EPTF_LGenBase_NrOfRangeLoop
+    //
+    // Purpose:
+    //   Declares the required amount of loop of range parameters in a traffic case
+    //   and the actions to be executed when the condition becomes true.  
+    //
+    // Elements:
+    //   count - *integer* - the required amount of loop of range parameters
+    //   actions - <EPTF_LGenBase_TcMgmt_GroupActionsList> - the actions to be executed
+    ///////////////////////////////////////////////////////////
+    type record EPTF_LGenBase_NrOfRangeLoop{
+      integer count,
+      EPTF_LGenBase_TcMgmt_GroupActionsList actions
+    }
+    
+    ///////////////////////////////////////////////////////////
+    // Type: EPTF_LGenBase_ExecTime
+    //
+    // Purpose:
+    //   Declares the required time of execution of a traffic case
+    //   and the actions to be executed when the condition becomes true.  
+    //
+    // Elements:
+    //   time - *float* - the required time of execution
+    //   actions - <EPTF_LGenBase_TcMgmt_GroupActionsList> - the actions to be executed
+    ///////////////////////////////////////////////////////////
+    type record EPTF_LGenBase_ExecTime{
+      float time,
+      EPTF_LGenBase_TcMgmt_GroupActionsList actions
+    }
+    
+    ///////////////////////////////////////////////////////////
+    // Type: EPTF_LGenBase_EntitiesFinished
+    //
+    // Purpose:
+    //   Declares that the execution of a traffic case should be finished when
+    //   all the entities in the traffic case finished,
+    //   and declares the actions to be executed when the condition becomes true.  
+    //
+    // Elements:
+    //   actions - <EPTF_LGenBase_TcMgmt_GroupActionsList> - the actions to be executed
+    ///////////////////////////////////////////////////////////
+    type record EPTF_LGenBase_EntitiesFinished{
+      EPTF_LGenBase_TcMgmt_GroupActionsList actions
+    }
+    
+    ///////////////////////////////////////////////////////////
+    // Type: EPTF_LGenBase_AvailableEntitiesFinished
+    //
+    // Purpose:
+    //   Declares that the execution of a traffic case should be finished when
+    //   all the available entities in the traffic case finished,
+    //   and declares the actions to be executed when the condition becomes true.  
+    //
+    // Elements:
+    //   actions - <EPTF_LGenBase_TcMgmt_GroupActionsList> - the actions to be executed
+    ///////////////////////////////////////////////////////////
+    type record EPTF_LGenBase_AvailableEntitiesFinished{
+      EPTF_LGenBase_TcMgmt_GroupActionsList actions
+    }
+    
+    ///////////////////////////////////////////////////////////
+    // Type: EPTF_LGenBase_AnythingFinished
+    //
+    // Purpose:
+    //   Declares the actions to be executed when any of the conditions becomes true.  
+    //
+    // Elements:
+    //   actions - <EPTF_LGenBase_TcMgmt_GroupActionsList> - the actions to be executed
+    ///////////////////////////////////////////////////////////
+    type record EPTF_LGenBase_AnythingFinished{
+      EPTF_LGenBase_TcMgmt_GroupActionsList actions
+    }
+    
+    ///////////////////////////////////////////////////////////
+    // Type: EPTF_LGenBase_CustomFinish
+    //
+    // Purpose:
+    //   Declares a function which must be executed every time when the execution 
+    //   of an entity of a traffic case started or finished. This function must decide 
+    //   whether the execution of the traffic case must be continued or finished 
+    //
+    // Elements:
+    //   functionName - *charstring* - the name of a 
+    //      previously declared <EPTF_LGenBase_customFinishFunction_FT> function.
+    //      See also <f_EPTF_LGenBase_declareFunction>.  
+    //   actions - <EPTF_LGenBase_TcMgmt_GroupActionsList> - the actions to be executed
+    ///////////////////////////////////////////////////////////
+    type record EPTF_LGenBase_CustomFinish{
+      charstring functionName,
+      EPTF_LGenBase_TcMgmt_GroupActionsList actions
+    }
+    
+    ///////////////////////////////////////////////////////////
+    // Type: EPTF_LGenBase_TcFinishCondition
+    //
+    // Purpose:
+    //   The collection of the available finish condition types
+    //
+    // Elements:
+    //   nrOfExecStart - <EPTF_LGenBase_NrOfExecStart> - See <EPTF_LGenBase_NrOfExecStart> 
+    //   nrOfSuccesses - <EPTF_LGenBase_NrOfSuccesses> - See <EPTF_LGenBase_NrOfSuccesses> 
+    //   nrOfFails - <EPTF_LGenBase_NrOfFails> - See <EPTF_LGenBase_NrOfFails> 
+    //   nrOfRangeLoop - <EPTF_LGenBase_NrOfRangeLoop> - See <EPTF_LGenBase_NrOfRangeLoop> 
+    //   nrOfErrors - <EPTF_LGenBase_NrOfErrors>
+    //   nrOfTimeouts - <EPTF_LGenBase_NrOfTimeouts>
+    //   execTime - <EPTF_LGenBase_ExecTime> - See <EPTF_LGenBase_ExecTime> 
+    //   entitiesFinished - <EPTF_LGenBase_EntitiesFinished> - See <EPTF_LGenBase_EntitiesFinished> 
+    //   availableEntitiesFinished - <EPTF_LGenBase_AvailableEntitiesFinished>
+    //   customFinish - <EPTF_LGenBase_CustomFinish> - See <EPTF_LGenBase_CustomFinish> 
+    //   anythingFinished - <EPTF_LGenBase_AnythingFinished> - See <EPTF_LGenBase_AnythingFinished> 
+    ///////////////////////////////////////////////////////////
+    type union EPTF_LGenBase_TcFinishCondition {
+      EPTF_LGenBase_NrOfExecStart nrOfExecStart,
+      EPTF_LGenBase_NrOfSuccesses nrOfSuccesses,
+      EPTF_LGenBase_NrOfFails nrOfFails,
+      EPTF_LGenBase_NrOfRangeLoop nrOfRangeLoop,
+      EPTF_LGenBase_NrOfErrors nrOfErrors,
+      EPTF_LGenBase_NrOfTimeouts nrOfTimeouts,
+      EPTF_LGenBase_ExecTime execTime,
+      EPTF_LGenBase_EntitiesFinished entitiesFinished,
+      EPTF_LGenBase_AvailableEntitiesFinished availableEntitiesFinished,
+      EPTF_LGenBase_CustomFinish customFinish,
+      EPTF_LGenBase_AnythingFinished anythingFinished
+    }
+    
+    ///////////////////////////////////////////////////////////
+    // Type: EPTF_LGenBase_TcFinishConditionList
+    //
+    // Purpose: List of <EPTF_LGenBase_TcFinishCondition> records.
+    //   Enumerates the finish conditions of a traffic case in the declarators. 
+    ///////////////////////////////////////////////////////////
+    type record of EPTF_LGenBase_TcFinishCondition EPTF_LGenBase_TcFinishConditionList;
+    
+    ///////////////////////////////////////////////////////////
+    // Type: EPTF_LGenBase_EntityFinishCondition
+    //
+    // Purpose: When one of these conditions becomes true, the launch of the 
+    // traffic on the specified entity of the specified traffic case will stop, and the
+    // sepcified actions will be executed.
+    // See also <EPTF_LGenBase_TcMgmt_EntityActionsList>,
+    // <EPTF_LGenBase_tcTypeDeclarator>, <EPTF_LGenBase_TcMgmt_TcOfScenario2>, <EPTF_LGenBase_TcMgmt_TcOfScenario3>,
+    // <EPTF_LGenBase_TcMgmt_ScenarioDeclarator2>, <EPTF_LGenBase_ScenarioTypeDeclarator>  
+    //////////////////////////////////////////////////////////
+    type union EPTF_LGenBase_EntityFinishCondition {
+      integer nrOfExecStart,
+      integer nrOfSuccesses,
+      integer nrOfFails,
+      integer nrOfErrors,
+      integer nrOfTimeouts,
+      charstring customFinishCondition
+    }
+    
+    ///////////////////////////////////////////////////////////
+    // Type: EPTF_LGenBase_EntityFinishConditionList
+    //
+    // Purpose: List of <EPTF_LGenBase_EntityFinishCondition> records. 
+    ///////////////////////////////////////////////////////////
+    type record of EPTF_LGenBase_EntityFinishCondition EPTF_LGenBase_EntityFinishConditionList;
+    
+    ///////////////////////////////////////////////////////////
+    // Type: EPTF_LGenBase_TrafficType
+    //
+    // Purpose: Specifies the type of the traffic performed by the traffic case  
+    //
+    // Elements:
+    //   - originating - The traffic case starts the traffic
+    //   - terminating - The traffic case reacts to incoming events
+    ///////////////////////////////////////////////////////////
+    type enumerated EPTF_LGenBase_TrafficType {originating, terminating}
+    
+    ///////////////////////////////////////////////////////////
+    // Type: EPTF_LGenBase_SiblingFSM
+    //
+    // Purpose: Specifies a sibling FSM of the traffic case  
+    //
+    // Elements:
+    //   - siblingName - The sibling-name of the FSM in the TC
+    //   - fsmType - The type of the (sibling) FSM
+    ///////////////////////////////////////////////////////////
+    type record EPTF_LGenBase_SiblingFSM {
+      charstring siblingName,
+      charstring fsmType
+    }
+    
+    ///////////////////////////////////////////////////////////
+    // Type: EPTF_LGenBase_SiblingFsmList
+    //
+    // Purpose: List of sibling FSMs in the traffic case  
+    //
+    // Elements:
+    //   - <EPTF_LGenBase_SiblingFSM>
+    ///////////////////////////////////////////////////////////
+    type record of EPTF_LGenBase_SiblingFSM EPTF_LGenBase_SiblingFsmList;
+    
+    ///////////////////////////////////////////////////////////
+    // Type: EPTF_LGenBase_tcParams
+    //
+    // Purpose: Describes the parameters of a traffic case of a scenario
+    //
+    // Elements:
+    //   - startDelay - *float* - traffic case should start only after the specified amount of time (given in seconds)
+    //   - enableEntitiesAtStart - *boolean* - the entities have to be in enabled or disabled state after creating the traffic case
+    //   - enabledAtStart - *boolean* - the traffic case will be enabled or disabled after creation    
+    //   - target - <EPTF_LGenBase_TcMgmt_TcProperty2Reach> - target "cps" or "traffic weight" to reach
+    //   - scheduler - <EPTF_LGenBase_burstFuncName> - the chosen scheduling strategy (burst calculation method) of the normal traffic case
+    //   - entitySelection - <EPTF_LGenBase_EntitySelectionType> - the method of selecting a new entity
+    //   - ranges - <EPTF_LGenBase_TcMgmt_ParamRangeDeclaratorList> - Range descriptors for the traffic case. 
+    //       The dispatched <c_EPTF_LGenBase_inputIdx_testMgmt_startTC> events of <c_EPTF_LGenBase_bIdx> 
+    //       behavior get their traffic parameter from this range. See also: <t_startTcOfFsm>, <f_EPTF_LGenBase_doTrafficCaseTimerAction>.  
+    //   - params - <EPTF_LGenBase_TcMgmt_tcCustomParamDeclaratorList> - Retrievable charstring parameters. See <f_EPTF_LGenBase_getCharstringParamValue>
+    //   - entityFinishConditions - <EPTF_LGenBase_EntityFinishConditionList> - When one of these conditions becomes true, the launch of the 
+    // 	     traffic on the specified entity of the specified traffic case will stop, and the
+    //       actions described in the entityFinishActions will be fired.
+    //   - entityFinishActions - <EPTF_LGenBase_TcMgmt_EntityActionsList> - List of actions that will be executed when an
+    // 	     entity finish condition becomes true.
+    //   - trafficStartFinish - <EPTF_LGenBase_TcFinishConditionList> - List of traffic case finish conditions       
+    //   - trafficFinishedActions - <EPTF_LGenBase_TcMgmt_GroupActionsList> - List of actions that will be executed when a
+    //       group finish condition becomes true or the last traffic of the traffic case returns the acknowledgement.
+    //   - templateSet - <EPTF_LGenBase_TemplateList> - Defines the template set of traffic case as list of template assignments
+    //   - tcTypeName - *charstring* - The name of the traffic case type descriptor. If it's not present, the name of the tc of sc must be the name of the tc type
+    // 
+    //   The finish conditions and actions declared in the <EPTF_LGenBase_TcOfScenarioDeclarator> for a
+    //   traffic case will overwrite the conditions occasionally declared in <EPTF_LGenBase_tcTypeDeclarator> 
+    ///////////////////////////////////////////////////////////
+    type union EPTF_LGenBase_tcParams{
+      float startDelay,
+      boolean enableEntitiesAtStart,
+      boolean enabledAtStart,
+      EPTF_LGenBase_TcMgmt_TcProperty2Reach target,
+      EPTF_LGenBase_burstFuncName scheduler,
+      EPTF_LGenBase_EntitySelectionType entitySelection,
+      EPTF_LGenBase_TcMgmt_ParamRangeDeclaratorList ranges,
+      EPTF_LGenBase_TcMgmt_tcCustomParamDeclaratorList params,
+      EPTF_LGenBase_EntityFinishConditionList entityFinishConditions,
+      EPTF_LGenBase_TcMgmt_EntityActionsList entityFinishActions,
+      EPTF_LGenBase_TcFinishConditionList trafficStartFinish,
+      EPTF_LGenBase_TcMgmt_GroupActionsList trafficFinishedActions,
+      EPTF_LGenBase_TemplateList templateSet,
+      charstring tcTypeName,
+      EPTF_CharstringList fsmList,
+      EPTF_LGenBase_SiblingFsmList siblingFsmList,
+      charstring customEntitySucc
+    }
+    
+    ///////////////////////////////////////////////////////////
+    // Type: EPTF_LGenBase_tcParamsList
+    //
+    // Purpose: List of parameters of a traffic case.
+    ///////////////////////////////////////////////////////////
+    type record of EPTF_LGenBase_tcParams EPTF_LGenBase_tcParamsList;
+    
+    ///////////////////////////////////////////////////////////
+    // Type: EPTF_LGenBase_TcOfScenarioDeclarator
+    //
+    // Purpose: Describes a traffic case in a for TitanSim R3.
+    //
+    // Elements:
+    //   - tcName - *charstring* - refers the name of the traffic case type
+    //   - tcParamsList - <EPTF_LGenBase_tcParamsList> - the parameters of the traffic case
+    ///////////////////////////////////////////////////////////    
+    type record EPTF_LGenBase_TcOfScenarioDeclarator{
+      charstring tcName,
+      EPTF_LGenBase_tcParamsList tcParamsList 
+    }
+    
+    ///////////////////////////////////////////////////////////
+    // Type: EPTF_LGenBase_TcOfScenarioDeclaratorList
+    //
+    // Purpose: List of <EPTF_LGenBase_TcOfScenarioDeclarator> declarators.
+    ///////////////////////////////////////////////////////////
+    type record of EPTF_LGenBase_TcOfScenarioDeclarator EPTF_LGenBase_TcOfScenarioDeclaratorList;
+    
+  }
+  group Scenario{
+    
+    ///////////////////////////////////////////////////////////
+    // Type: EPTF_LGenBase_WeightedScData
+    //
+    // Purpose: Additional data needed for the weighted scenario declaration
+    //
+    // Elements:
+    //   cpsToReach - *float* - cps to reach
+    //   lockCPS - *boolean* - lock cps
+    //   deterministicMix - *boolean* - the traffic case selection will be counted before the start of traffic generation,
+    //                                  or the traffic cases will be chosen runtime randomly
+    //   scheduler - <EPTF_LGenBase_burstFuncName> - the chosen scheduling strategy (burst calculation method) for the weighted scenario
+    //
+    // Detailed Comments:
+    //   If the parameter exists in the <EPTF_LGenBase_ScenarioTypeParamsList> scParamsList field of the 
+    //   <EPTF_LGenBase_ScenarioTypeDeclarator>, the scenario will be weighted, normal otherwise
+    ///////////////////////////////////////////////////////////
+    type record EPTF_LGenBase_WeightedScData{    
+      float cpsToReach,
+      boolean lockCPS,  
+      boolean deterministicMix,
+      EPTF_LGenBase_burstFuncName scheduler optional  
+    }
+    
+    ///////////////////////////////////////////////////////////
+    // Constant: c_EPTF_LGenBase_emptyWeightedScData
+    //
+    // Purpose: An empty initializer structure of <EPTF_LGenBase_WeightedScData>
+    ///////////////////////////////////////////////////////////
+    const EPTF_LGenBase_WeightedScData c_EPTF_LGenBase_emptyWeightedScData := {0.0,false,false,omit};
+    
+    ///////////////////////////////////////////////////////////
+    // Type: EPTF_LGenBase_TcMgmt_TcProperty2Reach
+    //
+    // Purpose: a union for storing "cps to reach" or "traffic weight" value
+    //
+    // Elements:
+    //   dummy - *float* - a dummy value
+    //   cpsToReach - *float* - cps to reach in a normal traffic case
+    //   trafficWeight - *float* - weight of the traffic in a weighted traffic case
+    ///////////////////////////////////////////////////////////
+    type union EPTF_LGenBase_TcMgmt_TcProperty2Reach{
+      float dummy,  
+      float cpsToReach,
+      float trafficWeight
+    }
+    
+    ///////////////////////////////////////////////////////////
+    // Type: EPTF_LGenBase_ScenarioTypeParams
+    //
+    // Purpose: Describes the parameters of a traffic case of a scenario
+    //
+    // Elements:
+    //   phaseListName - *charstring* - the name of the declared phaselist assigned to the scenario
+    //   weightedScData - <EPTF_LGenBase_WeightedScData> - See <EPTF_LGenBase_WeightedScData>
+    //   enabled - *boolean* - The enabled state of the scenario at startup. The default value is true.
+    //     The scenario can start automatically if the value is true
+    //   phaseFinishConditions - <EPTF_LGenBase_TcMgmt_PhaseFinishConditionList> - See <EPTF_LGenBase_TcMgmt_PhaseFinishConditionList>
+    //   phaseStateChangeActions - <EPTF_LGenBase_TcMgmt_PhaseActionList> - See <EPTF_LGenBase_TcMgmt_PhaseActionList>
+    ///////////////////////////////////////////////////////////
+    type union EPTF_LGenBase_ScenarioTypeParams{
+      charstring phaseListName, 
+      EPTF_LGenBase_WeightedScData weightedScData, // omit -> normal scenario  
+      boolean enabled,
+      EPTF_LGenBase_TcMgmt_PhaseFinishConditionList phaseFinishConditions,
+      EPTF_LGenBase_TcMgmt_PhaseActionList phaseStateChangeActions,    
+      EPTF_LGenBase_TrafficType trafficType
+    }
+    
+    ///////////////////////////////////////////////////////////
+    // Type: EPTF_LGenBase_ScenarioTypeParamsList
+    //
+    // Purpose: A list of <EPTF_LGenBase_ScenarioTypeParams>  
+    ///////////////////////////////////////////////////////////    
+    type record of EPTF_LGenBase_ScenarioTypeParams EPTF_LGenBase_ScenarioTypeParamsList;
+    
+    ///////////////////////////////////////////////////////////
+    // Type: EPTF_LGenBase_TcMgmt_ScenarioDeclarator
+    //
+    // Purpose: Declares a list of traffic cases as a scenario for TitanSimR3. The scenario can be normal or weighted.
+    //
+    // Elements:
+    //   name - *charstring* - name of the scenario
+    //   tcList - <EPTF_LGenBase_TcOfScenarioDeclaratorList> - list of traffic cases assigned to the scenario
+    //   scParamsList - <EPTF_LGenBase_ScenarioTypeParamsList> - stores various scenario parameters such as weighted scenario data, phase data etc.
+    //
+    // Detailed Comments:
+    //    R3 scenario type declarator
+    ///////////////////////////////////////////////////////////
+    type record EPTF_LGenBase_ScenarioTypeDeclarator{
+      charstring name,
+      EPTF_LGenBase_TcOfScenarioDeclaratorList tcList,
+      EPTF_LGenBase_ScenarioTypeParamsList scParamsList
+    }
+    
+    ///////////////////////////////////////////////////////////
+    // Type: EPTF_LGenBase_TcMgmt_ScenarioDeclaratorList
+    //
+    // Purpose: List of <EPTF_LGenBase_ScenarioTypeDeclarator> records.
+    ///////////////////////////////////////////////////////////
+    type record of EPTF_LGenBase_ScenarioTypeDeclarator EPTF_LGenBase_ScenarioTypeDeclaratorList;
+    
+    ///////////////////////////////////////////////////////////
+    // Constant: c_EPTF_LGenBase_emptyScenarioTypeDeclarator
+    //
+    // Purpose: An empty initializer structure of <EPTF_LGenBase_ScenarioTypeDeclarator>
+    ///////////////////////////////////////////////////////////
+    const EPTF_LGenBase_ScenarioTypeDeclarator c_EPTF_LGenBase_emptyScenarioTypeDeclarator := {
+      "", {}, {}
+    }
+  } // group Scenario
+} // group unionDecl
+
+///////////////////////////////////////////////////////////
+// Type: EPTF_LGenBase_Scenarios2Grp
+//
+// Purpose:
+//   Contains an entity group - scenario list association record
+//
+// Elements:
+//   - eGrpName - *charstring* - refers the name of the entity group
+//   - scenarioNames - <EPTF_CharstringList> - the list of the traffic scenario names
+//
+// Detailed Comments:
+// 
+///////////////////////////////////////////////////////////
+type record EPTF_LGenBase_Scenarios2Grp{
+  charstring eGrpName, //name of the group
+  EPTF_CharstringList scenarioNames
+}
+
+
+///////////////////////////////////////////////////////////
+// Type: EPTF_LGenBase_TcMgmt_Scenarios2GrpList
+//
+// Purpose:
+//   Record of <EPTF_LGenBase_Scenarios2Grp> to provide a container for
+//   arbitrary number of <EPTF_LGenBase_Scenarios2Grp> values
+//
+// Elements:
+//   record of <EPTF_LGenBase_Scenarios2Grp>
+//
+// Detailed Comments:
+//
+//////////////////////////////////////////////////////////
+type record of EPTF_LGenBase_Scenarios2Grp EPTF_LGenBase_TcMgmt_Scenarios2GrpList;
+
+///////////////////////////////////////////////////////////
+// Type: EPTF_LGenBase_TcMgmt_EntityAvailabilityGroupTransferMode
+//
+// Purpose: This transfer mode is used in group finish actions.
+//
+// Elements:
+//   noChangeuntouched - the enabling state of the entities in the specified
+//   traffic case(es) will be 
+//   enableIfPreviousSuccess - only the successful entities in the terminating 
+//   traffic case(es) will be enabled in the specified traffic case
+//   available - all the entities in the specified traffic case
+//   will be enabled
+//   non_available - none of the entities in the specified traffic case(es)
+//   will be enabled
+//
+// See also:
+//   <EPTF_LGenBase_TcMgmt_Action_EnableAllTc>, 
+//   <EPTF_LGenBase_TcMgmt_Action_DisableAllTc>,
+//   <EPTF_LGenBase_TcMgmt_Action_EnableTc4Group>,
+//   <EPTF_LGenBase_TcMgmt_Action_DisableTc>
+///////////////////////////////////////////////////////////
+type enumerated EPTF_LGenBase_TcMgmt_EntityAvailabilityGroupTransferMode {
+  // use for enableTc@groupFinishAction
+  noChange, enableIfPreviousSuccess, available, non_available}
+///////////////////////////////////////////////////////////
+// Type: EPTF_LGenBase_TcMgmt_EntityAvailabilityEntityTransferMode
+//
+// Purpose: See <EPTF_LGenBase_TcMgmt_EntityFinishConditions>.
+//
+// See also:
+//   <EPTF_LGenBase_TcMgmt_Action_EnableTc4Entity>,
+//   <EPTF_LGenBase_TcMgmt_Action_DisableTc4Entity>
+///////////////////////////////////////////////////////////
+type EPTF_LGenBase_TcMgmt_EntityAvailabilityGroupTransferMode EPTF_LGenBase_TcMgmt_EntityAvailabilityEntityTransferMode
+
+///////////////////////////////////////////////////////////
+// Type: EPTF_LGenBase_TcMgmt_Action_EnableAllTc
+//
+// Purpose: Enables all traffic cases in the scenario.
+///////////////////////////////////////////////////////////
+type record EPTF_LGenBase_TcMgmt_Action_EnableAllTc {
+  EPTF_LGenBase_TcMgmt_EntityAvailabilityGroupTransferMode aMode //availibility transfer mode
+}
+///////////////////////////////////////////////////////////
+// Type: EPTF_LGenBase_TcMgmt_Action_DisableAllTc
+//
+// Purpose: Disables all traffic cases in the scenario.
+///////////////////////////////////////////////////////////
+type record EPTF_LGenBase_TcMgmt_Action_DisableAllTc {
+  EPTF_LGenBase_TcMgmt_EntityAvailabilityGroupTransferMode aMode //availibility transfer mode
+}
+
+///////////////////////////////////////////////////////////
+// Type: EPTF_LGenBase_TcMgmt_Action_GenerateGenericEvent
+//
+// Purpose: Descriptor of dispatching a generic event   
+// in group finish actions. The behavior of the event == c_EPTF_LGenBase_bIdx
+///////////////////////////////////////////////////////////
+type record EPTF_LGenBase_TcMgmt_Action_GenerateGenericEvent{
+  integer iIdx  
+}
+///////////////////////////////////////////////////////////
+// Type: EPTF_LGenBase_TcMgmt_Action_GenerateFsmEvent
+//
+// Purpose: Descriptor of dispatching an FSM event   
+// in entity finish actions. 
+// The behavior of the event == c_EPTF_LGenBase_bIdx
+// The target FSM is the FSM of the traffic case
+///////////////////////////////////////////////////////////
+type record EPTF_LGenBase_TcMgmt_Action_GenerateFsmEvent{
+  integer iIdx 
+}
+
+///////////////////////////////////////////////////////////
+// Type: EPTF_LGenBase_TcMgmt_Action_TestFinished
+//
+// Purpose: Declares that the test finished
+///////////////////////////////////////////////////////////
+type record EPTF_LGenBase_TcMgmt_Action_TestFinished{}
+
+///////////////////////////////////////////////////////////
+// Type: EPTF_LGenBase_TcMgmt_GroupActions
+//
+// Purpose: Types of actions that will be executed when a
+// group finish condition becomes true.
+//
+// Elements: 
+//   enableTc - <EPTF_LGenBase_TcMgmt_Action_EnableTc4Group> - Enables the traffic case
+//   disableTc - <EPTF_LGenBase_TcMgmt_Action_DisableTc> - Disables the traffic case
+//   enableAllTc - <EPTF_LGenBase_TcMgmt_Action_EnableAllTc> - Enables all the traffic cases in the scenario
+//   disableAllTc - <EPTF_LGenBase_TcMgmt_Action_DisableAllTc> - Disables all the traffic cases in the scenario 
+//   generateGenericEvent - <EPTF_LGenBase_TcMgmt_Action_GenerateGenericEvent> - Generates a generic event 
+//   customFinishFunction - *charstring* - the name of a 
+//      previously declared <EPTF_LGenBase_customFinishFunction_FT> function.
+//      See <f_EPTF_LGenBase_declareFunction>.  
+///////////////////////////////////////////////////////////
+type union EPTF_LGenBase_TcMgmt_GroupActions {
+  EPTF_LGenBase_TcMgmt_Action_EnableTc4Group     enableTc, 
+  EPTF_LGenBase_TcMgmt_Action_DisableTc    disableTc, 
+  EPTF_LGenBase_TcMgmt_Action_EnableAllTc  enableAllTc, 
+  EPTF_LGenBase_TcMgmt_Action_DisableAllTc disableAllTc, 
+  EPTF_LGenBase_TcMgmt_Action_GenerateGenericEvent generateGenericEvent,
+  charstring customFinishFunction,
+  EPTF_LGenBase_TcMgmt_Action_TestFinished testFinished
+}
+///////////////////////////////////////////////////////////
+// Type: EPTF_LGenBase_TcMgmt_GroupActionsList
+//
+// Purpose: A list of <EPTF_LGenBase_TcMgmt_GroupActions>
+///////////////////////////////////////////////////////////
+type record of EPTF_LGenBase_TcMgmt_GroupActions EPTF_LGenBase_TcMgmt_GroupActionsList 
+
+///////////////////////////////////////////////////////////
+// Type: EPTF_LGenBase_TcMgmt_EntityActions
+//
+// Purpose: Types of actions that will be executed when an
+// entity finish condition becomes true.
+//
+// Elements: 
+// - enableEntity4Tc - <EPTF_LGenBase_TcMgmt_Action_EnableTc4Entity> - Sets the
+//   enabled state of the entity ragarding the 
+//   <EPTF_LGenBase_TcMgmt_EntityAvailabilityEntityTransferMode> aMode in the
+//   specified traffic case.      
+// - disableEntity4Tc - <EPTF_LGenBase_TcMgmt_Action_DisableTc4Entity> - Obsolete action. Use enableEntity4Tc instead.
+// - generateFsmEvent - <EPTF_LGenBase_TcMgmt_Action_GenerateFsmEvent> - Generates an FSM event
+//   customFinishFunction - *charstring* - the name of a 
+//      previously declared <EPTF_LGenBase_customFinishFunction_FT> function.
+//      See <f_EPTF_LGenBase_declareFunction>.  
+///////////////////////////////////////////////////////////
+type union EPTF_LGenBase_TcMgmt_EntityActions {
+  EPTF_LGenBase_TcMgmt_Action_EnableTc4Entity     enableEntity4Tc,  
+  EPTF_LGenBase_TcMgmt_Action_DisableTc           disableEntity4Tc, 
+  EPTF_LGenBase_TcMgmt_Action_GenerateFsmEvent    generateFsmEvent,
+  charstring customFinishFunction
+}
+///////////////////////////////////////////////////////////
+// Type: EPTF_LGenBase_TcMgmt_EntityActionsList
+//
+// Purpose: List of <EPTF_LGenBase_TcMgmt_EntityActions>
+///////////////////////////////////////////////////////////
+type record of EPTF_LGenBase_TcMgmt_EntityActions EPTF_LGenBase_TcMgmt_EntityActionsList 
+
+///////////////////////////////////////////////////////////
+// Type: EPTF_LGenBase_TcMgmt_Action_EnableTc4Group
+//
+// Purpose: Enables a traffic cases in the scenario.
+//
+// Elements: 
+// - tcName - *charstring* - The name of the traffic case. 
+// - aMode - <EPTF_LGenBase_TcMgmt_EntityAvailabilityGroupTransferMode> - availibility transfer mode
+///////////////////////////////////////////////////////////
+type record EPTF_LGenBase_TcMgmt_Action_EnableTc4Group {
+  charstring tcName,
+  EPTF_LGenBase_TcMgmt_EntityAvailabilityGroupTransferMode aMode //availibility transfer mode
+}
+
+///////////////////////////////////////////////////////////
+// Type: EPTF_LGenBase_TcMgmt_Action_EnableTc4Entity
+//
+// Purpose: Enables/disables an entity in a traffic case.
+//
+// Elements: 
+// - tcName - *charstring* - The name of the traffic case. 
+// - aMode - <EPTF_LGenBase_TcMgmt_EntityAvailabilityEntityTransferMode> - availibility transfer mode
+///////////////////////////////////////////////////////////
+type record EPTF_LGenBase_TcMgmt_Action_EnableTc4Entity {
+  charstring tcName,
+  EPTF_LGenBase_TcMgmt_EntityAvailabilityEntityTransferMode aMode //availibility transfer mode
+}
+
+///////////////////////////////////////////////////////////
+// Type: EPTF_LGenBase_TcMgmt_Action_DisableTc
+//
+// Purpose: Disables a traffic cases in the scenario. See <EPTF_LGenBase_TcMgmt_GroupActions>.
+//
+// Elements: 
+// - tcName - *charstring* - The name of the traffic case. 
+///////////////////////////////////////////////////////////
+type record EPTF_LGenBase_TcMgmt_Action_DisableTc {
+  charstring tcName
+}
+
+///////////////////////////////////////////////////////////
+// Type: EPTF_LGenBase_TcMgmt_tcCustomParamDeclarator
+//
+// Purpose: Retrievable charstring parameters. See <f_EPTF_LGenBase_getCharstringParamValue>
+//
+// Elements: 
+// - aName  - *charstring* - The name of the application owns this parameter
+// - pName  - *charstring* - The name of the parameter
+// - pValue - *charstring* - The charstring representation of the parameter value
+///////////////////////////////////////////////////////////
+type record EPTF_LGenBase_TcMgmt_tcCustomParamDeclarator
+{
+  charstring  aName,  // name of the application owns this parameter
+  charstring  pName,  // the name of the parameter
+  charstring  pValue  // the charstring representation of the parameter value
+}
+
+///////////////////////////////////////////////////////////
+// Type: EPTF_LGenBase_TcMgmt_tcCustomParamDeclaratorList
+//
+// Purpose: List of <EPTF_LGenBase_TcMgmt_tcCustomParamDeclarator> records.
+///////////////////////////////////////////////////////////
+type record of EPTF_LGenBase_TcMgmt_tcCustomParamDeclarator EPTF_LGenBase_TcMgmt_tcCustomParamDeclaratorList;
+
+///////////////////////////////////////////////////////////
+// Type: EPTF_LGenBase_TcMgmt_ParamRangeDeclarator
+//
+// Purpose: Describes a parameter range.
+//
+// Elements: 
+// - name - *charstring* - The name of the parameter range. 
+// - baseOffset - *integer - The starting value of the parameter.
+// - count - *integer - The maximal count of parameters in the range.
+//
+// Detailed Comments:
+//     The dispatched <c_EPTF_LGenBase_inputIdx_testMgmt_startTC> events of <c_EPTF_LGenBase_bIdx> 
+//     behavior get their traffic parameter from this range. See also: <t_startTcOfFsm>, <f_EPTF_LGenBase_doTrafficCaseTimerAction>.  
+///////////////////////////////////////////////////////////
+type record EPTF_LGenBase_TcMgmt_ParamRangeDeclarator{
+  charstring name,
+  boolean enableSplit,
+  integer baseOffset,
+  integer count
+}
+
+///////////////////////////////////////////////////////////
+// Type: EPTF_LGenBase_TcMgmt_ParamRangeDeclarator
+//
+// Purpose: List of <EPTF_LGenBase_TcMgmt_ParamRangeDeclarator> records.
+///////////////////////////////////////////////////////////
+type record of EPTF_LGenBase_TcMgmt_ParamRangeDeclarator EPTF_LGenBase_TcMgmt_ParamRangeDeclaratorList;
+
+const EPTF_LGenBase_TcMgmt_ParamRangeDeclarator c_EPTF_LGenBase_TcMgmt_emptyParamRangeDeclarator := {
+  "", false, -1, 0
+}
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_LGenBase_EntitySelectionType
+// 
+//  Purpose:
+//    Enumerated type for choosing the entity selection type
+// 
+//  Elements:
+//    - round_robin - Selecting using round robin algorithm
+//    - random - Randomly selecting 
+//
+//  Detailed Comments:
+//      The round_robin selection type uses the Free Busy Queue for selecting a new entity,
+//      The random selection type uses the Random N Array for selecting a new entity
+/////////////////////////////////////////////////////////
+type enumerated EPTF_LGenBase_EntitySelectionType {round_robin(0), random(1)}
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_LGenBase_burstFunc
+// 
+//  Purpose:
+//    Enumerated type for chosing the burst precalculation and postcalculation functions
+// 
+//  Elements:
+//    - userDefined - user defined burst pre- and post-calculation function
+//    - orig - Original burst pre- and post-calculation function
+//    - imst - IMST type burst pre- and post-calculation function
+//    - imst2 - IMST type burst pre- and post-calculation function with faster algorithm
+//    - cs - cs type burst pre- and post-calculation function
+//    - poisson - poisson distribution based burst pre- and post-calculation function
+//    - terminating - no scheduler is activated for the traffic case, entities will be started due to an external event
+//
+//  Detailed Comments:
+//      -
+/////////////////////////////////////////////////////////
+type enumerated EPTF_LGenBase_burstFunc {userDefined(-1), orig(0), imst(1), imst2(2), cs(3), poisson(4), terminating(5)}
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_LGenBase_burstFuncName
+// 
+//  Purpose:
+//    Union for chosing the burst precalculation and postcalculation functions
+// 
+//  Elements:
+//    - preDefinedName - <EPTF_LGenBase_burstFunc> - name of the pre defined burst pre- and post-calculation function
+//    - userDefinedName - *charstring* -  name of the user defined burst pre- and post-calculation function
+//
+//  Detailed Comments:
+//      -
+/////////////////////////////////////////////////////////
+type union EPTF_LGenBase_burstFuncName {
+  EPTF_LGenBase_burstFunc preDefinedName,
+  charstring userDefinedName
+}
+
+group FSM{
+  
+  ///////////////////////////////////////////////////////////
+  //  Type: EPTF_LGenBase_ReportableEventType
+  // 
+  //  Purpose:
+  //    Enumerated type for descripting classes of reportable events
+  // 
+  //  Elements:
+  //    - general - Event not possible to associate to a specific entity
+  //    - entity - Event associated to a specific entity
+  //    - fsm - Event associated to a specific FSM context of a specific entity
+  //
+  //  Detailed Comments:
+  //      -
+  /////////////////////////////////////////////////////////
+  type enumerated EPTF_LGenBase_ReportableEventType {general(0), entity(1),fsm(2)}
+  
+  group compactDeclarators{  
+    ///////////////////////////////////////////////////////////
+    //  Type: EPTF_LGenBase_EventDeclarator
+    // 
+    //  Purpose:
+    //    Record type for describing events that can be listened to by event listeners
+    // 
+    //  Elements:
+    //    - bName - *charstring* - the behaviorType of the reportable event 
+    //    - iName - *charstring* - the name of the reportable event w.r.t. to bName
+    //    - eventType - <EPTF_LGenBase_ReportableEventType>  - the event-level
+    //      class of the reportable event. 
+    // 
+    //  Detailed Comments:
+    //      -
+    /////////////////////////////////////////////////////////
+    type record EPTF_LGenBase_EventDeclarator{
+      charstring bName,
+      charstring iName,
+      EPTF_LGenBase_ReportableEventType eventType
+    }
+    
+    ///////////////////////////////////////////////////////////
+    //  Type: EPTF_LGenBase_EventArrayDeclarator
+    // 
+    //  Purpose:
+    //    Record type for describing event properties for defining an array of events that have to be created
+    // 
+    //  Elements:
+    //    - eventConstant - *integer* - the constant value mapped to the event 
+    //    - eventName - *charstring* - the name of the event
+    //
+    //  Detailed Comments:
+    //      -
+    /////////////////////////////////////////////////////////
+    type record EPTF_LGenBase_EventArrayDeclarator{
+      integer eventConstant,
+      charstring eventName
+    }
+    
+    ///////////////////////////////////////////////////////////
+    //  Type: EPTF_LGenBase_EventArrayDeclaratorList
+    // 
+    //  Purpose:
+    //    List of events
+    // 
+    /////////////////////////////////////////////////////////
+    type record of EPTF_LGenBase_EventArrayDeclarator EPTF_LGenBase_EventArrayDeclaratorList
+    
+    ///////////////////////////////////////////////////////////
+    //  Type: EPTF_LGenBase_FsmNextStateCalcDeclarator
+    // 
+    //  Purpose:
+    //    Record type for describing next state calculation functions
+    // 
+    //  Elements:
+    //    - fnName - *charstring* - name of the registered function 
+    //    - argsList - <EPTF_IntegerList> - arguments for the function
+    ///////////////////////////////////////////////////////////
+    type record EPTF_LGenBase_FsmNextStateCalcDeclarator{
+      charstring fnName, //EPTF_LGenBase_NextStateCalc_FT fn,
+      EPTF_IntegerList argsList optional
+    }
+    
+    ///////////////////////////////////////////////////////////
+    //  Type: EPTF_LGenBase_FsmNextStateCalcWithParamsDeclarator
+    // 
+    //  Purpose:
+    //    Record type for describing next state calculation functions
+    // 
+    //  Elements:
+    //    - fnName - *charstring* - name of the registered function 
+    //    - argsList - <EPTF_LGenBase_FsmActionArgsDeclarator> - arguments for the function
+    ///////////////////////////////////////////////////////////
+    type record EPTF_LGenBase_FsmNextStateCalcWithParamsDeclarator{
+      charstring fnName, //EPTF_LGenBase_NextStateCalc_FT fn,
+      EPTF_LGenBase_FsmActionArgsDeclarator argsList
+    }
+    
+    ///////////////////////////////////////////////////////////
+    //  Type: EPTF_LGenBase_FsmVarParams
+    // 
+    //  Purpose:
+    //    Record type for describing EPTF variable arguments in FSMs
+    // 
+    //  Elements:
+    //    - varName - *charstring* - name of the variable 
+    //    - paramValue - <EPTF_Var_DirectContent> - additional constant argument
+    ///////////////////////////////////////////////////////////
+    type record EPTF_LGenBase_FsmVarParams{
+      charstring varName,
+      EPTF_Var_DirectContent paramValue optional
+    }
+    
+    ///////////////////////////////////////////////////////////
+    //  Type: EPTF_LGenBase_FsmStatMeasParams
+    // 
+    //  Purpose:
+    //    Record type for describing <EPTF_StatMeasure_Statistics> arguments in FSMs
+    // 
+    //  Elements:
+    //    - statMeasName - *charstring* - name of the stat 
+    //    - paramValue - <EPTF_Var_DirectContent> - additional constant argument
+    ///////////////////////////////////////////////////////////
+    type record EPTF_LGenBase_FsmStatMeasParams{
+      charstring statMeasName,
+      EPTF_Var_DirectContent paramValue optional
+    }
+    
+    ///////////////////////////////////////////////////////////
+    //  Type: EPTF_LGenBase_EventToSibling
+    // 
+    //  Purpose:
+    //    Record type for describing an <EPTF_LGenBase_ReportedEventDescriptor> 
+    //    arguments in FSMs.
+    //    See also <f_EPTF_LGenBase_step_dispatchEventToSibling>
+    // 
+    //  Elements:
+    //    - siblingName - *charstring* - the sibling name of the target FSM 
+    //    - behaviorName - *charstring* - the name of the behavior of the event to be dispatched 
+    //    - inputName - *charstring* - the name of the input of the event to be dispatched 
+    //    - argVarName - *charstring* - the name of an FSM variable to pass parameters to the target FSM
+    //      The variable must be declared in the source FSM 
+    //
+    ///////////////////////////////////////////////////////////
+    type record EPTF_LGenBase_EventToSibling{
+      charstring siblingName,
+      charstring behaviorName,
+      charstring inputName,
+      charstring argVarName optional
+    }
+    
+    ///////////////////////////////////////////////////////////
+    //  Type: EPTF_LGenBase_EventToTC
+    // 
+    //  Purpose:
+    //    Record type for describing an <EPTF_LGenBase_ReportedEventDescriptor> 
+    //    arguments in FSMs.
+    //    See also <f_EPTF_LGenBase_step_dispatchEventToTC>
+    // 
+    //  Elements:
+    //    - tcName - *charstring* - the name of the target traffic case 
+    //    - siblingName - *charstring* - the sibling name of the target FSM 
+    //    - behaviorName - *charstring* - the name of the behavior of the
+    //      event to be dispatched 
+    //    - inputName - *charstring* - the name of the input of the
+    //      event to be dispatched 
+    //    - argVarName - *charstring* - the name of an FSM variable to 
+    //      pass parameters to the target FSM
+    //      The variable must be declared in the source FSM 
+    //
+    ///////////////////////////////////////////////////////////
+    type record EPTF_LGenBase_EventToTC{
+      charstring tcName,
+      charstring behaviorName,
+      charstring inputName,
+      charstring argVarName optional
+    }
+    
+    ///////////////////////////////////////////////////////////
+    //  Type: EPTF_LGenBase_ReplyEvent
+    // 
+    //  Purpose:
+    //    Record type for describing an <EPTF_LGenBase_ReportedEventDescriptor> 
+    //    arguments in FSMs.
+    //    See also <f_EPTF_LGenBase_step_dispatchReply>
+    // 
+    //  Elements:
+    //    - behaviorName - *charstring* - the name of the behavior of the event to be dispatched 
+    //    - inputName - *charstring* - the name of the input of the event to be dispatched 
+    //    - argVarName - *charstring* - the name of an FSM variable to pass parameters to the target FSM
+    //      The variable must be declared in the source FSM 
+    //
+    ///////////////////////////////////////////////////////////
+    type record EPTF_LGenBase_ReplyEvent{
+      charstring behaviorName,
+      charstring inputName,
+      charstring argVarName optional
+    }
+    
+    ///////////////////////////////////////////////////////////
+    //  Type: EPTF_LGenBase_ReplyEventOfFsm
+    // 
+    //  Purpose:
+    //    Record type for describing an <EPTF_LGenBase_ReportedEventDescriptor> 
+    //    arguments in FSMs.
+    //    See also <f_EPTF_LGenBase_step_dispatchReplyOfFsm>
+    // 
+    //  Elements:
+    //    - inputName - *charstring* - the name of the input of the event to be dispatched 
+    //    - argVarName - *charstring* - the name of an FSM variable to pass parameters to the target FSM
+    //      The variable must be declared in the source FSM 
+    //
+    ///////////////////////////////////////////////////////////
+    type record EPTF_LGenBase_EventOfFsm{
+      charstring inputName,
+      charstring argVarName optional
+    }
+    
+    ///////////////////////////////////////////////////////////
+    //  Type: EPTF_LGenBase_VerdictArg
+    // 
+    //  Purpose:
+    //    Record type for describing a verdict with reason 
+    //    arguments in FSMs.
+    // 
+    //  Elements:
+    //    - verdict - *verdicttype* - the verdict 
+    //    - reason - *charstring* - the reason phrase
+    //
+    ///////////////////////////////////////////////////////////
+    type record EPTF_LGenBase_VerdictArg{
+      verdicttype verdict,
+      charstring reason optional
+    }
+    ///////////////////////////////////////////////////////////
+    //  Type: EPTF_LGenBase_FsmActionArgsDeclarator
+    // 
+    //  Purpose:
+    //    Record type for describing arguments for steps in FSMs
+    // 
+    //  Elements:
+    //    - stepContextArgs - <EPTF_IntegerList> - step arguments in <EPTF_IntegerList> form
+    //    - timerName -  charstring - FSM timer
+    //    - varNames -  <EPTF_CharstringList> - List of the names of the referred FSM variables
+    //    - varParams -  <EPTF_LGenBase_FsmVarParams> - The name of an FSM variable and an optional constant 
+    //    - statMeasParams - <EPTF_LGenBase_FsmStatMeasParams> - The name of an FSM statMeasure stat and an optional constant
+    //    - statName - *charstring* - statHandler statistics
+    //    - statMeasName - *charstring* - statMeasure statistics
+    //    - eventToSibling - <EPTF_LGenBase_EventToSibling> - describs an <EPTF_LGenBase_ReportedEventDescriptor> 
+    //  Detailed Comments:
+    //    The FSM declaration process translates these arguments into an <EPTF_IntegerList> form.
+    //    The LGenBase provides functions for the step functions to get back the represented data.
+    ///////////////////////////////////////////////////////////
+    type union EPTF_LGenBase_FsmActionArgsDeclarator{
+      EPTF_IntegerList stepContextArgs,
+      charstring timerName,
+      EPTF_CharstringList varNames,
+      EPTF_LGenBase_FsmVarParams varParams,
+      EPTF_LGenBase_FsmStatMeasParams statMeasParams,
+      charstring statName,
+      charstring statMeasName,
+      EPTF_LGenBase_EventToSibling eventToSibling,
+      EPTF_LGenBase_ReplyEvent replyEvent,
+      EPTF_LGenBase_EventToTC eventToTC,
+      EPTF_LGenBase_EventOfFsmToSibling eventOfFsmToSibling,
+      EPTF_LGenBase_EventOfFsm eventOfFsm,
+      charstring charstringValue,
+      EPTF_LGenBase_VerdictArg verdict
+    }
+    
+    ///////////////////////////////////////////////////////////
+    //  Type: EPTF_LGenBase_EventOfFsmToSibling
+    // 
+    //  Purpose:
+    //    Record type for describing an <EPTF_LGenBase_ReportedEventDescriptor> 
+    //    arguments in FSMs.
+    //    See also <f_EPTF_LGenBase_step_dispatchEventOfFsmToSibling>
+    // 
+    //  Elements:
+    //    - siblingName - *charstring* - the sibling name of the target FSM 
+    //    - inputName - *charstring* - the name of the input of the event to be dispatched 
+    //    - argVarName - *charstring* - the name of an FSM variable to pass parameters to the target FSM
+    //      The variable must be declared in the source FSM 
+    //
+    ///////////////////////////////////////////////////////////
+    type record EPTF_LGenBase_EventOfFsmToSibling{
+      charstring siblingName,
+      charstring inputName,
+      charstring argVarName optional
+    }
+    
+    ///////////////////////////////////////////////////////////
+    //  Type: EPTF_LGenBase_FsmActionDeclarator
+    // 
+    //  Purpose:
+    //    Record type for describing steps in FSMs
+    // 
+    //  Elements:
+    //    - stepOrFunctionName -  *charstring* - Step function
+    //    - contextArgs - <EPTF_LGenBase_FsmActionArgsDeclarator> - step argument
+    ///////////////////////////////////////////////////////////
+    type record EPTF_LGenBase_FsmActionDeclarator {
+      charstring stepOrFunctionName, //EPTF_LGenBase_TestStepFunction_FT
+      EPTF_LGenBase_FsmActionArgsDeclarator contextArgs optional
+    }
+    
+    ///////////////////////////////////////////////////////////
+    //  Type: EPTF_LGenBase_FsmActionDeclaratorList
+    // 
+    //  Purpose:
+    //    Record of EPTF_LGenBase_FsmActionDeclarators
+    ///////////////////////////////////////////////////////////
+    type record of EPTF_LGenBase_FsmActionDeclarator EPTF_LGenBase_FsmActionDeclaratorList
+    
+    ///////////////////////////////////////////////////////////
+    //  Type: EPTF_LGenBase_FsmActionDeclarator
+    // 
+    //  Purpose:
+    //    Record to declare a list of steps to be inserted by
+    //    the <f_EPTF_LGenBase_insertFsmSteps> function
+    ///////////////////////////////////////////////////////////
+    type record EPTF_LGenBase_FsmActionListInsertDeclarator{
+      charstring name,
+      EPTF_LGenBase_FsmActionDeclaratorList actions
+    }
+    
+    ///////////////////////////////////////////////////////////
+    //  Type: EPTF_LGenBase_FsmActionListInsertDeclaratorList
+    // 
+    //  Purpose:
+    //    Record of <EPTF_LGenBase_FsmActionListInsertDeclarator>
+    ///////////////////////////////////////////////////////////
+    type record of EPTF_LGenBase_FsmActionListInsertDeclarator EPTF_LGenBase_FsmActionListInsertDeclaratorList;
+    ///////////////////////////////////////////////////////////
+    //  Type: EPTF_LGenBase_FsmTableCellDeclarator
+    // 
+    //  Purpose:
+    //    Record type for describing a cell of an FSM
+    // 
+    //  Elements:
+    //    - actionList -  <EPTF_LGenBase_FsmActionDeclaratorList> - List of steps with their arguments
+    //    - nextStateCalculation - <EPTF_LGenBase_FsmNextStateCalcDeclarator> - Function to calculate the next state after the execution of the steps 
+    //    - nextState - *charstring* - Next state after the execution of the steps 
+    ///////////////////////////////////////////////////////////
+    type record EPTF_LGenBase_FsmTableCellDeclarator {
+      EPTF_LGenBase_FsmActionDeclaratorList actionList optional,
+      EPTF_LGenBase_FsmNextStateCalcDeclarator nextStateCalculation optional, //calc method for the next state    
+      charstring nextState optional //pointer to the next state
+    }
+    
+    ///////////////////////////////////////////////////////////
+    //  Type: EPTF_LGenBase_FsmTableCellDeclaratorList
+    // 
+    //  Purpose:
+    //    Record of <EPTF_LGenBase_FsmTableCellDeclarator>
+    ///////////////////////////////////////////////////////////
+    type record of EPTF_LGenBase_FsmTableCellDeclarator EPTF_LGenBase_FsmTableCellDeclaratorList;
+    
+    type record EPTF_LGenBase_FsmTableCellWithExtNext {
+      EPTF_LGenBase_FsmActionDeclaratorList actionList optional,
+      EPTF_LGenBase_FsmNextStateCalcWithParamsDeclarator nextStateCalculation //calc method and params for the next state    
+    }
+    ///////////////////////////////////////////////////////////
+    //  Type: EPTF_LGenBase_FsmTableCellAnyUndefinedState
+    // 
+    //  Purpose:
+    //    Declares that the associated cell in the <EPTF_LGenBase_FsmStatedTableCellDeclarator>
+    //    must be used in all states which don't have associated cells. 
+    ///////////////////////////////////////////////////////////
+    type record EPTF_LGenBase_FsmTableCellAnyUndefinedState{}
+    
+    ///////////////////////////////////////////////////////////
+    //  Type: EPTF_LGenBase_FsmTableCellStateDeclarator
+    // 
+    //  Purpose:
+    //    This union contains the available state descriptions used
+    //    in <EPTF_LGenBase_FsmStatedTableCellDeclarator> 
+    ///////////////////////////////////////////////////////////
+    type union EPTF_LGenBase_FsmTableCellStateDeclarator{
+      charstring state,
+      EPTF_CharstringList stateList,
+      EPTF_LGenBase_FsmTableCellAnyUndefinedState anyUndefinedState
+    }
+    
+    ///////////////////////////////////////////////////////////
+    //  Type: EPTF_LGenBase_FsmStatedTableCellDeclarator
+    // 
+    //  Purpose:
+    //    Declares an FSM cell with the state(s) in which it must be executed. 
+    ///////////////////////////////////////////////////////////
+    type record EPTF_LGenBase_FsmStatedTableCellDeclarator {
+      EPTF_LGenBase_FsmTableCellStateDeclarator inState,
+      EPTF_LGenBase_FsmTableCellDeclarator cell
+    }
+    
+    ///////////////////////////////////////////////////////////
+    //  Type: EPTF_LGenBase_FsmStatedTableCellDeclaratorList
+    // 
+    //  Purpose:
+    //    Record of EPTF_LGenBase_FsmStatedTableCellDeclarator. 
+    ///////////////////////////////////////////////////////////
+    type record of EPTF_LGenBase_FsmStatedTableCellDeclarator EPTF_LGenBase_FsmStatedTableCellDeclaratorList;
+    
+    ///////////////////////////////////////////////////////////
+    //  Type: EPTF_LGenBase_FsmStatedTableCellExtendedDeclarator
+    // 
+    //  Purpose:
+    //    Declares an FSM cell with the state(s) and more sophisticated
+    //    parameters for the next state calculation function. 
+    ///////////////////////////////////////////////////////////
+    type record EPTF_LGenBase_FsmStatedTableCellExtendedDeclarator {
+      EPTF_LGenBase_FsmTableCellStateDeclarator inState,
+      EPTF_LGenBase_FsmTableCellWithExtNext cell
+    }
+    
+    ///////////////////////////////////////////////////////////
+    //  Type: EPTF_LGenBase_FsmStatedTableCellExtendedDeclaratorList
+    // 
+    //  Purpose:
+    //    Record of <EPTF_LGenBase_FsmStatedTableCellExtendedDeclarator>. 
+    ///////////////////////////////////////////////////////////
+    type record of EPTF_LGenBase_FsmStatedTableCellExtendedDeclarator EPTF_LGenBase_FsmStatedTableCellExtendedDeclaratorList
+    
+    ///////////////////////////////////////////////////////////
+    // Type: EPTF_LGenBase_FsmTableRowDeclarator
+    //
+    // Purpose:
+    //   Data type to declare the rows of an FSM table.
+    //
+    // Elements:
+    //   - eventToListen - <EPTF_LGenBase_EventDescriptor> reference to the event that
+    //     is used as input for the row of the FSM table
+    //   - cellRow - <EPTF_LGenBase_FsmTableCellList> cells of the row of the FSM table 
+    ///////////////////////////////////////////////////////////
+    type record EPTF_LGenBase_FsmTableRowDeclarator {
+      EPTF_LGenBase_EventDeclarator eventToListen,
+      EPTF_LGenBase_FsmTableCellDeclaratorList cellRow
+    }
+    ///////////////////////////////////////////////////////////
+    // Type: EPTF_LGenBase_FsmTableRowDeclaratorList
+    //
+    // Purpose:
+    //   List of <EPTF_LGenBase_FsmTableRowDeclarator>s
+    //
+    // Elements:
+    //   record of <EPTF_LGenBase_FsmTableRowDeclarator>
+    ///////////////////////////////////////////////////////////
+    type record of EPTF_LGenBase_FsmTableRowDeclarator EPTF_LGenBase_FsmTableRowDeclaratorList;
+    
+    ///////////////////////////////////////////////////////////
+    // Type: EPTF_LGenBase_ExtendedFsmTableRowDeclaratorList
+    //
+    // Purpose:
+    //   List of <EPTF_LGenBase_ExtendedFsmTableRowDeclarator>s
+    //
+    // Elements:
+    //   record of <EPTF_LGenBase_ExtendedFsmTableRowDeclarator>
+    ///////////////////////////////////////////////////////////
+    type record of EPTF_LGenBase_ExtendedFsmTableRowDeclarator EPTF_LGenBase_ExtendedFsmTableRowDeclaratorList;
+    
+    ///////////////////////////////////////////////////////////
+    // Type: EPTF_LGenBase_ExtendedFsmTableRowDeclarator
+    //
+    // Purpose:
+    //   Data type to declare the rows of an extended FSM table.
+    //
+    // Elements:
+    //   - events2Listen - <EPTF_LGenBase_Events2ListenDeclarator> defines a set of events that
+    //     is used as input for the row of the FSM table
+    //   - cellRow - <EPTF_LGenBase_UnionFsmTableCellRowDeclarator> cells of the row of the FSM table 
+    ///////////////////////////////////////////////////////////
+    type record EPTF_LGenBase_ExtendedFsmTableRowDeclarator {
+      EPTF_LGenBase_Events2ListenDeclarator events2Listen,
+      EPTF_LGenBase_UnionFsmTableCellRowDeclarator cellRow
+    }
+    
+    
+    
+    ///////////////////////////////////////////////////////////
+    // Type: EPTF_LGenBase_EventsFromSibling
+    //
+    // Purpose:
+    //   Data type to declare events from a sibling FSM to be listened to
+    //
+    // Elements:
+    //   - singleEventFromSibling - <EPTF_LGenBase_EventFromSiblingDeclarator>
+    //   - eventListFromSibling - <EPTF_LGenBase_EventListFromSiblingDeclarator> 
+    //   - eventRangeFromSibling - <EPTF_LGenBase_EventRangeFromSiblingDeclarator> 
+    ///////////////////////////////////////////////////////////
+    type union EPTF_LGenBase_EventsFromSibling{
+      EPTF_LGenBase_EventFromSiblingDeclarator singleEventFromSibling,
+      EPTF_LGenBase_EventListFromSiblingDeclarator eventListFromSibling,
+      EPTF_LGenBase_EventRangeFromSiblingDeclarator eventRangeFromSibling
+    }
+    
+    ///////////////////////////////////////////////////////////
+    // Type: EPTF_LGenBase_Events2ListenDeclarator
+    //
+    // Purpose:
+    //   Data type to declare a set of events.
+    //
+    // Elements:
+    //   - events - <EPTF_LGenBase_EventSet> defines a set of events
+    //   - catchAll - <EPTF_LGenBase_EventCatchAll> special event type: any event 
+    //   - unhandled - <EPTF_LGenBase_EventCatchAll> special event type: unhandled events 
+    ///////////////////////////////////////////////////////////
+    type union EPTF_LGenBase_Events2ListenDeclarator{
+      EPTF_LGenBase_EventSet events,
+      EPTF_LGenBase_EventCatchAll catchAll,
+      EPTF_LGenBase_EventUnhandled unhandled,
+      EPTF_LGenBase_EventsFromSibling siblingEvents
+    }
+    
+    ///////////////////////////////////////////////////////////
+    // Type: EPTF_LGenBase_EventSet
+    //
+    // Purpose:
+    //   Data a set of events
+    ///////////////////////////////////////////////////////////
+    type record of EPTF_LGenBase_EventSetItem EPTF_LGenBase_EventSet; 
+    ///////////////////////////////////////////////////////////
+    // Type: EPTF_LGenBase_EventSetItem
+    //
+    // Purpose:
+    //   Data type to declare a single event or an event range or a list of events.
+    //
+    // Elements:
+    //   - singleEvent - <EPTF_LGenBase_EventDeclarator> defines one event
+    //   - eventList - <EPTF_LGenBase_EventListDeclarator> defines a list of events
+    //   - eventRange - <EPTF_LGenBase_EventRangeDeclarator> defines a range of events 
+    ///////////////////////////////////////////////////////////
+    type union EPTF_LGenBase_EventSetItem{
+      EPTF_LGenBase_EventDeclarator singleEvent,
+      EPTF_LGenBase_EventListDeclarator eventList,
+      EPTF_LGenBase_EventRangeDeclarator eventRange
+    }
+    ///////////////////////////////////////////////////////////
+    // Type: EPTF_LGenBase_EventListDeclarator
+    //
+    // Purpose:
+    //   Data type to declare a list of events
+    //
+    // Elements:
+    //   - bName - <charstring> behaior of events
+    //   - iNameList - <EPTF_CharstringList> list of input event names
+    //   - eventType - <EPTF_LGenBase_ReportableEventType> scope of events 
+    ///////////////////////////////////////////////////////////
+    type record EPTF_LGenBase_EventListDeclarator {
+      charstring bName,
+      EPTF_CharstringList iNameList,
+      EPTF_LGenBase_ReportableEventType eventType
+    }
+    
+    ///////////////////////////////////////////////////////////
+    //  Type: EPTF_LGenBase_EventRangeDeclarator
+    // 
+    //  Purpose:
+    //    Record type for describing an event range that can be listened by event listeners
+    // 
+    //  Elements:
+    //    - bName - *charstring* - the behaviorType of the reportable event 
+    //    - iNameMin - *charstring* - the name of the first reportable event or the range
+    //    - iNameMax - *optional charstring* - the name of the last reportable event or the range
+    //            if omit, the structures referres 1 event instead of a range of events
+    //    - eventType - <EPTF_LGenBase_ReportableEventType>  - the event-level
+    //      class of the reportable event. 
+    /////////////////////////////////////////////////////////
+    type record EPTF_LGenBase_EventRangeDeclarator {
+      charstring bName,
+      charstring iNameMin,
+      charstring iNameMax,
+      EPTF_LGenBase_ReportableEventType eventType
+    }
+    
+    ///////////////////////////////////////////////////////////
+    // Type: EPTF_LGenBase_EventCatchAll
+    //
+    // Purpose:
+    //   Type for describing any event - used by event listener to catch all events
+    ///////////////////////////////////////////////////////////
+    type record EPTF_LGenBase_EventCatchAll{}
+    
+    ///////////////////////////////////////////////////////////
+    // Type: EPTF_LGenBase_EventUnhandled
+    //
+    // Purpose:
+    //   Type for describing unhandled events - used to handle events are not listened
+    ///////////////////////////////////////////////////////////
+    type record EPTF_LGenBase_EventUnhandled{}
+    
+    group SiblingEvents{
+      ///////////////////////////////////////////////////////////
+      //  Type: EPTF_LGenBase_EventFromSiblingDeclarator
+      // 
+      //  Purpose:
+      //    Record type for describing events
+      //    sent by a specified sibling FSM
+      // 
+      //  Elements:
+      //    - siblingName - *charstring* - the sibling name of the FSM which sent the event 
+      //    - iName - *charstring* - the name of the reportable event w.r.t. to bName
+      //    - eventType - <EPTF_LGenBase_ReportableEventType>  - the event-level
+      //      class of the reportable event. 
+      // 
+      //  Detailed Comments:
+      //      -
+      /////////////////////////////////////////////////////////
+      type record EPTF_LGenBase_EventFromSiblingDeclarator{
+        charstring siblingName,
+        charstring iName,
+        EPTF_LGenBase_ReportableEventType eventType
+      }
+      
+      ///////////////////////////////////////////////////////////
+      // Type: EPTF_LGenBase_EventListFromSiblingDeclarator
+      //
+      // Purpose:
+      //    Data type to declare a list of events
+      //    sent by a specified sibling FSM
+      //
+      // Elements:
+      //    - siblingName - *charstring* - the sibling name of the FSM which sent the event 
+      //    - iNameList - <EPTF_CharstringList> list of input names
+      //    - eventType - <EPTF_LGenBase_ReportableEventType>  - the event-level
+      //      class of the reportable event. 
+      ///////////////////////////////////////////////////////////
+      type record EPTF_LGenBase_EventListFromSiblingDeclarator {
+        charstring siblingName,
+        EPTF_CharstringList iNameList,
+        EPTF_LGenBase_ReportableEventType eventType
+      }
+      
+      ///////////////////////////////////////////////////////////
+      //  Type: EPTF_LGenBase_EventRangeFromSiblingDeclarator
+      // 
+      //  Purpose:
+      //    Record type for describing an event range 
+      //    sent by a specified sibling FSM
+      // 
+      //  Elements:
+      //    - siblingName - *charstring* - the sibling name of the FSM which sent the event 
+      //    - iNameMin - *charstring* - the name of the first reportable event or the range
+      //    - iNameMax - *optional charstring* - the name of the last reportable event 
+      //      or the range 
+      //      if omit, the structure refers 1 event instead of a range of events
+      //    - eventType - <EPTF_LGenBase_ReportableEventType>  - the event-level
+      //      class of the reportable event. 
+      /////////////////////////////////////////////////////////
+      type record EPTF_LGenBase_EventRangeFromSiblingDeclarator {
+        charstring siblingName,
+        charstring iNameMin,
+        charstring iNameMax,
+        EPTF_LGenBase_ReportableEventType eventType
+      }
+      
+    }
+    ///////////////////////////////////////////////////////////
+    // Type: EPTF_LGenBase_UnionFsmTableCellRowDeclarator
+    //
+    // Purpose:
+    //   Data type to declare the rows of cells in an FSM table.
+    //
+    // Elements:
+    //   - classicCellRow - <EPTF_LGenBase_FsmTableCellDeclaratorList> list of cells 
+    ///////////////////////////////////////////////////////////
+    type union EPTF_LGenBase_UnionFsmTableCellRowDeclarator{
+      EPTF_LGenBase_FsmTableCellDeclaratorList classicCellRow,
+      EPTF_LGenBase_FsmStatedTableCellDeclaratorList statedCellRow,
+      EPTF_LGenBase_FsmStatedTableCellExtendedDeclaratorList extStatedCellRow
+    }
+    
+    ///////////////////////////////////////////////////////////
+    // Type: EPTF_LGenBase_FsmLocalStateList
+    //
+    // Purpose:
+    //   Data type for declaring states of given FSM table. 
+    //
+    // Elements:
+    //   record of *charstring*
+    ///////////////////////////////////////////////////////////
+    type record of charstring EPTF_LGenBase_FsmLocalStateList;
+    
+    ///////////////////////////////////////////////////////////
+    // Type: EPTF_LGenBase_FsmLocalTimer
+    //
+    // Purpose:
+    //   Data type for declaring a static timer of a given FSM table. 
+    //
+    // Elements:
+    //   name - *charstring* - The name of the timer. Used in FSM declarations
+    //   startValue - *float* - The time in sec when the timer times out from its start
+    ///////////////////////////////////////////////////////////
+    type record  EPTF_LGenBase_FsmLocalTimer {
+      charstring name,
+      float startValue
+    } 
+    
+    ///////////////////////////////////////////////////////////
+    // Type: EPTF_LGenBase_FsmLocalTimerList
+    //
+    // Purpose:
+    //   Data type for declaring timers of a given FSM table. 
+    //
+    // Elements:
+    //   record of <EPTF_LGenBase_FsmLocalTimer>
+    ///////////////////////////////////////////////////////////
+    type record of EPTF_LGenBase_FsmLocalTimer EPTF_LGenBase_FsmLocalTimerList;
+    
+    ///////////////////////////////////////////////////////////
+    // Type: EPTF_LGenBase_FSMTimerParameters
+    //
+    // Purpose:
+    //   Data type for declaring the parameters of the type
+    //   <EPTF_LGenBase_FsmTimer>, which declares a timer
+    //   of a given FSM table. 
+    //
+    // Elements:
+    //   - static - <EPTF_LGenBase_FSMTimerParamsStatic>
+    //   - random - <EPTF_LGenBase_FSMTimerParamsRandom>
+    //   - randomGauss - <EPTF_LGenBase_FSMTimerParamsRandomGauss>
+    ///////////////////////////////////////////////////////////
+    type union EPTF_LGenBase_FSMTimerParameters{
+      EPTF_LGenBase_FSMTimerParamsStatic static,
+      EPTF_LGenBase_FSMTimerParamsRandom random,
+      EPTF_LGenBase_FSMTimerParamsRandomGauss randomGauss
+    }
+
+    ///////////////////////////////////////////////////////////
+    // Type: EPTF_LGenBase_FSMTimerParametersList
+    //
+    // Purpose:
+    //   Data type for declaring the parameters of timers of a given FSM table. 
+    //
+    // Elements:
+    //   record of <EPTF_LGenBase_FSMTimerParameters>
+    ///////////////////////////////////////////////////////////    
+    type record of EPTF_LGenBase_FSMTimerParameters EPTF_LGenBase_FSMTimerParametersList;
+    
+    ///////////////////////////////////////////////////////////
+    // Type: EPTF_LGenBase_FSMTimerParamsStatic
+    //
+    // Purpose:
+    //   Data type for declaring the parameters of a static timer
+    //   of a given FSM table. 
+    //
+    // Elements:
+    //   startValue - *float* - The time in sec when the timer times out from its start
+    ///////////////////////////////////////////////////////////
+    type record EPTF_LGenBase_FSMTimerParamsStatic{
+      float startValue
+    }
+    
+    ///////////////////////////////////////////////////////////
+    // Type: EPTF_LGenBase_FSMTimerParamsRandom
+    //
+    // Purpose:
+    //   Data type for declaring parameters of a timer of a given FSM table.
+    //
+    // Elements:
+    //   name - *charstring* - The name of the timer. Used in FSM declarations
+    //   timeoutMin - *float* - The minimal time in sec when the timer times out from its start
+    //   timeoutMax - *float* - The maximal time in sec when the timer times out from its start
+    //
+    // Detailed Comments:
+    //   The timer times out randomly after a delay between the
+    //   minimal and maximal timeout values.
+    ///////////////////////////////////////////////////////////
+    type record EPTF_LGenBase_FSMTimerParamsRandom{
+      float timeoutMin,
+      float timeoutMax
+    }
+    
+    ///////////////////////////////////////////////////////////
+    // Type: EPTF_LGenBase_FSMTimerParamsRandomGauss
+    //
+    // Purpose:
+    //   Data type for declaring parameters of a timer of a given FSM table.
+    //
+    // Elements:
+    //   name - *charstring* - The name of the timer. Used in FSM declarations
+    //   timeoutMin - *float* - The minimal time in sec when the timer times out from its start
+    //   timeoutMax - *float* - The maximal time in sec when the timer times out from its start
+    //
+    // Detailed Comments:
+    //   The timer times out randomly after a delay between the
+    //   minimal and maximal timeout values. The random values
+    //   follow normal (Gaussian) distribution.
+    ///////////////////////////////////////////////////////////
+    type record EPTF_LGenBase_FSMTimerParamsRandomGauss{
+      float mean,
+      float deviation
+    }
+    
+    ///////////////////////////////////////////////////////////
+    // Type: EPTF_LGenBase_FsmTimer
+    //
+    // Purpose:
+    //   Data type for declaring a timer of a given FSM table. 
+    //
+    // Elements:
+    //   - name - *charstring* - The name of the timer. Used in FSM declarations
+    //   - timerParams - <EPTF_LGenBase_FSMTimerParameters> - The required
+    //     arguments according to the specified behavior of the
+    //     timer
+    //
+    // Detailed Comments:
+    //   The timer can have different behaviors according to the
+    //   selected *timerParams* parameter. See the different
+    //   choices of the <EPTF_LGenBase_FSMTimerParameters> type.
+    ///////////////////////////////////////////////////////////
+    type record  EPTF_LGenBase_FsmTimer {
+      charstring name,
+      EPTF_LGenBase_FSMTimerParameters timerParams
+    }
+    
+    type record of EPTF_LGenBase_FsmTimer EPTF_LGenBase_FsmTimerList;
+    
+    ///////////////////////////////////////////////////////////
+    // Type: EPTF_LGenBase_FsmRandomTimer
+    //
+    // Purpose:
+    //   Data type for declaring a timer of a given FSM table. 
+    //
+    // Elements:
+    //   name - *charstring* - The name of the timer. Used in FSM declarations
+    //   timeoutMin - *float* - The minimal time in sec when the timer times out from its start
+    //   timeoutMax - *float* - The maximal time in sec when the timer times out from its start
+    ///////////////////////////////////////////////////////////
+    type record  EPTF_LGenBase_FsmRandomTimer {
+      charstring name,
+      float timeoutMin,
+      float timeoutMax
+    } 
+    
+    ///////////////////////////////////////////////////////////
+    // Type: EPTF_LGenBase_FsmRandomTimer
+    //
+    // Purpose:
+    //   Data type for declaring random timers of a given FSM table. 
+    //
+    // Elements:
+    //   record of <EPTF_LGenBase_FsmRandomTimer>
+    ///////////////////////////////////////////////////////////
+    type record of EPTF_LGenBase_FsmRandomTimer EPTF_LGenBase_FsmRandomTimerList
+    
+    ///////////////////////////////////////////////////////////
+    // Type: EPTF_LGenBase_CompactFsmTableDeclarator
+    //
+    // Purpose:
+    //   Data type for declaring compact FSM table. 
+    //
+    // Elements:
+    //   name - *charstring* - The name ID of the FSM
+    //   stateList - <EPTF_LGenBase_FsmLocalStateList> - The states in the FSM  
+    //   timerList - <EPTF_LGenBase_FsmLocalTimerList> - The FSM timers
+    //   table - <EPTF_LGenBase_FsmTableRowDeclaratorList> - The 2D description 
+    //   of the FSM cells 
+    ///////////////////////////////////////////////////////////
+    type record EPTF_LGenBase_CompactFsmTableDeclarator {
+      charstring name,
+      EPTF_LGenBase_FsmLocalStateList stateList,
+      EPTF_LGenBase_FsmLocalTimerList timerList,
+      EPTF_LGenBase_FsmTableRowDeclaratorList table
+    }
+    
+    ///////////////////////////////////////////////////////////
+    // Type: EPTF_LGenBase_CompactFsmTableDeclaratorList
+    //
+    // Purpose:
+    //   Data type for declaring list of compact FSM tables. 
+    ///////////////////////////////////////////////////////////
+    type record of EPTF_LGenBase_CompactFsmTableDeclarator EPTF_LGenBase_TcMgmt_CompactFsmTableDeclaratorList;
+    
+    type EPTF_LGenBase_CompactFsmTableDeclarator EPTF_LGenBase_IndexedFsmTableDeclarator;
+    
+    type record of EPTF_LGenBase_IndexedFsmTableDeclarator EPTF_LGenBase_TcMgmt_IndexedFsmTableDeclaratorList;
+  }
+}//FSM
+
+group FSMR3{
+  //FSMSibling2
+  ///////////////////////////////////////////////////////////
+  // Type: EPTF_LGenBase_FsmObjectScopeDeclarator
+  //
+  // Purpose:
+  //   Declares the scope of a variable or statistic used in FSM declaration 
+  //
+  // Elements:
+  //   FSM - all the FSM contexts will have their own specimen of the object
+  //   TC - There will be a single common object in the traffic case
+  //   SiblingFSM - Each sibling FSM of the same entity share the same object
+  ///////////////////////////////////////////////////////////
+  type enumerated EPTF_LGenBase_FsmObjectScopeDeclarator {FSM, TC, SiblingFSM}
+  ///////////////////////////////////////////////////////////
+  // Type: EPTF_LGenBase_FsmVarDeclarator
+  //
+  // Purpose:
+  //   Declares a variable in an FSM 
+  //
+  // Elements:
+  //   name - *charstring* - The name ID of the variable
+  //   initValue - <EPTF_Var_DirectContent> - The initial value of the variable
+  //   scope - <EPTF_LGenBase_FSMVarScope> - describes where to store the variable.
+  //     The created variable will be unique in the specified scope.
+  ///////////////////////////////////////////////////////////
+  type record EPTF_LGenBase_FsmVarDeclarator{
+    charstring name,
+    EPTF_Var_DirectContent initValue,
+    EPTF_LGenBase_FsmObjectScopeDeclarator scope 
+  }
+  ///////////////////////////////////////////////////////////
+  // Type: c_EPTF_LGenBase_emptyFsmVarDeclarator
+  //
+  // Purpose:
+  //   Empty default initializer value of an <EPTF_LGenBase_FsmVarDeclarator>
+  ///////////////////////////////////////////////////////////
+  const EPTF_LGenBase_FsmVarDeclarator c_EPTF_LGenBase_emptyFsmVarDeclarator := {
+    "", {intVal := 0}, FSM
+  }
+  ///////////////////////////////////////////////////////////
+  // Type: EPTF_LGenBase_FsmVarDeclaratorList
+  //
+  // Purpose:
+  //   A record of <EPTF_LGenBase_FsmVarDeclarator> records
+  ///////////////////////////////////////////////////////////
+  type record of EPTF_LGenBase_FsmVarDeclarator EPTF_LGenBase_FsmVarDeclaratorList;
+  
+  ///////////////////////////////////////////////////////////
+  // Type: EPTF_LGenBase_FsmStatProviderVars
+  //
+  // Purpose:
+  //   The names of the data providers of the specified statistic
+  ///////////////////////////////////////////////////////////
+  type EPTF_CharstringList EPTF_LGenBase_FsmStatProviderVars
+  
+  ///////////////////////////////////////////////////////////
+  // Type: EPTF_LGenBase_FsmStatProviderVarsList
+  //
+  // Purpose:
+  //   List of <EPTF_LGenBase_FsmStatProviderVars>
+  ///////////////////////////////////////////////////////////
+  type record of EPTF_LGenBase_FsmStatProviderVars EPTF_LGenBase_FsmStatProviderVarsList;
+  
+  ///////////////////////////////////////////////////////////
+  // Type: EPTF_LGenBase_FsmStatDeclarator
+  //
+  // Purpose:
+  //   Declares statistics used in FSM steps 
+  //
+  // Elements:
+  //   name - *charstring* - The name ID of the variable
+  //   refType - <EPTF_Var_RefType> - The type of the content of the variable
+  //   scope - <EPTF_LGenBase_FsmVarScope> - describes where to store the variable.
+  //     The created variable will be unique in the specified scope.
+  ///////////////////////////////////////////////////////////
+  type record EPTF_LGenBase_FsmStatDeclarator{
+    charstring name,
+    EPTF_LGenBase_FsmStatProviderVarsList providersList,
+    charstring statMethod,
+    EPTF_Var_DirectContent statResetValue,
+    EPTF_LGenBase_FsmObjectScopeDeclarator scope 
+  }
+  ///////////////////////////////////////////////////////////
+  // Type: c_EPTF_LGenBase_emptyFsmStatDeclarator
+  //
+  // Purpose:
+  //   Empty default initializer value of an <EPTF_LGenBase_FsmStatDeclarator>
+  ///////////////////////////////////////////////////////////
+  const EPTF_LGenBase_FsmStatDeclarator c_EPTF_LGenBase_emptyFsmStatDeclarator := {
+    "",{},"", {intVal := 0}, FSM
+  }
+  ///////////////////////////////////////////////////////////
+  // Type: EPTF_LGenBase_FsmStatDeclaratorList
+  //
+  // Purpose:
+  //   A record of <EPTF_LGenBase_FsmStatDeclarator> records
+  ///////////////////////////////////////////////////////////
+  type record of EPTF_LGenBase_FsmStatDeclarator EPTF_LGenBase_FsmStatDeclaratorList;
+  
+  type union EPTF_LGenBase_FsmStatHandlerProvider{
+    EPTF_CharstringList varList,
+    charstring statMeas,
+    charstring statHandler
+  }
+  
+  type record of EPTF_LGenBase_FsmStatHandlerProvider EPTF_LGenBase_FsmStatHandlerProviderList 
+  
+  type record EPTF_LGenBase_FsmStatHandlerDeclarator{
+    charstring name,
+    EPTF_LGenBase_FsmStatHandlerProviderList providers,
+    charstring statMethod,
+    EPTF_Var_DirectContent statResetValue,
+    EPTF_LGenBase_FsmObjectScopeDeclarator scope 
+  }
+  type record of EPTF_LGenBase_FsmStatHandlerDeclarator EPTF_LGenBase_FsmStatHandlerDeclaratorList
+  type record EPTF_LGenBase_FsmStatMeasDeclarator{
+    charstring name,
+    charstring varName,
+    EPTF_StatMeasure_statType statType,
+    EPTF_LGenBase_FsmObjectScopeDeclarator scope 
+  }
+  const EPTF_LGenBase_FsmStatMeasDeclarator c_EPTF_LGenBase_emptyFsmStatMeasDeclarator :={
+    "", "", content, FSM
+  }
+  type record of EPTF_LGenBase_FsmStatMeasDeclarator EPTF_LGenBase_FsmStatMeasDeclaratorList
+  
+  type union EPTF_LGenBase_FSMStatMeasParams{
+    EPTF_StatMeasure_statType statType,
+    EPTF_StatMeasure_StatParams params
+  }  
+  ///////////////////////////////////////////////////////////
+  // Type: EPTF_LGenBase_FsmStatMeasWithParamsDeclarator
+  //
+  // Purpose:
+  //   Declares parameters of statMeas statistic declarations where
+  //   the statMeas statistic requires boundaries
+  ///////////////////////////////////////////////////////////
+  type record EPTF_LGenBase_FsmStatMeasWithParamsDeclarator{
+    charstring name,
+    charstring providerVarName,
+    charstring targetVarName optional,
+    EPTF_LGenBase_FSMStatMeasParams statMeasParams,
+    EPTF_LGenBase_FsmObjectScopeDeclarator scope 
+  }
+  const EPTF_LGenBase_FsmStatMeasWithParamsDeclarator c_EPTF_LGenBase_emptyFsmStatMeasWithParamsDeclarator :={
+    "", "", "", {statType := content}, FSM
+  }
+  type record of EPTF_LGenBase_FsmStatMeasWithParamsDeclarator EPTF_LGenBase_FsmStatMeasWithParamsDeclaratorList
+  
+  //FSMSibling2
+  ///////////////////////////////////////////////////////////
+  // Type: EPTF_LGenBase_declareEvents
+  //
+  // Purpose:
+  //   Declares the enlisted FSM events with the behavior 
+  //   having the name of the FSM.
+  //
+  // Elements:
+  //   useDefaultEvents - *boolean* - Declare the events
+  //     enlisted in the <tsp_LGenBase_FSMDefaultEvents>
+  //   eventList - <EPTF_CharstringList> - The list of user-defined
+  //     events to be declared 
+  //
+  ///////////////////////////////////////////////////////////
+  type record EPTF_LGenBase_declareEvents{
+    boolean useDefaultEvents,
+    EPTF_CharstringList eventList
+  }
+  
+  ///////////////////////////////////////////////////////////
+  // Type: EPTF_LGenBase_FsmParams
+  //
+  // Purpose:
+  //   Collects the descriptors of the FSM environment
+  //
+  // Developer Comments:
+  //   First, we can extend the FSM environment without the necessity of rewriting 
+  //   the previously written user code.
+  //   In second, using this union we can make it optional to declare the elements of 
+  //   the FSM environment. E.g. users don't have to declare an empty list
+  //   of variables if they don't use them.
+  ///////////////////////////////////////////////////////////
+  type union EPTF_LGenBase_FsmParams{
+    EPTF_LGenBase_FsmLocalStateList stateList,
+    EPTF_LGenBase_FsmLocalTimerList timerList,
+    EPTF_LGenBase_FsmVarDeclaratorList varList,
+    EPTF_LGenBase_FsmStatDeclaratorList statisticList,
+    EPTF_LGenBase_FsmStatMeasDeclaratorList statMeasStatList,
+    EPTF_LGenBase_FsmStatMeasWithParamsDeclaratorList statMeasWithParamsList,
+    EPTF_LGenBase_FsmStatHandlerDeclaratorList statHandlerStatList,
+    EPTF_LGenBase_FsmRandomTimerList randomTimerList,
+    EPTF_LGenBase_declareEvents declareEvents,
+    EPTF_LGenBase_FsmTimerList fsmTimerList
+  }
+  
+  ///////////////////////////////////////////////////////////
+  // Type: EPTF_LGenBase_FSMParamsList
+  //
+  // Purpose:
+  //   Record of <EPTF_LGenBase_FSMParams> records
+  ///////////////////////////////////////////////////////////
+  type record of EPTF_LGenBase_FsmParams EPTF_LGenBase_FsmParamsList;
+  
+  ///////////////////////////////////////////////////////////
+  // Type: EPTF_LGenBase_FlexFsmTableRowDeclarator
+  //
+  // Purpose:
+  //   A union of type declarator for the FSM table rows.
+  //   This is declared as a union because of later modifications
+  ///////////////////////////////////////////////////////////
+  type union EPTF_LGenBase_FlexFsmTableRowDeclarator {
+    EPTF_LGenBase_FsmTableRowDeclaratorList classicTable,
+    EPTF_LGenBase_ExtendedFsmTableRowDeclaratorList extendedTable
+  }
+  
+  ///////////////////////////////////////////////////////////
+  // Type: EPTF_LGenBase_FsmTableDeclarator
+  //
+  // Purpose:
+  //   Data type for declaring FSM table. 
+  //
+  // Elements:
+  //   name - *charstring* - The name ID of the FSM
+  //   fsmParams - <EPTF_LGenBase_FSMParamsList> - The FSM basic descriptor of the working 
+  //     environment of the FSM.
+  //   table - <EPTF_LGenBase_FlexFsmTableRowDeclaratorList> - The 2D description 
+  //     of the FSM cells 
+  ///////////////////////////////////////////////////////////
+  type record EPTF_LGenBase_FsmTableDeclarator {
+    charstring name,
+    EPTF_LGenBase_FsmParamsList fsmParams,
+    EPTF_LGenBase_FlexFsmTableRowDeclarator table
+  }
+  
+  ///////////////////////////////////////////////////////////
+  // Type: EPTF_LGenBase_FsmTableDeclaratorList
+  //
+  // Purpose:
+  //   List of <EPTF_LGenBase_FsmTableDeclarator> records
+  ///////////////////////////////////////////////////////////
+  type record of EPTF_LGenBase_FsmTableDeclarator EPTF_LGenBase_FsmTableDeclaratorList
+  
+  type record EPTF_LGenBase_StatisticOfTC{
+    charstring declaredName,
+    charstring statName,
+    EPTF_StatHandler_StatMethod statMethod,
+    EPTF_Var_DirectContent statResetValue
+  }
+  type record of EPTF_LGenBase_StatisticOfTC EPTF_LGenBase_StatisticOfTCList
+  
+  type record EPTF_LGenBase_StatisticListOfTC{
+    charstring entityGroup,
+    charstring scenario,
+    charstring tc,
+    EPTF_LGenBase_StatisticOfTCList stats
+  }
+  const EPTF_LGenBase_StatisticListOfTC c_EPTF_LGenBase_emptyStatisticListOfTC := {
+    "","","",{}
+  }
+  type record of EPTF_LGenBase_StatisticListOfTC EPTF_LGenBase_StatisticListOfTCList
+}//FSMR3
+
+group Obsolete{
+  modulepar EPTF_LGenBase_ScenarioDeclaratorList  tsp_LGenBase_ScenarioDeclarators := {};
+  modulepar EPTF_LGenBase_tcTypeDeclaratorList    tsp_LGenBase_tcTypeDeclarators := {};
+  
+  // Declarator2
+  modulepar EPTF_LGenBase_TcMgmt_EntityGrpDeclaratorList tsp_LGenBase_EntityGrpDeclarators := {};
+  modulepar EPTF_LGenBase_TcMgmt_Scenarios2GrpList       tsp_LGenBase_Scenarios2Grps := {};
+  modulepar EPTF_LGenBase_ScenarioTypeDeclaratorList     tsp_LGenBase_TcMgmt_ScenarioDeclarators3 := {}; // weighted and non weighted too
+  
+  modulepar EPTF_LGenBase_TcMgmt_tcTypeDeclaratorList tsp_LGenBase_TcMgmt_tcTypeDeclarators2 := {};
+  modulepar EPTF_LGenBase_TcMgmt_WeightedScenarioDeclaratorList tsp_LGenBase_TcMgmt_WeightedScenarioDeclarators := {}
+  modulepar EPTF_LGenBase_TcMgmt_ScenarioDeclaratorList tsp_LGenBase_TcMgmt_ScenarioDeclarators2 := {};
+  
+  
+  ///////////////////////////////////////////////////////////
+  // Type: EPTF_LGenBase_TcMgmt_GroupFinishActionListType
+  //
+  // Purpose: Types of actions that will be executed when a
+  // group finish condition becomes true or a traffic launch ends.
+  //
+  // Elements:
+  //  - onGroupFinishCondition - The actions will be fired when the <groupFinishConditions> of
+  //    a traffic case becomes true. See <EPTF_LGenBase_TcOfScenario2>.
+  //  - onLaunchFinish - The actions will be fired when the last traffic of the traffic case returns the acknowledgement.
+  ///////////////////////////////////////////////////////////
+  type enumerated EPTF_LGenBase_TcMgmt_GroupFinishActionListType{
+    onGroupFinishCondition, onLaunchFinish
+  }
+  
+  ///////////////////////////////////////////////////////////
+  // Type: EPTF_LGenBase_TcMgmt_tcTypeDeclarator2
+  //
+  // Purpose:
+  //   Used to declare a traffic case type in TITAN config file and in
+  //   <f_EPTF_LGenBase_declareTcType2> and <f_EPTF_LGenBase_declareTcType3> function. 
+  // 
+  // Elements:
+  //   - name - *charstring* - the name of the traffic case type
+  //   - fsmName - *charstring* - FSM table name of the TC
+  //   - entityType - *charstring* - the type of the entity executing the traffic case
+  //   - customEntitySucc - *charstring* - the registered name of
+  //                                       a user-defined function to evaluate the state of the entity
+  //										 at the end of a traffic. If it's empty, the <f_EPTF_LGenBase_successSucNoFail> will be called.
+  //
+  // Detailed Comments:
+  //   It doesn't contain the fields that have default initial values,
+  //   so it simplifies the declaration code.
+  //
+  //   The customEntitySucc must contain the name of a previously declared 
+  //   <EPTF_LGenBase_evaluateSuccess4EntityAtEntityGroup2_FT> function or can be empty.
+  ///////////////////////////////////////////////////////////
+  type record EPTF_LGenBase_TcMgmt_tcTypeDeclarator2 {
+    charstring name,
+    charstring fsmName,
+    charstring entityType,
+    charstring customEntitySucc  //if EMPTY then default
+  }
+  ///////////////////////////////////////////////////////////
+  // Type: EPTF_LGenBase_TcMgmt_tcDeclarator2List
+  //
+  // Purpose: List of <EPTF_LGenBase_TcMgmt_tcTypeDeclarator2> records.
+  ///////////////////////////////////////////////////////////
+  type record of EPTF_LGenBase_TcMgmt_tcTypeDeclarator2 EPTF_LGenBase_TcMgmt_tcTypeDeclaratorList;
+  
+  ///////////////////////////////////////////////////////////
+  // Type: EPTF_LGenBase_TcMgmt_GroupActions2
+  //
+  // Purpose: Describes what to do when a group finish condition of
+  // a traffic case becomes true, or when the last traffic of the traffic case returns the acknowledgement.
+  //
+  // Elements:
+  // - actionsType - <EPTF_LGenBase_TcMgmt_GroupFinishActionListType> - When to do the actions. 
+  // - actions - <EPTF_LGenBase_TcMgmt_GroupActionsList> - The actions to be executed.
+  ///////////////////////////////////////////////////////////
+  type record EPTF_LGenBase_TcMgmt_GroupActions2 {
+    EPTF_LGenBase_TcMgmt_GroupFinishActionListType actionsType, 
+    EPTF_LGenBase_TcMgmt_GroupActionsList actions
+  }
+  
+  ///////////////////////////////////////////////////////////
+  // Type: EPTF_LGenBase_TcMgmt_GroupActions2List
+  //
+  // Purpose: List of <EPTF_LGenBase_TcMgmt_GroupActions2> records.
+  type record of EPTF_LGenBase_TcMgmt_GroupActions2 EPTF_LGenBase_TcMgmt_GroupActions2List;
+  
+  ///////////////////////////////////////////////////////////
+  // Type: EPTF_LGenBase_TcMgmt_GroupFinishConditions
+  //
+  // Purpose: When one of these conditions becomes true, the launch of the 
+  // traffic of the specified traffic case will stop, and the
+  // actions described in the <EPTF_LGenBase_TcMgmt_GroupActionsList> of the
+  // <EPTF_LGenBase_tcTypeDeclarator> structures will be fired. 
+  //////////////////////////////////////////////////////////
+  type record EPTF_LGenBase_TcMgmt_GroupFinishConditions {
+    integer nrOfExecStart optional,
+    integer nrOfSuccesses optional,
+    integer nrOfFails optional,
+    integer nrOfGrpLoop optional,
+    integer nrOfRangeLoop optional,
+    float execTime optional,
+    charstring customFinishCondition optional
+  }
+  
+  ///////////////////////////////////////////////////////////
+  // Constant: c_EPTF_LGenBase_TcMgmt_emptyGroupFinishConditions
+  //
+  // Purpose: An empty initializer structure of <EPTF_LGenBase_TcMgmt_GroupFinishConditions>
+  ///////////////////////////////////////////////////////////
+  const EPTF_LGenBase_TcMgmt_GroupFinishConditions c_EPTF_LGenBase_TcMgmt_emptyGroupFinishConditions := {omit, omit, omit, omit, omit, omit, omit};
+  
+  ///////////////////////////////////////////////////////////
+  // Type: EPTF_LGenBase_TcMgmt_GroupFinishConditions
+  //
+  // Purpose: When one of these conditions becomes true, the launch of the 
+  // traffic of the specified traffic case will stop, and the
+  // actions described in the <EPTF_LGenBase_TcMgmt_TcOfScenario2> or <EPTF_LGenBase_TcMgmt_TcOfScenario3> structure
+  // of the record <EPTF_LGenBase_TcMgmt_ScenarioDeclarator2> or <EPTF_LGenBase_TcMgmt_ScenarioDeclarator3> will be fired. 
+  //////////////////////////////////////////////////////////
+  type record EPTF_LGenBase_TcMgmt_GroupFinishConditions2 {
+    integer nrOfExecStart optional,
+    integer nrOfSuccesses optional,
+    integer nrOfFails optional,
+    integer nrOfGrpLoop optional,
+    integer nrOfRangeLoop optional,
+    float execTime optional,
+    boolean entitiesFinished optional,
+    charstring customFinishCondition optional
+  }
+  
+  ///////////////////////////////////////////////////////////
+  // Constant: c_EPTF_LGenBase_TcMgmt_emptyGroupFinishConditions2
+  //
+  // Purpose: An empty initializer structure of <EPTF_LGenBase_TcMgmt_GroupFinishConditions>
+  ///////////////////////////////////////////////////////////
+  const EPTF_LGenBase_TcMgmt_GroupFinishConditions2 c_EPTF_LGenBase_TcMgmt_emptyGroupFinishConditions2 := {omit, omit, omit, omit, omit, omit, omit, omit};
+  
+  /////////////////////////////////////////
+  // Template: EPTF_LGenBase_TcMgmt_GroupFinishConditions2
+  //
+  // Purpose: Template to make it easy to fill the newer EPTF_LGenBase_TcMgmt_GroupFinishConditions2 
+  // structure from an earlier EPTF_LGenBase_TcMgmt_GroupFinishConditions.
+  /////////////////////////////////////////
+  template EPTF_LGenBase_TcMgmt_GroupFinishConditions2 
+  EPTF_LGenBase_TcMgmt_GroupFinishConditions2FromPrev(EPTF_LGenBase_TcMgmt_GroupFinishConditions pl_prev):={
+    pl_prev.nrOfExecStart,
+    pl_prev.nrOfSuccesses,
+    pl_prev.nrOfFails,
+    pl_prev.nrOfGrpLoop,
+    pl_prev.nrOfRangeLoop,
+    pl_prev.execTime,
+    omit,
+    pl_prev.customFinishCondition
+  }
+  
+  ///////////////////////////////////////////////////////////
+  // Type: EPTF_LGenBase_TcMgmt_EntityFinishConditions
+  //
+  // Purpose: When one of these conditions becomes true, the launch of the 
+  // traffic on the specified entity of the specified traffic case will stop, and the
+  // actions described in the <EPTF_LGenBase_TcMgmt_EntityActionsList> of the
+  // <EPTF_LGenBase_tcTypeDeclarator> or in the <EPTF_LGenBase_TcMgmt_TcOfScenario2> or <EPTF_LGenBase_TcMgmt_TcOfScenario3> structure
+  // of the record <EPTF_LGenBase_TcMgmt_ScenarioDeclarator2> or <EPTF_LGenBase_TcMgmt_ScenarioDeclarator3> will be fired. 
+  //////////////////////////////////////////////////////////
+  type record EPTF_LGenBase_TcMgmt_EntityFinishConditions {
+    integer nrOfExecStart optional,
+    integer nrOfSuccesses optional,
+    integer nrOfFails optional,
+    charstring customFinishCondition optional
+  }
+  ///////////////////////////////////////////////////////////
+  // Constant: c_EPTF_LGenBase_TcMgmt_emptyEntityFinishConditions
+  //
+  // Purpose: An empty initializer structure of <EPTF_LGenBase_TcMgmt_EntityFinishConditions>
+  ///////////////////////////////////////////////////////////
+  const EPTF_LGenBase_TcMgmt_EntityFinishConditions c_EPTF_LGenBase_TcMgmt_emptyEntityFinishConditions := {omit, omit, omit, omit};
+  
+  ///////////////////////////////////////////////////////////
+  // Type: EPTF_LGenBase_WeightedScenarioExtraData
+  //
+  // Purpose: Additional data for the weighted scenario declarator
+  //
+  // Elements:
+  //   deterministicMix - *boolean* - the traffic case selection will be counted
+  //   before the start of traffic generation, or the traffic cases will be
+  //   chosen runtime rundomly
+  ///////////////////////////////////////////////////////////
+  type record EPTF_LGenBase_WeightedScenarioExtraData{    
+    //float cpsToReach ,
+    boolean deterministicMix 
+  }
+  
+  ///////////////////////////////////////////////////////////
+  // Type: EPTF_LGenBase_TcMgmt_ScenarioDeclarator2
+  //
+  // Purpose: Declares a list of traffic cases as a scenario.
+  ///////////////////////////////////////////////////////////
+  type record EPTF_LGenBase_TcMgmt_ScenarioDeclarator2{
+    charstring name,
+    EPTF_LGenBase_TcMgmt_TcOfScenario2List tcList
+  }
+  
+  const EPTF_LGenBase_TcMgmt_ScenarioDeclarator2 c_EPTF_LGenBase_TcMgmt_emptyScenarioDeclarator2 := {"", {} }
+  ///////////////////////////////////////////////////////////
+  // Type: EPTF_LGenBase_TcMgmt_WeightedScenarioDeclarator
+  //
+  // Purpose: Declares a list of weighted traffic cases in scenario
+  ///////////////////////////////////////////////////////////
+  type record EPTF_LGenBase_TcMgmt_WeightedScenarioDeclarator{
+    charstring name,
+    boolean enabled,
+    float cpsToReach,
+    boolean lockCPS,
+    EPTF_LGenBase_WeightedScenarioExtraData weightedScData,
+    EPTF_LGenBase_TcMgmt_TcOfWeightedScenarioList tcList
+  }  
+  
+  ///////////////////////////////////////////////////////////
+  // Type: EPTF_LGenBase_TcMgmt_TcOfScenario2List
+  //
+  // Purpose: List of <EPTF_LGenBase_TcMgmt_TcOfScenario2> records.
+  ///////////////////////////////////////////////////////////
+  type record of EPTF_LGenBase_TcMgmt_TcOfScenario2 EPTF_LGenBase_TcMgmt_TcOfScenario2List;
+  
+  ///////////////////////////////////////////////////////////
+  // Type: EPTF_LGenBase_TcMgmt_TcOfWeightedScenarioList
+  //
+  // Purpose: List of <EPTF_LGenBase_TcMgmt_TcOfWeightedScenario> records.
+  ///////////////////////////////////////////////////////////
+  type record of EPTF_LGenBase_TcMgmt_TcOfWeightedScenario EPTF_LGenBase_TcMgmt_TcOfWeightedScenarioList;
+  
+  ///////////////////////////////////////////////////////////
+  // Type: EPTF_LGenBase_TcMgmt_ScenarioDeclaratorList
+  //
+  // Purpose: List of <EPTF_LGenBase_TcMgmt_ScenarioDeclarator2> records.
+  ///////////////////////////////////////////////////////////
+  type record of EPTF_LGenBase_TcMgmt_ScenarioDeclarator2 EPTF_LGenBase_TcMgmt_ScenarioDeclaratorList;    
+  
+  ///////////////////////////////////////////////////////////
+  // Type: EPTF_LGenBase_TcMgmt_WeightedScenarioDeclaratorList
+  //
+  // Purpose: List of <EPTF_LGenBase_TcMgmt_WeightedScenarioDeclarator> records.
+  ///////////////////////////////////////////////////////////
+  type record of EPTF_LGenBase_TcMgmt_WeightedScenarioDeclarator EPTF_LGenBase_TcMgmt_WeightedScenarioDeclaratorList;
+  
+  ///////////////////////////////////////////////////////////
+  // Type: EPTF_LGenBase_TcMgmt_TcOfScenario2
+  //
+  // Purpose: Describes the parameters of a traffic case in the specified scenario.
+  //
+  // Elements:
+  //   - tcName - *charstring* - refers the name of the traffic case type
+  //   - startDelay - *float* - traffic case should start only after the specified amount of time (given in seconds)
+  //   - cpsToReach - *float* - cps value for this traffic case instance. The actual value may be decomposed when the traffic case running distributed on several LGens
+  //   - enableEntities - *boolean* - the entities have to be in enabled or disabled state after creating the traffic case
+  //   - enable - *boolean* - the traffic case will be enabled or disabled after creation
+  //   - ranges - <EPTF_LGenBase_TcMgmt_ParamRangeDeclaratorList> - Range descriptors for the traffic case. 
+  //     The dispatched <c_EPTF_LGenBase_inputIdx_testMgmt_startTC> events of <c_EPTF_LGenBase_bIdx> 
+  //     behavior get their traffic parameter from this range. See also: <t_startTcOfFsm>, <f_EPTF_LGenBase_doTrafficCaseTimerAction>.  
+  //   - params - <EPTF_LGenBase_TcMgmt_tcCustomParamDeclaratorList> - Retrievable charstring parameters. See <f_EPTF_LGenBase_getCharstringParamValue>
+  //   - groupFinishConditions - <EPTF_LGenBase_TcMgmt_GroupFinishConditions> - When one of these conditions becomes true, the launch of the 
+  //     traffic of the specified traffic case will stop, and the
+  //     actions described in the groupFinishActions will be fired.
+  //   - entityFinishConditions - <EPTF_LGenBase_TcMgmt_EntityFinishConditions> - When one of these conditions becomes true, the launch of the 
+  // 	 traffic on the specified entity of the specified traffic case will stop, and the
+  //     actions described in the entityFinishActions will be fired.
+  //   - tcFinishActions - <EPTF_LGenBase_TcMgmt_GroupActions2List> - List of actions that will be executed when a
+  //     group finish condition becomes true or the last traffic of the traffic case returns the acknowledgement.
+  //   - entityFinishActions - <EPTF_LGenBase_TcMgmt_EntityActionsList> - List of actions that will be executed when an
+  // 	 entity finish condition becomes true.
+  //   The finish conditions and actions declared in the <EPTF_LGenBase_TcMgmt_TcOfScenario2> for a
+  //   traffic case will overwrite the conditions occasionally declared in <EPTF_LGenBase_tcTypeDeclarator>
+  type record EPTF_LGenBase_TcMgmt_TcOfScenario2{
+    charstring tcName,
+    float startDelay optional,
+    float cpsToReach,
+    boolean enableEntities,
+    boolean enable, 
+    EPTF_LGenBase_TcMgmt_ParamRangeDeclaratorList ranges optional,
+    EPTF_LGenBase_TcMgmt_tcCustomParamDeclaratorList params optional,
+    //finishConditions
+    EPTF_LGenBase_TcMgmt_GroupFinishConditions2 groupFinishConditions optional,
+    EPTF_LGenBase_TcMgmt_EntityFinishConditions entityFinishConditions optional,
+    //actionLists
+    EPTF_LGenBase_TcMgmt_EntityActionsList entityFinishActions optional,
+    EPTF_LGenBase_TcMgmt_GroupActions2List tcFinishActions optional
+  }
+  ///////////////////////////////////////////////////////////
+  // Type: EPTF_LGenBase_TcMgmt_TcOfWeightedScenario
+  //
+  // Purpose: Describes the parameters of a traffic case in the specified scenario.
+  //
+  // Elements:  
+  //   - tcName - *charstring* - refers the name of the traffic case type
+  //   - tcWeight - *float* - The weight of the tc in the scenario
+  //   - enableEntities - *boolean* - the entities have to be in enabled or disabled state after creating the traffic case
+  //   - enable - *boolean* - the traffic case will be enabled or disabled after creation
+  //   - ranges - <EPTF_LGenBase_TcMgmt_ParamRangeDeclaratorList> - Range descriptors for the traffic case. 
+  //     The dispatched <c_EPTF_LGenBase_inputIdx_testMgmt_startTC> events of <c_EPTF_LGenBase_bIdx> 
+  //     behavior get their traffic parameter from this range. See also: <t_startTcOfFsm>, <f_EPTF_LGenBase_doTrafficCaseTimerAction>.  
+  //   - params - <EPTF_LGenBase_TcMgmt_tcCustomParamDeclaratorList> - Retrievable charstring parameters. See <f_EPTF_LGenBase_getCharstringParamValue>
+  //   - groupFinishConditions - <EPTF_LGenBase_TcMgmt_GroupFinishConditions> - When one of these conditions becomes true, the launch of the 
+  //     traffic of the specified traffic case will stop, and the
+  //     actions described in the groupFinishActions will be fired.
+  //   - entityFinishConditions - <EPTF_LGenBase_TcMgmt_EntityFinishConditions> - When one of these conditions becomes true, the launch of the 
+  //     traffic on the specified entity of the specified traffic case will stop, and the
+  //     actions described in the entityFinishActions will be fired.
+  //   - tcFinishActions - <EPTF_LGenBase_TcMgmt_GroupActions2List> - List of actions that will be executed when a
+  //     group finish condition becomes true or the last traffic of the traffic case returns the acknowledgement.
+  //   - entityFinishActions - <EPTF_LGenBase_TcMgmt_EntityActionsList> - List of actions that will be executed when an
+  //     entity finish condition becomes true.
+  //   The finish conditions and actions declared in the <EPTF_LGenBase_TcMgmt_TcOfWeightedScenario> for a
+  //   traffic case will overwrite the conditions occasionally declared in <EPTF_LGenBase_tcTypeDeclarator>
+  type record EPTF_LGenBase_TcMgmt_TcOfWeightedScenario{
+    charstring tcName, 
+    //float startDelay,
+    float tcWeight,   
+    boolean enableEntities,
+    boolean enable, 
+    EPTF_LGenBase_TcMgmt_ParamRangeDeclaratorList ranges optional,
+    EPTF_LGenBase_TcMgmt_tcCustomParamDeclaratorList params optional,
+    //finishConditions
+    EPTF_LGenBase_TcMgmt_GroupFinishConditions2 groupFinishConditions optional,
+    EPTF_LGenBase_TcMgmt_EntityFinishConditions entityFinishConditions optional,
+    //actionLists
+    EPTF_LGenBase_TcMgmt_EntityActionsList entityFinishActions optional,
+    EPTF_LGenBase_TcMgmt_GroupActions2List tcFinishActions optional
+  }
+  
+  ///////////////////////////////////////////////////////////
+  // Type: EPTF_LGenBase_tcTypeDeclarator
+  //
+  // Purpose:
+  //   Obsolete structure to declare a traffic case type in TITAN config file. 
+  // 
+  // Elements:
+  //   - name - *charstring* - the name of the traffic case type
+  //   - fsmName - *charstring* - FSM table name of the TC
+  //   - cCount - *integer* - the amount of entities within the group
+  //   - entityType - *charstring* - the type of the entity executing the traffic case
+  //   - customEntitySucc - *charstring* - the registered name of
+  //                                       a user-defined function to evaluate the traffic
+  //                                       case result. If EMPTY then default
+  //   - groupFinishConditions - <EPTF_LGenBase_TcMgmt_GroupFinishConditions> - When one of these conditions becomes true, the launch of the 
+  //     traffic of the specified traffic case will stop, and the
+  //     actions described in the groupFinishActions will be fired.
+  //   - entityFinishConditions - <EPTF_LGenBase_TcMgmt_EntityFinishConditions> - When one of these conditions becomes true, the launch of the 
+  // 	 traffic on the specified entity of the specified traffic case will stop, and the
+  //     actions described in the entityFinishActions will be fired.
+  //   - groupFinishActions - <EPTF_LGenBase_TcMgmt_GroupActionsList> - List of actions that will be executed when a
+  //     group finish condition becomes true.
+  //   - entityFinishActions - <EPTF_LGenBase_TcMgmt_EntityActionsList> - List of actions that will be executed when an
+  // 	 entity finish condition becomes true.
+  //   - params - <EPTF_LGenBase_TcMgmt_tcCustomParamDeclaratorList> - Retrievable charstring parameters. See <f_EPTF_LGenBase_getCharstringParamValue>
+  //
+  // Detailed Comments:
+  //   It doesn't contain the fields that have default initial values,
+  //   so it simplifies the declaration code.
+  //
+  //   The customEntitySucc must contain the name of a previously declared 
+  //   <EPTF_LGenBase_evaluateSuccess4EntityAtEntityGroup_FT> function or can be empty.
+  ///////////////////////////////////////////////////////////
+  type record EPTF_LGenBase_tcTypeDeclarator {
+    charstring name,
+    charstring fsmName,
+    charstring entityType,
+    charstring customEntitySucc,  //if EMPTY then default
+    //finishConditions
+    EPTF_LGenBase_TcMgmt_GroupFinishConditions groupFinishConditions,
+    EPTF_LGenBase_TcMgmt_EntityFinishConditions entityFinishConditions,
+    //actionLists
+    EPTF_LGenBase_TcMgmt_GroupActionsList  groupFinishActions,
+    EPTF_LGenBase_TcMgmt_EntityActionsList entityFinishActions,
+    // custom tc params
+    EPTF_LGenBase_TcMgmt_tcCustomParamDeclaratorList params
+  }
+  
+  ///////////////////////////////////////////////////////////
+  // Type: EPTF_LGenBase_tcTypeDeclaratorList
+  //
+  // Purpose:
+  //   Record of <EPTF_LGenBase_tcTypeDeclarator> to provide a container for
+  //   arbitrary number of <EPTF_LGenBase_tcTypeDeclarator> values
+  //
+  // Elements:
+  //   record of <EPTF_LGenBase_tcTypeDeclarator>
+  //////////////////////////////////////////////////////////
+  type record of EPTF_LGenBase_tcTypeDeclarator EPTF_LGenBase_tcTypeDeclaratorList;
+  
+  ///////////////////////////////////////////////////////////
+  // Type: EPTF_LGenBase_ScenarioDeclarator
+  //
+  // Purpose:
+  //   Used in declaring a traffic scenario in TITAN config file. 
+  //
+  // Elements:
+  //   - name - *charstring* - the name of the traffic scenario
+  //   - tcList - <EPTF_LGenBase_TcOfScenarioList> - list of traffic cases associated with this scenario
+  // 
+  // Detailed Comments:
+  //   It doesn't contain the fields that have default initial values,
+  //   so it simplifies the declaration code.
+  ///////////////////////////////////////////////////////////
+  type record EPTF_LGenBase_ScenarioDeclarator{
+    charstring name,
+    EPTF_LGenBase_TcOfScenarioList tcList
+  }
+  
+  ///////////////////////////////////////////////////////////
+  // Type: EPTF_LGenBase_ScenarioDeclaratorList
+  //
+  // Purpose:
+  //   Record of <EPTF_LGenBase_ScenarioDeclarator> to provide a container for
+  //   arbitrary number of <EPTF_LGenBase_ScenarioDeclarator> values
+  //
+  // Elements:
+  //   record of <EPTF_LGenBase_ScenarioDeclarator>
+  //////////////////////////////////////////////////////////
+  type record of EPTF_LGenBase_ScenarioDeclarator EPTF_LGenBase_ScenarioDeclaratorList;
+  
+  
+  ///////////////////////////////////////////////////////////
+  // Type: EPTF_LGenBase_TcOfScenario
+  //
+  // Purpose:
+  //   Obsolete structure to declare a traffic case of a scenario in TITAN config file. 
+  //
+  // Elements:
+  //   - tcName - *charstring* - refers the name of the traffic case type
+  //   - startDelay - *float* - traffic case should start only after the specified amount of time (given in seconds)
+  //   - cpsToReach - *float* - cps value for this traffic case instance. The actual value may be decomposed when the traffic case running distributed on several LGens
+  //   - enableEntities - *boolean* - the entities have to be in enabled or disabled state after creating the traffic case
+  //   - enable - *boolean* - the traffic case will be enabled or disabled after creation
+  //   - ranges - <EPTF_LGenBase_TcMgmt_ParamRangeDeclaratorList> - ranges to be given as parameters of the start traffic steps
+  //
+  // Detailed Comments:
+  //   It doesn't contain the fields that have default initial values,
+  //   so it simplifies the declaration code.
+  ///////////////////////////////////////////////////////////
+  type record EPTF_LGenBase_TcOfScenario{
+    charstring tcName,
+    float startDelay,
+    float cpsToReach,
+    boolean enableEntities,
+    boolean enable,
+    EPTF_LGenBase_TcMgmt_ParamRangeDeclaratorList ranges
+  }
+  
+  ///////////////////////////////////////////////////////////
+  // Type: EPTF_LGenBase_TcOfScenarioList
+  //
+  // Purpose:
+  //   Record of <EPTF_LGenBase_TcOfScenario> to provide a container for
+  //   arbitrary number of <EPTF_LGenBase_TcOfScenario> values
+  //
+  // Elements:
+  //   record of <EPTF_LGenBase_TcOfScenario>
+  //////////////////////////////////////////////////////////
+  type record of EPTF_LGenBase_TcOfScenario EPTF_LGenBase_TcOfScenarioList;
+  
+}
+//FSMSibling2
+const charstring c_EPTF_LGenBase_FSMEventFinishedSuccess := "FSM finished successfully"
+const charstring c_EPTF_LGenBase_FSMEventFinishedFail := "FSM finished with failure"
+const charstring c_EPTF_LGenBase_FSMEventFinishedError := "FSM finished with error"
+const charstring c_EPTF_LGenBase_FSMEventFinishedTimeout := "FSM finished with timeout"
+
+const EPTF_CharstringList c_EPTF_LGenBase_DefaultFSMEvents := {
+  c_EPTF_LGenBase_FSMEventFinishedSuccess,
+  c_EPTF_LGenBase_FSMEventFinishedFail,
+  c_EPTF_LGenBase_FSMEventFinishedError,
+  c_EPTF_LGenBase_FSMEventFinishedTimeout
+}
+
+}  // end of module

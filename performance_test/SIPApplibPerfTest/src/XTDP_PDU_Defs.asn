@@ -1,0 +1,275 @@
+-- ****************************************************************************
+-- Copyright (c) 2000-2018 Ericsson Telecom AB
+-- All rights reserved. This program and the accompanying materials
+-- are made available under the terms of the Eclipse Public License v1.0
+-- which accompanies this distribution, and is available at
+-- http://www.eclipse.org/legal/epl-v10.html
+--*****************************************************************************
+--
+--  File:               XTDP_PDU_Defs.asn
+--  Description:        XTDP PDU definitions
+--  Rev:                <RnXnn>
+--  Prodnr:             CNL 113 494
+--  Updated:            2008-12-17
+--  Contact:            http://ttcn.ericsson.se
+--
+
+--Extensible-Titan-Display-Protocol 
+XTDP-PDU-Defs --[DefinitiveOID]--
+DEFINITIONS  /*XER INSTRUCTIONS*/ AUTOMATIC TAGS ::=
+BEGIN
+--[Exports]--
+--[Imports]--
+
+IMPORTS 
+    Window,Tabbox,Tabs,Tab,Tabpanels,Tabpanel,Tree,Treecols,Treecol,Treechildren,Treeitem,Treerow,Treecell,
+    Hbox,Label,Spacer,Button,Textbox,Chart,TraceList,Trace,Toolbar,Toolbarelements,Toolbarbutton,Separator,
+    Listbox, Listitem, Numericalwidget, Menulist, Menuitem, Distributionchart, DistributionchartValuelist, Image
+    FROM XUL-XTDL
+    
+    String
+    FROM XSD-ASN;
+
+XTDP-Message ::= SEQUENCE {
+-- direction can be either GUI==>TITAN, or the opposite
+  noNamespaceSchemaLocation UTF8String ("XTDP-Message.xsd") OPTIONAL, -- used for XSD validation of EXER transfer
+  xtdp-Message CHOICE {
+    xtdp-Requests XTDP-Requests, --intially just a single Request
+    xtdp-Responses XTDP-Responses, -- or a just a single Response
+	xtdp-LayoutRequest XTDP-LayoutRequest, -- direction only TITAN => GUI
+	xtdp-LayoutResponse XTDP-LayoutResponse, -- direction only GUI => TITAN
+    xtdp-AddRequests XTDP-AddRequests, -- adding elements to the GUI
+    xtdp-RemoveRequests XTDP-RemoveRequests, -- removing elements from the GUI
+    xtdp-AuthChallenge XTDP-AuthChallenge, -- authentication challenge, direction only TITAN => GUI
+    xtdp-AuthResponse XTDP-AuthResponse -- response for authentication, direction only GUI => TITAN
+  }
+}
+
+XTDP-AuthChallenge ::= XSD-ASN.String
+
+XTDP-AuthResponse ::= XSD-ASN.String
+    
+XTDP-Requests ::= SEQUENCE OF XTDP-Request -- during initial deployment it should be restricted to single Request
+
+XTDP-Responses ::= SEQUENCE OF XTDP-Response -- during initial deployment it should be restricted to single Response
+
+/*XTDP-AuthData ::= SEQUENCE {
+  guiID XTDP-Identifier, -- the ID of the GUI to be configured
+  guiAuth OCTET STRING OPTIONAL, -- authentication credentials
+  ...
+  }
+  
+XTDL-Config ::= OCTET STRING -- it carries a valid XTDL document
+*/
+XTDP-AddRequests ::= SEQUENCE OF XTDP-AddRequest
+
+XTDP-RemoveRequests ::= SEQUENCE OF XTDP-RemoveRequest
+
+-- For XTDP message XER format examples, see file XTDP-Message-examples.xml
+-- An XTDP-Identifier should be also a valid absolute URI reference,  
+-- as per RFC 2396 Sec.5, without the "query" portion 
+-- allowing "net_path" component (such as "//gui.at.host.in.domain") is f.f.s.
+-- examples: "/tab.1/tab.1.2/row1/column3"
+XTDP-Identifier ::= XSD-ASN.String ( FROM ( "A" .. "Z"
+				UNION  "a" .. "z"
+				UNION  "0" .. "9"
+				UNION  "."  -- can be used, for delineating indices, for example,
+					    -- since the "[", "," and "]" characters are "unwise"
+					    -- according to TFC2396
+				UNION "/"   -- hierarchy separator
+				UNION "_"
+				UNION "-" )
+) 
+
+XTDL-Actions ::= ENUMERATED { xtdp-get(0),
+			      xtdp-put(1),
+			      xtdp-increase(2),
+			      xtdp-decrease(3),
+			      xtdp-enable(4),
+			      xtdp-disable(5),
+			      xtdp-setfocus(6),
+			      xtdp-settooltip(7),
+			      xtdp-replaceimage(8),  -- change button image to the image id given in the argument 
+			      ... }
+
+XTDL-WidgetType ::= ENUMERATED { xtdp-pushButton (0),
+				 xtdp-checkBox (1),
+				 xtdp-integerField (2),
+				 xtdp-floatField (3), 
+				 xtdp-statusLED (4),
+                 xtdp-string (5),
+				 xtdp-statusLEDWithText (6),
+				 xtdp-trace (7),
+				 xtdp-image (8),
+				 xtdp-valueList (9),
+				 xtdp-none(10),
+				 ...}
+
+XTDL-Widget ::= SEQUENCE {
+  widgetId XTDP-Identifier,
+  widgetType XTDL-WidgetType,
+  ...
+}
+
+XTDP-IA5StringList ::= SEQUENCE OF IA5String
+
+XTDP-Request ::= SEQUENCE {
+  requestId INTEGER , -- chosen by requestor
+  widget XTDL-Widget,
+  action-Field XTDL-Actions, -- should implicitly constrained by widget.widgetType
+  argument IA5String, -- type should be implicitly constrained by action_Field
+  argumentList XTDP-IA5StringList OPTIONAL, -- type should be implicitly constrained by action_Field
+  timeout-Field REAL OPTIONAL, -- timeout in seconds
+  ...
+}
+
+XTDP-Response ::= SEQUENCE {
+  requestId INTEGER , -- chosen by requestor
+  responseCode XTDP-Result ,
+  argument UTF8String OPTIONAL, -- an argument for a get request, for example
+				  -- type should be implicitly constrained by 
+				  -- action_Field and widget from request
+  errorSource XTDP-ErrorSource OPTIONAL , -- mandatory if response=error
+  errorCode XTDP-ErrorCode OPTIONAL , -- mandatory if response=error
+  errorMessage IA5String  OPTIONAL , -- for human eyes, mandatory, if response=error
+  ...
+}
+
+XTDP-Result ::= ENUMERATED { 	xtdp-success(0) , --sent on success
+				xtdp-pending(1) , --sent  before timeout if no success/error yet
+				xtdp-errorText(2) , -- sent on error, mandatorially implies components:
+					   -- errorSource, errorCode, errorMsg
+				...
+				}
+
+XTDP-ErrorSource ::= ENUMERATED { xtdp-other(0), -- unknown error source 
+				  xtdp-requestor(1), -- error on initiating side: requestor
+						-- shall not resend the same request, since
+						-- it would fail again
+				  xtdp-responder(2), -- requestor might resend the same request later
+				  xtdp-thirdParty(3),-- error caused by identifiable third party 
+						-- that is neither requestor, nor responder
+						-- errorMsg shall identify it
+				...}
+
+XTDP-ErrorCode ::= ENUMERATED { xtdp-syntaxError(0), -- syntax error
+				xtdp-timeOut(1), -- time out
+				xtdp-illegalArgument(2), -- illegal value with respect to type of widget 
+				xtdp-illegalAction(3), -- illegal action_Field with respect to type of widget
+				xtdp-illegalWidget(4), -- widget does not exist
+				...
+			      }
+
+--[AssignmentListTail]--
+/*ENCODING-CONTROL XER
+GLOBAL-DEFAULTS MODIFIED-ENCODINGS -- encode BOOLEANs as plain strings "true"/"false", 
+                                 -- allow named INTEGER values 
+                                 -- encode ENUMERATED values as plain strings 
+                                 -- encode named BIT STRING values as plain string names 
+                                 -- encode REAL INF, -INF, NaN as plain strings 
+				 
+ATTRIBUTE XTDP-Message.noNamespaceSchemaLocation 
+NAMESPACE XTDP-Message.noNamespaceSchemaLocation AS "http://www.w3.org/2001/XMLSchema-instance" PREFIX "xsi"
+UNTAGGED XTDP-Message.xtdp-Message
+NAME XTDP-Request.action-Field AS "action"
+NAME XTDP-Request.timeout-Field AS "timeout"
+
+TEXT XTDL-Actions:xtdp-get AS "get"
+TEXT XTDL-Actions:xtdp-put AS "put"
+TEXT XTDL-Actions:xtdp-increase AS "increase"
+TEXT XTDL-Actions:xtdp-decrease AS "decrease"
+TEXT XTDL-Actions:xtdp-enable AS "enable"
+TEXT XTDL-Actions:xtdp-disable AS "disable"
+TEXT XTDL-Actions:xtdp-settooltip AS "settooltip"
+
+TEXT XTDL-WidgetType:xtdp-pushButton AS "pushButton"
+TEXT XTDL-WidgetType:xtdp-checkBox AS "checkBox"
+TEXT XTDL-WidgetType:xtdp-integerField AS "integerField"
+TEXT XTDL-WidgetType:xtdp-floatField AS "floatField"
+TEXT XTDL-WidgetType:xtdp-statusLED AS "statusLED"
+TEXT XTDL-WidgetType:xtdp-string AS "string"
+TEXT XTDL-WidgetType:xtdp-statusLEDWithText AS "statusLEDWithText"
+TEXT XTDL-WidgetType:xtdp-none AS "none"
+
+TEXT XTDP-Result:xtdp-success AS "success"
+TEXT XTDP-Result:xtdp-pending AS "pending"
+TEXT XTDP-Result:xtdp-errorText AS "error"
+
+TEXT XTDP-ErrorCode:xtdp-syntaxError AS "syntaxError"
+TEXT XTDP-ErrorCode:xtdp-timeOut AS "timeOut"
+TEXT XTDP-ErrorCode:xtdp-illegalArgument AS "illegalArgument"
+TEXT XTDP-ErrorCode:xtdp-illegalAction AS "illegalAction"
+TEXT XTDP-ErrorCode:xtdp-illegalWidget AS "illegalWidget"
+
+TEXT XTDP-ErrorSource:xtdp-other AS "other"
+TEXT XTDP-ErrorSource:xtdp-requestor AS "requestor"
+TEXT XTDP-ErrorSource:xtdp-responder AS "responder"
+TEXT XTDP-ErrorSource:xtdp-thirdParty AS "thirdParty"
+
+NAME XTDP-Message.xtdp-Message.xtdp-Requests AS "XTDP-Requests"
+NAME XTDP-Message.xtdp-Message.xtdp-Responses AS "XTDP-Responses"
+NAME XTDP-Message.xtdp-Message.xtdp-ConfigRequest AS "XTDP-ConfigRequest"
+NAME XTDP-Message.xtdp-Message.xtdp-ConfigResponse AS "XTDP-ConfigResponse"
+
+--XER-ENCODING-CONTROL-ENDS*/
+
+XTDP-AddRequest ::= SEQUENCE {
+  requestId INTEGER , -- chosed by requestor
+  parent-widgetID XTDP-Identifier OPTIONAL, --the widget to add elements to
+  xul   XTDP-XML-Tag --to add to the GUI
+}
+
+XTDP-XML-Tag ::= CHOICE {
+  xtdp-window           Window,
+  xtdp-tabbox           Tabbox,
+  xtdp-tabs             Tabs,
+  xtdp-tab              Tab,
+  xtdp-tabpanels        Tabpanels,
+  xtdp-tabpanel         Tabpanel,
+  xtdp-tree             Tree,
+  xtdp-treecols         Treecols,
+  xtdp-treecol          Treecol,
+  xtdp-treechildren     Treechildren,
+  xtdp-treeitem         Treeitem,
+  xtdp-treerow          Treerow,
+  xtdp-treecell         Treecell,
+  xtdp-hbox             Hbox,
+  xtdp-labeltype        Label,
+  xtdp-spacer           Spacer,
+  xtdp-button           Button,
+  xtdp-textbox          Textbox,
+  xtdp-chart            Chart,
+  xtdp-tracelist        TraceList,
+  xtdp-trace            Trace,
+  xtdp-toolbar          Toolbar,
+  xtdp-toolbarelements  Toolbarelements,
+  xtdp-toolbarbutton    Toolbarbutton,
+  xtdp-separator        Separator,
+  xtdp-listbox          Listbox,
+  xtdp-listitem         Listitem,
+  xtdp-numericalwidget  Numericalwidget,
+  xtdp-menulist         Menulist,
+  xtdp-menuitem         Menuitem,
+  xtdp-distributionchart Distributionchart,
+  xtdp-valuelist        DistributionchartValuelist,
+  xtdp-image            Image
+}
+
+
+XTDP-RemoveRequest ::= SEQUENCE {
+  requestId INTEGER , -- chosen by requestor
+  widgetID XTDP-Identifier OPTIONAL --the widget to remove
+}
+
+XTDP-LayoutRequest ::= SEQUENCE {
+  requestId INTEGER , -- chosen by requestor
+  widgetID  XTDP-Identifier OPTIONAL --the widget to query; omit = whole window
+}
+
+XTDP-LayoutResponse ::= SEQUENCE {
+  requestId INTEGER , -- chosen by requestor
+  xul       XTDP-XML-Tag -- requested widget structure
+}
+
+END
+

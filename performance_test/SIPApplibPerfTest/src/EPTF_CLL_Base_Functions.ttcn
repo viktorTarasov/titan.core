@@ -1,0 +1,1385 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_CLL_Base_Functions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 512
+//  Updated:  2012-11-07
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////
+//  Module: EPTF_CLL_Base_Functions
+// 
+//  Purpose:
+//    This module contains the implementation of generic EPTF_CLL_Base functions.
+// 
+//  Module depends on:
+//    <EPTF_CLL_Base_Definitions>
+//    <EPTF_CLL_Commmon_Functions>
+// 
+//  Current Owner:
+//    Jozsef Gyurusi (ETHJGI)
+// 
+//  Last Review Date:
+//    2009-05-14
+//
+//  Detailed Comments:
+//    This module contains the interface functions for the EPTF_CLL_Base.
+//    Public functions:
+//      <f_EPTF_Base_init_CT>
+//      <f_EPTF_Base_registerCleanup>
+//      <f_EPTF_Base_cleanup_CT>
+//      <f_EPTF_Base_stop>
+//      <f_EPTF_Base_stopRemote>
+//      <f_EPTF_Base_stopAll>
+//      <f_EPTF_Base_selfName>
+//      <f_EPTF_Base_cleanupIsInProgress>
+//      <f_EPTF_Base_wait4Shutdown>
+//      <f_EPTF_Base_waitForCondition>
+//      <f_EPTF_Base_upcast>
+//      <f_EPTF_Base_downcast>
+//      <f_EPTF_Base_getRelTimeInSecs>
+//      <f_EPTF_Base_getRelTimeOffsetInSecs>
+//      <f_EPTF_Base_getAbsTimeInSecs>
+//      <f_EPTF_Base_getTimeOfDay>
+//      <f_EPTF_Base_setNegativeTestMode>
+//      <f_EPTF_Base_getNegativeTestMode>
+//      <f_EPTF_Base_assert>
+//      <f_EPTF_Base_nofAssertMsgs>
+//      <f_EPTF_Base_getAssertMsg>
+//      <f_EPTF_Base_setExpectedAssertMsg>
+//      <f_EPTF_Base_setExpectedErrorMsg>
+//      <f_EPTF_Base_checkExpectedAssert>
+//      <f_EPTF_Base_checkExpectedError>
+//      <f_EPTF_Base_getPid>
+//      <f_EPTF_Base_getHostName>
+//      <f_EPTF_Base_getComponentInfoByName>
+//      <f_EPTF_Base_getPidByName>
+//      <f_EPTF_Base_getComponentInfoAll>
+//
+///////////////////////////////////////////////////////////////
+
+module EPTF_CLL_Base_Functions {
+
+import from EPTF_CLL_Base_Definitions all;
+import from EPTF_CLL_Common_Functions all;
+
+///////////////////////////////////////////////////////////
+// _Group: Public
+//
+// Purpose:
+//   Public functions. Only these functions can be used by the user of <EPTF_Base_CT>
+//
+// Elements:
+///////////////////////////////////////////////////////////
+group Public {
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Base_init_CT
+// 
+//  Purpose:
+//    Initialises the EPTF_Base_CT component
+//
+//  Parameters:
+//    -
+//
+//  Return Value:
+//    -
+//
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//    This function should be called before using the EPTF Base
+//    component.
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_Base_init_CT(in charstring pl_selfName) runs on EPTF_Base_CT_private {
+  if (v_EPTF_Base_initialized) {
+    return;
+  }
+  v_selfName := pl_selfName;
+  v_EPTF_Base_cleanupFunctions := {};
+  v_EPTF_Base_componentsToStop := {};
+  v_EPTF_Base_componentInfoList := {};
+  v_EPTF_Base_getCompInfoResult := {};
+  f_EPTF_Base_addComponentInfo(f_EPTF_Base_downcast(f_EPTF_Base_upcast(self)),v_selfName,f_EPTF_Base_getHostName(),f_EPTF_Base_getPid());
+  v_EPTF_Base_disableBye := false;
+  v_EPTF_Base_byeAckReceived := false;
+  v_EPTF_Base_stopRemoteSentTo := null;
+  v_EPTF_Base_negativeTestMode := false;
+  v_EPTF_Base_assertMsgs := {};
+  v_EPTF_Base_expectedAssert := "";
+  v_EPTF_Base_expectedError := "";
+  // notify mtc:
+  if (self != mtc) {
+    connect(self:EPTF_Base_MgmtIf,mtc:EPTF_Base_MgmtIf); // mtc will close the connection
+    f_EPTF_Base_send({hello := {f_EPTF_Base_getPid(),v_selfName,f_EPTF_Base_getHostName()}},mtc);
+    //disconnect(self:EPTF_Base_MgmtIf,mtc:EPTF_Base_MgmtIf);
+  }
+  T_EPTF_componentClock.start;
+  v_EPTF_Base_abstimeOfZeroComponentClock := f_EPTF_Base_getTimeOfDay();
+  v_EPTF_Base_def := activate(as_handle_main_EPTF_Base_MgmtIf());
+  v_EPTF_Base_initialized := true;
+
+  f_EPTF_Base_registerCleanup(refers(f_EPTF_Base_cleanup_CT));
+  if (tsp_EPTF_Base_debug){
+    f_EPTF_Common_user(log2str("----BASE INIT DONE FOR COMPONENT ",v_selfName,"----"));
+  }
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Base_registerCleanup
+// 
+//  Purpose:
+//    This function should be called at the end of the init function of any component that extends EPTF_Base_CT component (explicitly or implicitly)
+//
+//  Parameters:
+//    pl_featureCleanupFn - *in* <f_EPTF_Feature_cleanup_CT> - the cleanup function that should be called before terminating the user component
+//
+//  Return Value:
+//    -
+//
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//    This function should be called in a component that extends (explicitly or implicitly) the EPTF_Base_CT
+//    with the argument of the cleanup function of the given component ('self.cleanup')
+//    The cleanup function itself should not call f_EPTF_Base_cleanup_CT.
+//    But if you call f_EPTF_Base_cleanup_CT inside your cleanup function put it after
+//    the line where you have set the v_initialized flag to false, otherwise, if your cleanup function was registered,
+//    it will be called twice!
+//
+//    The registered cleanup function should make sure, that all components that were created by the
+//    current component (=feature) will be stopped. Also all open port connections belonging
+//    to the current component should be closed and the connected component should be notified
+//    about the termination of the connection.
+//
+//    Note, that before the component exits, either <f_EPTF_Base_stop>, <f_EPTF_Base_cleanup_CT> or <f_EPTF_Base_stopAll> has to be called!
+//
+//    So the best rule:
+//     - in your init function call all the init functions of those components that your component extends explicitly
+//     - after that, initialize your component variables
+//     - activate your main event handler altstep as default before the init function calls if you would like to set
+//       the lowest priority for it, or after the init function calls for the highest priority.
+//       Always use the lowest priority for your altstep! Otherwise your altstep can affect the priorities in EPTF.
+//       Note, that the order of the init function calls may affect the default altstep priorities.
+//       The altstep for the latter init function normally will get higher priority unless 
+//       the earlier component extends the latter component and sets highest priority for itself.
+//     - register your cleanup function by f_EPTF_Base_registerCleanup at the end of your init function
+//     - do not call any cleanup function inside your cleanup function
+//     - call f_EPTF_Base_cleanup_CT before your component terminates
+//       or call f_EPTF_Base_stop if the execution should be stopped by an error (forced to stop immediately)
+//     - Make sure, that your init and cleanup functions can be called several times (with doing nothing during the additional calls)!
+//     - Make sure, that after your cleanup function is called, your component can be terminated without leaving
+//       any pending operations in the target system (or in other EPTF components),
+//       and that all other PTC-s that should be alive can continue operation without error.
+//
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_Base_registerCleanup(in f_EPTF_Feature_cleanup_CT pl_featureCleanupFn) runs on EPTF_Base_CT_private {
+  if (v_EPTF_Base_initialized == false) {
+    f_EPTF_Common_error(log2str("ERROR:","f_EPTF_Base_init_CT is not called before calling f_EPTF_Base_registerCleanup for ", pl_featureCleanupFn));
+    
+  }
+  for (var integer i:=0; i<sizeof(v_EPTF_Base_cleanupFunctions); i:=i+1) {
+    if (pl_featureCleanupFn == v_EPTF_Base_cleanupFunctions[i]) {
+      // already registered
+      return;
+    }
+  }
+  v_EPTF_Base_cleanupFunctions[sizeof(v_EPTF_Base_cleanupFunctions)] := pl_featureCleanupFn;
+}
+
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Base_cleanup_CT
+// 
+//  Purpose:
+//    This function should be called on any component that extends the EPTF_Base_CT as the last function call
+//    before the component terminates to shut the component down gracefully.
+//
+//  Parameters:
+//    -
+//
+//  Return Value:
+//    -
+//
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//    This function makes it possible to be able to shut down the component that extends <EPTF_Base_CT> gracefully.
+//    It calls all registered cleanup functions backwards as they were registered.
+//
+//    This function can be called inside or outside the main alt-loop. The main alt-loop
+//    will terminate if there is no 'repeat' statement after calling f_EPTF_Base_cleanup_CT.
+//    This is because f_EPTF_Base_cleanup_CT does not terminate the component.
+//    The stop; statement can only be called after f_EPTF_Base_cleanup_CT returned.
+//    To terminate the component use the function <f_EPTF_Base_stop> instead.
+//    The f_EPTF_Base_cleanup_CT function can normally be used as the last function call in the
+//    component's behaviour function (a function that is started on the component). On all other
+//    places use <f_EPTF_Base_stop>.
+//
+//    Note, that f_EPTF_Base_cleanup_CT is a blocking function. This means that the execution blocked until
+//    all cleanup function finished its operation.
+//    
+///////////////////////////////////////////////////////////
+public function f_EPTF_Base_cleanup_CT() runs on EPTF_Base_CT_private {
+  if (v_EPTF_Base_initialized == false) {
+    return;
+  }
+  v_EPTF_Base_initialized := false;
+  // the flag should be set before the for cycle, otherwise the
+  // cycle would be executed more than once, if a cleanup function called f_EPTF_Base_cleanup_CT
+  if (tsp_EPTF_Base_debug){
+    f_EPTF_Common_user("----BASE CLEANUP START----");
+  }
+  if (mtc == self) {
+    f_EPTF_Base_stopAllComponents();
+  }
+
+  // should go backwards! :
+  for (var integer i:=sizeof(v_EPTF_Base_cleanupFunctions)-1; i>-1; i:=i-1) {
+    if (tsp_EPTF_Base_debug){
+        f_EPTF_Common_user(log2str("DEBUG:","Calling cleanup function ",v_EPTF_Base_cleanupFunctions[i]));
+    }
+    v_EPTF_Base_cleanupFunctions[i].apply();
+    if (tsp_EPTF_Base_debug){
+        f_EPTF_Common_user(log2str("DEBUG:","Cleanup function done ",v_EPTF_Base_cleanupFunctions[i]));
+    }
+  }
+  
+  if (v_EPTF_Base_expectedAssert!="") { // only check if it was specified
+    if (f_EPTF_Base_checkExpectedAssert(v_EPTF_Base_expectedAssert)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+  }
+  if (v_EPTF_Base_expectedError!="") { // only check if it was specified
+    if (f_EPTF_Base_checkExpectedError(v_EPTF_Base_expectedError)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+  }
+
+  // if I am the mtc check if all components have exited:
+  if (mtc == self) {
+    f_EPTF_Base_stopAllComponents();
+//    var EPTF_Base_MgmtMsg vl_EPTF_Base_MgmtIf_msg;
+//    var EPTF_Base_CT vl_EPTF_Base_MgmtIf_msg_sender;
+    timer t_periodicStop := 2.0;
+    t_periodicStop.start;
+    alt {
+      [] all component.done;
+      [] t_periodicStop.timeout {
+        f_EPTF_Base_stopAllComponents();
+        t_periodicStop.start;
+        repeat;
+      }
+    }
+    //setverdict(none);
+  } else {
+    // do not send bye to MTC if MTC wants me to stop:
+    if (v_EPTF_Base_disableBye == false) {
+      //connect(self:EPTF_Base_MgmtIf,mtc:EPTF_Base_MgmtIf); // connection will be closed when byeAck received
+      f_EPTF_Base_send({bye := {}},mtc);
+      f_EPTF_Base_waitForByeAck();
+      disconnect(self:EPTF_Base_MgmtIf,mtc:EPTF_Base_MgmtIf); // Permanent connection will be closed here
+    }
+  }
+
+  if(T_EPTF_componentClock.running) { T_EPTF_componentClock.stop; }
+
+  v_EPTF_Base_stopRemoteSentTo := null;
+  if (tsp_EPTF_Base_debug){
+    f_EPTF_Common_user(log2str("----BASE CLEANUP DONE FOR ",v_selfName,"----"));
+  }
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Base_stop
+// 
+//  Purpose:
+//    This function should be called to force the current component to terminate
+//
+//  Parameters:
+//    pl_verdict - *in verdicttype* - the verdict to set (default: fail) (FIXME: to be changed to none)
+//
+//  Return Value:
+//    -
+//
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//   Wrapper around 'stop', but shuts down the component gracefully by calling the cleanup functions.
+//   (To stop without cleanups use stop;)
+//   All 'stop;' should be replaced with 'f_EPTF_Base_stop();'
+//   The current component is terminated before the function returns. (blocking stop)
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_Base_stop(in verdicttype pl_verdict := fail) runs on EPTF_Base_CT_private {
+  if (pl_verdict != none and not v_EPTF_Base_negativeTestMode) {
+    setverdict(pl_verdict);
+  }
+  if (v_EPTF_Base_initialized == false) {
+    f_EPTF_Common_warning(log2str("Warning:","Stop requested during cleanup. Cleanup is aborted."));
+    stop; // cleanup is in progress, additional stop forces component to stop without further cleanup!
+  }
+  if (tsp_EPTF_Base_debug){
+    f_EPTF_Common_user("Trying to stop execution gracefully...");
+  }
+  f_EPTF_Base_cleanup_CT();
+  stop;
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Base_stopRemote
+// 
+//  Purpose:
+//    This function should be called to force any remote component that extends EPTF_Base_CT to terminate
+//
+//  Parameters:
+//    pl_remoteComp - <EPTF_Base_CT> - the remote component to stop
+//    pl_noCleanup - *boolean* - true if stops without cleanup (fast method), default: false
+//
+//  Return Value:
+//    -
+//
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//   Shuts down the remote component gracefully. The current component continues its operation except it is called with mtc.
+//
+//   If called with pl_remoteComp := mtc, the whole system will be shut down. This is equivalent to f_EPTF_Base_stopAll(none);
+//   In this case the function does not return. The current component is terminated inside this function call;
+//
+//   If called with pl_remoteComp := self, the component it is called on will be shut down. The difference between this and f_EPTF_Base_stop(none);
+//   is that the latter will not return (component is terminated before the function returns) while the first will return and the termination of the component
+//   will be started on a different alt level (at which the stopRemote event is handled) (non-blocking stop).
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_Base_stopRemote(in EPTF_Base_CT_private pl_remoteComp, in boolean pl_noCleanup := false) runs on EPTF_Base_CT_private {
+  if (tsp_EPTF_Base_debug){
+    f_EPTF_Common_user(log2str("Requesting to stop execution of component ",pl_remoteComp," gracefully..."));
+  }
+
+  if (self == mtc) {
+    // I want to stop somebody and I am the mtc: remote will be terminated, so it has to be removed from the database:
+    f_EPTF_Base_removeComponent(pl_remoteComp);
+  }
+  
+  if (pl_remoteComp == mtc) {
+    if (v_EPTF_Base_initialized == false) {
+      f_EPTF_Common_warning(log2str("Warning:","Cleanup is in progress, additional stopRemote is ignored for pl_remoteComp: mtc."));
+      return; // do nothing: cleanup is in progress, additional stopRemote is ignored!
+    }
+    if (self != mtc) {
+      //connect(self:EPTF_Base_MgmtIf,pl_remoteComp:EPTF_Base_MgmtIf);
+      f_EPTF_Base_send({stopRemote := {pl_noCleanup}},pl_remoteComp);
+      if (pl_noCleanup == true) { //Permanent connection has to be closed here
+        disconnect(self:EPTF_Base_MgmtIf,pl_remoteComp:EPTF_Base_MgmtIf);
+      }
+      f_EPTF_Base_wait4Shutdown(); // StopRemote with wait4Shutdown
+    }
+//    else {   // StopRemote with wait4Shutdown
+      if (pl_noCleanup == false) {
+        v_EPTF_Base_disableBye := true;
+        f_EPTF_Base_cleanup_CT();
+      }
+//  }        // StopRemote with wait4Shutdown
+    stop;
+  }
+  // send stopRemote to remoteComp, which cannot be the mtc here
+  connect(self:EPTF_Base_MgmtIf,pl_remoteComp:EPTF_Base_MgmtIf);
+  f_EPTF_Base_send({stopRemote := {pl_noCleanup}},pl_remoteComp);
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Base_stopAll
+// 
+//  Purpose:
+//    This function should be called to force all components that extends EPTF_Base_CT to terminate
+//
+//  Parameters:
+//    pl_verdict - *in verdicttype* - the verdict to set (default: fail) (FIXME: to be changed to none)
+//    pl_noCleanup - *in boolean* - true if stops without cleanup (fast method), default: false
+//
+//  Return Value:
+//    -
+//
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//   Shuts down all components gracefully. The current component is terminated before the function returns. (blocking stop)
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_Base_stopAll(in verdicttype pl_verdict := fail, in boolean pl_noCleanup := false) runs on EPTF_Base_CT_private {
+  if (pl_verdict != none and not v_EPTF_Base_negativeTestMode) {
+    setverdict(pl_verdict);
+  }
+  if (tsp_EPTF_Base_debug){
+    f_EPTF_Common_user("Trying to stop execution of all components gracefully...");
+  }
+  f_EPTF_Base_stopRemote(mtc,pl_noCleanup);
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Base_selfName
+// 
+//  Purpose:
+//    Returns the name of the component, that was specified in the <f_EPTF_Base_init_CT> function
+//
+//  Parameters:
+//    -
+//
+//  Return Value:
+//    charstring - the name of the component
+//
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_Base_selfName() runs on EPTF_Base_CT_private  return charstring {
+  return v_selfName;
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Base_cleanupIsInProgress
+// 
+//  Purpose:
+//    Returns true after the base cleanup function was called (when the function is entered)
+//    and the cleanup mechanism is in progress or has finished.
+//
+//  Parameters:
+//    -
+//
+//  Return Value:
+//    charstring - the name of the component
+//
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_Base_cleanupIsInProgress() runs on EPTF_Base_CT_private  return boolean {
+  return v_EPTF_Base_initialized;
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Base_wait4Shutdown
+// 
+//  Purpose:
+//    Main event loop.
+//
+//  Parameters:
+//    -
+//
+//  Return Value:
+//    -
+//
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//    This function waits for the component clock timeout, i.e. it waits
+//    indefinitely, but keeps the default altsteps of EPTF running.
+//    Since the timeout is an alt statement, the wait for timeout is skipped
+//    once a default altstep runs and don't `repeat' the alt snapshot.
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_Base_wait4Shutdown() runs on EPTF_Base_CT_private
+{
+  T_EPTF_componentClock.timeout;
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Base_waitForCondition
+// 
+//  Purpose:
+//    A general function to wait for a condition to become true.
+//    It blocks the execution until the pl_checkCondFn function returns true.
+//
+//  Parameters:
+//    pl_checkCondFn - in <EPTF_Base_CheckCondition_FT> - reference to the function that checks
+//      whether the condition is true.
+//      Default: null.  This means that the function blocks the execution until
+//      the maxWaitTime expires (or until stop is requested).
+//
+//    pl_maxWaitTime - in *float* - the maximal time to wait for the condition to become true
+//      Default: -1.0 which means infinity
+//
+//  Return Value:
+//    *boolean* - true if the condition was fulfilled, false otherwise
+//
+//  Errors & assertions:
+//    - 
+//
+//  Detailed Comments:
+//    Can be used to block execution until the condition becomes true.
+//    By calling this function the user can block execution until
+//    a given event occurs ( = the event when the value returned
+//    by the pl_checkCondFn function becomes true).
+//    If it is called with a null pl_checkCondFn argument (default setting), the function
+//    blocks the execution for pl_maxWaitTime seconds.
+//
+//    If the function is called with default arguments (function and max wait time is not given),
+//    it behaves similarly to <f_EPTF_Base_wait4Shutdown>, i.e. it blocks the execution forever
+//    (or until stop is requested).
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_Base_waitForCondition(
+  in EPTF_Base_CheckCondition_FT pl_checkCondFn := null,
+  in float pl_maxWaitTime := -1.0
+) return boolean {
+  timer t_wait := 0.0;
+  t_wait.start;
+  timer t_periodicUpdate := 1.0; // needed to generate an event even if nothing happens
+  if (pl_checkCondFn!=null) {
+    t_periodicUpdate.start;
+  }
+  timer t_maxWait := 0.0;
+  if (pl_maxWaitTime>0.0) {
+    t_maxWait.start(pl_maxWaitTime);
+  }
+  alt {
+    [pl_checkCondFn!=null and pl_checkCondFn.apply()] t_wait.timeout {
+      return true; // condition fulfilled
+    }
+    [pl_maxWaitTime>0.0] t_maxWait.timeout;
+    [pl_checkCondFn!=null] t_periodicUpdate.timeout {
+      t_periodicUpdate.start;
+      repeat;
+    }
+  }
+  return false; // the alt exited before the condition was true
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Base_upcast
+// 
+//  Purpose:
+//   Cast the component type from EPTF_Base_CT to integer
+// 
+//  Parameters:
+//    pl_compRef - <EPTF_Base_CT> - the component to cast
+//
+//  Return Value:
+//    integer - the casted component reference
+//
+//  Detailed Comments:
+//    Actually accepts all components that extend <EPTF_Base_CT>
+//
+///////////////////////////////////////////////////////////
+public external function f_EPTF_Base_upcast(in EPTF_Base_CT_private pl_compRef) return integer;
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Base_downcast
+// 
+//  Purpose:
+//   Cast the component type from integer to EPTF_Base_CT
+// 
+//  Parameters:
+//    pl_compRef - *integer* - the component to cast
+//
+//  Return Value:
+//    EPTF_Base_CT - the casted component reference
+//
+///////////////////////////////////////////////////////////
+public external function f_EPTF_Base_downcast(in integer pl_baseCompRef) return EPTF_Base_CT;
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Base_getRelTimeInSecs
+// 
+//  Purpose:
+//    Get the relative time in seconds since component initialization.
+//
+//  Parameters:
+//    -
+//
+//  Return Value:
+//    float
+//
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//    -
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_Base_getRelTimeInSecs()
+runs on EPTF_Base_CT_private
+return float
+{
+  return T_EPTF_componentClock.read;
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Base_getRelTimeOffsetInSecs
+// 
+//  Purpose:
+//    Get the time offset in seconds (getTimeOfDay at component initialization)
+//
+//  Parameters:
+//    -
+//
+//  Return Value:
+//    float
+//
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//    -
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_Base_getRelTimeOffsetInSecs()
+runs on EPTF_Base_CT_private
+return float
+{
+  return v_EPTF_Base_abstimeOfZeroComponentClock;
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Base_getAbsTimeInSecs
+// 
+//  Purpose:
+//    Get the absolute time in seconds (~getTimeOfDay)
+//
+//  Parameters:
+//    -
+//
+//  Return Value:
+//    float
+//
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//    -
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_Base_getAbsTimeInSecs()
+runs on EPTF_Base_CT_private
+return float
+{
+  return v_EPTF_Base_abstimeOfZeroComponentClock + T_EPTF_componentClock.read;
+}
+
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Base_getTimeOfDay
+// 
+//  Purpose:
+//   Returns the system time since 00:00 UCT, Jan 1, 1970
+// 
+//  Parameters:
+//    -
+//
+//  Return Value:
+//    float
+//
+//  Detailed Comments:
+//    Used for initializing the time offset.
+//    It is recommended to use f_EPTF_Base_getAbsTimeInSecs() instead to
+//    get the current time.
+///////////////////////////////////////////////////////////
+public external function f_EPTF_Base_getTimeOfDay() return float;
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Base_setNegativeTestMode
+// 
+//  Purpose:
+//    This function sets the negative test mode
+//
+//  Parameters:
+//    pl_negativeTest - *in boolean* - if true: <f_EPTF_Base_assert> will not set the verdict,
+//            if false: verdict is set by <f_EPTF_Base_assert>
+//
+//  Return Value:
+//    -
+//
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//    It disables the setverdict in the functions: <f_EPTF_Base_stop>, <f_EPTF_Base_stopAll> and <f_EPTF_Base_assert>
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_Base_setNegativeTestMode(in boolean pl_negativeTest := true) runs on EPTF_Base_CT_private {
+  action(%definitionId&": THIS IS A NEGATIVE TEST, VERDICT SHOULD BE PASS!");
+  v_EPTF_Base_negativeTestMode:= pl_negativeTest;
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Base_getNegativeTestMode
+// 
+//  Purpose:
+//    This function returns the negative test mode
+//
+//  Parameters:
+//
+//  Return Value:
+//    -
+//
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_Base_getNegativeTestMode() 
+runs on EPTF_Base_CT_private
+return boolean{
+  return v_EPTF_Base_negativeTestMode;
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Base_assert
+// 
+//  Purpose:
+//   Stop the component execution if the condition is false and print out a message.
+// 
+//  Parameters:
+//    pl_assertMessage - *charstring* - the message printed out on error
+//    pl_predicate - *boolean* - the condition that should be true, otherwise the component will be stopped
+//
+//  Return Value:
+//    -
+//
+///////////////////////////////////////////////////////////
+public external function f_EPTF_Base_assert(in charstring pl_assertMessage,in boolean pl_predicate);
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Base_addAssertMsg
+// 
+//  Purpose:
+//   Adds the message to the assert messages list.
+// 
+//  Parameters:
+//    pl_newMsg - *in charstring* - message to add
+//
+//  Return Value:
+//    -
+//
+///////////////////////////////////////////////////////////
+private function f_EPTF_Base_addAssertMsg(in charstring pl_newMsg) runs on EPTF_Base_CT_private {
+  v_EPTF_Base_assertMsgs[sizeof(v_EPTF_Base_assertMsgs)] := pl_newMsg;
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Base_nofAssertMsgs
+// 
+//  Purpose:
+//    Returns the number of assert messages generated by previous <f_EPTF_Base_assert> function calls.
+// 
+//  Parameters:
+//    -
+//
+//  Return Value:
+//    integer - the number of assert messages
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_Base_nofAssertMsgs() runs on EPTF_Base_CT_private return integer {
+  return sizeof(v_EPTF_Base_assertMsgs);
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Base_getAssertMsg
+// 
+//  Purpose:
+//   Returns an assert message from the previous assert messages.
+// 
+//  Parameters:
+//    pl_assertNum - *in integer* - the id of the assert message (0 for the first message)
+//
+//  Return Value:
+//    charstring - the assert message, "" if not found
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_Base_getAssertMsg(in integer pl_assertNum := 0) runs on EPTF_Base_CT_private return charstring {
+  if (sizeof(v_EPTF_Base_assertMsgs)==0) {
+    return "";
+  }
+  if (sizeof(v_EPTF_Base_assertMsgs)<=pl_assertNum or pl_assertNum<0) {
+    return "";
+  }
+  return v_EPTF_Base_assertMsgs[pl_assertNum];
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Base_setExpectedAssertMsg
+// 
+//  Purpose:
+//   Sets the assert message that is checked in cleanup if this was the first assert message.
+// 
+//  Parameters:
+//    pl_expectedAssert - *in charstring* - the assert message pattern to expect as the first assert
+//
+//  Return Value:
+//    -
+//
+//  Detailed Comments:
+//    The expected assert pattern is automatically checked in <f_EPTF_Base_cleanup_CT>,
+//    and the verdict is set automatically to pass if that matches with the first assert, and fail if it does not.
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_Base_setExpectedAssertMsg(in charstring pl_expectedAssert) runs on EPTF_Base_CT_private {
+  v_EPTF_Base_expectedAssert := pl_expectedAssert;
+  if("" != v_EPTF_Base_expectedError){
+    f_EPTF_Common_warning(%definitionId&": There is already an expected error message: "&v_EPTF_Base_expectedError&
+    " This may cause ambiguous behavior!")
+  }
+  f_EPTF_Base_setNegativeTestMode()
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Base_setExpectedErrorMsg
+// 
+//  Purpose:
+//   Sets the error message that is checked in cleanup if this was the first error message.
+// 
+//  Parameters:
+//    pl_expectedError - *in charstring* - the error message pattern to expect as the first assert
+//
+//  Return Value:
+//    -
+//
+//  Detailed Comments:
+//    The expected assert pattern is automatically checked in <f_EPTF_Base_cleanup_CT>,
+//    and the verdict is set automatically to pass if that matches with the first error, and fail if it does not.
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_Base_setExpectedErrorMsg(in charstring pl_expectedError) runs on EPTF_Base_CT_private {
+  v_EPTF_Base_expectedError := pl_expectedError;
+  if("" != v_EPTF_Base_expectedAssert){
+    f_EPTF_Common_warning(%definitionId&": There is already an expected assert message: "&v_EPTF_Base_expectedAssert&
+    " This may cause ambiguous behavior!")
+  }
+  f_EPTF_Base_setNegativeTestMode()
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Base_checkExpectedAssert
+// 
+//  Purpose:
+//   Checks if the expectedAssert message pl_expectedAssert was the assert message at pl_assertNum or not
+// 
+//  Parameters:
+//    pl_expectedAssert - *in charstring* - the expected assert pattern
+//    pl_assertNum - *in integer* - the id of the assert message (0 for the first message)
+//
+//  Return Value:
+//    boolean - true if the expected assert pattern matches with the given assert
+//
+//  Detailed Comments:
+//   This function is called automatically in the <f_EPTF_Base_cleanup_CT>
+///////////////////////////////////////////////////////////
+public function f_EPTF_Base_checkExpectedAssert(in charstring pl_expectedAssert, in integer pl_assertNum := 0)
+runs on EPTF_Base_CT_private return boolean {
+  if (not match(f_EPTF_Base_getAssertMsg(pl_assertNum), pattern pl_expectedAssert)) {
+    f_EPTF_Common_warning("Warning: "&%definitionId& ": Assert message with id "&int2str(pl_assertNum)&" is different from the expected pattern: "&
+      log2str(match(f_EPTF_Base_getAssertMsg(pl_assertNum), pattern pl_expectedAssert)));
+    return false;
+  } else {
+    f_EPTF_Common_user(%definitionId& ": Assert message with id "&int2str(pl_assertNum)&" matches with the expected pattern: "& pl_expectedAssert);
+    return true;
+  }
+  return true;
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Base_checkExpectedError
+// 
+//  Purpose:
+//   Checks if the expectedError message pl_expectedError was the error message at pl_errNum or not
+// 
+//  Parameters:
+//    pl_expectedError - *in charstring* - the expected error pattern
+//    pl_errNum - *in integer* - the id of the error message (0 for the first message)
+//
+//  Return Value:
+//    boolean - true if the expected error pattern matches with the given error
+//
+//  Detailed Comments:
+//   This function is called automatically in the <f_EPTF_Base_cleanup_CT>
+///////////////////////////////////////////////////////////
+public function f_EPTF_Base_checkExpectedError(in charstring pl_expectedError, in integer pl_errNum := 0)
+runs on EPTF_Base_CT_private return boolean {
+  if (not match(f_EPTF_Common_getErrorMsg(pl_errNum), pattern pl_expectedError)) {
+    f_EPTF_Common_warning("Warning: "&%definitionId& ": Error message with id "&int2str(pl_errNum)&" is different from the expected pattern: "&
+      log2str(match(f_EPTF_Common_getErrorMsg(pl_errNum), pattern pl_expectedError)));
+    return false;
+  } else {
+    f_EPTF_Common_user(%definitionId& ": Error message with id "&int2str(pl_errNum)&" matches with the expected pattern: "& pl_expectedError);
+    return true;
+  }
+  return true;
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Base_getPid
+// 
+//  Purpose:
+//   Returns the pid of the current process
+// 
+//  Parameters:
+//    -
+//
+//  Return Value:
+//    integer
+//
+//  Detailed Comments:
+//    -
+///////////////////////////////////////////////////////////
+public external function f_EPTF_Base_getPid() return integer;
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Base_getHostName
+// 
+//  Purpose:
+//   Returns the name of the current host
+// 
+//  Parameters:
+//    -
+//
+//  Return Value:
+//    charstring - name of the host
+//
+//  Detailed Comments:
+//    -
+///////////////////////////////////////////////////////////
+public external function f_EPTF_Base_getHostName() return charstring;
+
+///////////////////////////////////////////////////////////
+//  Public Function: f_EPTF_Base_getComponentInfoByName
+// 
+//  Purpose:
+//    Returns the component data for a given name
+// 
+//  Parameters:
+//    pl_name - *in* *charstring* - the name of the component to find
+//    pl_compInfo - *in* <EPTF_Base_ComponentInfo> - the info about the component
+//
+//  Returns:
+//    integer - error code (zero if the result is valid, nonzero if error occured)
+//
+//  Detailed Comments:
+//    If more than one component exists with the same name, the one that is found first is returned
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_Base_getComponentInfoByName(in charstring pl_name, out EPTF_Base_ComponentInfo pl_compInfo)
+runs on EPTF_Base_CT_private return integer {
+  // check in local database
+  for(var integer i:=0;  i < sizeof(v_EPTF_Base_componentInfoList); i:=i+1) {
+    if (v_EPTF_Base_componentInfoList[i].selfName==pl_name) {
+      pl_compInfo := v_EPTF_Base_componentInfoList[i];
+      return 0;
+    }
+  }
+  // if I am the mtc: entry not found:
+  if (self == mtc) {
+    return -1;
+  } else {
+    // send message to mtc and wait for the response
+    timer t_semaphore := 0.0;
+    timer t_maxWait := tsp_EPTF_Base_maxWaitTime;
+
+    // allocate buffer for result:
+    var integer vl_EPTF_Base_getCompInfoRequestSemaphore := sizeof(v_EPTF_Base_getCompInfoResult);
+    v_EPTF_Base_getCompInfoResult[vl_EPTF_Base_getCompInfoRequestSemaphore] := c_EPTF_Base_Msg_GetCompInfoResult_init;
+
+    //connect(self:EPTF_Base_MgmtIf,mtc:EPTF_Base_MgmtIf); // I will close the connection
+    f_EPTF_Base_send({getCompInfo:={vl_EPTF_Base_getCompInfoRequestSemaphore,pl_name}},mtc);
+    // wait for response:
+    t_maxWait.start;
+    t_semaphore.start;
+    alt {
+      [vl_EPTF_Base_getCompInfoRequestSemaphore==v_EPTF_Base_getCompInfoResult[vl_EPTF_Base_getCompInfoRequestSemaphore].msgId] t_semaphore.timeout {
+        // response arrived:
+        pl_compInfo := v_EPTF_Base_getCompInfoResult[vl_EPTF_Base_getCompInfoRequestSemaphore].compInfo;
+        var integer vl_errorCode := v_EPTF_Base_getCompInfoResult[vl_EPTF_Base_getCompInfoRequestSemaphore].errorCode;
+        //disconnect(self:EPTF_Base_MgmtIf,mtc:EPTF_Base_MgmtIf); // I will close the connection
+        if (vl_errorCode==0) {
+          // add new entry to local database
+          f_EPTF_Base_addComponentInfo(pl_compInfo.compRef,pl_compInfo.selfName,pl_compInfo.hostName,pl_compInfo.pid);
+        }
+        v_EPTF_Base_getCompInfoResult[vl_EPTF_Base_getCompInfoRequestSemaphore] := c_EPTF_Base_Msg_GetCompInfoResult_init; // release semaphore
+        return vl_errorCode; // OK
+      }
+      [] t_maxWait.timeout {
+        f_EPTF_Common_warning(%definitionId& ": MaxWaitTime expired to wait for getCompInfo response. Current request failed.");
+        //disconnect(self:EPTF_Base_MgmtIf,mtc:EPTF_Base_MgmtIf); // I will close the connection
+        v_EPTF_Base_getCompInfoResult[vl_EPTF_Base_getCompInfoRequestSemaphore] := c_EPTF_Base_Msg_GetCompInfoResult_init; // release semaphore
+        return -3; // cannot get compInfo, previous request is pending
+      }
+    }
+  }
+  return -1; // not found
+}
+
+///////////////////////////////////////////////////////////
+//  Public Function: f_EPTF_Base_getPidByName
+// 
+//  Purpose:
+//    Returns the component data for a given name
+// 
+//  Parameters:
+//    pl_name - *in* *charstring* - the name of the component to find
+//
+//  Returns:
+//    integer - pid of the component with the given selfName (-1 if not available)
+//
+//  Detailed Comments:
+//    If more than one component exists with the same name, the one that is found first is returned
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_Base_getPidByName(in charstring pl_name)
+runs on EPTF_Base_CT_private return integer {
+  var EPTF_Base_ComponentInfo vl_compInfo;
+  if (0==f_EPTF_Base_getComponentInfoByName(pl_name,vl_compInfo)) {
+    return vl_compInfo.pid;
+  } else {
+    return -1; // not found
+  }
+}
+
+///////////////////////////////////////////////////////////
+//  Public Function: f_EPTF_Base_getComponentInfoAll
+// 
+//  Purpose:
+//    Returns the component data for a given name
+// 
+//  Parameters:
+//    -
+//
+//  Returns:
+//    EPTF_Base_ComponentInfoList - list of all components
+//
+//  Detailed Comments:
+//    -
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_Base_getComponentInfoAll()
+runs on EPTF_Base_CT_private return EPTF_Base_ComponentInfoList {
+  // if I am the mtc: entry not found:
+  if (self == mtc) {
+    return v_EPTF_Base_componentInfoList;
+  } else {
+    // send message to mtc and wait for the response
+    timer t_semaphore := 0.0;
+    timer t_maxWait := tsp_EPTF_Base_maxWaitTime;
+
+    // allocate buffer for result:
+    var integer vl_EPTF_Base_getCompInfoRequestSemaphore := sizeof(v_EPTF_Base_getCompInfoResult);
+    v_EPTF_Base_getCompInfoResult[vl_EPTF_Base_getCompInfoRequestSemaphore] := c_EPTF_Base_Msg_GetCompInfoResult_init;
+
+    //connect(self:EPTF_Base_MgmtIf,mtc:EPTF_Base_MgmtIf); // I will close the connection
+    f_EPTF_Base_send({getCompInfoAll:={vl_EPTF_Base_getCompInfoRequestSemaphore}},mtc);
+    // wait for response:
+    t_maxWait.start;
+    t_semaphore.start;
+    alt {
+      [vl_EPTF_Base_getCompInfoRequestSemaphore==v_EPTF_Base_getCompInfoResult[vl_EPTF_Base_getCompInfoRequestSemaphore].msgId] t_semaphore.timeout {
+        // response arrived:
+        //disconnect(self:EPTF_Base_MgmtIf,mtc:EPTF_Base_MgmtIf); // I will close the connection
+        v_EPTF_Base_getCompInfoResult[vl_EPTF_Base_getCompInfoRequestSemaphore] := c_EPTF_Base_Msg_GetCompInfoResult_init; // release semaphore
+        return v_EPTF_Base_componentInfoList; // OK
+      }
+      [] t_maxWait.timeout {
+        f_EPTF_Common_warning(%definitionId& ": MaxWaitTime expired to wait for getCompInfo response. Current request failed.");
+        //disconnect(self:EPTF_Base_MgmtIf,mtc:EPTF_Base_MgmtIf); // I will close the connection
+        v_EPTF_Base_getCompInfoResult[vl_EPTF_Base_getCompInfoRequestSemaphore] := c_EPTF_Base_Msg_GetCompInfoResult_init; // release semaphore
+        return {}; // cannot get compInfo, previous request is pending
+      }
+    }
+  }
+  return {}; // not found
+}
+
+} // group public
+
+//*************************************************************
+//  private
+//*************************************************************
+
+
+// this function was public, but had incorrect name. Use f_EPTF_Base_registerCleanup instead.
+/*public*/ function f_EPTF_Base_RegisterCleanup(in f_EPTF_Feature_cleanup_CT pl_featureCleanupFn) runs on EPTF_Base_CT_private {
+  f_EPTF_Common_warning("Warning: "&%definitionId& ": This function is deprecated and will be removed! Use f_EPTF_Base_registerCleanup instead!");
+  f_EPTF_Base_registerCleanup(pl_featureCleanupFn);
+}
+
+///////////////////////////////////////////////////////////
+//  Private Function: f_EPTF_Base_addComponentInfo
+// 
+//  Purpose:
+//    Adds a component to the known component list
+// 
+//  Parameters:
+//    -
+//
+//  Detailed Comments:
+//    The component list is used for stopping the added components at cleanup.
+//
+///////////////////////////////////////////////////////////
+private function f_EPTF_Base_addComponentInfo(in EPTF_Base_CT pl_remoteCompRef, in charstring pl_name, in charstring pl_hostName, in integer pl_pid) runs on EPTF_Base_CT_private {
+  var integer vl_i := sizeof(v_EPTF_Base_componentInfoList);
+  v_EPTF_Base_componentInfoList[vl_i] := {pl_name,pl_remoteCompRef,pl_hostName,pl_pid};
+}
+
+///////////////////////////////////////////////////////////
+//  Private Function: f_EPTF_Base_addComponent
+// 
+//  Purpose:
+//    Adds a component to the known component list
+// 
+//  Parameters:
+//    -
+//
+//  Detailed Comments:
+//    The component list is used for stopping the added components at cleanup.
+//
+///////////////////////////////////////////////////////////
+private function f_EPTF_Base_addComponent(in EPTF_Base_CT pl_remoteCompRef) runs on EPTF_Base_CT_private {
+  var integer vl_i := sizeof(v_EPTF_Base_componentsToStop) - 1;
+  while(vl_i >= 0 and v_EPTF_Base_componentsToStop[vl_i] == null) {
+    vl_i := vl_i - 1;
+  }
+  vl_i := vl_i + 1;
+  v_EPTF_Base_componentsToStop[vl_i] := pl_remoteCompRef;
+}
+
+private function f_EPTF_Base_removeComponent(in EPTF_Base_CT_private pl_remoteCompRef) runs on EPTF_Base_CT_private {
+  for (var integer i:=0; i<sizeof(v_EPTF_Base_componentsToStop); i := i+1) {
+    if ( v_EPTF_Base_componentsToStop[i] == pl_remoteCompRef) {
+      v_EPTF_Base_componentsToStop[i] := null;
+      return;
+    }
+  }
+}
+
+private function f_EPTF_Base_stopAllComponents() runs on EPTF_Base_CT_private {
+  v_EPTF_Base_stopRemoteSentTo:=mtc; // to notify the altstep about stopping all components, The value mtc is set only here
+  // stop backwards:
+  for (var integer i:=sizeof(v_EPTF_Base_componentsToStop)-1; i>=0; i := i-1) {
+    if ( v_EPTF_Base_componentsToStop[i] != null) {
+      var EPTF_Base_CT vl_componentToStop := v_EPTF_Base_componentsToStop[i];
+      f_EPTF_Base_stopRemote(v_EPTF_Base_componentsToStop[i]); // always with cleanup: this is not called if stopping without cleanup
+      if (v_EPTF_Base_serialStopAllComponents) {
+        // wait for the component to terminate:
+        vl_componentToStop.done;
+        i:=sizeof(v_EPTF_Base_componentsToStop)-1; // restart the for cycle because bye or stopRemote messages might have arrived during waiting
+      }
+    }
+  }
+}
+
+// stops the last created component
+// if all components terminated it stops itself (the mtc)
+private function f_EPTF_Base_stopLastComponent() runs on EPTF_Base_CT_private{
+  if (self!=mtc) {
+    return; // this function works only on mtc
+  }
+
+  // stop backwards:
+  for (var integer i:=sizeof(v_EPTF_Base_componentsToStop)-1; i>=0; i := i-1) {
+    if ( v_EPTF_Base_componentsToStop[i] != null) {
+      var EPTF_Base_CT vl_componentToStop := v_EPTF_Base_componentsToStop[i];
+      f_EPTF_Base_stopRemote(v_EPTF_Base_componentsToStop[i]); // always with cleanup: this is not called if stopping without cleanup
+      v_EPTF_Base_stopRemoteSentTo := vl_componentToStop;
+      return;
+    }
+  }
+  // all components stopped
+  // stopping myself:
+  if (tsp_EPTF_Base_debug){
+    f_EPTF_Common_user(log2str("All components terminated. Stopping myself (MTC)..."));
+  }
+  f_EPTF_Base_cleanup_CT();
+  stop;
+}
+
+
+// SEND FUNCTION
+
+private function f_EPTF_Base_send(in EPTF_Base_MgmtMsg pl_EPTF_Base_MgmtMsg, in EPTF_Base_CT_private pl_remoteCompRef) runs on EPTF_Base_CT_private {
+  EPTF_Base_MgmtIf.send(pl_EPTF_Base_MgmtMsg) to pl_remoteCompRef;
+}
+
+private function f_EPTF_Base_handle_StopRemote(in EPTF_Base_Msg_StopRemote pl_stopRemote, in EPTF_Base_CT_private pl_EPTF_Base_MgmtIf_msg_sender) runs on EPTF_Base_CT_private {
+  if (v_EPTF_Base_initialized == false) {
+    f_EPTF_Common_warning(log2str("Warning:","Cleanup is in progress, stopRemote message dropped."));
+    if (self == mtc) {
+      // however, the remote component should be removed from database, since that decided to exit by itself:
+      //f_EPTF_Base_removeComponent(pl_EPTF_Base_MgmtIf_msg_sender); // StopRemote with wait4Shutdown
+    }
+    return; // do not exit alt loop now: cleanup is in progress, stopRemote message is dropped!
+  }
+  if (tsp_EPTF_Base_debug){
+    f_EPTF_Common_user(log2str("StopRemote received from ",pl_EPTF_Base_MgmtIf_msg_sender,". Trying to stop execution gracefully..."));
+  }
+  if (self != mtc) {
+    disconnect(self:EPTF_Base_MgmtIf,pl_EPTF_Base_MgmtIf_msg_sender:EPTF_Base_MgmtIf);
+  }
+  if (pl_stopRemote.noCleanup) {
+    f_EPTF_Common_warning(log2str("Warning:","Cleanup is disabled in stopRemote message. CLEANUP IS NOT PERFORMED."));
+  } else {
+    if (pl_EPTF_Base_MgmtIf_msg_sender == mtc) {
+      v_EPTF_Base_disableBye := true;
+    } 
+    if (self == mtc) {
+      // sender wants me to stop and I am the mtc: sender is already terminated
+      //f_EPTF_Base_removeComponent(pl_EPTF_Base_MgmtIf_msg_sender); // StopRemote with wait4Shutdown
+      if (v_EPTF_Base_serialStopAllComponents) {
+        f_EPTF_Base_stopLastComponent(); // stopping of components initiated one by one
+      } else {
+        f_EPTF_Base_stopAllComponents(); // stopping all components at the same time
+      }
+      return; // mtc is not killed. it will be killed after all components have terminated
+    }
+    f_EPTF_Base_cleanup_CT();
+  }
+  stop; // terminate the component now
+}
+
+private function f_EPTF_Base_handle_hello(in EPTF_Base_Msg_Hello pl_msgHello, in EPTF_Base_CT pl_EPTF_Base_MgmtIf_msg_sender) runs on EPTF_Base_CT_private {
+  f_EPTF_Base_addComponent(pl_EPTF_Base_MgmtIf_msg_sender);
+  f_EPTF_Base_addComponentInfo(pl_EPTF_Base_MgmtIf_msg_sender,pl_msgHello.myName,pl_msgHello.myHostName,pl_msgHello.myPid);
+}
+
+private function f_EPTF_Base_handle_getCompInfo(in EPTF_Base_Msg_GetCompInfo pl_msgGetCompInfo, in EPTF_Base_CT pl_EPTF_Base_MgmtIf_msg_sender) runs on EPTF_Base_CT_private {
+  // i am the mtc
+  var EPTF_Base_ComponentInfo vl_compInfo;
+  var integer vl_errorCode := f_EPTF_Base_getComponentInfoByName(pl_msgGetCompInfo.selfName, vl_compInfo);
+  if (vl_errorCode!=0) {
+    vl_compInfo := c_EPTF_Base_ComponentInfo_init;
+  }
+  f_EPTF_Base_send({getCompInfoResult:={
+    pl_msgGetCompInfo.msgId,
+    vl_compInfo,
+    vl_errorCode
+  }},pl_EPTF_Base_MgmtIf_msg_sender)
+}
+
+private function f_EPTF_Base_handle_getCompInfoResult(in EPTF_Base_Msg_GetCompInfoResult pl_msgGetCompInfo, in EPTF_Base_CT pl_EPTF_Base_MgmtIf_msg_sender) runs on EPTF_Base_CT_private {
+  // i am not the mtc
+  v_EPTF_Base_getCompInfoResult[pl_msgGetCompInfo.msgId] := pl_msgGetCompInfo;
+}
+
+private function f_EPTF_Base_handle_getCompInfoAll(in EPTF_Base_Msg_GetCompInfoAll pl_msgGetCompInfoAll, in EPTF_Base_CT pl_EPTF_Base_MgmtIf_msg_sender) runs on EPTF_Base_CT_private {
+  // i am the mtc
+  f_EPTF_Base_send({getCompInfoAllResult:={
+    pl_msgGetCompInfoAll.msgId,
+    v_EPTF_Base_componentInfoList
+  }},pl_EPTF_Base_MgmtIf_msg_sender)
+}
+
+private function f_EPTF_Base_handle_getCompInfoAllResult(in EPTF_Base_Msg_GetCompInfoAllResult pl_msgGetCompInfoAll, in EPTF_Base_CT pl_EPTF_Base_MgmtIf_msg_sender) runs on EPTF_Base_CT_private {
+  // i am not the mtc
+  v_EPTF_Base_getCompInfoResult[pl_msgGetCompInfoAll.msgId].msgId := pl_msgGetCompInfoAll.msgId;
+  // overwrite the local database:
+  v_EPTF_Base_componentInfoList := pl_msgGetCompInfoAll.compInfoAll;
+}
+
+private function f_EPTF_Base_handle_bye(in EPTF_Base_CT pl_EPTF_Base_MgmtIf_msg_sender) runs on EPTF_Base_CT_private {
+  f_EPTF_Base_removeComponent(pl_EPTF_Base_MgmtIf_msg_sender);
+  f_EPTF_Base_send({byeAck := {}},pl_EPTF_Base_MgmtIf_msg_sender);
+}
+
+private function f_EPTF_Base_handle_byeAck(in EPTF_Base_CT pl_EPTF_Base_MgmtIf_msg_sender) runs on EPTF_Base_CT_private {
+  v_EPTF_Base_byeAckReceived := true;
+}
+
+modulepar float tsp_EPTF_Base_maxWaitTime := 120.0;
+
+private function f_EPTF_Base_waitForByeAck() runs on EPTF_Base_CT_private {
+  timer t_wait := 0.0;
+  t_wait.start;
+  timer t_maxWait := tsp_EPTF_Base_maxWaitTime;
+  t_maxWait.start;
+  alt {
+    [v_EPTF_Base_byeAckReceived] t_wait.timeout;
+    [] t_maxWait.timeout {
+      f_EPTF_Common_warning(%definitionId&": ByeAck is not received before max wait time expired. Continuing anyway...");
+    }
+  }
+}
+
+// the main handler function of the EPTF_Var_MgmtIf.
+// returns true if the repeat, false to exit from the main altsep
+private function f_handle_main_EPTF_Base_MgmtIf(
+  in EPTF_Base_MgmtMsg vl_EPTF_Base_MgmtIf_msg,
+  in EPTF_Base_CT vl_EPTF_Base_MgmtIf_msg_sender) runs on EPTF_Base_CT_private return boolean {
+  if (ischosen(vl_EPTF_Base_MgmtIf_msg.stopRemote)) {
+    f_EPTF_Base_handle_StopRemote(vl_EPTF_Base_MgmtIf_msg.stopRemote,vl_EPTF_Base_MgmtIf_msg_sender);
+    return true; // if this code is executed: do not exit from the alt-loop!
+  }
+  if (ischosen(vl_EPTF_Base_MgmtIf_msg.hello)) {
+    f_EPTF_Base_handle_hello(vl_EPTF_Base_MgmtIf_msg.hello,vl_EPTF_Base_MgmtIf_msg_sender);
+    return true;
+  }
+  if (ischosen(vl_EPTF_Base_MgmtIf_msg.getCompInfo)) {
+    f_EPTF_Base_handle_getCompInfo(vl_EPTF_Base_MgmtIf_msg.getCompInfo,vl_EPTF_Base_MgmtIf_msg_sender);
+    return true;
+  }
+  if (ischosen(vl_EPTF_Base_MgmtIf_msg.getCompInfoResult)) {
+    f_EPTF_Base_handle_getCompInfoResult(vl_EPTF_Base_MgmtIf_msg.getCompInfoResult,vl_EPTF_Base_MgmtIf_msg_sender);
+    return true;
+  }
+  if (ischosen(vl_EPTF_Base_MgmtIf_msg.getCompInfoAll)) {
+    f_EPTF_Base_handle_getCompInfoAll(vl_EPTF_Base_MgmtIf_msg.getCompInfoAll,vl_EPTF_Base_MgmtIf_msg_sender);
+    return true;
+  }
+  if (ischosen(vl_EPTF_Base_MgmtIf_msg.getCompInfoAllResult)) {
+    f_EPTF_Base_handle_getCompInfoAllResult(vl_EPTF_Base_MgmtIf_msg.getCompInfoAllResult,vl_EPTF_Base_MgmtIf_msg_sender);
+    return true;
+  }
+  if (ischosen(vl_EPTF_Base_MgmtIf_msg.bye)) {
+    f_EPTF_Base_handle_bye(vl_EPTF_Base_MgmtIf_msg_sender);
+    return true;
+  }
+  if (ischosen(vl_EPTF_Base_MgmtIf_msg.byeAck)) {
+    f_EPTF_Base_handle_byeAck(vl_EPTF_Base_MgmtIf_msg_sender);
+    return true;
+  }
+  // this is never reached:
+  f_EPTF_Common_error(log2str("ERROR:","Unexpected message received from ",vl_EPTF_Base_MgmtIf_msg_sender,": ",vl_EPTF_Base_MgmtIf_msg));
+  return false;
+}
+
+private altstep as_EPTF_Base_stopAllComponents() runs on EPTF_Base_CT_private {
+  [self==mtc and v_EPTF_Base_stopRemoteSentTo!=null and v_EPTF_Base_stopRemoteSentTo!=mtc] v_EPTF_Base_stopRemoteSentTo.done {
+    f_EPTF_Base_stopLastComponent(); // if none remains this will not return
+    repeat;
+  }
+  [self==mtc and v_EPTF_Base_stopRemoteSentTo==mtc and v_EPTF_Base_initialized] all component.done {
+    f_EPTF_Base_stopLastComponent(); // only mtc is alive => stop it
+    repeat;
+  }
+}
+
+private altstep as_handle_main_EPTF_Base_MgmtIf() runs on EPTF_Base_CT_private {
+  var EPTF_Base_MgmtMsg vl_EPTF_Base_MgmtIf_msg;
+  var EPTF_Base_CT vl_EPTF_Base_MgmtIf_msg_sender;
+  [] EPTF_Base_MgmtIf.receive(?) -> value vl_EPTF_Base_MgmtIf_msg sender vl_EPTF_Base_MgmtIf_msg_sender {
+    if (f_handle_main_EPTF_Base_MgmtIf(vl_EPTF_Base_MgmtIf_msg,vl_EPTF_Base_MgmtIf_msg_sender)) {repeat;}
+  }
+  [] as_EPTF_Base_stopAllComponents();
+}
+
+} // end of module

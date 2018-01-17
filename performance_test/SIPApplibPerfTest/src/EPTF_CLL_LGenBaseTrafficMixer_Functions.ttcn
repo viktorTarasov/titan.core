@@ -1,0 +1,282 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_CLL_LGenBaseTrafficMixer_Functions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 512
+//  Updated:  2008-10-17
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////
+// Module: EPTF_CLL_LGenBaseTrafficMixer_Functions
+//
+// Purpose:
+//   Module that defines the EPTF LGenBase TrafficMixer functions.
+//
+// Module Parameters:
+//    tsp_EPTF_CLL_Debug_TrafficMixer - *boolean* - enable debugging (default: *false*)
+//
+//  Module depends on:
+//    <EPTF_CLL_Base_Definitions>
+//    <EPTF_CLL_Base_Functions>
+//    <EPTF_CLL_LGenBaseTrafficMixer_Definitions>
+//
+// Current Owner:
+//    Gabor Tatarka (egbotat)
+//
+// Last Review Date:
+//    2008-02-26
+//
+//  Detailed Comments:
+// 
+///////////////////////////////////////////////////////////
+
+module EPTF_CLL_LGenBaseTrafficMixer_Functions {
+
+import from EPTF_CLL_Base_Functions all;
+import from EPTF_CLL_LGenBaseTrafficMixer_Definitions all;
+import from EPTF_CLL_LGenBase_LoggingFunctions all;
+import from EPTF_CLL_LGenBase_Definitions all;
+import from EPTF_CLL_Common_Definitions all;
+
+friend module EPTF_CLL_LGenBase_TrafficFunctions; // f_EPTF_TrafficMixer_generateTrafficMix, f_EPTF_TrafficMixer_generateTrafficMix_Rand, f_EPTF_TrafficMixer_acceptNewTrafficMix
+
+modulepar boolean tsp_EPTF_CLL_Debug_TrafficMixer := false;
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_TrafficMixer_initTrafficMix
+// 
+//  Purpose:
+//    function to initialize the TrafficMixer
+// 
+//  Parameters:
+//    pl_wList - *in* <EPTF_ProbabilityList> - list of weights of traffic mixes (no restriction on the sum)
+//
+//  Return Value:
+//    -
+// 
+//  Detailed Comments:
+//    This function should be called before using the TrafficMixer or any time
+//    the traffic mix weights should be changed.
+// 
+///////////////////////////////////////////////////////////
+private function f_EPTF_TrafficMixer_initTrafficMix(
+  inout EPTF_TrafficMixer_scenarioTraffixMixData pl_mixData,
+  in EPTF_ProbabilityList pl_wList)
+runs on EPTF_LGenBase_Private_CT{
+  if (c_EPTF_Common_debugSwitch and f_EPTF_LGenBase_isEnabled(c_EPTF_LGenBase_loggingClassIdx_DebugTrafficMixer)){
+    f_EPTF_LGenBase_loggingDebugTrafficMixer(log2str(%definitionId&"Initializing pl_mixData.wList with: ", pl_wList))
+  }
+  pl_mixData.wList := {};
+  pl_mixData.pList := {};
+  pl_mixData.currentBurst := {};
+  if (sizeof(pl_wList) == 0) {
+    return;
+  }
+  
+  // init pl_mixData.wList:
+  var float vl_maxP := pl_wList[0];
+  for(var integer i:=1; i<sizeof(pl_wList); i:=i+1) {
+    if (pl_wList[i]>vl_maxP) {vl_maxP := pl_wList[i];}
+  }
+  
+  if (vl_maxP<=0.0) {
+    vl_maxP := 1.0;
+  }
+  
+  // normalize pl_mixData.wList:
+  for(var integer i:=0; i<sizeof(pl_wList); i:=i+1) {
+    pl_mixData.wList[i] := pl_wList[i]/vl_maxP;
+    pl_mixData.currentBurst[i] := 0.0;
+  }
+  if (c_EPTF_Common_debugSwitch and f_EPTF_LGenBase_isEnabled(c_EPTF_LGenBase_loggingClassIdx_DebugTrafficMixer)){
+    f_EPTF_LGenBase_loggingDebugTrafficMixer(log2str("Normalized pl_mixData.wList: ", pl_mixData.wList))
+  }
+  
+  // init pl_mixData.pList:
+  pl_mixData.pList[0] := pl_wList[0];
+  for(var integer i:=1; i<sizeof(pl_wList); i:=i+1) {
+    pl_mixData.pList[i] := pl_mixData.pList[i-1] + pl_wList[i];
+  }
+  
+  var float sum := pl_mixData.pList[sizeof(pl_wList)-1];
+  if (sum<=0.0) {
+    sum := 1.0;
+  }
+  // normalize pl_mixData.pList:
+  for(var integer i:=0; i<sizeof(pl_wList); i:=i+1) {
+    pl_mixData.pList[i] := pl_mixData.pList[i]/sum;
+  }
+  if (c_EPTF_Common_debugSwitch and f_EPTF_LGenBase_isEnabled(c_EPTF_LGenBase_loggingClassIdx_DebugTrafficMixer)){
+    f_EPTF_LGenBase_loggingDebugTrafficMixer(log2str("Normalized pl_mixData.pList: ", pl_mixData.pList))
+  }
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_TrafficMixer_generateTrafficMix
+// 
+//  Purpose:
+//    function to generate new traffic mix in a deterministic way
+// 
+//  Parameters:
+//    -
+//
+//  Return Value:
+//    -
+// 
+//  Detailed Comments:
+//    It modifies the component variable pl_mixData.burstList. It is a list of integers telling which
+//    traffic cases should be selected next. The value 1 means selected, 0 not.
+//    If a value at index i is 1 it means that the given traffic case should be
+//    selected next time. The returned pl_mixData.burstList should be processed the following way:
+//
+//    The user should go through from the 0-th index to the last on its elements
+//    and generate a traffic mix if the value is 1. If there is only 0-s left,
+//    a new traffic mix should be generated.
+// 
+///////////////////////////////////////////////////////////
+friend function f_EPTF_TrafficMixer_generateTrafficMix(inout EPTF_TrafficMixer_scenarioTraffixMixData pl_mixData)  {
+  pl_mixData.burstList := {};
+  for(var integer i:=0; i<sizeof(pl_mixData.wList); i:=i+1) {
+    pl_mixData.currentBurst[i] := pl_mixData.currentBurst[i]+pl_mixData.wList[i];
+    pl_mixData.burstList[i] := float2int(pl_mixData.currentBurst[i]);
+    
+    pl_mixData.currentBurst[i] := pl_mixData.currentBurst[i] - int2float(pl_mixData.burstList[i]);
+  }
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_TrafficMixer_generateTrafficMix_Rand
+// 
+//  Purpose:
+//    function to generate new traffic mix in a random way
+// 
+//  Parameters:
+//
+//  Return Value:
+//    -
+// 
+//  Detailed Comments:
+//    See at <f_EPTF_TrafficMixer_generateTrafficMix>. The pl_mixData.burstList list will
+//    contain only one 1 value, i.e. only one traffic case will be selected.
+// 
+///////////////////////////////////////////////////////////
+friend function f_EPTF_TrafficMixer_generateTrafficMix_Rand(inout EPTF_TrafficMixer_scenarioTraffixMixData pl_mixData)  {
+  var float vl_randValue := rnd();
+  var boolean vl_found := false;
+  for(var integer i:=0; i<sizeof(pl_mixData.pList); i:=i+1) {
+    if (vl_randValue<pl_mixData.pList[i] and not vl_found) {
+      pl_mixData.burstList[i] := 1;
+      vl_found := true;
+    } else {
+      pl_mixData.burstList[i] := 0;
+    }
+  }
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_TrafficMixer_rescaleTrafficMixToMaxBurst
+// 
+//  Purpose:
+//    Call this function after <f_EPTF_TrafficMixer_initTrafficMix> and before
+//    <f_EPTF_TrafficMixer_generateTrafficMix> if you want big bursts.
+// 
+//  Parameters:
+//    -
+//
+//  Return Value:
+//    -
+// 
+//  Detailed Comments:
+//    See also <f_EPTF_TrafficMixer_generateTrafficMix>. Note, that the updated pl_mixData.burstList will
+//    contain values bigger than 1 also. This means that traffic should be generated
+//    this number of times before going to the next non-zero traffic case item.
+// 
+///////////////////////////////////////////////////////////
+private function f_EPTF_TrafficMixer_rescaleTrafficMixToMaxBurst (
+  inout EPTF_TrafficMixer_scenarioTraffixMixData pl_mixData)
+runs on EPTF_LGenBase_Private_CT{
+  // init pl_mixData.wList:
+  var float vl_minP := 0.0;
+  for(var integer i:=0; i<sizeof(pl_mixData.wList); i:=i+1) {
+    if (pl_mixData.wList[i]>0.0 and vl_minP == 0.0) {
+      vl_minP := pl_mixData.wList[i];
+    }
+    if (pl_mixData.wList[i]<vl_minP and pl_mixData.wList[i]>0.0) {vl_minP := pl_mixData.wList[i];}
+  }
+  
+  if (vl_minP<=0.0) {
+    vl_minP := 1.0;
+  }
+  
+  // normalize pl_mixData.wList:
+  for(var integer i:=0; i<sizeof(pl_mixData.wList); i:=i+1) {
+    pl_mixData.wList[i] := pl_mixData.wList[i]/vl_minP;
+    pl_mixData.currentBurst[i] := 0.0;
+  }
+  if (c_EPTF_Common_debugSwitch and f_EPTF_LGenBase_isEnabled(c_EPTF_LGenBase_loggingClassIdx_DebugTrafficMixer)){
+    f_EPTF_LGenBase_loggingDebugTrafficMixer(log2str("Normalized pl_mixData.wList: ", pl_mixData.wList))
+  }
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_TrafficMixer_acceptNewTrafficMix
+// 
+//  Purpose:
+//    Re-calculates the traffic mix according
+//    the actual traffic case weights
+//
+//  Parameters:
+//    pl_idx - *in* *integer*
+//    pl_argList - *in* <EPTF_IntegerList>
+//    pl_newContent - *in* <EPTF_Var_DirectContent>
+// 
+//  Return Value:
+//    *boolean* - true if accepted
+//
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//    -
+///////////////////////////////////////////////////////////
+friend function f_EPTF_TrafficMixer_acceptNewTrafficMix(
+  inout EPTF_TrafficMixer_scenarioTraffixMixData pl_mixData,
+  in EPTF_ProbabilityList pl_new_wList,
+  in boolean pl_deterministicTrafficMix
+) runs on EPTF_LGenBase_Private_CT return boolean
+{
+  if (c_EPTF_Common_debugSwitch and f_EPTF_LGenBase_isEnabled(c_EPTF_LGenBase_loggingClassIdx_DebugTrafficMixer)){
+    f_EPTF_LGenBase_loggingDebugTrafficMixer(log2str(%definitionId& " started")) 
+    f_EPTF_LGenBase_loggingDebugTrafficMixer(log2str(%definitionId, ": pl_mix data:", pl_mixData,
+        ", pl_new_wList:", pl_new_wList, ", pl_deterministicTrafficMix:", pl_deterministicTrafficMix))
+  }
+  f_EPTF_Base_assert(%definitionId& ": sizeof(pl_new_wList) is wrong",
+    sizeof(pl_new_wList)== sizeof(pl_mixData.wList));
+  
+  
+  for (var integer i:=0;i<sizeof(pl_new_wList);i:=i+1) {
+    if (pl_new_wList[i]<0.0) {
+      // revert the original value...
+      f_EPTF_LGenBase_loggingWarning(%definitionId& ": Negative weight value is not allowed")
+      return false;
+    }
+  }
+  
+  // Init trafficMixer data
+  f_EPTF_TrafficMixer_initTrafficMix(pl_mixData,pl_new_wList);
+  if (pl_deterministicTrafficMix) {
+    f_EPTF_TrafficMixer_generateTrafficMix(pl_mixData);
+  } else {
+    f_EPTF_TrafficMixer_generateTrafficMix_Rand(pl_mixData);
+  }
+  return true;
+}
+
+
+} // module

@@ -1,0 +1,1677 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//
+//  File          EPTF_SIP_MessageHandler_Functions.ttcn
+//  Description:        MessageHandler for SIP messages
+//  Rev:                <RnXnn>
+//  Updated:            2012-11-28
+//  Prodnr:             CNL 113 522
+//  Contact:      mail: ttcn3 (ETH); web: http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////
+//  Module: EPTF_SIP_MessageHandler_Functions
+//
+//  Purpose:
+//    Function definitions for SIP message handling.
+//
+//  Module depends on:
+//    <EPTF_CLL_Common_Definitions>
+//
+//    <EPTF_CLL_LGenBase_EventHandlingFunctions>
+//
+//    <EPTF_CLL_HashMapStr2Int_Functions>
+//
+//    <EPTF_CLL_Variable_Functions>
+//
+//    <EPTF_SIP_Common_Definitions>
+//
+//    <EPTF_SIP_Common_Functions>
+//
+//    <EPTF_SIP_CreateRemove_Functions>
+//
+//    <EPTF_SIP_Dialog_Functions>
+//
+//    <EPTF_SIP_EventNotification_Definitions>
+//
+//    <EPTF_SIP_EventNotification_Functions>
+//
+//    <EPTF_SIP_Events>
+//
+//    <EPTF_SIP_LGen_Definitions>
+//
+//    <EPTF_SIP_MessageCreator_Functions>
+//
+//    <EPTF_SIP_Publish_Definitions>
+//
+//    <EPTF_SIP_Publish_Functions>
+//
+//    <EPTF_SIP_StateHandler_Functions>
+//
+//    <EPTF_SIP_Templates>
+//
+//    <EPTF_SIP_Transaction_Definitions>
+//
+//    <EPTF_SIP_Transaction_Functions>
+//
+//    <EPTF_SIP_Transport_Functions>
+//
+//    <EPTF_SIP_UserDatabase_Definitions>
+//
+//    <EPTF_SIP_UserDatabase_Functions>
+//
+//    <Socket_API_Definitions>
+//
+//    <SIPmsg_Types>
+//
+//    <TCCConversion_Functions>
+//
+//  Last review date:
+//    2012-11-20
+///////////////////////////////////////////////////////////
+module EPTF_SIP_MessageHandler_Functions {
+
+import from EPTF_CLL_Common_Definitions all;
+import from EPTF_CLL_LGenBase_EventHandlingFunctions all;
+import from EPTF_CLL_HashMapStr2Int_Functions all;
+import from EPTF_CLL_Variable_Functions all;
+
+import from EPTF_SIP_Common_Definitions all;
+import from EPTF_SIP_Common_Functions all;
+import from EPTF_SIP_CreateRemove_Functions all;
+import from EPTF_SIP_Dialog_Definitions all;
+import from EPTF_SIP_Dialog_Functions all;
+import from EPTF_SIP_EventNotification_Definitions all;
+import from EPTF_SIP_EventNotification_Functions all;
+import from EPTF_SIP_Events all;
+import from EPTF_SIP_LGen_Definitions all;
+import from EPTF_SIP_MessageCreator_Functions all;
+import from EPTF_SIP_Publish_Definitions all;
+import from EPTF_SIP_Publish_Functions all;
+import from EPTF_SIP_StateHandler_Functions all;
+import from EPTF_SIP_Templates all;
+import from EPTF_SIP_Transaction_Definitions all;
+import from EPTF_SIP_Transaction_Functions all;
+import from EPTF_SIP_Transport_Definitions all;
+import from EPTF_SIP_Transport_Functions all;
+import from EPTF_SIP_UserDatabase_Definitions all;
+import from EPTF_SIP_UserDatabase_Functions all;
+
+import from Socket_API_Definitions all;
+
+import from SIPmsg_Types all;
+//import from TCCConversion_Functions all;
+
+////////////////////////////////
+// Message handling functions //
+////////////////////////////////
+
+///////////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_Message_MsgHandler
+//
+//Purpose:
+//  Handles incoming SIP messages.
+//
+//Parameters:
+//  - pl_message - *inout* <EPTF_SIP_Message_IN> - the message requested from the Trasaction layer
+//
+//Errors:
+//  - *Unhandled raw message*
+//
+//Detailed Comments:
+//  Incoming message is copied into the v_msgToProcess component variable.
+//
+//  The v_lastMsgProcessed component variable is set to true if the message
+//  has been processed by the AppLib. The message is deemed to be processed
+//  if a status code or the method of the request (e.g. c_SIP_eventIdx_INVITE) is dispatched,
+//  otherwise (for example in case of retransmission, not found transaction, ...) the message
+//  is "dropped by the AppLib".
+//
+//  The v_lastMsgProcessed component variable is set to false if the AppLibb dropped the message, otherwise
+//  it is set to true.
+//
+//////////////////////////////////////////////////////////
+function f_EPTF_SIP_Message_MsgHandler(inout EPTF_SIP_Message_IN pl_message)
+runs on EPTF_SIP_LGen_CT
+{
+
+  v_currentUser := pl_message.userId;
+
+  v_body := pl_message.sipMessage;
+  v_msgToProcess := f_SIP_decode_binary(v_body);
+
+  v_SIP_transportParams := pl_message.transportParams;
+
+  if(ischosen(v_msgToProcess.request)) {
+    if (vg_hook_ASP_RecvFrom != null) {
+      //eantwuh
+      var ProtoTuple vl_proto := {udp := {}};
+
+      if (TCP == v_SIP_transportParams.proto)
+      {
+        vl_proto :=  {tcp := {}};
+      }
+      vg_hook_ASP_RecvFrom.apply(v_currentUser,
+                                  {request := {
+                                    requestLine := v_msgToProcess.request.requestLine,
+                                    msgHeader := v_msgToProcess.request.msgHeader}
+                                  },
+                                  vl_proto,
+                                  T_EPTF_componentClock.read);
+    }
+    v_lastMsgProcessed :=  f_EPTF_SIP_Message_RequestHandler();
+  }
+  else if(ischosen(v_msgToProcess.response)) {
+    if (vg_hook_ASP_RecvFrom != null) {
+      var ProtoTuple vl_proto := {udp := {}};
+
+      if (TCP == v_SIP_transportParams.proto)
+      {
+        vl_proto :=  {tcp := {}};
+      }
+
+      vg_hook_ASP_RecvFrom.apply(v_currentUser,
+                                  {response := {
+                                    statusLine := v_msgToProcess.response.statusLine,
+                                    msgHeader := v_msgToProcess.response.msgHeader
+                                  }},
+                                  vl_proto,
+                                  T_EPTF_componentClock.read);
+    }
+    v_lastMsgProcessed := f_EPTF_SIP_Message_ResponseHandler();
+  }
+  else {
+    f_SIP_Logging_WARNING(%definitionId & ": Unhandled raw message!");
+    f_SIP_Logging_invalidMessage(%definitionId & ": " & v_msgToProcess.raw);
+
+    if (vg_hook_ASP_RecvFrom != null) {
+      var ProtoTuple vl_proto := {udp := {}};
+
+      if (TCP == v_SIP_transportParams.proto)
+      {
+        vl_proto :=  {tcp := {}};
+      }
+
+      vg_hook_ASP_RecvFrom.apply(v_currentUser,
+                                  {raw := v_msgToProcess.raw},
+                                  vl_proto,
+                                  T_EPTF_componentClock.read);
+    }
+
+    v_dropReason := "Unhandled raw message";
+    v_lastMsgProcessed := false;
+  }
+
+//label end;
+  if (not v_lastMsgProcessed)
+  {
+    f_EPTF_Var_adjustContent(v_statIdx_nofDiscarded,{ intVal := f_EPTF_Var_getIntValue(v_statIdx_nofDiscarded) + 1 });
+  }
+}
+
+//////////////////////////
+// SIP Request handlers //
+//////////////////////////
+
+///////////////////////////
+// SIP Response handlers //
+///////////////////////////
+
+///////////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_Message_ResponseHandler
+//
+//Purpose:
+//  function to handle incoming SIP responses
+//
+//Return value:
+//  *boolean* - true if if the message has not been dropped by the AppLib. If false, the v_dropReason component
+//    variable will contain an error string.
+//
+//Detailed comments:
+//  The v_currentUser component variable is set to the index of the given user in v_db_users if
+//  the user is found.
+//
+//  Also Sets the v_currentUAC, v_currentDialog, v_currentSubscription, and v_currentPublish component variables.
+//
+//  Sets the v_dropReason component variable if the message is dropped.
+///////////////////////////////////////////////////////////
+function f_EPTF_SIP_Message_ResponseHandler()
+runs on EPTF_SIP_LGen_CT
+return boolean // true == answered or forwarded to the app, false == dropped
+{
+  var charstring vl_transactionId := "";
+  var Method  vl_method;
+  var boolean vl_retVal := false;
+  var integer vl_statusCode := v_msgToProcess.response.statusLine.statusCode;
+
+  v_currentUAC := -1;
+  v_currentDialog := -1;
+  v_currentSubscription := -1;
+  v_currentPublish := -1;
+
+  f_EPTF_SIP_updateStat_incResp(vl_statusCode, v_msgToProcess.response.statusLine.reasonPhrase);
+
+  if (not f_EPTF_SIP_str2method(v_msgToProcess.response.msgHeader.cSeq.method, vl_method))
+  {
+    f_SIP_Logging_invalidMessage("Invalid message: " & log2str(v_msgToProcess));
+    f_EPTF_SIP_dispatchError(c_SIP_eventIdx_invalidResp_CSeq, {vl_statusCode}, c_SIP_eventName_invalidResp_CSeq);
+    return false;
+  }
+
+  f_EPTF_SIP_GetTransactionId(v_msgToProcess.response.msgHeader, vl_transactionId);
+
+  if ("" == vl_transactionId)
+  {
+    f_EPTF_SIP_dispatchError(c_SIP_eventIdx_invalidTransactionId, {vl_statusCode}, c_SIP_eventName_invalidTransactionId);
+    return false;
+  }
+
+  f_EPTF_SIP_Findstr2int(v_db_UAC.hashRef, vl_transactionId & v_msgToProcess.response.msgHeader.cSeq.method, v_currentUAC);
+
+  if(0 > v_currentUAC) {
+    if (vl_automaticProxyMode and ispresent(v_msgToProcess.response.msgHeader.via) and
+          sizeof(v_msgToProcess.response.msgHeader.via.viaBody) > 1)
+    {
+        //forward response, no UAC
+        v_userSearchFunc.apply(v_msgToProcess, v_currentUser);
+
+        f_EPTF_SIP_dispatchEvent(c_SIP_eventIdx_RespWithoutContext, v_currentUser, -1, {enum2int(vl_method)});
+
+        return true;
+    }else
+    {
+      if (INVITE_E == vl_method and
+          200 <= vl_statusCode and 299 >= vl_statusCode)//handle retransmitted final responses
+      {
+        var charstring vl_toTag := "";
+        var charstring vl_fromTag := "";
+
+        if (ispresent(v_msgToProcess.response.msgHeader.toField.toParams))
+        {
+          f_EPTF_SIP_GetParameter(v_msgToProcess.response.msgHeader.toField.toParams,
+          c_SIP_TAG_ID, vl_toTag);
+        }
+
+        f_EPTF_SIP_GetParameter(v_msgToProcess.response.msgHeader.fromField.fromParams,
+          c_SIP_TAG_ID, vl_fromTag);
+
+        //find the dialog
+        f_EPTF_SIP_Findstr2int(v_db_dialog.hashRef, v_msgToProcess.response.msgHeader.callId.callid & vl_fromTag & vl_toTag, v_currentDialog );
+
+        if(0 > v_currentDialog) {
+          f_EPTF_SIP_dispatchError(c_SIP_eventIdx_unknownDialog, {vl_statusCode}, c_SIP_eventName_unknownDialog);
+          return false;
+        }
+
+        v_currentUser := v_db_dialog.data[v_currentDialog].userIdx;
+        f_EPTF_SIP_getSessionId(v_currentUser, v_SIP_transportParams.port_us, v_SIP_transportParams.port_pc, v_currentSession);
+
+        if (v_db_dialog.data[v_currentDialog].ACKData.ACKSent)
+        {
+          //retransmitting ACK
+          f_EPTF_SIP_Message_RetransmitRequest(
+              v_db_dialog.data[v_currentDialog].userIdx,
+              v_db_users.data[v_currentUser].currentSession,
+              v_db_users.data[v_currentUser].preferredTransport,
+              v_db_dialog.data[v_currentDialog].ACKData.ACKRaw,
+              v_db_dialog.data[v_currentDialog].ACKData.toAddr,
+              v_db_dialog.data[v_currentDialog].ACKData.ACK);
+        }
+
+        f_EPTF_SIP_dispatchEvent(c_SIP_eventIdx_retransmittedResponse,
+                                  v_currentUser,
+                                  f_EPTF_SIP_getUserData_FSMs_fsmCtx(v_currentUser, v_db_dialog.data[v_currentDialog].FSMIdx),
+                                  {vl_statusCode});
+        v_dropReason := c_SIP_eventName_retransmittedResponse;
+        f_EPTF_SIP_updateStat_incRespRetrans(vl_statusCode, v_msgToProcess.response.statusLine.reasonPhrase);
+        return false;
+      }
+
+      f_EPTF_SIP_dispatchError(c_SIP_eventIdx_unknownTransaction, {vl_statusCode}, c_SIP_eventName_unknownTransaction);
+      return false;
+    }
+  }
+
+  v_currentUser := v_db_UAC.data[v_currentUAC].userIdx
+
+  var boolean vl_retrans := false;
+  f_EPTF_SIP_TransactionState_ResponseUAC(v_msgToProcess.response,v_currentUAC,vl_retrans);
+
+  if (vl_retrans)
+  {
+    //retransmission
+    var integer vl_fsmCtx := f_EPTF_SIP_getUserData_FSMs_fsmCtx(v_currentUser, v_db_UAC.data[v_currentUAC].FSMIdx);
+
+    f_EPTF_SIP_updateStat_incRespRetrans(vl_statusCode, v_msgToProcess.response.statusLine.reasonPhrase);
+
+    if (v_db_UAC.data[v_currentUAC].cleanedUp)
+    {
+      vl_fsmCtx := -1;
+    }
+    f_EPTF_SIP_dispatchEvent(c_SIP_eventIdx_retransmittedResponse, v_currentUser, vl_fsmCtx, {vl_statusCode})
+    v_dropReason := c_SIP_eventName_retransmittedResponse;
+    return false;
+  }
+
+  if (v_db_UAC.data[v_currentUAC].cleanedUp)
+  {
+    f_SIP_Logging_WARNING(%definitionId & ": message arrived to a cleaned up UAC!");
+    v_dropReason := "Internal error";
+    return false;
+  }
+
+  if (vl_automaticProxyMode and ispresent(v_msgToProcess.response.msgHeader.via) and
+         sizeof(v_msgToProcess.response.msgHeader.via.viaBody) > 1)
+  {
+    vl_retVal := f_EPTF_SIP_Message_ResponseHandlerTUProxy();
+  }else{
+    vl_retVal := f_EPTF_SIP_Message_ResponseHandlerTU();
+  }
+
+  if (f_EPTF_SIP_checkTransaction(v_db_UAC, v_currentUAC) and
+      c_SIP_TrState_Terminated == v_db_UAC.data[v_currentUAC].state)
+  {
+    f_EPTF_SIP_removeUAC(v_currentUAC);
+  }
+
+/*moved to f_EPTF_SIP_Message_ResponseHandlerTU
+  if (f_EPTF_SIP_checkSubscription(v_currentSubscription) and
+    c_SIP_Subscribe_State_terminated == v_db_subscription.data[v_currentSubscription].state)
+  {
+    f_EPTF_SIP_removeSubscription(v_currentSubscription, v_currentDialog);
+  }
+
+  if (f_EPTF_SIP_checkPublish(v_currentPublish) and
+    c_SIP_Publish_State_terminated == v_db_publish.data[v_currentPublish].state)
+  {
+    f_EPTF_SIP_removePublish(v_currentPublish);
+  }
+*/
+/*
+  if (f_EPTF_SIP_checkDialog(v_currentDialog) and
+    c_SIP_DlgState_Terminated == v_db_dialog.data[v_currentDialog].state)
+  {
+    f_EPTF_SIP_removeDialog(v_currentDialog);
+  }
+*/
+  return vl_retVal;
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_SIP_MessageConvertToTransport
+//
+//  Purpose:
+//    Convert transport protocol string to enum format
+//
+//  Parameters:
+//    -
+////////////////////////////////////////////////////////////
+function f_EPTF_SIP_MessageConvertToTransport(
+  in charstring pl_transport)
+return SIP_Transport
+{
+  var SIP_Transport vl_transport := UDP;
+  select (pl_transport) {
+    case ("UDP") { vl_transport := UDP }
+    case ("TCP") { vl_transport := TCP }
+  }
+  return vl_transport;
+}
+
+function f_EPTF_SIP_Message_ResponseHandlerTUProxy()
+runs on EPTF_SIP_LGen_CT
+return boolean
+{
+  var EPTF_IntegerList vl_reportedParams := {};
+  var integer vl_methodInt := enum2int(v_db_UAC.data[v_currentUAC].method);
+  var integer vl_offset := 0;
+
+  //FIXME:
+  //if (not f_SIP_setResponseContext()){return false;}
+
+  if (v_db_UAC.data[v_currentUAC].distinctResponse)
+  {
+    vl_offset := vl_methodInt * c_SIP_EventOffset
+  }
+
+  f_SIP_reportResponse(
+    v_currentUser,
+    f_EPTF_SIP_getUserData_FSMs_fsmCtx(v_currentUser, v_db_UAC.data[v_currentUAC].FSMIdx),
+    vl_offset,
+    vl_reportedParams);
+
+  return true;
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_SIP_needToStoreCallId
+//
+//  Purpose:
+//    To determine if the call-id need to be stored.
+//    It might be re-used in the next request.
+//
+//  Parameters:
+//    pl_statusCode - *in* *integer* - the status code of the response.
+//
+//  RFC-3261 8.1.3.5
+////////////////////////////////////////////////////////////
+function f_EPTF_SIP_needToStoreCallId(in integer pl_statusCode)
+runs on EPTF_SIP_LGen_CT
+return boolean
+{
+  if (401 == pl_statusCode
+      or 407 == pl_statusCode
+      or 413 == pl_statusCode
+      or 415 == pl_statusCode
+      or 416 == pl_statusCode
+      or 420 == pl_statusCode
+      ) {
+        return true;
+  }
+
+  return false;
+}
+
+function f_EPTF_SIP_Message_ResponseHandlerTU()
+runs on EPTF_SIP_LGen_CT
+return boolean
+{
+  var integer vl_methodInt := enum2int(v_db_UAC.data[v_currentUAC].method);
+  var EPTF_IntegerList vl_reportedParams := {vl_methodInt};
+  var integer vl_statusCode := v_msgToProcess.response.statusLine.statusCode;
+
+  if (not f_SIP_setResponseContext()){return false;}
+
+  if (ispresent(v_msgToProcess.response.msgHeader.require) and
+        ispresent(v_msgToProcess.response.msgHeader.rseq) and
+      100 < vl_statusCode and 200 > vl_statusCode) //reliably sent response
+  {
+    var integer vl_FSMIdx := v_db_UAC.data[v_currentUAC].FSMIdx;
+
+    if ( v_db_UAC.data[v_currentUAC].prack)
+    {
+      if (v_db_UAC.data[v_currentUAC].currentRSeq > v_msgToProcess.response.msgHeader.rseq.response_num)//out of order
+      {
+        f_SIP_Logging_WARNING(%definitionId & ": " & c_SIP_eventName_provisionalRespOutOfOrder);
+        f_EPTF_SIP_dispatchEvent(
+          c_SIP_eventIdx_provisionalRespOutOfOrder,
+          v_currentUser,
+          f_EPTF_SIP_getUserData_FSMs_fsmCtx(v_currentUser, vl_FSMIdx), vl_reportedParams);
+        v_dropReason := c_SIP_eventName_provisionalRespOutOfOrder;
+        return false;
+      }
+
+      var charstring vl_methodStr;
+      f_EPTF_SIP_method2str(v_db_UAC.data[v_currentUAC].method, vl_methodStr);
+      if (v_db_UAC.data[v_currentUAC].unackRespData.rSeq == v_msgToProcess.response.msgHeader.rseq.response_num and
+            v_db_UAC.data[v_currentUAC].unackRespData.seqNumber == v_msgToProcess.response.msgHeader.cSeq.seqNumber and
+            vl_methodStr == v_msgToProcess.response.msgHeader.cSeq.method)//retransmission
+      {
+        f_EPTF_SIP_updateStat_incRespRetrans(vl_statusCode, v_msgToProcess.response.statusLine.reasonPhrase);
+        f_EPTF_SIP_dispatchEvent(c_SIP_eventIdx_retransmittedResponse,
+                                  v_currentUser,
+                                  f_EPTF_SIP_getUserData_FSMs_fsmCtx(v_currentUser, vl_FSMIdx),
+                                  vl_reportedParams);
+        v_dropReason := c_SIP_eventName_retransmittedResponse;
+        return false;
+      }
+    }else{
+      v_db_UAC.data[v_currentUAC].prack := true;
+    }
+
+    v_db_UAC.data[v_currentUAC].currentRSeq := v_msgToProcess.response.msgHeader.rseq.response_num;
+    v_db_UAC.data[v_currentUAC].unackRespData.rSeq := v_msgToProcess.response.msgHeader.rseq.response_num;
+    v_db_UAC.data[v_currentUAC].unackRespData.seqNumber := v_msgToProcess.response.msgHeader.cSeq.seqNumber;
+  }
+  else {
+    //action("Setting PRACK to FALSE at: ", vl_statusCode, " - UAC: ", v_currentUAC);
+    v_db_UAC.data[v_currentUAC].prack := false;    
+  }
+
+  if (c_SIP_Method_INVITE == vl_methodInt)
+  {
+    f_EPTF_SIP_handleINVITEresp(v_currentUser, v_currentDialog, v_currentUAC);
+  }else if(c_SIP_Method_PUBLISH == vl_methodInt)
+  {
+    f_EPTF_SIP_handlePUBLISHresp(v_currentPublish);
+  }else if (c_SIP_Method_SUBSCRIBE == vl_methodInt)
+  {
+    // note: v_currentSubscription can be -1 if the subscription was
+    //       terminated with a NOTIFY before the 200 OK (SUBSCRIBE)
+    if(f_EPTF_SIP_checkSubscription(v_currentSubscription)) {
+      f_EPTF_SIP_handleSUBSCRIBEresp(v_currentSubscription);
+    }
+  }else if (c_SIP_Method_NOTIFY == vl_methodInt)
+  {
+    //TODO FIXME ethecs: handle the 200 OK for NOTIFY for unSUBSCRUBE: check subscription and remove subscription and dialog
+
+    // note: v_currentSubscription can be -1 if the subscription was
+    //       terminated with a NOTIFY before the 200 OK (SUBSCRIBE)
+    if(f_EPTF_SIP_checkSubscription(v_currentSubscription)) {
+      f_EPTF_SIP_handleSUBSCRIBEresp(v_currentSubscription);
+    }
+  }else if (c_SIP_Method_REGISTER == vl_methodInt)
+  {
+    f_EPTF_SIP_handleREGISTERresp(v_currentUser, v_currentSession);
+  }
+
+  if (f_EPTF_SIP_needToStoreCallId(v_msgToProcess.response.statusLine.statusCode)) {
+    // Save the method and call-id if needed
+    f_EPTF_SIP_str2method(
+      v_msgToProcess.response.msgHeader.cSeq.method,
+      v_db_users.data[v_currentUser].FSMs.data[v_db_UAC.data[v_currentUAC].FSMIdx].retryRequest.method);
+
+    v_db_users.data[v_currentUser].FSMs.data[v_db_UAC.data[v_currentUAC].FSMIdx].retryRequest.callId :=
+      v_msgToProcess.response.msgHeader.callId.callid;
+
+    v_db_users.data[v_currentUser].FSMs.data[v_db_UAC.data[v_currentUAC].FSMIdx].retryRequest.cSeq :=
+      v_msgToProcess.response.msgHeader.cSeq.seqNumber;
+
+  } else {
+    // Otherwise reset the record
+    v_db_users.data[v_currentUser].FSMs.data[v_db_UAC.data[v_currentUAC].FSMIdx].retryRequest := cg_SIP_RetryRequest;
+  }
+
+  if (407 == v_msgToProcess.response.statusLine.statusCode)
+  {
+    if (ispresent(v_msgToProcess.response.msgHeader.proxyAuthenticate))
+    {
+      if(sizeof(v_msgToProcess.response.msgHeader.proxyAuthenticate.challenge)>0)
+      {
+        v_db_users.data[v_currentUser].authData.challenge := v_msgToProcess.response.msgHeader.proxyAuthenticate.challenge[0].digestCln;
+        v_db_users.data[v_currentUser].authData.nonceCount := 1;
+      }
+      if (v_insertAuthHeader)
+      {
+        v_db_users.data[v_currentUser].authData.insertAuthHeaderInRequest := true;
+      }
+    }
+  }
+  //successful authentication
+  if (ispresent(v_msgToProcess.response.msgHeader.authenticationInfo))
+  {
+    f_EPTF_SIP_setNoncefromNextNonce(v_currentUser, v_msgToProcess.response.msgHeader.authenticationInfo);
+  }
+
+  if (tsp_EPTF_SIP_useTransportProtocolInRemoteTargetResolution)
+  {
+    if (v_currentDialog != -1 and
+      200 <= v_msgToProcess.response.statusLine.statusCode and
+      299 >= v_msgToProcess.response.statusLine.statusCode)
+    {
+      if (ispresent(v_msgToProcess.response.msgHeader.contact) and
+        ischosen(v_msgToProcess.response.msgHeader.contact.contactBody.contactAddresses) and
+        sizeof(v_msgToProcess.response.msgHeader.contact.contactBody.contactAddresses) > 0)
+      {
+        var SipUrl vl_remoteTarget;    
+        var charstring vl_transport;
+
+        f_EPTF_SIP_GetUri(v_msgToProcess.response.msgHeader.contact.contactBody.contactAddresses[0].addressField,
+          vl_remoteTarget);
+
+        if (f_EPTF_SIP_Transport_getTransportFromAddress(vl_remoteTarget, vl_transport)) 
+        {
+          v_db_users.data[v_currentUser].preferredTransport := 
+            f_EPTF_SIP_MessageConvertToTransport(vl_transport);
+        }
+
+        f_EPTF_SIP_refreshTarget(v_currentDialog, vl_remoteTarget);
+      }
+    }
+  }
+
+  var integer vl_offset := 0;
+
+  if (v_db_UAC.data[v_currentUAC].distinctResponse)
+  {
+    vl_offset := vl_methodInt * c_SIP_EventOffset
+  }
+
+  f_SIP_reportResponse(
+    v_currentUser,
+//    v_db_UAC.data[v_currentUAC].fsmCtx,
+    f_EPTF_SIP_getUserData_FSMs_fsmCtx(v_currentUser, v_db_UAC.data[v_currentUAC].FSMIdx),
+    vl_offset,
+    vl_reportedParams);
+
+  if (f_EPTF_SIP_checkSubscription(v_currentSubscription) and
+    c_SIP_Subscribe_State_terminated == v_db_subscription.data[v_currentSubscription].state)
+  {
+    f_EPTF_SIP_removeSubscription(v_currentSubscription, v_currentDialog);
+  }
+
+  if (f_EPTF_SIP_checkPublish(v_currentPublish) and
+    c_SIP_Publish_State_terminated == v_db_publish.data[v_currentPublish].state)
+  {
+    f_EPTF_SIP_removePublish(v_currentPublish);
+  }
+
+  if (tsp_EPTF_SIP_removeDialogsOnlyOnTermination) {
+    if(f_EPTF_SIP_checkDialog(v_currentDialog) and c_SIP_DlgState_Terminated == v_db_dialog.data[v_currentDialog].state) {
+      log("v_msgToProcess.response.msgHeader.cSeq.seqNumber: ", v_msgToProcess.response.msgHeader.cSeq.seqNumber, "; v_db_dialog.data[", v_currentDialog, "].localSeqNum: ", v_db_dialog.data[v_currentDialog].localSeqNum);
+
+      // check for the 200 OK comes for the _last_ request we sent. this check is to prevent the following case:
+      // incoming SUBSCRIBE
+      // outgoing 200 OK
+      // outgoing NOTIFY for SUBSCRIBE
+      // incoming UNSUBSCRIBE -> PGM Sim sets the dialog state to be terminated, which is good
+      // incoming 200 OK for NOTIFY for SUBSCRIBE -> previous dialog deletion deleted the dialog here, but this check prevents it
+      // outgoing NOTIFY for UNSUBSCRIBE
+      // incoming 200 OK for NOTIFY for UNSUBSCRIBE -> 
+
+      if(v_msgToProcess.response.msgHeader.cSeq.seqNumber == v_db_dialog.data[v_currentDialog].localSeqNum - 1) {
+        f_EPTF_SIP_removeDialog(v_currentDialog);
+      }
+    }
+  }
+
+  return true;
+}
+
+function f_SIP_setResponseContext()
+runs on EPTF_SIP_LGen_CT
+return boolean
+{
+  var charstring vl_toTag := "";
+  var charstring vl_fromTag := "";
+  var EPTF_IntegerList vl_reportedParams := {};
+  var integer vl_statusCode := v_msgToProcess.response.statusLine.statusCode;
+
+  vl_reportedParams := {enum2int(v_db_UAC.data[v_currentUAC].method)};
+//find dialog, subscription, publish
+  v_currentDialog := v_db_UAC.data[v_currentUAC].dialogIdx;
+  v_currentSubscription := v_db_UAC.data[v_currentUAC].subscriptionIdx;
+  v_currentPublish := v_db_UAC.data[v_currentUAC].publishIdx;
+  v_currentSession := v_db_UAC.data[v_currentUAC].sessionIdx;
+
+  if (ispresent(v_msgToProcess.response.msgHeader.toField.toParams))
+  {
+    f_EPTF_SIP_GetParameter(v_msgToProcess.response.msgHeader.toField.toParams,
+    c_SIP_TAG_ID, vl_toTag);
+  }
+
+  f_EPTF_SIP_GetParameter(v_msgToProcess.response.msgHeader.fromField.fromParams,
+    c_SIP_TAG_ID, vl_fromTag);
+
+//check the dialog index
+  if (CREATE_DIALOG == v_db_UAC.data[v_currentUAC].trInDialog)
+  {
+    if (not f_EPTF_SIP_checkDialog(v_currentDialog) or
+        vl_fromTag != v_db_dialog.data[v_currentDialog].localTag or
+        v_msgToProcess.response.msgHeader.callId.callid != v_db_dialog.data[v_currentDialog].callId)
+    {
+      f_EPTF_SIP_dispatchError(c_SIP_eventIdx_unknownDialog, vl_reportedParams, c_SIP_eventName_unknownDialog);
+      return false;
+    }
+
+    if (v_db_dialog.data[v_currentDialog].earlyDialog and
+        "" != v_db_dialog.data[v_currentDialog].remoteTag and vl_toTag != v_db_dialog.data[v_currentDialog].remoteTag) //forked
+    {
+      f_EPTF_SIP_dispatchError(c_SIP_eventIdx_unknownDialog, vl_reportedParams, c_SIP_eventName_unknownDialog);
+      return false;
+    }
+  } else if (OUTOF_DIALOG != v_db_UAC.data[v_currentUAC].trInDialog) {
+    if (not f_EPTF_SIP_checkDialog(v_currentDialog) or
+          vl_fromTag != v_db_dialog.data[v_currentDialog].localTag or
+          v_msgToProcess.response.msgHeader.callId.callid != v_db_dialog.data[v_currentDialog].callId or
+          vl_toTag != v_db_dialog.data[v_currentDialog].remoteTag)
+    {
+      if(v_msgToProcess.response.statusLine.statusCode == c_status_481CallTransactionDoesNotExist.statusCode) {
+        f_SIP_Logging_DEBUG(%definitionId & ": 481 CallTransactionDoesNotExist arrived for an unknown dialog; we agree with the SUT that this transaction does not exist.");
+        return false;
+      } else {
+        f_SIP_Logging_WARNING(%definitionId & ": " & c_SIP_eventName_unknownDialog & ": fromTag: " &  vl_fromTag & ", toTag: " & vl_toTag & ", callid: " & v_msgToProcess.response.msgHeader.callId.callid);
+        f_EPTF_SIP_dispatchError(c_SIP_eventIdx_unknownDialog, vl_reportedParams, c_SIP_eventName_unknownDialog);
+        return false;
+      }
+    }
+  }
+
+//check the subscription index
+  if (v_currentSubscription >= 0 and
+          not f_EPTF_SIP_checkSubsctiption(v_currentSubscription))
+  {
+    f_EPTF_SIP_dispatchError(c_SIP_eventIdx_RespWithUnknownSubscription, {vl_statusCode}, c_SIP_eventName_RespWithUnknownSubscription);
+    return false;
+  }
+
+//check publish index
+  if (v_currentPublish >= 0 and
+        not f_EPTF_SIP_checkPublish(v_currentPublish))
+  {
+    f_EPTF_SIP_dispatchError(c_SIP_eventIdx_unknownPublication, vl_reportedParams, c_SIP_eventName_unknownPublication);
+    return false;
+
+  }
+
+  if(0 <= v_currentDialog and
+      (INSIDE_DIALOG == v_db_UAC.data[v_currentUAC].trInDialog and (481 == vl_statusCode or 408 == vl_statusCode)) or
+      REFRESH_DIALOG == v_db_UAC.data[v_currentUAC].trInDialog or
+      CREATE_DIALOG == v_db_UAC.data[v_currentUAC].trInDialog or
+      REMOVE_DIALOG == v_db_UAC.data[v_currentUAC].trInDialog)
+  {
+    f_EPTF_SIP_DialogState_ResponseUAC(v_msgToProcess.response, v_currentDialog, v_currentSubscription, v_db_UAC.data[v_currentUAC].trInDialog);
+  }
+
+  return true;
+}
+
+function f_SIP_reportResponse(
+  in integer pl_userIdx,
+  in integer pl_fsmCtx,
+  in integer pl_offset,
+  in EPTF_IntegerList pl_reportedParams)
+runs on EPTF_SIP_LGen_CT
+{
+  var integer vl_statusCode := v_msgToProcess.response.statusLine.statusCode;
+
+  f_EPTF_SIP_dispatchEvent(vl_statusCode + pl_offset, pl_userIdx, pl_fsmCtx, pl_reportedParams);
+
+  if (ispresent(v_msgToProcess.response.msgHeader.retryAfter))
+  {
+    f_EPTF_SIP_dispatchEvent(c_SIP_eventIdx_retryAfter + pl_offset, pl_userIdx, pl_fsmCtx, pl_reportedParams);
+  }
+
+
+  if (100 <= vl_statusCode and 200 > vl_statusCode)
+  {
+    if (v_dispatchGroupEvent)
+    {
+      f_EPTF_SIP_dispatchEvent(c_SIP_eventIdx_1xx + pl_offset, pl_userIdx, pl_fsmCtx, pl_reportedParams);
+    }
+  }
+  else if (300 > vl_statusCode)
+  {
+    if (v_dispatchGroupEvent)
+    {
+      f_EPTF_SIP_dispatchEvent(c_SIP_eventIdx_2xx + pl_offset, pl_userIdx, pl_fsmCtx, pl_reportedParams);
+    }
+  }else{
+    f_SIP_Logging_3xxTo6xx(log2str(v_msgToProcess));
+
+    if (400 > vl_statusCode)
+    {
+      if (v_dispatchGroupEvent)
+      {
+        f_EPTF_SIP_dispatchEvent(c_SIP_eventIdx_3xx + pl_offset, pl_userIdx, pl_fsmCtx, pl_reportedParams);
+      }
+      f_SIP_Logging_3xx(log2str(v_msgToProcess));
+    }
+    else if (500 > vl_statusCode)
+    {
+      if (v_dispatchGroupEvent)
+      {
+        f_EPTF_SIP_dispatchEvent(c_SIP_eventIdx_4xx + pl_offset, pl_userIdx, pl_fsmCtx, pl_reportedParams);
+      }
+      f_SIP_Logging_4xx(log2str(v_msgToProcess));
+    }
+    else if (600 > vl_statusCode)
+    {
+      if (v_dispatchGroupEvent)
+      {
+        f_EPTF_SIP_dispatchEvent(c_SIP_eventIdx_5xx + pl_offset, pl_userIdx, pl_fsmCtx, pl_reportedParams);
+      }
+      f_SIP_Logging_5xx(log2str(v_msgToProcess));
+    }
+    else if (700 > vl_statusCode)
+    {
+      if (v_dispatchGroupEvent)
+      {
+        f_EPTF_SIP_dispatchEvent(c_SIP_eventIdx_6xx + pl_offset, pl_userIdx, pl_fsmCtx, pl_reportedParams);
+      }
+      f_SIP_Logging_6xx(log2str(v_msgToProcess));
+    }
+
+    if (v_dispatchGroupEvent)
+    {
+      f_EPTF_SIP_dispatchEvent(c_SIP_eventIdx_3xxto6xx + pl_offset, pl_userIdx, pl_fsmCtx, pl_reportedParams);
+    }
+  }
+
+  v_dispatchGroupEvent := true;
+
+}
+
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_Message_RequestHandler
+//
+//Purpose:
+//  Handles SIP requests.
+//
+//Return value:
+//  *boolean* - true if answered or forwarded to the app, false if it was dropped., If false, the v_dropReason component
+//    variable will contain an error string.
+//
+//Detailed comments:
+//  The v_currentUser component variable is set to the index of the given user in v_db_users if
+//  the user is found.
+//
+//  Also Sets the v_currentUAS, v_currentDialog, v_currentSubscription, and v_currentPublish component variables.
+//
+//  Sets the v_dropReason component variable if the message is dropped.
+////////////////////////////////////////////////////
+function f_EPTF_SIP_Message_RequestHandler()
+runs on EPTF_SIP_LGen_CT
+return boolean // true == answered or forwarded to the app, false == dropped
+{
+  var integer vl_fsmCtx := -1;
+  var charstring vl_methodStrToFind := "";
+  var charstring vl_transactionId := "";
+  var EPTF_IntegerList vl_reportedParams := {};
+
+  f_EPTF_SIP_updateStat_incReq(v_msgToProcess.request.requestLine.method);
+
+  f_EPTF_SIP_GetTransactionId(v_msgToProcess.request.msgHeader, vl_transactionId);
+
+  if ("" == vl_transactionId)
+  {
+    f_EPTF_SIP_dispatchError(c_SIP_eventIdx_invalidTransactionId, vl_reportedParams, c_SIP_eventName_invalidTransactionId);
+    return false;
+  }
+
+  v_currentDialog := -1;
+  v_currentSubscription := -1;
+  v_currentSession := -1;
+
+  if (ACK_E == v_msgToProcess.request.requestLine.method)
+  {
+    vl_methodStrToFind := "INVITE";
+  }else{
+    vl_methodStrToFind := c_SIP_Methods[enum2int(v_msgToProcess.request.requestLine.method)];
+  }
+
+  f_EPTF_SIP_Findstr2int(
+    v_db_UAS.hashRef,
+    vl_transactionId &
+      vl_methodStrToFind &
+      int2str(v_msgToProcess.request.msgHeader.cSeq.seqNumber),
+    v_currentUAS);
+
+  if(v_currentUAS >= 0)
+  {
+    v_currentUser := v_db_UAS.data[v_currentUAS].userIdx;
+    v_currentSession := v_db_UAS.data[v_currentUAS].sessionIdx;
+    v_currentDialog := v_db_UAS.data[v_currentUAS].dialogIdx;
+    vl_fsmCtx := f_EPTF_SIP_getUserData_FSMs_fsmCtx(v_currentUser, v_db_UAS.data[v_currentUAS].FSMIdx);
+
+    var boolean vl_retrans := false;
+    var boolean vl_returnVal := true;
+
+    f_EPTF_SIP_TransactionState_RequestUAS(v_msgToProcess.request, v_currentUAS, vl_retrans);
+
+    if (vl_retrans)
+    {
+      if (v_db_UAS.data[v_currentUAS].cleanedUp)
+      {
+        vl_fsmCtx := -1;
+      }
+
+      f_EPTF_SIP_updateStat_incReqRetrans(v_msgToProcess.request.requestLine.method);
+      f_EPTF_SIP_dispatchEvent(c_SIP_eventIdx_retransmittedRequest,
+                                v_currentUser,
+                                vl_fsmCtx,
+                                vl_reportedParams);
+      v_dropReason := c_SIP_eventName_retransmittedRequest;
+      vl_returnVal := false;
+    }else if (v_db_UAS.data[v_currentUAS].cleanedUp){
+      f_SIP_Logging_WARNING(%definitionId & ": message arrived to a cleaned up UAS!");
+      v_dropReason := "Internal error";
+      vl_returnVal := false;
+    }else if (ACK_E == v_msgToProcess.request.requestLine.method) {//automatic handling of ACK
+      f_EPTF_SIP_dispatchEvent(enum2int(v_msgToProcess.request.requestLine.method), v_currentUser, vl_fsmCtx, vl_reportedParams);
+      vl_returnVal := true;
+    }else{
+      v_dropReason := "Unknown";
+      vl_returnVal := false;
+    }
+
+    if (c_SIP_TrState_Terminated == v_db_UAS.data[v_currentUAS].state)
+    {
+      f_EPTF_SIP_removeUAS(v_currentUAS);
+    }
+
+    return vl_returnVal;
+  }
+
+  if (CANCEL_E == v_msgToProcess.request.requestLine.method)
+  {
+    var integer vl_UAS := -1;
+
+    f_EPTF_SIP_Findstr2int(
+      v_db_UAS.hashRef,
+      vl_transactionId &
+        "INVITE" &
+        int2str(v_msgToProcess.request.msgHeader.cSeq.seqNumber),
+      vl_UAS);
+
+    if (vl_UAS >= 0)
+    {
+      v_currentUser := v_db_UAS.data[vl_UAS].userIdx;
+      v_currentSession := v_db_UAS.data[vl_UAS].sessionIdx;
+      v_currentDialog := v_db_UAS.data[vl_UAS].dialogIdx;
+      vl_fsmCtx := f_EPTF_SIP_getUserData_FSMs_fsmCtx(v_currentUser, v_db_UAS.data[vl_UAS].FSMIdx);
+
+      f_EPTF_SIP_dispatchEvent(enum2int(v_msgToProcess.request.requestLine.method), v_currentUser, vl_fsmCtx, vl_reportedParams);
+      return true;
+    }
+  }
+
+  return v_requestHandlerTU.apply();
+  }
+
+function f_EPTF_SIP_Message_RequestHandlerTU()
+runs on EPTF_SIP_LGen_CT
+return boolean
+{
+  var integer vl_fsmCtx := -1;
+  var EPTF_IntegerList vl_reportedParams := {};
+  // registrar functionality only for testing (stateless!)
+  if(v_msgToProcess.request.requestLine.method == REGISTER_E)
+  {
+    if (-1 == v_currentUser)
+    {
+      v_userSearchFunc.apply(v_msgToProcess, v_currentUser);
+      if (-1 == v_currentUser)
+      {
+        f_SIP_Logging_WARNING(%definitionId & ": " & c_SIP_eventName_userNotFound);
+        f_EPTF_SIP_dispatchEvent(c_SIP_eventIdx_userNotFound, -1, -1, vl_reportedParams);
+        v_dropReason := c_SIP_eventName_userNotFound;
+        return false;
+      }
+    }
+
+    f_EPTF_SIP_getSessionId(v_currentUser, v_SIP_transportParams.port_us, v_SIP_transportParams.port_pc, v_currentSession);
+    f_EPTF_SIP_dispatchEvent(enum2int(v_msgToProcess.request.requestLine.method), v_currentUser, -1, vl_reportedParams);
+    return true;
+  }
+
+  var charstring toTag := "";
+
+  if (ispresent(v_msgToProcess.request.msgHeader.toField.toParams))
+  {
+    f_EPTF_SIP_GetParameter(v_msgToProcess.request.msgHeader.toField.toParams,
+      c_SIP_TAG_ID, toTag);
+  }
+
+  if("" != toTag){ //request inside dialog
+    var charstring fromTag := ""
+    var CallidString callId := "";
+
+
+    f_EPTF_SIP_GetParameter(v_msgToProcess.request.msgHeader.fromField.fromParams,
+      c_SIP_TAG_ID, fromTag);
+
+    callId := v_msgToProcess.request.msgHeader.callId.callid;
+
+    var boolean vl_isNotify := v_msgToProcess.request.requestLine.method == NOTIFY_E;
+    var boolean vl_isSubscribe := v_msgToProcess.request.requestLine.method == SUBSCRIBE_E;
+
+    if (vl_isNotify or vl_isSubscribe) //find subscription and dialog
+    {
+      if (ispresent(v_msgToProcess.request.msgHeader.event))
+      {
+        var charstring vl_id := "";
+        var charstring vl_eventStr := "";
+
+        if (ispresent(v_msgToProcess.request.msgHeader.event.event_params))
+        {
+          f_EPTF_SIP_GetParameter(v_msgToProcess.request.msgHeader.event.event_params, c_SIP_ID_ID, vl_id);
+        }
+
+        f_EPTF_SIP_eventType2str(v_msgToProcess.request.msgHeader.event.event_type, vl_eventStr)
+
+        if ("refer" != v_msgToProcess.request.msgHeader.event.event_type.event_package or "" == vl_id or
+              not f_EPTF_str2int_HashMap_Find(v_db_subscription.hashRef, callId & toTag & vl_eventStr, v_currentSubscription))
+        {
+          vl_eventStr := vl_eventStr & vl_id;
+          f_EPTF_SIP_Findstr2int(v_db_subscription.hashRef, callId & toTag & vl_eventStr, v_currentSubscription);
+        }
+
+        if (not f_EPTF_SIP_checkSubsctiption(v_currentSubscription))
+        {
+          f_EPTF_SIP_dispatchError(c_SIP_eventIdx_unknownSubscription, vl_reportedParams, c_SIP_eventName_unknownSubscription);
+          return false;
+        }
+
+        v_currentUser := v_db_subscription.data[v_currentSubscription].userIdx;
+        f_EPTF_SIP_getSessionId(v_currentUser, v_SIP_transportParams.port_us, v_SIP_transportParams.port_pc, v_currentSession);
+        vl_fsmCtx := f_EPTF_SIP_getUserData_FSMs_fsmCtx(v_currentUser, v_db_subscription.data[v_currentSubscription].FSMIdx);
+
+        v_currentDialog := v_db_subscription.data[v_currentSubscription].dialogIdx;
+
+        if (vl_isNotify and (not f_EPTF_SIP_checkDialog(v_currentDialog) or 
+            callId != v_db_dialog.data[v_currentDialog].callId or
+            toTag != v_db_dialog.data[v_currentDialog].localTag))
+        {
+          f_EPTF_SIP_dispatchError(c_SIP_eventIdx_unknownDialog, {}, c_SIP_eventName_unknownDialog);
+          return false;
+        }
+        if (vl_isSubscribe and (not f_EPTF_SIP_checkDialog(v_currentDialog) or 
+            callId != v_db_dialog.data[v_currentDialog].callId or
+            toTag != v_db_dialog.data[v_currentDialog].localTag))
+        {
+          f_EPTF_SIP_dispatchError(c_SIP_eventIdx_unknownDialog, {}, c_SIP_eventName_unknownDialog);
+          //  if (0 > pl_dialogIdx or sizeof(v_db_dialog.data) <= pl_dialogIdx or f_EPTF_FBQ_itemIsFree(pl_dialogIdx, v_db_dialog.queue))
+          return false;
+        }
+
+        if (vl_isNotify and "" != v_db_dialog.data[v_currentDialog].remoteTag) 
+        {
+          if (fromTag != v_db_dialog.data[v_currentDialog].remoteTag)//it can be forked
+          {
+            f_EPTF_SIP_dispatchError(c_SIP_eventIdx_unknownDialog, {}, c_SIP_eventName_unknownDialog);
+            return false;
+          }
+        } else  if (vl_isSubscribe and "" != v_db_dialog.data[v_currentDialog].localTag) 
+        {
+          if (toTag != v_db_dialog.data[v_currentDialog].localTag)//it can be forked
+          {
+            f_EPTF_SIP_dispatchError(c_SIP_eventIdx_unknownDialog, {}, c_SIP_eventName_unknownDialog);
+            return false;
+          }
+        }
+
+        if (v_msgToProcess.request.msgHeader.cSeq.seqNumber <= v_db_dialog.data[v_currentDialog].remoteSeqNum)
+        {
+          f_SIP_Logging_WARNING(%definitionId & ": " & c_SIP_eventName_requestOutOfOrder);
+          f_EPTF_SIP_dispatchEvent(
+            c_SIP_eventIdx_requestOutOfOrder,
+            v_currentUser,
+            vl_fsmCtx,
+            vl_reportedParams);
+          v_dropReason := c_SIP_eventName_requestOutOfOrder;
+
+          if (v_lastRequestRejected)
+          {
+            v_lastRequestRejected := false;
+            return false;
+          }
+        }
+
+        if (ispresent(v_msgToProcess.request.msgHeader.subscription_state))
+        {
+          var integer vl_subscriptionState := -1;
+
+          f_EPTF_SIP_str2StateInt(v_msgToProcess.request.msgHeader.subscription_state.substate_value, vl_subscriptionState);
+
+          if (v_db_subscription.data[v_currentSubscription].subscriptionStateReporting)
+          {
+            if (c_SIP_Subscribe_State_terminated == vl_subscriptionState)
+            {
+              f_EPTF_SIP_dispatchEvent(c_SIP_eventIdx_NOTIFYTerminated, v_currentUser, vl_fsmCtx, vl_reportedParams);
+
+            }else if (c_SIP_Subscribe_State_pending == vl_subscriptionState)
+            {
+              f_EPTF_SIP_dispatchEvent(c_SIP_eventIdx_NOTIFYPending, v_currentUser, vl_fsmCtx, vl_reportedParams);
+            }else
+            {
+              f_EPTF_SIP_dispatchEvent(c_SIP_eventIdx_NOTIFYActive, v_currentUser, vl_fsmCtx, vl_reportedParams);
+            }
+
+            return true;
+          }
+
+          vl_reportedParams[sizeof(vl_reportedParams)] := vl_subscriptionState;
+        }
+      }else{
+        f_EPTF_SIP_dispatchError(c_SIP_eventIdx_unknownSubscription, vl_reportedParams, c_SIP_eventName_unknownSubscription);
+        return false;
+      }
+
+    } else {
+
+      //if (ACK_E == v_msgToProcess.request.requestLine.method) {
+      //  f_EPTF_SIP_Findstr2int(v_db_dialog.hashRef, callId & fromTag & toTag, v_currentDialog );
+      //} else {
+      f_EPTF_SIP_Findstr2int(v_db_dialog.hashRef, callId & toTag & fromTag, v_currentDialog );
+      //}
+
+      if (v_currentDialog < 0) {
+        f_EPTF_SIP_dispatchError(c_SIP_eventIdx_unknownDialog, vl_reportedParams, c_SIP_eventName_unknownDialog);
+        //log("callId: ", callId, ", toTag: ", toTag, ", fromTag: ", fromTag);
+        //log("v_db_dialog.data: ", v_db_dialog.data);
+        return false;
+      }
+
+      v_currentUser := v_db_dialog.data[v_currentDialog].userIdx;
+      f_EPTF_SIP_getSessionId(v_currentUser, v_SIP_transportParams.port_us, v_SIP_transportParams.port_pc, v_currentSession);
+
+      vl_fsmCtx := f_EPTF_SIP_getUserData_FSMs_fsmCtx(v_currentUser, v_db_dialog.data[v_currentDialog].FSMIdx);
+
+      if (ACK_E == v_msgToProcess.request.requestLine.method)
+      {
+        f_EPTF_SIP_handleACK(v_currentDialog, v_currentUser, v_db_dialog.data[v_currentDialog].FSMIdx);
+      } else {
+        if (v_msgToProcess.request.msgHeader.cSeq.seqNumber <= v_db_dialog.data[v_currentDialog].remoteSeqNum)
+        {
+          f_SIP_Logging_WARNING(%definitionId & ": " & c_SIP_eventName_requestOutOfOrder);
+          f_EPTF_SIP_dispatchEvent(
+            c_SIP_eventIdx_requestOutOfOrder,
+            v_currentUser,
+            vl_fsmCtx,
+            vl_reportedParams);
+          v_dropReason := c_SIP_eventName_requestOutOfOrder;
+          if (v_lastRequestRejected)
+          {
+            v_lastRequestRejected := false;
+            return false;
+          }
+        }
+
+      }
+
+      if (INVITE_E == v_msgToProcess.request.requestLine.method)
+      {
+        f_EPTF_SIP_dispatchEvent(c_SIP_eventIdx_reINVITE, v_currentUser, vl_fsmCtx, vl_reportedParams);
+        return true;
+      }else if (PRACK_E == v_msgToProcess.request.requestLine.method)//find an unacknowledged response
+      {
+        var integer vl_FSMIdx := v_db_dialog.data[v_currentDialog].FSMIdx;
+        var integer vl_UASidx := -1;
+
+        if (not ispresent(v_msgToProcess.request.msgHeader.rack) or
+            not f_EPTF_SIP_searchUASforPRACK(v_currentUser,
+                                              vl_FSMIdx,
+                                              v_msgToProcess.request.msgHeader.rack.response_num,
+                                              v_msgToProcess.request.msgHeader.rack.seqNumber,
+                                              v_msgToProcess.request.msgHeader.rack.method))
+        {
+          f_SIP_Logging_WARNING(%definitionId & ": " & c_SIP_eventName_responseNotFoundForPRACK);
+          f_EPTF_SIP_dispatchEvent(
+            c_SIP_eventIdx_responseNotFoundForPRACK,
+            v_currentUser,
+            vl_fsmCtx,
+            vl_reportedParams);
+          v_dropReason := c_SIP_eventName_requestOutOfOrder;
+          return false;
+        }
+      }
+    }
+  } else{ //request outside of dialog
+    if (-1 == v_currentUser)
+    {
+      v_userSearchFunc.apply(v_msgToProcess, v_currentUser);
+      if (-1 == v_currentUser)
+      {
+        f_EPTF_SIP_dispatchEvent(c_SIP_eventIdx_userNotFound, -1, -1, vl_reportedParams);
+        v_dropReason := c_SIP_eventName_userNotFound;
+        return false;
+      }
+    }
+
+    f_EPTF_SIP_getSessionId(v_currentUser, v_SIP_transportParams.port_us, v_SIP_transportParams.port_pc, v_currentSession);
+    if (f_EPTF_SIP_requestInDialog(v_msgToProcess.request.requestLine.method))
+    {
+      f_EPTF_SIP_dispatchError(c_SIP_eventIdx_unknownDialog, vl_reportedParams, c_SIP_eventName_unknownDialog);
+      return false;
+
+    }
+
+    if(PUBLISH_E == v_msgToProcess.request.requestLine.method and
+        ispresent(v_msgToProcess.request.msgHeader.sip_If_Match))
+    {
+      var SipUrl vl_requestUri := v_msgToProcess.request.requestLine.requestUri;
+      var charstring vl_requestUri_str := "";
+      vl_requestUri.urlParameters := omit;
+      vl_requestUri.headers := omit;
+      f_EPTF_SIP_SIPUrl2str(vl_requestUri, vl_requestUri_str);
+      var integer vl_published_idx := -1;
+      f_EPTF_SIP_Findstr2int(
+        v_db_published.hashRef,
+        vl_requestUri_str,
+        vl_published_idx);
+      if(-1 == vl_published_idx)
+      {
+        f_EPTF_SIP_dispatchEvent(c_SIP_eventIdx_unknownResourceForPUBLISH, -1, -1, vl_reportedParams);
+        v_dropReason := c_SIP_eventName_unknownResourceForPUBLISH;
+        return false;
+      }
+
+      var charstring vl_ifMatch := v_msgToProcess.request.msgHeader.sip_If_Match.entity_tag;
+      var integer vl_publish_idx := -1;
+      f_EPTF_SIP_Publish_getPublishIdxByIfMatch(vl_published_idx, vl_ifMatch, vl_publish_idx);
+      if(-1 == vl_publish_idx)
+      {
+        f_EPTF_SIP_dispatchEvent(c_SIP_eventIdx_unknownPUBLISH, -1, -1, vl_reportedParams);
+        v_dropReason := c_SIP_eventName_unknownPUBLISH;
+        return false;
+      }
+    }
+  }
+
+  //WE HAVE A USER HERE
+  f_EPTF_SIP_dispatchEvent(enum2int(v_msgToProcess.request.requestLine.method), v_currentUser, vl_fsmCtx, vl_reportedParams);
+
+  return true;
+}
+
+function f_EPTF_SIP_Message_RequestHandlerTUProxy()
+runs on EPTF_SIP_LGen_CT
+return boolean
+{
+  var integer vl_fsmCtx := -1;
+  var EPTF_IntegerList vl_reportedParams := {};
+  var integer vl_event := enum2int(v_msgToProcess.request.requestLine.method);
+
+  if (-1 == v_currentUser)
+  {
+    v_userSearchFunc.apply(v_msgToProcess, v_currentUser);
+    if (-1 == v_currentUser)
+    {
+      if(c_EPTF_Common_debugSwitch and f_SIP_Logging_debugEnabled()) {
+        f_SIP_Logging_DEBUG(log2str(%definitionId,
+          ": ", c_SIP_eventName_userNotFound, " ", v_msgToProcess));
+      }
+      f_EPTF_SIP_dispatchEvent(c_SIP_eventIdx_userNotFound, -1, -1, vl_reportedParams);
+      v_dropReason := c_SIP_eventName_userNotFound;
+      return false;
+    }
+  }
+
+  if (ACK_E == v_msgToProcess.request.requestLine.method)
+  //ACK after a successful INVITE
+  {
+    vl_event := c_SIP_eventIdx_ACKto2xx;
+  }
+
+  f_EPTF_SIP_getSessionId(v_currentUser, v_SIP_transportParams.port_us, v_SIP_transportParams.port_pc, v_currentSession);
+  f_EPTF_SIP_dispatchEvent(vl_event, v_currentUser, -1, vl_reportedParams);
+  return true;
+}
+
+function f_EPTF_SIP_handleACK(in integer pl_dialogIdx, in integer pl_userIdx, in integer pl_FSMIdx)
+runs on EPTF_SIP_LGen_CT
+{
+  if (0 <= v_db_dialog.data[pl_dialogIdx].UASIdx)//hack, SIP sucks: INVITE UAS should not be destroyed on 2xx response to handle INVITE retransmissions
+  {
+    var integer vl_UAS := v_db_dialog.data[pl_dialogIdx].UASIdx;
+
+    //check UAS to terminate: Call-ID, from Tag, to Tag
+    var charstring vl_toTag := "";
+    var charstring vl_fromTag := "";
+
+    if(not ispresent(v_db_UAS.data[vl_UAS].response)) {
+      f_SIP_Logging_WARNING(%definitionId&": response field not present in UAS");
+      return;
+    }
+
+    f_EPTF_SIP_GetParameter(v_db_UAS.data[vl_UAS].response.msgHeader.toField.toParams,
+      c_SIP_TAG_ID, vl_toTag);
+
+    f_EPTF_SIP_GetParameter(v_db_UAS.data[vl_UAS].response.msgHeader.fromField.fromParams,
+      c_SIP_TAG_ID, vl_fromTag);
+
+    if (vl_toTag == v_db_dialog.data[pl_dialogIdx].localTag and
+          vl_fromTag == v_db_dialog.data[pl_dialogIdx].remoteTag and
+          v_db_UAS.data[vl_UAS].response.msgHeader.callId.callid == v_db_dialog.data[pl_dialogIdx].callId)
+    {
+      f_SIP_Logging_DEBUG(%definitionId &
+        ": removing INVITE transaction.");
+      f_EPTF_SIP_removeUAS(v_db_dialog.data[pl_dialogIdx].UASIdx);
+      v_db_dialog.data[pl_dialogIdx].UASIdx := -1;
+    }
+  }
+}
+
+function f_EPTF_SIP_handleINVITEresp(in integer pl_userIdx, in integer pl_dialogIdx, in integer pl_UAC)
+runs on EPTF_SIP_LGen_CT
+{
+  if (200 <= v_msgToProcess.response.statusLine.statusCode and
+        299 >= v_msgToProcess.response.statusLine.statusCode)
+  {
+    var charstring vl_ackTrId := "";
+    f_EPTF_SIP_Transaction_GenerateId(pl_UAC, vl_ackTrId);
+
+    if(not ispresent(v_db_dialog.data[pl_dialogIdx].ACKData.ACK)) {
+      v_db_dialog.data[pl_dialogIdx].ACKData.ACK := cg_PDU_SIP_Request_base;
+    }
+
+    f_EPTF_SIP_createACKTo2xx(
+      pl_userIdx,
+      pl_dialogIdx,
+      vl_ackTrId,
+      v_msgToProcess.response.msgHeader.cSeq.seqNumber,
+      v_db_UAC.data[pl_UAC].transport,
+      v_db_dialog.data[pl_dialogIdx].ACKData.ACK);
+
+    v_db_dialog.data[pl_dialogIdx].ACKData.transport := v_db_UAC.data[pl_UAC].transport
+    v_db_dialog.data[pl_dialogIdx].ACKData.trId :=  vl_ackTrId;
+    v_db_dialog.data[pl_dialogIdx].ACKData.ACKReady := true;
+    v_db_dialog.data[pl_dialogIdx].ACKData.ACKRaw := f_EPTF_SIP_sipEncodeRequest(v_db_dialog.data[pl_dialogIdx].ACKData.ACK);
+  }
+}
+
+function f_EPTF_SIP_handlePUBLISHresp(in integer pl_publishIdx)
+runs on EPTF_SIP_LGen_CT
+{
+  if (200 <= v_msgToProcess.response.statusLine.statusCode and
+        299 >= v_msgToProcess.response.statusLine.statusCode)
+  {
+    if(ispresent(v_msgToProcess.response.msgHeader.expires))
+    {
+      v_db_publish.data[pl_publishIdx].expireInterval :=
+        str2int(v_msgToProcess.response.msgHeader.expires.deltaSec);
+    }
+
+    if (ispresent(v_msgToProcess.response.msgHeader.sip_ETag))
+    {
+      v_db_publish.data[pl_publishIdx].eTag := v_msgToProcess.response.msgHeader.sip_ETag.entity_tag;
+    }
+
+    if (0 == v_db_publish.data[pl_publishIdx].expireInterval)
+    {
+      v_db_publish.data[pl_publishIdx].state := c_SIP_Publish_State_terminated;
+    }else{
+      v_db_publish.data[pl_publishIdx].state := c_SIP_Publish_State_active;
+    }
+  }
+
+  if (412 == v_msgToProcess.response.statusLine.statusCode)
+  {
+    v_db_publish.data[pl_publishIdx].state := c_SIP_Publish_State_terminated;
+  }
+
+}
+
+function f_EPTF_SIP_handleSUBSCRIBEresp(in integer pl_subscribeIdx)
+runs on EPTF_SIP_LGen_CT
+{
+  if(200 <= v_msgToProcess.response.statusLine.statusCode and
+      299 >= v_msgToProcess.response.statusLine.statusCode)
+  {
+    if (ispresent(v_msgToProcess.response.msgHeader.expires))
+    {
+      v_db_subscription.data[pl_subscribeIdx].expireInterval :=
+        str2int(v_msgToProcess.response.msgHeader.expires.deltaSec);
+    }
+  }
+}
+
+function f_EPTF_SIP_handleREGISTERresp(in integer pl_userIdx, in integer pl_sessionIdx)
+runs on EPTF_SIP_LGen_CT
+{
+  if(ispresent(v_msgToProcess.response.msgHeader.expires))
+  {
+    v_db_users.data[pl_userIdx].regData.expireInterval :=
+      str2int(v_msgToProcess.response.msgHeader.expires.deltaSec);
+  }
+
+  if(ispresent(v_msgToProcess.response.msgHeader.contact))
+  {
+    if(ischosen(v_msgToProcess.response.msgHeader.contact.contactBody.contactAddresses))
+    {
+      for(var integer i := 0;
+            i < sizeof(v_msgToProcess.response.msgHeader.contact.contactBody.contactAddresses);
+            i := i + 1) {
+        if(ispresent(v_msgToProcess.response.msgHeader.contact.contactBody.contactAddresses[i].contactParams) and ischosen(v_msgToProcess.response.msgHeader.contact.contactBody.contactAddresses[i].addressField.nameAddr))
+				{
+					if ((not isbound(v_msgToProcess.response.msgHeader.contact.contactBody.contactAddresses[i].addressField.nameAddr.addrSpec.hostPort.host)) or 
+						(not ispresent(v_msgToProcess.response.msgHeader.contact.contactBody.contactAddresses[i].addressField.nameAddr.addrSpec.hostPort.host)) or
+						v_msgToProcess.response.msgHeader.contact.contactBody.contactAddresses[i].addressField.nameAddr.addrSpec.hostPort.host == v_db_users.data[pl_userIdx].localHost)
+          {
+            f_EPTF_SIP_setExpireInterval(i,pl_userIdx)
+          }
+        }
+         if(ispresent(v_msgToProcess.response.msgHeader.contact.contactBody.contactAddresses[i].contactParams) and ischosen(v_msgToProcess.response.msgHeader.contact.contactBody.contactAddresses[i].addressField.addrSpecUnion))
+	{
+	  if ((not isbound(v_msgToProcess.response.msgHeader.contact.contactBody.contactAddresses[i].addressField.addrSpecUnion.hostPort.host)) or 
+	    (not ispresent(v_msgToProcess.response.msgHeader.contact.contactBody.contactAddresses[i].addressField.addrSpecUnion.hostPort.host)) or
+           v_msgToProcess.response.msgHeader.contact.contactBody.contactAddresses[i].addressField.addrSpecUnion.hostPort.host == v_db_users.data[pl_userIdx].localHost) 
+          {
+            f_EPTF_SIP_setExpireInterval(i,pl_userIdx)
+          }          
+        }       
+        
+      }
+    }
+  }
+
+  if (401 == v_msgToProcess.response.statusLine.statusCode)
+  {
+    if (ispresent(v_msgToProcess.response.msgHeader.wwwAuthenticate))
+    {
+      if(sizeof(v_msgToProcess.response.msgHeader.wwwAuthenticate.challenge)>0)
+      {
+        v_db_users.data[pl_userIdx].authData.challenge := v_msgToProcess.response.msgHeader.wwwAuthenticate.challenge[0].digestCln;
+        v_db_users.data[pl_userIdx].authData.nonceCount := 1;
+      }
+      if (v_insertAuthHeader)
+      {
+        v_db_users.data[pl_userIdx].authData.insertAuthHeaderInRequest := true;
+      }
+    }
+
+    v_db_users.data[pl_userIdx].regData.authRequired := true;
+    if (ispresent(v_db_users.data[pl_userIdx].imsAKAData))
+    {
+      if (ispresent(v_msgToProcess.response.msgHeader.security_server))
+      {
+        v_db_users.data[pl_userIdx].imsAKAData.securityServerData := v_msgToProcess.response.msgHeader.security_server.sec_mechanism_list;
+        v_db_users.data[pl_userIdx].imsAKAData.isValidSecSeverData := true;
+      }
+    }
+
+  }else if (200 == v_msgToProcess.response.statusLine.statusCode)
+  {
+    if (c_SIP_Reg_State_deregistering == v_db_users.data[pl_userIdx].regData.state)
+    {
+      v_db_users.data[pl_userIdx].regData.state := c_SIP_Reg_State_unregistered;
+//      v_db_users.data[pl_userIdx].regData.callId := "";
+      v_db_users.data[pl_userIdx].cSeq := -1;
+      v_db_users.data[pl_userIdx].authData.challenge := {};
+      v_db_users.data[pl_userIdx].authData.insertAuthHeaderInRequest := false;
+     if (ispresent(v_db_users.data[pl_userIdx].imsAKAData))
+      {
+        f_EPTF_SIP_changeSession(pl_userIdx, pl_sessionIdx, v_db_users.data[pl_userIdx].defaultSession);
+        v_db_users.data[pl_userIdx].imsAKAData.isValidSecSeverData := false;
+        v_db_users.data[pl_userIdx].imsAKAData.genSecClientData := true;
+      }
+    }else{
+      v_db_users.data[pl_userIdx].regData.state := c_SIP_Reg_State_registered;
+      if (ispresent(v_db_users.data[pl_userIdx].imsAKAData))
+      {
+        if (-1 != v_db_users.data[pl_userIdx].imsAKAData.negotiatedSession)
+        {
+          if (v_db_users.data[pl_userIdx].imsAKAData.negotiatedSession != pl_sessionIdx)
+          {
+            f_SIP_Logging_WARNING(log2str(%definitionId,
+              ": user(",pl_userIdx,")",
+              "current session (",pl_sessionIdx,") ",
+              " does not match with negotiated session (",v_db_users.data[pl_userIdx].imsAKAData.negotiatedSession,") "));
+          }
+
+          f_EPTF_SIP_changeSession(pl_userIdx,
+                                   v_db_users.data[pl_userIdx].imsAKAData.oldSession,
+                                   v_db_users.data[pl_userIdx].imsAKAData.negotiatedSession);
+
+          v_db_users.data[pl_userIdx].sessions[v_db_users.data[pl_userIdx].imsAKAData.negotiatedSession].terminate := false;
+          v_db_users.data[pl_userIdx].imsAKAData.negotiatedSession := -1;
+        }else{
+          f_SIP_Logging_WARNING(log2str( %definitionId,
+            ": user(",pl_userIdx,")",
+            "no negotiated session (",pl_sessionIdx,") "));
+        }
+      }
+    }
+  }else if (494 == v_msgToProcess.response.statusLine.statusCode)
+  {
+    if (ispresent(v_db_users.data[pl_userIdx].imsAKAData))
+    {
+      v_db_users.data[pl_userIdx].imsAKAData.currentUc := (v_db_users.data[pl_userIdx].imsAKAData.currentUc + 1) mod
+        sizeof(v_db_users.data[pl_userIdx].imsAKAData.clientPorts);
+    }
+  }else if (299 < v_msgToProcess.response.statusLine.statusCode){
+    if (c_SIP_Reg_State_registering == v_db_users.data[pl_userIdx].regData.state)
+    {
+      v_db_users.data[pl_userIdx].regData.state := c_SIP_Reg_State_unregistered;
+      if (ispresent(v_db_users.data[pl_userIdx].imsAKAData) and -1 != v_db_users.data[pl_userIdx].imsAKAData.negotiatedSession)
+      {
+        if (v_db_users.data[pl_userIdx].imsAKAData.negotiatedSession != pl_sessionIdx)
+        {
+          f_SIP_Logging_WARNING(log2str(%definitionId,
+            ": user(",pl_userIdx,")",
+            "current session (",pl_sessionIdx,") ",
+            " does not match with negotiated session (",v_db_users.data[pl_userIdx].imsAKAData.negotiatedSession,") "));
+        }
+
+        f_EPTF_SIP_changeSession(pl_userIdx,
+                                 v_db_users.data[pl_userIdx].imsAKAData.negotiatedSession,
+                                 v_db_users.data[pl_userIdx].imsAKAData.oldSession);
+        v_db_users.data[pl_userIdx].imsAKAData.negotiatedSession := -1;
+      }
+    }
+  }
+}
+
+//////////////////////////////
+// Transport error handlers //
+//////////////////////////////
+
+function f_EPTF_SIP_handleConnectionClosed(in EPTF_IntegerList pl_sipUsers)
+runs on EPTF_SIP_LGen_CT
+{
+  if(c_EPTF_Common_debugSwitch and f_SIP_Logging_debugEnabled()) {
+    f_SIP_Logging_DEBUG(log2str(%definitionId&": connection closed for SIP user(s) ", pl_sipUsers));
+  }
+  for(var integer i:=0; i<sizeof(pl_sipUsers); i:=i+1) {
+    f_EPTF_LGenBase_postEvent( {
+         {
+           v_SIP_myBIdx,
+           c_SIP_eventIdx_connectionClosed,
+           {
+             v_db_users.data[pl_sipUsers[i]].eIdx,
+             omit
+           }, omit
+         },
+         {}
+    });
+  }
+}
+
+function f_EPTF_SIP_handleConnectionClosed_dispatchEvents(in EPTF_IntegerList pl_sipUsers)
+runs on EPTF_SIP_LGen_CT
+{
+  if(c_EPTF_Common_debugSwitch and f_SIP_Logging_debugEnabled()) {
+    f_SIP_Logging_DEBUG(log2str(%definitionId&": connection closed for SIP user(s) ", pl_sipUsers));
+  }
+  for(var integer i:=0; i<sizeof(pl_sipUsers); i:=i+1) {
+    f_EPTF_LGenBase_dispatchEvent( {
+         {
+           v_SIP_myBIdx,
+           c_SIP_eventIdx_connectionClosed,
+           {
+             v_db_users.data[pl_sipUsers[i]].eIdx,
+             omit
+           }, omit
+         },
+         {}
+    });
+  }
+}
+
+function f_EPTF_SIP_handlePortError(in EPTF_IntegerList pl_sipUsers, in Result pl_result)
+runs on EPTF_SIP_LGen_CT
+{
+  if(c_EPTF_Common_debugSwitch and f_SIP_Logging_debugEnabled()) {
+    f_SIP_Logging_DEBUG(log2str(%definitionId&": transport error for SIP user(s) ", pl_sipUsers));
+  }
+
+  var EPTF_IntegerList vl_reportedArgs := {0, 0};
+
+  if (omit != pl_result.errorCode)
+  {
+    vl_reportedArgs[c_SIP_ArgsPortError_errorCode] := enum2int(pl_result.errorCode);
+  }
+
+  if (omit != pl_result.os_error_code)
+  {
+    vl_reportedArgs[c_SIP_ArgsPortError_OSerrorCode] := pl_result.os_error_code;
+  }
+
+  for(var integer i:=0; i<sizeof(pl_sipUsers); i:=i+1) {
+    f_EPTF_LGenBase_postEvent( {
+         {
+           v_SIP_myBIdx,
+           c_SIP_eventIdx_portError,
+           {
+             v_db_users.data[pl_sipUsers[i]].eIdx,
+             omit
+           }, omit
+         },
+         vl_reportedArgs
+    });
+  }
+}
+
+///////////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_getStatusCode
+//
+//Purpose:
+//  Retrieves the status code of the last received SIP respose.
+//
+//Return Value:
+//  integer - status code
+//
+///////////////////////////////////////////////////////////
+function f_EPTF_SIP_getStatusCode()
+runs on EPTF_SIP_LGen_CT return integer {
+  if (ischosen(v_msgToProcess.response)) {
+    return v_msgToProcess.response.statusLine.statusCode
+  } else {
+    return 0;
+  }
+}
+
+///////////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_getReasonPhrase
+//
+//Purpose:
+//  Retrieves the reason phrase of the last received SIP respose.
+//
+//Return Value:
+//  charstring - reason phrase
+//
+///////////////////////////////////////////////////////////
+function f_EPTF_SIP_getReasonPhrase()
+runs on EPTF_SIP_LGen_CT return charstring {
+  if (ischosen(v_msgToProcess.response)) {
+    return v_msgToProcess.response.statusLine.reasonPhrase
+  } else {
+    return "";
+  }
+}
+
+///////////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_setExpireInterval
+//
+//Purpose:
+//  Sets the expireInterval data of a SIP user in v_db_users
+//
+//Return Value:
+//
+///////////////////////////////////////////////////////////
+function f_EPTF_SIP_setExpireInterval(in integer pl_i, in integer pl_userIdx)
+runs on EPTF_SIP_LGen_CT {
+  var charstring expiresParam := "";
+  f_EPTF_SIP_GetParameter(v_msgToProcess.response.msgHeader.contact.contactBody.contactAddresses[pl_i].contactParams,c_SIP_EXPIRES_ID, expiresParam);
+  if(expiresParam != "")
+    {
+    var integer intExpiresParam := str2int(expiresParam);
+    if(intExpiresParam < v_db_users.data[pl_userIdx].regData.expireInterval)
+      {
+      v_db_users.data[pl_userIdx].regData.expireInterval := intExpiresParam;
+      }
+    }
+}
+
+}//end of module
+with {
+extension "version <RnXnn>"
+}
+

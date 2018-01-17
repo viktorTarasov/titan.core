@@ -1,0 +1,1937 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************///
+//  File:          ttcn_ericsson_se_protocolModules_xtdp_xtdl.ttcn
+//  Rev:           <RnXnn>
+//  Prodnr:        CNL 113 663
+//  Updated:       Tue Apr 23 15:25:42 2013
+//  Contact:       http://ttcn.ericsson.se
+//
+////////////////////////////////////////////////////////////////////////////////
+//
+//	Generated from file(s):
+//
+//	- XTDL.xsd
+//			/* xml version = "1.0" encoding = "UTF-8" standalone = "no" */
+//			/* targetnamespace = "http://ttcn.ericsson.se/protocolModules/xtdp/xtdl" */
+//
+////////////////////////////////////////////////////////////////////////////////
+
+
+module ttcn_ericsson_se_protocolModules_xtdp_xtdl {
+
+
+import from XSD all;
+
+
+/* ethgry: version is removed from targetNamespace: ttcn file names are generated from the namespace
+               and having the version in it could cause project and importing problems later */
+
+
+/* ethgry: targetNamespace is changed to the TCC xtdl one; xtdl is the default nameSpace;
+               consequently, all xul: prefixes are removed in the document */
+
+
+/* ethgry: in all over the document type names are unified (there were 3 different name conventions before)
+               all type names are written in all small font and without any separator character like - or _ */
+
+
+/* ethgry(2010-08-24): choice lists of widgets from window, tabpanel and hbox are moved to the group embeddedwidgets */
+
+
+/* ***********************************************************************
+***********************************************************************
+**            THE VERSION OF THIS XTDL DOCUMENT IS 1.0               **
+**      VERSION SHALL BE INCREASED WHEN ANY NEW INFORMATION OR       **
+**  MESSAGES ARE ADDED OR A NON-BACKWARD COMPATIBLE CHANGE IS DONE!  **
+***********************************************************************
+*********************************************************************** */
+
+
+/* ethgry: group is renamed from xul to widgets */
+
+
+type union Widgets
+{
+	Windowtype window,
+	Tabpages tabpages,
+	Tabpage tabpage,
+	Tree tree,
+	Hbox hbox,
+	Label label_,
+	Spacer spacer,
+	Button button,
+	Textbox textbox,
+	Chart chart,
+	Toolbar toolbar,
+	Listbox listbox,
+	Numericalwidget numericalwidget,
+	Menulist menulist,
+	Distributionchart distributionchart,
+	Image image,
+	Treecols treecols,
+	Treecol treecol,
+	Treechildren treechildren,
+	Treeitem treeitem,
+	Treerow treerow,
+	Treecell treecell,
+	Tracelist tracelist,
+	Trace trace,
+	Toolbarelements toolbarelements,
+	Toolbarbutton toolbarbutton,
+	Separator separator,
+	Listitem listitem,
+	Menuitem menuitem,
+	Valuelist valuelist,
+	Pushbutton pushbutton,
+	Togglebutton togglebutton,
+	Iterator iterator,
+	Tabpagelist tabpagelist,
+	Condition condition,
+	Insertif insertif,
+	Iterator externalvalue,
+	Htmlcode htmlcode
+}
+with {
+variant "untagged";
+variant (label_) "name as 'label'";
+};
+
+
+/* Bind widgets to data
+     Valid widgets are:
+        Button, Toolbarbutton, Pushbutton, Togglebutton,
+        Treecell,
+        Textbox, Trace */
+
+
+/* Commont attributes */
+
+
+/* <xsd:attributeGroup ref="commonAttrs" /> */
+
+
+type record Tabpagelist
+{
+	Tabpagegroups tabpagegroups
+}
+with {
+variant "name as uncapitalized";
+};
+
+
+type record Dataparams
+{
+	record of Dataparam dataparam_list
+}
+with {
+variant "name as uncapitalized";
+variant (dataparam_list) "untagged";
+variant (dataparam_list[-]) "name as 'dataparam'";
+};
+
+
+type record Dataparam
+{
+	XSD.String name,
+	XSD.String value_
+}
+with {
+variant "name as uncapitalized";
+variant (name) "attribute";
+variant (value_) "name as 'value'";
+variant (value_) "attribute";
+};
+
+
+type record Datadescription
+{
+	XSD.String element,
+	XSD.String ptcname optional,
+	XSD.String source,
+	Dataparams params optional
+}
+with {
+variant "name as uncapitalized";
+variant (element) "attribute";
+variant (ptcname) "attribute";
+variant (source) "attribute";
+};
+
+
+type record Datadescriptionlist
+{
+	record of Datadescription datadescription_list
+}
+with {
+variant "name as uncapitalized";
+variant (datadescription_list) "untagged";
+variant (datadescription_list[-]) "name as 'datadescription'";
+};
+
+
+type record Iteratordata
+{
+	XSD.String element,
+	XSD.String id,
+	XSD.String ptcname optional,
+	XSD.String source,
+	Dataparams params optional
+}
+with {
+variant "name as uncapitalized";
+variant (element) "attribute";
+variant (id) "attribute";
+variant (ptcname) "attribute";
+variant (source) "attribute";
+};
+
+
+type record Iterator
+{
+	XSD.String element,
+	XSD.String id,
+	XSD.String ptcname optional,
+	XSD.String source,
+	Dataparams params optional,
+	Embeddedwidgets embeddedwidgets
+}
+with {
+variant "name as uncapitalized";
+variant (element) "attribute";
+variant (id) "attribute";
+variant (ptcname) "attribute";
+variant (source) "attribute";
+};
+
+
+type record Condition
+{
+	XSD.String element,
+	XSD.String id,
+	XSD.String ptcname optional,
+	XSD.String source,
+	Dataparams params optional,
+	Embeddedwidgets embeddedwidgets
+}
+with {
+variant "name as uncapitalized";
+variant (element) "attribute";
+variant (id) "attribute";
+variant (ptcname) "attribute";
+variant (source) "attribute";
+};
+
+
+type record If
+{
+	XSD.String id,
+	XSD.Boolean negate optional
+}
+with {
+variant "name as uncapitalized";
+variant (id) "attribute";
+variant (negate) "defaultForEmpty as 'false'";
+variant (negate) "attribute";
+};
+
+
+type record Insertif
+{
+	XSD.String id,
+	XSD.Boolean negate optional,
+	Embeddedwidgets embeddedwidgets
+}
+with {
+variant "name as uncapitalized";
+variant (id) "attribute";
+variant (negate) "defaultForEmpty as 'false'";
+variant (negate) "attribute";
+};
+
+
+type record Tracelist
+{
+	record of Trace trace_list
+}
+with {
+variant "name as uncapitalized";
+variant (trace_list) "untagged";
+variant (trace_list[-]) "name as 'trace'";
+};
+
+
+type record Toolbarelements
+{
+	record of Toolbarelement toolbarelement_list
+}
+with {
+variant "name as uncapitalized";
+variant (toolbarelement_list) "untagged";
+variant (toolbarelement_list[-]) "name as 'toolbarelement'";
+};
+
+
+type record Toolbarelement
+{
+	union {
+		Toolbarbutton toolbarbutton,
+		Pushbutton pushbutton,
+		Togglebutton togglebutton,
+		Separator separator
+	} choice
+}
+with {
+variant "name as uncapitalized";
+variant (choice) "untagged";
+};
+
+
+type Windowtype Window
+with {
+variant "name as uncapitalized";
+variant "element";
+};
+
+
+type union Embeddedwidget
+{
+	Iterator iterator,
+	Tabpages tabpages,
+	Tree tree,
+	Hbox hbox,
+	Label label_,
+	Spacer spacer,
+	Button button,
+	Textbox textbox,
+	Numericalwidget numericalwidget,
+	Chart chart,
+	Distributionchart distributionchart,
+	Toolbar toolbar,
+	Listbox listbox,
+	Menulist menulist,
+	Pushbutton pushbutton,
+	Togglebutton togglebutton,
+	Condition condition,
+	Insertif insertif,
+	Iterator externalvalue,
+	Htmlcode htmlcode
+}
+with {
+variant "untagged";
+variant (label_) "name as 'label'";
+};
+
+
+type record Embeddedwidgets
+{
+	record of Embeddedwidget embeddedwidget_list
+}
+with {
+variant "untagged";
+variant (embeddedwidget_list) "untagged";
+};
+
+
+type record Windowtype
+{
+	XSD.Decimal height optional,
+	XSD.String id optional,
+	Orientation orientation optional,
+	XSD.String title optional,
+	XSD.Decimal width optional,
+	record of Image image_list,
+	Embeddedwidgets embeddedwidgets
+}
+with {
+variant "name as uncapitalized";
+variant (height) "attribute";
+variant (id) "attribute";
+variant (orientation) "defaultForEmpty as 'vertical'";
+variant (orientation) "attribute";
+variant (title) "attribute";
+variant (width) "attribute";
+variant (image_list) "untagged";
+variant (image_list[-]) "name as 'image'";
+};
+
+
+type record Tabpages
+{
+	XSD.String customclass optional,
+	XSD.Boolean disabled optional,
+	XSD.Boolean disabledongui optional,
+	XSD.Decimal flex optional,
+	XSD.String id optional,
+	Tablayout layout optional,
+	Tabpagegroups tabpagegroups
+}
+with {
+variant "name as uncapitalized";
+variant (customclass) "attribute";
+variant (disabled) "attribute";
+variant (disabledongui) "attribute";
+variant (flex) "attribute";
+variant (id) "attribute";
+variant (layout) "attribute";
+};
+
+
+type record Tabpageiterator
+{
+	XSD.String element,
+	XSD.String id,
+	XSD.String ptcname optional,
+	XSD.String source,
+	Dataparams params optional,
+	Tabpagegroups tabpagegroups
+}
+with {
+variant "name as uncapitalized";
+variant (element) "attribute";
+variant (id) "attribute";
+variant (ptcname) "attribute";
+variant (source) "attribute";
+};
+
+
+type record Tabpagecondition
+{
+	XSD.String element,
+	XSD.String id,
+	XSD.String ptcname optional,
+	XSD.String source,
+	Dataparams params optional,
+	Tabpagegroups tabpagegroups
+}
+with {
+variant "name as uncapitalized";
+variant (element) "attribute";
+variant (id) "attribute";
+variant (ptcname) "attribute";
+variant (source) "attribute";
+};
+
+
+type record Tabpageinsertif
+{
+	XSD.String id,
+	XSD.Boolean negate optional,
+	Tabpagegroups tabpagegroups
+}
+with {
+variant "name as uncapitalized";
+variant (id) "attribute";
+variant (negate) "defaultForEmpty as 'false'";
+variant (negate) "attribute";
+};
+
+
+type union Tabpagegroup
+{
+	Tabpageiterator iterator,
+	Tabpage tabpage,
+	Tabpagecondition condition,
+	Tabpageinsertif insertif,
+	Tabpageiterator externalvalue
+}
+with {
+variant "untagged";
+};
+
+
+type record Tabpagegroups
+{
+	record of Tabpagegroup tabpagegroup_list
+}
+with {
+variant "untagged";
+variant (tabpagegroup_list) "untagged";
+};
+
+
+type record Tabpage
+{
+	XSD.String customclass optional,
+	XSD.Boolean disabledongui optional,
+	XSD.String id optional,
+	XSD.String label_,
+	XSD.Decimal maxheight optional,
+	Orientation orientation optional,
+	XSD.String tooltiptext optional,
+	Embeddedwidgets embeddedwidgets
+}
+with {
+variant "name as uncapitalized";
+variant (customclass) "attribute";
+variant (disabledongui) "attribute";
+variant (id) "attribute";
+variant (label_) "name as 'label'";
+variant (label_) "attribute";
+variant (maxheight) "attribute";
+variant (orientation) "attribute";
+variant (tooltiptext) "attribute";
+};
+
+
+type enumerated Tablayout
+{
+	cARD,
+	lISTCARD,
+	sCROLL,
+	wRAP
+}
+with {
+variant "text 'cARD' as capitalized";
+variant "text 'lISTCARD' as capitalized";
+variant "text 'sCROLL' as capitalized";
+variant "text 'wRAP' as capitalized";
+variant "name as uncapitalized";
+};
+
+
+type record Tree
+{
+	XSD.String customclass optional,
+	XSD.Boolean disabled optional,
+	XSD.Boolean disabledongui optional,
+	XSD.Decimal flex optional,
+	XSD.Boolean hidecolumnpicker optional,
+	XSD.String id optional,
+	XSD.Decimal rows optional,
+	Treecols treecols,
+	Treechildren treechildren
+}
+with {
+variant "name as uncapitalized";
+variant (customclass) "attribute";
+variant (disabled) "attribute";
+variant (disabledongui) "attribute";
+variant (flex) "attribute";
+variant (hidecolumnpicker) "attribute";
+variant (id) "attribute";
+variant (rows) "attribute";
+};
+
+
+/* THE LOWER BOUND OF treecol ITERATIONS IS SET TO 0 TO ALLOW INITIALIZING TTCN-3 VARIABLES
+     WITH AN EMPTY LIST, BUT WHEN SENDING, IT SHALL CONTAIN AT LEAST ONE ELEMENT */
+
+
+type record Treecoliterator
+{
+	XSD.String element,
+	XSD.String id,
+	XSD.String ptcname optional,
+	XSD.String source,
+	Dataparams params optional,
+	Treecolgroups treecolgroups
+}
+with {
+variant "name as uncapitalized";
+variant (element) "attribute";
+variant (id) "attribute";
+variant (ptcname) "attribute";
+variant (source) "attribute";
+};
+
+
+type record Treecolcondition
+{
+	XSD.String element,
+	XSD.String id,
+	XSD.String ptcname optional,
+	XSD.String source,
+	Dataparams params optional,
+	Treecolgroups treecolgroups
+}
+with {
+variant "name as uncapitalized";
+variant (element) "attribute";
+variant (id) "attribute";
+variant (ptcname) "attribute";
+variant (source) "attribute";
+};
+
+
+type record Treecolgroups
+{
+	record of Treecolgroup treecolgroup_list
+}
+with {
+variant "untagged";
+variant (treecolgroup_list) "untagged";
+};
+
+
+type record Treecolinsertif
+{
+	XSD.String id,
+	XSD.Boolean negate optional,
+	Treecolgroups treecolgroups
+}
+with {
+variant "name as uncapitalized";
+variant (id) "attribute";
+variant (negate) "defaultForEmpty as 'false'";
+variant (negate) "attribute";
+};
+
+
+type union Treecolgroup
+{
+	Treecoliterator iterator,
+	Treecol treecol,
+	Treecolcondition condition,
+	Treecolinsertif insertif,
+	Treecoliterator externalvalue
+}
+with {
+variant "untagged";
+};
+
+
+type record Treecols
+{
+	Treecolgroups treecolgroups
+}
+with {
+variant "name as uncapitalized";
+};
+
+
+type record Treecol
+{
+	Align align optional,
+	XSD.String customclass optional,
+	XSD.Boolean disabledongui optional,
+	XSD.Boolean editable optional,
+	XSD.Decimal flex optional,
+	XSD.String id optional,
+	XSD.String label_,
+	XSD.String tooltiptext optional,
+	Align treecellalign optional,
+	Widgettype widgetType
+}
+with {
+variant "name as uncapitalized";
+variant (align) "attribute";
+variant (customclass) "attribute";
+variant (disabledongui) "attribute";
+variant (editable) "attribute";
+variant (flex) "attribute";
+variant (id) "attribute";
+variant (label_) "name as 'label'";
+variant (label_) "attribute";
+variant (tooltiptext) "attribute";
+variant (treecellalign) "attribute";
+variant (widgetType) "attribute";
+};
+
+
+type record Treeitemgroups
+{
+	record of Treeitemgroup treeitemgroup_list
+}
+with {
+variant "untagged";
+variant (treeitemgroup_list) "untagged";
+};
+
+
+type record Treeitemiterator
+{
+	XSD.String element,
+	XSD.String id,
+	XSD.String ptcname optional,
+	XSD.String source,
+	Dataparams params optional,
+	Treeitemgroups treeitemgroups
+}
+with {
+variant "name as uncapitalized";
+variant (element) "attribute";
+variant (id) "attribute";
+variant (ptcname) "attribute";
+variant (source) "attribute";
+};
+
+
+type record Treeitemcondition
+{
+	XSD.String element,
+	XSD.String id,
+	XSD.String ptcname optional,
+	XSD.String source,
+	Dataparams params optional,
+	Treeitemgroups treeitemgroups
+}
+with {
+variant "name as uncapitalized";
+variant (element) "attribute";
+variant (id) "attribute";
+variant (ptcname) "attribute";
+variant (source) "attribute";
+};
+
+
+type record Treeiteminsertif
+{
+	XSD.String id,
+	XSD.Boolean negate optional,
+	Treeitemgroups treeitemgroups
+}
+with {
+variant "name as uncapitalized";
+variant (id) "attribute";
+variant (negate) "defaultForEmpty as 'false'";
+variant (negate) "attribute";
+};
+
+
+type union Treeitemgroup
+{
+	Treeitemiterator iterator,
+	Treeitem treeitem,
+	Treeitemcondition condition,
+	Treeiteminsertif insertif,
+	Treeitemiterator externalvalue
+}
+with {
+variant "untagged";
+};
+
+
+type record Treerowgroups
+{
+	record of Treerowgroup treerowgroup_list
+}
+with {
+variant "untagged";
+variant (treerowgroup_list) "untagged";
+};
+
+
+type record Treechildren
+{
+	Treeitemgroups treeitemgroups
+}
+with {
+variant "name as uncapitalized";
+};
+
+
+type record Treerowiterator
+{
+	XSD.String element,
+	XSD.String id,
+	XSD.String ptcname optional,
+	XSD.String source,
+	Dataparams params optional,
+	Treerowgroups treerowgroups
+}
+with {
+variant "name as uncapitalized";
+variant (element) "attribute";
+variant (id) "attribute";
+variant (ptcname) "attribute";
+variant (source) "attribute";
+};
+
+
+type record Treerowcondition
+{
+	XSD.String element,
+	XSD.String id,
+	XSD.String ptcname optional,
+	XSD.String source,
+	Dataparams params optional,
+	Treerowgroups treerowgroups
+}
+with {
+variant "name as uncapitalized";
+variant (element) "attribute";
+variant (id) "attribute";
+variant (ptcname) "attribute";
+variant (source) "attribute";
+};
+
+
+type record Treerowinsertif
+{
+	XSD.String id,
+	XSD.Boolean negate optional,
+	Treerowgroups treerowgroups
+}
+with {
+variant "name as uncapitalized";
+variant (id) "attribute";
+variant (negate) "defaultForEmpty as 'false'";
+variant (negate) "attribute";
+};
+
+
+type union Treerowgroup
+{
+	Treerowiterator iterator,
+	Treerow treerow,
+	Treerowcondition condition,
+	Treerowinsertif insertif,
+	Treerowiterator externalvalue
+}
+with {
+variant "untagged";
+};
+
+
+type record Treeitem
+{
+	Treerowgroups treerowgroups
+}
+with {
+variant "name as uncapitalized";
+};
+
+
+type record Treecelliterator
+{
+	XSD.String element,
+	XSD.String id,
+	XSD.String ptcname optional,
+	XSD.String source,
+	Dataparams params optional,
+	Treecellgroups treecellgroups
+}
+with {
+variant "name as uncapitalized";
+variant (element) "attribute";
+variant (id) "attribute";
+variant (ptcname) "attribute";
+variant (source) "attribute";
+};
+
+
+type record Treecellcondition
+{
+	XSD.String element,
+	XSD.String id,
+	XSD.String ptcname optional,
+	XSD.String source,
+	Dataparams params optional,
+	Treecellgroups treecellgroups
+}
+with {
+variant "name as uncapitalized";
+variant (element) "attribute";
+variant (id) "attribute";
+variant (ptcname) "attribute";
+variant (source) "attribute";
+};
+
+
+type record Treecellinsertif
+{
+	XSD.String id,
+	XSD.Boolean negate optional,
+	Treecellgroups treecellgroups
+}
+with {
+variant "name as uncapitalized";
+variant (id) "attribute";
+variant (negate) "defaultForEmpty as 'false'";
+variant (negate) "attribute";
+};
+
+
+type union Treecellgroup
+{
+	Treecelliterator iterator,
+	Treecell treecell,
+	Treecellcondition condition,
+	Treecellinsertif insertif,
+	Treecelliterator externalvalue
+}
+with {
+variant "untagged";
+};
+
+
+type record Treecellgroups
+{
+	record of Treecellgroup treecellgroup_list
+}
+with {
+variant "untagged";
+variant (treecellgroup_list) "untagged";
+};
+
+
+type record Treerow
+{
+	Treecellgroups treecellgroups
+}
+with {
+variant "name as uncapitalized";
+};
+
+
+type record Treecell
+{
+	Align align optional,
+	XSD.String customclass optional,
+	XSD.String id optional,
+	XSD.String imageid optional,
+	XSD.String label_ optional,
+	XSD.String tooltiptext optional,
+	XSD.Boolean visible optional,
+	Datadescription externaldata optional
+}
+with {
+variant "name as uncapitalized";
+variant (align) "attribute";
+variant (customclass) "attribute";
+variant (id) "attribute";
+variant (imageid) "attribute";
+variant (label_) "name as 'label'";
+variant (label_) "attribute";
+variant (tooltiptext) "attribute";
+variant (visible) "attribute";
+};
+
+
+type record Hbox
+{
+	XSD.String customclass optional,
+	XSD.Boolean disabled optional,
+	XSD.Boolean disabledongui optional,
+	Fixedpositions fixedposition optional,
+	XSD.Decimal flex optional,
+	XSD.String id optional,
+	Orientation orientation optional,
+	XSD.Boolean scrollable optional,
+	Embeddedwidgets embeddedwidgets
+}
+with {
+variant "name as uncapitalized";
+variant (customclass) "attribute";
+variant (disabled) "attribute";
+variant (disabledongui) "attribute";
+variant (fixedposition) "attribute";
+variant (flex) "attribute";
+variant (id) "attribute";
+variant (orientation) "attribute";
+variant (scrollable) "attribute";
+};
+
+
+type record Label
+{
+	XSD.String customclass optional,
+	XSD.Boolean disabled optional,
+	XSD.Boolean disabledongui optional,
+	XSD.Decimal flex optional,
+	XSD.String id optional,
+	XSD.String style optional,
+	XSD.String tooltiptext optional,
+	XSD.String value_,
+	Datadescription externaldata optional
+}
+with {
+variant "name as uncapitalized";
+variant (customclass) "attribute";
+variant (disabled) "attribute";
+variant (disabledongui) "attribute";
+variant (flex) "attribute";
+variant (id) "attribute";
+variant (style) "attribute";
+variant (tooltiptext) "attribute";
+variant (value_) "name as 'value'";
+variant (value_) "attribute";
+};
+
+
+type record Spacer
+{
+	XSD.Decimal flex,
+	XSD.String id optional
+}
+with {
+variant "name as uncapitalized";
+variant (flex) "attribute";
+variant (id) "attribute";
+};
+
+
+type record Button
+{
+	XSD.Boolean checked optional,
+	XSD.String customclass optional,
+	XSD.Boolean disabled optional,
+	XSD.Boolean disabledongui optional,
+	XSD.Decimal flex optional,
+	XSD.String id optional,
+	XSD.String imageid optional,
+	XSD.String label_,
+	XSD.String tooltiptext optional,
+	XSD.String type_ optional,
+	Datadescription externaldata optional
+}
+with {
+variant "name as uncapitalized";
+variant (checked) "attribute";
+variant (customclass) "attribute";
+variant (disabled) "attribute";
+variant (disabledongui) "attribute";
+variant (flex) "attribute";
+variant (id) "attribute";
+variant (imageid) "attribute";
+variant (label_) "name as 'label'";
+variant (label_) "attribute";
+variant (tooltiptext) "attribute";
+variant (type_) "name as 'type'";
+variant (type_) "attribute";
+};
+
+
+type record Textbox
+{
+	XSD.String customclass optional,
+	XSD.Boolean disabled optional,
+	XSD.Boolean disabledongui optional,
+	XSD.Decimal flex optional,
+	Focusafterchange focusafterchange optional,
+	XSD.String id optional,
+	XSD.Boolean multiline optional,
+	XSD.Boolean readonly optional,
+	XSD.Decimal rows optional,
+	XSD.String tooltiptext optional,
+	XSD.String value_ optional,
+	XSD.String widgetType optional,
+	XSD.Boolean wrap optional,
+	Datadescription externaldata optional
+}
+with {
+variant "name as uncapitalized";
+variant (customclass) "attribute";
+variant (disabled) "attribute";
+variant (disabledongui) "attribute";
+variant (flex) "attribute";
+variant (focusafterchange) "attribute";
+variant (id) "attribute";
+variant (multiline) "attribute";
+variant (readonly) "attribute";
+variant (rows) "attribute";
+variant (tooltiptext) "attribute";
+variant (value_) "name as 'value'";
+variant (value_) "attribute";
+variant (widgetType) "attribute";
+variant (wrap) "attribute";
+};
+
+
+type enumerated Focusafterchange
+{
+	bottom,
+	bottomWithTrunc,
+	top
+}
+with {
+variant "text 'bottom' as capitalized";
+variant "text 'bottomWithTrunc' as capitalized";
+variant "text 'top' as capitalized";
+variant "name as uncapitalized";
+};
+
+
+type record Numericalwidget
+{
+	XSD.String customclass optional,
+	XSD.Boolean disabled optional,
+	XSD.Boolean disabledongui optional,
+	XSD.Decimal flex optional,
+	XSD.String id optional,
+	XSD.Decimal maxvalue optional,
+	XSD.Decimal minvalue optional,
+	XSD.Boolean readonly optional,
+	XSD.Boolean slider optional,
+	XSD.Boolean spinner optional,
+	XSD.Decimal stepsize optional,
+	XSD.String tooltiptext optional,
+	XSD.Decimal value_ optional,
+	Numericalwidgettype widgetType optional,
+	Datadescription externaldata optional
+}
+with {
+variant "name as uncapitalized";
+variant (customclass) "attribute";
+variant (disabled) "attribute";
+variant (disabledongui) "attribute";
+variant (flex) "attribute";
+variant (id) "attribute";
+variant (maxvalue) "attribute";
+variant (minvalue) "attribute";
+variant (readonly) "attribute";
+variant (slider) "attribute";
+variant (spinner) "attribute";
+variant (stepsize) "attribute";
+variant (tooltiptext) "attribute";
+variant (value_) "name as 'value'";
+variant (value_) "attribute";
+variant (widgetType) "attribute";
+};
+
+
+type record Tracegroups
+{
+	record of Tracegroup tracegroup_list
+}
+with {
+variant "untagged";
+variant (tracegroup_list) "untagged";
+};
+
+
+type union Tracegroup
+{
+	Trace trace,
+	Traceiterator iterator,
+	Tracecondition condition,
+	Traceinsertif insertif,
+	Traceiterator externalvalue
+}
+with {
+variant "untagged";
+};
+
+
+type record Traceinsertif
+{
+	XSD.String id,
+	XSD.Boolean negate optional,
+	Tracegroups tracegroups
+}
+with {
+variant "name as uncapitalized";
+variant (id) "attribute";
+variant (negate) "defaultForEmpty as 'false'";
+variant (negate) "attribute";
+};
+
+
+type record Tracecondition
+{
+	XSD.String element,
+	XSD.String id,
+	XSD.String ptcname optional,
+	XSD.String source,
+	Dataparams params optional,
+	Tracegroups tracegroups
+}
+with {
+variant "name as uncapitalized";
+variant (element) "attribute";
+variant (id) "attribute";
+variant (ptcname) "attribute";
+variant (source) "attribute";
+};
+
+
+type record Traceiterator
+{
+	XSD.String element,
+	XSD.String id,
+	XSD.String ptcname optional,
+	XSD.String source,
+	Dataparams params optional,
+	Tracegroups tracegroups
+}
+with {
+variant "name as uncapitalized";
+variant (element) "attribute";
+variant (id) "attribute";
+variant (ptcname) "attribute";
+variant (source) "attribute";
+};
+
+
+type record Chart
+{
+	AxisType axisXType optional,
+	AxisType axisYType optional,
+	XSD.String backgroundColor optional,
+	XSD.String customclass optional,
+	XSD.Boolean disabled optional,
+	XSD.Boolean disabledongui optional,
+	XSD.Decimal flex optional,
+	XSD.String foregroundColor optional,
+	XSD.String gridColor optional,
+	XSD.Boolean gridX optional,
+	XSD.Boolean gridY optional,
+	XSD.String id optional,
+	XSD.String title,
+	XSD.String tooltiptext optional,
+	XSD.Boolean zoomable optional,
+	Tracegroups tracegroups
+}
+with {
+variant "name as uncapitalized";
+variant (axisXType) "attribute";
+variant (axisYType) "attribute";
+variant (backgroundColor) "attribute";
+variant (customclass) "attribute";
+variant (disabled) "attribute";
+variant (disabledongui) "attribute";
+variant (flex) "attribute";
+variant (foregroundColor) "attribute";
+variant (gridColor) "attribute";
+variant (gridX) "attribute";
+variant (gridY) "attribute";
+variant (id) "attribute";
+variant (title) "attribute";
+variant (tooltiptext) "attribute";
+variant (zoomable) "attribute";
+};
+
+
+type record Trace
+{
+	XSD.String color optional,
+	XSD.Boolean fill optional,
+	XSD.String id,
+	XSD.NonNegativeInteger maxPoints optional,
+	XSD.String name,
+	XSD.String physicalUnitX optional,
+	XSD.String physicalUnitY optional,
+	XSD.String tooltiptext optional,
+	Datadescription externaldata optional,
+	record of union {
+		Xyvalue xy_value
+	} choice_list
+}
+with {
+variant "name as uncapitalized";
+variant (color) "attribute";
+variant (fill) "attribute";
+variant (id) "attribute";
+variant (maxPoints) "attribute";
+variant (name) "attribute";
+variant (physicalUnitX) "attribute";
+variant (physicalUnitY) "attribute";
+variant (tooltiptext) "attribute";
+variant (choice_list) "untagged";
+variant (choice_list[-]) "untagged";
+};
+
+
+type record Xyvalue
+{
+	XSD.Decimal x,
+	XSD.Decimal y
+}
+with {
+variant "name as uncapitalized";
+variant (x) "attribute";
+variant (y) "attribute";
+};
+
+
+type enumerated AxisType
+{
+	linear,
+	log10,
+	logE
+}
+with {
+variant "name as uncapitalized";
+};
+
+
+type record Image
+{
+	XSD.String id,
+	XSD.String imagedata optional,
+	XSD.String imageurl optional
+}
+with {
+variant "name as uncapitalized";
+variant (id) "attribute";
+variant (imagedata) "attribute";
+variant (imageurl) "attribute";
+};
+
+
+/* FIXME iterator */
+
+
+type record Toolbar
+{
+	XSD.String customclass optional,
+	XSD.Boolean disabled optional,
+	XSD.Boolean disabledongui optional,
+	XSD.String id optional,
+	Placement placement optional,
+	record of union {
+		Separator separator,
+		Toolbarbutton toolbarbutton,
+		Pushbutton pushbutton,
+		Togglebutton togglebutton
+	} choice_list
+}
+with {
+variant "name as uncapitalized";
+variant (customclass) "attribute";
+variant (disabled) "attribute";
+variant (disabledongui) "attribute";
+variant (id) "attribute";
+variant (placement) "attribute";
+variant (choice_list) "untagged";
+variant (choice_list[-]) "untagged";
+};
+
+
+type record Toolbarbutton
+{
+	XSD.String customclass optional,
+	XSD.Boolean disabled optional,
+	XSD.Boolean disabledongui optional,
+	XSD.String id optional,
+	XSD.String imageid optional,
+	XSD.String tooltiptext optional,
+	Datadescription externaldata optional
+}
+with {
+variant "name as uncapitalized";
+variant (customclass) "attribute";
+variant (disabled) "attribute";
+variant (disabledongui) "attribute";
+variant (id) "attribute";
+variant (imageid) "attribute";
+variant (tooltiptext) "attribute";
+};
+
+
+type record Separator
+{
+	XSD.String id optional
+}
+with {
+variant "name as uncapitalized";
+variant (id) "attribute";
+};
+
+
+type record Listitemgroups
+{
+	record of Listitemgroup listitemgroup_list
+}
+with {
+variant "untagged";
+variant (listitemgroup_list) "untagged";
+};
+
+
+type record Listitemiterator
+{
+	XSD.String element,
+	XSD.String id,
+	XSD.String ptcname optional,
+	XSD.String source,
+	Dataparams params optional,
+	Listitemgroups listitemgroups
+}
+with {
+variant "name as uncapitalized";
+variant (element) "attribute";
+variant (id) "attribute";
+variant (ptcname) "attribute";
+variant (source) "attribute";
+};
+
+
+type union Listitemgroup
+{
+	Listitemiterator iterator,
+	Listitem listitem,
+	Listitemcondition condition,
+	Listiteminsertif insertif,
+	Listitemiterator externalvalue
+}
+with {
+variant "untagged";
+};
+
+
+type record Listitemcondition
+{
+	XSD.String element,
+	XSD.String id,
+	XSD.String ptcname optional,
+	XSD.String source,
+	Dataparams params optional,
+	Listitemgroups listitemgroups
+}
+with {
+variant "name as uncapitalized";
+variant (element) "attribute";
+variant (id) "attribute";
+variant (ptcname) "attribute";
+variant (source) "attribute";
+};
+
+
+type record Listiteminsertif
+{
+	XSD.String id,
+	XSD.Boolean negate optional,
+	Listitemgroups listitemgroups
+}
+with {
+variant "name as uncapitalized";
+variant (id) "attribute";
+variant (negate) "defaultForEmpty as 'false'";
+variant (negate) "attribute";
+};
+
+
+type record Listbox
+{
+	XSD.String customclass optional,
+	XSD.Boolean disabled optional,
+	XSD.Boolean disabledongui optional,
+	XSD.Decimal flex optional,
+	XSD.String id optional,
+	XSD.NonNegativeInteger rows optional,
+	Seltype seltype optional,
+	XSD.String tooltiptext optional,
+	Datadescription externaldata optional,
+	Listitemgroups listitemgroups
+}
+with {
+variant "name as uncapitalized";
+variant (customclass) "attribute";
+variant (disabled) "attribute";
+variant (disabledongui) "attribute";
+variant (flex) "attribute";
+variant (id) "attribute";
+variant (rows) "attribute";
+variant (seltype) "attribute";
+variant (tooltiptext) "attribute";
+};
+
+
+type record Listitem
+{
+	XSD.String id optional,
+	XSD.String label_ optional,
+	XSD.Boolean selected optional
+}
+with {
+variant "name as uncapitalized";
+variant (id) "attribute";
+variant (label_) "name as 'label'";
+variant (label_) "attribute";
+variant (selected) "attribute";
+};
+
+
+type enumerated Seltype
+{
+	multiple,
+	single
+}
+with {
+variant "name as uncapitalized";
+};
+
+
+type record Menulist
+{
+	XSD.String customclass optional,
+	XSD.Boolean disabled optional,
+	XSD.Boolean disabledongui optional,
+	XSD.Boolean editable optional,
+	XSD.Decimal flex optional,
+	XSD.String id optional,
+	XSD.String label_ optional,
+	XSD.Boolean readonly optional,
+	XSD.String tooltiptext optional,
+	Menupopup menupopup,
+	Datadescription externaldata optional
+}
+with {
+variant "name as uncapitalized";
+variant (customclass) "attribute";
+variant (disabled) "attribute";
+variant (disabledongui) "attribute";
+variant (editable) "attribute";
+variant (flex) "attribute";
+variant (id) "attribute";
+variant (label_) "name as 'label'";
+variant (label_) "attribute";
+variant (readonly) "attribute";
+variant (tooltiptext) "attribute";
+};
+
+
+type record Menuitemiterator
+{
+	XSD.String element,
+	XSD.String id,
+	XSD.String ptcname optional,
+	XSD.String source,
+	Dataparams params optional,
+	Menuitemgroups menuitemgroups
+}
+with {
+variant "name as uncapitalized";
+variant (element) "attribute";
+variant (id) "attribute";
+variant (ptcname) "attribute";
+variant (source) "attribute";
+};
+
+
+type record Menuitemgroups
+{
+	record of Menuitemgroup menuitemgroup_list
+}
+with {
+variant "untagged";
+variant (menuitemgroup_list) "untagged";
+};
+
+
+type record Menuitemcondition
+{
+	XSD.String element,
+	XSD.String id,
+	XSD.String ptcname optional,
+	XSD.String source,
+	Dataparams params optional,
+	Menuitemgroups menuitemgroups
+}
+with {
+variant "name as uncapitalized";
+variant (element) "attribute";
+variant (id) "attribute";
+variant (ptcname) "attribute";
+variant (source) "attribute";
+};
+
+
+type record Menuiteminsertif
+{
+	XSD.String id,
+	XSD.Boolean negate optional,
+	Menuitemgroups menuitemgroups
+}
+with {
+variant "name as uncapitalized";
+variant (id) "attribute";
+variant (negate) "defaultForEmpty as 'false'";
+variant (negate) "attribute";
+};
+
+
+type union Menuitemgroup
+{
+	Menuitemiterator iterator,
+	Menuitem menuitem,
+	Menuitemcondition condition,
+	Menuiteminsertif insertif,
+	Menuitemiterator externalvalue
+}
+with {
+variant "untagged";
+};
+
+
+/* <xsd:sequence>
+      <xsd:element name="externaldata" type="datadescription" minOccurs="0" maxOccurs="1"/>
+      <xsd:choice minOccurs="0" maxOccurs="unbounded">
+        <xsd:group ref="menuitemgroups"/>        
+      </xsd:choice>
+    </xsd:sequence> */
+type record Menupopup
+{
+	union {
+		Menuitemgroups menuitemgroups,
+		record length(0 .. 1) of Datadescription externaldata_list
+	} choice
+}
+with {
+variant "name as uncapitalized";
+variant (choice) "untagged";
+variant (choice.externaldata_list) "untagged";
+variant (choice.externaldata_list[-]) "name as 'externaldata'";
+};
+
+
+type record Menuitem
+{
+	XSD.String id optional,
+	XSD.String label_ optional,
+	XSD.Boolean selected optional,
+	Datadescription externaldata optional
+}
+with {
+variant "name as uncapitalized";
+variant (id) "attribute";
+variant (label_) "name as 'label'";
+variant (label_) "attribute";
+variant (selected) "attribute";
+};
+
+
+type enumerated Placement
+{
+	east,
+	north,
+	south,
+	west
+}
+with {
+variant "name as uncapitalized";
+};
+
+
+/* egbozie: moved to XTDP-Message <xsd:simpleType name="XTDL-WidgetType">
+    <xsd:restriction base="xsd:string"> <xsd:enumeration
+    value="pushButton"/> <xsd:enumeration value="checkBox"/>
+    <xsd:enumeration value="integerField"/> <xsd:enumeration
+    value="floatField"/> <xsd:enumeration value="statusLED"/>
+    <xsd:enumeration value="string"/> <xsd:enumeration
+    value="statusLEDWithText"/> </xsd:restriction> </xsd:simpleType> */
+
+
+/* from XTDP_Message.xsd - egbozie */
+
+
+type enumerated Widgettype
+{
+	checkBox,
+	floatField,
+	image,
+	integerField,
+	none_,
+	pushButton,
+	statusLED,
+	statusLEDWithText,
+	string,
+	toggleButton,
+	trace,
+	valueList
+}
+with {
+variant "text 'none_' as 'none'";
+variant "name as uncapitalized";
+};
+
+
+type enumerated Numericalwidgettype
+{
+	floatField,
+	integerField
+}
+with {
+variant "name as uncapitalized";
+};
+
+
+type record Externaldataiterator
+{
+	XSD.String element,
+	XSD.String id,
+	XSD.String ptcname optional,
+	XSD.String source,
+	Dataparams params optional,
+	Externaldatagroups externaldatagroups
+}
+with {
+variant "name as uncapitalized";
+variant (element) "attribute";
+variant (id) "attribute";
+variant (ptcname) "attribute";
+variant (source) "attribute";
+};
+
+
+type record Externaldatacondition
+{
+	XSD.String element,
+	XSD.String id,
+	XSD.String ptcname optional,
+	XSD.String source,
+	Dataparams params optional,
+	Externaldatagroups externaldatagroups
+}
+with {
+variant "name as uncapitalized";
+variant (element) "attribute";
+variant (id) "attribute";
+variant (ptcname) "attribute";
+variant (source) "attribute";
+};
+
+
+type record Externaldatainsertif
+{
+	XSD.String id,
+	XSD.Boolean negate optional,
+	Externaldatagroups externaldatagroups
+}
+with {
+variant "name as uncapitalized";
+variant (id) "attribute";
+variant (negate) "defaultForEmpty as 'false'";
+variant (negate) "attribute";
+};
+
+
+type record Externaldatagroups
+{
+	record of Externaldatagroup externaldatagroup_list
+}
+with {
+variant "untagged";
+variant (externaldatagroup_list) "untagged";
+};
+
+
+type union Externaldatagroup
+{
+	Externaldataiterator iterator,
+	Externaldatacondition condition,
+	Externaldatainsertif insertif,
+	Intervallimits intervallimits,
+	record of Valuelist valuelist_list
+}
+with {
+variant "untagged";
+variant (valuelist_list) "untagged";
+variant (valuelist_list[-]) "name as 'valuelist'";
+};
+
+
+type record Distributionchart
+{
+	XSD.String axisXLabel optional,
+	XSD.String axisYLabel optional,
+	XSD.String backgroundcolor optional,
+	XSD.String customclass optional,
+	XSD.Boolean disabled optional,
+	XSD.Boolean disabledongui optional,
+	XSD.Decimal flex optional,
+	XSD.String gridcolor optional,
+	XSD.String id optional,
+	Labeltype labeltype optional,
+	Orientation orientation optional,
+	XSD.Boolean showlegend optional,
+	XSD.String title optional,
+	XSD.String tooltiptext optional,
+	Externaldatagroups externaldatagroups
+}
+with {
+variant "name as uncapitalized";
+variant (axisXLabel) "attribute";
+variant (axisYLabel) "attribute";
+variant (backgroundcolor) "attribute";
+variant (customclass) "attribute";
+variant (disabled) "attribute";
+variant (disabledongui) "attribute";
+variant (flex) "attribute";
+variant (gridcolor) "attribute";
+variant (id) "attribute";
+variant (labeltype) "attribute";
+variant (orientation) "attribute";
+variant (showlegend) "attribute";
+variant (title) "attribute";
+variant (tooltiptext) "attribute";
+};
+
+
+type record Intervallimits
+{
+	XSD.String id,
+	union {
+		Datadescription externaldata,
+		record of XSD.Float value_list
+	} choice
+}
+with {
+variant "name as uncapitalized";
+variant (id) "attribute";
+variant (choice) "untagged";
+variant (choice.value_list) "untagged";
+variant (choice.value_list[-]) "name as 'value'";
+};
+
+
+/* The value list can be handled only with the limits together. */
+
+
+/* The limits must be checked each time a new statistic is added to the chart. */
+
+
+/* Therefore adding a standalone valuelist is not permitted. */
+
+
+type record Valuelist
+{
+	XSD.String color optional,
+	XSD.String id,
+	Labeltype labeltype optional,
+	XSD.String legend optional,
+	XSD.String tooltiptext optional,
+	Datadescription externaldata optional,
+	record of XSD.Integer value_list
+}
+with {
+variant "name as uncapitalized";
+variant (color) "attribute";
+variant (id) "attribute";
+variant (labeltype) "attribute";
+variant (legend) "attribute";
+variant (tooltiptext) "attribute";
+variant (value_list) "untagged";
+variant (value_list[-]) "name as 'value'";
+};
+
+
+type enumerated Orientation
+{
+	horizontal,
+	vertical
+}
+with {
+variant "name as uncapitalized";
+};
+
+
+type enumerated Fixedpositions
+{
+	bottomLeft,
+	bottomRight,
+	topLeft,
+	topRight
+}
+with {
+variant "text 'bottomLeft' as capitalized";
+variant "text 'bottomRight' as capitalized";
+variant "text 'topLeft' as capitalized";
+variant "text 'topRight' as capitalized";
+variant "name as uncapitalized";
+};
+
+
+type enumerated Labeltype
+{
+	absolute,
+	mixed_,
+	none_,
+	percentage
+}
+with {
+variant "text 'mixed_' as 'mixed'";
+variant "text 'none_' as 'none'";
+variant "name as uncapitalized";
+};
+
+
+type record Pushbutton
+{
+	XSD.String customclass optional,
+	XSD.Boolean disabled optional,
+	XSD.Boolean disabledongui optional,
+	XSD.Decimal flex optional,
+	XSD.String id optional,
+	XSD.String imageid optional,
+	XSD.String label_ optional,
+	XSD.String tooltiptext optional,
+	Datadescription externaldata optional
+}
+with {
+variant "name as uncapitalized";
+variant (customclass) "attribute";
+variant (disabled) "attribute";
+variant (disabledongui) "attribute";
+variant (flex) "attribute";
+variant (id) "attribute";
+variant (imageid) "attribute";
+variant (label_) "name as 'label'";
+variant (label_) "attribute";
+variant (tooltiptext) "attribute";
+};
+
+
+type record Togglebutton
+{
+	XSD.String customclass optional,
+	XSD.Boolean disabled optional,
+	XSD.Boolean disabledongui optional,
+	XSD.Decimal flex optional,
+	XSD.String id optional,
+	XSD.String imageid optional,
+	XSD.String label_ optional,
+	XSD.Boolean state,
+	XSD.String tooltiptext optional,
+	Datadescription externaldata optional
+}
+with {
+variant "name as uncapitalized";
+variant (customclass) "attribute";
+variant (disabled) "attribute";
+variant (disabledongui) "attribute";
+variant (flex) "attribute";
+variant (id) "attribute";
+variant (imageid) "attribute";
+variant (label_) "name as 'label'";
+variant (label_) "attribute";
+variant (state) "attribute";
+variant (tooltiptext) "attribute";
+};
+
+
+type record Htmlcode
+{
+	XSD.String customclass optional,
+	XSD.Boolean disabled optional,
+	XSD.Boolean disabledongui optional,
+	XSD.Decimal flex optional,
+	XSD.String id optional,
+	Datadescription externaldata optional,
+	XSD.String value_
+}
+with {
+variant "name as uncapitalized";
+variant (customclass) "attribute";
+variant (disabled) "attribute";
+variant (disabledongui) "attribute";
+variant (flex) "attribute";
+variant (id) "attribute";
+variant (value_) "name as 'value'";
+};
+
+
+type enumerated Align
+{
+	center,
+	left,
+	right
+}
+with {
+variant "name as uncapitalized";
+};
+
+
+}
+with {
+encode "XML";
+variant "namespace as 'http://ttcn.ericsson.se/protocolModules/xtdp/xtdl'";
+variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+variant "elementFormQualified";
+}

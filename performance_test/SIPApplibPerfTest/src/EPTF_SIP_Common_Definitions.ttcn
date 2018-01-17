@@ -1,0 +1,194 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_SIP_Common_Definitions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 522
+//  Updated:  2012-11-28
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////
+//  Module: EPTF_SIP_Common_Definitions
+// 
+//  Purpose:
+//    Basic type definitions that are used in the SIP AppLib.
+// 
+//  Module depends on:
+//    <EPTF_CLL_Common_Definitions>
+//
+//    <SIPmsg_Types>
+//
+//  Last review date:
+//    2012-11-08
+// 
+///////////////////////////////////////////////////////////
+module EPTF_SIP_Common_Definitions {
+
+import from EPTF_CLL_Common_Definitions all;
+
+import from SIPmsg_Types all;
+
+///////////////////////////////////////////////////////////
+// Type: fcb_EPTF_SIP_genCallId
+//
+// Purpose:
+//   Function type for generating the Call-ID.
+//
+///////////////////////////////////////////////////////////
+type function fcb_EPTF_SIP_genCallId(
+  in integer pl_idx,
+  in charstring pl_host,
+  inout charstring pl_callId)
+runs on self;
+
+///////////////////////////////////////////////////////////
+// Type: fcb_EPTF_SIP_sipEncodeRequest
+//
+// Purpose:
+//   Function type for encoding a SIP request.
+//
+///////////////////////////////////////////////////////////
+type function fcb_EPTF_SIP_sipEncodeRequest(inout PDU_SIP_Request pl_pduSipRequest) runs on self return octetstring;
+
+///////////////////////////////////////////////////////////
+// Type: fcb_EPTF_SIP_sipEncodeResponse
+//
+// Purpose:
+//   Function type for encoding a SIP response.
+//
+///////////////////////////////////////////////////////////
+type function fcb_EPTF_SIP_sipEncodeResponse(inout PDU_SIP_Response pl_pduSipResponse) runs on self return octetstring;
+
+///////////////////////////////////////////////////////////
+// Type: SIP_TimerValues
+//
+// Purpose:
+//   Provides a container for timer values.
+//
+// Elements:
+//   record of *float*
+///////////////////////////////////////////////////////////
+type record of float SIP_TimerValues;
+
+///////////////////////////////////////////////////////////
+// Type: SIP_TimerDB
+//
+// Purpose:
+//  Provides a list that can be used as references to timers.
+//
+// Elements:
+//   type alias for EPTF_IntegerList (record of *integer*)
+///////////////////////////////////////////////////////////
+type EPTF_IntegerList SIP_TimerDB;
+
+///////////////////////////////////////////////////////////
+// Type: SIP_Transport
+//
+// Purpose:
+//  Defines the supported transport types.
+//
+// Elements:
+//  -TCP - TCP transport
+//  -UDP - UDP transport
+//  -SSL - SSL transport
+//////////////////////////////////////////////////////////
+
+type enumerated SIP_Transport {TCP, UDP, SSL}
+
+///////////////////////////////////////////////////////////
+// Constant: Indices for data storage in the FSM context
+//
+// Elements:
+//  c_SIP_AppDataIndex_FSMIdx - 
+//////////////////////////////////////////////////////////
+
+const integer c_SIP_AppDataIndex_FSMIdx := 0;
+
+///////////////////////////////////////////////////////////
+// Type: SIP_SupportedEventTypes
+//
+// Purpose:
+//   Provides a conationer for <Event_type>.
+///////////////////////////////////////////////////////////
+type record of Event_type SIP_SupportedEventTypes;
+
+////////////////////////////////////////////////////
+//Constant: Indices to identify the logging levels
+//
+//Elements:
+//  c_EPTF_SIP_Logging_WARNING -
+//  c_EPTF_SIP_Logging_DEBUG -
+//  c_EPTF_SIP_Logging_3xx -
+//  c_EPTF_SIP_Logging_4xx -
+//  c_EPTF_SIP_Logging_5xx -
+//  c_EPTF_SIP_Logging_6xx -
+//  c_EPTF_SIP_Logging_3xxTo6xx -
+//  c_EPTF_SIP_Logging_invalidMessage -
+//
+//Detailed comments:
+//  The DEBUG level should be used only for debugging. The amount of debug logging
+//  messages makes it much harder to generate high load. Also the generated logfile
+//  will be very large.
+////////////////////////////////////////////////////
+const integer c_EPTF_SIP_Logging_WARNING := 0;
+const integer c_EPTF_SIP_Logging_DEBUG := 1;
+const integer c_EPTF_SIP_Logging_3xx := 2;
+const integer c_EPTF_SIP_Logging_4xx := 3;
+const integer c_EPTF_SIP_Logging_5xx := 4;
+const integer c_EPTF_SIP_Logging_6xx := 5;
+const integer c_EPTF_SIP_Logging_3xxTo6xx := 6;
+
+const integer c_EPTF_SIP_Logging_invalidMessage := 7;
+
+type union AddrIndex
+{
+  integer userId,
+  integer calledUser
+}
+
+type SipUrl_List SIP_TargetURI_List;
+type record of SipUrl SipUrl_List;
+
+// use f_EPTF_SIP_AddrUnion2FlatSipUrl and f_EPTF_SIP_FlatSipUrl2AddrUnion
+// to convert Addr_Union to SIP_FlatSipUrl and vice versa
+type record SIP_FlatSipUrl {
+  charstring displayName optional,
+  charstring scheme,
+  charstring username,
+  charstring hostname,
+  integer portField,
+  SemicolonParam_List urlParameters optional
+}
+type record of SIP_FlatSipUrl SIP_FlatSipUrlList;
+
+const SIP_FlatSipUrl cg_FlatSipUrl_base :=
+{
+  displayName := omit,
+  scheme := "sip",//c_SIP_SCHEME,
+  username := "",
+  hostname := "",
+  portField := -1,
+  urlParameters := omit
+}
+
+type record SIP_RouteBody
+{
+  SIP_FlatSipUrl routeAddr,
+  SemicolonParam_List rrParam optional
+}
+
+type record of SIP_RouteBody SIP_RouteBodyList;
+
+const integer c_EPTF_SIP_CSeq_MAX := 2147483647;
+const float c_EPTF_SIP_CSeq_MAX_float := int2float(c_EPTF_SIP_CSeq_MAX);
+
+}//end of module
+with {
+extension "version <RnXnn>"
+}
+

@@ -1,0 +1,714 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_CLL_DataSourceClient_Functions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 512
+//  Updated:  2012-07-20
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////
+//  Module: EPTF_CLL_DataSourceClient_Functions
+// 
+//  Purpose:
+//    This module contains the implementation of EPTF_CLL_DataSource functions.
+// 
+//  Module depends on:
+//    <EPTF_CLL_Base_Functions>
+//    <EPTF_CLL_Common_Functions>
+//    <EPTF_CLL_Variable_Functions>
+//    <EPTF_CLL_DataSource_Definitions>
+//    <EPTF_CLL_HashMapStr2Int_Functions>
+//    <EPTF_CLL_HashMap_Functions>
+//    <EPTF_CLL_Semaphore_Functions>
+//    <EPTF_CLL_Variable_Definitions>
+//
+//  Module Parameters:
+//    tsp_debug_EPTF_DataSource_Functions - boolean - enable/disable debug logs
+//
+//  Current Owner:
+//    Jozsef Gyurusi (ethjgi)
+// 
+//  Last Review Date:
+//    2011-02-03
+//
+//  Detailed Comments:
+//    This module contains the interface functions for the EPTF_CLL_DataSource.
+//
+//    Public functions:
+//       <f_EPTF_DataSourceClient_init_CT>
+//       <f_EPTF_DataSourceClient_connectToServer>
+//       <f_EPTF_DataSourceClient_registerData>
+//       <f_EPTF_DataSourceClient_registerCondition>
+//       <f_EPTF_DataSourceClient_sendReady>
+//       <f_EPTF_DataSourceClient_getData>
+//       <f_EPTF_DataSourceClient_checkData>
+//       <f_EPTF_DataSourceClient_getCondition> - to be implemented
+//
+//    All other functions in this module are private! 
+//
+///////////////////////////////////////////////////////////////
+
+module EPTF_CLL_DataSourceClient_Functions {
+import from EPTF_CLL_Logging_Definitions all;
+
+import from EPTF_CLL_Logging_Functions all;
+
+import from EPTF_CLL_Common_Definitions all;
+
+
+import from EPTF_CLL_Base_Functions all;
+import from EPTF_CLL_Common_Functions all;
+import from EPTF_CLL_Variable_Functions all;
+import from EPTF_CLL_DataSource_Definitions all;
+import from EPTF_CLL_HashMapStr2Int_Functions all;
+import from EPTF_CLL_HashMap_Functions all;
+import from EPTF_CLL_Semaphore_Functions all;
+import from EPTF_CLL_Variable_Definitions all;
+
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_DataSourceClient_init_CT
+// 
+//  Purpose:
+//    Init function for DataSourceClient_CT
+//
+//  Parameters:
+//    *in charstring pl_selfName* - the name of the component
+//    *in* <EPTF_DataSource_CT> *pl_sourceCompRef* - the 
+//      main DataSource component (server).
+//      If it is null, no connection is made, the function
+//      <f_EPTF_DataSourceClient_connectToServer> should be called
+//      later.
+//
+//  Detailed Comments:
+//    Has to be called before any other DataSourceClient
+//    function is used
+///////////////////////////////////////////////////////////
+public function f_EPTF_DataSourceClient_init_CT(in charstring pl_selfName, in EPTF_DataSource_CT pl_sourceCompRef)
+runs on EPTF_DataSourceClient_CT {
+  if (v_EPTF_DataSourceClient_initialized) {
+    return;
+  }
+  f_EPTF_Base_init_CT(pl_selfName);
+  f_EPTF_Logging_init_CT(pl_selfName);
+  f_EPTF_Var_init_CT(pl_selfName);
+  f_EPTF_HashMap_init_CT(pl_selfName);
+  f_EPTF_Semaphore_init_CT(pl_selfName);
+  v_EPTF_DataSourceClient_connected := false;
+  f_EPTF_DataSourceClient_connectToServer(pl_sourceCompRef);
+  v_EPTF_DataSourceClient_initialized := true;
+  v_DataSourceClient_handler := activate(as_EPTF_DataSourceClient_EventHandler());
+  f_EPTF_Base_registerCleanup(refers(f_EPTF_DataSourceClient_cleanup_CT));
+
+  v_fcb_EPTF_DataSourceClient_dataHandler_List := {};
+  v_EPTF_DataSourceClient_dataHandlerHash := f_EPTF_str2int_HashMap_New(c_EPTF_DataSourceClient_dataHandlerHashName);
+  
+  v_fcb_EPTF_DataSourceClient_conditionHandler_List := {};
+
+  v_EPTF_DataSourceClient_dataValueHash := f_EPTF_str2int_HashMap_New(c_EPTF_DataSourceClient_dataValueHashName);
+  v_EPTF_DataSourceClient_dataValue_List := {};
+  v_EPTF_DataSourceClient_Msg_List := {};
+}
+
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_DataSourceClient_connectToServer
+// 
+//  Purpose:
+//    Connects to the specified DataSource component
+//
+//  Parameters:
+//    *in <EPTF_DataSource_CT> pl_sourceCompRef* - the DataSource_CT componentRef
+//       to connect to. If it is null, no connection is made.
+//
+//  Detailed Comments:
+//    If this function is called only once with non-null argument,
+//    the <f_EPTF_DataSourceClient_registerData> can be called
+//    without specifying the *pl_sourceCompRef* argument.
+///////////////////////////////////////////////////////////
+public function f_EPTF_DataSourceClient_connectToServer(in EPTF_DataSource_CT pl_sourceCompRef) runs on EPTF_DataSourceClient_CT {
+  if (pl_sourceCompRef!=null) {
+    connect(pl_sourceCompRef:EPTF_DataSourceIf,self:EPTF_DataSourceClientIf);
+    v_EPTF_DataSourceClient_connected := true;
+  }
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_DataSourceClient_registerData
+// 
+//  Purpose:
+//    Registers an data handler into the DataSource_CT
+//
+//  Parameters:
+//    *in charstring pl_source* - the name of the dataSource 'feature'
+//    *in charstring pl_ptcName* - the name of the PTC
+//         (dataSource+ptcName should be a unigue id of the data). Default: "" (i.e. PTC name is ignored)
+//    *in <fcb_EPTF_DataSourceClient_dataHandler> pl_dataHandler* - this function is called
+//       when a data value is requested for the given dataSource and ptcName
+//    *in <EPTF_DataSource_CT> pl_sourceCompRef* - the DataSource_CT componentRef
+//       to register the data into. If not specified the data is registered to the only one
+//       DataSource component which is connected (= for which the <f_EPTF_DataSourceClient_connectToServer> was called)
+//
+//  Detailed Comments:
+//    Only one handler can be regitered for the same pl_source and pl_ptcName,
+//    but it processes all dataElements and its parameters.
+//    The function might create the variable, or just return
+//    its name if it already existed before.
+//    The registered function can be called by calling <f_EPTF_DataSource_getData>
+//    on the component pl_sourceCompRef with the pl_source and pl_ptcName arguments registered here.
+///////////////////////////////////////////////////////////
+public function f_EPTF_DataSourceClient_registerData(
+  in charstring pl_source,
+  in charstring pl_ptcName := "",
+  in fcb_EPTF_DataSourceClient_dataHandler pl_dataHandler,
+  in EPTF_DataSource_CT pl_sourceCompRef := null
+) runs on EPTF_DataSourceClient_CT {
+  if(not v_EPTF_DataSourceClient_connected) {
+    f_EPTF_DataSourceClient_warning(log2str(%definitionId&": Cannot register handler fn ",pl_dataHandler,
+        "for pl_source: ",pl_source," pl_ptcName: ",pl_ptcName, " into pl_sourceCompRef: ",pl_sourceCompRef,": Not connected to DataSource"));
+    return;
+  }
+  
+  var charstring vl_handlerIdStr := pl_source&"@"&pl_ptcName;
+  var integer vl_handlerId := -1;
+  if (not f_EPTF_str2int_HashMap_Find(v_EPTF_DataSourceClient_dataHandlerHash,vl_handlerIdStr,vl_handlerId)) {
+    vl_handlerId := sizeof(v_fcb_EPTF_DataSourceClient_dataHandler_List);
+    v_fcb_EPTF_DataSourceClient_dataHandler_List[vl_handlerId] := pl_dataHandler;
+    f_EPTF_str2int_HashMap_Insert(v_EPTF_DataSourceClient_dataHandlerHash,vl_handlerIdStr,vl_handlerId);
+  } else {
+    f_EPTF_DataSourceClient_warning(log2str(%definitionId&": Cannot register handler fn ",pl_dataHandler,
+        "for pl_source: ",pl_source," pl_ptcName: ",pl_ptcName,": Handler already registered"));
+    return;
+  }
+  f_EPTF_DataSourceClient_registerSource(pl_source,pl_ptcName,pl_sourceCompRef);
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_DataSourceClient_registerCondition
+// 
+//  Purpose:
+//    Registers a condition handler into the DataSource_CT
+//
+//  Parameters:
+//    *in charstring pl_source* - the name of the dataSource 'feature'
+//    *in charstring pl_ptcName* - the name of the PTC
+//         (dataSource+ptcName should be a unigue id of the data). Default: "" (i.e. PTC name is ignored)
+//    *in <fcb_EPTF_DataSourceClient_conditionHandler> pl_conditionHandler* - this function is called
+//       when a condition value is requested for the given dataSource, ptcName and method
+//    *in charstring pl_method* - the name of the method that corresponds to this condition handler
+//         (dataSource+ptcName should be a unigue id of the location of the condition) and
+//         (dataSource+ptcName+method should be a unigue id of the condition). Default: "" which means
+//        that log2str(pl_conditionHandler) is used for the method.
+//    *in <EPTF_DataSource_CT> pl_sourceCompRef* - the DataSource_CT componentRef
+//       to register the data into. If not specified the data is registered to the only one
+//       DataSource component which is connected (= for which the <f_EPTF_DataSourceClient_connectToServer> was called)
+//
+//  Detailed Comments:
+//    Only one handler can be regitered for the same pl_source, pl_ptcName and pl_method,
+//    but it processes all parameters.
+//    The registered function can be called by calling <f_EPTF_DataSource_getCondition>
+//    on the component pl_sourceCompRef with the pl_source,pl_ptcName and pl_method arguments registered here.
+///////////////////////////////////////////////////////////
+public function f_EPTF_DataSourceClient_registerCondition(
+  in charstring pl_source,
+  in charstring pl_ptcName := "",
+  in fcb_EPTF_DataSourceClient_conditionHandler pl_conditionHandler,
+  in charstring pl_method := "",
+  in EPTF_DataSource_CT pl_sourceCompRef := null
+) runs on EPTF_DataSourceClient_CT {
+  if(not v_EPTF_DataSourceClient_connected) {
+    f_EPTF_DataSourceClient_warning(log2str(%definitionId&": Cannot register condition handler fn ",pl_conditionHandler,
+        "for pl_source: ",pl_source," pl_ptcName: ",pl_ptcName, " pl_method: ",pl_method, " into pl_sourceCompRef: ",pl_sourceCompRef,": Not connected to DataSource"));
+    return;
+  }
+  if (pl_method=="") {
+    pl_method := log2str(pl_conditionHandler);
+  }
+  var charstring vl_handlerIdStr := pl_source&"@"&pl_ptcName&"/"&pl_method;
+  var integer vl_handlerId := -1;
+  if (not f_EPTF_str2int_HashMap_Find(v_EPTF_DataSourceClient_dataHandlerHash,vl_handlerIdStr,vl_handlerId)) {
+    vl_handlerId := sizeof(v_fcb_EPTF_DataSourceClient_conditionHandler_List);
+    v_fcb_EPTF_DataSourceClient_conditionHandler_List[vl_handlerId] := pl_conditionHandler;
+    f_EPTF_str2int_HashMap_Insert(v_EPTF_DataSourceClient_dataHandlerHash,vl_handlerIdStr,vl_handlerId);
+  } else {
+    f_EPTF_DataSourceClient_warning(log2str(%definitionId&": Cannot register condition handler fn ",pl_conditionHandler,
+        "for pl_source: ",pl_source," pl_ptcName: ",pl_ptcName," pl_method: ",pl_method,": Handler already registered"));
+    return;
+  }
+  f_EPTF_DataSourceClient_registerSource(pl_source,pl_ptcName,pl_sourceCompRef);
+}
+
+
+private function f_EPTF_DataSourceClient_registerSource(
+  in charstring pl_source,
+  in charstring pl_ptcName := "",
+  in EPTF_DataSource_CT pl_sourceCompRef := null
+) runs on EPTF_DataSourceClient_CT {
+  // send registerData if it was not already sent:
+  var charstring vl_handlerIdStr := "Registered:"&pl_source&"@"&pl_ptcName;
+  var integer vl_handlerId := -1;
+  if (not f_EPTF_str2int_HashMap_Find(v_EPTF_DataSourceClient_dataHandlerHash,vl_handlerIdStr,vl_handlerId)) {
+    f_EPTF_str2int_HashMap_Insert(v_EPTF_DataSourceClient_dataHandlerHash,vl_handlerIdStr,vl_handlerId);
+    f_EPTF_DataSourceClient_sendMsg(EPTF_DataSource_Msg:{registerData:={pl_source,pl_ptcName}},pl_sourceCompRef);
+  }
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_DataSourceClient_sendReady
+// 
+//  Purpose:
+//    Notifies the DataSource_CT that the client is ready
+//
+//  Parameters:
+//    *in charstring pl_source* - the name of the dataSource 'feature'
+//    *in charstring pl_ptcName* - the name of the PTC
+//         (dataSource+ptcName should be a unigue id of the data)
+//    *in <EPTF_DataSource_CT> pl_sourceCompRef* - the DataSource_CT componentRef
+//       to register the data into. If not specified the data is registered to the only one
+//       DataSource component which is connected (= for which the <f_EPTF_DataSourceClient_connectToServer> was called)
+//
+//  Detailed Comments:
+//    Notifies the DataSource_CT that the client is ready
+///////////////////////////////////////////////////////////
+public function f_EPTF_DataSourceClient_sendReady(
+  in charstring pl_source,
+  in charstring pl_ptcName,
+  in EPTF_DataSource_CT pl_sourceCompRef := null)
+runs on EPTF_DataSourceClient_CT {
+  if(not v_EPTF_DataSourceClient_connected) {
+    f_EPTF_DataSourceClient_warning(log2str(%definitionId&": Cannot send Ready ",
+        "for pl_source: ",pl_source," pl_ptcName: ",pl_ptcName, " to pl_sourceCompRef: ",pl_sourceCompRef,": Not connected to DataSource"));
+    return;
+  }
+  f_EPTF_DataSourceClient_sendMsg(EPTF_DataSource_Msg:{clientReady:={pl_source, pl_ptcName}}, pl_sourceCompRef);
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_DataSourceClient_getData
+// 
+//  Purpose:
+//    To get the value of a given data
+//
+//  Parameters:
+//    *out charstring pl_dataVarName* - this is the name of the variable
+//       that stores the values of the data on the local component
+//    *in charstring pl_source* - the name of the dataSource 'feature'
+//    *in charstring pl_ptcName* - the name of the PTC
+//         (dataSource+ptcName should be a unigue id of the data). Default: "" (i.e. PTC name is ignored)
+//    *in charstring pl_element* - the type of data
+//    *in* <EPTF_DataSource_Params> *pl_params* - additional parameters (default: {})
+//       The parameters are sorted lexicographically according to the paramNames
+//    *in* <EPTF_Var_SubscriptionMode> - pl_subscriptionMode - subscription mode: sampled or timeLine: buffered; realtime: non-buffered
+//       Default: tsp_EPTF_DataSource_subscriptionMode
+//    *in integer* - pl_refreshRate - the refresh rate for the subscription.
+//      default: tsp_EPTF_DataSource_refreshRate
+//    *in <EPTF_DataSource_CT> pl_sourceCompRef* - the DataSource_CT componentRef
+//       to register the data into. If not specified the data is registered to the only one
+//       DataSource component which is connected (= for which the <f_EPTF_DataSourceClient_connectToServer> was called)
+//
+//  Return Value:
+//    integer - 0 if OK, nonzero if pl_dataVarName is not valid
+//
+//  Detailed Comments:
+//    Sends a request to the main DataSource_CT component
+//    to request the EPTF Variable name for the given dataSource.
+//    It will automatically subscribe to the source valiable.
+//    The subscribe is done directly, there is no subscription
+//    performed by the DataSource_CT
+///////////////////////////////////////////////////////////
+public function f_EPTF_DataSourceClient_getData(
+  out charstring pl_dataVarName,
+  in charstring pl_source,
+  in charstring pl_ptcName := "",
+  in charstring pl_element,
+  in EPTF_DataSource_Params pl_params := {},
+  in EPTF_Var_SubscriptionMode pl_subscriptionMode := tsp_EPTF_DataSource_subscriptionMode,
+  in integer pl_refreshRate := tsp_EPTF_DataSource_refreshRate,
+  in EPTF_DataSource_CT pl_sourceCompRef := null
+) runs on EPTF_DataSourceClient_CT return integer {
+  if(not v_EPTF_DataSourceClient_connected) {
+    f_EPTF_DataSourceClient_warning(log2str(%definitionId&": Cannot get data ",
+        "for pl_source: ",pl_source," pl_ptcName: ",pl_ptcName, " pl_element: ",pl_element," pl_params: ",pl_params, " from pl_sourceCompRef: ",pl_sourceCompRef,": Not connected to DataSource"));
+    pl_dataVarName := "";
+    return -99;
+  }
+  
+  var EPTF_Var_CT vl_ownerCompRef;
+
+  // check if already subscribed:
+  var charstring vl_dataValueIdStr := pl_source&"@"&pl_ptcName&"."&pl_element&":"&log2str(pl_params);
+  var integer vl_dataValueId;
+  var integer vl_errorCode;
+  var charstring vl_remoteDataVarName;
+  if (f_EPTF_str2int_HashMap_Find(v_EPTF_DataSourceClient_dataValueHash,vl_dataValueIdStr,vl_dataValueId)) {
+    vl_remoteDataVarName := v_EPTF_DataSourceClient_dataValue_List[vl_dataValueId].dataVarName;
+    pl_dataVarName := "EPTF_DataSourceClient_"&vl_remoteDataVarName&"."&vl_dataValueIdStr;
+    vl_ownerCompRef := v_EPTF_DataSourceClient_dataValue_List[vl_dataValueId].ownerCompRef;
+
+    // check if var exists: it is needed because checkData does not create it, but stores it in the hashMap
+    // if var does not exist subscribe is needed => no error if variable is not found
+    if(f_EPTF_Var_getId(pl_dataVarName)!=-1) {
+      return 0;
+    }
+
+    vl_errorCode := 0;
+  } else {
+  
+    var integer vl_transactionId := f_EPTF_Semaphore_new();
+    f_EPTF_DataSourceClient_sendMsg(EPTF_DataSource_Msg:{getData:={
+      transactionId := vl_transactionId,
+      dataSource := pl_source,
+      ptcName := pl_ptcName,
+      dataElement := pl_element,
+      params := pl_params
+    }}, pl_sourceCompRef);
+
+    //wait for the result:
+    if (f_EPTF_Semaphore_waitForUnlock(vl_transactionId,tsp_EPTF_DataSourceClient_maxWaitTime)) {
+      // max wait time expired before response received:
+      f_EPTF_DataSourceClient_warning(log2str(%definitionId&": Communication error: No response received for getData message: ",vl_transactionId));
+      pl_dataVarName := "";
+      return -1;
+    }
+
+    // copy the values from the message database because it might be possible that they will be overwritten because
+    // the semaphore is released and there is a blocking statement before they are used:
+    vl_ownerCompRef := v_EPTF_DataSourceClient_Msg_List[vl_transactionId].dataValue.ownerCompRef;
+    vl_remoteDataVarName := v_EPTF_DataSourceClient_Msg_List[vl_transactionId].dataValue.dataVarName;
+    vl_errorCode := v_EPTF_DataSourceClient_Msg_List[vl_transactionId].dataValue.errorCode;
+
+    //set the variable name
+    pl_dataVarName := "EPTF_DataSourceClient_"&vl_remoteDataVarName&"."&vl_dataValueIdStr;
+  }
+  
+  //subscribe to the source variable:
+  // if returned error code is 0 (no error) subscibe to the provider data variable:
+  if (vl_errorCode==0) {
+    var integer vl_localVarIdx;
+    // The presence of the source variable is not checked. It was done on the main dataSource component.
+    // If error code is 0, it will be there
+    f_EPTF_Var_subscribeRemote(
+      vl_ownerCompRef,
+      vl_remoteDataVarName,
+      pl_subscriptionMode,
+      vl_localVarIdx,
+      pl_dataVarName,
+      pl_refreshRate
+    );
+  } else {
+    f_EPTF_DataSourceClient_warning(vl_remoteDataVarName); // warning message is received in the dataVarName
+  }
+  return vl_errorCode;
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_DataSourceClient_checkData
+// 
+//  Purpose:
+//    To check if the value of a given data exists. Returns the variable name
+//    of the dataSource.
+//
+//  Parameters:
+//    *out charstring pl_dataVarName* - this is the name of the variable
+//       that stores the values of the data on the local component
+//    *in charstring pl_source* - the name of the dataSource 'feature'
+//    *in charstring pl_ptcName* - the name of the PTC
+//         (dataSource+ptcName should be a unigue id of the data). Default: "" (i.e. PTC name is ignored)
+//    *in charstring pl_element* - the type of data
+//    *in* <EPTF_DataSource_Params> *pl_params* - additional parameters (default: {})
+//       The parameters are sorted lexicographically according to the paramNames
+//    *in <EPTF_DataSource_CT> pl_sourceCompRef* - the DataSource_CT componentRef
+//       to register the data into. If not specified the data is registered to the only one
+//       DataSource component which is connected (= for which the <f_EPTF_DataSourceClient_connectToServer> was called)
+//
+//  Return Value:
+//    integer - 0 if OK, nonzero if pl_dataVarName is not valid
+//
+//  Detailed Comments:
+//    This function is almost the same as <f_EPTF_DataSourceClient_getData>, but
+//    does not subscribe to the provider variable and does not check the subscription.
+//    It only checks if the source variable is there on the source component.
+//    The returned variable might not exist even if the error code is zero.
+///////////////////////////////////////////////////////////
+public function f_EPTF_DataSourceClient_checkData(
+  out charstring pl_dataVarName,
+  in charstring pl_source,
+  in charstring pl_ptcName := "",
+  in charstring pl_element,
+  in EPTF_DataSource_Params pl_params := {},
+  in EPTF_DataSource_CT pl_sourceCompRef := null
+) runs on EPTF_DataSourceClient_CT return integer {
+  if(not v_EPTF_DataSourceClient_connected) {
+    return -99; // not connected
+  }
+  
+  // check if already subscribed:
+  var charstring vl_dataValueIdStr := pl_source&"@"&pl_ptcName&"."&pl_element&":"&log2str(pl_params);
+  var integer vl_dataValueId;
+  if (f_EPTF_str2int_HashMap_Find(v_EPTF_DataSourceClient_dataValueHash,vl_dataValueIdStr,vl_dataValueId)) {
+    pl_dataVarName := "EPTF_DataSourceClient_"&v_EPTF_DataSourceClient_dataValue_List[vl_dataValueId].dataVarName&"."&vl_dataValueIdStr;
+    return 0;
+  }
+  
+  var integer vl_transactionId := f_EPTF_Semaphore_new();
+  f_EPTF_DataSourceClient_sendMsg(EPTF_DataSource_Msg:{getData:={
+    transactionId := vl_transactionId,
+    dataSource := pl_source,
+    ptcName := pl_ptcName,
+    dataElement := pl_element,
+    params := pl_params
+  }}, pl_sourceCompRef);
+  
+  //wait for the result:
+  if (f_EPTF_Semaphore_waitForUnlock(vl_transactionId,tsp_EPTF_DataSourceClient_maxWaitTime)) {
+    // max wait time expired before response received:
+    f_EPTF_DataSourceClient_warning(log2str(%definitionId&": Communication error: No response received for getData message: ",vl_transactionId));
+    pl_dataVarName := "";
+    return -1;
+  }
+  
+  // copy the values from the message database because it might be possible that they will be overwritten because
+  // the semaphore is released and there is a blocking statement before they are used:
+  var integer vl_errorCode := v_EPTF_DataSourceClient_Msg_List[vl_transactionId].dataValue.errorCode;
+  //var EPTF_DataSourceClient_CT vl_ownerCompRef := v_EPTF_DataSourceClient_Msg_List[vl_transactionId].dataValue.ownerCompRef;
+  var charstring vl_remoteDataVarName := v_EPTF_DataSourceClient_Msg_List[vl_transactionId].dataValue.dataVarName;
+  
+  // if returned error code is 0 (no error) set the variable name:
+  if (vl_errorCode==0) {
+    // The presence of the source variable is not checked. It was done on the main dataSource component.
+    // If error code is 0, it will be there
+    pl_dataVarName := "EPTF_DataSourceClient_"&vl_remoteDataVarName&"."&vl_dataValueIdStr; // local variable name
+  }
+  return vl_errorCode;
+}
+
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+//          Private functions:
+////////////////////////////////////////////////////////////////////////////////
+
+
+
+private function f_EPTF_DataSourceClient_cleanup_CT() runs on EPTF_DataSourceClient_CT {
+  if (not v_EPTF_DataSourceClient_initialized) {
+    return;
+  }
+  v_EPTF_DataSourceClient_initialized := false;
+  //disconnect(pl_sourceCompRef:EPTF_DataSourceIf,self:EPTF_DataSourceClientIf);
+  deactivate(v_DataSourceClient_handler);
+  v_DataSourceClient_handler := null;
+  if (v_EPTF_DataSourceClient_dataHandlerHash!=-1) {
+    v_EPTF_DataSourceClient_dataHandlerHash := -1;
+    f_EPTF_str2int_HashMap_Delete(c_EPTF_DataSourceClient_dataHandlerHashName);
+  }
+  if (v_EPTF_DataSourceClient_dataValueHash!=-1) {
+    v_EPTF_DataSourceClient_dataValueHash := -1;
+    f_EPTF_str2int_HashMap_Delete(c_EPTF_DataSourceClient_dataValueHashName);
+  }
+}
+
+private function f_EPTF_DataSourceClient_handleGetData(
+  in EPTF_DataSource_Msg_GetData pl_getData,
+  in EPTF_DataSource_CT pl_sourceCompRef
+) runs on EPTF_DataSourceClient_CT {
+  // find handler:
+  var charstring vl_handlerIdStr := pl_getData.dataSource&"@"&pl_getData.ptcName;
+  var integer vl_handlerId := -1;
+  if (not f_EPTF_str2int_HashMap_Find(v_EPTF_DataSourceClient_dataHandlerHash,vl_handlerIdStr,vl_handlerId)) {
+    f_EPTF_DataSourceClient_warning(log2str(%definitionId&": Cannot handle data ",pl_getData,
+        ": Handler not registered"));
+    // send errorCode to the DataSource_CT:
+    f_EPTF_DataSourceClient_sendMsg(EPTF_DataSource_Msg:{dataValue:={
+          pl_getData.transactionId,
+          pl_getData.dataSource,
+          pl_getData.ptcName,
+          pl_getData.dataElement,
+          pl_getData.params,
+          "",
+          1,
+          self // it is the same as the sender of the message
+        }},pl_sourceCompRef);
+    return;
+  }
+  // calling handler: v_fcb_EPTF_DataSourceClient_dataHandler_List[vl_handlerId]
+  var charstring vl_dataVarName;
+  var integer vl_errorCode := v_fcb_EPTF_DataSourceClient_dataHandler_List[vl_handlerId].apply(
+    vl_dataVarName,
+    pl_getData.dataSource,
+    pl_getData.ptcName,
+    pl_getData.dataElement,
+    pl_getData.params
+  );
+
+  if (not isbound(vl_dataVarName)) {
+    vl_dataVarName := "";
+  }
+
+  // send vl_dataVarName to the DataSource_CT:
+  f_EPTF_DataSourceClient_sendMsg(EPTF_DataSource_Msg:{dataValue:={
+        pl_getData.transactionId,
+        pl_getData.dataSource,
+        pl_getData.ptcName,
+        pl_getData.dataElement,
+        pl_getData.params,
+        vl_dataVarName,
+        vl_errorCode,
+        self // it is the same as the sender of the message
+      }},pl_sourceCompRef);
+}
+
+private function f_EPTF_DataSourceClient_handleGetCondition(
+  in EPTF_DataSource_Msg_GetCondition pl_getCondition,
+  in EPTF_DataSource_CT pl_sourceCompRef
+) runs on EPTF_DataSourceClient_CT {
+  // find handler:
+  var charstring vl_handlerIdStr := pl_getCondition.dataSource&"@"&pl_getCondition.ptcName&"/"&pl_getCondition.method;
+  var integer vl_handlerId := -1;
+  if (not f_EPTF_str2int_HashMap_Find(v_EPTF_DataSourceClient_dataHandlerHash,vl_handlerIdStr,vl_handlerId)) {
+    f_EPTF_DataSourceClient_warning(log2str(%definitionId&": Cannot handle condition ",pl_getCondition,
+        ": Handler not registered"));
+    // send error code to the DataSource_CT:
+    f_EPTF_DataSourceClient_sendMsg(EPTF_DataSource_Msg:{conditionValue:={
+          pl_getCondition.transactionId,
+          pl_getCondition.dataSource,
+          pl_getCondition.ptcName,
+          pl_getCondition.method,
+          pl_getCondition.params,
+          false,
+          1
+        }},pl_sourceCompRef);
+    return;
+  }
+  // calling handler: v_fcb_EPTF_DataSourceClient_dataHandler_List[vl_handlerId]
+  var boolean vl_conditionValue;
+  var integer vl_errorCode := v_fcb_EPTF_DataSourceClient_conditionHandler_List[vl_handlerId].apply(
+    vl_conditionValue,
+    pl_getCondition.dataSource,
+    pl_getCondition.ptcName,
+    pl_getCondition.method,
+    pl_getCondition.params
+  );
+
+  if (not isbound(vl_conditionValue)) {
+    vl_conditionValue := false;
+  }
+
+  // send vl_conditionValue to the DataSource_CT:
+  f_EPTF_DataSourceClient_sendMsg(EPTF_DataSource_Msg:{conditionValue:={
+        pl_getCondition.transactionId,
+        pl_getCondition.dataSource,
+        pl_getCondition.ptcName,
+        pl_getCondition.method,
+        pl_getCondition.params,
+        vl_conditionValue,
+        vl_errorCode
+      }},pl_sourceCompRef);
+}
+
+private function f_EPTF_DataSourceClient_handleDataValue(
+  in EPTF_DataSource_Msg_DataValue pl_dataValue,
+  in EPTF_DataSource_CT pl_sourceCompRef
+) runs on EPTF_DataSourceClient_CT {
+  v_EPTF_DataSourceClient_Msg_List[pl_dataValue.transactionId] := {dataValue := pl_dataValue};
+  // store the returned varname in a hashmap:
+  if(pl_dataValue.errorCode==0) {
+    var charstring vl_dataValueIdStr := pl_dataValue.dataSource&"@"&pl_dataValue.ptcName&
+    "."&pl_dataValue.dataElement&":"&log2str(pl_dataValue.params);
+
+    var integer vl_dataValueId := sizeof(v_EPTF_DataSourceClient_dataValue_List);
+    var EPTF_Var_CT vl_ownerCompRef := pl_dataValue.ownerCompRef;
+    if (vl_ownerCompRef==null) {
+      // DataSource is the source, the other side is the owner:
+      vl_ownerCompRef := pl_sourceCompRef
+      v_EPTF_DataSourceClient_Msg_List[pl_dataValue.transactionId].dataValue.ownerCompRef := vl_ownerCompRef;
+    }
+    v_EPTF_DataSourceClient_dataValue_List[vl_dataValueId] := {pl_dataValue.dataVarName, vl_ownerCompRef};
+    f_EPTF_str2int_HashMap_Insert(v_EPTF_DataSourceClient_dataValueHash,vl_dataValueIdStr,vl_dataValueId);
+  }
+  f_EPTF_Semaphore_unlock(pl_dataValue.transactionId);
+}
+
+private function f_EPTF_DataSourceClient_sendMsg(
+  in EPTF_DataSource_Msg pl_msg,
+  in EPTF_DataSource_CT pl_sourceCompRef := null
+) runs on EPTF_DataSourceClient_CT {
+  if(not v_EPTF_DataSourceClient_connected) {
+    f_EPTF_DataSourceClient_warning(log2str(%definitionId&": Cannot send message ",
+        "for pl_msg: ",pl_msg," to "," pl_sourceCompRef: ",pl_sourceCompRef,": Not connected to DataSource"));
+    return;
+  }
+  if (pl_sourceCompRef==null) {
+    EPTF_DataSourceClientIf.send(pl_msg);
+  } else {
+    EPTF_DataSourceClientIf.send(pl_msg) to pl_sourceCompRef;
+  }
+}
+
+private altstep as_EPTF_DataSourceClient_EventHandler() runs on EPTF_DataSourceClient_CT {
+  var EPTF_DataSource_CT vl_sourceCompRef;
+  var EPTF_DataSource_Msg vl_msg;
+  [] EPTF_DataSourceClientIf.receive(EPTF_DataSource_Msg:?) -> value vl_msg sender vl_sourceCompRef {
+    if (ischosen(vl_msg.getData)) {
+      f_EPTF_DataSourceClient_handleGetData(vl_msg.getData,vl_sourceCompRef);
+    } else if (ischosen(vl_msg.getCondition)) {
+      f_EPTF_DataSourceClient_handleGetCondition(vl_msg.getCondition,vl_sourceCompRef);
+    } else if (ischosen(vl_msg.dataValue)) {
+      f_EPTF_DataSourceClient_handleDataValue(vl_msg.dataValue,vl_sourceCompRef);
+    }
+    repeat;
+  }
+}
+
+private function f_EPTF_DataSourceClient_error(in charstring pl_msg)
+runs on EPTF_Logging_CT{
+  f_EPTF_Logging_error(true, pl_msg);
+}
+
+private function f_EPTF_DataSourceClient_warning(in charstring pl_msg) 
+runs on EPTF_Logging_CT{
+  f_EPTF_Logging_warning(true, pl_msg);
+}
+
+// private function f_EPTF_DataSourceClient_debug(in charstring pl_msg)
+// runs on EPTF_Logging_CT{
+//   f_EPTF_Logging_debug(true,"Debug: "&pl_msg);
+// }
+
+public function f_EPTF_DataSourceClient_extractParams(
+  in charstring pl_element,
+  in EPTF_DataSource_Params pl_params,
+  in EPTF_CharstringList pl_needed,
+  out EPTF_CharstringList pl_result)
+runs on EPTF_Logging_CT
+return integer{
+  pl_result := {};
+  for(var integer j := 0; j < sizeof(pl_needed); j := j + 1){
+    pl_result[j] := "";
+  }
+  for(var integer i := 0; i < sizeof(pl_params); i:= i + 1){
+    var boolean vl_found := false;
+    for(var integer j := 0; j < sizeof(pl_needed); j := j + 1){
+      if(pl_params[i].paramName == pl_needed[j]){
+        pl_result[j] := pl_params[i].paramValue;
+        vl_found := true;
+        break;
+      }
+    }
+    if(not vl_found){
+      f_EPTF_DataSourceClient_warning("Invalid parameter: "&pl_params[i].paramName&" for element "&pl_element&". Acceptable parameters: "&log2str(pl_needed));
+      return -1;
+    }
+  }
+  return 0
+}
+
+
+} // module EPTF_CLL_DataSource_ClientFunctions

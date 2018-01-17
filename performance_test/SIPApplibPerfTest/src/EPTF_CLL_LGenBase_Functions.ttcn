@@ -1,0 +1,958 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************///  File:     EPTF_CLL_LGenBase_Functions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 512
+//  Updated:  2012-11-25
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////
+//  Module: EPTF_CLL_LGenBase_Functions
+//
+//  Purpose:
+//    This module provides common functions for TitanSim load generators
+//
+//  Module Parameters:
+//    -
+//
+//  Module depends on:
+//    <EPTF_CLL_Base_Definitions>
+//    <EPTF_CLL_Base_Functions>
+//    <EPTF_CLL_LGenBase_Definitions>
+//    <EPTF_CLL_LGenBase_ConfigDefinitions>
+//    <EPTF_CLL_LGenBase_ConfigFunctions>
+//    <EPTF_CLL_LGenBase_PhaseDefinitions>
+//    <EPTF_CLL_LGenBase_PhaseFunctions>
+//    <EPTF_CLL_LGenBase_EventHandlingFunctions>
+//    <EPTF_CLL_LGenBase_TrafficFunctions>
+//    <EPTF_CLL_LGenBase_StepFunctions>
+//    <EPTF_CLL_LGenBase_TemplateDefinitions>
+//    <EPTF_CLL_LGenBase_TemplateFunctions>
+//    <EPTF_CLL_Common_Definitions>
+//    <EPTF_CLL_Scheduler_Definitions>
+//    <EPTF_CLL_RBTScheduler_Functions>
+//    <EPTF_CLL_HashMapInt2Int_Functions>
+//    <EPTF_CLL_HashMapStr2Int_Functions>
+//    <EPTF_CLL_FBQ_Definitions>
+//    <EPTF_CLL_FBQ_Functions>
+//    <EPTF_CLL_LGenBaseTrafficMixer_Definitions>
+//    <EPTF_CLL_LGenBaseTrafficMixer_Functions>
+//    <EPTF_CLL_Variable_Functions>
+//    <EPTF_CLL_StatHandlerClient_Functions>
+//    <EPTF_CLL_StatHandler_Definitions>
+//    <EPTF_CLL_StatHandler_Functions>
+//
+//  Current Owner:
+//    egbozie, ELSZSKU
+//
+//  Last Review Date:
+//    2008-02-26
+//
+//  Detailed Comments:
+//
+///////////////////////////////////////////////////////////
+module EPTF_CLL_LGenBase_Functions {
+//=========================================================================
+// Import Part
+//=========================================================================
+
+//import from EPTF_CLL_Base_Definitions all;
+import from EPTF_CLL_Base_Functions all;
+import from EPTF_CLL_LGenBase_Definitions all;
+import from EPTF_CLL_LGenBase_ConfigDefinitions all;
+import from EPTF_CLL_LGenBase_ConfigFunctions all;
+//import from EPTF_CLL_LGenBase_PhaseDefinitions all;
+import from EPTF_CLL_LGenBase_PhaseFunctions all;
+import from EPTF_CLL_LGenBase_EventHandlingFunctions all;
+import from EPTF_CLL_LGenBase_TrafficFunctions all;
+import from EPTF_CLL_LGenBase_StepFunctions all;
+import from EPTF_CLL_LGenBase_TemplateDefinitions all;
+import from EPTF_CLL_LGenBase_TemplateFunctions all;
+//import from EPTF_CLL_Scheduler_Definitions all;
+import from EPTF_CLL_RBTScheduler_Functions all;
+import from EPTF_CLL_HashMapInt2Int_Functions all;
+import from EPTF_CLL_HashMapStr2Int_Functions all;
+import from EPTF_CLL_HashMap_Functions all;
+import from EPTF_CLL_FBQ_Definitions all;
+import from EPTF_CLL_FBQ_Functions all;
+//import from EPTF_CLL_LGenBaseTrafficMixer_Definitions all;
+//import from EPTF_CLL_LGenBaseTrafficMixer_Functions all;
+import from EPTF_CLL_Variable_Functions all;
+import from EPTF_CLL_StatHandlerClient_Functions all;
+import from EPTF_CLL_StatHandler_Definitions all;
+import from EPTF_CLL_StatHandler_Functions all;
+import from EPTF_CLL_LGenBase_LoggingFunctions all;
+import from EPTF_CLL_StatMeasure_Functions all;
+import from EPTF_CLL_DataSource_Definitions all;
+import from EPTF_CLL_DataSourceClient_Functions all;
+import from EPTF_CLL_LGenBase_DSFunctions all;
+import from EPTF_CLL_Variable_Definitions all;
+import from EPTF_CLL_LGenBaseStats_Definitions all;
+import from EPTF_CLL_ILog_Definitions all;
+import from EPTF_CLL_LGenBase_ILog_Definitions all;
+import from EPTF_CLL_LGenBase_ILog_Functions all;
+import from EPTF_CLL_ILog_Functions all;
+import from EPTF_CLL_Common_Definitions all;
+import from EPTF_CLL_Common_Functions all;
+
+//=========================================================================
+// Functions
+//========================================================================
+///////////////////////////////////////////////////////////
+//  Group: InitandCleanup
+//
+//  Purpose:
+//    Functions related to the init & cleanup of EPTF_LGenBase feature
+///////////////////////////////////////////////////////////
+group InitandCleanup {
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_LGenBase_init
+  //
+  //  Purpose:
+  //    Init EPTF_LGenBase feature
+  //
+  //  Parameters:
+  //    - pl_selfName - *in* - *charstring* - the name of the component
+  //    - pl_numEntities - *in* - *integer* - the number of entity contexts to create.
+  //    - pl_entityNamePrefix - *in* - *charstring* -  the name prefix for the entities
+  //    - pl_EPTF_LGenBase_burstFunc - *in* - <EPTF_LGenBase_burstFunc> - global burst calculating function
+  //    - pl_extTemplLoadList - *in* - <EPTF_LGenBase_ExtTemplLoadList> - list of external templates to load if needed
+  //    - pl_statHandlerCompRef - *in* - <EPTF_StatHandler_CT> - statHandler component reference, that generates
+  //        global statistics if needed
+  //
+  //  Return Value:
+  //    -
+  //
+  //  Errors & assertions:
+  //    - pl_numEntities shall be non-negative.
+  //
+  //  Detailed Comments:
+  //    This function initializes EPTF_LGenBase_CT.
+  //    The name of the Xth entity will be generated as 'entityNamePrefix&int2str(X)
+  //
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_LGenBase_init(
+    in charstring pl_selfName,
+    in integer pl_numEntities := 0,
+    in charstring pl_entityNamePrefix := "",
+    in EPTF_LGenBase_burstFunc pl_EPTF_LGenBase_burstFunc := tsp_LGenBase_BustCalcMethod,
+    in EPTF_LGenBase_ExtTemplLoadList pl_extTemplLoadList := tsp_LGenBase_extTemplLoadList,
+    in EPTF_StatHandler_CT pl_statHandlerCompRef := null,
+    in EPTF_DataSource_CT pl_dataSource_compRef := null,
+    in boolean pl_guiVarsEnabled := true)
+  runs on EPTF_LGenBase_Private_CT {
+    if (v_LGenBase_initialized) {return}
+    if ( "" != pl_entityNamePrefix ){
+      v_LGenBase_entityNamePrefix := pl_entityNamePrefix;
+    }else{
+      v_LGenBase_entityNamePrefix := pl_selfName;
+    }
+
+    f_EPTF_FBQ_init_CT(pl_selfName);
+    f_EPTF_HashMap_init_CT(pl_selfName);
+    f_EPTF_LGenBase_initLogging(pl_selfName)
+    f_EPTF_StatHandler_init_CT(pl_selfName);
+    if(null == pl_statHandlerCompRef){
+      pl_statHandlerCompRef := self
+    }
+    f_EPTF_StatHandlerClient_init_CT(pl_selfName,pl_statHandlerCompRef);
+    f_EPTF_StatMeasure_init_CT(pl_selfName)
+    //f_EPTF_Base_init_CT(pl_selfName);
+    //f_EPTF_Base_assert(%definitionId&": Checking number of entities", pl_numEntities>=0);
+
+    // saving burst calc functions
+    f_EPTF_LGenBase_BurstCalc_init();
+    var integer vl_burstId;
+    vl_burstId:= f_EPTF_LGenBase_getBurstCalcFunctionId(f_EPTF_LGenBase_BurstFuncName2Char(pl_EPTF_LGenBase_burstFunc));
+    f_EPTF_LGenBase_setBurstCalcAlgInternal(vl_burstId, -1, false);
+
+    //start clock, init queue
+    f_EPTF_Scheduler_init_CT(pl_selfName);    
+
+    //v_LGenBase_eventListenerHashmap := f_EPTF_str2int_HashMap_New(c_EPTF_LGenBase_eventListenersHashmap);
+    v_LGenBase_listeners := {};
+    
+    f_EPTF_FBQ_initFreeBusyQueue(v_LGenBase_listenersQueue);
+    f_EPTF_FBQ_initFreeBusyQueue(v_LGenBase_scenarios);
+    f_EPTF_FBQ_initFreeBusyQueue(v_LGenBase_PhaseListDeclaratorDB.queue);
+    f_EPTF_FBQ_initFreeBusyQueue(v_LGenBase_postedEventsQueue);
+
+    v_LGenBase_functionHashMap := f_EPTF_str2int_HashMap_New(c_EPTF_LGenBase_functionHashmap);
+    v_LGenBase_fsmEventsBehaviorHashMap := f_EPTF_str2int_HashMap_New(c_EPTF_LGenBase_eventBehaviorHashmap);
+    v_LGenBase_fsmEventsInputHashMap := f_EPTF_str2int_HashMap_New(c_EPTF_LGenBase_eventInputHashmap);
+    if(0 < pl_numEntities){
+      f_EPTF_LGenBase_initEntityCtxs(0, pl_numEntities);
+    }
+    v_LGenBase_behaviorHashMap := f_EPTF_str2int_HashMap_New(c_EPTF_LGenBase_behaviorHashMap);
+
+    // init structure for storing phaselist
+    f_EPTF_LGenBase_Phase_init();
+
+    v_LGenBase_functions := {};
+    var integer vl_ret := f_EPTF_LGenBase_declareBehaviorType(c_EPTF_LGenBase_behavior, 0, null,null,null);
+    f_EPTF_Base_assert(%definitionId&": Behavior type index must be "&int2str(c_EPTF_LGenBase_bIdx),
+      c_EPTF_LGenBase_bIdx == vl_ret);
+    //events
+    vl_ret := f_EPTF_LGenBase_declareFsmEvent(c_EPTF_LGenBase_behavior,c_EPTF_LGenBase_inputName_timerTimeout);
+    f_EPTF_Base_assert(%definitionId&": "&c_EPTF_LGenBase_inputName_timerTimeout&" must be "&int2str(c_EPTF_LGenBase_inputIdx_timerTimeout),vl_ret == c_EPTF_LGenBase_inputIdx_timerTimeout);
+    vl_ret := f_EPTF_LGenBase_declareFsmEvent(c_EPTF_LGenBase_behavior,c_EPTF_LGenBase_inputName_testMgmt_startTC);
+    f_EPTF_Base_assert(%definitionId&": "&c_EPTF_LGenBase_inputName_testMgmt_startTC&" must be "&int2str(c_EPTF_LGenBase_inputIdx_testMgmt_startTC),vl_ret == c_EPTF_LGenBase_inputIdx_testMgmt_startTC);
+    vl_ret := f_EPTF_LGenBase_declareFsmEvent(c_EPTF_LGenBase_behavior,c_EPTF_LGenBase_inputName_testMgmt_stopTC);
+    f_EPTF_Base_assert(%definitionId&": "&c_EPTF_LGenBase_inputName_testMgmt_stopTC&" must be "&int2str(c_EPTF_LGenBase_inputIdx_testMgmt_stopTC),vl_ret == c_EPTF_LGenBase_inputIdx_testMgmt_stopTC);
+    vl_ret := f_EPTF_LGenBase_declareFsmEvent(c_EPTF_LGenBase_behavior,c_EPTF_LGenBase_inputName_testMgmt_finishedTcSuccess);
+    f_EPTF_Base_assert(%definitionId&": "&c_EPTF_LGenBase_inputName_testMgmt_finishedTcSuccess&" must be "&int2str(c_EPTF_LGenBase_inputIdx_testMgmt_finishedTcSuccess),vl_ret == c_EPTF_LGenBase_inputIdx_testMgmt_finishedTcSuccess);
+    vl_ret := f_EPTF_LGenBase_declareFsmEvent(c_EPTF_LGenBase_behavior,c_EPTF_LGenBase_inputName_testMgmt_finishedTcFail);
+    f_EPTF_Base_assert(%definitionId&": "&c_EPTF_LGenBase_inputName_testMgmt_finishedTcFail&" must be "&int2str(c_EPTF_LGenBase_inputIdx_testMgmt_finishedTcFail),vl_ret == c_EPTF_LGenBase_inputIdx_testMgmt_finishedTcFail);
+    vl_ret := f_EPTF_LGenBase_declareFsmEvent(c_EPTF_LGenBase_behavior,c_EPTF_LGenBase_inputName_testMgmt_abortTC);
+    f_EPTF_Base_assert(%definitionId&": "&c_EPTF_LGenBase_inputName_testMgmt_abortTC&" must be "&int2str(c_EPTF_LGenBase_inputIdx_testMgmt_abortTC),vl_ret == c_EPTF_LGenBase_inputIdx_testMgmt_abortTC);
+    vl_ret := f_EPTF_LGenBase_declareFsmEvent(c_EPTF_LGenBase_behavior,c_EPTF_LGenBase_inputName_testMgmt_launchedTrafficFinished);
+    f_EPTF_Base_assert(%definitionId&": "&c_EPTF_LGenBase_inputName_testMgmt_launchedTrafficFinished&" must be "&int2str(c_EPTF_LGenBase_inputIdx_testMgmt_launchedTrafficFinished),vl_ret == c_EPTF_LGenBase_inputIdx_testMgmt_launchedTrafficFinished);
+    vl_ret := f_EPTF_LGenBase_declareFsmEvent(c_EPTF_LGenBase_behavior,c_EPTF_LGenBase_inputName_testMgmt_scenarioFinished);
+    f_EPTF_Base_assert(%definitionId&": "&c_EPTF_LGenBase_inputName_testMgmt_scenarioFinished&" must be "&int2str(c_EPTF_LGenBase_inputIdx_testMgmt_scenarioFinished),vl_ret == c_EPTF_LGenBase_inputIdx_testMgmt_scenarioFinished);
+    vl_ret := f_EPTF_LGenBase_declareFsmEvent(c_EPTF_LGenBase_behavior,c_EPTF_LGenBase_inputName_testMgmt_trafficCaseStopped);
+    f_EPTF_Base_assert(%definitionId&": "&c_EPTF_LGenBase_inputName_testMgmt_trafficCaseStopped&" must be "&int2str(c_EPTF_LGenBase_inputIdx_testMgmt_trafficCaseStopped),vl_ret == c_EPTF_LGenBase_inputIdx_testMgmt_trafficCaseStopped);
+    vl_ret := f_EPTF_LGenBase_declareFsmEvent(c_EPTF_LGenBase_behavior,c_EPTF_LGenBase_inputName_testMgmt_trafficCaseStarted);
+    f_EPTF_Base_assert(%definitionId&": "&c_EPTF_LGenBase_inputName_testMgmt_trafficCaseStarted&" must be "&int2str(c_EPTF_LGenBase_inputIdx_testMgmt_trafficCaseStarted),vl_ret == c_EPTF_LGenBase_inputIdx_testMgmt_trafficCaseStarted);
+    vl_ret := f_EPTF_LGenBase_declareFsmEvent(c_EPTF_LGenBase_behavior,c_EPTF_LGenBase_inputName_testMgmt_entityStopped);
+    f_EPTF_Base_assert(%definitionId&": "&c_EPTF_LGenBase_inputName_testMgmt_entityStopped&" must be "&int2str(c_EPTF_LGenBase_inputIdx_testMgmt_entityStopped),vl_ret == c_EPTF_LGenBase_inputIdx_testMgmt_entityStopped);
+    vl_ret := f_EPTF_LGenBase_declareFsmEvent(c_EPTF_LGenBase_behavior,c_EPTF_LGenBase_inputName_testMgmt_entityAborted);
+    f_EPTF_Base_assert(%definitionId&": "&c_EPTF_LGenBase_inputName_testMgmt_entityAborted&" must be "&int2str(c_EPTF_LGenBase_inputIdx_testMgmt_entityAborted),vl_ret == c_EPTF_LGenBase_inputIdx_testMgmt_entityAborted);
+
+    vl_ret := f_EPTF_LGenBase_declareFsmEvent(c_EPTF_LGenBase_behavior,c_EPTF_LGenBase_inputName_testMgmt_finishedTcError);
+    f_EPTF_Base_assert(%definitionId&": "&c_EPTF_LGenBase_inputName_testMgmt_finishedTcError&" must be "&int2str(c_EPTF_LGenBase_inputIdx_testMgmt_finishedTcError),vl_ret == c_EPTF_LGenBase_inputIdx_testMgmt_finishedTcError);
+    vl_ret := f_EPTF_LGenBase_declareFsmEvent(c_EPTF_LGenBase_behavior,c_EPTF_LGenBase_inputName_testMgmt_finishedTcTimeout);
+    f_EPTF_Base_assert(%definitionId&": "&c_EPTF_LGenBase_inputName_testMgmt_finishedTcTimeout&" must be "&int2str(c_EPTF_LGenBase_inputIdx_testMgmt_finishedTcTimeout),vl_ret == c_EPTF_LGenBase_inputIdx_testMgmt_finishedTcTimeout);
+
+    vl_ret := f_EPTF_LGenBase_declareFsmEvent(c_EPTF_LGenBase_behavior,c_EPTF_LGenBase_inputName_testMgmt_scenarioStarted);
+    f_EPTF_Base_assert(%definitionId&": "&c_EPTF_LGenBase_inputName_testMgmt_scenarioStarted&" must be "&int2str(c_EPTF_LGenBase_inputIdx_testMgmt_scenarioStarted),vl_ret == c_EPTF_LGenBase_inputIdx_testMgmt_scenarioStarted);
+    vl_ret := f_EPTF_LGenBase_declareFsmEvent(c_EPTF_LGenBase_behavior,c_EPTF_LGenBase_inputName_testMgmt_testFinished);
+    f_EPTF_Base_assert(%definitionId&": "&c_EPTF_LGenBase_inputName_testMgmt_testFinished&" must be "&int2str(c_EPTF_LGenBase_inputIdx_testMgmt_testFinished),vl_ret == c_EPTF_LGenBase_inputIdx_testMgmt_testFinished);
+
+    //steps
+    vl_ret := f_EPTF_LGenBase_declareStep(c_EPTF_LGenBase_behavior,{c_EPTF_LGenBase_stepName_timerStart,refers(f_EPTF_LGenBase_step_timerStart)})
+    f_EPTF_Base_assert(%definitionId&": Timer start step must be "&int2str(c_EPTF_LGenBase_stepIdx_timerStart),c_EPTF_LGenBase_stepIdx_timerStart==vl_ret);
+    vl_ret := f_EPTF_LGenBase_declareStep(c_EPTF_LGenBase_behavior,{c_EPTF_LGenBase_stepName_timerStartOrRestart,refers(f_EPTF_LGenBase_step_timerStartOrRestart)})
+    f_EPTF_Base_assert(%definitionId&": Timer start step must be "&int2str(c_EPTF_LGenBase_stepIdx_timerStartOrRestart),c_EPTF_LGenBase_stepIdx_timerStartOrRestart==vl_ret);    
+    vl_ret := f_EPTF_LGenBase_declareStep(c_EPTF_LGenBase_behavior,{c_EPTF_LGenBase_stepName_timerCancel,refers(f_EPTF_LGenBase_step_timerCancel)})
+    f_EPTF_Base_assert(%definitionId&": Timer cancel step must be "&int2str(c_EPTF_LGenBase_stepIdx_timerCancel),c_EPTF_LGenBase_stepIdx_timerCancel == vl_ret);    
+    vl_ret := f_EPTF_LGenBase_declareStep(c_EPTF_LGenBase_behavior,{c_EPTF_LGenBase_stepName_timerCancelIfRunning,refers(f_EPTF_LGenBase_step_timerCancelIfRunning)})
+    f_EPTF_Base_assert(%definitionId&": Timer cancel step must be "&int2str(c_EPTF_LGenBase_stepIdx_timerCancelIfRunning),c_EPTF_LGenBase_stepIdx_timerCancelIfRunning == vl_ret);    
+    vl_ret := f_EPTF_LGenBase_declareStep(c_EPTF_LGenBase_behavior,{c_EPTF_LGenBase_stepName_cancelAllTimers,refers(f_EPTF_LGenBase_step_cancelAllTimers)})
+    f_EPTF_Base_assert(%definitionId&": All timers cancel step must be "&int2str(c_EPTF_LGenBase_stepIdx_cancelAllTimers),c_EPTF_LGenBase_stepIdx_cancelAllTimers == vl_ret);
+    vl_ret := f_EPTF_LGenBase_declareStep(c_EPTF_LGenBase_behavior,{c_EPTF_LGenBase_stepName_trafficSuccess,refers(f_EPTF_LGenBase_step_trafficSuccess)})
+    f_EPTF_Base_assert(%definitionId&": Traffic success step must be "&int2str(c_EPTF_LGenBase_stepIdx_trafficSuccess),c_EPTF_LGenBase_stepIdx_trafficSuccess==vl_ret);
+    vl_ret := f_EPTF_LGenBase_declareStep(c_EPTF_LGenBase_behavior,{c_EPTF_LGenBase_stepName_trafficFailed,refers(f_EPTF_LGenBase_step_trafficFailed)})
+    f_EPTF_Base_assert(%definitionId&": Traffic failed step must be "&int2str(c_EPTF_LGenBase_stepIdx_trafficFailed),c_EPTF_LGenBase_stepIdx_trafficFailed==vl_ret);
+    vl_ret := f_EPTF_LGenBase_declareStep(c_EPTF_LGenBase_behavior,{c_EPTF_LGenBase_stepName_startEntity,refers(f_EPTF_LGenBase_step_startEntity)})
+    f_EPTF_Base_assert(%definitionId&": Start entity step must be "&int2str(c_EPTF_LGenBase_stepIdx_startEntity),c_EPTF_LGenBase_stepIdx_startEntity==vl_ret);
+    vl_ret := f_EPTF_LGenBase_declareStep(c_EPTF_LGenBase_behavior,{c_EPTF_LGenBase_stepName_recordEntityStart,refers(f_EPTF_LGenBase_step_recordEntityStart)})
+    f_EPTF_Base_assert(%definitionId&": Record start of entity step must be "&int2str(c_EPTF_LGenBase_stepIdx_recordEntityStart),c_EPTF_LGenBase_stepIdx_recordEntityStart==vl_ret);
+    vl_ret := f_EPTF_LGenBase_declareStep(c_EPTF_LGenBase_behavior,{c_EPTF_LGenBase_stepName_entityStopped,refers(f_EPTF_LGenBase_step_entityStopped)})
+    f_EPTF_Base_assert(%definitionId&": Entity stopped step must be "&int2str(c_EPTF_LGenBase_stepIdx_entityStopped),c_EPTF_LGenBase_stepIdx_entityStopped==vl_ret);
+    vl_ret := f_EPTF_LGenBase_declareStep(c_EPTF_LGenBase_behavior,{c_EPTF_LGenBase_stepName_entityAborted,refers(f_EPTF_LGenBase_step_entityAborted)})
+    f_EPTF_Base_assert(%definitionId&": Record start of entity step must be "&int2str(c_EPTF_LGenBase_stepIdx_entityAborted),c_EPTF_LGenBase_stepIdx_entityAborted==vl_ret);
+    //Variable manipulation steps
+    vl_ret := f_EPTF_LGenBase_declareStep(c_EPTF_LGenBase_behavior,{c_EPTF_LGenBase_stepName_fsmVarSet,refers(f_EPTF_LGenBase_step_fsmVarSet)})
+    f_EPTF_Base_assert(%definitionId&": The ID of "&c_EPTF_LGenBase_stepName_fsmVarSet&" must be "&int2str(c_EPTF_LGenBase_stepIdx_fsmVarSet),c_EPTF_LGenBase_stepIdx_fsmVarSet==vl_ret);
+    vl_ret := f_EPTF_LGenBase_declareStep(c_EPTF_LGenBase_behavior,{c_EPTF_LGenBase_stepName_fsmVarInc,refers(f_EPTF_LGenBase_step_fsmVarInc)})
+    f_EPTF_Base_assert(%definitionId&": The ID of "&c_EPTF_LGenBase_stepName_fsmVarInc&" must be "&int2str(c_EPTF_LGenBase_stepIdx_fsmVarInc),c_EPTF_LGenBase_stepIdx_fsmVarInc==vl_ret);
+    vl_ret := f_EPTF_LGenBase_declareStep(c_EPTF_LGenBase_behavior,{c_EPTF_LGenBase_stepName_fsmVarDec,refers(f_EPTF_LGenBase_step_fsmVarDec)})
+    f_EPTF_Base_assert(%definitionId&": The ID of "&c_EPTF_LGenBase_stepName_fsmVarDec&" must be "&int2str(c_EPTF_LGenBase_stepIdx_fsmVarDec),c_EPTF_LGenBase_stepIdx_fsmVarDec==vl_ret);
+    vl_ret := f_EPTF_LGenBase_declareStep(c_EPTF_LGenBase_behavior,{c_EPTF_LGenBase_stepName_fsmVarAdd,refers(f_EPTF_LGenBase_step_fsmVarAdd)})
+    f_EPTF_Base_assert(%definitionId&": The ID of "&c_EPTF_LGenBase_stepName_fsmVarAdd&" must be "&int2str(c_EPTF_LGenBase_stepIdx_fsmVarAdd),c_EPTF_LGenBase_stepIdx_fsmVarAdd==vl_ret);
+    vl_ret := f_EPTF_LGenBase_declareStep(c_EPTF_LGenBase_behavior,{c_EPTF_LGenBase_stepName_fsmVarSub,refers(f_EPTF_LGenBase_step_fsmVarSub)})
+    f_EPTF_Base_assert(%definitionId&": The ID of "&c_EPTF_LGenBase_stepName_fsmVarSub&" must be "&int2str(c_EPTF_LGenBase_stepIdx_fsmVarSub),c_EPTF_LGenBase_stepIdx_fsmVarSub==vl_ret);
+    vl_ret := f_EPTF_LGenBase_declareStep(c_EPTF_LGenBase_behavior,{c_EPTF_LGenBase_stepName_fsmVarReset,refers(f_EPTF_LGenBase_step_fsmVarReset)})
+    f_EPTF_Base_assert(%definitionId&": The ID of "&c_EPTF_LGenBase_stepName_fsmVarReset&" must be "&int2str(c_EPTF_LGenBase_stepIdx_fsmVarReset),c_EPTF_LGenBase_stepIdx_fsmVarReset==vl_ret);
+    
+    vl_ret := f_EPTF_LGenBase_declareStep(c_EPTF_LGenBase_behavior,{c_EPTF_LGenBase_stepName_fsmStartChrono,refers(f_EPTF_LGenBase_step_fsmStartChrono)})
+    f_EPTF_Base_assert(%definitionId&": The ID of "&c_EPTF_LGenBase_stepName_fsmStartChrono&" must be "&int2str(c_EPTF_LGenBase_stepIdx_fsmStartChrono),c_EPTF_LGenBase_stepIdx_fsmStartChrono==vl_ret);
+    vl_ret := f_EPTF_LGenBase_declareStep(c_EPTF_LGenBase_behavior,{c_EPTF_LGenBase_stepName_fsmStopChrono,refers(f_EPTF_LGenBase_step_fsmStopChrono)})
+    f_EPTF_Base_assert(%definitionId&": The ID of "&c_EPTF_LGenBase_stepName_fsmStopChrono&" must be "&int2str(c_EPTF_LGenBase_stepIdx_fsmStopChrono),c_EPTF_LGenBase_stepIdx_fsmStopChrono==vl_ret);
+    vl_ret := f_EPTF_LGenBase_declareStep(c_EPTF_LGenBase_behavior,{c_EPTF_LGenBase_stepName_fsmResetChrono,refers(f_EPTF_LGenBase_step_fsmResetChrono)})
+    f_EPTF_Base_assert(%definitionId&": The ID of "&c_EPTF_LGenBase_stepName_fsmResetChrono&" must be "&int2str(c_EPTF_LGenBase_stepIdx_fsmResetChrono),c_EPTF_LGenBase_stepIdx_fsmResetChrono==vl_ret);
+    
+    vl_ret := f_EPTF_LGenBase_declareStep(c_EPTF_LGenBase_behavior,{c_EPTF_LGenBase_stepName_trafficError,refers(f_EPTF_LGenBase_step_trafficError)})
+    f_EPTF_Base_assert(%definitionId&": The ID of "&c_EPTF_LGenBase_stepName_trafficError&" must be "&int2str(c_EPTF_LGenBase_stepIdx_trafficError),c_EPTF_LGenBase_stepIdx_trafficError==vl_ret);
+    vl_ret := f_EPTF_LGenBase_declareStep(c_EPTF_LGenBase_behavior,{c_EPTF_LGenBase_stepName_trafficTimeout,refers(f_EPTF_LGenBase_step_trafficTimeout)})
+    f_EPTF_Base_assert(%definitionId&": The ID of "&c_EPTF_LGenBase_stepName_trafficTimeout&" must be "&int2str(c_EPTF_LGenBase_stepIdx_trafficTimeout),c_EPTF_LGenBase_stepIdx_trafficTimeout==vl_ret);
+    vl_ret := f_EPTF_LGenBase_declareStep(c_EPTF_LGenBase_behavior,{c_EPTF_LGenBase_stepName_testFinished,refers(f_EPTF_LGenBase_step_testFinished)})
+    f_EPTF_Base_assert(%definitionId&": The ID of "&c_EPTF_LGenBase_stepName_testFinished&" must be "&int2str(c_EPTF_LGenBase_stepIdx_testFinished),c_EPTF_LGenBase_stepIdx_testFinished==vl_ret);
+    
+// Event to sibling steps    
+    vl_ret := f_EPTF_LGenBase_declareStep(c_EPTF_LGenBase_behavior,{c_EPTF_LGenBase_stepName_dispatchEventToSibling,refers(f_EPTF_LGenBase_step_dispatchEventToSibling)})
+    f_EPTF_Base_assert(%definitionId&": The ID of "&c_EPTF_LGenBase_stepName_dispatchEventToSibling&" must be "&int2str(c_EPTF_LGenBase_stepIdx_dispatchEventToSibling),c_EPTF_LGenBase_stepIdx_dispatchEventToSibling==vl_ret);
+    vl_ret := f_EPTF_LGenBase_declareStep(c_EPTF_LGenBase_behavior,{c_EPTF_LGenBase_stepName_dispatchReplyFromSibling,refers(f_EPTF_LGenBase_step_dispatchReplyFromSibling)})
+    f_EPTF_Base_assert(%definitionId&": The ID of "&c_EPTF_LGenBase_stepName_dispatchReplyFromSibling&" must be "&int2str(c_EPTF_LGenBase_stepIdx_dispatchReplyFromSibling),c_EPTF_LGenBase_stepIdx_dispatchReplyFromSibling==vl_ret);
+
+    vl_ret := f_EPTF_LGenBase_declareStep(c_EPTF_LGenBase_behavior,{c_EPTF_LGenBase_stepName_postEventToSibling,refers(f_EPTF_LGenBase_step_postEventToSibling)})
+    f_EPTF_Base_assert(%definitionId&": The ID of "&c_EPTF_LGenBase_stepName_postEventToSibling&" must be "&int2str(c_EPTF_LGenBase_stepIdx_postEventToSibling),c_EPTF_LGenBase_stepIdx_postEventToSibling==vl_ret);
+    vl_ret := f_EPTF_LGenBase_declareStep(c_EPTF_LGenBase_behavior,{c_EPTF_LGenBase_stepName_postReplyFromSibling,refers(f_EPTF_LGenBase_step_postReplyFromSibling)})
+    f_EPTF_Base_assert(%definitionId&": The ID of "&c_EPTF_LGenBase_stepName_postReplyFromSibling&" must be "&int2str(c_EPTF_LGenBase_stepIdx_postReplyFromSibling),c_EPTF_LGenBase_stepIdx_postReplyFromSibling==vl_ret);
+    
+// Event stack handling steps
+    vl_ret := f_EPTF_LGenBase_declareStep(c_EPTF_LGenBase_behavior,{c_EPTF_LGenBase_stepName_pushEventToStack,refers(f_EPTF_LGenBase_step_pushEventToStack)})
+    f_EPTF_Base_assert(%definitionId&": The ID of "&c_EPTF_LGenBase_stepName_pushEventToStack&" must be "&int2str(c_EPTF_LGenBase_stepIdx_pushEventToStack),c_EPTF_LGenBase_stepIdx_pushEventToStack==vl_ret);
+    vl_ret := f_EPTF_LGenBase_declareStep(c_EPTF_LGenBase_behavior,{c_EPTF_LGenBase_stepName_popEventFromStack,refers(f_EPTF_LGenBase_step_popEventFromStack)})
+    f_EPTF_Base_assert(%definitionId&": The ID of "&c_EPTF_LGenBase_stepName_popEventFromStack&" must be "&int2str(c_EPTF_LGenBase_stepIdx_popEventFromStack),c_EPTF_LGenBase_stepIdx_popEventFromStack==vl_ret);
+    vl_ret := f_EPTF_LGenBase_declareStep(c_EPTF_LGenBase_behavior,{c_EPTF_LGenBase_stepName_dispatchReplyToTopEventInStack,refers(f_EPTF_LGenBase_step_dispatchReplyToTopEventInStack)})
+    f_EPTF_Base_assert(%definitionId&": The ID of "&c_EPTF_LGenBase_stepName_dispatchReplyToTopEventInStack&" must be "&int2str(c_EPTF_LGenBase_stepIdx_dispatchReplyToTopEventInStack),c_EPTF_LGenBase_stepIdx_dispatchReplyToTopEventInStack==vl_ret);
+    vl_ret := f_EPTF_LGenBase_declareStep(c_EPTF_LGenBase_behavior,{c_EPTF_LGenBase_stepName_postReplyToTopEventInStack,refers(f_EPTF_LGenBase_step_postReplyToTopEventInStack)})
+    f_EPTF_Base_assert(%definitionId&": The ID of "&c_EPTF_LGenBase_stepName_postReplyToTopEventInStack&" must be "&int2str(c_EPTF_LGenBase_stepIdx_postReplyToTopEventInStack),c_EPTF_LGenBase_stepIdx_postReplyToTopEventInStack==vl_ret);
+
+// Event to TC
+    vl_ret := f_EPTF_LGenBase_declareStep(c_EPTF_LGenBase_behavior,{c_EPTF_LGenBase_stepName_dispatchEventToTC,refers(f_EPTF_LGenBase_step_dispatchEventToTC)})
+    f_EPTF_Base_assert(%definitionId&": The ID of "&c_EPTF_LGenBase_stepName_dispatchEventToTC&" must be "&int2str(c_EPTF_LGenBase_stepIdx_dispatchEventToTC),c_EPTF_LGenBase_stepIdx_dispatchEventToTC==vl_ret);
+    vl_ret := f_EPTF_LGenBase_declareStep(c_EPTF_LGenBase_behavior,{c_EPTF_LGenBase_stepName_postEventToTC,refers(f_EPTF_LGenBase_step_postEventToTC)})
+    f_EPTF_Base_assert(%definitionId&": The ID of "&c_EPTF_LGenBase_stepName_postEventToTC&" must be "&int2str(c_EPTF_LGenBase_stepIdx_postEventToTC),c_EPTF_LGenBase_stepIdx_postEventToTC==vl_ret);
+
+// Event of Fsm to sibling steps 
+    vl_ret := f_EPTF_LGenBase_declareStep(c_EPTF_LGenBase_behavior,{c_EPTF_LGenBase_stepName_dispatchEventOfFsmToSibling,refers(f_EPTF_LGenBase_step_dispatchEventOfFsmToSibling)})
+    f_EPTF_Base_assert(%definitionId&": The ID of "&c_EPTF_LGenBase_stepName_dispatchEventOfFsmToSibling&" must be "&int2str(c_EPTF_LGenBase_stepIdx_dispatchEventOfFsmToSibling),c_EPTF_LGenBase_stepIdx_dispatchEventOfFsmToSibling==vl_ret);
+    vl_ret := f_EPTF_LGenBase_declareStep(c_EPTF_LGenBase_behavior,{c_EPTF_LGenBase_stepName_postEventOfFsmToSibling,refers(f_EPTF_LGenBase_step_postEventOfFsmToSibling)})
+    f_EPTF_Base_assert(%definitionId&": The ID of "&c_EPTF_LGenBase_stepName_postEventOfFsmToSibling&" must be "&int2str(c_EPTF_LGenBase_stepIdx_postEventOfFsmToSibling),c_EPTF_LGenBase_stepIdx_postEventOfFsmToSibling==vl_ret);
+
+// Reply Event of Fsm to an event sent previously by sibling steps
+    vl_ret := f_EPTF_LGenBase_declareStep(c_EPTF_LGenBase_behavior,{c_EPTF_LGenBase_stepName_dispatchReplyWithEventOfFsmFromSibling,refers(f_EPTF_LGenBase_step_dispatchReplyWithEventOfFsmFromSibling)})
+    f_EPTF_Base_assert(%definitionId&": The ID of "&c_EPTF_LGenBase_stepName_dispatchReplyWithEventOfFsmFromSibling&" must be "&int2str(c_EPTF_LGenBase_stepIdx_dispatchReplyWithEventOfFsmFromSibling),c_EPTF_LGenBase_stepIdx_dispatchReplyWithEventOfFsmFromSibling==vl_ret);
+    vl_ret := f_EPTF_LGenBase_declareStep(c_EPTF_LGenBase_behavior,{c_EPTF_LGenBase_stepName_postReplyWithEventOfFsmFromSibling,refers(f_EPTF_LGenBase_step_postReplyWithEventOfFsmFromSibling)})
+    f_EPTF_Base_assert(%definitionId&": The ID of "&c_EPTF_LGenBase_stepName_postReplyWithEventOfFsmFromSibling&" must be "&int2str(c_EPTF_LGenBase_stepIdx_postReplyWithEventOfFsmFromSibling),c_EPTF_LGenBase_stepIdx_postReplyWithEventOfFsmFromSibling==vl_ret);
+
+// Reply Event of Fsm to the event on top of the stack
+    vl_ret := f_EPTF_LGenBase_declareStep(c_EPTF_LGenBase_behavior,{c_EPTF_LGenBase_stepName_dispatchReplyOwnEventToTopEventInStack,refers(f_EPTF_LGenBase_step_dispatchReplyOwnEventToTopEventInStack)})
+    f_EPTF_Base_assert(%definitionId&": The ID of "&c_EPTF_LGenBase_stepName_dispatchReplyOwnEventToTopEventInStack&" must be "&int2str(c_EPTF_LGenBase_stepIdx_dispatchReplyOwnEventToTopEventInStack),c_EPTF_LGenBase_stepIdx_dispatchReplyOwnEventToTopEventInStack==vl_ret);
+    vl_ret := f_EPTF_LGenBase_declareStep(c_EPTF_LGenBase_behavior,{c_EPTF_LGenBase_stepName_postReplyOwnEventToTopEventInStack,refers(f_EPTF_LGenBase_step_postReplyOwnEventToTopEventInStack)})
+    f_EPTF_Base_assert(%definitionId&": The ID of "&c_EPTF_LGenBase_stepName_postReplyOwnEventToTopEventInStack&" must be "&int2str(c_EPTF_LGenBase_stepIdx_postReplyOwnEventToTopEventInStack),c_EPTF_LGenBase_stepIdx_postReplyOwnEventToTopEventInStack==vl_ret);
+
+    vl_ret := f_EPTF_LGenBase_declareStep(c_EPTF_LGenBase_behavior, {c_EPTF_LGenBase_stepName_log, refers( f_EPTF_LGenBase_step_log )})
+    f_EPTF_Base_assert(%definitionId&": The ID of "&c_EPTF_LGenBase_stepName_log&" must be "&int2str(c_EPTF_LGenBase_stepIdx_log),c_EPTF_LGenBase_stepIdx_log==vl_ret);
+    vl_ret := f_EPTF_LGenBase_declareStep(c_EPTF_LGenBase_behavior, {c_EPTF_LGenBase_stepName_setVerdict, refers( f_EPTF_LGenBase_step_setVerdict )})
+    f_EPTF_Base_assert(%definitionId&": The ID of "&c_EPTF_LGenBase_stepName_setVerdict&" must be "&int2str(c_EPTF_LGenBase_stepIdx_setVerdict),c_EPTF_LGenBase_stepIdx_setVerdict==vl_ret);
+    vl_ret := f_EPTF_LGenBase_declareStep(c_EPTF_LGenBase_behavior, {c_EPTF_LGenBase_stepName_hookpoint, refers( f_EPTF_LGenBase_step_hookpoint )})
+    f_EPTF_Base_assert(%definitionId&": The ID of "&c_EPTF_LGenBase_stepName_hookpoint&" must be "&int2str(c_EPTF_LGenBase_stepIdx_hookpoint),c_EPTF_LGenBase_stepIdx_hookpoint==vl_ret);
+   
+    vl_ret := f_EPTF_LGenBase_addGeneralEventListener(c_EPTF_LGenBase_bIdx, c_EPTF_LGenBase_inputIdx_testMgmt_finishedTcSuccess,refers(f_EPTF_LGenBase_finishedTcListener),{});
+    vl_ret := f_EPTF_LGenBase_addGeneralEventListener(c_EPTF_LGenBase_bIdx, c_EPTF_LGenBase_inputIdx_testMgmt_finishedTcFail,refers(f_EPTF_LGenBase_finishedTcListener),{});
+    vl_ret := f_EPTF_LGenBase_addGeneralEventListener(c_EPTF_LGenBase_bIdx, c_EPTF_LGenBase_inputIdx_testMgmt_finishedTcError,refers(f_EPTF_LGenBase_finishedTcListener),{});
+    vl_ret := f_EPTF_LGenBase_addGeneralEventListener(c_EPTF_LGenBase_bIdx, c_EPTF_LGenBase_inputIdx_testMgmt_finishedTcTimeout,refers(f_EPTF_LGenBase_finishedTcListener),{});
+    vl_ret := f_EPTF_LGenBase_addGeneralEventListener(c_EPTF_LGenBase_bIdx, c_EPTF_LGenBase_inputIdx_testMgmt_entityStopped,refers(f_EPTF_LGenBase_finishedStopTcListener),{});
+    vl_ret := f_EPTF_LGenBase_addGeneralEventListener(c_EPTF_LGenBase_bIdx, c_EPTF_LGenBase_inputIdx_testMgmt_entityAborted,refers(f_EPTF_LGenBase_finishedAbortTcListener),{});
+    
+    v_LGenBase_groupFinishedFn := null
+    v_LGenBase_groupFinishedPerConditionFn := null
+    
+    v_LGenBase_fnsuccessSucNoFail := f_EPTF_LGenBase_declareFunction(c_EPTF_LGenBase_EntitySucc_successSucNoFailFnName, {evaluateSuccess4EntityAtEntityGroup2 := refers(f_EPTF_LGenBase_successSucNoFail)})
+    v_LGenBase_fnsuccessIfLastSuccess := f_EPTF_LGenBase_declareFunction(c_EPTF_LGenBase_EntitySucc_successIfLastSuccessFnName, {evaluateSuccess4EntityAtEntityGroup2 := refers(f_EPTF_LGenBase_successIfLastSuccess)})
+    v_LGenBase_fnsuccessIfOnceSuccess := f_EPTF_LGenBase_declareFunction(c_EPTF_LGenBase_EntitySucc_successIfOnceSuccessFnName, {evaluateSuccess4EntityAtEntityGroup2 := refers(f_EPTF_LGenBase_successIfOnceSuccess)})
+
+    //Initialize ILog
+    f_EPTF_ILog_init_CT(pl_selfName);
+    v_logFileName := tsp_EPTF_ILog_logFileName;
+    v_LGenBase_ILog_DB_Idx := f_EPTF_LGenBase_ILog_register_DB(refers(f_EPTF_LGenBase_ILog_logItem), {});
+   
+    vl_ret := f_EPTF_LGenBase_declareStep(c_EPTF_LGenBase_behavior, {c_EPTF_LGenBase_ILog_stepName_logSuccess,refers( f_EPTF_LGenBase_ILog_step_logSuccess)});
+    f_EPTF_Base_assert(%definitionId&": The ID of "&c_EPTF_LGenBase_ILog_stepName_logSuccess&" must be "&int2str(c_EPTF_LGenBase_stepIdx_logSuccess),c_EPTF_LGenBase_stepIdx_logSuccess==vl_ret);
+    vl_ret := f_EPTF_LGenBase_declareStep(c_EPTF_LGenBase_behavior, {c_EPTF_LGenBase_ILog_stepName_logFailed,refers( f_EPTF_LGenBase_ILog_step_logFailed)});
+    f_EPTF_Base_assert(%definitionId&": The ID of "&c_EPTF_LGenBase_ILog_stepName_logFailed&" must be "&int2str(c_EPTF_LGenBase_stepIdx_logFailed),c_EPTF_LGenBase_stepIdx_logFailed==vl_ret);
+    vl_ret := f_EPTF_LGenBase_declareStep(c_EPTF_LGenBase_behavior, {c_EPTF_LGenBase_ILog_stepName_deleteLog,refers( f_EPTF_LGenBase_ILog_step_deleteLog)});
+    f_EPTF_Base_assert(%definitionId&": The ID of "&c_EPTF_LGenBase_ILog_stepName_deleteLog&" must be "&int2str(c_EPTF_LGenBase_stepIdx_deleteLog),c_EPTF_LGenBase_stepIdx_deleteLog==vl_ret);
+    vl_ret := f_EPTF_LGenBase_declareStep(c_EPTF_LGenBase_behavior, {c_EPTF_LGenBase_ILog_stepName_shortLogNext,refers( f_EPTF_LGenBase_ILog_step_shortLogNext)});
+    f_EPTF_Base_assert(%definitionId&": The ID of "&c_EPTF_LGenBase_ILog_stepName_shortLogNext&" must be "&int2str(c_EPTF_LGenBase_stepIdx_shortLogNext),c_EPTF_LGenBase_stepIdx_shortLogNext==vl_ret);
+    vl_ret := f_EPTF_LGenBase_declareStep(c_EPTF_LGenBase_behavior, {c_EPTF_LGenBase_ILog_stepName_disableShortLog,refers( f_EPTF_LGenBase_ILog_disableShortLog)});
+    f_EPTF_Base_assert(%definitionId&": The ID of "&c_EPTF_LGenBase_ILog_stepName_disableShortLog&" must be "&int2str(c_EPTF_LGenBase_stepIdx_disableShortLog),c_EPTF_LGenBase_stepIdx_disableShortLog==vl_ret);
+    
+    // Initialize external templates
+    // create hashmaps
+    v_LGenBase_extTemplHashMapId := f_EPTF_str2int_HashMap_New(c_EPTF_LGenBase_extTemplHashMapName);
+    v_LGenBase_templTypeHashMapId := f_EPTF_str2int_HashMap_New(c_EPTF_LGenBase_templTypeHashMapName);
+    // load initial external templates
+    f_EPTF_LGenBase_loadExtTemplList(pl_extTemplLoadList);
+    f_EPTF_Var_newCharstring(c_EPTF_LGenBase_fsmDefaultDebugVarName, "", v_LGenBase_defaultLogBuffer)
+    v_LGenBase_fsmDebugPostprocList := {}
+    v_LGenBase_singleShotDebugPostprocList := {}
+    f_EPTF_Base_registerCleanup(refers(f_EPTF_LGenBase_cleanup_CT));
+    v_LGenBase_groupFinishConditionMask := c_EPTF_LGenBase_allConditionTrue
+    v_LGenBase_fsmDebugLightList := tsp_EPTF_LGenBaseDebugLightList
+    
+    //LGenBaseStats_init
+    //v_LGenBase_dummyInt := f_EPTF_LGenBase_addScenarioCreatedCallback(refers(f_EPTF_LGenBaseStats_createScenarioVars));
+    //f_EPTF_LGenBase_registerTcStateChangedCallback(refers(f_EPTF_LGenBaseStats_tcStateChangedCallback));
+    //f_EPTF_LGenBase_registerScenarioStateChangedCallback(refers(f_EPTF_LGenBaseStats_scenarioStateChangedCallback));
+    //f_EPTF_LGenBase_registerTrafficStartedFn(refers( f_EPTF_LGenBaseStats_trafficStartedCallback ));
+    //f_EPTF_LGenBase_registerTrafficFailedFn(refers( f_EPTF_LGenBaseStats_trafficFail ));
+    //f_EPTF_LGenBase_registerTrafficErrorFn(refers( f_EPTF_LGenBaseStats_trafficError ));
+    //f_EPTF_LGenBase_registerTrafficTimeoutFn(refers( f_EPTF_LGenBaseStats_trafficTimeout ));
+    //f_EPTF_LGenBase_registerTrafficSuccessFn(refers( f_EPTF_LGenBaseStats_trafficSucces ));
+    if(not f_EPTF_SchedulerComp_scheduleAction(
+        f_EPTF_SchedulerComp_snapshotTime() + tsp_LGenBaseStats_CPSCalc,
+        refers(f_EPTF_LGenBaseStats_calcCPSListAction),
+        {},
+        v_LGenBaseStats_CPSCalcTimer
+      )) {
+      f_EPTF_LGenBase_loggingError(%definitionId&": could not start CPS calculation timer.");
+    }
+    
+    //create variable for iterator of entitygroups if enabled
+    if ( pl_guiVarsEnabled )
+    {
+    	var integer vl_idx := 0;
+ 	  	f_EPTF_Var_newCharstringlist(c_LGenBase_iteratorVar_prefix & c_LGenBase_iteratorEntityGroups_varName, {} ,vl_idx);
+ 	  	f_EPTF_LGenBase_addEntityGroupCreatedCallback(refers(f_EPTF_LGenBase_createScenarioIteratorVar));
+ 	  	f_EPTF_LGenBase_addScenarioCreatedCallback(refers(f_EPTF_LGenBase_createTrafficCaseIteratorVar));
+ 	  	f_EPTF_LGenBase_addtrafficCaseCreatedCallback(refers(f_EPTF_LGenBase_adjustTrafficCaseIteratorVar));
+    }
+
+    if(pl_dataSource_compRef != null){
+      f_EPTF_LGenBase_setDataSource(pl_dataSource_compRef);
+    }
+    
+    v_LGenBase_initialized :=true;
+  }//function
+  
+  public function f_EPTF_LGenBase_initialized()
+  runs on EPTF_LGenBase_Private_CT
+  return boolean
+  {
+    return v_LGenBase_initialized
+  }
+  
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_LGenBase_setDataSource
+  //
+  //  Purpose:
+  //    Set and register the datasources in EPTF_LGenBase feature
+  //
+  //  Parameters:
+  //    - pl_dataSource_compRef - *in* - <EPTF_DataSource_CT> - dataSource component reference
+  //
+  //  Return Value:
+  //    -
+  //
+  //  Errors & assertions:
+  //    -
+  //
+  //  Detailed Comments:
+  //    This function should be called when all entity groups
+  //    and other data is declared.
+  //
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_LGenBase_setDataSource(
+    in EPTF_DataSource_CT pl_dataSource_compRef
+  ) runs on EPTF_LGenBase_Private_CT {
+    if(pl_dataSource_compRef != null){
+      f_EPTF_DataSourceClient_init_CT(f_EPTF_Base_selfName(), pl_dataSource_compRef);
+      //v_ExecCtrl_dataSourceCompRef := pl_dataSource_compRef;
+      f_EPTF_DataSourceClient_registerData(c_LGenBase_DataSource_sourceId, f_EPTF_Base_selfName(), refers(f_EPTF_LGenBase_DSProcessData), pl_dataSource_compRef);
+      f_EPTF_DataSourceClient_registerCondition(c_LGenBase_DataSource_sourceId, f_EPTF_Base_selfName(), refers(f_EPTF_LGenBase_conditionHandler_isWeightedSc),c_LGenBase_conditionIsWeightedSc);  
+      f_EPTF_DataSourceClient_registerCondition(c_LGenBase_DataSource_sourceId, f_EPTF_Base_selfName(), refers(f_EPTF_LGenBase_conditionHandler_isScPresent),c_LGenBase_conditionIsScPresent);  
+      f_EPTF_DataSourceClient_registerCondition(c_LGenBase_DataSource_sourceId, f_EPTF_Base_selfName(), refers(f_EPTF_LGenBase_conditionHandler_isTcPresent),c_LGenBase_conditionIsTcPresent);  
+      f_EPTF_DataSourceClient_sendReady(c_LGenBase_DataSource_sourceId, f_EPTF_Base_selfName());
+    }
+  }
+  
+  public function f_EPTF_LGenBase_logEntityGroups()
+  runs on EPTF_LGenBase_Private_CT
+  {
+    log(v_LGenBase_entityGroups)
+  }
+  
+  public function f_EPTF_LGenBase_logEntities()
+  runs on EPTF_LGenBase_Private_CT
+  {
+    log(v_LGenBase_entities)
+  }
+  
+  public function f_EPTF_LGenBase_logEntityData(in integer pl_eAbsIdx)
+  runs on EPTF_LGenBase_Private_CT
+  {
+    f_EPTF_Base_assert(%definitionId&": Invalid entity index: "&int2str(pl_eAbsIdx),pl_eAbsIdx>=0 and pl_eAbsIdx < sizeof(v_LGenBase_entities))
+    log(v_LGenBase_entities[pl_eAbsIdx])
+  }
+ 
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_LGenBase_cleanup_CT
+  //
+  //  Purpose:
+  //    EPTF_LGenBase clean up function
+  //
+  //  Parameters:
+  //    -
+  //
+  //  Return Value:
+  //    -
+  //
+  //  Errors:
+  //    -
+  //
+  //  Detailed Comments:
+  //    This is a private cleanup function, called automatically when EPTF_LGenBase_CT ends running.
+  //
+  ///////////////////////////////////////////////////////////
+  private function f_EPTF_LGenBase_cleanup_CT() runs on EPTF_LGenBase_Private_CT
+  {
+    if (not v_LGenBase_initialized) {return}
+    v_LGenBase_initialized := false;
+    
+    
+    for(var integer vl_i := 0; vl_i < sizeof(v_LGenBase_entityGroups);vl_i := vl_i + 1){
+      if(-1 != v_LGenBase_entityGroups[vl_i].eTypeIdx){
+        f_EPTF_LGenBase_removeEntityGroupByIdx(vl_i);
+      }
+    }
+
+    for (var integer vl_eIdx :=0; vl_eIdx<sizeof(v_LGenBase_entities); vl_eIdx:=vl_eIdx+1) {
+      for(var integer vl_fCtxIdx :=0; vl_fCtxIdx<sizeof(v_LGenBase_entities[vl_eIdx].fsmCtxList); vl_fCtxIdx:=vl_fCtxIdx+1) {
+        f_EPTF_LGenBase_deactivateFsm(vl_eIdx,vl_fCtxIdx);
+      }
+    }
+    
+    f_EPTF_str2int_HashMap_Delete(c_EPTF_LGenBase_functionHashmap);
+    v_LGenBase_functionHashMap := -1;
+    f_EPTF_str2int_HashMap_Delete(c_EPTF_LGenBase_behaviorHashMap);
+    v_LGenBase_behaviorHashMap := -1;
+    
+    /*
+    var charstring vl_tempName := "";
+    var boolean vl_found := f_EPTF_str2int_HashMap_Begin(v_LGenBase_fsmEventsBehaviorHashMap, vl_tempName);
+    while(vl_found){
+    f_EPTF_int2int_HashMap_Delete(c_EPTF_LGenBase_entityListenerHashMapPrefix & vl_tempName);
+    vl_found := f_EPTF_str2int_HashMap_Next(v_LGenBase_fsmEventsBehaviorHashMap, vl_tempName);
+    }
+    */
+    for ( var integer vl_b := 0; vl_b < sizeof(v_LGenBase_behaviorTypes) ; vl_b := vl_b+1 )
+    {
+      for ( var integer vl_i := 0; vl_i < sizeof(v_LGenBase_fsmEvents[vl_b]) ; vl_i := vl_i+1 )
+      {
+        f_EPTF_int2int_HashMap_Delete(
+          c_EPTF_LGenBase_generalSourceListenerHashMapPrefix &
+          v_LGenBase_behaviorTypes[vl_b].name&
+          tsp_LGenBase_nameSeparator&
+          v_LGenBase_fsmEvents[vl_b][vl_i].name);
+        f_EPTF_int2int_HashMap_Delete(
+          c_EPTF_LGenBase_entityListenerHashMapPrefix &
+          v_LGenBase_behaviorTypes[vl_b].name&
+          tsp_LGenBase_nameSeparator&
+          v_LGenBase_fsmEvents[vl_b][vl_i].name);
+      }
+    }
+    f_EPTF_str2int_HashMap_Delete(c_EPTF_LGenBase_eventBehaviorHashmap);
+    v_LGenBase_fsmEventsBehaviorHashMap := -1;
+    f_EPTF_str2int_HashMap_Delete(c_EPTF_LGenBase_eventInputHashmap);
+    v_LGenBase_fsmEventsInputHashMap := -1;
+    
+    // clear phaselist storing structure
+    f_EPTF_LGenBase_Phase_cleanUp();
+    
+    //Clear event listeners
+    //f_EPTF_str2int_HashMap_Delete(c_EPTF_LGenBase_genericListenerHashMap);
+    //f_EPTF_str2int_HashMap_Delete(c_EPTF_LGenBase_targetListenerHashMap);
+    //f_EPTF_str2int_HashMap_Delete(c_EPTF_LGenBase_sourceListenerHashMap);
+    
+    //f_EPTF_str2int_HashMap_Delete(c_EPTF_LGenBase_listenerHashmap);
+    v_LGenBase_listeners := {};
+    v_LGenBase_listenersQueue := c_EPTF_emptyFreeBusyQueue;
+    
+    for ( var integer vl_i := 0; vl_i < sizeof(v_LGenBase_behaviorTypes) ; vl_i := vl_i+1 )
+    {
+      f_EPTF_int2int_HashMap_Delete(c_EPTF_LGenBase_behaviorOfEntityListenerHashMapPrefix &v_LGenBase_behaviorTypes[vl_i].name);
+      f_EPTF_int2int_HashMap_Delete(c_EPTF_LGenBase_behaviorOfSourceListenerHashMapPrefix &v_LGenBase_behaviorTypes[vl_i].name);
+    }
+    v_LGenBase_behaviorTypes := {};
+    v_LGenBase_testSteps := {};
+    v_LGenBase_fsmEvents := {};
+    /*
+    for ( var integer vl_i := 0; vl_i < sizeof(v_LGenBase_fsmTableRows2EventsHashMaps) ; vl_i := vl_i+1 )
+    {
+    f_EPTF_str2int_HashMap_Delete(c_EPTF_LGenBase_tableRow2EvenHashMap&v_LGenBase_fsmTables[vl_i].name);
+    }
+    v_LGenBase_fsmTableRows2EventsHashMaps := {};
+    v_LGenBase_fsmTableRows2EventsRowList := {};
+    */
+    for ( var integer vl_i := 0; vl_i < sizeof(v_LGenBase_fsmTables) ; vl_i := vl_i+1 ){
+      var charstring vl_fsmName := v_LGenBase_fsmTables[vl_i].name
+      f_EPTF_str2int_HashMap_Delete(c_EPTF_LGenBase_stateNamesHashMapPrefix&vl_fsmName);
+      f_EPTF_str2int_HashMap_Delete(c_EPTF_LGenBase_statisticsNamesHashMapPrefix&vl_fsmName);
+      f_EPTF_str2int_HashMap_Delete(c_EPTF_LGenBase_statMeasNamesHashMapPrefix&vl_fsmName);
+      f_EPTF_str2int_HashMap_Delete(c_EPTF_LGenBase_varNamesHashMapPrefix&vl_fsmName);
+      f_EPTF_str2int_HashMap_Delete(c_EPTF_LGenBase_timerNamesHashMapPrefix&vl_fsmName);
+    }
+    for ( var integer vl_i := 0; vl_i < sizeof(v_LGenBase_temporaryHashMaps) ; vl_i := vl_i+1 ){
+      f_EPTF_str2int_HashMap_Delete(v_LGenBase_temporaryHashMaps[vl_i])
+    }
+    //In case of error during FSM activation
+    for ( var integer vl_i := 0; vl_i < sizeof(v_LGenBase_trafficCases) ; vl_i := vl_i+1 ){
+      f_EPTF_LGenBase_deleteTCHashmaps(vl_i);
+    }
+    
+    v_LGenBase_temporaryHashMaps := {}
+    v_LGenBase_fsmTables := {};
+    //v_LGenBase_genericEventListeners := {};
+    v_LGenBase_entityTypes := {};
+    v_LGenBase_entityGroups := {};
+    v_LGenBase_entities := {};
+    v_LGenBase_functions := {};
+    v_LGenBase_trafficCaseTypes := {};
+    v_LGenBase_trafficCases := {};
+    v_LGenBase_scenarioTypes := {};
+    v_LGenBase_scenarioCreated := {};
+    v_LGenBase_trafficCaseCreated := {};
+    v_LGenBase_entityGroupCreated := {};
+    v_LGenBase_tcStartedOrStoppedCallbacks := {};
+    v_LGenBase_scenarioStateChangedCallbacks := {};
+    v_LGenBase_tcStateChangedCallbacks := {};
+    v_LGenBase_trafficStarted_FTList := {};
+    v_LGenBase_refreshSuccFnList := {};
+    v_LGenBase_refreshFailFnList := {};
+    v_LGenBase_refreshErrorFnList := {};
+    v_LGenBase_refreshTimeoutFnList := {};
+    v_LGenBase_setTransactionTimeStatValueFnList := {};
+    v_LGenBase_trafficStarted_FTList := {};
+    v_LGenBase_trafficStarted_FTList := {};
+    v_LGenBase_burstGenerated  := {};
+    v_LGenBase_burstFuncRefList := {};
+    v_LGenBase_PhaseListDeclaratorDB :={c_EPTF_emptyFreeBusyQueue,{},-1};
+    v_LGenBase_fsmDebugPostprocList := {}
+    v_LGenBase_singleShotDebugPostprocList := {}
+    // cleanupexternal templates
+    f_EPTF_str2int_HashMap_Delete(c_EPTF_LGenBase_extTemplHashMapName);
+    f_EPTF_str2int_HashMap_Delete(c_EPTF_LGenBase_templTypeHashMapName);
+    v_LGenBase_extTemplateDB := {};
+    v_LGenBase_templateTypeDB := {};
+    v_LGenBase_templateSetDB := {};
+    v_LGenBase_extTemplHashMapId := -1;
+    v_LGenBase_templTypeHashMapId := -1;
+    
+    v_LGenBase_groupFinishedFn := null
+    v_LGenBase_groupFinishedPerConditionFn := null
+    f_EPTF_Var_removeVar(v_LGenBase_defaultLogBuffer)
+    v_LGenBase_defaultLogBuffer := -1
+    v_LGenBase_groupFinishConditionMask := c_EPTF_LGenBase_allConditionTrue
+    
+    v_LGenBase_hasBehaviorListener := false
+    v_LGenBase_hasEntityIdxListener := false
+    v_LGenBase_hasBehaviorOfEntityListener := false
+    v_LGenBase_hasFSMOfEntityListener := false
+    v_LGenBase_hasSourceEntityListener := false
+    v_LGenBase_hasSourceEntityIndexListener := false
+    v_LGenBase_hasBehaviorOfSourceEntityListener := false
+    v_LGenBase_hasSourceFsmListener := false
+    v_LGenBase_hasFsmOfSourceEntityListener := false
+    
+  }
+} //group InitandCleanup
+
+group DataSource_createVariables{
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_LGenBase_createScenarioIteratorVar
+  // 
+  //  Purpose:
+  //	  Creates the iterator variable for the scenario belonging to given entity group
+  //	  Adds current entity group to the iterator of entity groups.
+  //
+  //  Parameters:
+  //    -
+  //
+  //  Return Value:
+  //    -
+  //
+  //  Errors & assertions:
+  //    - 
+  //
+  //  Detailed Comments:
+  //    -
+  //
+  ///////////////////////////////////////////////////////////
+  friend function f_EPTF_LGenBase_createScenarioIteratorVar(in integer pl_eGrpIdx)
+  runs on EPTF_LGenBase_Private_CT{
+	var integer vl_idx := 0;
+    f_EPTF_Var_newCharstringlist(c_LGenBase_iteratorVar_prefix & c_LGenBase_iteratorScenarios_varName & tsp_LGenBase_nameSeparator & f_EPTF_LGenBase_entityGroupName(pl_eGrpIdx), {} , vl_idx);
+    
+    //add current entity group to the iterator of entity groups
+    var integer vl_egrpIteratorIdx := f_EPTF_Var_getId(c_LGenBase_iteratorVar_prefix & c_LGenBase_iteratorEntityGroups_varName);
+    var EPTF_Var_DirectContent vl_currentContent;
+    f_EPTF_Var_getContent(vl_egrpIteratorIdx, vl_currentContent);
+    vl_currentContent.charstringlistVal[sizeof(vl_currentContent.charstringlistVal)] := f_EPTF_LGenBase_entityGroupName(pl_eGrpIdx);
+    f_EPTF_Var_adjustContent(vl_egrpIteratorIdx, vl_currentContent);
+  }
+
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_LGenBase_createTrafficCaseIteratorVar
+  // 
+  //  Purpose:
+  //    This is a callback function which is called after every creation of scenarios.
+  //	  Adds current scenario to the iterator of scenarios of this entity group.
+  //	  Creates the iterator variable for the traffic cases belonging to the given entity group & scenario
+  //
+  //  Parameters:
+  //    -
+  //
+  //  Return Value:
+  //    -
+  //
+  //  Errors & assertions:
+  //    - 
+  //
+  //  Detailed Comments:
+  //    -
+  //
+  /////////////////////////////////////////////////////////// 
+  friend function f_EPTF_LGenBase_createTrafficCaseIteratorVar(in integer pl_eGrpIdx, in integer pl_scIdx)
+  runs on EPTF_LGenBase_Private_CT{ 
+    //creating new iterator for traffic cases of this entity group & scenario
+    var integer vl_idx := 0;  
+    f_EPTF_Var_newCharstringlist(c_LGenBase_iteratorVar_prefix & c_LGenBase_iteratorTrafficCases_varName& tsp_LGenBase_nameSeparator & f_EPTF_LGenBase_entityGroupName(pl_eGrpIdx) & tsp_LGenBase_nameSeparator &f_EPTF_LGenBase_scenarioName(pl_eGrpIdx, pl_scIdx), {} ,vl_idx);
+
+	//add current scenario to the iterator of scenarios of this entity group
+	var integer vl_scenarioIteratorIdx := f_EPTF_Var_getId(c_LGenBase_iteratorVar_prefix & c_LGenBase_iteratorScenarios_varName& tsp_LGenBase_nameSeparator & f_EPTF_LGenBase_entityGroupName(pl_eGrpIdx));
+    var EPTF_Var_DirectContent vl_currentContent;
+    f_EPTF_Var_getContent(vl_scenarioIteratorIdx, vl_currentContent);
+    vl_currentContent.charstringlistVal[sizeof(vl_currentContent.charstringlistVal)] := f_EPTF_LGenBase_scenarioName(pl_eGrpIdx, pl_scIdx);
+    f_EPTF_Var_adjustContent(vl_scenarioIteratorIdx, vl_currentContent);
+    
+  	var integer vl_temp;   
+	var charstring vl_eGrpName := f_EPTF_LGenBase_entityGroupName(pl_eGrpIdx);
+    var charstring vl_scName := f_EPTF_LGenBase_scenarioName(pl_eGrpIdx, pl_scIdx);
+    var charstring vl_scVarPrefix := f_EPTF_LGenBase_getScNamePrefix(vl_eGrpName, vl_scName);
+
+    var charstring vl_varName := vl_scVarPrefix&c_EPTF_LGenBaseStats_nameOfStartBtn;
+    f_EPTF_Var_newInt(vl_varName, 0, vl_temp);
+    f_EPTF_Var_addPostProcFn(vl_temp, {refers(f_EPTF_LGenBaseStats_startBtnPressed),{pl_eGrpIdx, pl_scIdx, -1}});
+   
+    vl_varName := vl_scVarPrefix&c_EPTF_LGenBaseStats_nameOfStopBtn;
+    f_EPTF_Var_newInt(vl_varName, 0, vl_temp);
+    f_EPTF_Var_addPostProcFn(vl_temp, {refers(f_EPTF_LGenBaseStats_stopBtnPressed),{pl_eGrpIdx, pl_scIdx, -1}});
+   
+    vl_varName := vl_scVarPrefix&c_EPTF_LGenBaseStats_nameOfPauseBtn;
+    f_EPTF_Var_newInt(vl_varName, 0, vl_temp);
+    f_EPTF_Var_addPostProcFn(vl_temp, {refers(f_EPTF_LGenBaseStats_pauseBtnPressed),{pl_eGrpIdx, pl_scIdx, -1}});
+
+    vl_varName := vl_scVarPrefix&c_EPTF_LGenBaseStats_nameOfAbortBtn;   
+    f_EPTF_Var_newInt(vl_varName, 0, vl_temp);
+    f_EPTF_Var_addPostProcFn(vl_temp, {refers(f_EPTF_LGenBaseStats_abortBtnPressed),{pl_eGrpIdx, pl_scIdx, -1}});
+    
+    vl_varName := vl_scVarPrefix&c_EPTF_LGenBaseStats_nameOfRestoreBtn;
+    f_EPTF_Var_newInt(vl_varName, 0, vl_temp);
+    f_EPTF_Var_addPostProcFn(vl_temp, {refers(f_EPTF_LGenBaseStats_restoreBtnPressed),{pl_eGrpIdx, pl_scIdx, -1}});
+
+	vl_varName := vl_scVarPrefix&c_EPTF_LGenBaseStats_nameOfSingleShotBtn;    
+    f_EPTF_Var_newInt(vl_varName, 0, vl_temp);
+    f_EPTF_Var_addPostProcFn(vl_temp, {refers(f_EPTF_LGenBaseStats_singleShotBtnPressed),{pl_eGrpIdx, pl_scIdx, -1}});
+    
+    
+  }
+
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_LGenBase_adjustTrafficCaseIteratorVar
+  // 
+  //  Purpose:
+  //    This is a callback function which is called after every creation of traffic cases.
+  //	  Adds current traffic case to the iterator of traffic cases of this entity group & scenario.
+  //	  Creates the variables for the differrent buttons that will be used with this traffic case.
+  //
+  //  Parameters:
+  //    -
+  //
+  //  Return Value:
+  //    -
+  //
+  //  Errors & assertions:
+  //    - 
+  //
+  //  Detailed Comments:
+  //    -
+  //
+  ///////////////////////////////////////////////////////////
+  friend function f_EPTF_LGenBase_adjustTrafficCaseIteratorVar(in integer pl_tcAbsIdx)
+  runs on EPTF_LGenBase_Private_CT{
+    var charstring vl_eGrpName;
+    var charstring vl_scName;
+    var charstring vl_tcName;
+    f_EPTF_LGenBase_trafficCaseIdNames(pl_tcAbsIdx, vl_eGrpName, vl_scName, vl_tcName);
+    var integer vl_tcIteratorIdx := f_EPTF_Var_getId(c_LGenBase_iteratorVar_prefix & c_LGenBase_iteratorTrafficCases_varName &tsp_LGenBase_nameSeparator& vl_eGrpName &tsp_LGenBase_nameSeparator& vl_scName);
+    var EPTF_Var_DirectContent vl_currentContent;
+    f_EPTF_Var_getContent(vl_tcIteratorIdx, vl_currentContent);
+    vl_currentContent.charstringlistVal[sizeof(vl_currentContent.charstringlistVal)] := vl_tcName;
+    f_EPTF_Var_adjustContent(vl_tcIteratorIdx, vl_currentContent);
+
+    var integer vl_eGrpIdx := v_LGenBase_trafficCases[pl_tcAbsIdx].eGroupBackref
+    var integer vl_scIdx := v_LGenBase_trafficCases[pl_tcAbsIdx].eScenarioBackRef
+    var integer vl_tcIdx := v_LGenBase_trafficCases[pl_tcAbsIdx].eTcRelIdx
+
+	var integer vl_temp;
+    var charstring vl_varNamePrefix := f_EPTF_LGenBase_getNamePrefix(vl_eGrpName,vl_scName,vl_tcName);
+	//creating variable for start button
+    var charstring vl_startTcVarName := vl_varNamePrefix&c_EPTF_LGenBaseStats_nameOfStartBtn;
+    f_EPTF_Var_newBool(vl_startTcVarName, false, vl_temp);
+    f_EPTF_Var_addPostProcFn(vl_temp, {refers(f_EPTF_LGenBaseStats_startBtnPressed),{vl_eGrpIdx, vl_scIdx, vl_tcIdx}});
+
+    var charstring vl_stopTcVarName := vl_varNamePrefix&c_EPTF_LGenBaseStats_nameOfStopBtn;
+    f_EPTF_Var_newBool(vl_stopTcVarName, false, vl_temp);
+    f_EPTF_Var_addPostProcFn(vl_temp, {refers(f_EPTF_LGenBaseStats_stopBtnPressed),{vl_eGrpIdx, vl_scIdx, vl_tcIdx}});
+
+    var charstring vl_abortTcVarName := vl_varNamePrefix&c_EPTF_LGenBaseStats_nameOfAbortBtn;
+    f_EPTF_Var_newBool(vl_abortTcVarName, false, vl_temp);
+    f_EPTF_Var_addPostProcFn(vl_temp, {refers(f_EPTF_LGenBaseStats_abortBtnPressed),{vl_eGrpIdx, vl_scIdx, vl_tcIdx}});
+
+    var charstring vl_pauseTcVarName := vl_varNamePrefix&c_EPTF_LGenBaseStats_nameOfPauseBtn;
+    f_EPTF_Var_newBool(vl_pauseTcVarName, false, vl_temp);
+    f_EPTF_Var_addPostProcFn(vl_temp, {refers(f_EPTF_LGenBaseStats_pauseBtnPressed),{vl_eGrpIdx, vl_scIdx, vl_tcIdx}});
+
+    var charstring vl_restoreTcVarName := vl_varNamePrefix&c_EPTF_LGenBaseStats_nameOfRestoreBtn;
+    f_EPTF_Var_newBool(vl_restoreTcVarName, false, vl_temp);
+    f_EPTF_Var_addPostProcFn(vl_temp, {refers(f_EPTF_LGenBaseStats_restoreBtnPressed),{vl_eGrpIdx, vl_scIdx, vl_tcIdx}});
+
+    var charstring vl_varName := vl_varNamePrefix&c_EPTF_LGenBaseStats_nameOfSingleShotBtn;
+    f_EPTF_Var_newBool(vl_varName, false, vl_temp);
+    f_EPTF_Var_addPostProcFn(vl_temp, {refers(f_EPTF_LGenBaseStats_singleShotBtnPressed),{vl_eGrpIdx, vl_scIdx, vl_tcIdx}});
+
+    
+  }
+  
+private function f_EPTF_LGenBaseStats_startBtnPressed(
+  in integer pl_idx, 
+  in EPTF_IntegerList pl_argList) 
+runs on EPTF_LGenBase_Private_CT {
+  var integer vl_eGrpIdx := pl_argList[0];
+  var integer vl_scIdx := pl_argList[1];
+  var integer vl_tcRelIdx := pl_argList[2];
+  if(-1 == vl_tcRelIdx){
+    //Scenario
+    f_EPTF_LGenBase_enableScenarioOnEntityGroup(vl_eGrpIdx, vl_scIdx, true);
+  }else{
+    var EPTF_Var_DirectContent vl_currentContent;
+    f_EPTF_Var_getContent(pl_idx,vl_currentContent);
+    if(vl_currentContent.boolVal){
+      //Traffic case
+      f_EPTF_LGenBase_startTrafficCaseByIdx(f_EPTF_LGenBase_trafficCaseAbsIdx(vl_eGrpIdx, vl_scIdx, vl_tcRelIdx));
+    }
+  }
+}
+
+private function f_EPTF_LGenBaseStats_stopBtnPressed(
+  in integer pl_idx, 
+  in EPTF_IntegerList pl_argList) 
+runs on EPTF_LGenBase_Private_CT {
+  var integer vl_eGrpIdx := pl_argList[0];
+  var integer vl_scIdx := pl_argList[1];
+  var integer vl_tcIdx := pl_argList[2];
+  if(-1 == vl_tcIdx){
+    //Scenario
+    if ( f_EPTF_LGenBase_isWeightedScenario(vl_eGrpIdx, vl_scIdx) ){
+      //Weighted
+      f_EPTF_LGenBase_stopWeightedScenarioByIdx(vl_eGrpIdx, vl_scIdx);
+    }
+    else
+    {
+      f_EPTF_LGenBase_stopScenarioByIdx(vl_eGrpIdx, vl_scIdx);
+    }
+  }else{
+    var EPTF_Var_DirectContent vl_currentContent;
+    f_EPTF_Var_getContent(pl_idx,vl_currentContent);
+    if(vl_currentContent.boolVal){
+      //Traffic case
+      f_EPTF_LGenBase_stopTrafficCaseByIdx(f_EPTF_LGenBase_trafficCaseAbsIdx(vl_eGrpIdx, vl_scIdx, vl_tcIdx));
+    }
+  }
+}
+
+private function f_EPTF_LGenBaseStats_abortBtnPressed(
+  in integer pl_idx, 
+  in EPTF_IntegerList pl_argList) 
+runs on EPTF_LGenBase_Private_CT {
+  var integer vl_eGrpIdx := pl_argList[0];
+  var integer vl_scIdx := pl_argList[1];
+  var integer vl_tcIdx := pl_argList[2];
+  if(-1 == vl_tcIdx){
+    //Scenario
+    if ( f_EPTF_LGenBase_isWeightedScenario(vl_eGrpIdx, vl_scIdx) ){
+      //Weighted
+      f_EPTF_LGenBase_abortWeightedScenarioByIdx(vl_eGrpIdx, vl_scIdx);
+    }
+    else
+    {
+      f_EPTF_LGenBase_abortScenarioByIdx(vl_eGrpIdx, vl_scIdx);
+    }
+  }else{
+    var EPTF_Var_DirectContent vl_currentContent;
+    f_EPTF_Var_getContent(pl_idx,vl_currentContent);
+    if(vl_currentContent.boolVal){
+      //Traffic case
+      f_EPTF_LGenBase_abortTrafficCaseByIdx(f_EPTF_LGenBase_trafficCaseAbsIdx(vl_eGrpIdx, vl_scIdx, vl_tcIdx));
+    }
+  }
+}
+
+
+private function f_EPTF_LGenBaseStats_pauseBtnPressed(
+  in integer pl_idx, 
+  in EPTF_IntegerList pl_argList) 
+runs on EPTF_LGenBase_Private_CT {
+  var integer vl_eGrpIdx := pl_argList[0];
+  var integer vl_scIdx := pl_argList[1];
+  var integer vl_tcIdx := pl_argList[2];
+  if(-1 == vl_tcIdx){
+    //Scenario
+    if ( f_EPTF_LGenBase_isWeightedScenario(vl_eGrpIdx, vl_scIdx) ){
+      //Weighted
+      f_EPTF_LGenBase_pauseWeightedScenario(vl_eGrpIdx, vl_scIdx);
+    }
+    else
+    {
+      f_EPTF_LGenBase_pauseScenario(vl_eGrpIdx, vl_scIdx);
+    }
+  }else{
+    var EPTF_Var_DirectContent vl_currentContent;
+    f_EPTF_Var_getContent(pl_idx,vl_currentContent);
+    if(vl_currentContent.boolVal){
+      //Traffic case
+      f_EPTF_LGenBase_pauseTrafficCaseByIdx(f_EPTF_LGenBase_trafficCaseAbsIdx(vl_eGrpIdx, vl_scIdx, vl_tcIdx));
+    }
+  }
+}
+
+private function f_EPTF_LGenBaseStats_singleShotBtnPressed(
+  in integer pl_idx, 
+  in EPTF_IntegerList pl_argList) 
+runs on EPTF_LGenBase_Private_CT {
+  var integer vl_eGrpIdx := pl_argList[0];
+  var integer vl_scIdx := pl_argList[1];
+  var integer vl_tcIdx := pl_argList[2];
+  if(-1 == vl_tcIdx){
+    //Scenario
+    f_EPTF_LGenBase_singleShotScByIdx(vl_eGrpIdx, vl_scIdx);
+  }else{
+    var EPTF_Var_DirectContent vl_currentContent;
+    f_EPTF_Var_getContent(pl_idx,vl_currentContent);
+    if(vl_currentContent.boolVal){
+      //Traffic case
+      f_EPTF_LGenBase_singleShotTcByIdx(f_EPTF_LGenBase_trafficCaseAbsIdx(vl_eGrpIdx, vl_scIdx, vl_tcIdx));
+    }
+  }
+}
+
+private function f_EPTF_LGenBaseStats_restoreBtnPressed(
+  in integer pl_idx, 
+  in EPTF_IntegerList pl_argList) 
+runs on EPTF_LGenBase_Private_CT {
+  //The f_EPTF_LGenBase_restoreScenarioByIdx logs the problems
+  var boolean vl_dummyBool := f_EPTF_LGenBase_restoreScenarioByIdx(pl_argList[0], pl_argList[1], false);
+}
+
+private function f_EPTF_LGenBase_ILog_logItem(in integer pl_elementIdx, in integer pl_dbId, in integer pl_chainId, in EPTF_IntegerList pl_param)
+runs on EPTF_LGenBase_Private_CT{
+  if(tsp_EPTF_ILog_logFileName != "") {
+
+    f_EPTF_LGenBase_ILog_logToFile(v_LGenBase_ILog_DB[pl_elementIdx]);
+  }
+}
+  
+}
+
+}  // end of module
+

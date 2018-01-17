@@ -1,0 +1,266 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_CLL_RBtree_Functions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 512
+//  Updated:  2010-07-21
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////
+//  Module: EPTF_CLL_RBtree_Functions
+// 
+//  Purpose:
+//    This module contains generic functions for TTCN-3 Red-Black tree implementation.
+// 
+//  Module depends on:
+//    <EPTF_CLL_Common_Functions>
+//    <EPTF_CLL_RBtree_Definitions>
+//    <EPTF_CLL_RBtree_PrivateFunctions>
+// 
+//  Current Owner:
+//    Rita Kovacs (ERITKOV)
+// 
+//  Last Review Date:
+//    2007-12-06
+//
+//  Detailed Comments:
+//    For detailed description on RBtree functionality, plse see <EPTF_CLL_RBtree_Definitions>.
+//
+//    This module contains constants and generic functions for event scheduling. 
+//    Using the functions of this module is recommended when design load module 
+//    specific scheduler functions.
+// 
+//    - To remove a registered event from the tree <f_EPTF_RBTree_removeNode>.
+//
+//    - To remove an event (node) from a cluster chain, call <f_EPTF_RBTree_removeNodeWithSameKey>.
+//
+//    - For insertion and search-related functions, plse see <EPTF_CLL_RBtree_PrivateFunctions>.
+//
+///////////////////////////////////////////////////////////////
+
+module EPTF_CLL_RBtree_Functions {
+
+import from EPTF_CLL_Common_Functions all;
+import from EPTF_CLL_RBtree_Definitions all;
+import from EPTF_CLL_RBtree_PrivateFunctions all;
+
+
+///////////////////////////////////////////////////////////
+// Function: f_EPTF_RBTree_removeNodeWithSameKey
+// 
+// Purpose:
+//   Function to remove an event (node) from a cluster chain.
+// 
+// Parameters:
+//   rb_treeNodes - *inout* <EPTF_RBTreeNodeList> - red-black-tree nodes' list
+//   nodeToDeleteIndex - *in* *integer* - the node to be removed
+//   pl_root - *in* *integer* - root sentinel index of the tree
+//   pl_nil - *in* *integer* - leaf sentinel index of the tree
+// 
+// Return Value:
+//   boolean - success
+///////////////////////////////////////////////////////////
+
+function f_EPTF_RBTree_removeNodeWithSameKey(
+      inout EPTF_RBTreeNodeList rb_treeNodes, 
+      in integer nodeToDeleteIndex, 
+      in integer pl_root,
+      in integer pl_nil
+    ) return boolean {
+
+    var boolean vl_result := false;
+
+    // The node is in a cluster
+    if ( (rb_treeNodes[nodeToDeleteIndex].color == incluster) or (rb_treeNodes[nodeToDeleteIndex].isHeadInSameKeysCluster) ) {		  		  		  		
+	    // This element is not the first one in the cluster and so it is not in the tree.	
+	    if (rb_treeNodes[nodeToDeleteIndex].color == incluster) {
+
+                    if(rb_treeNodes[nodeToDeleteIndex].fwd < 0) { // node is end of cluser
+                      rb_treeNodes[rb_treeNodes[nodeToDeleteIndex].startOfClusterIdx].endOfClusterIdx :=
+                        rb_treeNodes[nodeToDeleteIndex].bwd;
+                      rb_treeNodes[rb_treeNodes[nodeToDeleteIndex].bwd].startOfClusterIdx :=
+                        rb_treeNodes[nodeToDeleteIndex].startOfClusterIdx;
+                    }
+
+		    //  [prevElement] [toDelete]  [nextElement | -1]
+		    //            |--------->----------^
+		    rb_treeNodes[rb_treeNodes[nodeToDeleteIndex].bwd].fwd := rb_treeNodes[nodeToDeleteIndex].fwd;
+
+		    // If only one element left in the cluster, the cluster
+		    // cease to exists and the Head element won't be head anymore.
+		    if (rb_treeNodes[rb_treeNodes[nodeToDeleteIndex].bwd].fwd < 0) {
+			    rb_treeNodes[rb_treeNodes[nodeToDeleteIndex].bwd].isHeadInSameKeysCluster := false;
+		    }						
+
+		    // It is not the last element in the cluster: next element exists
+		    if (rb_treeNodes[nodeToDeleteIndex].fwd > -1) {
+			    // The next element of the node to delete
+			    // will point back to the previous element of the node to delete.
+			    //   [prevElement] [toDelete]  [nextElement]
+			    //         ^----------<---------------|
+			    rb_treeNodes[rb_treeNodes[nodeToDeleteIndex].fwd].bwd := rb_treeNodes[nodeToDeleteIndex].bwd;
+		    }				
+
+		    rb_treeNodes[nodeToDeleteIndex].color := unused; // ???
+		    rb_treeNodes[nodeToDeleteIndex].bwd := -1;
+		    rb_treeNodes[nodeToDeleteIndex].fwd := -1;		
+
+		    vl_result := true;
+	    } else {
+		    // color != incluster
+		    // if this is the first element of the cluster and is on the tree
+		    if (rb_treeNodes[nodeToDeleteIndex].isHeadInSameKeysCluster) {
+			    // If a next element exists...
+			    if (rb_treeNodes[nodeToDeleteIndex].fwd > -1) {
+
+                                    rb_treeNodes[rb_treeNodes[nodeToDeleteIndex].fwd].endOfClusterIdx :=
+                                      rb_treeNodes[nodeToDeleteIndex].endOfClusterIdx;
+                                    rb_treeNodes[rb_treeNodes[nodeToDeleteIndex].endOfClusterIdx].startOfClusterIdx :=
+                                      rb_treeNodes[nodeToDeleteIndex].fwd;
+
+				    //  ... the next element will be the head of the cluster.
+				    // The next element replaces the head element in the tree.
+				    rb_treeNodes[rb_treeNodes[nodeToDeleteIndex].fwd].parent := rb_treeNodes[nodeToDeleteIndex].parent;
+				    rb_treeNodes[rb_treeNodes[nodeToDeleteIndex].fwd].right  := rb_treeNodes[nodeToDeleteIndex].right;
+				    rb_treeNodes[rb_treeNodes[nodeToDeleteIndex].fwd].left   := rb_treeNodes[nodeToDeleteIndex].left;
+				    rb_treeNodes[rb_treeNodes[nodeToDeleteIndex].fwd].color  := rb_treeNodes[nodeToDeleteIndex].color;
+
+				    rb_treeNodes[rb_treeNodes[nodeToDeleteIndex].fwd].isHeadInSameKeysCluster := true;
+				    rb_treeNodes[rb_treeNodes[nodeToDeleteIndex].fwd].bwd := -1;
+
+				    // The parents of the children of the element to be deleted are set to point to the new head.
+				    if (rb_treeNodes[nodeToDeleteIndex].left > -1 and rb_treeNodes[nodeToDeleteIndex].left != pl_nil) {
+					    // left child's parent
+					    rb_treeNodes[rb_treeNodes[nodeToDeleteIndex].left].parent := rb_treeNodes[nodeToDeleteIndex].fwd;
+				    }
+
+				    if (rb_treeNodes[nodeToDeleteIndex].right > -1 and rb_treeNodes[nodeToDeleteIndex].right != pl_nil) {
+					    // right child's parent
+					    rb_treeNodes[rb_treeNodes[nodeToDeleteIndex].right].parent := rb_treeNodes[nodeToDeleteIndex].fwd;
+				    }
+
+				    // Existing tree parent element will point to 
+				    // the new head of cluster node. If the parent is exists...
+				    if (rb_treeNodes[nodeToDeleteIndex].parent > -1 and rb_treeNodes[nodeToDeleteIndex].parent != pl_root) {
+					    // the head element was a left or right?				
+					    if (rb_treeNodes[rb_treeNodes[nodeToDeleteIndex].parent].left == nodeToDeleteIndex) {
+						    // left
+						    rb_treeNodes[rb_treeNodes[nodeToDeleteIndex].parent].left := rb_treeNodes[nodeToDeleteIndex].fwd;
+					    } else {
+						    // right
+						    rb_treeNodes[rb_treeNodes[nodeToDeleteIndex].parent].right := rb_treeNodes[nodeToDeleteIndex].fwd;
+					    }
+				    }
+                                    // !!! MODIFIED ---------------------
+                                    else if (rb_treeNodes[nodeToDeleteIndex].parent == pl_root) {
+                                             // The node to be deleted is the root (its parent is the root sentinel)
+                                             // The child become the root of the tree.
+                                             rb_treeNodes[pl_root].left := rb_treeNodes[nodeToDeleteIndex].fwd;
+                                    }
+                                    // !!! END OF MODIFIED ---------------------        
+				    // If only one element left in the cluster, the cluster
+				    // cease to exist and the Head element won't be head anymore.
+				    if (rb_treeNodes[rb_treeNodes[nodeToDeleteIndex].fwd].fwd < 0) {
+					    rb_treeNodes[rb_treeNodes[nodeToDeleteIndex].fwd].isHeadInSameKeysCluster := false;
+				    }
+
+				    // The old head element won't be head any more
+				    rb_treeNodes[nodeToDeleteIndex].isHeadInSameKeysCluster := false;
+
+				    // --- The next element has replaced the previous head element in tree ---				
+				    vl_result := true;
+			    }
+		    }
+	    }
+    }	
+    return vl_result;	
+}
+
+///////////////////////////////////////////////////////////
+// Function: f_EPTF_RBTree_removeNode
+// 
+// Purpose:
+//      Removes an element from the given tree.
+// 
+// Parameters:
+//   rb_treeNodes - *inout* <EPTF_RBTreeNodeList> - red-black-tree nodes' list
+//   pl_z - *in* *integer* - the node's index to be removed
+//   pl_root - *in* *integer* - root sentinel index of the red-black-tree
+//   pl_nil - *in* *integer* - leaf sentinel index of the red-black-tree
+// 
+// Return Value:
+//   (none)
+///////////////////////////////////////////////////////////
+
+function f_EPTF_RBTree_removeNode(
+        inout EPTF_RBTreeNodeList rb_treeNodes,
+        in integer pl_z,
+        in integer pl_root,
+        in integer pl_nil
+    )
+{ 
+    if (pl_z == pl_root or pl_z == pl_nil) {f_EPTF_Common_error("ERROR: you are about to delete a sentinel node (NOT recommended)!!!");return;}
+  
+    var integer vl_y;
+    var integer vl_x;
+
+    if ((rb_treeNodes[pl_z].left  == pl_nil) or
+        (rb_treeNodes[pl_z].right == pl_nil)) {
+        vl_y := pl_z;
+    } else {
+        vl_y := f_EPTF_RBTree_getSuccessorOf(rb_treeNodes, pl_z, pl_root, pl_nil); 
+    }
+
+    if (rb_treeNodes[vl_y].left == pl_nil) {
+       vl_x := rb_treeNodes[vl_y].right;
+    } else {
+       vl_x := rb_treeNodes[vl_y].left;
+    }
+
+    rb_treeNodes[vl_x].parent := rb_treeNodes[vl_y].parent;
+    if (pl_root == rb_treeNodes[vl_x].parent) {
+       rb_treeNodes[pl_root].left := vl_x; // setting the REAL root element to x.
+    } else {
+       if (vl_y == rb_treeNodes[rb_treeNodes[vl_y].parent].left) {
+          rb_treeNodes[rb_treeNodes[vl_y].parent].left := vl_x;
+       } else {
+          rb_treeNodes[rb_treeNodes[vl_y].parent].right := vl_x;
+       }
+    }
+
+    if (vl_y != pl_z) { // y should not be nil in this case
+       // y is the node to splice out and x is its child
+       if (rb_treeNodes[vl_y].color == black) {
+          f_EPTF_RBTree_helpTreeRemove(rb_treeNodes, vl_x, pl_root, pl_nil);
+       }
+       rb_treeNodes[vl_y].left := rb_treeNodes[pl_z].left;
+       rb_treeNodes[vl_y].right := rb_treeNodes[pl_z].right;
+       rb_treeNodes[vl_y].parent := rb_treeNodes[pl_z].parent;
+       rb_treeNodes[vl_y].color := rb_treeNodes[pl_z].color;
+       
+       rb_treeNodes[rb_treeNodes[pl_z].left].parent := vl_y;
+       rb_treeNodes[rb_treeNodes[pl_z].right].parent := vl_y;
+
+       if (pl_z == rb_treeNodes[rb_treeNodes[pl_z].parent].left) {
+          rb_treeNodes[rb_treeNodes[pl_z].parent].left := vl_y;
+       } else {
+          rb_treeNodes[rb_treeNodes[pl_z].parent].right := vl_y;
+       }
+       // free (z)
+    } else {
+       if (rb_treeNodes[vl_y].color == black) {
+          f_EPTF_RBTree_helpTreeRemove(rb_treeNodes, vl_x, pl_root, pl_nil);
+       }
+    }
+
+
+} // f_EPTF_RBTree_removeNode
+
+
+} //module

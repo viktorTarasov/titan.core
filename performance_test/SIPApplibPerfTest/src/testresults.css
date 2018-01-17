@@ -1,0 +1,57 @@
+
+table {
+        margin: 0px 0px 20px 0px;
+	font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+	border-collapse: collapse;
+        width:100%;
+}
+
+td,th {
+        width: 50%;
+	font-size: small;
+	border: 1px solid #003258;
+	padding: 3px 7px 2px 7px;
+}
+
+tr.Header { 
+	font-size: medium;
+	text-align: left;
+	padding-top: 5px;
+	padding-bottom: 4px;
+	background-color: #194669;
+	color: #fff;
+}
+
+.tableTitle {
+       text-align: center;
+       font-weight: bold;
+       font-size: large;
+       margin-bottom: 5px;
+}
+
+.EnvironmentTable {
+   width:49%;
+   float:left;
+}
+
+.ParamTable {
+   width:49%;
+   float:right;
+}
+
+.ResultTable {
+   clear:both;
+}
+
+.ExecutionTime {
+	font-family: auto;
+        width:auto;
+}
+.ExecutionTime td,.ExecutionTime th {
+	margin: 0px;
+	padding: 0px;
+	border: 0px;
+	outline: 0px;
+	font-size: 100%;
+	vertical-align: baseline;
+}

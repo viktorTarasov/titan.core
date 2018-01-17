@@ -1,0 +1,85 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_CLL_StatHandlerLogging_Definitions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 512
+//  Updated:  2010-01-28
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////
+//  Module: EPTF_CLL_StatHandlerLogging_Definitions
+// 
+//  Purpose:
+//    This module contains type definitions for the logging subsystem used in StatHandler
+// 
+//  Module depends on:
+//    <EPTF_CLL_Logging_Definitions>
+// 
+//  Module Parameters:
+//    -
+//
+//  Current Owner:
+//    Gabor Tatarka (EGBOTAT)
+// 
+//  Last Review Date:
+//    -
+//
+//  Detailed Comments:
+//    This module contains type definitions for the logging subsystem used in StatHandler
+//
+///////////////////////////////////////////////////////////////
+
+module EPTF_CLL_StatHandlerLogging_Definitions {
+
+import from EPTF_CLL_Logging_Definitions all;
+
+/////////////////////////////////////////////////////////////////////////
+//
+//  Component: EPTF_StatHandlerLogging_CT
+//
+//  Purpose:
+//    Component type for StatHandler's logging subsytem
+//
+//  Elements:
+//    v_EPTF_StatHandlerLogging_initialized - *boolean*
+//    v_EPTF_StatHandlerLogging_maskId - *integer*
+//
+//  Detailed Comments:
+//    Extends EPTF_Logging_CT
+/////////////////////////////////////////////////////////////////////////
+type component EPTF_StatHandlerLogging_CT extends EPTF_Logging_CT
+{
+  private var boolean v_EPTF_StatHandlerLogging_initialized := false;
+  private var integer v_EPTF_StatHandlerLogging_maskId := c_EPTF_Logging_invalidMaskId;
+  private var charstring v_EPTF_StatHandlerLogging_loggingComponentMask := "EPTF_StatHandler";
+}
+
+/////////////////////////////////////////////////////////////////////////
+// Constants: c_EPTF_StatHandlerLogging_eventClasses
+//
+// Purpose:
+//    Logging event classes for StatHandler
+/////////////////////////////////////////////////////////////////////////
+const EPTF_Logging_EventClassPrefixList c_EPTF_StatHandlerLogging_eventClasses := {"Warning","Debug"};
+
+/////////////////////////////////////////////////////////////////////////
+// Constants: c_EPTF_StatHandlerLogging_ClassIdx_Error
+//
+// Purpose:
+//    Logging event class indices for StatHandler
+//
+// Other values:
+//    - c_EPTF_StatHandlerLogging_ClassIdx_Error
+//    - c_EPTF_StatHandlerLogging_ClassIdx_Warning
+//    - c_EPTF_StatHandlerLogging_ClassIdx_Debug
+/////////////////////////////////////////////////////////////////////////
+const integer c_EPTF_StatHandlerLogging_ClassIdx_Warning := 0;
+const integer c_EPTF_StatHandlerLogging_ClassIdx_Debug := 1;
+
+} // end of module

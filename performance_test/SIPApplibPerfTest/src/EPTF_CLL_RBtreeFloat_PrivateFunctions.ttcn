@@ -1,0 +1,366 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_CLL_RBtreeFloat_PrivateFunctions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 512
+//  Updated:  2010-07-21
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////
+//  Module: EPTF_CLL_RBtreeFloat_PrivateFunctions
+// 
+//  Purpose:
+//    This module contains private functions for TTCN-3 float Red-Black tree implementation.
+//    These functions are not to be used by the user, only by other functions.
+// 
+//  Module depends on:
+//    <EPTF_CLL_Common_Definitions>
+//    <EPTF_CLL_Common_Functions>
+//    <EPTF_CLL_RBtree_Definitions>
+//    <EPTF_CLL_RBtree_PrivateFunctions>
+// 
+//  Current Owner:
+//    Rita Kovacs (ERITKOV)
+// 
+//  Last Review Date:
+//    2007-12-06
+///////////////////////////////////////////////////////////////
+
+module EPTF_CLL_RBtreeFloat_PrivateFunctions {
+
+import from EPTF_CLL_Common_Definitions all;
+import from EPTF_CLL_Common_Functions all;
+import from EPTF_CLL_RBtree_Definitions all;
+import from EPTF_CLL_RBtree_PrivateFunctions all;
+
+friend module EPTF_CLL_RBtreeFloat_Functions;
+friend module EPTF_CLL_RBTScheduler_Functions;
+//friend module EPTF_RedBlackTree_demo; // f_EPTF_RBTreeF_getSmallestNodeIndexFromCache, f_EPTF_RBTreeF_destroyInvalidFloatNode
+
+///////////////////////////////////////////////////////////
+// Function: f_EPTF_RBTreeF_getFloatNodeIndexByKey
+// 
+// Purpose:
+//   Function to get the given float-identified event (node) from the tree.
+// 
+// Parameters:
+//   pl_tree - *inout* <EPTF_Float_RedBlackTree> - the up-to-date float red-black-tree itself
+//   pl_key - *in* *float* - node to get
+//   pl_indexFound - *out* *integer* - index of the tree node of the given key
+// 
+// Return Value:
+//   boolean - success
+///////////////////////////////////////////////////////////
+
+// friend for module EPTF_CLL_RBTScheduler_Functions
+friend function f_EPTF_RBTreeF_getFloatNodeIndexByKey(inout EPTF_Float_RedBlackTree pl_tree, in float pl_key, out integer pl_indexFound) return boolean {
+    var integer nil := pl_tree.nil;
+
+    var integer vl_x := pl_tree.nodes[pl_tree.root].left; // the real root of the tree
+    while (vl_x != nil) {
+      var float vl_tmp := pl_tree.floatKeyData[vl_x].key;
+            if (vl_tmp == pl_key) {
+		    pl_indexFound := vl_x;
+	            //log("DEBUG: [f_EPTF_RBTreeF_getFloatNodeIndexByKey] pl_indexFound: ",pl_indexFound);
+                    return true;
+	    } else {
+                    if (pl_key < vl_tmp) {
+			    // we go forward to left
+			    vl_x := pl_tree.nodes[vl_x].left;
+		    } else {
+			    // we go forward to right
+			    vl_x := pl_tree.nodes[vl_x].right;
+		    }
+	    } // else
+    } // while
+
+    //log("DEBUG: [f_EPTF_RBTreeF_getFloatNodeIndexByKey] vl_isFound: ", vl_isFound);
+    return false;
+} // f_EPTF_RBTreeF_getFloatNodeIndexByKey
+
+///////////////////////////////////////////////////////////
+// Function: f_EPTF_RBTreeF_insertFloatNodeWithSameKey
+// 
+// Purpose:
+//   Function to insert the given float-identified event (node) to cluster chain.
+// 
+// Parameters:
+//   pl_tree - *inout* <EPTF_Float_RedBlackTree> - the up-to-date float red-black-tree itself
+//   pl_newNodeIndex - *in* *integer* - index of the float tree node to insert
+// 
+// Return Value:
+//   boolean - success
+///////////////////////////////////////////////////////////
+
+private function f_EPTF_RBTreeF_insertFloatNodeWithSameKey(inout EPTF_Float_RedBlackTree pl_tree, in integer pl_newNodeIndex) return boolean {
+
+    var integer vl_indexFound := -1;
+    if (f_EPTF_RBTreeF_getFloatNodeIndexByKey(pl_tree, pl_tree.floatKeyData[pl_newNodeIndex].key, vl_indexFound)) {
+        f_EPTF_RBTree_insertNodeWithSameKey(pl_tree.nodes, pl_newNodeIndex, vl_indexFound);       
+        return true;
+    }
+    return false;
+}
+
+///////////////////////////////////////////////////////////
+// Function: f_EPTF_RBTreeF_insertFloat
+// 
+// Purpose:
+//   Function to insert the given float-identified event (node) to the tree.
+// 
+// Parameters:
+//   pl_tree - *inout* <EPTF_Float_RedBlackTree> - the up-to-date float red-black-tree itself
+//   pl_x - *in* *integer* - index of the float tree node to insert
+// 
+// Return Value:
+//   boolean - success
+///////////////////////////////////////////////////////////
+
+friend function f_EPTF_RBTreeF_insertFloat(inout EPTF_Float_RedBlackTree pl_tree, in integer pl_x) {
+
+    // Storing number of nodes
+    pl_tree.nOfElements := pl_tree.nOfElements + 1;
+  
+    // If the same key is exists, we append this node to a cluster
+    // and not to the tree.
+    if (f_EPTF_RBTreeF_insertFloatNodeWithSameKey(pl_tree, pl_x)) {
+        return;
+    }
+	
+    f_EPTF_RBTreeF_helpFloatTreeInsert(pl_tree, pl_x);
+    f_EPTF_RBTree_RBTreeInsert(pl_tree.nodes, pl_tree.root, pl_tree.nil, pl_x);
+
+    f_EPTF_RBTreeF_checkMaxSize(%definitionId, pl_tree);
+}
+
+///////////////////////////////////////////////////////////
+// Function: f_EPTF_RBTreeF_helpFloatTreeInsert
+// 
+// Purpose:
+//   Inserts z into the tree as if it were a regular binary tree using the algorithm described 
+//   in _Introduction_To_Algorithms_ by Cormen et al. This function is only intended to be called
+//   by the <f_EPTF_RBTree_RBTreeInsert> function and not by the user.
+// 
+// Parameters:
+//   pl_tree - *inout* <EPTF_Float_RedBlackTree> - the up-to-date float red-black-tree itself
+//   pl_z - *in* *integer* - index of the float tree node to insert
+// 
+// Return Value:
+//   (none)
+///////////////////////////////////////////////////////////
+private function f_EPTF_RBTreeF_helpFloatTreeInsert(inout EPTF_Float_RedBlackTree pl_tree, in integer pl_z) {
+    var integer x := pl_tree.nodes[pl_tree.root].left; // real root node of the tree
+    var integer y := pl_tree.root; // sentinel
+    var integer nil := pl_tree.nil;
+
+    // !!! ? These are not neccessary, because left and right already set during
+    //       node creation -> CHECK !!!
+    pl_tree.nodes[pl_z].left  := nil;
+    pl_tree.nodes[pl_z].right := nil;
+
+    while (x != nil) {
+	y := x;
+        if (pl_tree.floatKeyData[x].key > pl_tree.floatKeyData[pl_z].key) { 
+                x := pl_tree.nodes[x].left; 
+            } else { 
+                x := pl_tree.nodes[x].right; 
+            }
+    } // while
+
+    pl_tree.nodes[pl_z].parent := y;
+
+    if ( (y == pl_tree.root) or
+         (pl_tree.floatKeyData[y].key > pl_tree.floatKeyData[pl_z].key) ) {
+	    pl_tree.nodes[y].left := pl_z;
+         } else { 
+            pl_tree.nodes[y].right := pl_z;
+         }
+} //  f_EPTF_RBTreeF_helpFloatTreeInsert
+
+
+///////////////////////////////////////////////////////////
+// Function: f_EPTF_RBTreeF_getFreeSlotFloat
+// 
+// Purpose:
+//      search for a free (unused or new) slot in float tree
+// 
+// Parameters:
+//   pl_tree - *inout* <EPTF_Float_RedBlackTree> - the up-to-date float red-black-tree
+// 
+// Return Value:
+//   integer - leaf float node index
+///////////////////////////////////////////////////////////
+
+friend function f_EPTF_RBTreeF_getFreeSlotFloat(inout EPTF_Float_RedBlackTree pl_tree) return integer {
+	return f_EPTF_RBTree_getFreeSlot(
+		pl_tree.nodes,
+		pl_tree.freeHead,
+		pl_tree.freeTail,
+		pl_tree.nodesCurMaxIndex
+	);
+}
+
+///////////////////////////////////////////////////////////
+// Function: f_EPTF_RBTreeF_destroyFloatNode
+// 
+// Purpose:
+//      deletes node from float tree
+// 
+// Parameters:
+//   pl_tree - *inout* <EPTF_Float_RedBlackTree> - the up-to-date float red-black-tree
+//   pl_z - *in* *integer* - index of the float tree node to delete
+// 
+// Return Value:
+//   (none)
+///////////////////////////////////////////////////////////
+
+friend function f_EPTF_RBTreeF_destroyFloatNode(inout EPTF_Float_RedBlackTree pl_tree, in integer pl_z) {
+	f_EPTF_RBTree_destroyNode(pl_tree.nodes, pl_tree.freeHead, pl_tree.freeTail, pl_z);
+        // if we are to remove node with smallest key, content of cache shall be invalid from now on
+        if (pl_tree.smallestKeyIndex == pl_z) {
+    	    pl_tree.isSmallestCacheValid := false;
+        }
+}
+
+///////////////////////////////////////////////////////////
+// Function: f_EPTF_RBTreeF_invalidateFloatNode
+// 
+// Purpose:
+//      sets node of the given index (pl_z) invalid 
+// 
+// Parameters:
+//   pl_tree - *inout* <EPTF_Float_RedBlackTree> - the up-to-date float red-black-tree itself
+//   pl_z - *in* *integer* - index of the float tree node to invalidate
+// 
+// Return Value:
+//   (none)
+///////////////////////////////////////////////////////////
+
+friend function f_EPTF_RBTreeF_invalidateFloatNode(inout EPTF_Float_RedBlackTree pl_tree, in integer pl_z) {
+	f_EPTF_RBTree_invalidateNode(pl_tree.nodes, pl_z);
+        // if we are to remove node with smallest key, content of cache shall be invalid from now on
+        if (pl_tree.smallestKeyIndex == pl_z) {
+    	    pl_tree.isSmallestCacheValid := false;
+        }
+}
+
+///////////////////////////////////////////////////////////
+// Function: f_EPTF_RBTreeF_getSmallestNodeIndexFromCache
+// 
+// Purpose:
+//      Gets smallest keyed float node index from cache.
+//      Refreshes cache if invalid.
+// 
+// Parameters:
+//   pl_tree - *inout* <EPTF_Float_RedBlackTree> - the up-to-date float red-black-tree itself
+//   pl_idx - *inout* *integer* - smallest key index
+// 
+// Return Value:
+//   boolean - success
+///////////////////////////////////////////////////////////
+
+// friend for module EPTF_CLL_RBTScheduler_Functions and EPTF_CLL_RBtreeFloat_Functions
+friend function f_EPTF_RBTreeF_getSmallestNodeIndexFromCache(inout EPTF_Float_RedBlackTree pl_tree, inout integer pl_idx) return boolean {
+  if (pl_tree.isSmallestCacheValid) {
+    pl_idx := pl_tree.smallestKeyIndex;
+    return true;
+  } else {
+    pl_idx := f_EPTF_RBTreeF_searchSmallestNodeIndex(pl_tree);
+    return pl_idx >= 0;
+  }
+} 
+
+///////////////////////////////////////////////////////////
+// Function: f_EPTF_RBTreeF_searchSmallestNodeIndex
+// 
+// Purpose:
+//      Searches for smallest key node in float tree.
+//      Also refreshes smallest key cache if found.
+// 
+// Parameters:
+//   pl_tree - *inout* <EPTF_Float_RedBlackTree> - the up-to-date float red-black-tree
+//
+// Return Value:
+//   integer - smallest key index.
+//               Returns -1 if the tree is empty.
+///////////////////////////////////////////////////////////
+
+friend function f_EPTF_RBTreeF_searchSmallestNodeIndex(inout EPTF_Float_RedBlackTree pl_tree) return integer {  
+
+    if(pl_tree.isSmallestCacheValid) { return pl_tree.smallestKeyIndex; }
+
+    var integer nil := pl_tree.nil;
+    var integer x := pl_tree.nodes[pl_tree.root].left; // root
+
+    if (x == nil) {
+       // Tree is empty... EXIT
+       return -1;
+    }
+
+    while (pl_tree.nodes[x].left != nil) {
+        x := pl_tree.nodes[x].left;
+    } // while
+
+    pl_tree.smallestKeyIndex := x;
+    pl_tree.isSmallestCacheValid := true;    
+
+    return x;
+
+/* Previous solution. The new (above) might be faster: has less if operation.
+    var integer vl_x := pl_tree.root.left;
+    while (vl_x != nil and not vl_isFound) {
+	    if (pl_tree.nodes[vl_x].left == nil) {
+		    // no more left child -> end of the tree
+		    // refreshing cache
+		    pl_tree.smallestKeyIndex := vl_x;
+		    pl_tree.isSmallestCacheValid := true;
+		    vl_isFound := true;
+	    } else {
+		    // go forward to left
+		    vl_x := pl_tree.nodes[vl_x].left;
+	    }
+    } // while  
+
+  return vl_x;
+*/
+
+}
+
+///////////////////////////////////////////////////////////
+// Function: f_EPTF_RBTreeF_checkMaxSize
+//
+// Purpose:
+//  Function to check if the size of the tree exceeds a certain limit.
+//
+// Parameters:
+//   pl_caller - *in* *charstring* - caller function, use %definitionId when calling
+//   pl_tree - *inout* <EPTF_Float_RedBlackTree> - the tree in question
+//
+// Return Value:
+//   -
+//
+// Detailed Comments:
+//  The tree MUST be initialized by calling f_EPTF_RBTreeF_initFloatTree.
+//
+///////////////////////////////////////////////////////////
+private function f_EPTF_RBTreeF_checkMaxSize(in charstring pl_caller, inout EPTF_Float_RedBlackTree pl_tree)
+{
+  if(c_EPTF_Common_debugSwitch and pl_tree.acceptableMaxSize >= 0) {
+    if(pl_tree.nOfElements > pl_tree.acceptableMaxSize) {
+      //EPTF_Logging_debug
+      f_EPTF_Common_warning(log2str(pl_caller, ": tree exceeds acceptable max size of ", pl_tree.acceptableMaxSize, " elements."));
+      f_EPTF_Common_warning(log2str(pl_caller, ": increasing acceptable max size by a factor of ", tsp_CLL_debug_increasePercentage4AcceptableMaxSize));
+      pl_tree.acceptableMaxSize := float2int(int2float(pl_tree.acceptableMaxSize)
+        * (1.0+tsp_CLL_debug_increasePercentage4AcceptableMaxSize));
+      f_EPTF_Common_warning(log2str(pl_caller, ": new acceptable max size: ", pl_tree.acceptableMaxSize));
+    }
+  }
+}
+
+} //module

@@ -1,0 +1,579 @@
+-- ****************************************************************************
+-- Copyright (c) 2000-2018 Ericsson Telecom AB
+-- All rights reserved. This program and the accompanying materials
+-- are made available under the terms of the Eclipse Public License v1.0
+-- which accompanies this distribution, and is available at
+-- http://www.eclipse.org/legal/epl-v10.html
+--*****************************************************************************
+--  File:               XUL_XTDL.asn
+--  Description:        XTDL widget definitions
+--  Rev:                <RnXnn>
+--  Prodnr:             CNL 113 494
+--  Updated:            2008-12-17
+--  Contact:            http://ttcn.ericsson.se
+--
+
+
+XUL-XTDL
+DEFINITIONS AUTOMATIC TAGS ::=
+BEGIN
+IMPORTS 
+    Decimal, Integer, NonNegativeInteger, String, Boolean, AnyType, AnyURI FROM XSD-ASN;
+
+--/////////////////////////////////////////////////////////
+--  Type: WidgetList
+-- 
+--  Purpose:
+--    Specifies the widgets allowed to add to a window, a tabpanel or a hbox
+-- 
+--/////////////////////////////////////////////////////////
+WidgetList ::= SEQUENCE OF AnyWidget
+
+AnyWidget ::= CHOICE {
+    tabbox             Tabbox,
+    tree               Tree,
+    hbox               Hbox,
+    textlabel          Label,
+    spacer             Spacer,
+    button             Button,
+    textbox            Textbox,
+    chart              Chart,
+    toolbar            Toolbar,
+    toolbarbutton      Toolbarbutton,
+    listbox            Listbox,
+    numericalwidget    Numericalwidget,
+    menulist           Menulist,
+    distributionchart  Distributionchart
+}
+
+--/////////////////////////////////////////////////////////
+--  Type: Window
+-- 
+--  Purpose:
+--    The main widget displayed on the Runtime GUI
+-- 
+--  Detailed Comments:
+--    Every GUI layout must have Window as the top-level widget.
+--
+--/////////////////////////////////////////////////////////
+Window ::= SEQUENCE {
+    height      XSD-ASN.Decimal OPTIONAL,
+    id          XSD-ASN.String,
+    orient      XSD-ASN.String ("vertical") DEFAULT "vertical",
+    title       XSD-ASN.String OPTIONAL,
+    width       XSD-ASN.Decimal OPTIONAL,
+    widgets     WidgetList,
+    images      ImageList OPTIONAL
+}
+
+--/////////////////////////////////////////////////////////
+--  Type: Tabbox
+-- 
+--  Purpose:
+--    A container used to display tabbed pages of elements to the user.
+-- 
+--  Detailed Comments:
+--    Either add a tabbox with bots tabs and tabpanels specified,
+--    or add tabpanels to tabs with the tab's id as parent-widgetID.
+--
+--/////////////////////////////////////////////////////////
+Tabbox ::= SEQUENCE {
+    id          XSD-ASN.String OPTIONAL,
+    flex        XSD-ASN.Decimal OPTIONAL,
+    disabled    BOOLEAN OPTIONAL,
+    layout      TabLayout OPTIONAL,
+    tabs        Tabs,
+    tabpanels   Tabpanels
+}
+
+Tabs ::= SEQUENCE OF Tab
+
+--/////////////////////////////////////////////////////////
+--  Type: Tab
+-- 
+--  Purpose:
+--    A single tab which should be placed inside a tabs element.
+--    The user may click a tab to bring the associated page of the tabbox to the front.
+-- 
+--/////////////////////////////////////////////////////////
+Tab ::= SEQUENCE {
+    id          XSD-ASN.String OPTIONAL,
+    tablabel    XSD-ASN.String
+}
+
+Tabpanels ::= SEQUENCE OF Tabpanel
+
+--/////////////////////////////////////////////////////////
+--  Type: Tabpanel
+-- 
+--  Purpose:
+--    A individual panel in a tabpanels element.
+-- 
+--/////////////////////////////////////////////////////////
+Tabpanel ::= SEQUENCE {
+    id          XSD-ASN.String OPTIONAL,
+    maxheight   XSD-ASN.Decimal OPTIONAL,
+    orient      XSD-ASN.String ("vertical") DEFAULT "vertical",
+    widgets     WidgetList
+}
+
+--/////////////////////////////////////////////////////////
+--  Type: TabLayout
+-- 
+--  Purpose:
+--    Tabbox layout types.
+--    The GUI cab display tabbox widget with different styles.
+-- 
+--/////////////////////////////////////////////////////////
+TabLayout ::= ENUMERATED {
+    wrap,
+    scroll,
+    card,
+    listcard
+}
+
+--/////////////////////////////////////////////////////////
+--  Type: Tree
+-- 
+--  Purpose:
+--    A container which can be used to hold a tabular or hierarchical set of rows of elements.
+-- 
+--/////////////////////////////////////////////////////////
+Tree ::= SEQUENCE {
+    hidecolumnpicker  BOOLEAN OPTIONAL,
+    id            XSD-ASN.String,
+    flex          XSD-ASN.Decimal OPTIONAL,
+    disabled      BOOLEAN OPTIONAL,
+    rows          XSD-ASN.Decimal,
+    treecols      Treecols,
+    treechildren  Treechildren
+}
+
+Treecols ::= SEQUENCE OF Treecol
+
+--/////////////////////////////////////////////////////////
+--  Type: Treecol
+-- 
+--  Purpose:
+--    A column of a tree. It displays the column header and holds the size and other information about the column.
+-- 
+--/////////////////////////////////////////////////////////
+Treecol ::= SEQUENCE {
+    editable     BOOLEAN OPTIONAL,
+    flex         XSD-ASN.Decimal OPTIONAL,
+    id           XSD-ASN.String OPTIONAL,
+    columnlabel  XSD-ASN.String,
+    widgetType   WidgetType
+}
+
+Treechildren ::= SEQUENCE OF Treeitem
+
+Treeitem ::= SEQUENCE OF Treerow
+
+Treerow ::= SEQUENCE OF Treecell
+
+--/////////////////////////////////////////////////////////
+--  Type: Treecell
+-- 
+--  Purpose:
+--    A single cell in a tree. This element should be placed inside a treerow.
+--    You can set the text for the cell using the textlabel attribute.
+-- 
+--/////////////////////////////////////////////////////////
+Treecell ::= SEQUENCE {
+    id          XSD-ASN.String OPTIONAL,
+    textlabel   XSD-ASN.String,
+    tooltiptext XSD-ASN.String OPTIONAL
+}
+
+--/////////////////////////////////////////////////////////
+--  Type: Hbox
+-- 
+--  Purpose:
+--    A container element which can contain any number of child elements.
+-- 
+--/////////////////////////////////////////////////////////
+Hbox ::= SEQUENCE {
+    id        XSD-ASN.String OPTIONAL,
+    flex      XSD-ASN.Decimal OPTIONAL,
+    disabled  BOOLEAN OPTIONAL,
+    orient    XSD-ASN.String OPTIONAL,
+    widgets   WidgetList
+}
+
+--/////////////////////////////////////////////////////////
+--  Type: Label
+-- 
+--  Purpose:
+--    Simple one-row text displaying widget.
+-- 
+--/////////////////////////////////////////////////////////
+Label ::= SEQUENCE {
+    id         XSD-ASN.String OPTIONAL,
+    flex       XSD-ASN.Decimal OPTIONAL,
+    disabled   BOOLEAN OPTIONAL,
+    style      XSD-ASN.String OPTIONAL,
+    textvalue  XSD-ASN.String
+}
+
+--/////////////////////////////////////////////////////////
+--  Type: Spacer
+-- 
+--  Purpose:
+--    An element that takes up space but does not display anything.
+--    It is usually used to place spacing within a container.
+-- 
+--/////////////////////////////////////////////////////////
+Spacer ::= SEQUENCE {
+    flex XSD-ASN.Decimal,
+    id   XSD-ASN.String OPTIONAL
+}
+
+--/////////////////////////////////////////////////////////
+--  Type: Button
+-- 
+--  Purpose:
+--    A button that can be pressed by the user.
+--    buttontype := "checkbox" will be rendered as a two-stated pushbutton
+-- 
+--/////////////////////////////////////////////////////////
+Button ::= SEQUENCE {
+    checked      BOOLEAN OPTIONAL,
+    disabled     BOOLEAN OPTIONAL,
+    id           XSD-ASN.String,
+    flex         XSD-ASN.Decimal OPTIONAL,
+    buttonlabel  XSD-ASN.String,
+    buttontype   XSD-ASN.String OPTIONAL,
+    imageId      XSD-ASN.String OPTIONAL
+}
+
+ImageList ::= SEQUENCE OF Image
+
+--/////////////////////////////////////////////////////////
+--  Type: Image
+-- 
+--  Purpose:
+--    Images to be used on the GUI can be specified with the Image element.
+--    The Image is not displayed itself on the GUI. The GUI will load the Image from the specified imageSource
+--    and the given id can be used in the Button's and Toolbarbutton's 'imageId' field value to specify the image to be
+--    displayed on the GUI.
+--    If the Image with the same id is added more than once to the GUI, the GUI will re-initialize the Image,
+--    and update all images on buttons to the given (changed) image.
+-- 
+--/////////////////////////////////////////////////////////
+Image ::= SEQUENCE {
+    id           XSD-ASN.String,
+    imageSource  ImageSource
+}
+
+--/////////////////////////////////////////////////////////
+--  Type: ImageSource
+-- 
+--  Purpose:
+--    If imageurl is specified, the Image will be downloaded from URL given in the imageurl.
+--    If imagedata is specified, the GUI will initialize the Image from the data given as Base64 encoded octets in
+--      the imagedata.
+-- 
+--/////////////////////////////////////////////////////////
+ImageSource ::= CHOICE {
+    imageurl     AnyURI,
+    imagedata    XSD-ASN.String
+}
+
+
+--/////////////////////////////////////////////////////////
+--  Type: Textbox
+-- 
+--  Purpose:
+--    An input field where the user can enter text.
+--    The multiline attribute can be specified to display a field with multiple rows.
+--    The rows attribute specifies the number of rows to be displayed.
+--    The readonly attribute can be specified to restrict the user from changing the textbox content.
+--    The widgetType := "console" instructs the textbox to work as a console:
+--      - if number of current rows in the content reaches the rows given, then the first line will be dropped
+--      - every textvalue set will be appended to the content
+-- 
+--/////////////////////////////////////////////////////////
+Textbox ::= SEQUENCE {
+    disabled    BOOLEAN OPTIONAL,
+    flex        XSD-ASN.Decimal OPTIONAL,
+    id          XSD-ASN.String,
+    multiline   BOOLEAN OPTIONAL,
+    readonly    BOOLEAN OPTIONAL,
+    rows        XSD-ASN.Decimal OPTIONAL,
+    textvalue   XSD-ASN.String OPTIONAL,
+    widgetType  XSD-ASN.String OPTIONAL,
+    wrap        BOOLEAN OPTIONAL
+}
+
+/*XyValues ::= SEQUENCE OF XyValue
+
+XyValue ::= SEQUENCE {
+    x          XSD-ASN.Decimal,
+    y          XSD-ASN.Decimal
+}*/
+
+TraceList ::= SEQUENCE OF Trace
+
+--/////////////////////////////////////////////////////////
+--  Type: Trace
+-- 
+--  Purpose:
+--    A sequence of values to be displayed on a Chart.
+--    maxPoints defines the maximum number of points to be displayed. If the trace reaches this limit, the first
+--    point will be discarded. If not specified the trace will hold values from the whole run, but will average
+--    value ranges in order to not run out of memory.
+-- 
+--/////////////////////////////////////////////////////////
+Trace ::= SEQUENCE {
+    id            XSD-ASN.String,
+    name          XSD-ASN.String,
+    maxPoints     XSD-ASN.NonNegativeInteger OPTIONAL,
+    color         XSD-ASN.String OPTIONAL,
+    fill          XSD-ASN.Boolean OPTIONAL,
+    physicalUnitX XSD-ASN.String OPTIONAL,
+    physicalUnitY XSD-ASN.String OPTIONAL/*,
+    xyValues      XyValues OPTIONAL*/
+}
+
+--/////////////////////////////////////////////////////////
+--  Type: Chart
+-- 
+--  Purpose:
+--    Container widget for trace(s). 
+-- 
+--/////////////////////////////////////////////////////////
+Chart ::= SEQUENCE {
+    id               XSD-ASN.String,
+    flex             XSD-ASN.Decimal OPTIONAL,
+    title            XSD-ASN.String,
+    disabled         XSD-ASN.Boolean OPTIONAL,
+    zoomable         XSD-ASN.Boolean OPTIONAL,
+    axisXType        XSD-ASN.String OPTIONAL,
+    axisYType        XSD-ASN.String OPTIONAL,
+    gridX            XSD-ASN.Boolean OPTIONAL,
+    gridY            XSD-ASN.Boolean OPTIONAL,
+    foregroundColor  XSD-ASN.String OPTIONAL,
+    backgroundColor  XSD-ASN.String OPTIONAL,
+    gridColor        XSD-ASN.String OPTIONAL,
+    traceList        TraceList
+}
+
+--/////////////////////////////////////////////////////////
+--  Type: Toolbar
+-- 
+--  Purpose:
+--    Container widget for Toolbarbuttons and Separators.
+-- 
+--/////////////////////////////////////////////////////////
+Toolbar  ::= SEQUENCE {
+    id               XSD-ASN.String,
+    placement        XSD-ASN.String OPTIONAL,
+    disabled         XSD-ASN.Boolean OPTIONAL,
+    toolbarelements  Toolbarelements
+}
+
+Toolbarelements ::= SEQUENCE OF Toolbarelement
+
+Toolbarelement ::= CHOICE {
+  toolbarbutton  Toolbarbutton,
+  separator      Separator
+}
+
+--/////////////////////////////////////////////////////////
+--  Type: Toolbarbutton
+-- 
+--  Purpose:
+--    A button to be displayed on a toolbar.
+-- 
+--/////////////////////////////////////////////////////////
+Toolbarbutton ::= SEQUENCE {
+    id              XSD-ASN.String,
+    tooltiptext     XSD-ASN.String OPTIONAL,
+    disabled        XSD-ASN.Boolean OPTIONAL,
+    imageId         XSD-ASN.String OPTIONAL
+}
+
+--/////////////////////////////////////////////////////////
+--  Type: Separator
+-- 
+--  Purpose:
+--    Separator widget to be displayed on a toolbar.
+-- 
+--/////////////////////////////////////////////////////////
+Separator  ::= SEQUENCE {
+    id              XSD-ASN.String OPTIONAL
+}
+
+--/////////////////////////////////////////////////////////
+--  Type: Listbox
+-- 
+--  Purpose:
+--    A widget containing list of selectable strings below each other.
+-- 
+--/////////////////////////////////////////////////////////
+Listbox ::= SEQUENCE {
+    id         XSD-ASN.String,
+    flex       XSD-ASN.Decimal OPTIONAL,
+    disabled   BOOLEAN OPTIONAL,
+    rows       NonNegativeInteger,
+    seltype    SelType OPTIONAL,
+    listitems  Listitems
+}
+
+--/////////////////////////////////////////////////////////
+--  Type: SelType
+-- 
+--  Purpose:
+--    Selection types.
+-- 
+--/////////////////////////////////////////////////////////
+SelType ::= ENUMERATED {
+    single,
+    multiple
+}
+
+Listitems ::= SEQUENCE OF Listitem
+
+--/////////////////////////////////////////////////////////
+--  Type: Listitem
+-- 
+--  Purpose:
+--    A string to be displayed in a Listbox
+-- 
+--/////////////////////////////////////////////////////////
+Listitem ::= SEQUENCE {
+    id          XSD-ASN.String,
+    textlabel   XSD-ASN.String,
+    selected    Boolean OPTIONAL
+}
+
+--/////////////////////////////////////////////////////////
+--  Type: Numericalwidget
+-- 
+--  Purpose:
+--    A widget to edit numerical values of type Integer and Float.
+--    The widget can optionally have a spinner and/or a slider.
+-- 
+--/////////////////////////////////////////////////////////
+Numericalwidget ::= SEQUENCE {
+    id            XSD-ASN.String,
+    flex          XSD-ASN.Decimal OPTIONAL,
+    disabled      BOOLEAN OPTIONAL,
+    widgetType    NumericalWidgetType,
+    numericvalue  XSD-ASN.Decimal,
+    readonly      BOOLEAN OPTIONAL,
+    spinner       BOOLEAN OPTIONAL,
+    slider        BOOLEAN OPTIONAL,
+    minvalue      XSD-ASN.Decimal OPTIONAL,
+    maxvalue      XSD-ASN.Decimal OPTIONAL,
+    stepsize      XSD-ASN.Decimal OPTIONAL
+}
+
+--/////////////////////////////////////////////////////////
+--  Type: NumericalWidgetType
+-- 
+--  Purpose:
+--    Numericalwidget number types.
+--    The GUI checks on user input for float and integer.
+-- 
+--/////////////////////////////////////////////////////////
+NumericalWidgetType ::= ENUMERATED {
+    floatField,
+    integerField
+}
+
+--/////////////////////////////////////////////////////////
+--  Type: Menulist
+-- 
+--  Purpose:
+--    A dropdown list of selectable values.
+--    If editable = true, the user can specify any value.
+-- 
+--/////////////////////////////////////////////////////////
+Menulist ::= SEQUENCE {
+    id         XSD-ASN.String,
+    flex       XSD-ASN.Decimal OPTIONAL,
+    disabled   BOOLEAN OPTIONAL,
+    editable   BOOLEAN OPTIONAL,
+    menulabel  XSD-ASN.String OPTIONAL,
+    menuitems  Menuitems
+}
+
+Menuitems ::= SEQUENCE OF Menuitem
+
+--/////////////////////////////////////////////////////////
+--  Type: Menuitem
+-- 
+--  Purpose:
+--    Selectable item of a Menulist.
+-- 
+--/////////////////////////////////////////////////////////
+Menuitem ::= SEQUENCE {
+    id         XSD-ASN.String,
+    textlabel  XSD-ASN.String,
+    selected   BOOLEAN OPTIONAL     
+}
+
+Distributionchart ::= SEQUENCE {
+    id              XSD-ASN.String,
+    flex            XSD-ASN.Decimal OPTIONAL,
+    disabled        BOOLEAN OPTIONAL,
+    title           XSD-ASN.String OPTIONAL,
+    axisXLabel      XSD-ASN.String OPTIONAL,
+    axisYLabel      XSD-ASN.String OPTIONAL,
+    showlegend      BOOLEAN OPTIONAL,
+    orientation     XULOrientation OPTIONAL,
+    backgroundcolor XSD-ASN.String OPTIONAL,
+    gridcolor       XSD-ASN.String OPTIONAL,
+    labeltype       DistributionchartLabeltype OPTIONAL,
+    intervallimits  Intervallimitslist,
+    valuelist       DistributionchartValuelists
+}
+
+Intervallimitslist ::= SEQUENCE {
+    id       XSD-ASN.String,
+    values   SEQUENCE OF value XSD-ASN.Decimal
+}
+
+DistributionchartValuelists ::= SEQUENCE OF DistributionchartValuelist
+
+DistributionchartValuelist ::= SEQUENCE {
+    id         XSD-ASN.String,
+    color      XSD-ASN.String OPTIONAL,
+    legend     XSD-ASN.String OPTIONAL,
+    labeltype  DistributionchartLabeltype OPTIONAL,
+    values     SEQUENCE OF value XSD-ASN.Integer
+}
+
+XULOrientation ::= ENUMERATED {
+    vertical,
+    horizontal
+}
+
+DistributionchartLabeltype ::= ENUMERATED {
+    absolute,
+    mixedType,
+    noneType,
+    percentage
+}
+
+--/////////////////////////////////////////////////////////
+--  Type: WidgetType
+-- 
+--  Purpose:
+--    Table cell widget (data) types. The GUI does type checks on user input for floatField and integerField.
+--    Otherwise it controls the GUI table cell rendering.
+-- 
+--/////////////////////////////////////////////////////////
+WidgetType ::= ENUMERATED {
+    checkBox,
+    floatField,
+    integerField,
+    pushButton,  -- not rendered as a button!
+    statusLED,
+    statusLEDWithText,
+    string
+}
+
+END

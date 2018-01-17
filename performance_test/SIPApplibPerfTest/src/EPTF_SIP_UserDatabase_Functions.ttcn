@@ -1,0 +1,2877 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_SIP_UserDatabase_Functions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 522
+//  Updated:  2012-11-28
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////
+//  Module: EPTF_SIP_UserDatabase_Functions
+//
+//  Purpose:
+//
+//  Module paramters:
+//
+//  Module depends on:
+//    <EPTF_CLL_Common_Definitions>
+//
+//    <EPTF_CLL_Common_IndexArrayFunctions>
+//
+//    <EPTF_CLL_LGenBase_ConfigFunctions>
+//
+//    <EPTF_CLL_FBQ_Functions>
+//
+//    <EPTF_CLL_RBTScheduler_Functions>
+//
+//    <EPTF_CLL_Scheduler_Definitions>
+//
+//    <EPTF_CLL_HashMapStr2Int_Functions>
+//
+//    <EPTF_SIP_Common_Definitions>
+//
+//    <EPTF_SIP_Common_Functions>
+//
+//    <EPTF_SIP_EventNotification_Definitions>
+//
+//    <EPTF_SIP_EventNotification_Functions>
+//
+//    <EPTF_SIP_LGen_Definitions>
+//
+//    <EPTF_SIP_MessageCreator_Functions>
+//
+//    <EPTF_SIP_Templates>
+//
+//    <EPTF_SIP_Transaction_Functions>
+//
+//    <EPTF_SIP_UserDatabase_Definitions>
+//
+//    <EPTF_CLL_Common_IndexArrayDefinitions>
+//
+//    <SIPmsg_Types>
+//
+//    <TCCEncoding_Functions>
+//
+//    <TCCIPsec_Definitions>
+//
+//    <TCCSecurity_Functions>
+//
+//  Last review date:
+//    2012-10-24
+////////////////////////////////////////////////////
+module EPTF_SIP_UserDatabase_Functions
+{
+import from EPTF_CLL_Common_Definitions all;
+import from EPTF_CLL_Common_IndexArrayFunctions all;
+import from EPTF_CLL_LGenBase_ConfigFunctions all;
+import from EPTF_CLL_FBQ_Functions all;
+import from EPTF_CLL_RBTScheduler_Functions all;
+import from EPTF_CLL_Scheduler_Definitions all;
+import from EPTF_CLL_HashMapStr2Int_Functions all;
+
+import from EPTF_SIP_Common_Definitions all;
+import from EPTF_SIP_Common_Functions all;
+import from EPTF_SIP_Dialog_Functions all;
+import from EPTF_SIP_EventNotification_Definitions all;
+import from EPTF_SIP_EventNotification_Functions all;
+import from EPTF_SIP_LGen_Definitions all;
+import from EPTF_SIP_MessageCreator_Functions all;
+import from EPTF_SIP_Templates all;
+import from EPTF_SIP_Transaction_Functions all;
+import from EPTF_SIP_UserDatabase_Definitions all;
+import from EPTF_CLL_Common_IndexArrayDefinitions all;
+
+import from SIPmsg_Types all;
+
+import from TCCEncoding_Functions all;
+import from TCCIPsec_Definitions all;
+import from TCCSecurity_Functions all;
+
+
+function f_EPTF_SIP_UA_initDatabase()
+runs on EPTF_SIP_LGen_CT
+{
+  v_db_UAs.uaData := {
+    acceptList := {},
+    allowedMethods := {},
+    acceptEncodingList := {},
+    acceptLanguageList := {},
+    supportedList := {}
+  };
+}
+
+function f_EPTF_SIP_UA_cleanUpDatabase()
+runs on EPTF_SIP_LGen_CT
+{
+  v_db_UAs.uaData := {
+    acceptList := {},
+    allowedMethods := {},
+    acceptEncodingList := {},
+    acceptLanguageList := {},
+    supportedList := {}
+  };
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_User_InitDatabase
+//
+//Purpose:
+//  Initializes the user database (v_db_users).
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_User_InitDatabase()
+runs on EPTF_SIP_LGen_CT
+{
+  f_EPTF_FBQ_initFreeBusyQueue(v_db_users.queue);
+  v_db_users.data :={}
+  v_db_users.hashRef := f_EPTF_str2int_HashMap_New("EPTF_SIP_UserDB_Hash");
+
+  v_db_functions.hashRef := f_EPTF_str2int_HashMap_New("EPTF_SIP_UserDB_FunctionsHash");
+  v_db_functions.data := {};
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_User_cleanUpDatabase
+//
+//Purpose:  
+//  Cleans up the user database (v_db_users).
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_User_cleanUpDatabase()
+runs on EPTF_SIP_LGen_CT
+{
+  f_EPTF_FBQ_initFreeBusyQueue(v_db_users.queue);
+  v_db_users.data :={}
+  f_EPTF_str2int_HashMap_Delete("EPTF_SIP_UserDB_Hash");
+
+  f_EPTF_str2int_HashMap_Delete("EPTF_SIP_UserDB_FunctionsHash");
+  v_db_functions.data := {};
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_User_SetUserData
+//
+//Purpose:  
+//  Sets the data of a SIP user in v_db_users.
+//
+//Parameters:
+//  - pl_userIdx - *in* *integer* - the index of the user in v_db_users
+//  - pl_iD - *in* <SIP_UserIDList> - ID information of the user
+//  - pl_localHost - *in* *charstring* - the local host of the user
+//  - pl_portNumbers - *in* <EPTF_IntegerList> - the portnumbers of the user [0] : local server port [1] : local protected server port, optional
+//  - pl_entityIdx - *in* *integer* - index of the entity
+//
+//Detailed comments:  
+//  *WARNING*: the function DOES NOT add a new user to v_db_users.
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_User_SetUserData(
+  in integer pl_userIdx,
+  in SIP_UserIDList pl_iD,
+  in charstring pl_localHost,
+  in EPTF_IntegerList pl_portNumbers,
+  in integer pl_entityIdx)
+runs on EPTF_SIP_LGen_CT
+{
+
+  for(var integer i:=0; i<sizeof(pl_iD); i:=i+1) {
+    f_EPTF_SIP_setUserData_id(pl_userIdx, i, pl_iD[i]);
+  }
+
+  v_db_users.data[pl_userIdx].localHost := pl_localHost;
+  v_db_users.data[pl_userIdx].poCData := omit;
+  v_db_users.data[pl_userIdx].eIdx := pl_entityIdx;
+
+  if (sizeof(pl_iD) > 0)
+  {
+    v_db_users.data[pl_userIdx].authData.password := pl_iD[0].password;
+  }
+
+  for (var integer i:=0; i<sizeof(pl_iD); i:=i+1)
+  {
+    var charstring vl_user_url_str := "";
+    var SipUrl     vl_user_sipurl;
+    var integer    vl_key := 0;
+
+    f_EPTF_SIP_GetUri(pl_iD[i].addr, vl_user_sipurl);
+
+    vl_user_sipurl.urlParameters := omit;
+    vl_user_sipurl.headers := omit;
+
+    f_EPTF_SIP_SIPUrl2str(vl_user_sipurl, vl_user_url_str);
+
+    if (not f_EPTF_str2int_HashMap_Find(v_db_users.hashRef, vl_user_url_str, vl_key))
+    {
+      f_EPTF_str2int_HashMap_Insert(v_db_users.hashRef, vl_user_url_str, pl_userIdx);
+    }
+    else
+    {
+      f_SIP_Logging_DEBUG("User is already defined and thus, overwritten: " & vl_user_url_str);
+    }
+  }
+  
+  if (sizeof(pl_portNumbers) > c_SIP_portNumberSIP)
+  {
+    v_db_users.data[pl_userIdx].sessions[0].port_us := pl_portNumbers[c_SIP_portNumberSIP];
+  }
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_setUserData_id
+//
+//Purpose:  
+//  Sets the user ids of a SIP user.
+//
+//Parameters:
+//  - pl_userIdx - *in* *integer* - the index of the user in v_db_users
+//  - pl_idx - *in* *integer* - the index of the user id. More than one id can belong to one user
+//  - pl_addr - *in* <SIP_UserID> - the user id
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_setUserData_id(in integer pl_userIdx, in integer pl_idx, in SIP_UserID pl_addr)
+runs on EPTF_SIP_LGen_CT
+{
+  f_EPTF_SIP_AddrUnion2FlatSipUrl(pl_addr.addr, v_db_users.data[pl_userIdx].iD[pl_idx].addr);
+  v_db_users.data[pl_userIdx].iD[pl_idx].password := pl_addr.password;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_setUserData_id_addr
+//
+//Purpose:  
+//  Sets the address in the user ids of a SIP user.
+//
+//Parameters:
+//  - pl_userIdx - *in* *integer* - the index of the user in v_db_users
+//  - pl_idx - *in* *integer* - the index of the user id. More than one id can belong to one user
+//  - pl_addr - *in* <Addr_Union> - the user address 
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_setUserData_id_addr(in integer pl_userIdx, in integer pl_idx, in Addr_Union pl_addr)
+runs on EPTF_SIP_LGen_CT
+{
+  f_EPTF_SIP_AddrUnion2FlatSipUrl(pl_addr, v_db_users.data[pl_userIdx].iD[pl_idx].addr);
+}
+
+  //function f_EPTF_SIP_getUserData_id(in integer pl_userIdx, in integer pl_idx, out SIP_UserID pl_addr)
+  //runs on EPTF_SIP_LGen_CT
+  //    {see module EPTF_SIP_Common_Functions}
+  //function f_EPTF_SIP_getUserData_id_addr(in integer pl_userIdx, in integer pl_idx, out Addr_Union pl_addr)
+  //runs on EPTF_SIP_LGen_CT
+  //    {see module EPTF_SIP_Common_Functions}
+  //function f_EPTF_SIP_getUserData_nrOfIds(in integer pl_userIdx)
+  //runs on EPTF_SIP_LGen_CT
+  //return integer
+  //    {see module EPTF_SIP_Common_Functions}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_setUserData_calledUser
+//
+//Purpose:  
+//  Sets the user ids of a SIP user.
+//
+//Parameters:
+//  - pl_userIdx - *in* *integer* - the index of the user in v_db_users
+//  - pl_idx - *in* *integer* - the index of the user id. More than one id can belong to one user
+//  - pl_addr - *in* <SIP_UserID> - the user id
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_setUserData_calledUser(in integer pl_userIdx, in integer pl_idx, in Addr_Union pl_addr)
+runs on EPTF_SIP_LGen_CT
+{
+  f_EPTF_SIP_AddrUnion2FlatSipUrl(pl_addr, v_db_users.data[pl_userIdx].calledUsers[pl_idx]);
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_setUserData_forwardedToUser
+//
+//Purpose:  
+//  Sets the forwarded to user of a SIP user in v_db_users.
+//
+//Parameters:
+//  - pl_userIdx - *in* *integer* - the index of the user in v_db_users
+//  - pl_idx - *in* *integer* - the index of the user id. More than one id can belong to one user
+//  - pl_addr - *in* <Addr_Union> - the user address 
+//
+//Detailed comments:  
+//  *WARNING*: the function DOES NOT add a new user to v_db_users.
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_setUserData_forwardedToUser(in integer pl_userIdx, in integer pl_idx, in Addr_Union pl_addr)
+runs on EPTF_SIP_LGen_CT
+{
+  f_EPTF_SIP_AddrUnion2FlatSipUrl(pl_addr, v_db_users.data[pl_userIdx].forwardedToUsers[pl_idx]);
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_setUserData_additionalHost
+//
+//Purpose:  
+//  Sets the additional host to user of a SIP user in v_db_users.
+//
+//Parameters:
+//  - pl_userIdx - *in* *integer* - the index of the user in v_db_users
+//  - pl_idx - *in* *integer* - the index of the user id. More than one id can belong to one user
+//  - pl_addr - *in* <Addr_Union> - the user address with host data
+//
+//Detailed comments:  
+//  *WARNING*: the function DOES NOT add a new user to v_db_users.
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_setUserData_additionalHost(in integer pl_userIdx, in integer pl_idx, in Addr_Union pl_addr)
+runs on EPTF_SIP_LGen_CT
+{
+  f_EPTF_SIP_AddrUnion2FlatSipUrl(pl_addr, v_db_users.data[pl_userIdx].additionalHosts[pl_idx]);
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_setUserData_localHost
+//
+//Purpose:  
+//  Sets the local host of a SIP user.
+//
+//Parameters:
+//  - pl_userIdx - *in* *integer* - the index of the user in v_db_users
+//  - pl_localHost - *in* *charstring* - the local host of the user
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_setUserData_localHost(in integer pl_userIdx, in charstring pl_localHost)
+runs on EPTF_SIP_LGen_CT
+{
+  v_db_users.data[pl_userIdx].localHost := pl_localHost;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_setUserData_secondaryLocalHost
+//
+//Purpose:  
+//  Sets the secondary local host of a SIP user. 
+//
+//Parameters:
+//  - pl_userIdx - *in* *integer* - the index of the user in v_db_users
+//  - pl_secondaryLocalHost - *in* *charstring* - the secondary local host
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_setUserData_secondaryLocalHost(in integer pl_userIdx, in charstring pl_secondaryLocalHost)
+runs on EPTF_SIP_LGen_CT
+{
+  v_db_users.data[pl_userIdx].secondaryLocalHost := pl_secondaryLocalHost;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_setUserData_secondaryRemoteHost
+//
+//Purpose:  
+//  Sets the secondary remote host of a SIP user. 
+//
+//Parameters:
+//  - pl_userIdx - *in* *integer* - the index of the user in v_db_users
+//  - pl_secondaryRemoteHost - *in* *charstring* - the secondary remote host
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_setUserData_secondaryRemoteHost(in integer pl_userIdx, in charstring pl_secondaryRemoteHost)
+runs on EPTF_SIP_LGen_CT
+{
+  v_db_users.data[pl_userIdx].secondaryRemoteHost := pl_secondaryRemoteHost;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_setUserData_addNewEmptyMediaParametersEntry
+//
+//Purpose:  
+//  Sets the secondary local host of a SIP user. 
+//
+//Parameters:
+//  - pl_userIdx - *in* *integer* - the index of the user in v_db_users
+//
+//Return value:
+//  *integer* - the index of the created empty media parameters entry
+////////////////////////////////////////////////////
+function f_EPTF_SIP_setUserData_addNewEmptyMediaParametersEntry(in integer pl_userIdx)
+runs on EPTF_SIP_LGen_CT return integer
+{
+  var integer vl_newMediaEntryIdx := sizeof(v_db_users.data[pl_userIdx].mediaParams);
+  v_db_users.data[pl_userIdx].mediaParams[vl_newMediaEntryIdx] := c_SIP_MediaParameters_empty;
+  return vl_newMediaEntryIdx;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_setUserData_setMediaParameters_LocalIP
+//
+//Purpose:  
+//  Sets the the local media IP address of a media entry of a SIP user
+//
+//Parameters:
+//  - pl_userIdx - *in* *integer* - the index of the user in v_db_users
+//  - pl_mediaIdx - *in* *integer* - the index of the media parameters entry of the SIP user in v_db_users
+//  - pl_localIP - *in* *charstring* - the local media IP address
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_setUserData_setMediaParameters_LocalIP(in integer pl_userIdx, in integer pl_mediaIdx, in charstring pl_localIP)
+runs on EPTF_SIP_LGen_CT
+{
+  v_db_users.data[pl_userIdx].mediaParams[pl_mediaIdx].localIP := pl_localIP;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_setUserData_setMediaParameters_RemoteIP
+//
+//Purpose:  
+//  Sets the the remote media IP address of a media entry of a SIP user
+//
+//Parameters:
+//  - pl_userIdx - *in* *integer* - the index of the user in v_db_users
+//  - pl_mediaIdx - *in* *integer* - the index of the media parameters entry of the SIP user in v_db_users
+//  - pl_remoteIP - *in* *charstring* - the remote media IP address
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_setUserData_setMediaParameters_RemoteIP(in integer pl_userIdx, in integer pl_mediaIdx, in charstring pl_remoteIP)
+runs on EPTF_SIP_LGen_CT
+{
+  v_db_users.data[pl_userIdx].mediaParams[pl_mediaIdx].remoteIP := pl_remoteIP;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_setUserData_setMediaParameters_LocalPort
+//
+//Purpose:  
+//  Sets the the local media Port address of a media entry of a SIP user
+//
+//Parameters:
+//  - pl_userIdx - *in* *integer* - the index of the user in v_db_users
+//  - pl_mediaIdx - *in* *integer* - the index of the media parameters entry of the SIP user in v_db_users
+//  - pl_localPort - *in* *integer* - the local media Port
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_setUserData_setMediaParameters_LocalPort(in integer pl_userIdx, in integer pl_mediaIdx, in integer pl_localPort)
+runs on EPTF_SIP_LGen_CT
+{
+  v_db_users.data[pl_userIdx].mediaParams[pl_mediaIdx].localPort := pl_localPort;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_setUserData_setMediaParameters_RemotePort
+//
+//Purpose:  
+//  Sets the the remote media Port address of a media entry of a SIP user
+//
+//Parameters:
+//  - pl_userIdx - *in* *integer* - the index of the user in v_db_users
+//  - pl_mediaIdx - *in* *integer* - the index of the media parameters entry of the SIP user in v_db_users
+//  - pl_remotePort - *in* *integer* - the remote media Port
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_setUserData_setMediaParameters_RemotePort(in integer pl_userIdx, in integer pl_mediaIdx, in integer pl_remotePort)
+runs on EPTF_SIP_LGen_CT
+{
+  v_db_users.data[pl_userIdx].mediaParams[pl_mediaIdx].remotePort := pl_remotePort;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_setUserData_portNumbers
+//
+//Purpose:  
+//  Sets the portnumbers of a SIP user. 
+//    [0] : local server port
+//    [1] : local protected server port, optional
+//
+//Parameters:
+//  - pl_userIdx - *in* *integer* - the index of the user in v_db_users
+//  - pl_portNumbers - *in* <EPTF_IntegerList> - the portnumbers
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_setUserData_portNumbers(in integer pl_userIdx, in EPTF_IntegerList pl_portNumbers)
+runs on EPTF_SIP_LGen_CT
+{
+  if (sizeof(pl_portNumbers) > c_SIP_portNumberSIP)
+  {
+    v_db_users.data[pl_userIdx].sessions[0].port_us := pl_portNumbers[c_SIP_portNumberSIP];
+  }
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_setUserData_preferredTransport
+//
+//Purpose:  
+//  Sets the preferred transport of a SIP user. 
+//
+//Parameters:
+//  - pl_userIdx - *in* *integer* - the index of the user in v_db_users
+//  - pl_preferredTransport - *in* <SIP_Transport> - the preferred transport (TCP/UDP)
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_setUserData_preferredTransport(in integer pl_userIdx, in SIP_Transport pl_preferredTransport)
+runs on EPTF_SIP_LGen_CT
+{
+  v_db_users.data[pl_userIdx].preferredTransport := pl_preferredTransport;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_setUserData_secondaryTransport
+//
+//Purpose:  
+//  Sets the secondary transport of a SIP user. 
+//
+//Parameters:
+//  - pl_userIdx - *in* *integer* - the index of the user in v_db_users
+//  - pl_secondaryTransport - *in* <SIP_Transport> - the secondary transport (TCP/UDP)
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_setUserData_secondaryTransport(in integer pl_userIdx, in SIP_Transport pl_secondaryTransport)
+runs on EPTF_SIP_LGen_CT
+{
+  v_db_users.data[pl_userIdx].secondaryTransport := pl_secondaryTransport;
+}
+
+
+///////////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_setUserData_proxy
+//
+//Purpose:
+//  Sets the proxy of a SIP user.
+//
+//Parameters:
+//  - pl_userIdx - *in* *integer* - the index of the user in v_db_users
+//  - pl_proxyName - *in* *charstring* - the name of the proxy
+//  - pl_proxyPort - *in* *integer* - the port of the proxy
+//
+///////////////////////////////////////////////////////////
+function f_EPTF_SIP_setUserData_proxy(
+		in integer pl_userIdx,
+		in charstring pl_proxyName,
+		in integer pl_proxyPort)
+runs on EPTF_SIP_LGen_CT {
+  v_db_users.data[pl_userIdx].proxyName := pl_proxyName; 
+  v_db_users.data[pl_userIdx].proxyPort := pl_proxyPort;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_setUserData_insertAuthHeader
+//
+//Purpose:  
+//  Sets if Authorization header should be inserted 
+//  in the next outgoing request or not. 
+//
+//Parameters:
+//  - pl_userIdx - *in* *integer* - the index of the user in v_db_users
+//  - pl_insert - *in* *boolean* - 
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_setUserData_insertAuthHeader(in integer pl_userIdx, in boolean pl_insert)
+runs on EPTF_SIP_LGen_CT
+{
+  v_db_users.data[pl_userIdx].authData.insertAuthHeaderInRequest := pl_insert;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_Session_AddData
+//
+//Purpose:  
+//  Adds session data to a SIP user.
+//
+//Parameters:
+//  - pl_userIdx - *in* *integer* - the index of the user in v_db_users
+//  - pl_preferredTransport - *in* <SIP_Transport> - the preferred transport (TCP/UDP)
+//  - pl_registrationExp - *in* *integer* - registration expires interval
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_Session_AddData(
+  in integer pl_userIdx,
+  in SIP_Transport  pl_preferredTransport,
+  in integer  pl_registrationExp
+)
+runs on EPTF_SIP_LGen_CT
+{
+  v_db_users.data[pl_userIdx].preferredTransport := pl_preferredTransport;
+  v_db_users.data[pl_userIdx].regData.expireInterval := pl_registrationExp;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_Session_addRegsitrarURI
+//
+//Purpose:
+//  Adds a registrar URI to the user database
+//
+//Parameters:
+//  - pl_userIdx - *in* *integer* - the index of the user in v_db_users
+//  - pl_registrar - *in* <SipUrl> - the URI of the registrar
+//
+//Detailed Comments:
+//  Used by <f_SIP_step_createREGISTER>.
+////////////////////////////////////////////////////
+function f_EPTF_SIP_Session_addRegsitrarURI(
+  in integer pl_userIdx,
+  in SipUrl pl_registrar)
+runs on EPTF_SIP_LGen_CT
+{
+  v_db_users.data[pl_userIdx].regData.registrar := pl_registrar;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_Session_addCalledUser
+//
+//Purpose:
+//  Adds a called user to the database. The called users can be indexed in the order
+//  they were added, starting with the index 0.
+//
+//Parameters:
+//  - pl_userIdx - *in* *integer* - the index of the user in v_db_users
+//  - pl_calledUser - *in* <Addr_Union> - the SIP URI of the called user
+//
+//Detailed Comments:
+//  Used by <f_SIP_step_createINVITE>.
+////////////////////////////////////////////////////
+function f_EPTF_SIP_Session_addCalledUser(
+  in integer pl_userIdx,
+  in Addr_Union pl_calledUser
+)
+runs on EPTF_SIP_LGen_CT
+{
+  var integer l_size := sizeof(v_db_users.data[pl_userIdx].calledUsers);
+  f_EPTF_SIP_setUserData_calledUser(pl_userIdx, l_size, pl_calledUser);
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_Session_addForwardedToUser
+//
+//Purpose:
+//  Adds a forwarded-to user to the database. The forwarded-to users can be indexed in the order
+//  they were added, starting with the index 0.
+//
+//Parameters:
+//  - pl_userIdx - *in* *integer* - the index of the user in v_db_users
+//  - pl_forwardedToUser - *in* <Addr_Union> - the SIP URI of the called user
+//
+//Detailed Comments:
+//  -
+////////////////////////////////////////////////////
+function f_EPTF_SIP_Session_addForwardedToUser(
+  in integer pl_userIdx,
+  in Addr_Union pl_forwardedToUser
+)
+runs on EPTF_SIP_LGen_CT
+{
+  var integer l_size := sizeof(v_db_users.data[pl_userIdx].forwardedToUsers);
+  f_EPTF_SIP_setUserData_forwardedToUser(pl_userIdx, l_size, pl_forwardedToUser);
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_Session_addAdditionalHost
+//
+//Purpose:
+//  Adds an additional host to the database. The additional hosts can be indexed in the order
+//  they were added, starting with the index 0.
+//
+//Parameters:
+//  - pl_userIdx - *in* *integer* - the index of the user in v_db_users
+//  - pl_additionalHost - *in* <Addr_Union> - the SIP URI of the called user
+//
+//Detailed Comments:
+//  -
+////////////////////////////////////////////////////
+function f_EPTF_SIP_Session_addAdditionalHost(
+  in integer pl_userIdx,
+  in Addr_Union pl_additionalHost
+)
+runs on EPTF_SIP_LGen_CT
+{
+  var integer l_size := sizeof(v_db_users.data[pl_userIdx].additionalHosts);
+  f_EPTF_SIP_setUserData_additionalHost(pl_userIdx, l_size, pl_additionalHost);
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_setRegExpire
+//
+//Purpose:  
+//  Sets registration expire interval for an entity.
+//
+//Parameters:
+//  - pl_entityIdx - *in* *integer* - the index of the entity
+//  - pl_expire - *in* *float* - the expiration interval
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_setRegExpire(
+  in integer pl_entityIdx,
+  in float   pl_expire)
+runs on EPTF_SIP_LGen_CT
+{
+  v_db_users.data[f_EPTF_LGenBase_getBehaviorCtxItem(pl_entityIdx, v_SIP_myBIdx, 0)].regData.expireInterval :=
+    float2int(pl_expire);
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_getRegExpire
+//
+//Purpose:  
+//  Gets registration expire interval of an entity.
+//
+//Parameters:
+//  - pl_entityIdx - *in* *integer* - index of the entity
+//  - pl_expire - *inout* *float* - the expiration interval.
+////////////////////////////////////////////////////
+function f_EPTF_SIP_getRegExpire(
+  in integer pl_entityIdx,
+  inout float   pl_expire)
+runs on EPTF_SIP_LGen_CT
+{
+  pl_expire := int2float(v_db_users.data[f_EPTF_LGenBase_getBehaviorCtxItem(pl_entityIdx, v_SIP_myBIdx, 0)].regData.expireInterval);
+}
+
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_setCurrentID
+//
+//Purpose:  
+//  Sets the <SIP_UserRegistrationData>.currentID value.
+//
+//Parameters:
+//  - pl_entityIdx - *in* *integer* - index of the entity
+//  - pl_currentID - *in* *integer* - the currentID to set
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_setCurrentID(in integer pl_entityIdx, in integer pl_currentID)
+runs on EPTF_SIP_LGen_CT
+{
+  v_db_users.data[f_EPTF_LGenBase_getBehaviorCtxItem(pl_entityIdx, v_SIP_myBIdx, 0)].regData.currentID := pl_currentID;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_getCurrentID
+//
+//Purpose:  
+//  Gets the <SIP_UserRegistrationData>.currentID value.
+//
+//Parameters:
+//  - pl_entityIdx - *in* *integer* - index of the entity
+//
+//Return value:
+//  integer - the currentID
+////////////////////////////////////////////////////
+function f_EPTF_SIP_getCurrentID(in integer pl_entityIdx)
+runs on EPTF_SIP_LGen_CT
+return integer
+{
+  return v_db_users.data[f_EPTF_LGenBase_getBehaviorCtxItem(pl_entityIdx, v_SIP_myBIdx, 0)].regData.currentID;
+}
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_getSIPURI
+//
+//Purpose:
+//  Gets a SIP URI of a user from its ID list
+//
+//Parameters:
+//  - pl_entityIdx - *in* *integer* - index of the entity
+//  - pl_iDindex - *in* *integer* - the index of the URI in the ID list of the user
+//  - pl_uri - *inout* <Addr_Union> - the SIP URI
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_getSIPURI(in integer pl_entityIdx, in integer pl_iDindex, inout Addr_Union pl_uri)
+runs on EPTF_SIP_LGen_CT
+{
+  if (pl_iDindex < f_EPTF_SIP_getUserData_nrOfIds(f_EPTF_LGenBase_getBehaviorCtxItem(pl_entityIdx, v_SIP_myBIdx, 0)))
+  {
+    f_EPTF_SIP_getUserData_id_addr(f_EPTF_LGenBase_getBehaviorCtxItem(pl_entityIdx, v_SIP_myBIdx, 0), pl_iDindex, pl_uri);
+  }else{
+    f_SIP_Logging_WARNING(log2str(
+      %definitionId,": Could not get user for entity ",pl_entityIdx ," at index ", pl_iDindex, " ", 
+      "Number of IDs: ", f_EPTF_SIP_getUserData_nrOfIds(f_EPTF_LGenBase_getBehaviorCtxItem(pl_entityIdx, v_SIP_myBIdx, 0))));
+  }
+}
+
+// note: this function gets the called user by entity index
+function f_EPTF_SIP_getCalledUser(in integer pl_entityIdx, in integer pl_calledUser, inout Addr_Union pl_uri)
+runs on EPTF_SIP_LGen_CT
+{
+  if (pl_calledUser < sizeof(v_db_users.data[f_EPTF_LGenBase_getBehaviorCtxItem(pl_entityIdx, v_SIP_myBIdx, 0)].calledUsers))
+  {
+    f_EPTF_SIP_getCalledUser_addr(f_EPTF_LGenBase_getBehaviorCtxItem(pl_entityIdx, v_SIP_myBIdx, 0), pl_calledUser, pl_uri);
+  }else{
+    f_SIP_Logging_WARNING(log2str(
+      %definitionId,": Could not get called user for entity ",pl_entityIdx ," at index ", pl_calledUser, " ", 
+      v_db_users.data[f_EPTF_LGenBase_getBehaviorCtxItem(pl_entityIdx, v_SIP_myBIdx, 0)].calledUsers));
+  }
+}
+
+// note: this function gets the called user by SIP User index
+function f_EPTF_SIP_getCalledUser_addr(in integer pl_userIdx, in integer pl_calledUser, inout Addr_Union pl_addr)
+runs on EPTF_SIP_LGen_CT
+{
+  f_EPTF_SIP_FlatSipUrl2AddrUnion(v_db_users.data[pl_userIdx].calledUsers[pl_calledUser], pl_addr);
+}
+
+// note: this function gets the called user by SIP User index
+function f_EPTF_SIP_getForwardedToUser_addr(in integer pl_userIdx, in integer pl_forwardedToUser, inout Addr_Union pl_addr)
+runs on EPTF_SIP_LGen_CT
+{
+  f_EPTF_SIP_FlatSipUrl2AddrUnion(v_db_users.data[pl_userIdx].forwardedToUsers[pl_forwardedToUser], pl_addr);
+}
+
+// note: this function gets the called user by SIP User index
+function f_EPTF_SIP_getAdditionalHost_addr(in integer pl_userIdx, in integer pl_additionalHost, inout Addr_Union pl_addr)
+runs on EPTF_SIP_LGen_CT
+{
+  f_EPTF_SIP_FlatSipUrl2AddrUnion(v_db_users.data[pl_userIdx].additionalHosts[pl_additionalHost], pl_addr);
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_setUserData_FSMs_fsmCtx
+//
+//Purpose:  
+//  Sets the fsmCtx field of the FSM data of the SIP User
+//
+//Parameters:
+//  - pl_userIdx - *in* *integer* - the index of the user in v_db_users
+//  - pl_fsmDataIdx - *in* *integer* - the FSM data index
+//  - pl_fsmCtx - *in* *integer* - the FSM context index
+//
+// Detailed Comments:
+//  This function does the same as f_EPTF_SIP_setFSMData_fsmCtx but with the user index
+//  as parameter instead of the entity index.
+////////////////////////////////////////////////////
+function f_EPTF_SIP_setUserData_FSMs_fsmCtx(in integer pl_userIdx, in integer pl_fsmDataIdx, in integer pl_fsmCtx)
+runs on EPTF_SIP_LGen_CT
+{
+  v_db_users.data[pl_userIdx].FSMs.data[pl_fsmDataIdx].fsmCtx := pl_fsmCtx;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_getUserData_FSMs_fsmCtx
+//
+//Purpose:  
+//  Gets the fsmCtx field of the FSM data of the SIP User
+//
+//Parameters:
+//  - pl_userIdx - *in* *integer* - the index of the user in v_db_users
+//  - pl_fsmDataIdx - *in* *integer* - the FSM data index
+//
+// Return:
+//  *integer* - the FSM context index
+//
+// Detailed Comments:
+//  This function does the same as f_EPTF_SIP_getFSMData_fsmCtx but with the user index
+//  as parameter instead of the entity index.
+////////////////////////////////////////////////////
+function f_EPTF_SIP_getUserData_FSMs_fsmCtx(in integer pl_userIdx, in integer pl_fsmDataIdx)
+runs on EPTF_SIP_LGen_CT
+return integer
+{
+  if(pl_fsmDataIdx < 0) { return -1; }
+  return v_db_users.data[pl_userIdx].FSMs.data[pl_fsmDataIdx].fsmCtx;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_setAuthDataUserName
+//
+//Purpose:  
+//  Sets the username used in Digest Authentication for a SIP user.
+//
+//Parameters:
+//  - pl_userIdx - *in* *integer* - the index of the user in v_db_users
+//  - pl_userName - *in* *charstring* - the authentication username
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_setAuthDataUserName(in integer pl_userIdx, in charstring pl_userName)
+runs on EPTF_SIP_LGen_CT
+{
+  v_db_users.data[pl_userIdx].authData.userName := pl_userName;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_getAuthDataUserName
+//
+//Purpose:  
+//  Gets the username used in Digest Authentication for a SIP user.
+//
+//Parameters:
+//  - pl_userIdx - *in* *integer* - the index of the user in v_db_users
+//  - pl_userName - *out* *charstring* - the authentication username
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_getAuthDataUserName(in integer pl_userIdx, out charstring pl_userName)
+runs on EPTF_SIP_LGen_CT
+{
+  pl_userName := v_db_users.data[pl_userIdx].authData.userName;
+}
+  
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_addTransactionIdx
+//
+//Purpose:  
+//  Adds a transaction reference to the <SIP_TransactionDB> transaction
+//  reference database.
+//  
+//Parameters:
+//  - pl_db - *inout* <SIP_TransactionDB> - the transaction reference database
+//  - pl_transactionIdx - *in* *integer* - the transaction reference
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_addTransactionIdx(
+  inout SIP_TransactionDB pl_db,
+  in integer      pl_transactionIdx)
+runs on EPTF_SIP_LGen_CT
+{
+  if(c_EPTF_Common_debugSwitch and f_SIP_Logging_debugEnabled()) {
+    f_SIP_Logging_DEBUG(log2str(%definitionId,
+    ": adding transaction reference ",pl_transactionIdx," to database."));
+
+    f_SIP_Logging_DEBUG(log2str(%definitionId,
+      ": the transaction reference database: ", pl_db.data));
+  }
+
+  pl_db.data[sizeof(pl_db.data)] := pl_transactionIdx;
+
+/*  if (sizeof(pl_db.data) > 3)
+  {
+    action("WARNING: too many transactions in the database.");
+  }*/
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_removeTransactionIdx
+//
+//Purpose:  
+//  Removes a transaction reference from the <SIP_TransactionDB> transaction
+//  reference database.
+//
+//Parameters:
+//  - pl_db - *inout* <SIP_TransactionDB> - the transaction reference database
+//  - pl_transactionIdx - *in* *integer* - the transaction reference
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_removeTransactionIdx(
+  inout SIP_TransactionDB pl_db,
+  in integer      pl_transactionIdx)
+runs on EPTF_SIP_LGen_CT
+{
+  if(c_EPTF_Common_debugSwitch and f_SIP_Logging_debugEnabled()) {
+    f_SIP_Logging_DEBUG(log2str(%definitionId,
+      ": removing transaction reference ",pl_transactionIdx," from database"));
+
+    f_SIP_Logging_DEBUG(log2str(%definitionId,
+      ": the transaction reference database: ", pl_db.data));
+  }
+
+  var SIP_TransactionList vl_new := {};
+  var boolean vl_elementNotFound := true;
+  
+  for (var integer i := 0; i < sizeof(pl_db.data); i := i + 1)
+  {
+    if (pl_transactionIdx == pl_db.data[i])
+    {
+      vl_elementNotFound := false;
+    }else
+    {
+      vl_new[sizeof(vl_new)] := pl_db.data[i];
+    }
+  }
+  
+  pl_db.data := vl_new;
+
+  if (vl_elementNotFound)
+  {
+    f_SIP_Logging_WARNING(log2str(
+      %definitionId,": trasaction has not been found: ",pl_transactionIdx));
+  }
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_getSubscription
+//
+//Purpose:
+//  Gets the index of the subscription in v_db_subscription in the given FSM.
+//
+//Parameters:
+//  - pl_entityIdx - *in* *integer* - index of the entity
+//  - pl_fsmCtx - *in* *integer* - the FSM context index
+//  - pl_subscriptionIdx - *inout* *integer* - the retrieved index
+//
+//Detailed comments:
+// If there is no subscription in the given FSM context data, pl_subscriptionIdx remains unchanged.
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_getSubscription(in integer pl_entityIdx, in integer pl_fsmCtx, inout integer pl_subscriptionIdx)
+runs on EPTF_SIP_LGen_CT
+return boolean
+{
+  var integer vl_FSMIdx := -1;
+  pl_subscriptionIdx := -1;
+
+  if (not f_EPTF_SIP_FSMInitialized(pl_entityIdx, pl_fsmCtx, vl_FSMIdx))
+  {
+    f_SIP_Logging_WARNING(log2str(%definitionId,": FSM has not been initialized."));
+    return false;
+  }
+
+  pl_subscriptionIdx := v_db_users.data[f_EPTF_LGenBase_getBehaviorCtxItem(pl_entityIdx, v_SIP_myBIdx, 0)].FSMs.data[vl_FSMIdx].subscriptionIdx;
+
+  if (not f_EPTF_SIP_checkSubsctiption(pl_subscriptionIdx))
+  {
+    f_SIP_Logging_WARNING(log2str(%definitionId,": invalid subscription index in FSM context data."));
+    return false;
+  }
+  
+  return true;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_Subscription_setExpire
+//
+//Purpose:
+//  Sets the expire time of the created subscription in the given FSM.
+//
+//Parameters:
+//  - pl_entityIdx - *in* *integer* - index of the entity
+//  - pl_fsmCtx - *in* *integer* - the FSM context index
+//  - pl_expInt - *in* *integer* - the expire interval
+//
+//Detailed comments:
+//  If there is no subscription in the given FSM context data, the time will
+//  not be set.
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_Subscription_setExpire(in integer pl_entityIdx, in integer pl_fsmCtx, in integer pl_expInt)
+runs on EPTF_SIP_LGen_CT
+{  
+  var integer vl_subscriptionIdx := -1;
+  if (f_EPTF_SIP_getSubscription(pl_entityIdx, pl_fsmCtx, vl_subscriptionIdx))
+  {
+    v_db_subscription.data[vl_subscriptionIdx].expireInterval := pl_expInt;
+  }
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_Subscription_getExpire
+//
+//Purpose:  
+//  Gets the expire time of the subscription in the given FSM.
+//
+//Parameters:
+//  - pl_entityIdx - *in* *integer* - index of the entity
+//  - pl_fsmCtx - *in* *integer* - the FSM context index
+//  - pl_expInt - *inout* *integer* - the expire interval
+//
+//Detailed comments:
+//  If there is no subscription in the given FSM context data, pl_expInt remains unchanged.
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_Subscription_getExpire(in integer pl_entityIdx, in integer pl_fsmCtx, inout integer pl_expInt)
+runs on EPTF_SIP_LGen_CT
+{  
+  var integer vl_subscriptionIdx := -1;
+  if (f_EPTF_SIP_getSubscription(pl_entityIdx, pl_fsmCtx, vl_subscriptionIdx))
+  {
+    pl_expInt := v_db_subscription.data[vl_subscriptionIdx].expireInterval;
+  }
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_Subscription_getState
+//
+//Purpose:
+//  Gets the state of the subscription in the given FSM.
+//
+//Parameters:
+//  - pl_entityIdx - *in* *integer* - index of the entity
+//  - pl_fsmCtx - *in* *integer* - the FSM context index
+//  - pl_state - *inout* *integer* - the retrieved state
+//
+//Detailed comments:
+// If there is no subscription in the given FSM context data, pl_expInt remains unchanged.
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_Subscription_getState(in integer pl_entityIdx, in integer pl_fsmCtx, inout integer pl_state)
+runs on EPTF_SIP_LGen_CT
+{
+  var integer vl_subscriptionIdx := -1;
+  pl_state := -1;
+  if (f_EPTF_SIP_getSubscription(pl_entityIdx, pl_fsmCtx, vl_subscriptionIdx))
+  {
+    if (c_SIP_Subscribe_State_toBeterminated == v_db_subscription.data[vl_subscriptionIdx].state)
+    {
+      pl_state := c_SIP_Subscribe_State_terminated;
+    }else{
+      pl_state := v_db_subscription.data[vl_subscriptionIdx].state;
+    }
+  }
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_Subscription_setState
+//
+//Purpose:
+//  Sets the state of the subscription in the given FSM.
+//
+//Parameters:
+//  - pl_entityIdx - *in* *integer* - index of the entity
+//  - pl_fsmCtx - *in* *integer* - the FSM context index
+//  - pl_state - *inout* *integer* - the state to set
+//
+//Detailed comments:
+// If there is no subscription in the given FSM context data, the state will not be set.
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_Subscription_setState(in integer pl_entityIdx, in integer pl_fsmCtx, in integer pl_state)
+runs on EPTF_SIP_LGen_CT
+{  
+  var integer vl_subscriptionIdx := -1;
+  if (f_EPTF_SIP_getSubscription(pl_entityIdx, pl_fsmCtx, vl_subscriptionIdx))
+  {
+    if (c_SIP_Subscribe_State_terminated == pl_state)
+    {
+      v_db_subscription.data[vl_subscriptionIdx].state := c_SIP_Subscribe_State_toBeterminated;
+    }else{
+      v_db_subscription.data[vl_subscriptionIdx].state := pl_state;
+    }
+  }
+}
+
+////////////////////////////////////////////////
+//Function: f_EPTF_SIP_setFSMData_fsmCtx
+//
+//Purpose:
+//  Sets the fsmCtx field of the FSM data.
+//
+//Parameters:
+//  - pl_entityIdx - *in* *integer* - index of the entity
+//  - pl_fsmDataIdx - *in* *integer* - the FSM data index (int the FSMs field of the SIP User)
+//  - pl_fsmCtx - *in* *integer* - the FSM context index
+//
+// Detailed Comments:
+//  Note that the second parameter is the index into the FSMs field of the SIP used,
+//  unlike with the other setFSMData functions, where it is the LGenBase FSM Context index!
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_setFSMData_fsmCtx(in integer pl_entityIdx, in integer pl_fsmDataIdx, in integer pl_fsmCtx)
+runs on EPTF_SIP_LGen_CT
+{
+  v_db_users.data[f_EPTF_LGenBase_getBehaviorCtxItem(pl_entityIdx, v_SIP_myBIdx, 0)].FSMs.data[pl_fsmDataIdx].fsmCtx := pl_fsmCtx;
+}
+
+////////////////////////////////////////////////
+//Function: f_EPTF_SIP_getFSMData_fsmCtx
+//
+//Purpose:
+//  Gets the fsmCtx field of the FSM data.
+//
+//Parameters:
+//  - pl_entityIdx - *in* *integer* - index of the entity
+//  - pl_fsmDataIdx - *in* *integer* - the FSM data index (int the FSMs field of the SIP User)
+//
+// Return:
+//  *integer* - the FSM context index
+//
+// Detailed Comments:
+//  Note that the second parameter is the index into the FSMs field of the SIP used,
+//  unlike with the other setFSMData functions, where it is the LGenBase FSM Context index!
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_getFSMData_fsmCtx(in integer pl_entityIdx, in integer pl_fsmDataIdx, in integer pl_fsmCtx)
+runs on EPTF_SIP_LGen_CT
+return integer
+{
+  return v_db_users.data[f_EPTF_LGenBase_getBehaviorCtxItem(pl_entityIdx, v_SIP_myBIdx, 0)].FSMs.data[pl_fsmDataIdx].fsmCtx;
+}
+
+////////////////////////////////////////////////
+//Function: f_EPTF_SIP_setFSMData_extTemplateSetIdx
+//
+//Purpose:
+//  Sets the external templateset index in an FSM context data.
+//
+//Parameters:
+//  - pl_entityIdx - *in* *integer* - index of the entity
+//  - pl_fsmCtx - *in* *integer* - the FSM context index
+//  - pl_extTemplateSetIdx - *in* *integer* - the external template set index
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_setFSMData_extTemplateSetIdx(in integer pl_entityIdx, in integer pl_fsmCtx, in integer pl_extTemplateSetIdx)
+runs on EPTF_SIP_LGen_CT
+{
+  var integer vl_FSMIdx := -1;
+
+  if (not f_EPTF_SIP_FSMInitialized(pl_entityIdx, pl_fsmCtx, vl_FSMIdx))
+  {
+    f_SIP_Logging_WARNING(log2str(
+      %definitionId,": FSM has not been initialized."));
+    return;
+  }
+
+  v_db_users.data[f_EPTF_LGenBase_getBehaviorCtxItem(pl_entityIdx, v_SIP_myBIdx, 0)].FSMs.data[vl_FSMIdx].extTemplateSetIdx := pl_extTemplateSetIdx;
+}
+
+////////////////////////////////////////////////
+//Function: f_EPTF_SIP_setFSMData_NotifierURI
+//
+//Purpose:
+//  Sets the notifier URI in an FSM context data.
+//
+//Parameters:
+//  - pl_entityIdx - *in* *integer* - index of the entity
+//  - pl_fsmCtx - *in* *integer* - the FSM context index
+//  - pl_uri - *in* <Addr_Union> - the SIP URI
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_setFSMData_notifierURI(in integer pl_entityIdx, in integer pl_fsmCtx, in Addr_Union pl_uri)
+runs on EPTF_SIP_LGen_CT
+{
+  var integer vl_FSMIdx := -1;
+
+  if (not f_EPTF_SIP_FSMInitialized(pl_entityIdx, pl_fsmCtx, vl_FSMIdx))
+  {
+    f_SIP_Logging_WARNING(log2str(
+      %definitionId,": FSM has not been initialized."));
+    return;
+  }
+
+  f_EPTF_SIP_AddrUnion2FlatSipUrl(pl_uri, v_db_users.data[f_EPTF_LGenBase_getBehaviorCtxItem(pl_entityIdx, v_SIP_myBIdx, 0)].FSMs.data[vl_FSMIdx].notifierURI);
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_setFSMData_referToURI
+//
+//Purpose:
+//  Sets the Refer-To URI in an FSM context data
+//
+//Parameters:
+//  - pl_entityIdx - *in* *integer* - index of the entity
+//  - pl_fsmCtx - *in* *integer* - the FSM context index
+//  - pl_uri - *in* <Addr_Union> - the Refer-To URI
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_setFSMData_referToURI(in integer pl_entityIdx, in integer pl_fsmCtx, in Addr_Union pl_uri)
+runs on EPTF_SIP_LGen_CT
+{
+  var integer vl_FSMIdx := -1;
+
+  if (not f_EPTF_SIP_FSMInitialized(pl_entityIdx, pl_fsmCtx, vl_FSMIdx))
+  {
+    f_SIP_Logging_WARNING(log2str(
+      %definitionId,": FSM has not been initialized."));
+    return;
+  }
+
+  f_EPTF_SIP_AddrUnion2FlatSipUrl(pl_uri, v_db_users.data[f_EPTF_LGenBase_getBehaviorCtxItem(pl_entityIdx, v_SIP_myBIdx, 0)].FSMs.data[vl_FSMIdx].referToURI);
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_setFSMData_publishEventIdx
+//
+//Purpose:
+//  Sets the publish index in an FSM context data.
+//
+//Parameters:
+//  - pl_entityIdx - *in* *integer* - index of the entity
+//  - pl_fsmCtx - *in* *integer* - the FSM context index
+//  - pl_eventTypeIdx - *in* *integer* - the event type index
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_setFSMData_publishEventIdx(in integer pl_entityIdx, in integer pl_fsmCtx, in integer pl_eventTypeIdx)
+runs on EPTF_SIP_LGen_CT
+{
+  var integer vl_FSMIdx := -1;
+
+  if (not f_EPTF_SIP_FSMInitialized(pl_entityIdx, pl_fsmCtx, vl_FSMIdx))
+  {
+    f_SIP_Logging_WARNING(log2str(
+      %definitionId,": FSM has not been initialized."));
+    return;
+  }
+
+  v_db_users.data[f_EPTF_LGenBase_getBehaviorCtxItem(pl_entityIdx, v_SIP_myBIdx, 0)].FSMs.data[vl_FSMIdx].publishEventIdx := pl_eventTypeIdx;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_setFSMData_publishExpire
+//
+//Purpose:
+//  Sets the expire time of the publication in an FSM context data.
+//
+//Parameters:
+//  - pl_entityIdx - *in* *integer* - index of the entity
+//  - pl_fsmCtx - *in* *integer* - the FSM context index
+//  - pl_expire - *in* *integer* - the expire time
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_setFSMData_publishExpire(in integer pl_entityIdx, in integer pl_fsmCtx, in integer pl_expire)
+runs on EPTF_SIP_LGen_CT
+{
+  var integer vl_FSMIdx := -1;
+
+  if (not f_EPTF_SIP_FSMInitialized(pl_entityIdx, pl_fsmCtx, vl_FSMIdx))
+  {
+    f_SIP_Logging_WARNING(log2str(
+      %definitionId,": FSM has not been initialized."));
+    return;
+  }
+
+  v_db_users.data[f_EPTF_LGenBase_getBehaviorCtxItem(pl_entityIdx, v_SIP_myBIdx, 0)].FSMs.data[vl_FSMIdx].publishExpireTime := pl_expire;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_setFSMData_subEventIdx
+//
+//Purpose:
+//  Sets the event type index in an FSM context data.
+//
+//Parameters:
+//  - pl_entityIdx - *in* *integer* - index of the entity
+//  - pl_fsmCtx - *in* *integer* - the FSM context index
+//  - pl_eventTypeIdx - *in* *integer* - the event type index
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_setFSMData_subEventIdx(in integer pl_entityIdx, in integer pl_fsmCtx, in integer pl_eventTypeIdx)
+runs on EPTF_SIP_LGen_CT
+{
+  var integer vl_FSMIdx := -1;
+
+  if (not f_EPTF_SIP_FSMInitialized(pl_entityIdx, pl_fsmCtx, vl_FSMIdx))
+  {
+    f_SIP_Logging_WARNING(log2str(
+      %definitionId,": FSM has not been initialized."));
+    return;
+  }
+
+  v_db_users.data[f_EPTF_LGenBase_getBehaviorCtxItem(pl_entityIdx, v_SIP_myBIdx, 0)].FSMs.data[vl_FSMIdx].subscriptionEventIdx := pl_eventTypeIdx;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_setFSMData_subEventId
+//
+//Purpose:
+//  Sets an event id to a subscription in an FSM context data.
+//
+//Parameters:
+//  - pl_entityIdx - *in* *integer* - index of the entity
+//  - pl_fsmCtx - *in* *integer* - the FSM context index
+//  - pl_eventId - *in* *charstring* - the event id
+//
+//Errors:
+//
+//Detailed comments:  
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_setFSMData_subEventId(in integer pl_entityIdx, in integer pl_fsmCtx, in charstring pl_eventId)
+runs on EPTF_SIP_LGen_CT
+{
+  var integer vl_FSMIdx := -1;
+
+  if (not f_EPTF_SIP_FSMInitialized(pl_entityIdx, pl_fsmCtx, vl_FSMIdx))
+  {
+    f_SIP_Logging_WARNING(log2str(
+      %definitionId,": FSM has not been initialized."));
+    return;
+  }
+
+  v_db_users.data[f_EPTF_LGenBase_getBehaviorCtxItem(pl_entityIdx, v_SIP_myBIdx, 0)].FSMs.data[vl_FSMIdx].eventId := pl_eventId;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_setFSMData_subExpire
+//
+//Purpose:
+//  Sets the expire time of a subscription in an FSM context data.
+//
+//Parameters:
+//  - pl_entityIdx - *in* *integer* - index of the entity
+//  - pl_fsmCtx - *in* *integer* - the FSM context index
+//  - pl_expire - *in* *integer* - the expire time
+//
+//Errors:
+//
+//Detailed comments:  
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_setFSMData_subExpire(in integer pl_entityIdx, in integer pl_fsmCtx, in integer pl_expire)
+runs on EPTF_SIP_LGen_CT
+{
+  var integer vl_FSMIdx := -1;
+
+  if (not f_EPTF_SIP_FSMInitialized(pl_entityIdx, pl_fsmCtx, vl_FSMIdx))
+  {
+    f_SIP_Logging_WARNING(log2str(
+      %definitionId,": FSM has not been initialized."));
+    return;
+  }
+
+  v_db_users.data[f_EPTF_LGenBase_getBehaviorCtxItem(pl_entityIdx, v_SIP_myBIdx, 0)].FSMs.data[vl_FSMIdx].subscriptionExpireTime := pl_expire;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_setFSMData_dialogIdx
+//
+//Purpose:
+//  Sets the dialog index in the FSM context data.
+//
+//Parameters:
+//  - pl_entityIdx - *in* *integer* - index of the entity
+//  - pl_fsmCtx - *in* *integer* - the FSM context index
+//  - pl_dialogIdx - *in* *integer* - the index of the dialog in v_db_dialog
+//
+//Errors:
+//
+//Detailed comments:
+//    Must be used if a dialog is shared among multiple FSMs. The dialog index set by means of
+//    this function will not be cleaned up with f_SIP_step_cleanUp.
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_setFSMData_dialogIdx(in integer pl_entityIdx, in integer pl_fsmCtx, in integer pl_dialogIdx)
+runs on EPTF_SIP_LGen_CT
+{
+  var integer vl_FSMIdx := -1;
+
+  if (not f_EPTF_SIP_FSMInitialized(pl_entityIdx, pl_fsmCtx, vl_FSMIdx))
+  {
+    f_SIP_Logging_WARNING(log2str(
+      %definitionId,": FSM has not been initialized."));
+    return;
+  }
+
+  if (f_EPTF_SIP_checkDialog(pl_dialogIdx))
+  {
+    v_db_users.data[f_EPTF_LGenBase_getBehaviorCtxItem(pl_entityIdx, v_SIP_myBIdx, 0)].FSMs.data[vl_FSMIdx].dialogIdx := pl_dialogIdx;
+
+    v_db_dialog.data[pl_dialogIdx].nofRefs := v_db_dialog.data[pl_dialogIdx].nofRefs + 1;
+  }else{
+    f_SIP_Logging_WARNING(%definitionId&": setting invalid dialog index " & int2str(pl_dialogIdx) & ".");
+  }
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_getFSMData_dialogIdx
+//
+//Purpose:
+//  Gets the dialog index from the FSM context data.
+//
+//Parameters:
+//  - pl_entityIdx - *in* *integer* - index of the entity
+//  - pl_fsmCtx - *in* *integer* - the FSM context index
+//  - pl_dialogIdx - *inout* *integer* - the index of the dialog in v_db_dialog
+//
+//Errors:
+//
+//Detailed comments:  
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_getFSMData_dialogIdx(in integer pl_entityIdx, in integer pl_fsmCtx, inout integer pl_dialogIdx)
+runs on EPTF_SIP_LGen_CT
+{
+  var integer vl_FSMIdx := -1;
+
+  if (not f_EPTF_SIP_FSMInitialized(pl_entityIdx, pl_fsmCtx, vl_FSMIdx))
+  {
+    f_SIP_Logging_WARNING(log2str(
+      %definitionId,": FSM has not been initialized."));
+    return;
+  }
+
+  pl_dialogIdx := v_db_users.data[f_EPTF_LGenBase_getBehaviorCtxItem(pl_entityIdx, v_SIP_myBIdx, 0)].FSMs.data[vl_FSMIdx].dialogIdx;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_setFSMData_subscriptionStateReport
+//
+//Purpose:
+//  Sets if the subscription state should be reported in the FSM or not
+//
+//Parameters:
+//  - pl_entityIdx - *in* *integer* - index of the entity
+//  - pl_fsmCtx - *in* *integer* - the FSM context index
+//  - pl_stateReport - *in* *boolean* - true if the state should be reported with the NOTIFY
+//
+//Errors:
+//
+//Detailed comments:  
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_setFSMData_subscriptionStateReport(in integer pl_entityIdx, in integer pl_fsmCtx, in boolean pl_stateReport)
+runs on EPTF_SIP_LGen_CT
+{
+  var integer vl_FSMIdx := -1;
+
+  if (not f_EPTF_SIP_FSMInitialized(pl_entityIdx, pl_fsmCtx, vl_FSMIdx))
+  {
+    f_SIP_Logging_WARNING(log2str(
+      %definitionId,": FSM has not been initialized."));
+    return;
+  }
+
+  v_db_users.data[f_EPTF_LGenBase_getBehaviorCtxItem(pl_entityIdx, v_SIP_myBIdx, 0)].FSMs.data[vl_FSMIdx].subscriptionStateReporting := pl_stateReport;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_FSMInitialized
+//
+//Purpose:
+//  Checks if the FSM context data is initialized for a given FSM.
+//  If initialized, the index of the FSM context data i returned
+//
+//Parameters:
+//  - pl_entityIdx - *in* *integer* - index of the entity
+//  - pl_fsmCtx - *in* *integer* - the FSM context index
+//  - pl_FSMIdx - *inout* *integer* - the FSM context data index
+//
+//Return value:
+//  boolean - true if initialized
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_FSMInitialized(in integer pl_entityIdx, in integer pl_fsmCtx,inout integer pl_FSMIdx)
+runs on EPTF_SIP_LGen_CT
+return boolean
+{
+  pl_FSMIdx := -1;
+
+  if(c_SIP_AppDataIndex_FSMIdx < f_EPTF_LGenBase_getAppDataSizeOfFsmCtx(pl_entityIdx, pl_fsmCtx, v_SIP_myBIdx)) {
+    pl_FSMIdx := f_EPTF_LGenBase_getAppDataItemOfFsmCtx(pl_entityIdx, pl_fsmCtx, v_SIP_myBIdx, c_SIP_AppDataIndex_FSMIdx);
+  }
+
+  if(not isbound(v_db_users.data[f_EPTF_LGenBase_getBehaviorCtxItem(pl_entityIdx, v_SIP_myBIdx, 0)].FSMs)) {
+    v_db_users.data[f_EPTF_LGenBase_getBehaviorCtxItem(pl_entityIdx, v_SIP_myBIdx, 0)].FSMs.data := {};
+    v_db_users.data[f_EPTF_LGenBase_getBehaviorCtxItem(pl_entityIdx, v_SIP_myBIdx, 0)].FSMs.queue := c_EPTF_emptyCommon_IndexArray;
+  }
+
+  return (pl_FSMIdx > -1) and 
+    // FIXME: ethecs: is this needed? (sizeof(v_db_users.data[f_EPTF_LGenBase_getBehaviorCtxItem(pl_entityIdx, v_SIP_myBIdx, 0)]) > 0) and
+    (sizeof(v_db_users.data[f_EPTF_LGenBase_getBehaviorCtxItem(pl_entityIdx, v_SIP_myBIdx, 0)].FSMs.data) > pl_FSMIdx and 
+//    f_EPTF_FBQ_itemIsBusy(pl_FSMIdx, v_db_users.data[f_EPTF_LGenBase_getBehaviorCtxItem(pl_entityIdx, v_SIP_myBIdx, 0)].FSMs.queue);
+    f_EPTF_Common_IndexArray_getElement(v_db_users.data[f_EPTF_LGenBase_getBehaviorCtxItem(pl_entityIdx, v_SIP_myBIdx, 0)].FSMs.queue, pl_FSMIdx) >= 0);
+}
+
+//////////////////////////////////////////////////////////
+//  Function: f_EPTF_SIP_StartT_FSM
+// 
+//  Purpose:
+//    Starts an FSM timer. (independent from the FSM timers defined in LGenBase)
+// 
+//  Parameters:
+//    - pl_userIdx - *in integer* - the index of the user in v_db_users
+//    - pl_FSMIdx - *in integer* - the FSM context data index
+//    - pl_timerId - *in integer* - index of FSM timer
+//    - pl_deltaSec - *in float* - the relative schedule time
+// 
+//  Errors:
+//    - *timer #id is already running for dialog #idx*
+// 
+//  Return Value:
+//    boolean - false if operation failed
+///////////////////////////////////////////////////////////
+function f_EPTF_SIP_StartT_FSM(in integer pl_userIdx, in integer pl_FSMIdx, in integer pl_timerId, in float pl_deltaSec) 
+runs on EPTF_SIP_LGen_CT 
+return boolean
+{
+  var boolean retval;
+  var EPTF_ActionId vl_actionId;
+
+
+  vl_actionId[c_AIdx_FSMContextDataUserIdx] := pl_userIdx;
+  vl_actionId[c_AIdx_FSMContextDataIdx] := pl_FSMIdx;
+  vl_actionId[c_AIdx_FSMContextDataTimerId] := pl_timerId;
+
+  if(c_EPTF_Common_debugSwitch and f_SIP_Logging_debugEnabled()) {
+    f_SIP_Logging_DEBUG(log2str(
+      %definitionId,": starting timer with idx ", pl_timerId,"(",pl_deltaSec,"s) for FSM context data ", pl_FSMIdx));
+  }
+
+  if (v_db_users.data[pl_userIdx].FSMs.data[pl_FSMIdx].timers[pl_timerId] >= 0)
+  { 
+    f_SIP_Logging_WARNING(log2str(
+      %definitionId,": timer " & int2str(pl_timerId) & " is already running for FSM context ", pl_FSMIdx));
+    return false;
+  }
+
+  retval := f_EPTF_SchedulerComp_scheduleAction(f_EPTF_SchedulerComp_snapshotTime() + pl_deltaSec,
+    refers(f_EPTF_SIP_TimerHandler_FSM), vl_actionId,
+    v_db_users.data[pl_userIdx].FSMs.data[pl_FSMIdx].timers[pl_timerId]);
+
+  return retval;
+} 
+
+function f_EPTF_SIP_StartT_FSMRetransmit(in integer pl_userIdx, in integer pl_sessionId, in integer pl_FSMIdx, in float pl_timer, inout integer pl_timerIdx)
+runs on EPTF_SIP_LGen_CT
+return boolean
+{
+  var boolean retval;
+  var EPTF_ActionId vl_actionId;
+
+  vl_actionId[c_AIdx_FSMContextDataUserIdx] := pl_userIdx;
+  vl_actionId[c_AIdx_FSMContextDataIdx] := pl_FSMIdx;
+  vl_actionId[c_AIdx_FSMContextDataTimerId] := -1; // fix: prevent unbound value
+  vl_actionId[c_AIdx_FSMContextSessionIdx] := pl_sessionId;
+
+  if(c_EPTF_Common_debugSwitch and f_SIP_Logging_debugEnabled()) {
+    f_SIP_Logging_DEBUG(log2str(
+      %definitionId,": starting retransmission timer for user: ",pl_userIdx," FSM: ", pl_FSMIdx));
+  }
+
+  retval := f_EPTF_SchedulerComp_scheduleAction(f_EPTF_SchedulerComp_snapshotTime() + pl_timer,
+    refers(f_EPTF_SIP_TimerHandler_FSMRetransmit), vl_actionId,
+    pl_timerIdx);
+
+  return retval;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_CancelT_FSM
+//
+//Purpose:
+//  Cancels a dialog timer.
+//
+//Parameters:
+//   - pl_userIdx - *in integer* - the index of the user in v_db_users
+//   - pl_FSMIdx - *in integer* - the FSM context data index
+//   - pl_timerId - *in integer* - index of FSM timer
+//
+//Return value:
+//  boolean - true if the cancellation was successful
+//
+//Errors:
+//  - *timer #id is not running for FSM context #id*
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_CancelT_FSM(in integer pl_userIdx, in integer pl_FSMIdx, in integer pl_timerId)
+runs on EPTF_SIP_LGen_CT
+{
+  if(c_EPTF_Common_debugSwitch and f_SIP_Logging_debugEnabled()) {
+    f_SIP_Logging_DEBUG(log2str(
+      %definitionId,": cancelling FSM context timer ", pl_timerId," for user: ",pl_userIdx,", FSM: ", pl_FSMIdx));
+  }
+
+  if (v_db_users.data[pl_userIdx].FSMs.data[pl_FSMIdx].timers[pl_timerId] >= 0)
+  { 
+    if(not f_EPTF_SchedulerComp_CancelEvent(v_db_users.data[pl_userIdx].FSMs.data[pl_FSMIdx].timers[pl_timerId]))
+    {
+      v_db_users.data[pl_userIdx].FSMs.data[pl_FSMIdx].timers[pl_timerId] := -1;
+      f_SIP_Logging_DEBUG(log2str(
+        %definitionId,": could not cancel timer "));
+      return;
+    }
+    else {
+      v_db_users.data[pl_userIdx].FSMs.data[pl_FSMIdx].timers[pl_timerId] := -1;
+      return;
+    }
+  }
+  else
+  {
+    f_SIP_Logging_WARNING(log2str(
+      %definitionId, ": timer ", pl_timerId, " is not running for user: ",pl_userIdx,", FSM: ", pl_FSMIdx));
+    return;
+  }
+}
+
+function f_ETPF_SIP_CancelRetransmit(in integer pl_userIdx, in integer pl_FSMIdx)
+runs on EPTF_SIP_LGen_CT
+{
+  if(not ispresent(v_db_users.data[pl_userIdx].FSMs.data[pl_FSMIdx].retransCache)) {
+    if(c_EPTF_Common_debugSwitch and f_SIP_Logging_debugEnabled()) {
+      f_SIP_Logging_DEBUG(log2str(
+        %definitionId,": retransmission cache is not present. User: ",pl_userIdx,", FSM: ", pl_FSMIdx));
+    }
+    return;
+  }
+  if (v_db_users.data[pl_userIdx].FSMs.data[pl_FSMIdx].retransCache.timerIdx >= 0)
+  { 
+    if(c_EPTF_Common_debugSwitch and f_SIP_Logging_debugEnabled()) {
+      f_SIP_Logging_DEBUG(log2str(
+        %definitionId,": cancelling FSM retransmission timer for user: ",pl_userIdx,", FSM: ", pl_FSMIdx));
+    }
+
+    if(not f_EPTF_SchedulerComp_CancelEvent(v_db_users.data[pl_userIdx].FSMs.data[pl_FSMIdx].retransCache.timerIdx))
+    {
+      v_db_users.data[pl_userIdx].FSMs.data[pl_FSMIdx].retransCache.timerIdx := -1;
+      f_SIP_Logging_DEBUG(%definitionId&": could not cancel timer");
+      return;
+    }
+    else {
+      v_db_users.data[pl_userIdx].FSMs.data[pl_FSMIdx].retransCache.timerIdx := -1;
+      return;
+    }
+  }
+  v_db_users.data[pl_userIdx].FSMs.data[pl_FSMIdx].retransCache := omit;
+
+  return;
+}
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_TimerHandler_FSM
+//
+//Purpose:
+//  Handles FSM timer events
+//
+//Parameters:
+//  - pl_action - *in* <EPTF_ScheduledAction> - the scheduled action
+//  - pl_eventIndex - *in* *integer* - the index of the scheduled action in the event queue
+//
+//Errors:
+//  - *FSM index is not valid anymore*: the FSM context data is not valied
+//  - *timer #id not running*
+//  - *could not start retransmission timer*
+//  - *could not cancel retransmission timer*
+////////////////////////////////////////////////////
+function f_EPTF_SIP_TimerHandler_FSM(in EPTF_ScheduledAction pl_action, in integer pl_eventIndex)
+runs on EPTF_SIP_LGen_CT
+return boolean
+{
+  var integer vl_user := pl_action.actionId[c_AIdx_FSMContextDataUserIdx];
+  var integer vl_FSMIdx := pl_action.actionId[c_AIdx_FSMContextDataIdx];
+  var integer vl_timerId := pl_action.actionId[c_AIdx_FSMContextDataTimerId];
+
+  if (0 > vl_FSMIdx or 
+        sizeof(v_db_users.data[vl_user].FSMs.data) <= vl_FSMIdx or
+//        f_EPTF_FBQ_itemIsFree(vl_FSMIdx, v_db_users.data[vl_user].FSMs.queue))
+        f_EPTF_Common_IndexArray_getElement(v_db_users.data[vl_user].FSMs.queue, vl_FSMIdx) < 0)
+  {
+    f_SIP_Logging_WARNING(log2str(
+      %definitionId,": FSM context index is not valid anymore."));
+    return false;
+  }
+
+  if(c_EPTF_Common_debugSwitch and f_SIP_Logging_debugEnabled()) {
+    f_SIP_Logging_DEBUG(log2str(
+      %definitionId,": handling timer ",vl_timerId," for user: ",vl_user,", FSM: ", vl_FSMIdx));
+  }
+
+  if (0 <= v_db_users.data[vl_user].FSMs.data[vl_FSMIdx].timers[vl_timerId])
+  {
+    v_db_users.data[vl_user].FSMs.data[vl_FSMIdx].timers[vl_timerId] := -1;
+  }else{
+    f_SIP_Logging_WARNING(log2str(   %definitionId,": timer ", vl_timerId, " not running"));
+    return false;
+  }
+
+  return true;
+}
+
+function f_EPTF_SIP_TimerHandler_FSMRetransmit(in EPTF_ScheduledAction pl_action, in integer pl_eventIndex)
+runs on EPTF_SIP_LGen_CT
+return boolean
+{
+  var integer vl_user := pl_action.actionId[c_AIdx_FSMContextDataUserIdx];
+  var integer vl_FSMIdx := pl_action.actionId[c_AIdx_FSMContextDataIdx];
+  var integer vl_sessionId := pl_action.actionId[c_AIdx_FSMContextSessionIdx];
+
+  v_currentUser := vl_user;
+  
+  if (0 > vl_FSMIdx or 
+        sizeof(v_db_users.data[vl_user].FSMs.data) <= vl_FSMIdx or
+//        f_EPTF_FBQ_itemIsFree(vl_FSMIdx, v_db_users.data[vl_user].FSMs.queue))
+        f_EPTF_Common_IndexArray_getElement(v_db_users.data[vl_user].FSMs.queue, vl_FSMIdx) < 0)
+  {
+    f_SIP_Logging_WARNING(log2str(
+      %definitionId,": FSM context index is not valid anymore."));
+    return false;
+  }
+
+  if(c_EPTF_Common_debugSwitch and f_SIP_Logging_debugEnabled()) {
+    f_SIP_Logging_DEBUG(log2str(
+      %definitionId,": handling retransmission timer for user: ",vl_user,", FSM: ", vl_FSMIdx));
+  }
+
+  if (ispresent(v_db_users.data[vl_user].FSMs.data[vl_FSMIdx].retransCache) and
+    0 <= v_db_users.data[vl_user].FSMs.data[vl_FSMIdx].retransCache.timerIdx)
+  {
+    v_db_users.data[vl_user].FSMs.data[vl_FSMIdx].retransCache.timerIdx := -1;
+  }else{
+    f_SIP_Logging_WARNING(log2str(   %definitionId,": retransmission timer is not running"));
+    return false;
+  }
+  
+  var float vl_timer := 0.0;
+  if (not f_EPTF_SIP_getRetransmissionTime(v_db_users.data[vl_user].FSMs.data[vl_FSMIdx].retransCache, vl_timer))
+  {
+    //report event
+    return true;
+  }
+
+  var integer vl_trIdx := v_db_users.data[vl_user].FSMs.data[vl_FSMIdx].retransCache.messageCache.trIdx;
+  if (ischosen(v_db_users.data[vl_user].FSMs.data[vl_FSMIdx].retransCache.messageCache.sipMessage.request))
+  {
+    if (f_EPTF_SIP_checkTransaction(v_db_UAC, vl_trIdx) and
+          v_db_UAC.data[vl_trIdx].transactionId == v_db_users.data[vl_user].FSMs.data[vl_FSMIdx].retransCache.messageCache.transactionId)
+    {
+      v_db_UAC.data[vl_trIdx].request := v_db_users.data[vl_user].FSMs.data[vl_FSMIdx].retransCache.messageCache.sipMessage.request;
+      v_db_UAC.data[vl_trIdx].requestRaw := v_db_users.data[vl_user].FSMs.data[vl_FSMIdx].retransCache.messageCache.sipMessageRaw
+    
+      f_EPTF_SIP_retransmitUAC(vl_trIdx);
+    }
+  }else{
+    if (f_EPTF_SIP_checkTransaction(v_db_UAS, vl_trIdx) and
+          v_db_UAS.data[vl_trIdx].transactionId == v_db_users.data[vl_user].FSMs.data[vl_FSMIdx].retransCache.messageCache.transactionId)
+    {
+      v_db_UAS.data[vl_trIdx].response := v_db_users.data[vl_user].FSMs.data[vl_FSMIdx].retransCache.messageCache.sipMessage.response;
+      v_db_UAS.data[vl_trIdx].responseRaw := v_db_users.data[vl_user].FSMs.data[vl_FSMIdx].retransCache.messageCache.sipMessageRaw
+    
+      f_EPTF_SIP_retransmitUAS(vl_trIdx);
+    }
+  }
+
+  if (not f_EPTF_SIP_StartT_FSMRetransmit(vl_user, vl_sessionId, vl_FSMIdx, vl_timer, v_db_users.data[vl_user].FSMs.data[vl_FSMIdx].retransCache.timerIdx))
+  {
+    f_SIP_Logging_WARNING(log2str(
+      %definitionId,": could not start retransmission for user: ",vl_user," FSM: ", vl_FSMIdx));
+    return false;
+  }
+
+  return true;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_setMsgACK
+//
+//Purpose:
+//  Adds an encoded ACK request to the FSM context database of an FSM.
+//
+//Parameters:
+//  - pl_entityIdx - *in* *integer* - index of the entity
+//  - pl_fsmCtx - *in* *integer* - the FSM context index
+//  - pl_message - *in* *octetstring* - the encoded ACK request
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_setMsgACK(in integer pl_entityIdx, in integer pl_fsmCtx, in octetstring pl_message)
+runs on EPTF_SIP_LGen_CT
+{
+  var integer vl_FSMIdx;
+  
+  if (not f_EPTF_SIP_FSMInitialized(pl_entityIdx, pl_fsmCtx, vl_FSMIdx))
+  {
+    f_SIP_Logging_WARNING(log2str(
+      %definitionId,": FSM has not been initialized. The f_SIP_step_init function must be called as first step in the FSMs using SIP."));
+    return;
+  }
+
+  var integer vl_dialogIdx := v_db_users.data[f_EPTF_LGenBase_getBehaviorCtxItem(pl_entityIdx, v_SIP_myBIdx, 0)].FSMs.data[vl_FSMIdx].dialogIdx;
+  
+  if (-1 == vl_dialogIdx)
+  {
+    f_SIP_Logging_WARNING(log2str(
+      %definitionId,": Invalid dialog index in FSM context data."));
+    return;
+  }
+  
+  v_db_dialog.data[vl_dialogIdx].ACKData.ACKRaw := pl_message;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_CancelAllTimers_FSM
+//
+//Purpose:
+//  Cancels all of the started FSM timers.
+//
+//Parameters:
+//  - pl_userIdx - *in* *integer* - the index of the user in v_db_users
+//  - pl_FSMCtxIdx - *in* *integer* - the FSM context data index
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_CancelAllTimers_FSM(in integer pl_userIdx, in integer pl_FSMCtxIdx)
+runs on EPTF_SIP_LGen_CT
+{
+  for (var integer i := 0; i < sizeof(v_db_users.data[pl_userIdx].FSMs.data[pl_FSMCtxIdx].timers); i := i + 1)
+  {
+    if (v_db_users.data[pl_userIdx].FSMs.data[pl_FSMCtxIdx].timers[i] > -1)
+    {
+      f_EPTF_SIP_CancelT_FSM(pl_userIdx, pl_FSMCtxIdx, i)
+    }
+  }
+  
+  f_ETPF_SIP_CancelRetransmit(pl_userIdx, pl_FSMCtxIdx);
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_getRetransmissionTime
+//
+//Purpose:
+//  Calculates a tetransmission time for a retransmission cache.
+//
+//Parameters:
+//  - pl_cache - *in* <SIP_RetransmissionCache> - the retransmission cache
+//  - pl_timer - *in* *float* - the next retransmission timer value
+//
+//Detailed comments:
+//  The retransmission time is always doubled but is never greater then maxRetransTime.
+////////////////////////////////////////////////////
+function f_EPTF_SIP_getRetransmissionTime(inout SIP_RetransmissionCache pl_cache, inout float pl_timer)
+return boolean
+{
+  
+  if (pl_cache.totalRetransTime >= pl_cache.retransTimeout)
+  {
+    return false;
+  }
+  
+  f_EPTF_SIP_min(2.0 * pl_cache.retransmissionTime, pl_cache.maxRetransTime, pl_cache.retransmissionTime);
+  
+  if (pl_cache.retransmissionTime + pl_cache.totalRetransTime >= pl_cache.retransTimeout)
+  {
+    pl_cache.retransmissionTime := pl_cache.retransTimeout - pl_cache.totalRetransTime;
+  }
+  
+  pl_timer := pl_cache.retransmissionTime;
+  pl_cache.totalRetransTime := pl_cache.totalRetransTime + pl_cache.retransmissionTime;
+  
+  return true;
+}
+
+function f_EPTF_SIP_searchUASforPRACK(in integer pl_userIdx, in integer pl_FSMIdx, in integer pl_resNum, in integer pl_seqNum, in charstring pl_method)
+runs on EPTF_SIP_LGen_CT
+return boolean
+{
+  for (var integer i := 0; i < sizeof(v_db_users.data[pl_userIdx].FSMs.data[pl_FSMIdx].UASs.data); i := i + 1)
+  {
+    var charstring vl_method;
+    
+    f_EPTF_SIP_method2str(v_db_UAS.data[v_db_users.data[pl_userIdx].FSMs.data[pl_FSMIdx].UASs.data[i]].method, vl_method);
+    
+    if (pl_resNum == v_db_UAS.data[v_db_users.data[pl_userIdx].FSMs.data[pl_FSMIdx].UASs.data[i]].unackRespData.rSeq and
+        pl_seqNum == v_db_UAS.data[v_db_users.data[pl_userIdx].FSMs.data[pl_FSMIdx].UASs.data[i]].unackRespData.seqNumber and
+        pl_method == vl_method)
+    {
+      return true;
+    }
+  }
+  
+  return false;
+}
+
+function f_EPTF_SIP_startRetransmission(inout SIP_RetransmissionCache pl_cache, inout float pl_timer)
+{
+  pl_timer := pl_cache.retransmissionTime;
+  pl_cache.totalRetransTime := pl_cache.retransmissionTime
+}
+
+function f_EPTF_SIP_setRetransCache(inout SIP_RetransmissionCache pl_cache,
+  in SIP_MessageCache pl_message,
+  in float pl_retransmissionTime,
+  in float pl_maxRetransTime,
+  in float pl_retransTimeout)
+{
+  pl_cache.messageCache := pl_message;
+  pl_cache.retransmissionTime := pl_retransmissionTime;
+  pl_cache.maxRetransTime := pl_maxRetransTime;
+  pl_cache.retransTimeout := pl_retransTimeout;
+}
+
+function f_EPTF_SIP_getFreeSessionIdx(in integer pl_userIdx, inout integer pl_sessionIdx)
+runs on EPTF_SIP_LGen_CT
+{
+  for (pl_sessionIdx := 0; pl_sessionIdx < sizeof(v_db_users.data[pl_userIdx].sessions); pl_sessionIdx := pl_sessionIdx + 1)
+  {
+    if (-1 == v_db_users.data[pl_userIdx].sessions[pl_sessionIdx].sessionId)
+    {
+      return;
+    }
+  }
+
+  if(c_EPTF_Common_debugSwitch and f_SIP_Logging_debugEnabled()) {
+    f_SIP_Logging_DEBUG(log2str(%definitionId,
+      ": new session is allocated with id ", pl_sessionIdx));
+  }
+  v_db_users.data[pl_userIdx].sessions[pl_sessionIdx] := c_SIP_Session_init;
+}
+
+function f_EPTF_SIP_eraseSession(in integer pl_userIdx, in integer pl_sessionIdx)
+runs on EPTF_SIP_LGen_CT
+{
+  if(c_EPTF_Common_debugSwitch and f_SIP_Logging_debugEnabled()) {
+    f_SIP_Logging_DEBUG(log2str(
+      %definitionId, ": user(",pl_userIdx,") erasing session ", pl_sessionIdx));
+  }
+    
+    if (ispresent(v_db_users.data[pl_userIdx].imsAKAData) and
+          null != v_eraseIPSecSA and
+          ispresent(v_db_users.data[pl_userIdx].sessions[pl_sessionIdx].secureSessionData)) //delete SAs
+    {
+      v_eraseIPSecSA.apply(
+        pl_userIdx,
+        v_db_users.data[pl_userIdx].sessions[pl_sessionIdx].secureSessionData.SAs.uc_ps.spi,
+        v_db_users.data[pl_userIdx].sessions[pl_sessionIdx].port_uc,
+        v_db_users.data[pl_userIdx].sessions[pl_sessionIdx].port_ps,
+        f_EPTF_SIP_str2IPSecProto(v_db_users.data[pl_userIdx].imsAKAData.proto),
+        outDir);
+
+      v_eraseIPSecSA.apply(
+        pl_userIdx,
+        v_db_users.data[pl_userIdx].sessions[pl_sessionIdx].secureSessionData.SAs.pc_us.spi,
+        v_db_users.data[pl_userIdx].sessions[pl_sessionIdx].port_pc,
+        v_db_users.data[pl_userIdx].sessions[pl_sessionIdx].port_us,
+        f_EPTF_SIP_str2IPSecProto(v_db_users.data[pl_userIdx].imsAKAData.proto),
+        inDir);
+    }
+
+  v_db_users.data[pl_userIdx].sessions[pl_sessionIdx]:= c_SIP_Session_init;
+}
+
+function f_EPTF_SIP_selectSecAlg(
+  in SIP_IMSAKA_algorithmList pl_supported, 
+  in EPTF_CharstringList pl_proposed, 
+  inout SIP_IMSAKA_algorithm pl_selected)
+{
+  if (sizeof(pl_supported) == 0 or sizeof(pl_proposed) == 0)
+  {
+    pl_selected := c_IMSAKA_algName_null;
+    return;
+  }
+
+  for (var integer i := 0; i < sizeof(pl_supported); i := i + 1)
+  {
+    for (var integer ii := 0; ii < sizeof(pl_proposed); ii := ii + 1)
+    {
+      if (pl_supported[i] == pl_proposed[ii])
+      {
+        pl_selected := pl_proposed[ii];
+        return;
+      }
+    }
+  }
+
+  pl_selected := c_IMSAKA_algName_null
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_str2IPSecProto
+//
+//Purpose:
+//  Conversion function from *charstring* to <TCCIPsec_Protocol> enum
+//
+//Parameters:
+//  - pl_alg - *in* *charstring* - the charstring value
+//
+//Return Value:
+//  <TCCIPsec_Protocol> - the enumerated value
+////////////////////////////////////////////////////
+function f_EPTF_SIP_str2IPSecProto(in charstring pl_proto)
+return TCCIPsec_Protocol
+{
+  if (pl_proto == c_SIP_SECPARAM_PROTONAME_AH)
+  {
+    return ah;
+  }else if (pl_proto == c_SIP_SECPARAM_PROTONAME_ESP)
+  {
+    return esp;
+  }
+
+  return ah;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_str2IPSecALG
+//
+//Purpose:
+//  Conversion function from *charstring* to <TCCIPsec_AAlgo> enum
+//
+//Parameters:
+//  - pl_alg - *in* *charstring* - the charstring value
+//
+//Return Value:
+//  <TCCIPsec_AAlgo> - the enumerated value
+////////////////////////////////////////////////////
+function f_EPTF_SIP_str2IPSecALG(in charstring pl_alg)
+return TCCIPsec_AAlgo
+{
+  if (c_IMSAKA_algName_HMAC_MD5_96 == pl_alg)
+  {
+    return AALG_MD5HMAC;
+  }else if (c_IMSAKA_algName_HMAC_SHA_1_96 == pl_alg)
+  {
+    return AALG_SHA1HMAC;
+  }
+
+  return AALG_NONE;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_str2IPSecEALG
+//
+//Purpose:
+//  Conversion function from *charstring* to <TCCIPsec_EAlgo> enum
+//
+//Parameters:
+//  - pl_ealg - *in* *charstring* - the charstring value
+//
+//Return Value:
+//  <TCCIPsec_EAlgo> - the enumerated value
+////////////////////////////////////////////////////
+function f_EPTF_SIP_str2IPSecEALG(in charstring pl_ealg)
+return TCCIPsec_EAlgo
+{
+  if (c_IMSAKA_ealgName_DES_EDE3_CBC == pl_ealg)
+  {
+    return EALG_3DESCBC;
+  }else if (c_IMSAKA_ealgName_AES_CBC == pl_ealg)
+  {
+    return EALG_AESCBC;
+  }else if (c_IMSAKA_algName_null == pl_ealg)
+  {
+    return EALG_NULL;
+  }
+
+  return EALG_NONE;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_setIMSAKA
+//
+//Purpose:
+//  Sets if a given user applies IMS AKA. By default, IMS AKA is not applied.
+//
+//Parameters:
+//  - pl_userIdx - *in* *integer* - the index of the user in v_db_users
+//  - pl_use - *in* *boolean* - true if the user must use IMS AKA
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_setIMSAKA(in integer pl_userIdx, in boolean pl_use)
+runs on EPTF_SIP_LGen_CT
+{
+  v_db_users.data[pl_userIdx].authData.insertAuthHeaderInRequest := pl_use;
+  v_insertAuthHeaderOnChallengeOnly := not pl_use;
+  if(pl_use) {
+    v_db_users.data[pl_userIdx].imsAKAData := c_SIP_IMSAKA_Data_init;
+  } else {
+    v_db_users.data[pl_userIdx].imsAKAData := omit;
+  }
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_setIMSAKAData_OP
+//
+//Purpose:
+//  Sets the operator value to use during IMS AKA.
+//
+//Parameters:
+//  - pl_userIdx - *in* *integer* - the index of the user in v_db_users
+//  - pl_OP - *in* *octetstring* - the operator value
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_setIMSAKAData_OP(in integer pl_userIdx, in octetstring pl_OP)
+runs on EPTF_SIP_LGen_CT
+{
+  v_db_users.data[pl_userIdx].imsAKAData.OP := pl_OP;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_setIMSAKAData_longtermKey
+//
+//Purpose:
+//  Sets the long term key to use during IMS AKA.
+//
+//Parameters:
+//  - pl_userIdx - *in* *integer* - the index of the user in v_db_users
+//  - pl_longtermKey - *in* *octetstring* - the long term key
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_setIMSAKAData_longtermKey(in integer pl_userIdx, in octetstring pl_longtermKey)
+runs on EPTF_SIP_LGen_CT
+{
+  v_db_users.data[pl_userIdx].imsAKAData.longtermKey := pl_longtermKey;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_setIMSAKAData_supportedALGs
+//
+//Purpose:
+//  Sets the supported authentication algorithms.
+//
+//Parameters:
+//  - pl_userIdx - *in* *integer* - the index of the user in v_db_users
+//  - pl_supportedALGs - *in* <SIP_IMSAKA_algorithmList> - the supported algorithm names
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_setIMSAKAData_supportedALGs(in integer pl_userIdx, in SIP_IMSAKA_algorithmList pl_supportedALGs)
+runs on EPTF_SIP_LGen_CT
+{
+  v_db_users.data[pl_userIdx].imsAKAData.supportedALGs := pl_supportedALGs;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_setIMSAKAData_supportedEALGs
+//
+//Purpose:
+//  Sets the supported encryption algorithms.
+//
+//Parameters:
+//  - pl_userIdx - *in* *integer* - the index of the user in v_db_users
+//  - pl_supportedEALGs - *in* <SIP_IMSAKA_algorithmList> - the supported algorithm names
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_setIMSAKAData_supportedEALGs(in integer pl_userIdx, in SIP_IMSAKA_algorithmList pl_supportedEALGs)
+runs on EPTF_SIP_LGen_CT
+{
+  v_db_users.data[pl_userIdx].imsAKAData.supportedEALGs := pl_supportedEALGs;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_setIMSAKAData_proto
+//
+//Purpose:
+//  Sets the IPSec protocol to use.
+//
+//Parameters:
+//  - pl_userIdx - *in* *integer* - the index of the user in v_db_users
+//  - pl_proto - *in* <SIP_IMSAKA_protocol> - the IPSec protocol to use (ah/esp)
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_setIMSAKAData_proto(in integer pl_userIdx, in SIP_IMSAKA_protocol pl_proto)
+runs on EPTF_SIP_LGen_CT
+{
+  v_db_users.data[pl_userIdx].imsAKAData.proto := pl_proto;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_setIMSAKAData_mode
+//
+//Purpose:
+//  Sets the IPSec mode to use.
+//
+//Parameters:
+//  - pl_userIdx - *in* *integer* - the index of the user in v_db_users
+//  - pl_mode - *in* *charstring* - the IPSec protocol to use (ah/esp)
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_setIMSAKAData_mode(in integer pl_userIdx, in charstring pl_mode)
+runs on EPTF_SIP_LGen_CT
+{
+  v_db_users.data[pl_userIdx].imsAKAData.mode := pl_mode;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_setIMSAKAData_privateUsername
+//
+//Purpose:
+//  Sets the IPSec private username.
+//
+//Parameters:
+//  - pl_userIdx - *in* *integer* - the index of the user in v_db_users
+//  - pl_privateUsername - *in* *charstring* - private username
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_setIMSAKAData_privateUsername(in integer pl_userIdx, in charstring pl_privateUsername)
+runs on EPTF_SIP_LGen_CT
+{
+  v_db_users.data[pl_userIdx].imsAKAData.privateUsername := pl_privateUsername;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_setIMSAKAData_portUs
+//
+//Purpose:
+//  Sets the secured listening port of the UA.
+//
+//Parameters:
+//  - pl_userIdx - *in* *integer* - the index of the user in v_db_users
+//  - pl_portUs - *in* *integer* - the secured listening port
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_setIMSAKAData_portUs(in integer pl_userIdx, in integer pl_portUs)
+runs on EPTF_SIP_LGen_CT
+{
+  v_db_users.data[pl_userIdx].imsAKAData.protectedPortNumber := pl_portUs;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_setIMSAKAData_portUcs
+//
+//Purpose:
+//  Sets the client ports of the UA.
+//
+//Parameters:
+//  - pl_userIdx - *in* *integer* - the index of the user in v_db_users
+//  - pl_portUcs - *in* <EPTF_IntegerList>- the secured client ports
+//
+//Detailed comment:
+//  In case of a re-registration, the UA changes its client port. 
+//  The ports given in this function are goning to be used in a round robin way.
+////////////////////////////////////////////////////
+function f_EPTF_SIP_setIMSAKAData_portUcs(in integer pl_userIdx, in EPTF_IntegerList pl_portUcs)
+runs on EPTF_SIP_LGen_CT
+{
+  v_db_users.data[pl_userIdx].imsAKAData.clientPorts := pl_portUcs;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_getIPSecParams
+//
+//Purpose:
+//  Retrieves IPSec data.
+//
+//Parameters:
+//  - pl_userIdx - *in* *integer* - the index of the user in v_db_users
+//  - pl_ipSecParams - *in* <SIP_IPSec_Params>- the IPSec parameters
+//
+//Return Value:
+//  boolean - true if the session is secured
+////////////////////////////////////////////////////
+function f_EPTF_SIP_getIPSecParams(in integer pl_userIdx, inout SIP_IPSec_Params pl_ipSecParams)
+runs on EPTF_SIP_LGen_CT
+return boolean
+{
+  var integer vl_currentSession := v_db_users.data[pl_userIdx].currentSession;
+  if(not ispresent(v_db_users.data[pl_userIdx].sessions[vl_currentSession].secureSessionData))
+  {
+    f_SIP_Logging_WARNING(log2str(%definitionId,
+      ": current session is not secured"));
+    return false;
+  }
+
+  pl_ipSecParams := c_SIP_initSIPIPSecParams;
+  
+  pl_ipSecParams.CK := v_db_users.data[pl_userIdx].sessions[vl_currentSession].secureSessionData.CK;
+  pl_ipSecParams.IK := v_db_users.data[pl_userIdx].sessions[vl_currentSession].secureSessionData.IK;
+  
+  pl_ipSecParams.uc_ps.port_s := v_db_users.data[pl_userIdx].sessions[vl_currentSession].port_uc;
+  pl_ipSecParams.uc_ps.port_d := v_db_users.data[pl_userIdx].sessions[vl_currentSession].port_ps;
+  pl_ipSecParams.uc_ps.spi := v_db_users.data[pl_userIdx].sessions[vl_currentSession].secureSessionData.SAs.uc_ps.spi;
+  pl_ipSecParams.uc_ps.lifeTime := v_db_users.data[pl_userIdx].sessions[vl_currentSession].secureSessionData.SAs.uc_ps.lifeTime;
+
+  pl_ipSecParams.uc_ps.port_s := v_db_users.data[pl_userIdx].sessions[vl_currentSession].port_uc;
+  pl_ipSecParams.uc_ps.port_d := v_db_users.data[pl_userIdx].sessions[vl_currentSession].port_ps;
+  pl_ipSecParams.uc_ps.spi := v_db_users.data[pl_userIdx].sessions[vl_currentSession].secureSessionData.SAs.uc_ps.spi;
+  pl_ipSecParams.uc_ps.lifeTime := v_db_users.data[pl_userIdx].sessions[vl_currentSession].secureSessionData.SAs.uc_ps.lifeTime;
+  
+  if (c_SIP_IMSAKA_SA_init != v_db_users.data[pl_userIdx].sessions[vl_currentSession].secureSessionData.SAs.us_pc)
+  {
+    pl_ipSecParams.us_pc.port_s := v_db_users.data[pl_userIdx].sessions[vl_currentSession].port_us;
+    pl_ipSecParams.us_pc.port_d := v_db_users.data[pl_userIdx].sessions[vl_currentSession].port_pc;
+    pl_ipSecParams.us_pc.spi := v_db_users.data[pl_userIdx].sessions[vl_currentSession].secureSessionData.SAs.us_pc.spi;
+    pl_ipSecParams.us_pc.lifeTime := v_db_users.data[pl_userIdx].sessions[vl_currentSession].secureSessionData.SAs.us_pc.lifeTime;
+  }
+  
+  pl_ipSecParams.pc_us.port_s := v_db_users.data[pl_userIdx].sessions[vl_currentSession].port_pc;
+  pl_ipSecParams.pc_us.port_d := v_db_users.data[pl_userIdx].sessions[vl_currentSession].port_us;
+  pl_ipSecParams.pc_us.spi := v_db_users.data[pl_userIdx].sessions[vl_currentSession].secureSessionData.SAs.pc_us.spi;
+  pl_ipSecParams.pc_us.lifeTime := v_db_users.data[pl_userIdx].sessions[vl_currentSession].secureSessionData.SAs.pc_us.lifeTime;
+  
+  if (c_SIP_IMSAKA_SA_init != v_db_users.data[pl_userIdx].sessions[vl_currentSession].secureSessionData.SAs.ps_uc)
+  {
+    pl_ipSecParams.ps_uc.port_s := v_db_users.data[pl_userIdx].sessions[vl_currentSession].port_ps;
+    pl_ipSecParams.ps_uc.port_d := v_db_users.data[pl_userIdx].sessions[vl_currentSession].port_uc;
+    pl_ipSecParams.ps_uc.spi := v_db_users.data[pl_userIdx].sessions[vl_currentSession].secureSessionData.SAs.ps_uc.spi;
+    pl_ipSecParams.ps_uc.lifeTime := v_db_users.data[pl_userIdx].sessions[vl_currentSession].secureSessionData.SAs.ps_uc.lifeTime;
+  }
+  
+  return true;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_IPSecParams2Str
+//
+//Purpose:
+//  Converts <SIP_IPSec_Params> into a charstring
+//
+//Parameters:
+//  - pl_ipSecParams - *in* <SIP_IPSec_Params> - the IPSec parameters
+//  - pl_str - *inout* *charstring*- the converted parameters
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_IPSecParams2Str(in SIP_IPSec_Params pl_ipSecParams, inout charstring pl_str)
+{
+  pl_str := "SA: " & 
+              "cypher-key=" & oct2str(pl_ipSecParams.CK) & "," & 
+              "integriry-key=" & oct2str(pl_ipSecParams.IK) & ";" &
+              "port-src(local)=" & int2str(pl_ipSecParams.uc_ps.port_s) & "," &
+              "port-dst=" & int2str(pl_ipSecParams.uc_ps.port_d) & "," &
+              "spi=" & int2str(pl_ipSecParams.uc_ps.spi) & "," &
+              "lifetime= " & int2str(pl_ipSecParams.uc_ps.lifeTime) & ";" &
+            "\n" &
+            "SA: " &
+              "cypher-key=" & oct2str(pl_ipSecParams.CK) & "," & 
+              "integriry-key=" & oct2str(pl_ipSecParams.IK) & ";" &
+              "port-src=" & int2str(pl_ipSecParams.pc_us.port_s) & "," &
+              "port-dst(local)=" & int2str(pl_ipSecParams.pc_us.port_d) & "," &
+              "spi=" & int2str(pl_ipSecParams.pc_us.spi) & "," &
+              "lifetime= " & int2str(pl_ipSecParams.pc_us.lifeTime) & ";" &
+             "\n";
+  
+  if (ispresent(pl_ipSecParams.us_pc))
+  {
+    pl_str := "SA: " & 
+                "cypher-key=" & oct2str(pl_ipSecParams.CK) & "," & 
+                "integriry-key=" & oct2str(pl_ipSecParams.IK) & ";" &
+                "port-src(local)=" & int2str(pl_ipSecParams.us_pc.port_s) & "," &
+                "port-dst=" & int2str(pl_ipSecParams.us_pc.port_d) & "," &
+                "spi=" & int2str(pl_ipSecParams.us_pc.spi) & "," &
+                "lifetime= " & int2str(pl_ipSecParams.us_pc.lifeTime) & ";" &
+              "\n";
+    
+  }
+  if (ispresent(pl_ipSecParams.ps_uc))
+  {
+    pl_str := "SA: " & 
+                "cypher-key=" & oct2str(pl_ipSecParams.CK) & "," & 
+                "integriry-key=" & oct2str(pl_ipSecParams.IK) & ";" &
+                "port-src=" & int2str(pl_ipSecParams.ps_uc.port_s) & "," &
+                "port-dst(local)=" & int2str(pl_ipSecParams.ps_uc.port_d) & "," &
+                "spi=" & int2str(pl_ipSecParams.ps_uc.spi) & "," &
+                "lifetime= " & int2str(pl_ipSecParams.ps_uc.lifeTime) & ";" &
+              "\n";
+    
+  }
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_setCallBack4Request
+//
+//Purpose:
+//  Adds the call-back function to an FSM that modifies the outgoing requests.
+//
+//Parameters:
+//  - pl_entityIdx - *in* *integer* - index of the entity
+//  - pl_fsmCtx - *in* *integer* - the FSM context index
+//  - pl_callBack - *in* <fcb_EPTF_SIP_setRequest> - the function reference to set
+//  - pl_params - *in* <EPTF_IntegerList> - parameters to pass to the callBack
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_setCallBack4Request(
+  in integer pl_entityIdx, 
+  in integer pl_fsmCtx, 
+  in fcb_EPTF_SIP_setRequest pl_callBack,
+  in EPTF_IntegerList pl_params)
+runs on EPTF_SIP_LGen_CT
+{
+  var integer vl_FSMIdx := -1;
+
+  if (not f_EPTF_SIP_FSMInitialized(pl_entityIdx, pl_fsmCtx, vl_FSMIdx))
+  {
+    f_SIP_Logging_WARNING(log2str(
+      %definitionId,": FSM has not been initialized."));
+    return;
+  }
+  
+  var integer vl_userIdx := f_EPTF_LGenBase_getBehaviorCtxItem(pl_entityIdx, v_SIP_myBIdx, 0);
+  var integer vl_sizeof := sizeof(v_db_users.data[vl_userIdx].FSMs.data[vl_FSMIdx].setRequest);
+  
+  v_db_users.data[vl_userIdx].FSMs.data[vl_FSMIdx].setRequest[vl_sizeof] := {pl_callBack, pl_params}
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_setCallBack4Response
+//
+//Purpose:
+//  Adds the call-back function to an FSM that modifies the outgoing responses.
+//
+//Parameters:
+//  - pl_entityIdx - *in* *integer* - index of the entity
+//  - pl_fsmCtx - *in* *integer* - the FSM context index
+//  - pl_callBack - *in* <fcb_EPTF_SIP_setResponse> - the function reference to set
+//  - pl_params - *in* <EPTF_IntegerList> - parameters to pass to the callBack
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_setCallBack4Response(
+  in integer pl_entityIdx, 
+  in integer pl_fsmCtx, 
+  in fcb_EPTF_SIP_setResponse pl_callBack,
+  in EPTF_IntegerList pl_params)
+runs on EPTF_SIP_LGen_CT
+{
+  var integer vl_FSMIdx := -1;
+
+  if (not f_EPTF_SIP_FSMInitialized(pl_entityIdx, pl_fsmCtx, vl_FSMIdx))
+  {
+    f_SIP_Logging_WARNING(log2str(
+      %definitionId,": FSM has not been initialized."));
+    return;
+  }
+  
+  var integer vl_userIdx := f_EPTF_LGenBase_getBehaviorCtxItem(pl_entityIdx, v_SIP_myBIdx, 0);
+  var integer vl_sizeof := sizeof(v_db_users.data[vl_userIdx].FSMs.data[vl_FSMIdx].setResponse);
+  
+  v_db_users.data[vl_userIdx].FSMs.data[vl_FSMIdx].setResponse[vl_sizeof] := {pl_callBack, pl_params}
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_setCallBack4TemplateBody
+//
+//Purpose:
+//  Adds the call-back function to an FSM that modifies the outgoing template body.
+//
+//Parameters:
+//  - pl_entityIdx - *in* *integer* - index of the entity
+//  - pl_fsmCtx - *in* *integer* - the FSM context index
+//  - pl_callBack - *in* <fcb_EPTF_SIP_setTemplateBody> - the function reference to set
+//  - pl_params - *in* <EPTF_IntegerList> - parameters to pass to the callBack
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_setCallBack4TemplateBody(
+  in integer pl_entityIdx, 
+  in integer pl_fsmCtx, 
+  in fcb_EPTF_SIP_setTemplateBody pl_callBack,
+  in EPTF_IntegerList pl_params)
+runs on EPTF_SIP_LGen_CT
+{
+  var integer vl_FSMIdx := -1;
+
+  if (not f_EPTF_SIP_FSMInitialized(pl_entityIdx, pl_fsmCtx, vl_FSMIdx))
+  {
+    f_SIP_Logging_WARNING(log2str(
+      %definitionId,": FSM has not been initialized."));
+    return;
+  }
+  
+  var integer vl_userIdx := f_EPTF_LGenBase_getBehaviorCtxItem(pl_entityIdx, v_SIP_myBIdx, 0);
+  var integer vl_sizeof := sizeof(v_db_users.data[vl_userIdx].FSMs.data[vl_FSMIdx].setTemplateBody);
+  
+  v_db_users.data[vl_userIdx].FSMs.data[vl_FSMIdx].setTemplateBody[vl_sizeof] := {pl_callBack, pl_params}
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_registerFunction
+//
+//Purpose:
+//  Registers a function in the SIP database. The registered names
+//  can be used to refer to the function from the config file.
+//
+//Parameters:
+//  - pl_fnName - *in* *charstring* - the name of the function
+//  - pl_fn - *in* <SIP_RegsiterdFuncition> - the reference of the registered function
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_registerFunction(in charstring pl_fnName, in SIP_RegsiteredFuncition pl_fn)
+runs on EPTF_SIP_LGen_CT
+{
+  if(c_EPTF_Common_debugSwitch and f_SIP_Logging_debugEnabled()) {
+    f_SIP_Logging_DEBUG(log2str(
+      %definitionId,": registering ",pl_fnName));
+  }
+
+  var integer vl_idx;
+  
+  if (f_EPTF_str2int_HashMap_Find ( v_db_functions.hashRef,pl_fnName, vl_idx ))
+  {
+    f_SIP_Logging_WARNING(log2str(
+      %definitionId,": registered function name (",pl_fnName,") is not unique: ", v_db_functions.data[vl_idx]));
+    return;
+  }
+  
+  vl_idx := sizeof(v_db_functions.data);
+  
+  v_db_functions.data[vl_idx].name := pl_fnName;
+  v_db_functions.data[vl_idx].functionRef := pl_fn;
+  f_EPTF_str2int_HashMap_Insert(v_db_functions.hashRef, pl_fnName, vl_idx);
+}
+
+function f_EPTF_SIP_generateUEParams(in integer pl_userIdx, inout SIP_UEParams pl_UEParams)
+runs on EPTF_SIP_LGen_CT
+{
+  if(not ispresent(v_db_users.data[pl_userIdx].imsAKAData)) { return }
+  pl_UEParams.port_c := v_db_users.data[pl_userIdx].imsAKAData.clientPorts[v_db_users.data[pl_userIdx].imsAKAData.currentUc];
+
+  v_db_users.data[pl_userIdx].imsAKAData.currentUc := (v_db_users.data[pl_userIdx].imsAKAData.currentUc + 1) mod
+    sizeof(v_db_users.data[pl_userIdx].imsAKAData.clientPorts);
+
+  pl_UEParams.port_s := v_db_users.data[pl_userIdx].imsAKAData.protectedPortNumber;
+
+  pl_UEParams.spi_c := float2int(2147483647.0 * rnd());
+
+  pl_UEParams.spi_s := float2int(2147483647.0 * rnd());
+  
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_addUADataAccept
+//
+//Purpose:
+//  Adds the accepted body value to the User Agent data.
+//
+//Parameters:
+//  - pl_accept - *in* <SIP_Accept> - accept list
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_addUAData_Accept(in AcceptBody pl_accept)
+runs on EPTF_SIP_LGen_CT
+{
+  var integer vl_idx := sizeof(v_db_UAs.uaData.acceptList);
+  
+  v_db_UAs.uaData.acceptList[vl_idx] := pl_accept;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_addUAData_AllowedMethod
+//
+//Purpose:
+//  Adds an allowed method to the User Agent data.
+//
+//Parameters:
+//  - pl_allowedMethod - *in* *charstring* - allowed method
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_addUAData_AllowedMethod(in charstring pl_allowedMethod)
+runs on EPTF_SIP_LGen_CT
+{
+  var integer vl_idx := sizeof(v_db_UAs.uaData.allowedMethods);
+  
+  v_db_UAs.uaData.allowedMethods[vl_idx] := pl_allowedMethod;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_addUAData_AcceptEncoding
+//
+//Purpose:
+//  Adds an aaccpted encoding value to the User Agent data.
+//
+//Parameters:
+//  - pl_contentCoding - *in* <ContentCoding> - accepted encoding
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_addUAData_AcceptEncoding(in ContentCoding pl_contentCoding)
+runs on EPTF_SIP_LGen_CT
+{
+  var integer vl_idx := sizeof(v_db_UAs.uaData.acceptEncodingList);
+  
+  v_db_UAs.uaData.acceptEncodingList[vl_idx] := pl_contentCoding;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_addUAData_AcceptLanguage
+//
+//Purpose:
+//  Adds an accepted language value to the User Agent data.
+//
+//Parameters:
+//  - pl_language - *in* <LanguageBody> - allo list
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_addUAData_AcceptLanguage(in LanguageBody pl_language)
+runs on EPTF_SIP_LGen_CT
+{
+  var integer vl_idx := sizeof(v_db_UAs.uaData.acceptLanguageList);
+  
+  v_db_UAs.uaData.acceptLanguageList[vl_idx] := pl_language;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_addUAData_SupportedOption
+//
+//Purpose:
+//  Adds a supported option tag to the User Agent data.
+//
+//Parameters:
+//  - pl_optionTag - *in* <OptionTag> - supported option tag
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_addUAData_SupportedOption(in OptionTag pl_optionTag)
+runs on EPTF_SIP_LGen_CT
+{
+  var integer vl_idx := sizeof(v_db_UAs.uaData.supportedList);
+  
+  v_db_UAs.uaData.supportedList[vl_idx] := pl_optionTag;
+}
+
+function f_EPTF_SIP_setPortNumberSIP(in integer pl_userIdx, in integer pl_port)
+runs on EPTF_SIP_LGen_CT
+{
+  v_db_users.data[pl_userIdx].sessions[0].port_us := pl_port;
+}
+
+function f_EPTF_SIP_setPortNumberOutgoing(in integer pl_userIdx, in integer pl_port)
+runs on EPTF_SIP_LGen_CT
+{
+  v_db_users.data[pl_userIdx].sessions[0].port_uc := pl_port;
+}
+
+
+function f_EPTF_SIP_changeSession(in integer pl_userIdx, in integer pl_fromSession, in integer pl_toSession)
+runs on EPTF_SIP_LGen_CT
+{
+  if (pl_fromSession == pl_toSession)
+  {
+    return;
+  }
+  
+  if(c_EPTF_Common_debugSwitch and f_SIP_Logging_debugEnabled()) {
+    f_SIP_Logging_DEBUG(log2str(%definitionId, 
+      ": user(",pl_userIdx,")",
+      " changing session from : ",pl_fromSession, 
+      " to ", pl_toSession));
+  }
+
+  if (pl_fromSession != v_db_users.data[pl_userIdx].defaultSession)
+  {
+    v_db_users.data[pl_userIdx].sessions[pl_fromSession].terminate := true;
+  }
+
+  v_db_users.data[pl_userIdx].currentSession := pl_toSession;
+
+}
+
+//creates new session, calculates keys
+
+function f_EPTF_SIP_imsAKA_authRequired(in integer pl_userIdx, inout integer pl_sessionIdx)
+runs on EPTF_SIP_LGen_CT
+{
+  if(not ispresent(v_db_users.data[pl_userIdx].imsAKAData)) {
+    f_SIP_Logging_DEBUG(%definitionId&": imsAKAData not present.");
+    return;
+  }
+  f_EPTF_SIP_getFreeSessionIdx(pl_userIdx, pl_sessionIdx);
+  v_db_users.data[pl_userIdx].imsAKAData.negotiatedSession := pl_sessionIdx;
+
+  v_db_users.data[pl_userIdx].sessions[pl_sessionIdx].port_us := 
+    v_db_users.data[pl_userIdx].imsAKAData.negotiatedSessionParams.port_s;
+
+  v_db_users.data[pl_userIdx].sessions[pl_sessionIdx].port_uc := 
+    v_db_users.data[pl_userIdx].imsAKAData.negotiatedSessionParams.port_c;
+
+  v_db_users.data[pl_userIdx].sessions[pl_sessionIdx].sessionId := pl_sessionIdx;
+  v_db_users.data[pl_userIdx].sessions[pl_sessionIdx].secureSessionData := c_SIP_SecureSessionData_init;
+
+  v_db_users.data[pl_userIdx].imsAKAData.oldSession := v_db_users.data[pl_userIdx].currentSession;
+
+  v_db_users.data[pl_userIdx].sessions[pl_sessionIdx].secureSessionData.SAs.pc_us.spi := v_db_users.data[pl_userIdx].imsAKAData.negotiatedSessionParams.spi_s;
+
+  v_db_users.data[pl_userIdx].sessions[pl_sessionIdx].secureSessionData.SAs.ps_uc.spi := v_db_users.data[pl_userIdx].imsAKAData.negotiatedSessionParams.spi_c;
+
+  var integer vl_idx := -1;
+  if (f_EPTF_SIP_getSecurityMechanismIdx(v_db_users.data[pl_userIdx].imsAKAData.securityServerData, c_IMSAKA_mechanismName, vl_idx) and
+        ispresent(v_db_users.data[pl_userIdx].imsAKAData.securityServerData[vl_idx].mechanism_params))
+  {
+    var EPTF_CharstringList vl_proposedList := {};
+    var charstring vl_param := "";
+    var octetstring vl_nonce := ''O;
+
+    f_EPTF_SIP_GetSecurityParameterAll(
+      v_db_users.data[pl_userIdx].imsAKAData.securityServerData,
+      c_SIP_SECPARAM_ALG,
+      vl_proposedList);
+
+    f_EPTF_SIP_selectSecAlg(v_db_users.data[pl_userIdx].imsAKAData.supportedALGs, vl_proposedList, v_db_users.data[pl_userIdx].imsAKAData.selectedALG);
+
+    f_EPTF_SIP_GetSecurityParameterAll(
+      v_db_users.data[pl_userIdx].imsAKAData.securityServerData,
+      c_SIP_SECPARAM_EALG,
+      vl_proposedList);
+
+    f_EPTF_SIP_selectSecAlg(v_db_users.data[pl_userIdx].imsAKAData.supportedEALGs, vl_proposedList, v_db_users.data[pl_userIdx].imsAKAData.selectedEALG);
+
+    f_EPTF_SIP_GetParameter(
+      v_db_users.data[pl_userIdx].imsAKAData.securityServerData[vl_idx].mechanism_params,
+      c_SIP_SECPARAM_PROTO,
+      v_db_users.data[pl_userIdx].imsAKAData.proto);
+
+    if ("" == v_db_users.data[pl_userIdx].imsAKAData.proto)
+    {
+      v_db_users.data[pl_userIdx].imsAKAData.proto := c_SIP_SECPARAM_PROTONAME_ESP;
+    }
+
+    f_EPTF_SIP_GetParameter(
+      v_db_users.data[pl_userIdx].imsAKAData.securityServerData[vl_idx].mechanism_params,
+      c_SIP_SECPARAM_SPI_C,
+      vl_param);
+
+    v_db_users.data[pl_userIdx].sessions[pl_sessionIdx].secureSessionData.SAs.us_pc.spi := str2int(vl_param);
+
+    f_EPTF_SIP_GetParameter(
+      v_db_users.data[pl_userIdx].imsAKAData.securityServerData[vl_idx].mechanism_params,
+      c_SIP_SECPARAM_SPI_S,
+      vl_param);
+
+    v_db_users.data[pl_userIdx].sessions[pl_sessionIdx].secureSessionData.SAs.uc_ps.spi := str2int(vl_param);
+
+    f_EPTF_SIP_GetParameter(
+      v_db_users.data[pl_userIdx].imsAKAData.securityServerData[vl_idx].mechanism_params,
+      c_SIP_SECPARAM_PORT_C,
+      vl_param);
+
+    v_db_users.data[pl_userIdx].sessions[pl_sessionIdx].port_pc := str2int(vl_param);
+
+    f_EPTF_SIP_GetParameter(
+      v_db_users.data[pl_userIdx].imsAKAData.securityServerData[vl_idx].mechanism_params,
+      c_SIP_SECPARAM_PORT_S,
+      vl_param);
+
+    v_db_users.data[pl_userIdx].sessions[pl_sessionIdx].port_ps := str2int(vl_param);
+
+    //set keys
+    f_EPTF_SIP_GetParameter(
+      v_db_users.data[pl_userIdx].authData.challenge,
+      c_SIP_PARAM_NONCE,
+      vl_param);
+
+    v_db_users.data[pl_userIdx].sessions[pl_sessionIdx].secureSessionData.nonce := dec_MIME_Base64(vl_param);
+    var octetstring vl_RAND := substr(v_db_users.data[pl_userIdx].sessions[pl_sessionIdx].secureSessionData.nonce, 0, c_IMSAKA_RANDLength);
+
+    var TCCSecurity_Keys keys := v_SIP_f2345.apply(v_db_users.data[pl_userIdx].imsAKAData.OP, 
+      v_db_users.data[pl_userIdx].imsAKAData.longtermKey, vl_RAND);
+
+    v_db_users.data[pl_userIdx].sessions[pl_sessionIdx].secureSessionData.CK := keys.CK;
+    v_db_users.data[pl_userIdx].sessions[pl_sessionIdx].secureSessionData.IK := keys.IK;
+    v_db_users.data[pl_userIdx].sessions[pl_sessionIdx].secureSessionData.RES := keys.RES;
+
+    if (c_IMSAKA_ealgName_DES_EDE3_CBC == v_db_users.data[pl_userIdx].imsAKAData.selectedEALG)
+    {
+      v_db_users.data[pl_userIdx].sessions[pl_sessionIdx].secureSessionData.CK :=
+        substr(keys.CK, 0, 8) & substr(keys.CK, 8, 8) & substr(keys.CK, 0, 8);
+    }
+
+    if (c_IMSAKA_algName_HMAC_SHA_1_96 == v_db_users.data[pl_userIdx].imsAKAData.selectedALG)
+    {
+      v_db_users.data[pl_userIdx].sessions[pl_sessionIdx].secureSessionData.IK := 
+        keys.IK & '00000000'O;
+    }
+  }
+}
+
+function f_EPTF_SIP_imsAKA_setIPSec(in integer pl_userIdx, in integer pl_sessionIdx)
+runs on EPTF_SIP_LGen_CT
+{
+  if(not ispresent(v_db_users.data[pl_userIdx].imsAKAData)) {
+    f_SIP_Logging_DEBUG(%definitionId&": imsAKAData not present.");
+    return;
+  }
+  var TCCIPsec_Algorithm vl_algo;
+
+  var TCCIPsec_Auth vl_auth := {
+    algo := f_EPTF_SIP_str2IPSecALG(v_db_users.data[pl_userIdx].imsAKAData.selectedALG),
+    key := {hex := oct2hex(v_db_users.data[pl_userIdx].sessions[pl_sessionIdx].secureSessionData.IK)}
+  }
+
+  if (c_SIP_SECPARAM_PROTONAME_ESP == v_db_users.data[pl_userIdx].imsAKAData.proto)
+  {
+    vl_algo := {
+      encrAndAuth := {
+        ealgo := f_EPTF_SIP_str2IPSecEALG(v_db_users.data[pl_userIdx].imsAKAData.selectedEALG),
+        ekey := {hex := oct2hex(v_db_users.data[pl_userIdx].sessions[pl_sessionIdx].secureSessionData.CK)},
+        aalgo := f_EPTF_SIP_str2IPSecALG(v_db_users.data[pl_userIdx].imsAKAData.selectedALG),
+        akey := {hex := oct2hex(v_db_users.data[pl_userIdx].sessions[pl_sessionIdx].secureSessionData.IK)}
+      }
+    }
+  }else{
+    vl_algo := {
+      auth := {
+        algo := f_EPTF_SIP_str2IPSecALG(v_db_users.data[pl_userIdx].imsAKAData.selectedALG),
+        key := {hex := oct2hex(v_db_users.data[pl_userIdx].sessions[pl_sessionIdx].secureSessionData.IK)}
+      }
+    }
+  }
+
+  if (null != v_createIPSecSA)
+  {
+    v_createIPSecSA.apply(
+      pl_userIdx,
+      v_db_users.data[pl_userIdx].sessions[pl_sessionIdx].port_uc,
+      v_db_users.data[pl_userIdx].sessions[pl_sessionIdx].port_ps,
+      f_EPTF_SIP_str2IPSecProto(v_db_users.data[pl_userIdx].imsAKAData.proto),
+      v_db_users.data[pl_userIdx].sessions[pl_sessionIdx].secureSessionData.SAs.uc_ps.spi,
+      2147483647, //lifetime
+      vl_algo,
+      outDir
+      );
+
+    v_createIPSecSA.apply(
+      pl_userIdx,
+      v_db_users.data[pl_userIdx].sessions[pl_sessionIdx].port_pc,
+      v_db_users.data[pl_userIdx].sessions[pl_sessionIdx].port_us,
+      f_EPTF_SIP_str2IPSecProto(v_db_users.data[pl_userIdx].imsAKAData.proto),
+      v_db_users.data[pl_userIdx].sessions[pl_sessionIdx].secureSessionData.SAs.pc_us.spi,
+      2147483647, //lifetime
+      vl_algo,
+      inDir
+      );
+  }      
+}
+
+}//end of module
+with {
+extension "version <RnXnn>"
+}
+

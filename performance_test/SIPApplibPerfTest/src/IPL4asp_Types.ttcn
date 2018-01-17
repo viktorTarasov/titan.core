@@ -1,0 +1,510 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//
+//  File:               IPL4asp_Types.ttcn
+//  Rev:                <RnXnn>
+//  Prodnr:             CNL 113 531
+//  Updated:            2012-09-16
+//  Contact:            http://ttcn.ericsson.se
+//  Reference:          
+
+module IPL4asp_Types {  
+
+  import from Socket_API_Definitions all;
+
+  //////////////////////////////////////////////////////////
+  // Type: ConnectionId
+  //
+  // Purpose:
+  //  ConnectionId
+  //
+  // Elements:
+  //   Type alias of <Socket_API_Definitions.ConnectionId>
+  ///////////////////////////////////////////////////////////
+  type Socket_API_Definitions.ConnectionId ConnectionId;
+  
+  //////////////////////////////////////////////////////////
+  // Type: ro_ConnectionId
+  //
+  // Purpose:
+  //  ro_ConnectionId
+  //
+  // Elements:
+  //   Type alias of <Socket_API_Definitions.ro_ConnectionId>
+  ///////////////////////////////////////////////////////////
+  type Socket_API_Definitions.ro_ConnectionId ro_ConnectionId;
+  
+  //////////////////////////////////////////////////////////
+  // Type: AssociationId
+  //
+  // Purpose:
+  //  AssociationId
+  //
+  // Elements:
+  //   Type alias of <Socket_API_Definitions.AssociationId>
+  ///////////////////////////////////////////////////////////
+  type Socket_API_Definitions.AssociationId AssociationId;
+  
+  //////////////////////////////////////////////////////////
+  // Type: ro_AssociationId
+  //
+  // Purpose:
+  //  ro_AssociationId
+  //
+  // Elements:
+  //   Type alias of <Socket_API_Definitions.ro_AssociationId>
+  ///////////////////////////////////////////////////////////
+  type Socket_API_Definitions.ro_AssociationId ro_AssociationId;
+  
+  //////////////////////////////////////////////////////////
+  // Type: HostName
+  //
+  // Purpose:
+  //  HostName
+  //
+  // Elements:
+  //   Type alias of <Socket_API_Definitions.HostName>
+  ///////////////////////////////////////////////////////////
+  type Socket_API_Definitions.HostName HostName;
+  
+  //////////////////////////////////////////////////////////
+  // Type: PortNumber
+  //
+  // Purpose:
+  //  PortNumber
+  //
+  // Elements:
+  //   Type alias of <Socket_API_Definitions.PortNumber>
+  ///////////////////////////////////////////////////////////
+  type Socket_API_Definitions.PortNumber PortNumber;
+  
+  //////////////////////////////////////////////////////////
+  // Type: Socket
+  //
+  // Purpose:
+  //  Socket
+  //
+  // Elements:
+  //   Type alias of <Socket_API_Definitions.Socket>
+  ///////////////////////////////////////////////////////////
+  type Socket_API_Definitions.Socket Socket;
+  
+  //////////////////////////////////////////////////////////
+  // Type: SocketList
+  //
+  // Purpose:
+  //  SocketList
+  //
+  // Elements:
+  //   Type alias of <Socket_API_Definitions.SocketList>
+  ///////////////////////////////////////////////////////////
+  type Socket_API_Definitions.SocketList SocketList;  
+  
+  //////////////////////////////////////////////////////////
+  // Type: UdpTuple
+  //
+  // Purpose:
+  //  UdpTuple
+  //
+  // Elements:
+  //   Type alias of <Socket_API_Definitions.UdpTuple>
+  ///////////////////////////////////////////////////////////
+  type Socket_API_Definitions.UdpTuple UdpTuple;
+  
+  //////////////////////////////////////////////////////////
+  // Type: TcpTuple
+  //
+  // Purpose:
+  //  TcpTuple
+  //
+  // Elements:
+  //   Type alias of <Socket_API_Definitions.TcpTuple>
+  ///////////////////////////////////////////////////////////
+  type Socket_API_Definitions.TcpTuple TcpTuple;
+  
+  //////////////////////////////////////////////////////////
+  // Type: SctpTuple
+  //
+  // Purpose:
+  //  SctpTuple
+  //
+  // Elements:
+  //   Type alias of <Socket_API_Definitions.SctpTuple>
+  ///////////////////////////////////////////////////////////
+  type Socket_API_Definitions.SctpTuple SctpTuple;
+  
+  //////////////////////////////////////////////////////////
+  // Type: SslTuple
+  //
+  // Purpose:
+  //  SslTuple
+  //
+  // Elements:
+  //   Type alias of <Socket_API_Definitions.SslTuple>
+  ///////////////////////////////////////////////////////////
+  type Socket_API_Definitions.SslTuple SslTuple;
+  
+  //////////////////////////////////////////////////////////
+  // Type: UnspecifiedTuple
+  //
+  // Purpose:
+  //  UnspecifiedTuple
+  //
+  // Elements:
+  //   Type alias of <Socket_API_Definitions.UnspecifiedTuple>
+  ///////////////////////////////////////////////////////////
+  type Socket_API_Definitions.UnspecifiedTuple UnspecifiedTuple;
+  
+  //////////////////////////////////////////////////////////
+  // Type: ProtoTuple
+  //
+  // Purpose:
+  //  ProtoTuple
+  //
+  // Elements:
+  //   Type alias of <Socket_API_Definitions.ProtoTuple>
+  ///////////////////////////////////////////////////////////
+  type Socket_API_Definitions.ProtoTuple ProtoTuple;
+  
+  //////////////////////////////////////////////////////////
+  // Type: Result
+  //
+  // Purpose:
+  //  Result
+  //
+  // Elements:
+  //   Type alias of <Socket_API_Definitions.Result>
+  ///////////////////////////////////////////////////////////
+  type Socket_API_Definitions.Result Result;
+
+  //////////////////////////////////////////////////////////
+  // Type: Extended_Result
+  //
+  // Purpose:
+  //  Extended Result
+  //
+  // Elements:
+  //   Type alias of <Socket_API_Definitions.Result>
+  ///////////////////////////////////////////////////////////
+  type Socket_API_Definitions.Extended_Result Extended_Result;
+  
+  //////////////////////////////////////////////////////////
+  // Type: UserData
+  //
+  // Purpose:
+  //  UserData
+  //
+  // Elements:
+  //   Type alias of <Socket_API_Definitions.UserData>
+  ///////////////////////////////////////////////////////////  
+  type Socket_API_Definitions.UserData UserData; 
+  
+  //////////////////////////////////////////////////////////
+  // Type: PortError
+  //
+  // Purpose:
+  //  PortError
+  //
+  // Elements:
+  //   Type alias of <Socket_API_Definitions.PortError>
+  ///////////////////////////////////////////////////////////
+  type Socket_API_Definitions.PortError PortError;
+  
+  //////////////////////////////////////////////////////////
+  // Type: ConnectionOpenedEvent
+  //
+  // Purpose:
+  //  ConnectionOpenedEvent
+  //
+  // Elements:
+  //   Type alias of <Socket_API_Definitions.ConnectionOpenedEvent>
+  ///////////////////////////////////////////////////////////
+  type Socket_API_Definitions.ConnectionOpenedEvent ConnectionOpenedEvent;
+  
+  //////////////////////////////////////////////////////////
+  // Type: ConnectionClosedEvent
+  //
+  // Purpose:
+  //  ConnectionClosedEvent
+  //
+  // Elements:
+  //   Type alias of <Socket_API_Definitions.ConnectionClosedEvent>
+  ///////////////////////////////////////////////////////////
+  type Socket_API_Definitions.ConnectionClosedEvent ConnectionClosedEvent;
+  
+  //////////////////////////////////////////////////////////
+  // Type: SctpEvent
+  //
+  // Purpose:
+  //  SctpEvent
+  //
+  // Elements:
+  //   Type alias of <Socket_API_Definitions.SctpEvent>
+  ///////////////////////////////////////////////////////////
+  type Socket_API_Definitions.SctpEvent SctpEvent;
+  
+  //////////////////////////////////////////////////////////
+  // Type: PortEvent
+  //
+  // Purpose:
+  //  PortEvent
+  //
+  // Elements:
+  //   Type alias of <Socket_API_Definitions.PortEvent>
+  ///////////////////////////////////////////////////////////
+  type Socket_API_Definitions.PortEvent PortEvent;
+  
+  //////////////////////////////////////////////////////////
+  // Type: SAC_STATE
+  //
+  // Purpose:
+  //  SAC_STATE
+  //
+  // Elements:
+  //   Type alias of <Socket_API_Definitions.SAC_STATE>
+  ///////////////////////////////////////////////////////////
+  type Socket_API_Definitions.SAC_STATE SAC_STATE;
+  
+  //////////////////////////////////////////////////////////
+  // Type: SctpAssocChange
+  //
+  // Purpose:
+  //  SctpAssocChange
+  //
+  // Elements:
+  //   Type alias of <Socket_API_Definitions.SctpAssocChange>
+  ///////////////////////////////////////////////////////////
+  type Socket_API_Definitions.SctpAssocChange SctpAssocChange;
+  
+  //////////////////////////////////////////////////////////
+  // Type: SPC_STATE
+  //
+  // Purpose:
+  //  SPC_STATE
+  //
+  // Elements:
+  //   Type alias of <Socket_API_Definitions.SPC_STATE>
+  ///////////////////////////////////////////////////////////
+  type Socket_API_Definitions.SPC_STATE SPC_STATE;
+  
+  //////////////////////////////////////////////////////////
+  // Type: SctpPeerAddrChange
+  //
+  // Purpose:
+  //  SctpPeerAddrChange
+  //
+  // Elements:
+  //   Type alias of <Socket_API_Definitions.SctpPeerAddrChange>
+  ///////////////////////////////////////////////////////////
+  type Socket_API_Definitions.SctpPeerAddrChange SctpPeerAddrChange;
+  
+  //////////////////////////////////////////////////////////
+  // Type: SctpSendFailed
+  //
+  // Purpose:
+  //  SctpSendFailed
+  //
+  // Elements:
+  //   Type alias of <Socket_API_Definitions.SctpSendFailed>
+  ///////////////////////////////////////////////////////////
+  type Socket_API_Definitions.SctpSendFailed SctpSendFailed;
+  
+  //////////////////////////////////////////////////////////
+  // Type: SctpRemoteError
+  //
+  // Purpose:
+  //  SctpRemoteError
+  //
+  // Elements:
+  //   Type alias of <Socket_API_Definitions.SctpRemoteError>
+  ///////////////////////////////////////////////////////////
+  type Socket_API_Definitions.SctpRemoteError SctpRemoteError;
+  
+  //////////////////////////////////////////////////////////
+  // Type: SctpShutDownEvent
+  //
+  // Purpose:
+  //  SctpShutDownEvent
+  //
+  // Elements:
+  //   Type alias of <Socket_API_Definitions.SctpShutDownEvent>
+  ///////////////////////////////////////////////////////////
+  type Socket_API_Definitions.SctpShutDownEvent SctpShutDownEvent;
+  
+  //////////////////////////////////////////////////////////
+  // Type: SctpPartialDeliveryEvent
+  //
+  // Purpose:
+  //  SctpPartialDeliveryEvent
+  //
+  // Elements:
+  //   Type alias of <Socket_API_Definitions.SctpPartialDeliveryEvent>
+  ///////////////////////////////////////////////////////////
+  type Socket_API_Definitions.SctpPartialDeliveryEvent SctpPartialDeliveryEvent;
+  
+  //////////////////////////////////////////////////////////
+  // Type: SctpAdaptationIndication
+  //
+  // Purpose:
+  //  SctpAdaptationIndication
+  //
+  // Elements:
+  //   Type alias of <Socket_API_Definitions.SctpAdaptationIndication>
+  ///////////////////////////////////////////////////////////
+  type Socket_API_Definitions.SctpAdaptationIndication SctpAdaptationIndication;
+  
+  //////////////////////////////////////////////////////////
+  // Type: ro_integer
+  //
+  // Purpose:
+  //  ro_integer
+  //
+  // Elements:
+  //   Type alias of <Socket_API_Definitions.ro_integer>
+  ///////////////////////////////////////////////////////////
+  type Socket_API_Definitions.ro_integer ro_integer;
+  
+  //////////////////////////////////////////////////////////
+  // Type: f_getMsgLen
+  //
+  // Purpose:
+  //  f_getMsgLen
+  //
+  // Elements:
+  //   Type alias of <Socket_API_Definitions.f_getMsgLen>
+  ///////////////////////////////////////////////////////////
+  type Socket_API_Definitions.f_getMsgLen f_getMsgLen;
+  
+  //////////////////////////////////////////////////////////
+  // Type: ro_charstring
+  //
+  // Purpose:
+  //  ro_charstring
+  //
+  // Elements:
+  //   Type alias of <Socket_API_Definitions.ro_charstring>
+  ///////////////////////////////////////////////////////////
+  type Socket_API_Definitions.ro_charstring ro_charstring;
+  
+  /* A list of options can be specified on global or protocol level,
+     in listen or connect or for an opened connection.
+     There are restrictions on the usage of options.
+  */
+  /* TcpKeepAlive is valid only for TCP. */
+  type record TcpKeepAlive {
+    boolean enable optional,
+    integer count optional,
+    integer idle optional,
+    integer interval optional
+  }
+  /* ReuseAddress should be specified in listen or connect.
+     It is supported for TCP.
+     Support for other protocols may be platform dependent. */
+  type record ReuseAddress {
+    boolean enable optional   // default is TRUE
+  }
+  /* SCTPEvent should be specified in listen or connect.
+     It is supported for SCTP. */
+  type record SctpEventHandle {
+    boolean sctp_data_io_event optional,   // default is TRUE  
+    boolean sctp_association_event optional,   // default is TRUE
+    boolean sctp_address_event optional,   // default is TRUE
+    boolean sctp_send_failure_event optional,   // default is TRUE
+    boolean sctp_peer_error_event optional,   // default is TRUE
+    boolean sctp_shutdown_event optional,   // default is TRUE
+    boolean sctp_partial_delivery_event optional,   // default is TRUE
+    boolean sctp_adaptation_layer_event optional,   // default is TRUE
+    boolean sctp_authentication_event optional   // default is TRUE    
+  }  
+  type union Option {
+    ReuseAddress 	reuseAddress,
+    TcpKeepAlive 	tcpKeepAlive,
+    SctpEventHandle 	sctpEventHandle,
+    TcpKeepAlive   sslKeepAlive,
+    HostList       sctpAdditionalLocalAddresses ,
+    integer        sctpEINConfigGroup
+  }
+  type record of Option OptionList;
+  type record of HostName HostList;
+
+  /* The communication ASP is used to send and receive messages in octetstrings.
+  */
+  type record ASP_Send {
+    ConnectionId connId,
+    ProtoTuple proto optional,
+    octetstring msg
+  }
+
+  type record ASP_SendTo {
+    ConnectionId connId,
+    HostName remName,
+    PortNumber remPort,
+    ProtoTuple proto optional,
+    octetstring msg
+  }
+
+  type record ASP_RecvFrom {
+    ConnectionId connId,
+    HostName remName,
+    PortNumber remPort,
+    HostName locName,
+    PortNumber locPort,
+    ProtoTuple proto,
+    UserData userData,
+    octetstring msg
+  }
+
+  type PortEvent ASP_Event;
+
+  // aliases of PortError values for backward compatibility
+  const PortError IPL4_ERROR_GENERAL := ERROR_GENERAL;
+  const PortError IPL4_ERROR_INSUFFICIENT_MEMORY := ERROR_INSUFFICIENT_MEMORY;
+  const PortError IPL4_ERROR_INVALID_INPUT_PARAMETER := ERROR_INVALID_INPUT_PARAMETER;
+  const PortError IPL4_ERROR_UNSUPPORTED_TRANSPORT := ERROR_UNSUPPORTED_PROTOCOL;
+  const PortError IPL4_ERROR_SOCKET := ERROR_SOCKET;
+  const PortError IPL4_ERROR_HOSTNAME := ERROR_HOSTNAME;
+  const PortError IPL4_ERROR_INVALID_CONNECTION := ERROR_INVALID_CONNECTION;
+  const PortError IPL4_ERROR_TEMPORARILY_UNAVAILABLE := ERROR_TEMPORARILY_UNAVAILABLE;
+  const PortError IPL4_ERROR_AVAILABLE := ERROR_AVAILABLE;
+
+  /* Type definition for the user defined function to determine the message
+     length (boundary) in a TCP data stream.
+     See the description of f_IPL4_setGetMsgLen.
+  */
+  type f_getMsgLen f_IPL4_getMsgLen;
+
+  /* 
+    Type definition to query IPL4 parameters.
+  */
+
+  type enumerated IPL4_Param {
+    IPL4_LOCALADDRESS,
+    IPL4_REMOTEADDRESS,
+    IPL4_PROTO,
+    IPL4_USERDATA,
+    IPL4_PARENTIDX
+  }
+
+  type union IPL4_ParamResult {
+    Socket local,
+    Socket remote,
+    ProtoTuple proto,
+    integer userData,
+    ConnectionId parentIdx
+  }
+  
+
+type enumerated IPL4_IPAddressType 
+{
+  IPv4,
+  IPv6
+};
+
+
+} // module IPL4_Types.ttcn
+

@@ -1,0 +1,363 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//
+//  File:               TCCDateTime_Functions.ttcn
+//  Description:        TCC Useful Functions: DateTime Functions
+//  Rev:                <RnXnn>
+//  Prodnr:             CNL 113 472
+//  Updated:            2011-06-29
+//  Contact:            http://ttcn.ericsson.se
+//
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+//  Module: TCCDateTime_Functions
+// 
+//  Purpose:
+//    This module supports date and time handling
+// 
+//  Module Parameters:
+//      - 
+// 
+//  Module depends on:
+//    -
+//
+///////////////////////////////////////////////////////////////////////////////
+module TCCDateTime_Functions {
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_time
+// 
+//  Purpose:
+//    Current calendar time of the system in seconds
+//
+//  Parameters:
+//    -
+// 
+//  Return Value:
+//    integer - time value
+//
+//  Errors:
+//    - 
+// 
+//  Detailed description:
+//    -
+// 
+///////////////////////////////////////////////////////////////////////////////
+external function f_time() return integer;
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_ctime
+// 
+//  Purpose:
+//    Convert a time value in seconds to human readable string
+//    The time represented as local time
+//
+//  Parameters:
+//    pl_sec - *in* *integer* - time value
+// 
+//  Return Value:
+//    integer - converted time value
+//
+//  Errors:
+//    - 
+// 
+//  Detailed description:
+//    -
+// 
+///////////////////////////////////////////////////////////////////////////////  
+external function f_ctime(integer pl_sec) return charstring;
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_ctime_UTC
+// 
+//  Purpose:
+//    Convert a time value in seconds to human readable string
+//    The time represented as UTC
+//
+//  Parameters:
+//    pl_sec - *in* *integer* - time value
+// 
+//  Return Value:
+//    integer - converted time value
+//
+//  Errors:
+//    - 
+// 
+//  Detailed description:
+//    -
+// 
+///////////////////////////////////////////////////////////////////////////////  
+external function f_ctime_UTC(integer pl_sec) return charstring;
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_getTimeFormatted
+// 
+//  Purpose:
+//    Return the current calendar time in a formatted way
+//
+//  Parameters:
+//    pl_sec - *in* *integer* - time value in seconds
+//    pl_format - *in* *charstring* - format string
+// 
+//  Return Value:
+//    charstring - formatted time in string format
+//
+//  Errors:
+//    - 
+// 
+//  Detailed description:
+//    *Specifier / Replaced by / Example*
+//
+//    ----------------------------------------------------------------------------------------------------------
+//
+//    %a - Abbreviated weekday name * - Thu
+//
+//    %A - Full weekday name * - Thursday
+//
+//    %b - Abbreviated month name * - Aug
+//
+//    %B - Full month name * - August
+//
+//    %c - Date and time representation * - Thu Aug 23 14:55:02 2001
+//
+//    %d - Day of the month (01-31) - 23
+//
+//    %H - Hour in 24h format (00-23) - 14
+//
+//    %I - Hour in 12h format (01-12) - 02
+//
+//    %j - Day of the year (001-366) - 235
+//
+//    %m - Month as a decimal number (01-12) - 08
+//
+//    %M - Minute (00-59) - 55
+//
+//    %p - AM or PM designation - PM
+//
+//    %S - Second (00-61) - 02
+//
+//    %U - Week number with the first Sunday as the first day of week one (00-53) - 33
+//
+//    %w - Weekday as a decimal number with Sunday as 0 (0-6) - 4
+//
+//    %W - Week number with the first Monday as the first day of week one (00-53) - 34
+//
+//    %x - Date representation * - 08/23/01
+//
+//    %X - Time representation * - 14:55:02
+//
+//    %y - Year, last two digits (00-99) - 01
+//
+//    %Y - Year - 2001
+//
+//    %Z - Timezone name or abbreviation - CDT
+//
+//    %% - A % sign - %
+//
+//    ----------------------------------------------------------------------------------------------------------
+//
+//    * The specifiers whose description is marked with an asterisk (*) are locale-dependent.
+// 
+///////////////////////////////////////////////////////////////////////////////
+external function f_getTimeFormatted(integer pl_sec, charstring pl_format) 
+return charstring;
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_time2sec
+// 
+//  Purpose:
+//    function to convert a formated time value to seconds
+//    The time represented as local time
+//
+//  Parameters:
+//    pl_year - *in* *integer* - year (e.g. 2007)
+//    pl_mon - *in* *integer* - month (e.g. 3)
+//    pl_day - *in* *integer* - day (e.g. 7)
+//    pl_hour - *in* *integer* - day (e.g. 12)
+//    pl_min - *in* *integer* - day (e.g. 50)
+//    pl_sec - *in* *integer* - day (e.g. 7)
+// 
+//  Return Value:
+//    integer - time in seconds
+//
+//  Errors:
+//    - 
+// 
+//  Detailed description:
+//    time in seconds since January 1, 1900
+// 
+///////////////////////////////////////////////////////////////////////////////
+external function f_time2sec(
+  integer pl_year, 
+  integer pl_mon, 
+  integer pl_day, 
+  integer pl_hour,
+  integer pl_min,
+  integer pl_sec) 
+return integer;
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_time2sec_UTC
+// 
+//  Purpose:
+//    function to convert a formated time value to seconds
+//    The time represented as UTC
+//
+//  Parameters:
+//    pl_year - *in* *integer* - year (e.g. 2007)
+//    pl_mon - *in* *integer* - month (e.g. 3)
+//    pl_day - *in* *integer* - day (e.g. 7)
+//    pl_hour - *in* *integer* - day (e.g. 12)
+//    pl_min - *in* *integer* - day (e.g. 50)
+//    pl_sec - *in* *integer* - day (e.g. 7)
+// 
+//  Return Value:
+//    integer - time in seconds
+//
+//  Errors:
+//    - 
+// 
+//  Detailed description:
+//    time in seconds since January 1, 1900
+// 
+///////////////////////////////////////////////////////////////////////////////
+external function f_time2sec_UTC(
+  integer pl_year, 
+  integer pl_mon, 
+  integer pl_day, 
+  integer pl_hour,
+  integer pl_min,
+  integer pl_sec) 
+return integer;
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_getCurrentDateWithOffset
+// 
+//  Purpose:
+//    Generate a date from the actual date and time plus the parameter
+//    in seconds e.g. getSdate(30) will return a charstring containing 
+//    the date and time of 30 seconds later
+//
+//  Parameters:
+//    pl_sec - *in* *integer* - offset time value
+// 
+//  Return Value:
+//    charstring - formatted time in string format
+//
+//  Errors:
+//    - 
+// 
+//  Detailed description:
+//    -
+// 
+///////////////////////////////////////////////////////////////////////////////
+external function f_getCurrentDateWithOffset(integer pl_sec) return charstring;
+ 
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_getCurrentGMTDate
+// 
+//  Purpose:
+//    Return the current GMT date in format RFC 1123-Date 
+//    ex :Sat, 13 Nov 2010 23:30:02 GMT
+//
+//  Parameters:
+//    -
+// 
+//  Return Value:
+//    charstring - formatted time in string format
+//
+//  Errors:
+//    - 
+// 
+//  Detailed description:
+//    -
+// 
+///////////////////////////////////////////////////////////////////////////////  
+external function f_getCurrentGMTDate() return charstring;
+
+//external function f_getCurrentTimeValue() return TimeValue;
+
+//////////////////////////////////////////////////////////////////////////////
+//  Function: f_tic
+// 
+//  Purpose:
+//    Return the number of clock ticks used by the application since 
+//    the program was launched
+//
+//    OR
+//
+//    Return the amount of CPU time in microseconds since the last call of f_tic
+//
+//    OR ...
+//
+//    Warning! This function depends on used library version. Be careful!
+//
+//  Parameters:
+//    -
+// 
+//  Return Value:
+//    integer - tics since program start
+//
+//  Errors:
+//    -
+// 
+//  Detailed description:
+//    -
+// 
+/////////////////////////////////////////////////////////////////////////////// 
+external function f_tic() return integer;
+
+//////////////////////////////////////////////////////////////////////////////
+//  Function: f_toc
+// 
+//  Purpose:
+//    Elapsed seconds since time t (only when f_tic() returns the number of 
+//    clock ticks elapsed since the program was launched)
+//
+//    Warning! This function depends on used library version. Be careful!
+//
+//  Parameters:
+//    t - *in* *integer* - time value
+// 
+//  Return Value:
+//    float - elapsed seconds
+//
+//  Errors:
+//    -
+// 
+//  Detailed description:
+//    f_tic counts clock tics since program start. f_toc counts seconds
+//    since clock() readout in t till current time
+// 
+///////////////////////////////////////////////////////////////////////////////
+external function f_toc(integer t) return float;
+  
+//////////////////////////////////////////////////////////////////////////////
+//  Function: f_timeDiff
+// 
+//  Purpose:
+//    Difference between two time
+//
+//  Parameters:
+//    t_start - *in* *integer* - start time
+//    t_stop - *in* *integer* - stop time
+// 
+//  Return Value:
+//    integer - t_stop-t_start
+//
+//  Errors:
+//    -
+// 
+//  Detailed description:
+//    -
+// 
+///////////////////////////////////////////////////////////////////////////////
+external function f_timeDiff(integer t_stop, integer t_start) return integer;
+
+}

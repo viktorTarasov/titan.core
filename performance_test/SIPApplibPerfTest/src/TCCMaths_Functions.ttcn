@@ -1,0 +1,935 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//
+//  File:               TCCMaths_Functions.ttcn
+//  Description:        TCC Useful Functions: Math Functions
+//  Rev:                <RnXnn>
+//  Prodnr:             CNL 113 472
+//  Updated:            2008-12-10
+//  Contact:            http://ttcn.ericsson.se
+//
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+//  Module: TCCMaths_Functions
+//
+//  Purpose:
+//    This module supports mathematics
+//
+//  Module Parameters:
+//      -
+//
+//  Module depends on:
+//    <TCCMaths_GenericTypes>
+//
+///////////////////////////////////////////////////////////////////////////////
+module TCCMaths_Functions {
+
+import from TCCMaths_GenericTypes all;
+
+///////////////////////////////////////////////////////////////////////////////
+//  Module parameters:
+//
+//  Purpose:
+//    Module parameters used by TCCMaths_Functions.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+//Types used by the poisson generation
+type record t_Poisson_Table
+{
+  boolean initialized,          //indicates if the table was initialized or not
+  float lambda,                 //the lambda that was used to generate the table
+  record of float poisson_value //the poisson table
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_maxIL
+//
+//  Purpose:
+//    Return an IntegerList with the highest number found at index 0 and
+//    the index of ilist where it's found at index 1
+//
+//  Parameters:
+//    ilist - *in* <IntegerList> - integer array
+//
+//  Return Value:
+//    <IntegerList> - integer array: { <max>, <max index> }
+//
+//  Errors:
+//    -
+//
+//  Detailed description:
+//    -
+//
+///////////////////////////////////////////////////////////////////////////////
+external function f_maxIL(in IntegerList ilist) return IntegerList;
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_maxFL
+//
+//  Purpose:
+//    Return an FloatList with the highest number found
+//    at index 0 and the index of flist where it's fond at index
+//    1
+//
+//  Parameters:
+//    flist - *in* <FloatList> - integer array
+//
+//  Return Value:
+//    <FloatList> - float array: { <max>, <max index> }
+//
+//  Errors:
+//    -
+//
+//  Detailed description:
+//    -
+//
+///////////////////////////////////////////////////////////////////////////////
+external function f_maxFL(in FloatList flist) return FloatList;
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_minIL
+//
+//  Purpose:
+//     Return an IntegerList with the lowest number found
+//     at index 0 and the index of ilist where it's fond at index
+//     1
+//
+//  Parameters:
+//    ilist - *in* <IntegerList> - integer array
+//
+//  Return Value:
+//    <IntegerList> - integer array: { <min>, <min index> }
+//
+//  Errors:
+//    -
+//
+//  Detailed description:
+//    -
+//
+///////////////////////////////////////////////////////////////////////////////
+external function f_minIL(in IntegerList ilist) return  IntegerList;
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_minFL
+//
+//  Purpose:
+//    Return an FloatList with the highest number found
+//    at index 0 and the index of flist where it's fond at index
+//    1
+//
+//  Parameters:
+//    flist - *in* <FloatList> - integer array
+//
+//  Return Value:
+//    <FloatList> - float array: { <min>, <min index> }
+//
+//  Errors:
+//    -
+//
+//  Detailed description:
+//    -
+//
+///////////////////////////////////////////////////////////////////////////////
+external function f_minFL(in FloatList flist) return FloatList;
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_averageFL
+//
+//  Purpose:
+//    Return the average of flist
+//
+//  Parameters:
+//    flist - *in* <FloatList> - integer array
+//
+//  Return Value:
+//    float - average of float numbers
+//
+//  Errors:
+//    -
+//
+//  Detailed description:
+//    -
+//
+///////////////////////////////////////////////////////////////////////////////
+external function f_averageFL(in FloatList flist) return float;
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_averageIL
+//
+//  Purpose:
+//    Return the average of ilist
+//
+//  Parameters:
+//    ilist - *in* <IntegerList> - integer array
+//
+//  Return Value:
+//    float - average of integer numbers
+//
+//  Errors:
+//    -
+//
+//  Detailed description:
+//    -
+//
+///////////////////////////////////////////////////////////////////////////////
+external function f_averageIL(in IntegerList ilist) return float;
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_updateFL
+//
+//  Purpose:
+//    Append tail to the end of head (head return as inout)
+//
+//  Parameters:
+//    head - *in* <FloatList> - first part of the float list
+//    tail - *in* <FloatList> - second part of the float list
+//
+//  Return Value:
+//    -
+//
+//  Errors:
+//    -
+//
+//  Detailed description:
+//    -
+//
+///////////////////////////////////////////////////////////////////////////////
+external function f_updateFL(inout FloatList head, in FloatList tail);
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_updateIL
+//
+//  Purpose:
+//     Append tail to the end of head (head return as inout)
+//
+//  Parameters:
+//    head - *in* <IntegerList> - first part of the integer list
+//    tail - *in* <IntegerList> - second part of the integer list
+//
+//  Return Value:
+//    -
+//
+//  Errors:
+//    -
+//
+//  Detailed description:
+//    -
+//
+///////////////////////////////////////////////////////////////////////////////
+external function f_updateIL(inout IntegerList head, in IntegerList tail);
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_stdFL
+//
+//  Purpose:
+//    Return the normalized standard devILtion of float list
+//    (so the average square distance from the center of elements in the list)
+//
+//  Parameters:
+//    flist - *in* <FloatList> - float list
+//
+//  Return Value:
+//    float - normalized, standard derivate
+//
+//  Errors:
+//    -
+//
+//  Detailed description:
+//    E.g.  list = {2.0, 4.0}
+//
+//          u = (2.0 + 4.0) / 2 <- *center of elements in the list*
+//
+//          len = sizeof(list)
+//
+//          [ ( (2.0-u)^2 + (4.0-u)^2 ) / len ] ^ (0.5)
+//
+///////////////////////////////////////////////////////////////////////////////
+external function f_stdFL(in FloatList flist) return float;
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_stdFLL
+//
+//  Purpose:
+//    Return the normalized standard devILtion of float list  using custom
+//    center
+//    (so it is the average square distance from a user defined central value)
+//
+//  Parameters:
+//    u - *in* *float* - user defined central value
+//    flist - *in* <FloatList> - float list
+//
+//  Return Value:
+//    float - normalized, standard derivate
+//
+//  Errors:
+//    -
+//
+//  Detailed description:
+//    Note: u is the average value of flist and has to be calculated
+//    before a call to this function
+//
+//    E.g.  list = {2.0, 4.0}
+//
+//          u <- *user input*
+//
+//          len = sizeof(list)
+//
+//          [ ( (2.0-u)^2 + (4.0-u)^2 ) / len ] ^ (0.5)
+//
+///////////////////////////////////////////////////////////////////////////////
+external function f_stdFLL(in FloatList flist, in float u) return float;
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_stdIL
+//
+//  Purpose:
+//    Return the normalized standard devILtion of integer list
+//    (so the average square distance from the center of points)
+//
+//  Parameters:
+//    ilist - *in* <IntegerList> - integer list
+//
+//  Return Value:
+//    float - normalized, standard derivate
+//
+//  Errors:
+//    -
+//
+//  Detailed description:
+//    E.g.  list = {2.0, 4.0}
+//
+//          u = (2.0 + 4.0) / 2 <- *center of elements in the list*
+//
+//          len = sizeof(list)
+//
+//          [ ( (2.0-u)^2 + (4.0-u)^2 ) / len ] ^ (0.5)
+//
+//
+///////////////////////////////////////////////////////////////////////////////
+external function f_stdIL(in IntegerList ilist) return float;
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_stdILL
+//
+//  Purpose:
+//    Return the normalized standard devILtion of integer list using custom
+//    center
+//    (so it is the average square distance from a user defined central value)
+//
+//  Parameters:
+//    u - *in* *float* - user defined central value
+//    ilist - *in* <IntegerList> - integer list
+//
+//  Return Value:
+//    float - normalized, standard derivate
+//
+//  Errors:
+//    -
+//
+//  Detailed description:
+//    Note: u is a user defined value
+//
+//    E.g.  list = {2.0, 4.0}
+//
+//          u <- *user input*
+//
+//          len = sizeof(list)
+//
+//          [ ( (2.0-u)^2 + (4.0-u)^2 ) / len ] ^ (0.5)
+//
+///////////////////////////////////////////////////////////////////////////////
+external function f_stdILL(in IntegerList ilist, in float u) return float;
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_sinVL
+//
+//  Purpose:
+//    Return the values of the sine function
+//
+//  Parameters:
+//    freq - *in* *float* - the frequency of the sine curve
+//    altitude - *in* *float* - the altitude of the sine curve
+//    start_val - *in* *float* - the starting value passed to the sine function
+//    len - *in* *integer* - the wanted number of points of the sine curve
+//    step - *in* *float* - the length between the points on the sine curve
+//
+//  Return Value:
+//    <FloatList> - the wanted points in a float list
+//
+//  Errors:
+//    -
+//
+//  Detailed description:
+//    Generation of one sin value:
+//
+//      altitude * sin(2 * pi * freq * start_val)
+//
+//      start_val := start_val + step
+//
+///////////////////////////////////////////////////////////////////////////////
+external function f_sinVL(
+  in float freq,
+  in float altitude,
+  in float start_val,
+  in integer len,
+  in float step) return FloatList;
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_cosVL
+//
+//  Purpose:
+//    Return the values of the cosine function
+//
+//  Parameters:
+//    freq - *in* *float* - the frequency of the sine curve
+//    altitude - *in* *float* - the altitude of the sine curve
+//    start_val - *in* *float* - the starting value passed to the sine function
+//    len - *in* *integer* - the wanted number of points of the sine curve
+//    step - *in* *float* - the length between the points on the sine curve
+//
+//  Return Value:
+//    <FloatList> - the wanted points in a float list
+//
+//  Errors:
+//    -
+//
+//  Detailed description:
+//    Generation of one cos value:
+//
+//      altitude * cos(2 * pi * freq * start_val)
+//
+//      start_val := start_val + step
+//
+///////////////////////////////////////////////////////////////////////////////
+external function f_cosVL(
+  in float freq,
+  in float altitude,
+  in float start_val,
+  in integer len,
+  in float step) return FloatList;
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_sin
+//
+//  Purpose:
+//    Return the sine of angle radILns
+//
+//  Parameters:
+//    angle - *in* *float* - angle in radILns
+//
+//  Return Value:
+//    float - the sine value of angle radILns
+//
+//  Errors:
+//    -
+//
+//  Detailed description:
+//    -
+//
+///////////////////////////////////////////////////////////////////////////////
+external function f_sin(in float angle) return float;
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_cos
+//
+//  Purpose:
+//    Return the cosine of angle radILns
+//
+//  Parameters:
+//    angle - *in* *float* - angle in radILns
+//
+//  Return Value:
+//    float - the cosine value of angle radILns
+//
+//  Errors:
+//    -
+//
+//  Detailed description:
+//    -
+//
+///////////////////////////////////////////////////////////////////////////////
+external function f_cos(in float angle) return float;
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_asin
+//
+//  Purpose:
+//    Return the arc sine of value in [-pi/2, +pi/2]
+//
+//  Parameters:
+//    val - *in* *float* - value
+//
+//  Return Value:
+//    float - the arc sine value of val
+//
+//  Errors:
+//    -
+//
+//  Detailed description:
+//    -
+//
+///////////////////////////////////////////////////////////////////////////////
+external function f_asin(in float val) return float;
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_acos
+//
+//  Purpose:
+//    Return the arc cosine of value in [0, pi]
+//
+//  Parameters:
+//    val - *in* *float* - value
+//
+//  Return Value:
+//    float - the arc cosine value of val
+//
+//  Errors:
+//    -
+//
+//  Detailed description:
+//    -
+//
+///////////////////////////////////////////////////////////////////////////////
+external function f_acos(in float val) return float;
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_powFF
+//
+//  Purpose:
+//    Raise to power (float to float power)
+//
+//  Parameters:
+//    base - *in* *float* - base value
+//    expo - *in* *float* - exponent value
+//
+//  Return Value:
+//    float - base raised to power expo
+//
+//  Errors:
+//    -
+//
+//  Detailed description:
+//    -
+//
+///////////////////////////////////////////////////////////////////////////////
+external function f_powFF(in float base, in float expo) return float;
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_powII
+//
+//  Purpose:
+//    Raise to power (integer to integer power)
+//
+//  Parameters:
+//    base - *in* *integer* - base value
+//    expo - *in* *integer* - exponent value
+//
+//  Return Value:
+//    integer - base raised to power expo
+//
+//  Errors:
+//    -
+//
+//  Detailed description:
+//    -
+//
+///////////////////////////////////////////////////////////////////////////////
+external function f_powII(in integer base, in integer expo) return integer;
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_powIF
+//
+//  Purpose:
+//    Raise to power (integer to float power)
+//
+//  Parameters:
+//    base - *in* *integer* - base value
+//    expo - *in* *float* - exponent value
+//
+//  Return Value:
+//    float - base raised to power expo
+//
+//  Errors:
+//    -
+//
+//  Detailed description:
+//    -
+//
+///////////////////////////////////////////////////////////////////////////////
+external function f_powIF(in integer base, in float expo) return float;
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_powFI
+//
+//  Purpose:
+//    Raise to power (float to integer power)
+//
+//  Parameters:
+//    base - *in* *float* - base value
+//    expo - *in* *integer* - exponent value
+//
+//  Return Value:
+//    float - base raised to power expo
+//
+//  Errors:
+//    -
+//
+//  Detailed description:
+//    -
+//
+///////////////////////////////////////////////////////////////////////////////
+external function f_powFI(in float base, in integer expo) return float;
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_sqrF
+//
+//  Purpose:
+//    Raise a float value to square
+//
+//  Parameters:
+//    base - *in* *float* - base value
+//
+//  Return Value:
+//    float - square of base
+//
+//  Errors:
+//    -
+//
+//  Detailed description:
+//    -
+//
+///////////////////////////////////////////////////////////////////////////////
+external function f_sqrF(in float base) return float;
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_sqrI
+//
+//  Purpose:
+//    Raise an integer value to square
+//
+//  Parameters:
+//    base - *in* *integer* - base value
+//
+//  Return Value:
+//    integer - square of base
+//
+//  Errors:
+//    -
+//
+//  Detailed description:
+//    -
+//
+///////////////////////////////////////////////////////////////////////////////
+external function f_sqrI(in integer base) return integer;
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_sqrtF
+//
+//  Purpose:
+//    Square root of float value
+//
+//  Parameters:
+//    base - *in* *float* - base value
+//
+//  Return Value:
+//    float - square root of base
+//
+//  Errors:
+//    -
+//
+//  Detailed description:
+//    -
+//
+///////////////////////////////////////////////////////////////////////////////
+external function f_sqrtF(in float base) return float;
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_sqrtI
+//
+//  Purpose:
+//    Square root of integer value
+//
+//  Parameters:
+//    base - *in* *integer* - base value
+//
+//  Return Value:
+//    float - square root of base
+//
+//  Errors:
+//    -
+//
+//  Detailed description:
+//    -
+//
+///////////////////////////////////////////////////////////////////////////////
+external function f_sqrtI(in integer base) return float;
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_ceil
+//
+//  Purpose:
+//    Return the smallest integer value that is not less then value
+//
+//  Parameters:
+//    val - *in* *float* - float value
+//
+//  Return Value:
+//    integer - ceil value of val
+//
+//  Errors:
+//    -
+//
+//  Detailed description:
+//    -
+//
+///////////////////////////////////////////////////////////////////////////////
+external function f_ceil(in float val) return integer;
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_floor
+//
+//  Purpose:
+//    Return the largest integer value that is not greater then value
+//
+//  Parameters:
+//    val - *in* *float* - float value
+//
+//  Return Value:
+//    integer - floor value of val
+//
+//  Errors:
+//    -
+//
+//  Detailed description:
+//    -
+//
+///////////////////////////////////////////////////////////////////////////////
+external function f_floor(in float val) return integer;
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_exp
+//
+//  Purpose:
+//    Return the exponential value of the argument
+//
+//  Parameters:
+//    val - *in* *float* - float value
+//
+//  Return Value:
+//    float - exp value of val
+//
+//  Errors:
+//    -
+//
+//  Detailed description:
+//    -
+//
+///////////////////////////////////////////////////////////////////////////////
+external function f_exp(in float val) return float;
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_log
+//
+//  Purpose:
+//    Return the natural logarithm of the argument
+//
+//  Parameters:
+//    val - *in* *float* - float value
+//
+//  Return Value:
+//    float - ln value of val
+//
+//  Errors:
+//    -
+//
+//  Detailed description:
+//    -
+//
+///////////////////////////////////////////////////////////////////////////////
+external function f_log(in float val) return float;
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_generate_poissonTable
+//
+//  Purpose:
+//    Returns with an initialized poisson table which is a
+//    cumulative probability distribution list for a given lambda.
+//
+//  Parameters:
+//    p_lambda - *in* *float* - the lambda variance of the poisson distribution
+//    p_pTable - *out* *t_Poisson_Table* - the generated poisson table
+//
+//  Return Value:
+//    *boolean* - true if the generation was success
+//
+//  Errors:
+//    If exp(-lambda) is zero than the table generation fails
+//
+//  Detailed description:
+//    The table used to get a poisson value by a random number indicates the
+//    next poisson value that should be use. See <f_getNext_poissonValue>
+//    function for more details. The size of the table will be lambda * 2.
+//    Note: With this method we can only generate correct values for lambda-s smaller than about 100-110
+//	    This is due to f_powFF(p_lambda, j) is rounded to infinity above lambda-s bigger than about 150
+//
+///////////////////////////////////////////////////////////////////////////////
+function f_generate_poissonTable(in float p_lambda, out t_Poisson_Table p_pTable) return boolean
+{
+  var float t := f_exp(-1.0*p_lambda);
+  var float act_poisson := 0.0;
+  var float factJ := 1.0;
+  var float distr_lambda := 0.0;
+  var integer i := 0;
+  var integer vl_limit := float2int(p_lambda +1.0 ) * 2;
+  var boolean ret_val := true;
+  p_pTable.initialized := true;
+
+  if(p_lambda<0.0)
+  {
+	log("lambda is smaller than zero. The generated poisson table is corrupted. Lambda:",p_lambda);
+        p_pTable.initialized := false;
+	ret_val := false;
+  }
+
+  if(t==0.0)
+  {
+	log("exp(-lambda) is zero. This may corrupts the poisson table generation. Lambda:",p_lambda);
+        p_pTable.initialized := false;
+	ret_val := false;
+  }
+
+  p_pTable.lambda := p_lambda;
+
+
+  act_poisson := t;
+  distr_lambda := t;
+  factJ := 0.0;
+  p_pTable.poisson_value[0] := act_poisson;
+
+  for(i:=1; i < vl_limit + 1; i := i + 1)
+  {
+    factJ := factJ + 1.0;
+    distr_lambda := distr_lambda * p_lambda / factJ;
+    act_poisson := act_poisson + distr_lambda;
+
+    p_pTable.poisson_value[i] := act_poisson;
+  }
+
+  return ret_val;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_getNext_poissonValue
+//
+//  Purpose:
+//    Returns with a random poisson value by the given poisson table and lambda
+//    poisson variance.
+//
+//  Parameters:
+//    p_lambda - *in* *float* - the lambda variance of the poisson distribution
+//    p_pTable - *inout* *t_Poisson_Table* - the poisson table
+//    p_sucess - *out* *boolean* - indicates if the returned value is from a
+//                                 successfully generated poisson table or not
+//                                 If false, an extremly rare error happened under
+//                                 the table generation and this need to be
+//                                 regenerate!
+//
+//  Return Value:
+//    *integer* - the selected random poisson value between 0 and sizeof(p_pTable)
+//
+//  Errors:
+//    -
+//
+//  Detailed description:
+//    The function checks the input table if it is initialized or not and if
+//    not first of all generates it by the <f_generate_poissonTable> function.
+//    If the table was initialized checks the given lambda if it was used to
+//    generate the table. If it is different, regenerates the table.
+//    After these checks we have the correct initialized poisson table for
+//    the given p_lambda. Finally it returns with a random poisson value by
+//    the table.
+//
+///////////////////////////////////////////////////////////////////////////////
+function f_getNext_poissonValue(in float p_lambda, inout t_Poisson_Table p_pTable, out boolean p_sucess) return integer
+{
+  var integer ret_val := 0;
+  var float random_num := rnd();
+  var integer i := 0;
+  var integer vl_limit;
+
+  p_sucess := true;
+
+  //if it is the first time or for different lambda
+  //than (re-)generate the poisson table
+  if((not p_pTable.initialized) or p_lambda != p_pTable.lambda)
+  {
+    p_sucess := f_generate_poissonTable(p_lambda, p_pTable);
+  }
+  if(p_sucess)
+  {
+    vl_limit := sizeof(p_pTable.poisson_value) - 1;
+    i := float2int(p_lambda);
+    if(p_pTable.poisson_value[i] < random_num)
+    {
+  	i := i + 1;
+  	while((p_pTable.poisson_value[i] < random_num) and (i < vl_limit))
+  	{
+    	i := i + 1;
+  	}
+    }
+    else
+    {
+   	while((p_pTable.poisson_value[i] > random_num) and (i>0))
+  	{
+    	i := i - 1;
+  	}
+    }
+    ret_val := i;
+  }
+
+  return ret_val;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_gen_Exponential_Distribution(in float p_lambda) return float
+//
+//  Purpose:
+//    Returns with the exponential random variable for a given lambda
+//
+//  Parameters:
+//    p_lambda - *in* *float* - the lambda variance of the exponential distribution
+//
+//  Return Value:
+//    *float* - the exponential random variable for the given lambda
+//
+//  Errors:
+//    -
+//
+//  Detailed description:
+//    The function works as the following:
+//    - generate a random number U~U(0,1)
+//    - since U is uniform in (0,1) then so is U-1
+//    - X = - Log(1-U)/lambda = - Log(U)/lambda
+//    - return with X
+//    Note: Log means natural logarithm in this case
+//
+///////////////////////////////////////////////////////////////////////////////
+function f_gen_Exponential_Distribution(in float p_lambda) return float
+{
+  var float ret_val := 0.0;
+  var float random_num := rnd();
+
+  ret_val := -1.0*(f_log(random_num))/p_lambda;
+
+  return ret_val;
+}
+
+}

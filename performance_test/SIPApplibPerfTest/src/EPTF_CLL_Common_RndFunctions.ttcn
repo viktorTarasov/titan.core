@@ -1,0 +1,201 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//
+//  File:               EPTF_CLL_Common_RndFunctions.ttcn
+//  Description:        Random Value generator facility functions
+//                      Any component can be extended with it to inherit 
+//			it properties
+//  Rev:                <RnXnn>
+//  Prodnr:             CNL 113 512
+//  Updated:            2009-05-26
+//  Contact:            http://ttcn.ericsson.se
+//  Author:             ETH/RZD Norbert Pinter
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////
+//  Module: EPTF_CLL_Common_RndFunctions
+// 
+//  Purpose:
+//    This module contains the implementation of the RndValues component
+// 
+//  Module Parameters:
+//    tsp_EPTF_Common_rndValues_behaviour - *float* - the behaviour of the random number generation
+//    tsp_EPTF_Common_rndValues_numberOfRndValues - *integer* - the number of the generated random values
+//
+//  Module depends on:
+//    <EPTF_CLL_Common_RndDefinitions>
+// 
+//  Current Owner:
+//    ENORPIN
+// 
+//  Last Review Date:
+//    2007-xx-xx
+//
+//  Detailed Comments:
+//    -
+// 
+///////////////////////////////////////////////////////////////
+module EPTF_CLL_Common_RndFunctions
+{
+
+//=========================================================================
+// Import Part
+//=========================================================================
+import from EPTF_CLL_Common_RndDefinitions all;
+import from EPTF_CLL_Common_Functions all;
+
+//=========================================================================
+// Module Parameters
+//=========================================================================
+modulepar {
+  float tsp_EPTF_Common_RndValues_behaviour := 0.1; //-1:no seed, otherwise the value of the first seed
+  integer tsp_EPTF_Common_RndValues_numberOfRndValues := 10;
+}
+
+//=========================================================================
+// Functions
+//=========================================================================
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Common_RndValues_init_CT
+// 
+//  Purpose:
+//    Function to initialize the rndValues component
+//
+//  Parameters:
+//    -
+//
+//  Return Value:
+//    *boolean* - true, if the initialization finished
+//
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//    -  
+//  
+///////////////////////////////////////////////////////////
+function f_EPTF_Common_RndValues_init_CT(
+  in integer pl_nofRndValues := -1,
+  in float pl_behavior := 0.0 )
+runs on EPTF_Common_RndValues_CT 
+return boolean
+{
+  if ( v_EPTF_Common_RndValues_initialized) {return false;}
+  
+  if (pl_nofRndValues != -1) {
+    v_EPTF_Common_RndValues_numberOfRndValues := pl_nofRndValues;
+  }
+  else {
+    v_EPTF_Common_RndValues_numberOfRndValues := tsp_EPTF_Common_RndValues_numberOfRndValues;
+  }
+  
+  if (pl_behavior != 0.0) {
+    v_EPTF_Common_RndValues_behaviour := pl_behavior;
+  }
+  else {
+    v_EPTF_Common_RndValues_behaviour := tsp_EPTF_Common_RndValues_behaviour;
+  }
+  
+  
+  if( not( v_EPTF_Common_RndValues_behaviour == -1.0  or (v_EPTF_Common_RndValues_behaviour>=0.0 and v_EPTF_Common_RndValues_behaviour<1.0)))
+  {
+    f_EPTF_Common_error(log2str("ERROR:Faulty input value in f_EPTF_Common_RndValues_init_CT:",v_EPTF_Common_RndValues_behaviour));
+    return false;
+  }
+
+  if( v_EPTF_Common_RndValues_behaviour == -1.0 )
+  {
+    f_EPTF_Common_RndValues_generateRandomNumbers(false);
+  }
+  else //( tsp_EPTF_Common_RndValues_behaviour>=0.0 and tsp_EPTF_Common_RndValues_behaviour<1.0)
+  {
+    f_EPTF_Common_RndValues_generateRandomNumbers(true);
+  }
+
+  v_EPTF_Common_RndValues_initialized := true;
+  return true;
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Common_RndValues_generateRandomNumbers
+// 
+//  Purpose:
+//    Function to generate random numbers
+//
+//  Parameters:
+//    pl_isFirstTime - *boolean* - boolean to indicate the first usage time
+//
+//  Return Value:
+//    -
+//
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//    -  
+//  
+///////////////////////////////////////////////////////////
+function f_EPTF_Common_RndValues_generateRandomNumbers(
+  in boolean pl_isFirstTime := false) 
+runs on EPTF_Common_RndValues_CT 
+{
+  if (pl_isFirstTime) {
+    v_EPTF_Common_RndValues_rndNumberList[0] := rnd(v_EPTF_Common_RndValues_behaviour);
+  }
+  else {
+    v_EPTF_Common_RndValues_rndNumberList[0] := rnd();
+  }
+  for(var integer i := 1; i< v_EPTF_Common_RndValues_numberOfRndValues;  i:=i+1)
+  {
+    v_EPTF_Common_RndValues_rndNumberList[i] := rnd();
+  }
+  v_EPTF_Common_RndValues_actualIndex := 0;
+  
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Common_RndValues_getNextRndValue
+// 
+//  Purpose:
+//    Function to get the next generated random value
+//
+//  Parameters:
+//    -
+//
+//  Return Value:
+//    *float* - the next generated random number
+//
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//    -  
+//  
+///////////////////////////////////////////////////////////
+function f_EPTF_Common_RndValues_getNextRndValue()
+  runs on EPTF_Common_RndValues_CT
+return float
+{
+  var float vloc_retval := -1.0;
+  if(v_EPTF_Common_RndValues_initialized == true) {
+    if (v_EPTF_Common_RndValues_actualIndex >= tsp_EPTF_Common_RndValues_numberOfRndValues) {
+      f_EPTF_Common_RndValues_generateRandomNumbers(false);
+    }
+    
+    vloc_retval := v_EPTF_Common_RndValues_rndNumberList[v_EPTF_Common_RndValues_actualIndex];
+    v_EPTF_Common_RndValues_actualIndex := v_EPTF_Common_RndValues_actualIndex+1;  
+  }
+  else {
+    f_EPTF_Common_error("ERROR: The component has not been initialized yet");
+  }
+  return vloc_retval;
+}
+
+}  // end of module
+
+

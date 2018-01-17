@@ -1,0 +1,371 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_CLL_TransportMessageBufferManager_Functions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 512
+//  Updated:  2011-10-12
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////
+//  Module: EPTF_CLL_TransportMessageBufferManager_Functions
+// 
+//  Purpose:
+//    Buffermanager functions used for transport components.
+// 
+//  Module Parameters:
+//    tsp_EPTF_MessageBufferManager_maxBufferSize - integer - the maximum buffer size, original value is 1.
+// 
+//  Module depends on:
+//    <EPTF_CLL_HashMapInt2Int_Functions>
+//
+//    <EPTF_CLL_FBQ_Functions>
+//
+//    <EPTF_CLL_TransportMessageBufferManager_Definitions>
+//
+//    <EPTF_CLL_Base_Functions>
+// 
+//    <EPTF_CLL_HashMap_Functions>
+//
+//  Current Owner:
+//    ENORPIN (EBENMOL)
+// 
+//  Last Review Date:
+//    2008-07-18 
+// 
+//  Detailed Comments:
+// 
+// 
+///////////////////////////////////////////////////////////
+module EPTF_CLL_TransportMessageBufferManager_Functions {
+
+
+//=========================================================================
+// Import Part
+//=========================================================================
+import from EPTF_CLL_HashMapInt2Int_Functions all;
+import from EPTF_CLL_FBQ_Functions all;
+import from EPTF_CLL_TransportMessageBufferManager_Definitions all;
+import from EPTF_CLL_Base_Functions all;
+import from EPTF_CLL_Logging_Functions all;
+import from EPTF_CLL_HashMap_Functions all;
+
+modulepar integer tsp_EPTF_MessageBufferManager_maxBufferSize := 1;
+
+//=========================================================================
+// Functions
+//=========================================================================
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_MessageBufferManager_init_CT
+// 
+//  Purpose:
+//    Function to initialize the MessageBufferManager component
+//
+//  Parameters:
+//    pl_selfName - *in* *charstring* - the name of the component
+//
+//  Return Value:
+//    - 
+//
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//    
+///////////////////////////////////////////////////////////  
+public function f_EPTF_MessageBufferManager_init_CT(
+  in charstring pl_selfName := "EPTF_MessageBufferManager") 
+runs on EPTF_MessageBufferManager_CT {
+
+  if (v_EPTF_MessageBufferManager_initialized) {
+    return;
+  }
+
+  f_EPTF_Base_init_CT(pl_selfName);
+  f_EPTF_HashMap_init_CT (pl_selfName);
+  f_EPTF_FBQ_init_CT(pl_selfName);
+  
+  f_EPTF_Base_registerCleanup(refers(f_EPTF_MessageBufferManager_cleanup_CT));
+  
+  v_EPTF_MessageBufferManager_keyToMessageRecord := f_EPTF_int2int_HashMap_New ("EPTF_MessageBuffer:Key to Message Record");
+  f_EPTF_FBQ_initFreeBusyQueue(v_EPTF_MessageBufferManager_messageFreeBusyQueue);
+  v_EPTF_MessageBufferManager_maxBufferSize := tsp_EPTF_MessageBufferManager_maxBufferSize;
+  f_EPTF_Logging_init_CT(pl_selfName);
+  v_EPTF_MessageBufferManager_initialized := true;
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_MessageBufferManager_cleanup_CT
+// 
+//  Purpose:
+//    Function to cleanup the MessageBufferManager component
+//
+//  Parameters:
+//    - 
+//
+//  Return Value:
+//    - 
+//
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//    
+///////////////////////////////////////////////////////////  
+private function f_EPTF_MessageBufferManager_cleanup_CT() 
+runs on EPTF_MessageBufferManager_CT {
+  if(not v_EPTF_MessageBufferManager_initialized) { return; }
+  
+  f_EPTF_int2int_HashMap_Delete("EPTF_MessageBuffer:Key to Message Record");
+  
+  v_EPTF_MessageBufferManager_initialized := false;
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_MessageBufferManager_setMessageToBuffer
+// 
+//  Purpose:
+//    Function to set message to the buffer
+//
+//  Parameters:
+//    pl_message - *in octetstring* - The outgoing message
+//    pl_information - *in charstring* - Store some other information
+//    pl_key - *in integer* - The key of the message
+//
+//  Return Value:
+//    - 
+//
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//    
+///////////////////////////////////////////////////////////  
+public function f_EPTF_MessageBufferManager_setMessageToBuffer (
+  in octetstring pl_message,
+  in charstring pl_information := "", 
+  in integer pl_key) 
+runs on EPTF_MessageBufferManager_CT {
+
+  var integer vl_idx := -1;
+
+  if (f_EPTF_int2int_HashMap_Find(v_EPTF_MessageBufferManager_keyToMessageRecord, pl_key, vl_idx))
+  {
+    if (v_EPTF_MessageBufferManager_maxBufferSize <= sizeof(v_EPTF_MessageBufferManager_messages[vl_idx]))
+    {
+      v_EPTF_MessageBufferManager_messages[vl_idx] := {};  //erasing buffer
+      //log("f_EPTF_MessageBufferManager_setMessageToBuffer: clearing buffer");
+      f_EPTF_Logging_warning(true, log2str("Warning: ","Buffer is full, clearing buffer..."));
+    }
+    //log("f_EPTF_MessageBufferManager_setMessageToBuffer: ["&int2str(sizeof(v_EPTF_MessageBufferManager_messages[vl_idx]))&"]");
+    v_EPTF_MessageBufferManager_messages[vl_idx][sizeof(v_EPTF_MessageBufferManager_messages[vl_idx])] := {StoreInformation := pl_information, Message := pl_message, Valid := true};
+  }
+  else
+  {
+    //log("f_EPTF_MessageBufferManager_setMessageToBuffer: [-0]");
+    vl_idx := f_EPTF_FBQ_getOrCreateFreeSlot(v_EPTF_MessageBufferManager_messageFreeBusyQueue);
+    f_EPTF_int2int_HashMap_Insert(v_EPTF_MessageBufferManager_keyToMessageRecord, pl_key, vl_idx);
+    f_EPTF_FBQ_moveFromFreeHeadToBusyTail(v_EPTF_MessageBufferManager_messageFreeBusyQueue);
+    v_EPTF_MessageBufferManager_messages[vl_idx][0] := {StoreInformation := pl_information, Message := pl_message, Valid := true};
+  }
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_MessageBufferManager_getMessageFromBuffer
+// 
+//  Purpose:
+//    Function to get message from the buffer
+//
+//  Parameters:
+//    pl_key - *in integer* - The key of the message 
+//    pl_message - *in octetstring* - The outgoing message
+//    pl_information - *in charstring* - Store some other information
+//
+//  Return Value:
+//    *boolean* - true if there are any messages left in the buffer 
+//
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//    This function is used to read messages from the buffer and then delete the stored messages. The parameter pl_message 
+//    is the message read from the buffer.
+//    If there are other messages left the return value is true.
+//    
+///////////////////////////////////////////////////////////  
+public function f_EPTF_MessageBufferManager_getMessageFromBuffer (
+  in integer pl_key, 
+  out octetstring pl_message,
+  out charstring pl_information) 
+runs on EPTF_MessageBufferManager_CT
+return boolean
+{
+
+  var integer vl_idx;
+  //log("f_EPTF_MessageBufferManager_getMessageFromBuffer: entering");
+
+  if(f_EPTF_int2int_HashMap_Find(v_EPTF_MessageBufferManager_keyToMessageRecord,pl_key,vl_idx))
+  {
+
+    for(var integer i:=0;i<sizeof(v_EPTF_MessageBufferManager_messages[vl_idx]);i:=i+1)
+    {
+      if(v_EPTF_MessageBufferManager_messages[vl_idx][i].Valid == true)
+      {
+        pl_message := v_EPTF_MessageBufferManager_messages[vl_idx][i].Message;
+        pl_information := v_EPTF_MessageBufferManager_messages[vl_idx][i].StoreInformation;
+        v_EPTF_MessageBufferManager_messages[vl_idx][i] := {StoreInformation := "", Message := ''O, Valid := false};
+        //log("f_EPTF_MessageBufferManager_getMessageFromBuffer: returning ["&int2str(i)&"]");
+        return true;
+      }
+
+    }
+    v_EPTF_MessageBufferManager_messages[vl_idx] :={};
+    f_EPTF_int2int_HashMap_Erase(v_EPTF_MessageBufferManager_keyToMessageRecord,pl_key);
+    f_EPTF_FBQ_moveFromBusyToFreeHead(vl_idx,v_EPTF_MessageBufferManager_messageFreeBusyQueue);
+    //log("f_EPTF_MessageBufferManager_getMessageFromBuffer: no more found");
+    return false;       
+    
+  }
+  else
+  {
+    // error
+    return false;
+  }
+  
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_MessageBufferManager_refillFirstMessageInBuffer
+// 
+//  Purpose:
+//    Function to set message to the buffer
+//
+//  Parameters:
+//    pl_message - *in octetstring* - The outgoing message
+//    pl_information - *in charstring* - Store some other information
+//    pl_key - *in integer* - The key of the message
+//
+//  Return Value:
+//    - 
+//
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//    This function is used for putting back a buffer fragment, that was alread
+//   removed. (but the retansmission failed and therefore it must be put back)
+//    
+///////////////////////////////////////////////////////////  
+public function f_EPTF_MessageBufferManager_refillFirstMessageInBuffer (
+  in octetstring pl_message,
+  in charstring pl_information := "", 
+  in integer pl_key) 
+runs on EPTF_MessageBufferManager_CT {
+
+  var integer vl_idx := -1;
+
+  if (f_EPTF_int2int_HashMap_Find(v_EPTF_MessageBufferManager_keyToMessageRecord, pl_key, vl_idx))
+  {
+    for(var integer i:=0;i<sizeof(v_EPTF_MessageBufferManager_messages[vl_idx]);i:=i+1)
+    {
+      // The first invalid item in the buffer will be modified (there must be an invalid item)
+      if(v_EPTF_MessageBufferManager_messages[vl_idx][i].Valid == false)
+      {
+        v_EPTF_MessageBufferManager_messages[vl_idx][i] :=
+        {StoreInformation := pl_information, Message := pl_message, Valid := true};
+        //log("f_EPTF_MessageBufferManager_refillFirstMessageInBuffer: succesfully reinserted");
+        return;
+      }
+    }
+    //log("f_EPTF_MessageBufferManager_refillFirstMessageInBuffer: invalid position was not found");
+    v_EPTF_MessageBufferManager_messages[vl_idx][sizeof(v_EPTF_MessageBufferManager_messages[vl_idx])] := {StoreInformation := pl_information, Message := pl_message, Valid := true};
+  }
+  else
+  {
+    //error the buffer must exist!
+    //log("f_EPTF_MessageBufferManager_setFirstMessageInBuffer: error the buffer must exist!");
+  }
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_MessageBufferManager_setMaxBufferSize
+// 
+//  Purpose:
+//    Function to set the maximal size of the buffer
+//
+//  Parameters:
+//    pl_newSize - *in integer* - the new maximal size of the buffer
+//
+//  Return Value:
+//    - 
+//
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//    
+///////////////////////////////////////////////////////////  
+public function f_EPTF_MessageBufferManager_setMaxBufferSize(in integer pl_size)
+runs on EPTF_MessageBufferManager_CT
+{
+  v_EPTF_MessageBufferManager_maxBufferSize := pl_size;
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_MessageBufferManager_getMaxBufferSize
+// 
+//  Purpose:
+//    Function to return the maximal size of the buffer
+//
+//  Parameters:
+//    -
+//
+//  Return Value:
+//    - max buffer size - integer
+//
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//    
+///////////////////////////////////////////////////////////  
+public function f_EPTF_MessageBufferManager_getMaxBufferSize()
+runs on EPTF_MessageBufferManager_CT
+return integer
+{
+  return v_EPTF_MessageBufferManager_maxBufferSize;
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_MessageBufferManager_MaxBufferSize_setMinValue
+// 
+//  Purpose:
+//    Sets the minimum value of the maximum size of a buffer.
+//
+//  Parameters:
+//    - pl_minSize - integer - min buffer size
+//
+//  Return Value:
+//    - 
+//
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//    
+///////////////////////////////////////////////////////////  
+public function f_EPTF_MessageBufferManager_MaxBufferSize_setMinValue(in integer pl_minSize)
+runs on EPTF_MessageBufferManager_CT
+{
+  if (v_EPTF_MessageBufferManager_maxBufferSize < pl_minSize)
+  {
+    v_EPTF_MessageBufferManager_maxBufferSize := pl_minSize;
+  }
+}
+
+}  // end of module

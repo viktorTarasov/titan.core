@@ -1,0 +1,105 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//
+//  File:               XTDPasp_Types.ttcn
+//  Description:        XTDP ASP definition file
+//  Rev:                <RnXnn>
+//  Prodnr:             CNL 113 494
+//  Updated:            2007.05.17
+//  Contact:            http://ttcn.ericsson.se
+//
+
+
+module XTDPasp_Types
+{    
+
+import from XTDP_PDU_Defs language "ASN.1:2002" all; 
+
+external function enc_XTDP_Message(in XTDP_Message pdu) return charstring;
+external function enct_XTDP_Message(in template XTDP_Message pdu) return charstring;
+external function enc_XUL(in XTDP_XML_Tag xul) return charstring;
+
+external function dec_XTDP_Message(in charstring pdu) return XTDP_Message;
+external function dec_XUL(in charstring xul) return XTDP_XML_Tag;
+
+//
+type record ASP_XTDP {
+  // client_id is used only in case of server port with multiple connections
+  integer client_id optional,   
+  XTDP_Message data
+}
+
+type record ASP_XTDP_Bye {
+  // client_id is used only in case of server port with multiple connections
+  integer client_id optional
+}
+
+/*
+ *  You can send/receive these ASPS if the 'use_connection_ASPs' test port
+ *  parameter is set to "YES"
+ */
+
+// Client connect ASP. Initiates a new connection towards a server.
+// Check for ASP_XTDP_Connected!
+type record ASP_XTDP_Connect {
+  charstring hostname,
+  integer portnumber (1..65535),
+  charstring local_hostname optional,
+  integer local_portnumber (1..65535) optional
+};
+
+// Received by the client after ASP_XTDP_Connect is sent.
+// The client_id will be filled with -1 if unsuccessful.
+// Returned client_id shall be used to distinguish between the open connections.
+type record ASP_XTDP_Connect_result {
+  integer client_id
+}
+
+// Received when the server has accepted an incoming connection.
+type record ASP_XTDP_Connected {
+  charstring hostname,
+  integer portnumber (1..65535),
+  integer client_id
+};
+  
+// Closes all connections, or the specified one only.
+// client_id = omit means close all connections.
+type record ASP_XTDP_Close {
+  integer client_id optional
+};
+
+// Shuts down the current listening port and listens on the specified port.
+// In case of omit will use the configured port (if specified in config), else random.
+// portnumber = omit means random port number -> check for ASP_XTDP_Listen_result!
+type record ASP_XTDP_Listen {
+  integer portnumber (1..65535) optional,
+  charstring local_hostname optional
+};
+
+// Received after Listen. Sends back the choosen listening port.
+type record ASP_XTDP_Listen_result {
+  integer portnumber (1..65535)
+};
+
+// Close server listening port, but leave all current connections open.
+type record ASP_XTDP_Shutdown {};
+
+type enumerated XTDP_Send_error_types { XTDP_SEND_INVALID_CLIENT_ID (0),
+  XTDP_SEND_ERROR(1), XTDP_SEND_MESSAGE_NOT_COMPLETE(2) }
+
+type record ASP_XTDP_Send_error {
+  integer client_id optional,   
+  octetstring data,
+  integer sent_octets,
+  XTDP_Send_error_types error_type,
+  integer os_error_code,
+  charstring os_error_text,
+  charstring ttcn_error_text
+}
+
+}

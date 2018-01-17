@@ -1,0 +1,179 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_CLL_Transport_CommonDefinitions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 512
+//  Updated:  2010-06-07
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////
+//  Module: EPTF_CLL_Transport_CommonDefinitions
+// 
+//  Purpose:
+//    Type and constant definitions 
+//    commonly used by all transport layers
+// 
+//  Module Parameters:
+//    -
+// 
+//  Module depends on:
+//    <Socket_API_Definitions>
+//    <EPTF_CLL_Common_Definitions>
+// 
+//  Current Owner:
+//    ELSZSKU
+// 
+//  Last Review Date:
+//    -
+// 
+//  Detailed Comments:
+//    -
+//
+///////////////////////////////////////////////////////////
+module EPTF_CLL_Transport_CommonDefinitions
+// [.objid{ itu_t(0) identified_organization(4) etsi(0)
+// identified_organization(127) ericsson(5) testing(0)
+// <put further nodes here if needed>}]
+{
+import from Socket_API_Definitions all;
+import from EPTF_CLL_Common_Definitions all;
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Transport_TransportType
+// 
+//  Purpose:
+//    Enumerated type for describing the testport to be used
+//    under the transport layer
+// 
+//  Elements:
+//    - IPL4 - IPL4
+//    - IPL2 - IPL2
+//
+//  Detailed Comments:
+//      -
+/////////////////////////////////////////////////////////
+type enumerated EPTF_Transport_TransportType
+{
+  IPL4(0),
+  IPL2,
+  BOTH
+}  
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Transport_GetMsgLen_FT
+// 
+//  Purpose:
+//    Type definition for the user defined function to determine the message
+//    length (boundary) in a TCP data stream.
+// 
+//  Parameters:
+//    pl_transportType - *in* - <EPTF_Transport_TransportType> - Testport type
+//    pl_stream - *in* - *octetstring* - Received stream
+//    pl_args - *inout* - <EPTF_IntegerList> - Arguments
+//
+//  Detailed Comments:
+//      See the description of <f_EPTF_Transport_registerMsgLenCallback>
+//      and <f_EPTF_Transport_registerMsgLenCallback4LGenType>
+/////////////////////////////////////////////////////////
+type function EPTF_Transport_GetMsgLen_FT(
+  in EPTF_Transport_TransportType pl_transportType,
+  in octetstring pl_stream,
+  inout EPTF_IntegerList pl_args // variadic list of user defined parameters
+) runs on self
+return integer
+
+//////////////////////////////////////////////////////////
+// Type: EPTF_Transport_MsgCallback_FT
+//
+// Purpose:
+//   Function type to register callback functions handling incoming messages
+//
+// Parameters:
+//  pl_transportType - *in* - <EPTF_Transport_TransportType> - Testport type
+//  pl_connId - *in* <ConnectionId> - connection ID
+//  pl_remHost - *in* <HostName> - remote address
+//  pl_remPort - *in* <PortNumber> - remote port number
+//  pl_locHost - *in* <HostName> - local address
+//  pl_locPort - *in* <PortNumber> - local port number
+//  pl_proto - *in* <ProtoTuple> - protocol
+//  pl_userData - *in* *integer* - user data stored for this connection
+//  pl_msg - *in* *octetstring* - the incoming message
+//
+///////////////////////////////////////////////////////////
+type function EPTF_Transport_MsgCallback_FT(
+  in EPTF_Transport_TransportType pl_transportType,
+  in ConnectionId pl_connId,
+  in HostName pl_remHost,
+  in PortNumber pl_remPort,
+  in HostName pl_locHost,
+  in PortNumber pl_locPort,
+  in ProtoTuple pl_proto,
+  in integer pl_userData,
+  in octetstring pl_msg)
+runs on self;
+
+type function EPTF_Transport_EventCallback_FT(
+  in EPTF_Transport_TransportType pl_transportType,
+  in ConnectionId pl_connId,
+  in PortEvent pl_event)
+runs on self;
+
+type function EPTF_Transport_Connect_FT(
+  in EPTF_Transport_TransportType pl_transportType,
+  in ProtoTuple pl_proto,
+  in HostName pl_localHost,
+  in PortNumber pl_localPort,
+  in HostName pl_remoteHost,
+  in PortNumber pl_remotePort,
+  in charstring pl_LGenType,
+  out Result pl_result,
+  in boolean pl_automaticBuffering := false
+)
+runs on self
+return integer
+
+type function EPTF_Transport_ConnectionOpened_FT(
+  in EPTF_Transport_TransportType pl_transportType,
+  in ConnectionId pl_connId)
+runs on self;
+
+type function EPTF_Transport_ConnectionClosed_FT(
+  in EPTF_Transport_TransportType pl_transportType,
+  in integer pl_uniqueId)
+runs on self;
+
+//FIXME Socket_API??
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Transport_InterfaceInformation
+// 
+//  Purpose:
+//    Enumerated type for describing the transport interface informations
+// 
+//  Elements:
+//
+//  Detailed Comments:
+//      -
+/////////////////////////////////////////////////////////
+type record EPTF_Transport_InterfaceInformation {
+  HostName 	HostName,
+  PortNumber 	HostPort,
+  charstring	netmask,
+  charstring	broadcast,
+  charstring 	ifname,
+  integer 	count,
+  integer 	virtualIfaceStart
+}
+//FIXME Socket_API??
+const ConnectionId c_ConnectionId_invalidConnection := -1
+const Result c_emptyResult := {omit, omit, omit, omit}
+
+type record of EPTF_Transport_InterfaceInformation EPTF_Transport_InterfaceInformationList;
+
+
+}  // end of module

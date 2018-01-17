@@ -1,0 +1,99 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_CLL_LGenBaseStats_Definitions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 512
+//  Updated:  2009-03-05
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////
+//  Module: EPTF_CLL_LGenBaseStats_Definitions
+// 
+//  Purpose:
+//    This module provides common data types common for TitanSim load generator statistics
+// 
+//  Module Parameters:
+//    -
+// 
+//  Module depends on:
+//    <EPTF_CLL_LGenBase_Definitions>
+//    <EPTF_CLL_Variable_Definitions>
+//    <EPTF_CLL_Common_Definitions>
+//
+//  Current Owner:    ELSZSKU
+// 
+//  Last Review Date:
+//    2009-08-31
+// 
+//  Detailed Comments:
+// 
+///////////////////////////////////////////////////////////
+module EPTF_CLL_LGenBaseStats_Definitions
+{
+//=========================================================================
+// Import Part
+//=========================================================================
+import from EPTF_CLL_LGenBase_Definitions all;
+
+const charstring c_EPTF_LGenBaseStats_nameOfTcNrOfStarts := "NrOfStarts";
+const charstring c_EPTF_LGenBaseStats_nameOfTcNrOfSuccesses := "NrOfSuccesses";
+const charstring c_EPTF_LGenBaseStats_nameOfTcNrOfFails := "NrOfFails";
+const charstring c_EPTF_LGenBaseStats_nameOfTcNnrOfFails := c_EPTF_LGenBaseStats_nameOfTcNrOfFails //Backward
+const charstring c_EPTF_LGenBaseStats_nameOfTcNrOfNotFinishedEntities:= "NrOfNotFinishedEntities";
+const charstring c_EPTF_LGenBaseStats_nameOfTcNrOfAllEntities := "NrOfAllEntities";
+const charstring c_EPTF_LGenBaseStats_nameOfTcNrOfRunningEntities := "NrOfRunningEntities";
+const charstring c_EPTF_LGenBaseStats_nameOfTcNrOfAvailableEntities := "NrOfAvailableEntities";
+const charstring c_EPTF_LGenBaseStats_nameOfTcState:= "State";
+const charstring c_EPTF_LGenBaseStats_nameOfTcStateName := "StateName";
+const charstring c_EPTF_LGenBaseStats_nameOfTcUserData:= "UserData";
+const charstring c_EPTF_LGenBaseStats_nameOfTcSentMessages:= "SentMessages";
+const charstring c_EPTF_LGenBaseStats_nameOfTcReceivedAnswers:= "ReceivedAnswers";
+const charstring c_EPTF_LGenBaseStats_nameOfTcRangeLoops:= "RangeLoops";
+const charstring c_EPTF_LGenBaseStats_nameOfTcCpsToReach := "CpsToReach";
+const charstring c_EPTF_LGenBaseStats_nameOfTcLastCps := "LastCps";
+const charstring c_EPTF_LGenBaseStats_nameOfTcLastCalls := "LastCalls";
+const charstring c_EPTF_LGenBaseStats_nameOfTcName := "TCName";
+const charstring c_EPTF_LGenBaseStats_nameOfTcUniqueName := "UniqueName";
+const charstring c_EPTF_LGenBaseStats_nameOfTcEnabled := "Enabled";
+const charstring c_EPTF_LGenBaseStats_nameOfTcMinAvailable := "MinAvailableEntities";
+const charstring c_EPTF_LGenBaseStats_nameOfTcMaxRunning := "MaxRunningEntities";
+const charstring c_EPTF_LGenBaseStats_nameOfTcMaxBusy := "MaxBusyEntities";
+const charstring c_EPTF_LGenBaseStats_nameOfTcWeight := "Weight"
+const charstring c_EPTF_LGenBaseStats_nameOfTcTrafficType := "TrafficType"
+const charstring c_EPTF_LGenBaseStats_nameOfTcNrOfErrors := "NrOfErrors";
+const charstring c_EPTF_LGenBaseStats_nameOfTcNrOfTimeouts := "NrOfTimeouts";
+
+const charstring c_EPTF_LGenBaseStats_nameOfScName			:= "Name"
+const charstring c_EPTF_LGenBaseStats_nameOfScEnabled		:= "Enabled";
+const charstring c_EPTF_LGenBaseStats_nameOfScState			:= "State";
+const charstring c_EPTF_LGenBaseStats_nameOfScUserData		:= "UserData";
+const charstring c_EPTF_LGenBaseStats_nameOfScStateName		:= "StateName";
+const charstring c_EPTF_LGenBaseStats_nameOfScLockCPS		:= "LockCPS";
+
+const charstring c_EPTF_LGenBaseStats_nameOfStartBtn := "StartButton"
+const charstring c_EPTF_LGenBaseStats_nameOfStopBtn := "StopButton"
+const charstring c_EPTF_LGenBaseStats_nameOfAbortBtn := "AbortButton"
+const charstring c_EPTF_LGenBaseStats_nameOfRestoreBtn := "RestoreButton"
+const charstring c_EPTF_LGenBaseStats_nameOfPauseBtn := "PauseButton"
+const charstring c_EPTF_LGenBaseStats_nameOfSingleShotBtn := "SingleShotBtn"
+
+//const charstring c_EPTF_LGenBaseStats_nameOfTcRunningTcsInSc := "RunningTcsInSc"; 
+
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_LGenBaseStats_CT
+//
+//  Purpose:
+//    Component type alias for the LGenBase feature
+//
+/////////////////////////////////////////////////////////
+type component EPTF_LGenBaseStats_CT extends EPTF_LGenBase_CT{
+}
+
+}  // end of module

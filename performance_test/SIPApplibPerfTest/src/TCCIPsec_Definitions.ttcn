@@ -1,0 +1,634 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//
+//  File:               TCCIPsec_Definitions.ttcn
+//  Description:        TCC Useful Functions: Definitions for IPsec functions
+//  Rev:                <RnXnn>
+//  Prodnr:             CNL 113 472
+//  Updated:            2012-10-31
+//  Contact:            http://ttcn.ericsson.se
+//
+///////////////////////////////////////////////////////////////////////////////
+
+module TCCIPsec_Definitions {
+
+///////////////////////////////////////////////////////////////////////////////
+//  Type: TCCIPsec_IPsecResult
+//
+//  Purpose:
+//     Declares the possible return values of IPsec handling functions
+//
+//  Elements:
+//    ok:
+//      The function finished successfully
+//    parameterInvalid:
+//      One of the function parameters was invalid
+//      The error is indicated either by the library or the kernel.
+//    alreadyExisted:
+//      Entry already existed while trying to add it
+//    notFound:
+//      Entry was not found while trying to delete or modify it
+//    insufficientPrivilege:
+//      The calling process does not have the necessary privilege to use the
+//      PF_KEY interface or to handle the databases of IPsec.
+//    notImplemented:
+//      Not implemented:
+//        The library is compiled without IPsec support or with limited support
+//        Support for SPD handling is platform dependent
+//    socketError:
+//      Other type of error during socket operation
+//      The logs contain details on the error
+//
+//  Detailed Comments:
+//
+///////////////////////////////////////////////////////////////////////////////
+  type enumerated TCCIPsec_Result {
+    ok (0),
+    parameterInvalid,
+    alreadyExisted,
+    notFound,
+    insufficientPrivilege,
+    notImplemented,
+    socketError
+  };
+
+///////////////////////////////////////////////////////////////////////////////
+//  Const: c_TCCIPsec_anyPort
+//
+//  Purpose:
+//    Provides port value representing any port
+//
+//  Value:
+//    0
+//
+//  Detailed Comments:
+//    -
+//
+///////////////////////////////////////////////////////////////////////////////
+  const integer c_TCCIPsec_anyPort := 0;
+
+///////////////////////////////////////////////////////////////////////////////
+//  Const: c_TCCIPsec_prefixAll
+//
+//  Purpose:
+//    Provides port value representing any port
+//
+//  Value:
+//    0
+//
+//  Detailed Comments:
+//    -
+//
+///////////////////////////////////////////////////////////////////////////////
+  const integer c_TCCIPsec_prefixAll := -1;
+
+///////////////////////////////////////////////////////////////////////////////
+//  Type: TCCIPsec_Protocol
+//
+//  Purpose:
+//     Declares identifiers for the possible security protocols
+//
+//  Elements:
+//    ah:
+//      Authentication Header
+//    esp:
+//      Encapsulated Security Payload
+//
+//  Detailed Comments:
+//
+///////////////////////////////////////////////////////////////////////////////
+  type enumerated TCCIPsec_Protocol {
+    ah (2),
+    esp (3)
+    /*,ipComp (9)*/
+  };
+
+///////////////////////////////////////////////////////////////////////////////
+//  Type: TCCIPsec_IPsecMode
+//
+//  Purpose:
+//     Declares identifiers for the possible security association
+//
+//  Elements:
+//    anyMode: this is the unspecified, default mode
+//    transport: turns on transport mode in security association
+//    tunnel: turns on tunneling mode in security association
+//
+//  Detailed Comments:
+//    -
+//
+///////////////////////////////////////////////////////////////////////////////
+  type enumerated TCCIPsec_IPsecMode {
+    anyMode (0),
+    transport (1),
+    tunnel (2)
+  };
+
+///////////////////////////////////////////////////////////////////////////////
+//  Type: TCCIPsec_Extension
+//
+//  Purpose:
+//    Defines a union of possible extensions for Security Associations (SAs)
+//
+//  Elements:
+//    policyId - *integer*:
+//      Identifier to link a Security Association (SA) to Security Policy (SP)
+//    hardLifetime - *integer*:
+//      Hard Lifetime in seconds
+//    softLifetime - *integer*:
+//      Soft Lifetime in seconds
+//
+//  Detailed Comments:
+//    -
+//
+///////////////////////////////////////////////////////////////////////////////
+  type union TCCIPsec_Extension {
+    integer                       policyId,
+    integer                       hardLifetime,
+    integer                       softLifetime
+  };
+
+///////////////////////////////////////////////////////////////////////////////
+//  Type: TCCIPsec_ExtensionList
+//
+//  Purpose:
+//    Defines a list of extensions for the SA adding function
+//
+//  Elements:
+//    record of *TCCIPsec_Extension*
+//
+// Detailed Comments:
+//    -
+//
+///////////////////////////////////////////////////////////////////////////////
+  type record of TCCIPsec_Extension TCCIPsec_ExtensionList;
+
+///////////////////////////////////////////////////////////////////////////////
+//  Type: TCCIPsec_Key
+//
+//  Purpose:
+//    Defines a union for storing a key for an SA.
+//    The key is specified inside the *TCCIPsec_Algorithm* alg parameter of
+//    the f_IPsec_SADB_add function.
+//
+//  Elements:
+//    hex - *hexstring*:
+//      Key in hexstring format
+//    text - *charstring*:
+//      Key in charstring format
+//
+//  Detailed Comments:
+//
+///////////////////////////////////////////////////////////////////////////////
+  type union TCCIPsec_Key {
+    hexstring       hex,
+    charstring      text
+  };
+
+///////////////////////////////////////////////////////////////////////////////
+//  Type: TCCIPsec_EAlgo
+//
+//  Purpose:
+//     Declares identifiers for the possible encryption algorithms
+//
+//  Elements:
+//    EALG_NONE:
+//      The "null" algorithm
+//    EALG_3DESCBC:
+//      The "3des-cbc" algorithm (rfc2451)
+//    EALG_NULL:
+//      The NULL encryption algorithm (rfc2367)
+//    EALG_AESCBC:
+//      The "aes-cbc" algorithm (
+//
+//  Detailed Comments:
+//
+///////////////////////////////////////////////////////////////////////////////
+  type enumerated TCCIPsec_EAlgo {
+    EALG_NONE (0),
+    EALG_3DESCBC (3),
+    EALG_NULL(11),
+    EALG_AESCBC (12)
+  };
+
+///////////////////////////////////////////////////////////////////////////////
+//  Type: TCCIPsec_AAlgo
+//
+//  Purpose:
+//     Declares identifiers for the possible integrity protection algorithms
+//
+//  Elements:
+//    AALG_NONE:
+//      The "null" algorithm
+//    AALG_MD5HMAC:
+//      The "hmac-md5" algorithm (rfc2403)
+//    AALG_SHA1HMAC:
+//      The "hmac-sha1" algorithm (rfc2404)
+//
+//  Detailed Comments:
+//
+///////////////////////////////////////////////////////////////////////////////
+  type enumerated TCCIPsec_AAlgo {
+    AALG_NONE (0),
+    AALG_MD5HMAC (2),
+    AALG_SHA1HMAC (3)
+  };
+
+///////////////////////////////////////////////////////////////////////////////
+//  Type: TCCIPsec_Encr
+//
+//  Purpose:
+//    Defines a record for storing the encryption algorithm identifier and
+//    key.
+//
+//  Elements:
+//    algo - *TCCIPsec_EAlgo*:
+//      Identifier of the encryption algorithm
+//    key - *TCCIPsec_Key*:
+//      Key for the algorithm
+//
+//  Detailed Comments:
+//
+///////////////////////////////////////////////////////////////////////////////
+  type record TCCIPsec_Encr {
+    TCCIPsec_EAlgo                algo,
+    TCCIPsec_Key                  key
+  };
+
+///////////////////////////////////////////////////////////////////////////////
+//  Type: TCCIPsec_Auth
+//
+//  Purpose:
+//    Defines a record for storing the integrity protection algorithm
+//    identifier and key.
+//
+//  Elements:
+//    algo - *TCCIPsec_AAlgo*:
+//      Identifier of the integrity protection algorithm
+//    key - *TCCIPsec_Key*:
+//      Key for the algorithm
+//
+//  Detailed Comments:
+//
+///////////////////////////////////////////////////////////////////////////////
+  type record TCCIPsec_Auth {
+    TCCIPsec_AAlgo                algo,
+    TCCIPsec_Key                  key
+  };
+
+///////////////////////////////////////////////////////////////////////////////
+//  Type: TCCIPsec_Auth
+//
+//  Purpose:
+//    Defines a record for storing the encryption and integrity protection
+//    algorithm identifiers and the keys.
+//
+//  Elements:
+//    ealgo - *TCCIPsec_EAlgo*:
+//      Identifier of the encryption algorithm
+//    ekey - *TCCIPsec_Key*:
+//      Key for the encryption algorithm
+//    aalgo - *TCCIPsec_AAlgo*:
+//      Identifier of the integrity protection algorithm
+//    akey - *TCCIPsec_Key*:
+//      Key for the integrity protection algorithm
+//
+//  Detailed Comments:
+//
+///////////////////////////////////////////////////////////////////////////////
+  type record TCCIPsec_EncrAndAuth {
+    TCCIPsec_EAlgo                ealgo,
+    TCCIPsec_Key                  ekey,
+    TCCIPsec_AAlgo                aalgo,
+    TCCIPsec_Key                  akey
+  };
+
+///////////////////////////////////////////////////////////////////////////////
+//  Type: TCCIPsec_Algorithm
+//
+//  Purpose:
+//    Defines a union for storing the possible combination of algorithms with
+//    its keys. It is used as the *TCCIPsec_Algorithm* alg parameter of the
+//    f_IPsec_SADB_add function.
+//
+//  Elements:
+//    encr - *TCCIPsec_Encr*:
+//      encryption algorithm data
+//    auth - *TCCIPsec_Auth*
+//      integrity protection algorithm data
+//    encrAndAuth - *TCCIPsec_EncrAndAuth*
+//      Key in charstring format
+//
+//  Detailed Comments:
+//
+///////////////////////////////////////////////////////////////////////////////
+  type union TCCIPsec_Algorithm {
+    TCCIPsec_Encr                 encr,
+    TCCIPsec_Auth                 auth,
+    TCCIPsec_EncrAndAuth          encrAndAuth
+    /*,Compr compr*/
+  };
+
+///////////////////////////////////////////////////////////////////////////////
+//  Type: TCCIPsec_TranspProto
+//
+//  Purpose:
+//     Declares identifiers for the possible upper layer protocols
+//
+//  Elements:
+//    anyTranspProto:
+//      Either TCP or UDP protocol
+//    tcpProto:
+//      The TCP protocol
+//    udpProto:
+//      The UDP protocol
+//
+//  Detailed Comments:
+//
+///////////////////////////////////////////////////////////////////////////////
+  type enumerated TCCIPsec_TranspProto {
+    anyTranspProto (0),
+    tcpProto (6),
+    udpProto (17)
+  };
+
+///////////////////////////////////////////////////////////////////////////////
+//  Type: TCCIPsec_TranspProto
+//
+//  Purpose:
+//    Declares identifiers for the possible directions for which a policy is
+//    applied.
+//
+//  Elements:
+//    inDir:
+//      incoming packets
+//    outDir:
+//      outgoing packets
+//    fwdDir:
+//      forwarded packets
+//
+//  Detailed Comments:
+//
+///////////////////////////////////////////////////////////////////////////////
+  type enumerated TCCIPsec_PolicyDirection {
+    inDir (1),
+    outDir (2),
+    fwdDir (3)
+  };
+
+///////////////////////////////////////////////////////////////////////////////
+//  Type: TCCIPsec_DiscardRule
+//
+//  Purpose:
+//    Declares a type to represent the policy rule to discard packets.
+//
+//  Elements:
+//    -
+//
+//  Detailed Comments:
+//    -
+//
+///////////////////////////////////////////////////////////////////////////////
+  type record TCCIPsec_DiscardRule {};
+
+///////////////////////////////////////////////////////////////////////////////
+//  Type: TCCIPsec_NoneRule
+//
+//  Purpose:
+//    Declares a type to represent the policy rule to bypass IPsec.
+//
+//  Elements:
+//    -
+//
+//  Detailed Comments:
+//    -
+//
+///////////////////////////////////////////////////////////////////////////////
+  type record TCCIPsec_NoneRule {};
+
+///////////////////////////////////////////////////////////////////////////////
+//  Type: TCCIPsec_Transport
+//
+//  Purpose:
+//    Declares a type to represent the transport IPsec mode -
+//    as opposed to tunnel mode
+//
+//  Elements:
+//    -
+//
+//  Detailed Comments:
+//    -
+//
+///////////////////////////////////////////////////////////////////////////////
+  type record TCCIPsec_Transport {};
+
+///////////////////////////////////////////////////////////////////////////////
+//  Type: TCCIPsec_Tunnel
+//
+//  Purpose:
+//    Declares a type to represent the tunnel IPsec mode -
+//    as opposed to transport mode
+//
+//  Elements:
+//    srcAddr: source address
+//    srcPort: source port
+//    dstAddr: destination address
+//    dstPort: destination port
+//
+//  Detailed Comments: Address and port pairs for the tunnel. Used in SPDB rules.
+//
+///////////////////////////////////////////////////////////////////////////////
+  type record TCCIPsec_Tunnel {
+        charstring    srcAddr,
+        integer       srcPort,
+        charstring    dstAddr,
+        integer       dstPort
+  };
+
+///////////////////////////////////////////////////////////////////////////////
+//  Type: TCCIPsec_Mode
+//
+//  Purpose:
+//    Declares an union for storing to IPsec mode
+//
+//  Elements:
+//    transport - *TCCIPsec_Transport*:
+//      identifies the transport IPsec mode
+//    tunnel - *TCCIPsec_Tunnel*:
+//      identifies the tunnel IPsec mode
+//
+//  Detailed Comments:
+//    IPsec supports transport and tunnel mode.
+//
+///////////////////////////////////////////////////////////////////////////////
+  type union TCCIPsec_Mode {
+    TCCIPsec_Transport            transport,
+    TCCIPsec_Tunnel               tunnel
+  };
+
+///////////////////////////////////////////////////////////////////////////////
+//  Type: TCCIPsec_DefaultLevel
+//
+//  Purpose:
+//    Declares a type to represent the policy level indicating that system
+//    defaults has to be used.
+//
+//  Elements:
+//    -
+//
+//  Detailed Comments:
+//    -
+//
+///////////////////////////////////////////////////////////////////////////////
+  type record TCCIPsec_DefaultLevel {};
+
+///////////////////////////////////////////////////////////////////////////////
+//  Type: TCCIPsec_UseLevel
+//
+//  Purpose:
+//    Declares a type to represent the policy level indicating that IPsec
+//    should be used if appropriate SA is available. If SA is naot available
+//    IPsec is bypassed.
+//
+//  Elements:
+//    -
+//
+//  Detailed Comments:
+//    -
+//
+///////////////////////////////////////////////////////////////////////////////
+  type record TCCIPsec_UseLevel {};
+
+///////////////////////////////////////////////////////////////////////////////
+//  Type: TCCIPsec_UseLevel
+//
+//  Purpose:
+//    Declares a type to represent the policy level indicating that IPsec
+//    has to be used unconditionally.
+//
+//  Elements:
+//    -
+//
+//  Detailed Comments:
+//    -
+//
+///////////////////////////////////////////////////////////////////////////////
+  type record TCCIPsec_RequireLevel {};
+
+///////////////////////////////////////////////////////////////////////////////
+//  Type: TCCIPsec_UseLevel
+//
+//  Purpose:
+//    Declares a type to represent the policy level indicating that IPsec
+//    has to be used with the SA or SAs indicated by id.
+//
+//  Elements:
+//    id - *integer*:
+//      link to SAs
+//
+//  Detailed Comments:
+//    An SA is linked to an SP when the SA has a policyId extension with the
+//    value of the SP's id.
+//
+///////////////////////////////////////////////////////////////////////////////
+  type record TCCIPsec_UniqueLevel {
+    integer id
+  }
+
+///////////////////////////////////////////////////////////////////////////////
+//  Type: TCCIPsec_RuleLevel
+//
+//  Purpose:
+//    Defines a union for storing rule level.
+//
+//  Elements:
+//    defaultLevel - *TCCIPsec_DefaultLevel*:
+//      The level represnting default
+//    use - *TCCIPsec_UseLevel*
+//      The use level
+//    require - *TCCIPsec_RequireLevel*
+//      The require level
+//    unique - *TCCIPsec_UniqueLevel*
+//      The unique level
+//
+//  Detailed Comments:
+//    -
+//
+///////////////////////////////////////////////////////////////////////////////
+  type union TCCIPsec_RuleLevel {
+    TCCIPsec_DefaultLevel         defaultLevel,
+    TCCIPsec_UseLevel             use,
+    TCCIPsec_RequireLevel         require,
+    TCCIPsec_UniqueLevel          unique
+  };
+
+///////////////////////////////////////////////////////////////////////////////
+//  Type: TCCIPsec_Rule
+//
+//  Purpose:
+//    Declares a record for storing an IPsec rule.
+//
+//  Elements:
+//    protocol - *TCCIPsec_Protocol*:
+//      The security protocol to use
+//    mode - *TCCIPsec_Mode*:
+//      IPsec mode
+//    level - *TCCIPsec_RuleLevel*:
+//      rule level
+//
+//  Detailed Comments:
+//    -
+//
+///////////////////////////////////////////////////////////////////////////////
+  type record TCCIPsec_Rule {
+    TCCIPsec_Protocol             protocol,
+    TCCIPsec_Mode                 mode,
+    TCCIPsec_RuleLevel            level
+  };
+
+///////////////////////////////////////////////////////////////////////////////
+//  Type: TCCIPsec_ExtensionList
+//
+//  Purpose:
+//    Defines a list of IPsec rules
+//
+//  Elements:
+//    record of *TCCIPsec_Rule*
+//
+// Detailed Comments:
+//    -
+//
+///////////////////////////////////////////////////////////////////////////////
+  type record of TCCIPsec_Rule TCCIPsec_RuleList;
+
+///////////////////////////////////////////////////////////////////////////////
+//  Type: TCCIPsec_RuleLevel
+//
+//  Purpose:
+//    Defines a union for storing a policy rule.
+//
+//  Elements:
+//    discard - *TCCIPsec_DiscardRule*:
+//      The discard policy rule
+//    noneRule - *TCCIPsec_NoneRule*
+//      The none policy rule
+//    require - *TCCIPsec_RequireLevel*
+//      The require level
+//    ipSec - *TCCIPsec_RuleList*
+//      A list of IPsec policy rules
+//
+//  Detailed Comments:
+//    -
+//
+///////////////////////////////////////////////////////////////////////////////
+  type union TCCIPsec_PolicyRule {
+    TCCIPsec_DiscardRule          discard,
+    TCCIPsec_NoneRule             noneRule,
+    TCCIPsec_RuleList             ipSec
+  };
+} // TCCIPsec_Definitions

@@ -1,0 +1,269 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_CLL_Common_IndexArrayFunctions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 512
+//  Updated:  2009-09-07
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////
+//  Module: EPTF_CLL_Common_IndexArrayFunctions
+// 
+//  Purpose:
+//    This module provides functions to handle index lists stored in 
+//    an EPTF_Common_IndexArray record
+// 
+//  Module Parameters:
+//    -
+// 
+//  Module depends on:
+//    <EPTF_CLL_Common_Definitions>
+//    <EPTF_CLL_Common_Functions>
+//    <EPTF_CLL_Common_IndexArrayDefinitions>
+//
+//  Current Owner:    ELSZSKU
+// 
+//  Last Review Date:
+//    2009-09-07
+// 
+///////////////////////////////////////////////////////////
+module EPTF_CLL_Common_IndexArrayFunctions
+{
+import from EPTF_CLL_Common_Definitions all;
+import from EPTF_CLL_Common_Functions all;
+import from EPTF_CLL_Common_IndexArrayDefinitions all
+
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Common_IndexArray_getOrCreateFreeSlot
+// 
+//  Purpose:
+//    Retrieves the first available position in the <EPTF_Common_IndexArray>
+//
+//  Parameters:
+//    pl_array - <EPTF_Common_IndexArray> - the IndexArray record
+//
+//  Return Value:
+//    *integer* - the free index
+//
+//  Detailed Comments:
+//
+///////////////////////////////////////////////////////////
+function f_EPTF_Common_IndexArray_getOrCreateFreeSlot(inout EPTF_Common_IndexArray pl_array) return integer{
+  for ( var integer vl_i := 0; vl_i < sizeof(pl_array.values) ; vl_i := vl_i+1 ){
+    if(pl_array.values[vl_i] < 0){
+      return vl_i
+    }
+  }
+  return sizeof(pl_array.values)
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Common_IndexArray_getElement
+// 
+//  Purpose:
+//    Retrieves the content of the specified element from the 
+//    <EPTF_Common_IndexArray>.
+//
+//  Parameters:
+//    pl_array - <EPTF_Common_IndexArray> - the IndexArray record
+//    pl_idx - *integer* - the specified index
+//
+//  Return Value:
+//    *integer* - the content of the index
+//
+//  Detailed comments:
+//    If there is no valid element, the return value is -1 
+///////////////////////////////////////////////////////////
+function f_EPTF_Common_IndexArray_getElement(
+  inout EPTF_Common_IndexArray pl_array,
+  in integer pl_idx)
+return integer{
+  if(pl_idx >= 0 and pl_idx < sizeof(pl_array.values)){
+    return pl_array.values[pl_idx]
+  }
+  return -1
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Common_IndexArray_setElement
+// 
+//  Purpose:
+//    Sets the content of the specified element in the 
+//    <EPTF_Common_IndexArray>.
+//
+//  Parameters:
+//    pl_array - <EPTF_Common_IndexArray> - the IndexArray record
+//    pl_idx - *integer* - the specified index
+//    pl_data - *integer* - the data to be set
+//
+//  Detailed comments:
+//    If pl_data < 0 the content of the specified index will be the index.
+///////////////////////////////////////////////////////////
+function f_EPTF_Common_IndexArray_setElement(
+  inout EPTF_Common_IndexArray pl_array,
+  in integer pl_idx,
+  in integer pl_data := -1){
+  if (c_EPTF_Common_debugSwitch and pl_idx < 0){
+    f_EPTF_Common_error(%definitionId&": using a negative index: "&int2str(pl_idx));
+    return;
+  }
+  if(0 > pl_data){pl_data := pl_idx}
+  pl_array.values[pl_idx] := pl_data;
+  if((pl_array.firstBusy > pl_idx) or (0 > pl_array.firstBusy)){
+    pl_array.firstBusy := pl_idx
+  }
+  for ( var integer vl_i := (pl_idx - 1); vl_i >= 0 and not isbound(pl_array.values[vl_i]) ; vl_i := vl_i - 1 ){
+      pl_array.values[vl_i] := -1;
+  }
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Common_IndexArray_setNewElement
+// 
+//  Purpose:
+//    Sets the content of the first available element in the 
+//    <EPTF_Common_IndexArray>.
+//
+//  Parameters:
+//    pl_array - <EPTF_Common_IndexArray> - the IndexArray record
+//    pl_data - *integer* - the data to be set
+//
+//  Return Value:
+//    *integer* - the index of the available element
+//
+//  Detailed Comments:
+//    If pl_data < 0 the content of the specified index will be the index.
+//
+///////////////////////////////////////////////////////////
+function f_EPTF_Common_IndexArray_setNewElement(
+  inout EPTF_Common_IndexArray pl_array,
+  in integer pl_data := -1)
+return integer{
+  var integer vl_idx := f_EPTF_Common_IndexArray_getOrCreateFreeSlot(pl_array)
+  if(0 > pl_data){pl_data := vl_idx}
+  pl_array.values[vl_idx] := pl_data;
+  if((pl_array.firstBusy > vl_idx) or (0 > pl_array.firstBusy)){
+    pl_array.firstBusy := vl_idx
+  }
+  return vl_idx
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Common_IndexArray_freeElement
+// 
+//  Purpose:
+//    Invalidates the content of the specified element in the 
+//    <EPTF_Common_IndexArray>.
+//
+//  Parameters:
+//    pl_array - <EPTF_Common_IndexArray> - the IndexArray record
+//    pl_idx - *integer* - the index
+//
+//  Return Value:
+//    *integer* - the content of the freed index
+//
+//  Detailed Comments:
+//
+///////////////////////////////////////////////////////////
+function f_EPTF_Common_IndexArray_freeElement(
+  inout EPTF_Common_IndexArray pl_array,
+  in integer pl_idx)
+return integer{
+  var integer vl_ret := -1
+  if(pl_idx >= 0 and pl_idx < sizeof(pl_array.values)){
+    vl_ret := pl_array.values[pl_idx]
+    pl_array.values[pl_idx] := -1
+    if(pl_idx == pl_array.firstBusy){
+      pl_array.firstBusy := -1
+      for ( var integer vl_i := pl_idx+1; vl_i < sizeof(pl_array.values) and -1 == pl_array.firstBusy ; vl_i := vl_i+1 ){
+        if(0 <= pl_array.values[vl_i]){
+          pl_array.firstBusy := vl_i
+        }
+      }
+    }
+  }
+  return vl_ret
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Common_IndexArray_arrayIsEmpty
+// 
+//  Purpose:
+//    Checks whether the <EPTF_Common_IndexArray> is empty
+//
+//  Parameters:
+//    pl_array - <EPTF_Common_IndexArray> - the IndexArray record
+//
+//  Return Value:
+//    *boolean* - true if IndexArray record is empty
+//
+//  Detailed Comments:
+//
+///////////////////////////////////////////////////////////
+function f_EPTF_Common_IndexArray_arrayIsEmpty(
+  inout EPTF_Common_IndexArray pl_array)
+return boolean{
+  return -1 == pl_array.firstBusy
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Common_IndexArray_getFirstBusyIdx
+// 
+//  Purpose:
+//    Retrieves the index of the first valid element in the 
+//    <EPTF_Common_IndexArray>
+//
+//  Parameters:
+//    pl_array - <EPTF_Common_IndexArray> - the IndexArray record
+//
+//  Return Value:
+//    *integer* - the index of the first busy element
+//
+//  Detailed Comments:
+//
+///////////////////////////////////////////////////////////
+function f_EPTF_Common_IndexArray_getFirstBusyIdx(
+  inout EPTF_Common_IndexArray pl_array)
+return integer{
+  return pl_array.firstBusy
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Common_IndexArray_getNextBusyIdx
+// 
+//  Purpose:
+//    Retrieves the first valid element in the 
+//    <EPTF_Common_IndexArray> after the specified position
+//
+//  Parameters:
+//    pl_array - <EPTF_Common_IndexArray> - the IndexArray record
+//    pl_idx - *integer* - the specified position where the search to be started
+//
+//  Return Value:
+//    *integer* - the index of the first busy element after the specified position
+//
+//  Detailed comments:
+//
+///////////////////////////////////////////////////////////
+function f_EPTF_Common_IndexArray_getNextBusyIdx(
+  inout EPTF_Common_IndexArray pl_array,
+  in integer pl_idx)
+return integer{
+  if(pl_idx >= 0 and pl_idx < sizeof(pl_array.values)){
+    for ( var integer vl_i := pl_idx+1; vl_i < sizeof(pl_array.values) ; vl_i := vl_i+1 ){
+      if(0 <= pl_array.values[vl_i]){
+        return vl_i
+      }
+    }
+  }
+  return -1
+}
+
+}// end of module

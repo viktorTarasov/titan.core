@@ -1,0 +1,2437 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************///  File:     EPTF_CLL_TransportIPL4_Functions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 512
+//  Updated:  2012-02-17
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////
+//  Module: EPTF_CLL_TransportIPL4_Functions
+// 
+//  Purpose:
+//    -
+// 
+//  Module Parameters:
+//    tsp_EPTF_TransportIPL4_enableLogging - *boolean*
+//    tsp_EPTF_TransportIPL4_loggingComponentMask - *charstring*
+//    tsp_EPTF_TransportIPL4_enableStats - *boolean*
+// 
+//  Module depends on:
+//    <EPTF_CLL_TransportIPL4_Definitions>
+//    <EPTF_CLL_TransportMessageBufferManager_Functions>
+//    <IPL4asp_Types>
+//    <IPL4asp_PortType>
+//    <IPL4asp_Functions>
+//    <EPTF_CLL_HashMapInt2Int_Functions>
+//    <EPTF_CLL_HashMapStr2Int_Functions>
+//    <EPTF_CLL_FBQ_Definitions>
+//    <EPTF_CLL_FBQ_Functions>
+//    <EPTF_CLL_Base_Functions>
+//    <EPTF_CLL_Logging_Definitions>
+//    <EPTF_CLL_Logging_Functions>
+//    <EPTF_CLL_Variable_Definitions>
+//    <EPTF_CLL_Variable_Functions>
+//    <EPTF_CLL_Transport_CommonDefinitions>
+//    <EPTF_CLL_Common_Definitions>
+//    <EPTF_CLL_RBTScheduler_Functions>
+//    <EPTF_CLL_Scheduler_Definitions>
+//    <EPTF_CLL_HashMap_Functions>
+// 
+//  Current Owner:
+//    ENORPIN (EBENMOL)
+// 
+//  Last Review Date:
+//    2008-07-18
+// 
+//  Detailed Comments:
+// 
+// 
+///////////////////////////////////////////////////////////
+module EPTF_CLL_TransportIPL4_Functions {
+//=========================================================================
+// Import Part
+//=========================================================================
+import from EPTF_CLL_TransportIPL4_Definitions all;
+import from EPTF_CLL_TransportMessageBufferManager_Functions all;
+import from IPL4asp_Types all;
+import from IPL4asp_PortType all;
+import from IPL4asp_Functions all;
+import from EPTF_CLL_HashMapInt2Int_Functions all;
+import from EPTF_CLL_HashMapStr2Int_Functions all;
+import from EPTF_CLL_FBQ_Definitions all;
+import from EPTF_CLL_FBQ_Functions all;
+import from EPTF_CLL_Base_Functions all;
+import from EPTF_CLL_Logging_Definitions all;
+import from EPTF_CLL_Logging_Functions all;
+import from EPTF_CLL_Variable_Definitions all;
+import from EPTF_CLL_Variable_Functions all;
+import from EPTF_CLL_Transport_CommonDefinitions all;
+import from EPTF_CLL_Common_Definitions all;
+import from EPTF_CLL_RBTScheduler_Functions all;
+import from EPTF_CLL_Scheduler_Definitions all;
+import from EPTF_CLL_HashMap_Functions all;
+
+friend module EPTF_CLL_TransportCommPortIPL4_Functions
+friend module EPTF_CLL_Transport_Functions;
+//=========================================================================
+// Module parameters
+//========================================================================
+modulepar boolean tsp_EPTF_TransportIPL4_enableLogging := false;
+modulepar charstring tsp_EPTF_TransportIPL4_loggingComponentMask := "EPTF_TransportIPL4";
+modulepar boolean tsp_EPTF_TransportIPL4_enableStats := true;
+
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Transport_init
+// 
+//  Purpose:
+//    Function to initialize the component
+//
+//  Parameters:
+//    pl_transportType - *in* - <EPTF_Transport_TransportType> - Testport type.
+//    Used only for make it compatibile with the common layer.
+//    pl_selfName - *in* *charstring* - component name
+//    pl_interfaceList - *in* - <EPTF_TransportIPL4_InterfaceInformationList> - The defined interface 
+//    pl_enableBufferManager - *in boolean* - Enable the BufferManager function
+//
+//  Return Value:
+//    - 
+//
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//    
+///////////////////////////////////////////////////////////  
+public function f_EPTF_Transport_init(
+  in EPTF_Transport_TransportType pl_transportType,
+  in charstring pl_selfName,
+  in EPTF_Transport_InterfaceInformationList pl_interfaceList := {},
+  in boolean pl_enableBufferManager := true)
+runs on EPTF_TransportIPL4_CT 
+{
+  if (IPL4 != pl_transportType) {
+    f_EPTF_Base_assert(%definitionId&": The transport type "&log2str(pl_transportType)&
+      " is not supported in the IPL4 transport.", IPL4 == pl_transportType)
+  }
+  if (v_EPTF_TransportIPL4_initialized) {
+    return;
+  }
+
+  f_EPTF_TransportIPL4_initExtendedComponents(pl_selfName);
+  f_EPTF_HashMap_init_CT (pl_selfName);
+
+  f_EPTF_Base_registerCleanup(refers(f_EPTF_TransportIPL4_cleanup_CT));
+
+  v_EPTF_TransportIPL4_loggingMaskId := 
+  f_EPTF_Logging_registerComponentMasks(
+    tsp_EPTF_TransportIPL4_loggingComponentMask, 
+    c_EPTF_TransportIPL4_loggingEventClasses, 
+    EPTF_Logging_CLL);
+
+  if (tsp_EPTF_TransportIPL4_enableLogging) 
+  {
+    f_EPTF_Logging_enableLocalMask(
+      v_EPTF_TransportIPL4_loggingMaskId, 
+      c_EPTF_TransportIPL4_loggingClassIdx_Debug);
+  } 
+  else 
+  {
+    f_EPTF_Logging_disableLocalMask(
+      v_EPTF_TransportIPL4_loggingMaskId, 
+      c_EPTF_TransportIPL4_loggingClassIdx_Debug);
+  }
+
+  v_EPTF_TransportIPL4_LGenTypesHashMapId := 
+  f_EPTF_str2int_HashMap_New(c_EPTF_TransportIPL4_LGenTypesHashMapName);
+  v_EPTF_TransportIPL4_connInfoHashMapId := 
+  f_EPTF_int2int_HashMap_New(c_EPTF_TransportIPL4_connInfoHashMapName);
+
+  v_EPTF_TransportIPL4_LGenInfoFreeBusyQueue := c_EPTF_emptyFreeBusyQueue;
+  f_EPTF_FBQ_initFreeBusyQueue(v_EPTF_TransportIPL4_LGenInfoFreeBusyQueue);
+  v_EPTF_TransportIPL4_connInfoFreeBusyQueue := c_EPTF_emptyFreeBusyQueue;
+  f_EPTF_FBQ_initFreeBusyQueue(v_EPTF_TransportIPL4_connInfoFreeBusyQueue);  
+
+  vd_EPTF_TransportIPL4_defaultReceive := activate(as_EPTF_TransportIPL4_defaultReceive());
+  vd_EPTF_TransportIPL4_defaultEvent := activate(as_EPTF_TransportIPL4_defaultEvent()); 
+
+  var Result vl_result
+  if (pl_interfaceList != {}) { 
+    v_EPTF_TransportIPL4_interfaceInformationList := pl_interfaceList;
+    f_EPTF_Transport_setUpInterfaces (IPL4, vl_result);
+  }
+  if (pl_enableBufferManager) 
+  {
+    v_EPTF_TransportIPL4_isBufferManagerEnabled := pl_enableBufferManager;
+    f_EPTF_MessageBufferManager_init_CT();
+  }
+
+  f_EPTF_TransportIPL4_initStatistics ();
+
+  map(self:IPL4_PCO, system:IPL4_PCO);
+
+  v_EPTF_TransportIPL4_initialized := true;
+}
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Transport_registerMsgLenCallback4LGenType
+// 
+//  Purpose:
+//    Sets the message length calclutaion function for an LGen type.
+//
+//  Parameters:
+//    pl_transportType - *in* - <EPTF_Transport_TransportType> - Testport type.
+//    pl_function - *in* - <EPTF_Transport_GetMsgLen_FT> - the message length calculation function reference
+//    pl_msgLenArgs - *in* - <EPTF_IntegerList> - the function arguments
+//    pL_LGenType - *in* *charstring* - the name of the LGen type
+//
+/////////////////////////////////////////////////////////// 
+public function f_EPTF_Transport_registerMsgLenCallback4LGenType(
+  in EPTF_Transport_TransportType pl_transportType,
+  in EPTF_Transport_GetMsgLen_FT pl_function,
+  in EPTF_IntegerList pl_msgLenArgs,
+  in charstring pl_LGenType) 
+runs on EPTF_TransportIPL4_CT
+{
+  if (IPL4 != pl_transportType) {
+    f_EPTF_Base_assert(%definitionId&": The transport type "&log2str(pl_transportType)&
+      " is not supported in the IPL4 transport.", IPL4 == pl_transportType)
+  }
+  if (pl_LGenType=="")
+  {    
+    f_EPTF_TransportIPL4_error(%definitionId&": LGenType must be specified.");
+  }
+  else
+  {
+    var integer vl_fbqId;
+    f_EPTF_TransportIPL4_addLGenInfo(pl_LGenType, vl_fbqId);
+    v_EPTF_TransportIPL4_LGenInfoList[vl_fbqId].msgLenCalc := c_EPTF_TransportIPL4_emptyGetMsgLen
+    v_EPTF_TransportIPL4_LGenInfoList[vl_fbqId].msgLenCalc.getMsgLenNewFn := pl_function
+    v_EPTF_TransportIPL4_LGenInfoList[vl_fbqId].msgLenCalc.getMsgLenNewArgs := pl_msgLenArgs
+  }
+}
+
+friend function f_EPTF_Transport_registerConnCallbacks(
+  in EPTF_Transport_TransportType pl_transportType,
+  in charstring pl_LGenType,
+  in EPTF_Transport_ConnectionOpened_FT pl_connOpenedFn,
+  in EPTF_Transport_ConnectionClosed_FT pl_connClosedFn)
+runs on EPTF_TransportIPL4_CT
+{
+  if (IPL4 != pl_transportType) {
+    f_EPTF_Base_assert(%definitionId&": The transport type "&log2str(pl_transportType)&
+      " is not supported in the IPL4 transport.", IPL4 == pl_transportType)
+  }
+  if (pl_LGenType=="") {
+    f_EPTF_Base_assert(%definitionId&": LGenType must be specified.", pl_LGenType!="");
+  }
+  var integer vl_fbqId;
+  f_EPTF_TransportIPL4_addLGenInfo(pl_LGenType, vl_fbqId);
+  v_EPTF_TransportIPL4_LGenInfoList[vl_fbqId].connOpenedFn := pl_connOpenedFn;
+  v_EPTF_TransportIPL4_LGenInfoList[vl_fbqId].connClosedFn := pl_connClosedFn;
+}
+
+friend function f_EPTF_Transport_setConnectionUniqueId(
+  in ConnectionId pl_connId,
+  in integer pl_uniqueId)
+runs on EPTF_TransportIPL4_CT
+{
+  var integer vl_connInfofbqId;
+  if (f_EPTF_int2int_HashMap_Find(v_EPTF_TransportIPL4_connInfoHashMapId,pl_connId,vl_connInfofbqId))
+  {
+    v_EPTF_TransportIPL4_connInfoList[vl_connInfofbqId].uniqueId := pl_uniqueId;
+  }
+}
+
+friend function f_EPTF_Transport_getConnectionUniqueId(
+  in ConnectionId pl_connId)
+runs on EPTF_TransportIPL4_CT
+return integer
+{
+  var integer vl_connInfofbqId;
+  if (f_EPTF_int2int_HashMap_Find(v_EPTF_TransportIPL4_connInfoHashMapId,pl_connId,vl_connInfofbqId))
+  {
+    return v_EPTF_TransportIPL4_connInfoList[vl_connInfofbqId].uniqueId;
+  } else {
+    return -1;
+  }
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Transport_connect
+// 
+//  Purpose:
+//    Function to create a new connection
+//
+//  Parameters:
+//    pl_transportType - *in* - <EPTF_Transport_TransportType> - Testport type
+//    pl_proto - *in* <EPTF_TransportProtocol> - protocol
+//    pl_localHost - *in* <HostName> - local host
+//    pl_localPort - *in* <PortNumber> - local port number
+//    pl_remoteHost - *in* <HostName> - remote host
+//    pl_remotePort - *in* <PortNumber> - remote port number
+//    pl_LGenType - *in* - *charstring* - LGen type
+//    pl_result - *out* - <Result> - result
+//    pl_automaticBuffering - *in* - *boolean* - buffering is automatic?
+//	  pl_options - *in* - *OptionList* - additional options of the connection ex.: sctpAdditionalLocalAddresses to enable SCTP multihoming
+//
+//  Return Value:
+//    *integer* - connection/socket ID, or -1 on error
+//
+//  Errors:
+//    - invalid LGenType
+//    - already listening on localHost:localPort
+///////////////////////////////////////////////////////////
+public function f_EPTF_Transport_connect(
+  in EPTF_Transport_TransportType pl_transportType,
+  in ProtoTuple pl_proto,
+  in HostName pl_localHost,
+  in PortNumber pl_localPort,
+  in HostName pl_remoteHost,
+  in PortNumber pl_remotePort,
+  in charstring pl_LGenType,
+  out Result pl_result,
+  in boolean pl_automaticBuffering := false,
+  in OptionList pl_options := {})
+runs on EPTF_TransportIPL4_CT
+return integer
+{
+  return f_EPTF_Transport_connect_priv(
+    pl_transportType,
+    pl_proto,
+    pl_localHost,
+    pl_localPort,
+    pl_remoteHost,
+    pl_remotePort,
+    pl_LGenType,
+    pl_result,
+    pl_automaticBuffering,
+    -1,
+    pl_options);
+}
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Transport_connect_priv
+// 
+//  Purpose:
+//    Function to create a new connection. This private function is able to 
+//    reuse an existing connection info DB index (*pl_connInfofbqId*).
+//
+//  Parameters:
+//    pl_transportType - *in* - <EPTF_Transport_TransportType> - Testport type
+//    pl_proto - *in* <EPTF_TransportProtocol> - protocol
+//    pl_localHost - *in* <HostName> - local host
+//    pl_localPort - *in* <PortNumber> - local port number
+//    pl_remoteHost - *in* <HostName> - remote host
+//    pl_remotePort - *in* <PortNumber> - remote port number
+//    pl_LGenType - *in* - *charstring* - LGen type
+//    pl_result - *out* - <Result> - result
+//    pl_automaticBuffering - *in* - *boolean* - buffering is automatic?
+//    pl_connInfofbqId - *in* - *integer* - if not -1 then this index will be 
+//      reused. It points into the connection info DB. 
+//	  pl_options - *in* - *OptionList* - additional options
+//
+//  Return Value:
+//    *integer* - connection/socket ID, or -1 on error
+//
+//  Errors:
+//    - invalid LGenType
+//    - already listening on localHost:localPort
+///////////////////////////////////////////////////////////
+private function f_EPTF_Transport_connect_priv(
+  in EPTF_Transport_TransportType pl_transportType,
+  in ProtoTuple pl_proto,
+  in HostName pl_localHost,
+  in PortNumber pl_localPort,
+  in HostName pl_remoteHost,
+  in PortNumber pl_remotePort,
+  in charstring pl_LGenType,
+  out Result pl_result,
+  in boolean pl_automaticBuffering := false,
+  in integer pl_connInfofbqId := -1,
+  in OptionList pl_options := {})
+runs on EPTF_TransportIPL4_CT
+return integer
+{
+  if (IPL4 != pl_transportType) {
+    f_EPTF_Base_assert(%definitionId&": The transport type "&log2str(pl_transportType)&
+      " is not supported in the IPL4 transport.", IPL4 == pl_transportType)
+  }
+  var integer vl_ret := -1
+  var integer vl_connInfofbqId := -1;
+  var integer vl_fbqId;  
+  pl_result := f_IPL4_connect(IPL4_PCO, pl_remoteHost, pl_remotePort, pl_localHost, pl_localPort, 0, pl_proto, pl_options);
+
+  f_EPTF_TransportIPL4_updateOutgoingStatistics(c_EPTF_TransportIPL4_outConnect);
+
+  if ((pl_result.errorCode == omit) or (pl_result.errorCode == IPL4_ERROR_TEMPORARILY_UNAVAILABLE)) //if not error in sending
+  {
+    var EPTF_TransportIPL4_connectionStates vl_state;      
+    if (pl_result.errorCode == omit) 
+    {
+      vl_state := OPENED;
+    }
+    else
+    {
+      vl_state := TEMPORARILY_UNAVAILABLE;
+    }
+
+    vl_connInfofbqId := pl_connInfofbqId;
+    if (vl_connInfofbqId < 0) {
+      vl_connInfofbqId:= f_EPTF_FBQ_getOrCreateFreeSlot(v_EPTF_TransportIPL4_connInfoFreeBusyQueue); 
+      f_EPTF_FBQ_moveFromFreeToBusyTail(vl_connInfofbqId,v_EPTF_TransportIPL4_connInfoFreeBusyQueue);     
+      f_EPTF_int2int_HashMap_Insert(v_EPTF_TransportIPL4_connInfoHashMapId,pl_result.connId,vl_connInfofbqId);
+    }
+    v_EPTF_TransportIPL4_connInfoList[vl_connInfofbqId] := c_EPTF_TransportIPL4_connInfo_init;
+    v_EPTF_TransportIPL4_connInfoList[vl_connInfofbqId].uniqueId := pl_result.connId;
+    v_EPTF_TransportIPL4_connInfoList[vl_connInfofbqId].automaticBuffering := pl_automaticBuffering;
+    v_EPTF_TransportIPL4_connInfoList[vl_connInfofbqId].connectionState := vl_state; //storing connection state
+    v_EPTF_TransportIPL4_connInfoList[vl_connInfofbqId].options := pl_options;
+    if (ischosen(pl_proto.sctp)) {
+      v_EPTF_TransportIPL4_connInfoList[vl_connInfofbqId].sctpInformation := pl_proto.sctp;
+      
+      v_EPTF_TransportIPL4_connInfoList[vl_connInfofbqId].sctpReestablishmentInfo := c_EPTF_TransportIPL4_sctpReestablishmentInfo_init;
+      v_EPTF_TransportIPL4_connInfoList[vl_connInfofbqId].sctpReestablishmentInfo.localHost := pl_localHost;
+      v_EPTF_TransportIPL4_connInfoList[vl_connInfofbqId].sctpReestablishmentInfo.localPort := pl_localPort;
+      v_EPTF_TransportIPL4_connInfoList[vl_connInfofbqId].sctpReestablishmentInfo.remoteHost := pl_remoteHost;
+      v_EPTF_TransportIPL4_connInfoList[vl_connInfofbqId].sctpReestablishmentInfo.remotePort := pl_remotePort;
+      v_EPTF_TransportIPL4_connInfoList[vl_connInfofbqId].sctpReestablishmentInfo.lGenType := pl_LGenType;
+      v_EPTF_TransportIPL4_connInfoList[vl_connInfofbqId].sctpReestablishmentInfo.automaticBuffering := pl_automaticBuffering;
+    } else {
+      v_EPTF_TransportIPL4_connInfoList[vl_connInfofbqId].sctpInformation := omit;
+    }
+
+    if(pl_LGenType!="")
+    {
+
+      if (f_EPTF_str2int_HashMap_Find(v_EPTF_TransportIPL4_LGenTypesHashMapId,pl_LGenType,vl_fbqId))
+      { 
+        v_EPTF_TransportIPL4_connInfoList[vl_connInfofbqId].LGenTypeId := vl_fbqId; //storing LGen type too
+
+        // call the connectionOpened callback of the LGenType if not null which may override uniqueId
+        if(v_EPTF_TransportIPL4_LGenInfoList[vl_fbqId].connOpenedFn != null) {
+          v_EPTF_TransportIPL4_LGenInfoList[vl_fbqId].connOpenedFn.apply(IPL4, pl_result.connId);
+        }
+
+        select( true ){
+          case ( null != v_EPTF_TransportIPL4_LGenInfoList[vl_fbqId].msgLenCalc.getMsgLenOldAPIFn ){
+            f_IPL4_setGetMsgLen(
+              IPL4_PCO,
+              pl_result.connId,
+              v_EPTF_TransportIPL4_LGenInfoList[vl_fbqId].msgLenCalc.getMsgLenOldAPIFn,
+              v_EPTF_TransportIPL4_LGenInfoList[vl_fbqId].msgLenCalc.getMsgLenOldArgs);
+          }
+          case ( null != v_EPTF_TransportIPL4_LGenInfoList[vl_fbqId].msgLenCalc.getMsgLenNewFn){
+            var f_IPL4_getMsgLen vl_f := refers(f_EPTF_Transport_IPL4GetMsgLenWrapper)
+            f_IPL4_setGetMsgLen(
+              IPL4_PCO,
+              pl_result.connId,
+              vl_f,
+              {vl_fbqId});
+          }
+          case else{
+            //Do nothing
+          }
+        }
+
+      }
+      else
+      {
+        f_EPTF_TransportIPL4_warning("LGenType not found in the hashmap");
+      }
+    }
+  }
+
+  if(vl_connInfofbqId >= 0) {
+    vl_ret := v_EPTF_TransportIPL4_connInfoList[vl_connInfofbqId].uniqueId;
+  } else if (isvalue(pl_result.connId)){
+    vl_ret := pl_result.connId
+  }
+  return vl_ret
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Transport_listen
+// 
+//  Purpose:
+//    Function to listen on a socket
+//
+//  Parameters:
+//    pl_transportType - *in* - <EPTF_Transport_TransportType> - Testport type
+//    pl_proto - *in* <EPTF_TransportProtocol> - protocol
+//    pl_hostName - *in* <HostName> - local host
+//    pl_portNumber - *in* <PortNumber> - local port number
+//    pl_LGenType - *in* - *charstring* - LGen type
+//    pl_result - *out* - <Result> - result
+//    pl_automaticBuffering - *in* - *boolean* - buffering is automatic?
+//  Return Value:
+//    *integer* - connection/socket ID, or -1 on error
+//
+//  Errors:
+//    - invalid LGenType
+///////////////////////////////////////////////////////////
+public function f_EPTF_Transport_listen(
+  in EPTF_Transport_TransportType pl_transportType,
+  in ProtoTuple pl_proto,
+  in HostName pl_hostName,
+  in PortNumber pl_portNumber,
+  in charstring pl_LGenType,
+  out Result pl_result,
+  in boolean pl_automaticBuffering := false,
+  in OptionList pl_options := {})
+runs on EPTF_TransportIPL4_CT
+return integer
+{
+  if (IPL4 != pl_transportType) {
+    f_EPTF_Base_assert(%definitionId&": The transport type "&log2str(pl_transportType)&
+      " is not supported in the IPL4 transport.", IPL4 == pl_transportType)
+  }
+  var integer vl_ret := -1
+  var integer vl_connInfofbqId := -1;
+  var integer vl_fbqId;  
+  pl_result := f_IPL4_listen(IPL4_PCO, pl_hostName, pl_portNumber, pl_proto, pl_options);
+
+  f_EPTF_TransportIPL4_updateOutgoingStatistics(c_EPTF_TransportIPL4_outListen);
+
+  if ((pl_result.errorCode == omit) or (pl_result.errorCode == IPL4_ERROR_TEMPORARILY_UNAVAILABLE)) //if not error
+  {
+    var EPTF_TransportIPL4_connectionStates vl_state;      
+    if (pl_result.errorCode == omit) 
+    {
+      vl_state := OPENED;
+    }
+    else
+    {
+      vl_state := TEMPORARILY_UNAVAILABLE;
+    }
+
+    vl_connInfofbqId:= f_EPTF_FBQ_getOrCreateFreeSlot(v_EPTF_TransportIPL4_connInfoFreeBusyQueue); 
+    f_EPTF_FBQ_moveFromFreeToBusyTail(vl_connInfofbqId,v_EPTF_TransportIPL4_connInfoFreeBusyQueue);     
+    f_EPTF_int2int_HashMap_Insert(v_EPTF_TransportIPL4_connInfoHashMapId,pl_result.connId,vl_connInfofbqId);
+
+    v_EPTF_TransportIPL4_connInfoList[vl_connInfofbqId] := c_EPTF_TransportIPL4_connInfo_init;
+    v_EPTF_TransportIPL4_connInfoList[vl_connInfofbqId].uniqueId := pl_result.connId;
+
+    v_EPTF_TransportIPL4_connInfoList[vl_connInfofbqId].automaticBuffering := pl_automaticBuffering;
+    v_EPTF_TransportIPL4_connInfoList[vl_connInfofbqId].connectionState := vl_state; //storing connection state
+    v_EPTF_TransportIPL4_connInfoList[vl_connInfofbqId].options := pl_options;
+
+    if (ischosen(pl_proto.sctp)) {
+      v_EPTF_TransportIPL4_connInfoList[vl_connInfofbqId].sctpInformation := pl_proto.sctp;
+    } else {
+      v_EPTF_TransportIPL4_connInfoList[vl_connInfofbqId].sctpInformation := omit;
+    }
+
+    if(pl_LGenType!="")
+    {
+
+      if (f_EPTF_str2int_HashMap_Find(v_EPTF_TransportIPL4_LGenTypesHashMapId,pl_LGenType,vl_fbqId))
+      { 
+        v_EPTF_TransportIPL4_connInfoList[vl_connInfofbqId].LGenTypeId := vl_fbqId; //storing LGen type too         
+
+        // call the connectionOpened callback of the LGenType if not null which may override uniqueId
+        if(v_EPTF_TransportIPL4_LGenInfoList[vl_fbqId].connOpenedFn != null) {
+          v_EPTF_TransportIPL4_LGenInfoList[vl_fbqId].connOpenedFn.apply(IPL4, pl_result.connId);
+        }
+
+        select( true ){
+          case ( null != v_EPTF_TransportIPL4_LGenInfoList[vl_fbqId].msgLenCalc.getMsgLenOldAPIFn ){
+            f_IPL4_setGetMsgLen(
+              IPL4_PCO,
+              pl_result.connId,
+              v_EPTF_TransportIPL4_LGenInfoList[vl_fbqId].msgLenCalc.getMsgLenOldAPIFn,
+              v_EPTF_TransportIPL4_LGenInfoList[vl_fbqId].msgLenCalc.getMsgLenOldArgs);
+          }
+          case ( null != v_EPTF_TransportIPL4_LGenInfoList[vl_fbqId].msgLenCalc.getMsgLenNewFn){
+            var f_IPL4_getMsgLen vl_f := refers(f_EPTF_Transport_IPL4GetMsgLenWrapper)
+            f_IPL4_setGetMsgLen(
+              IPL4_PCO,
+              pl_result.connId,
+              vl_f,
+              {vl_fbqId});
+          }
+          case else{
+            //Do nothing
+          }
+        }
+      }
+      else
+      {
+        f_EPTF_TransportIPL4_warning("LGenType not found in the hashmap");  
+      }
+    }
+  }
+
+  if(vl_connInfofbqId >= 0) {
+    vl_ret := v_EPTF_TransportIPL4_connInfoList[vl_connInfofbqId].uniqueId;
+  } else if (isvalue(pl_result.connId)){
+    vl_ret := pl_result.connId
+  }
+  return vl_ret
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Transport_close
+// 
+//  Purpose:
+//    Function to close a connection or listening socket
+//
+//  Parameters:
+//    pl_transportType - *in* - <EPTF_Transport_TransportType> - Testport type
+//    pl_connId - *in* - *integer* - connection/socket ID
+//    pl_result - *out* - <Result> - result
+//
+//  Return Value:
+//    *boolean* - true on success
+//
+//  Errors:
+//    - invalid connection/socket ID
+///////////////////////////////////////////////////////////
+public function f_EPTF_Transport_close(  
+  in EPTF_Transport_TransportType pl_transportType,
+  in integer pl_connId,
+  out Result pl_result,
+  in ProtoTuple pl_proto:={unspecified:={}})
+runs on EPTF_TransportIPL4_CT
+return boolean
+{
+  if (IPL4 != pl_transportType) {
+    f_EPTF_Base_assert(%definitionId&": The transport type "&log2str(pl_transportType)&
+      " is not supported in the IPL4 transport.", IPL4 == pl_transportType)
+  }
+  var integer vl_connInfofbqId := -1;
+  var integer vl_fbqId;  
+  pl_result := f_IPL4_close(IPL4_PCO,pl_connId,pl_proto);
+  f_EPTF_TransportIPL4_updateOutgoingStatistics(c_EPTF_TransportIPL4_outClose);
+  if(f_EPTF_int2int_HashMap_Find(v_EPTF_TransportIPL4_connInfoHashMapId, pl_connId, vl_connInfofbqId))
+  {
+    // Cancel scheduled SCTP reestablishment action if exists
+    if (ispresent(v_EPTF_TransportIPL4_connInfoList[vl_connInfofbqId].sctpReestablishmentInfo) 
+        and v_EPTF_TransportIPL4_connInfoList[vl_connInfofbqId].sctpReestablishmentInfo.timerIdx >= 0) {
+      f_EPTF_SchedulerComp_CancelEvent(v_EPTF_TransportIPL4_connInfoList[vl_connInfofbqId].sctpReestablishmentInfo.timerIdx);
+      v_EPTF_TransportIPL4_connInfoList[vl_connInfofbqId].sctpReestablishmentInfo.timerIdx := -1;
+    } 
+    
+    vl_fbqId := v_EPTF_TransportIPL4_connInfoList[vl_connInfofbqId].LGenTypeId;
+    // call the connectionClosed callback of the LGenType if not null which may free up the unique ID
+    if(vl_fbqId >= 0 and v_EPTF_TransportIPL4_LGenInfoList[vl_fbqId].connClosedFn != null) {
+      v_EPTF_TransportIPL4_LGenInfoList[vl_fbqId].connClosedFn.apply(IPL4, v_EPTF_TransportIPL4_connInfoList[vl_connInfofbqId].uniqueId);
+    }
+    v_EPTF_TransportIPL4_connInfoList[vl_connInfofbqId] := c_EPTF_TransportIPL4_connInfo_init; // removing connection state and other
+    f_EPTF_FBQ_moveFromBusyToFreeTail(vl_connInfofbqId,v_EPTF_TransportIPL4_connInfoFreeBusyQueue);    
+    f_EPTF_int2int_HashMap_Erase(v_EPTF_TransportIPL4_connInfoHashMapId,pl_connId);
+    //FIXME
+    //if (ischosen(vl_proto.sctp)) 
+    {
+      v_EPTF_TransportIPL4_connInfoList[vl_connInfofbqId].sctpInformation := omit;
+    }
+  }
+  else {
+    f_EPTF_TransportIPL4_warning("Connection ID not found in the hashmap");
+
+  }
+
+  return not isvalue(pl_result.errorCode)
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Transport_send
+// 
+//  Purpose:
+//    Function to send a message on a connection
+//
+//  Parameters:
+//    pl_transportType - *in* - <EPTF_Transport_TransportType> - Testport type
+//    pl_connId - *in* *integer* - connection ID
+//    pl_msg - *in* - *octetstring* - the message to send
+//    pl_result - *out* - <Result> - result
+//    pl_needBuffering - *in* - *boolean* - buffering needed?
+//
+//  Return Value:
+//    *boolean* - true on success, false on error
+//
+//  Errors:
+//    - invalid connection ID
+//    - no connection (remote peer) exists for socket
+///////////////////////////////////////////////////////////
+public function f_EPTF_Transport_send(
+  in EPTF_Transport_TransportType pl_transportType,
+  in integer pl_connId,
+  in octetstring pl_msg,
+  out Result pl_result,
+  in boolean pl_needBuffering := false,
+  in ProtoTuple pl_proto := {unspecified:={}})
+runs on EPTF_TransportIPL4_CT
+return boolean
+{
+  if (IPL4 != pl_transportType) {
+    f_EPTF_Base_assert(%definitionId&": The transport type "&log2str(pl_transportType)&
+      " is not supported in the IPL4 transport.", IPL4 == pl_transportType)
+  }
+  var integer vl_connInfofbqId := -1;
+  var boolean vl_needAutoBuffering := false;  
+  var integer vl_sentOctets := 0;
+
+  if (f_EPTF_int2int_HashMap_Find(v_EPTF_TransportIPL4_connInfoHashMapId,pl_connId,vl_connInfofbqId))
+  { 
+    if(v_EPTF_TransportIPL4_connInfoList[vl_connInfofbqId].automaticBuffering and (v_EPTF_TransportIPL4_connInfoList[vl_connInfofbqId].connectionState == TEMPORARILY_UNAVAILABLE))
+    { //if sending is not ready we have to buffer it
+      vl_needAutoBuffering := true;
+    }
+  }    
+
+  if ((pl_needBuffering or vl_needAutoBuffering) and v_EPTF_TransportIPL4_isBufferManagerEnabled) 
+  {
+    //FIXME Remove pl_information from f_EPTF_MessageBufferManager_setMessageToBuffer
+    f_EPTF_MessageBufferManager_setMessageToBuffer(pl_msg,"unspecified",pl_connId);
+  }
+  else 
+  {
+    var ASP_Send vl_data := {
+      pl_connId,
+      pl_proto,
+      pl_msg
+    }
+    pl_result := f_EPTF_TransportIPL4_portSend(IPL4_PCO,vl_data,vl_sentOctets, vl_connInfofbqId);
+
+    // If not the entire message was sent, the remaining octets must be buffered:
+    if (vl_sentOctets < lengthof(pl_msg) and v_EPTF_TransportIPL4_isBufferManagerEnabled)
+    {
+      //f_EPTF_TransportIPL4_debug("Partial send <"&int2str(vl_sentOctets)&"> ["&int2str(pl_connId)&"]: auto buffering");
+      var octetstring vl_octetsToBuffer := substr(pl_msg, vl_sentOctets, lengthof(pl_msg)-vl_sentOctets);
+      f_EPTF_MessageBufferManager_setMessageToBuffer(vl_octetsToBuffer,"unspecified",pl_connId);
+    }
+
+    if (vl_sentOctets >0) {f_EPTF_TransportIPL4_updateOutgoingStatistics(c_EPTF_TransportIPL4_outMessage); }
+  }
+
+  return not isvalue(pl_result.errorCode)
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Transport_sendTo
+// 
+//  Purpose:
+//    Function to send a message to a remote peer
+//
+//  Parameters:
+//    pl_transportType - *in* - <EPTF_Transport_TransportType> - Testport type
+//    pl_connId - *in* *integer* - connection ID
+//    pl_remHost - *in* *charstring* - remote host
+//    pl_remotePort - *in* *integer* - remote port number
+//    pl_msg - *in* - *octetstring* - the message to send
+//    pl_result - *out* - <Result> - result
+//    pl_needBuffering - *in* - *boolean* - buffering needed?
+//
+//  Return Value:
+//    *boolean* - true on success, false on error
+//
+//  Errors:
+//    - invalid connection ID
+///////////////////////////////////////////////////////////
+public function f_EPTF_Transport_sendTo(
+  in EPTF_Transport_TransportType pl_transportType,
+  in integer pl_connId,
+  in charstring pl_remHost,
+  in integer pl_remotePort,
+  in octetstring pl_msg,
+  out Result pl_result,
+  in boolean pl_needBuffering := false,
+  in ProtoTuple pl_proto:={unspecified:={}})
+runs on EPTF_TransportIPL4_CT
+return boolean
+{
+  if (IPL4 != pl_transportType) {
+    f_EPTF_Base_assert(%definitionId&": The transport type "&log2str(pl_transportType)&
+      " is not supported in the IPL4 transport.", IPL4 == pl_transportType)
+  }
+  var ASP_SendTo vl_data := {
+    pl_connId,
+    pl_remHost,
+    pl_remotePort,
+    pl_proto,
+    pl_msg
+  }
+  var integer vl_connInfofbqId := -1;
+  var boolean vl_needAutoBuffering := false;  
+  var integer vl_sentOctets := 0;
+  if (f_EPTF_int2int_HashMap_Find(v_EPTF_TransportIPL4_connInfoHashMapId,pl_connId,vl_connInfofbqId))
+  { 
+    if(v_EPTF_TransportIPL4_connInfoList[vl_connInfofbqId].automaticBuffering and (v_EPTF_TransportIPL4_connInfoList[vl_connInfofbqId].connectionState == TEMPORARILY_UNAVAILABLE))
+    { //if sending is not ready we have to buffer it
+      vl_needAutoBuffering := true;
+    }
+  }    
+
+  if ((pl_needBuffering or vl_needAutoBuffering) and v_EPTF_TransportIPL4_isBufferManagerEnabled) 
+  {
+    if (vl_data.proto == {tcp:={}}) 
+    {        
+      f_EPTF_MessageBufferManager_setMessageToBuffer (
+        pl_msg,"tcp"&"|"&pl_remHost&"|"&int2str(pl_remotePort), 
+        pl_connId);	
+    }
+    else if (vl_data.proto == {udp:={}})
+    {
+      f_EPTF_MessageBufferManager_setMessageToBuffer (
+        pl_msg,"udp"&"|"&pl_remHost&"|"&int2str(pl_remotePort),
+        pl_connId);
+    }
+    else {
+      //SCTP sendTo not supported
+    }	
+  }
+  else
+  {
+    pl_result := f_EPTF_TransportIPL4_portSendTo(IPL4_PCO,vl_data,vl_sentOctets, vl_connInfofbqId);
+
+    // If not the entire message was sent, the remaining octets must be buffered:
+    if (vl_sentOctets < 0) { vl_sentOctets := 0; }
+    if (vl_sentOctets < lengthof(pl_msg) and v_EPTF_TransportIPL4_isBufferManagerEnabled)
+    {
+      //f_EPTF_TransportIPL4_debug("Partial sendTo ["&int2str(pl_connId)&"]: auto buffering");
+      var octetstring vl_octetsToBuffer := substr(pl_msg, vl_sentOctets, lengthof(pl_msg)-vl_sentOctets);
+      //FIXME unspecified
+      f_EPTF_MessageBufferManager_setMessageToBuffer(vl_octetsToBuffer, "unspecified"&"|"&pl_remHost&"|"&int2str(pl_remotePort), pl_connId);
+    }
+    if (vl_sentOctets > 0) {f_EPTF_TransportIPL4_updateOutgoingStatistics(c_EPTF_TransportIPL4_outMessage); }
+  }
+
+  return not isvalue(pl_result.errorCode)
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Transport_setUserData
+// 
+//  Purpose:
+//    Function to set user data 
+//
+//  Parameters:
+//    pl_transportType - *in* - <EPTF_Transport_TransportType> - Testport type
+//    pl_connId - *in* - *integer* - The ID of the connection
+//    pl_userData - *in* - *integer* - The data information
+//    pl_result - *out* - <Result> - result
+//
+//  Return Value:
+//    Result - the result of the operation 
+//
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//    
+/////////////////////////////////////////////////////////// 
+public function f_EPTF_Transport_setUserData(
+  in EPTF_Transport_TransportType pl_transportType,
+  in integer pl_connId, 
+  in integer pl_userData,
+  out Result pl_result)
+runs on EPTF_TransportIPL4_CT
+{
+  if (IPL4 != pl_transportType) {
+    f_EPTF_Base_assert(%definitionId&": The transport type "&log2str(pl_transportType)&
+      " is not supported in the IPL4 transport.", IPL4 == pl_transportType)
+  }
+  pl_result := f_IPL4_setUserData(IPL4_PCO,pl_connId,pl_userData);
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Transport_getUserData
+// 
+//  Purpose:
+//    Function to get user data 
+//
+//  Parameters:
+//    pl_transportType - *in* - <EPTF_Transport_TransportType> - Testport type
+//    pl_connId - *in* - <ConnectionId> - The ID of the connection
+//    pl_userData - *out* - <UserData> - The data information
+//    pl_result - *out* - <Result> - result
+//
+//  Return Value:
+//    Result - the result of the operation 
+//
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//    
+/////////////////////////////////////////////////////////// 
+public function f_EPTF_Transport_getUserData(
+  in EPTF_Transport_TransportType pl_transportType,
+  in ConnectionId pl_connId, 
+  out UserData pl_userData,
+  out Result pl_result)
+runs on EPTF_TransportIPL4_CT
+{
+  if (IPL4 != pl_transportType) {
+    f_EPTF_Base_assert(%definitionId&": The transport type "&log2str(pl_transportType)&
+      " is not supported in the IPL4 transport.", IPL4 == pl_transportType)
+  }
+  pl_result := f_IPL4_getUserData(IPL4_PCO,pl_connId,pl_userData);
+}
+
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Transport_registerMsgCallback
+// 
+//  Purpose:
+//    Function to set callback function for handling incoming messages
+//
+//  Parameters:
+//    pl_transportType - *in* - <EPTF_Transport_TransportType> - Testport type
+//    pl_LGenType - *in* - *charstring* - the type of the LGen component registered this function
+//    pl_msghandler - *in* - <f_EPTF_Transport_MsgCallback_FT> - The handler function to the receive template
+//    pl_eventHandler - *in* - <f_EPTF_Transport_MsgCallback_FT> - The handler function to the receive template
+//
+//  Return Value:
+//    - 
+//
+//  Errors:
+//    pl_LgenType should not be empty string.
+//
+//  Detailed Comments:
+//    
+///////////////////////////////////////////////////////////
+public function f_EPTF_Transport_registerMsgCallback(
+  in EPTF_Transport_TransportType pl_transportType,
+  in charstring pl_LGenType,
+  in EPTF_Transport_MsgCallback_FT pl_msgHandler,
+  in EPTF_Transport_EventCallback_FT pl_eventHandler := null)
+runs on EPTF_TransportIPL4_CT
+{
+  if (IPL4 != pl_transportType) {
+    f_EPTF_Base_assert(%definitionId&": The transport type "&log2str(pl_transportType)&
+      " is not supported in the IPL4 transport.", IPL4 == pl_transportType)
+  }
+
+  var integer vl_fbqId;
+  f_EPTF_TransportIPL4_addLGenInfo(pl_LGenType, vl_fbqId);
+  v_EPTF_TransportIPL4_LGenInfoList[vl_fbqId].eventHandlerOldFn := null
+  v_EPTF_TransportIPL4_LGenInfoList[vl_fbqId].eventHandlerNewFn := pl_eventHandler
+  v_EPTF_TransportIPL4_LGenInfoList[vl_fbqId].msgHandlerOldFn := null
+  v_EPTF_TransportIPL4_LGenInfoList[vl_fbqId].msgHandlerNewFn := pl_msgHandler
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Transport_getLocalAddress
+// 
+//  Purpose:
+//    Function to get local address information
+//
+//  Parameters:
+//    pl_transportType - *in* - <EPTF_Transport_TransportType> - Testport type
+//    pl_connId - *in* - <ConnectionId> - The ID of the connection
+//    pl_hostName - *out* - <HostName> - The name of the local host
+//    pl_portNumber - *out* - <PortNumber> - The port number of the local host
+//    pl_result - *out* - <Result> - the value of the connection detail
+//
+//  Return Value:
+//    -
+//
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//    
+/////////////////////////////////////////////////////////// 
+public function f_EPTF_Transport_getLocalAddress(
+  in EPTF_Transport_TransportType pl_transportType,
+  in ConnectionId pl_connId,
+  out HostName pl_hostName,
+  out PortNumber pl_portNumber,
+  out Result pl_result)
+runs on EPTF_TransportIPL4_CT
+{
+  if (IPL4 != pl_transportType) {
+    f_EPTF_Base_assert(%definitionId&": The transport type "&log2str(pl_transportType)&
+      " is not supported in the IPL4 transport.", IPL4 == pl_transportType)
+  }
+  var IPL4_ParamResult vl_paramRes
+  pl_result := f_IPL4_getConnectionDetails(IPL4_PCO,pl_connId,IPL4_LOCALADDRESS,vl_paramRes);
+  if(not isvalue(pl_result.errorCode)){
+    pl_hostName := vl_paramRes.local.hostName
+    pl_portNumber := vl_paramRes.local.portNumber
+  }else{
+    pl_hostName := ""
+    pl_portNumber := -1
+  }
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Transport_getRemoteAddress
+// 
+//  Purpose:
+//    Function to get the remote address information
+//
+//  Parameters:
+//    pl_transportType - *in* - <EPTF_Transport_TransportType> - Testport type
+//    pl_connId - *in* - <ConnectionId> - The ID of the connection
+//    pl_hostName - *out* - <HostName> - The name of the remote host
+//    pl_portNumber - *out* - <PortNUmber> - The port number of the remote host
+//    pl_result - *out* - <Result> - the value of the connection detail
+//
+//  Return Value:
+//    -
+//
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//    
+/////////////////////////////////////////////////////////// 
+public function f_EPTF_Transport_getRemoteAddress(
+  in EPTF_Transport_TransportType pl_transportType,
+  in ConnectionId pl_connId,
+  out HostName pl_hostName,
+  out PortNumber pl_portNumber,
+  out Result pl_result)
+runs on EPTF_TransportIPL4_CT
+{
+  if (IPL4 != pl_transportType) {
+    f_EPTF_Base_assert(%definitionId&": The transport type "&log2str(pl_transportType)&
+      " is not supported in the IPL4 transport.", IPL4 == pl_transportType)
+  }
+  var IPL4_ParamResult vl_paramRes
+  pl_result := f_IPL4_getConnectionDetails(IPL4_PCO,pl_connId,IPL4_REMOTEADDRESS,vl_paramRes);
+  if(not isvalue(pl_result.errorCode)){
+    pl_hostName := vl_paramRes.remote.hostName
+    pl_portNumber := vl_paramRes.remote.portNumber
+  }else{
+    pl_hostName := ""
+    pl_portNumber := -1
+  }
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Transport_getProto
+// 
+//  Purpose:
+//    Function to get protocol information associated with the socket
+//
+//  Parameters:
+//    pl_transportType - *in* - <EPTF_Transport_TransportType> - Testport type
+//    pl_connId - *in* - <ConnectionId> - The ID of the connection
+//    pl_proto - *out* - <ProtoTuple> - Protocol
+//    pl_result - *out* - <Result> - the value of the connection detail
+//
+//  Return Value:
+//    -
+//
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//    
+/////////////////////////////////////////////////////////// 
+public function f_EPTF_Transport_getProto(
+  in EPTF_Transport_TransportType pl_transportType,
+  in ConnectionId pl_connId,
+  out ProtoTuple pl_proto,
+  out Result pl_result)
+runs on EPTF_TransportIPL4_CT
+{
+  if (IPL4 != pl_transportType) {
+    f_EPTF_Base_assert(%definitionId&": The transport type "&log2str(pl_transportType)&
+      " is not supported in the IPL4 transport.", IPL4 == pl_transportType)
+  }
+  var IPL4_ParamResult vl_paramRes
+  pl_result := f_IPL4_getConnectionDetails(IPL4_PCO,pl_connId,IPL4_PROTO,vl_paramRes);
+  if(not isvalue(pl_result.errorCode)){
+    pl_proto := vl_paramRes.proto
+  }else{
+    pl_proto.unspecified := {}
+  }
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Transport_setUpInterfaces
+// 
+//  Purpose:
+//    Function to set up the given interfaces 
+//
+//  Parameters:
+//    pl_transportType - *in* - <EPTF_Transport_TransportType> - Testport type
+//    pl_result - *out* - <Result> - the value of the connection detail
+//
+//  Return Value:
+//    - 
+//
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//    
+///////////////////////////////////////////////////////////
+public function f_EPTF_Transport_setUpInterfaces(
+  in EPTF_Transport_TransportType pl_transportType,
+  out Result pl_result)
+runs on EPTF_TransportIPL4_CT 
+{
+  if (IPL4 != pl_transportType) {
+    f_EPTF_Base_assert(%definitionId&": The transport type "&log2str(pl_transportType)&
+      " is not supported in the IPL4 transport.", IPL4 == pl_transportType)
+  }
+  var integer vl_numberofinterfaces := sizeof(v_EPTF_TransportIPL4_interfaceInformationList);
+
+  for (var integer i := 0; i < vl_numberofinterfaces; i := i + 1) {
+    f_setUpInterface(v_EPTF_TransportIPL4_interfaceInformationList[i].HostName,
+      v_EPTF_TransportIPL4_interfaceInformationList[i].netmask,
+      v_EPTF_TransportIPL4_interfaceInformationList[i].broadcast,
+      v_EPTF_TransportIPL4_interfaceInformationList[i].count,
+      v_EPTF_TransportIPL4_interfaceInformationList[i].ifname,
+      v_EPTF_TransportIPL4_interfaceInformationList[i].virtualIfaceStart);
+  }
+  pl_result := { errorCode := omit, connId  := omit, os_error_code:=omit, os_error_text:= omit };
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Transport_appendInterfaces
+// 
+//  Purpose:
+//    Function to setup additional interfaces
+//
+//  Parameters:
+//    pl_transportType - *in* <EPTF_Transport_TransportType> - The ID of the connection
+//    pl_interfaceList - *in* <EPTF_Transport_InterfaceInformationList> - the list of additional interfaces
+//    pl_result - *out* <Result> - result
+/////////////////////////////////////////////////////////// 
+public function f_EPTF_Transport_appendInterfaces(
+  in EPTF_Transport_TransportType pl_transportType,
+  in EPTF_Transport_InterfaceInformationList pl_interfaceList,
+  out Result pl_result)
+runs on EPTF_TransportIPL4_CT
+{
+  if (IPL4 != pl_transportType) {
+    f_EPTF_Base_assert(%definitionId&": The transport type "&log2str(pl_transportType)&
+      " is not supported in the IPL4 transport.", IPL4 == pl_transportType)
+  }
+  var integer vl_numberofinterfaces := sizeof(pl_interfaceList);
+
+  for (var integer i := 0; i < vl_numberofinterfaces; i := i + 1) {
+    f_setUpInterface(pl_interfaceList[i].HostName,
+      pl_interfaceList[i].netmask,
+      pl_interfaceList[i].broadcast,
+      pl_interfaceList[i].count,
+      pl_interfaceList[i].ifname,
+      pl_interfaceList[i].virtualIfaceStart);
+  }
+
+  v_EPTF_TransportIPL4_interfaceInformationList := v_EPTF_TransportIPL4_interfaceInformationList & pl_interfaceList;
+
+  pl_result := { errorCode := omit, connId  := omit, os_error_code:=omit, os_error_text:= omit };
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Transport_setDownInterfaces
+// 
+//  Purpose:
+//    Function to set down the initialized interfaces 
+//
+//  Parameters:
+//    pl_transportType - *in* - <EPTF_Transport_TransportType> - Testport type
+//    pl_result - *out* - <Result> - the value of the connection detail
+//
+//  Return Value:
+//    - 
+//
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//    
+///////////////////////////////////////////////////////////
+public function f_EPTF_Transport_setDownInterfaces (
+  in EPTF_Transport_TransportType pl_transportType,
+  out Result pl_result) 
+runs on EPTF_TransportIPL4_CT 
+{ 
+  if (IPL4 != pl_transportType) {
+    f_EPTF_Base_assert(%definitionId&": The transport type "&log2str(pl_transportType)&
+      " is not supported in the IPL4 transport.", IPL4 == pl_transportType)
+  }
+  var integer vl_numberofinterfaces := sizeof(v_EPTF_TransportIPL4_interfaceInformationList);
+  
+  for (var integer i := 0; i < vl_numberofinterfaces; i := i + 1) {
+    f_setDownInterface(v_EPTF_TransportIPL4_interfaceInformationList[i].ifname,
+      v_EPTF_TransportIPL4_interfaceInformationList[i].count,
+      v_EPTF_TransportIPL4_interfaceInformationList[i].virtualIfaceStart);
+  }
+  pl_result := { errorCode := omit, connId  := omit, os_error_code:=omit, os_error_text:= omit };
+}
+
+///////////////////////////////////////////////////////////
+//  Altstep: as_EPTF_TransportIPL4_defaultReceive
+// 
+//  Purpose:
+//    Default altstep to handle receiving messages 
+///////////////////////////////////////////////////////////
+altstep as_EPTF_TransportIPL4_defaultReceive ()
+runs on EPTF_TransportIPL4_CT
+{
+  [] IPL4_PCO.receive (EPTF_TransportIPL4_IncomingMessage.asp_RecvFrom : ?) -> value v_EPTF_CommPort_IPL4_aspRecvFrom
+  { 
+    var integer vl_connInfofbqId;
+    var integer vl_fbqId;
+    f_EPTF_TransportIPL4_updateIncomingStatistics(c_EPTF_TransportIPL4_incMessage);   
+    if (f_EPTF_int2int_HashMap_Find(v_EPTF_TransportIPL4_connInfoHashMapId,v_EPTF_CommPort_IPL4_aspRecvFrom.connId,vl_connInfofbqId))
+    { 
+      vl_fbqId := v_EPTF_TransportIPL4_connInfoList[vl_connInfofbqId].LGenTypeId;
+      v_EPTF_CommPort_IPL4_incomingMessage.asp_RecvFrom := v_EPTF_CommPort_IPL4_aspRecvFrom;
+      select( true ){
+        case ( null != v_EPTF_TransportIPL4_LGenInfoList[vl_fbqId].msgHandlerOldFn ){
+          v_EPTF_TransportIPL4_LGenInfoList[vl_fbqId].msgHandlerOldFn.apply(); 
+        }
+        case ( null != v_EPTF_TransportIPL4_LGenInfoList[vl_fbqId].msgHandlerNewFn){
+          v_EPTF_TransportIPL4_LGenInfoList[vl_fbqId].msgHandlerNewFn.apply(
+            IPL4,
+
+//            v_EPTF_CommPort_IPL4_aspRecvFrom.connId,
+            v_EPTF_TransportIPL4_connInfoList[vl_connInfofbqId].uniqueId,
+
+            v_EPTF_CommPort_IPL4_aspRecvFrom.remName,
+            v_EPTF_CommPort_IPL4_aspRecvFrom.remPort,
+            v_EPTF_CommPort_IPL4_aspRecvFrom.locName,
+            v_EPTF_CommPort_IPL4_aspRecvFrom.locPort,
+            v_EPTF_CommPort_IPL4_aspRecvFrom.proto,
+            v_EPTF_CommPort_IPL4_aspRecvFrom.userData,
+            v_EPTF_CommPort_IPL4_aspRecvFrom.msg)
+        }
+        case else{
+          f_EPTF_TransportIPL4_debug("Message Handler function not exist!")
+        }
+      }
+    } 
+    else
+    {
+      f_EPTF_TransportIPL4_warning("Connection ID not found");
+      
+    }
+    repeat;
+  }
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_TransportIPL4_getConnectionDetails
+// 
+//  Purpose:
+//    Function to get connection details
+//
+//  Parameters:
+//    pl_connId - *in* - <ConnectionId> - The ID of the connection
+//    pl_param - *in* - <IPL4_Param> - the connection detail which is interested
+//    pl_result - *out* - <IPL4_ParamResult> - the value of the connection detail
+//
+//  Return Value:
+//    Result - the result of the operation 
+//
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//    
+/////////////////////////////////////////////////////////// 
+public function f_EPTF_TransportIPL4_getConnectionDetails(
+  in ConnectionId pl_connId,
+  in IPL4_Param pl_param,
+  out IPL4_ParamResult  pl_result)
+runs on EPTF_TransportIPL4_CT
+return Result
+{
+  return f_IPL4_getConnectionDetails(IPL4_PCO,pl_connId,pl_param,pl_result);
+}
+
+function f_EPTF_TransportIPL4_defaultResultHandler(in Result pl_result)
+runs on EPTF_TransportIPL4_CT
+{
+  
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_TransportIPL4_sctpReestablisment
+// 
+//  Purpose:
+//    SCTP reestablishment Scheduler call-back function. 
+//    It tries to reconnect and schedules the action again.  
+//
+//  Parameters:
+//    pl_action - *in* <EPTF_ScheduledAction> - Action to be handled
+//    pl_eventIndex - *in* *integer* - the position of the current event within the queue
+//
+//  Return Value:
+//    *boolean* - false if operation failed
+//
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//    
+/////////////////////////////////////////////////////////// 
+private function f_EPTF_TransportIPL4_sctpReestablisment(
+  in EPTF_ScheduledAction pl_action, // pl_action.actionId[0]: connInfo FBQ ID
+  in integer pl_eventIndex)
+runs on EPTF_TransportIPL4_CT
+return boolean
+{
+  // Try to reestablish SCTP connection. 
+  f_EPTF_TransportIPL4_reestablishSctpConnection(pl_action.actionId[0]);
+  v_EPTF_TransportIPL4_connInfoList[pl_action.actionId[0]].sctpReestablishmentInfo.timerIdx := -1;
+  return f_EPTF_TransportIPL4_scheduleSctpReestablismentAction(pl_action.actionId[0]);
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_TransportIPL4_reestablishSctpConnection
+// 
+//  Purpose:
+//    Try to reestablish the SCTP connection.  
+//
+//  Parameters:
+//    pl_connInfofbqId - *in* *integer* - the index in the connection info DB
+//
+//  Return Value:
+//    *boolean* - false if operation failed
+//
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//    
+/////////////////////////////////////////////////////////// 
+private function f_EPTF_TransportIPL4_reestablishSctpConnection(
+  in integer pl_connInfofbqId)
+runs on EPTF_TransportIPL4_CT
+return boolean
+{
+  if(pl_connInfofbqId < 0){return false}
+  var OptionList vl_options := {};
+  if(isvalue(v_EPTF_TransportIPL4_connInfoList[pl_connInfofbqId].options))
+  {vl_options := v_EPTF_TransportIPL4_connInfoList[pl_connInfofbqId].options}
+  
+  return f_EPTF_Transport_connect_priv(
+    IPL4,
+    {sctp := v_EPTF_TransportIPL4_connInfoList[pl_connInfofbqId].sctpInformation},
+    v_EPTF_TransportIPL4_connInfoList[pl_connInfofbqId].sctpReestablishmentInfo.localHost,
+    v_EPTF_TransportIPL4_connInfoList[pl_connInfofbqId].sctpReestablishmentInfo.localPort,
+    v_EPTF_TransportIPL4_connInfoList[pl_connInfofbqId].sctpReestablishmentInfo.remoteHost,
+    v_EPTF_TransportIPL4_connInfoList[pl_connInfofbqId].sctpReestablishmentInfo.remotePort,
+    v_EPTF_TransportIPL4_connInfoList[pl_connInfofbqId].sctpReestablishmentInfo.lGenType,
+    v_TransportIPL4_dummyResult,
+    v_EPTF_TransportIPL4_connInfoList[pl_connInfofbqId].sctpReestablishmentInfo.automaticBuffering,
+    pl_connInfofbqId,
+    vl_options
+  ) >= 0;
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_TransportIPL4_scheduleSctpReestablismentAction
+// 
+//  Purpose:
+//    Schedule an SCTP connection reestablishment action.  
+//
+//  Parameters:
+//    pl_connInfofbqId - *in* *integer* - the index in the connection info DB
+//
+//  Return Value:
+//    *boolean* - false if operation failed
+//
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//    
+/////////////////////////////////////////////////////////// 
+private function f_EPTF_TransportIPL4_scheduleSctpReestablismentAction(
+  in integer pl_connInfofbqId)
+runs on EPTF_TransportIPL4_CT
+return boolean
+{
+  var boolean vl_ret := true;
+  
+  // CR_TR00018902 - SCTP automatic reestablishment
+  if (v_EPTF_TransportIPL4_connInfoList[pl_connInfofbqId].sctpReestablishmentInfo.timerIdx < 0 
+    and v_EPTF_TransportIPL4_sctpReestablishmentTime > 0.0) {
+    vl_ret := f_EPTF_SchedulerComp_scheduleAction(
+      f_EPTF_SchedulerComp_snapshotTime()+v_EPTF_TransportIPL4_sctpReestablishmentTime,
+      refers(f_EPTF_TransportIPL4_sctpReestablisment),
+      {pl_connInfofbqId},
+      v_EPTF_TransportIPL4_connInfoList[pl_connInfofbqId].sctpReestablishmentInfo.timerIdx);
+  } // else already started a reestablishment timer or the automatic reestablishment is disabled
+  return vl_ret;
+} 
+
+///////////////////////////////////////////////////////////
+//  Altstep: as_EPTF_TransportIPL4_defaultEvent
+// 
+//  Purpose:
+//    Default altstep to handle receiving events
+///////////////////////////////////////////////////////////
+altstep as_EPTF_TransportIPL4_defaultEvent ()
+runs on EPTF_TransportIPL4_CT
+{
+  [] IPL4_PCO.receive (EPTF_TransportIPL4_IncomingMessage.asp_Event : ?) -> value v_EPTF_CommPort_IPL4_aspEvent
+  {
+    var integer vl_connInfofbqId, vl_parentFbqId;      
+    var integer vl_fbqId;
+    var f_EPTF_TransportIPL4_messageProcess_FT vl_oldEventHandler := null;
+    var EPTF_Transport_EventCallback_FT vl_newEventHandler := null
+    var IPL4_ParamResult vl_paramResult;
+    var integer vl_connId := -1;
+    var SAC_STATE vl_sac_state := SCTP_UNKNOWN_SAC_STATE;
+    
+    select( true ){
+      case ( ischosen(v_EPTF_CommPort_IPL4_aspEvent.connOpened) ){
+        f_EPTF_TransportIPL4_updateIncomingStatistics(c_EPTF_TransportIPL4_incConnOpened);
+        v_TransportIPL4_dummyResult := f_IPL4_getConnectionDetails(IPL4_PCO, v_EPTF_CommPort_IPL4_aspEvent.connOpened.connId,IPL4_PARENTIDX,vl_paramResult); //get parent Idx
+        
+        //HK76638
+        if (not isvalue(vl_paramResult) or not ischosen(vl_paramResult.parentIdx)) {
+          f_EPTF_TransportIPL4_warning("The parentIdx cannot be retrieved for connOpen!");
+        } else if(f_EPTF_int2int_HashMap_Find(v_EPTF_TransportIPL4_connInfoHashMapId,vl_paramResult.parentIdx,vl_parentFbqId))
+        {
+          vl_fbqId := v_EPTF_TransportIPL4_connInfoList[vl_parentFbqId].LGenTypeId; // find Lgen type of parent       
+          
+          vl_connInfofbqId:= f_EPTF_FBQ_getOrCreateFreeSlot(v_EPTF_TransportIPL4_connInfoFreeBusyQueue); 
+          f_EPTF_FBQ_moveFromFreeToBusyTail(vl_connInfofbqId,v_EPTF_TransportIPL4_connInfoFreeBusyQueue);    
+          f_EPTF_int2int_HashMap_Insert(v_EPTF_TransportIPL4_connInfoHashMapId,v_EPTF_CommPort_IPL4_aspEvent.connOpened.connId,vl_connInfofbqId);
+          
+          v_EPTF_TransportIPL4_connInfoList[vl_connInfofbqId] := c_EPTF_TransportIPL4_connInfo_init;
+          v_EPTF_TransportIPL4_connInfoList[vl_connInfofbqId].LGenTypeId := vl_fbqId;        
+          v_EPTF_TransportIPL4_connInfoList[vl_connInfofbqId].automaticBuffering := v_EPTF_TransportIPL4_connInfoList[vl_parentFbqId].automaticBuffering;
+          v_EPTF_TransportIPL4_connInfoList[vl_connInfofbqId].connectionState := OPENED;
+          
+          v_EPTF_TransportIPL4_connInfoList[vl_connInfofbqId].uniqueId := v_EPTF_CommPort_IPL4_aspEvent.connOpened.connId;
+          // call the connectionOpened callback of the LGenType if not null which may override uniqueId
+          if(v_EPTF_TransportIPL4_LGenInfoList[vl_fbqId].connOpenedFn != null) {
+            v_EPTF_TransportIPL4_LGenInfoList[vl_fbqId].connOpenedFn.apply(IPL4, v_EPTF_CommPort_IPL4_aspEvent.connOpened.connId);
+          }
+          
+          vl_oldEventHandler := v_EPTF_TransportIPL4_LGenInfoList[vl_fbqId].eventHandlerOldFn;
+          vl_newEventHandler := v_EPTF_TransportIPL4_LGenInfoList[vl_fbqId].eventHandlerNewFn
+          vl_connId := v_EPTF_TransportIPL4_connInfoList[vl_connInfofbqId].uniqueId;
+          v_EPTF_CommPort_IPL4_aspEvent.connOpened.connId := vl_connId;
+        }
+        else
+        {
+          f_EPTF_TransportIPL4_warning("The Parent Connection ID not found in the hashmap");
+        }
+      }
+      case ( ischosen(v_EPTF_CommPort_IPL4_aspEvent.connClosed) ){
+        f_EPTF_TransportIPL4_updateIncomingStatistics(c_EPTF_TransportIPL4_incConnClosed);
+        if (f_EPTF_int2int_HashMap_Find(v_EPTF_TransportIPL4_connInfoHashMapId,v_EPTF_CommPort_IPL4_aspEvent.connClosed.connId,vl_connInfofbqId))
+        {
+          // Cancel scheduled SCTP reestablishment action if exists
+          if (ispresent(v_EPTF_TransportIPL4_connInfoList[vl_connInfofbqId].sctpReestablishmentInfo) 
+              and v_EPTF_TransportIPL4_connInfoList[vl_connInfofbqId].sctpReestablishmentInfo.timerIdx >= 0) {
+            f_EPTF_SchedulerComp_CancelEvent(v_EPTF_TransportIPL4_connInfoList[vl_connInfofbqId].sctpReestablishmentInfo.timerIdx)
+            v_EPTF_TransportIPL4_connInfoList[vl_connInfofbqId].sctpReestablishmentInfo.timerIdx := -1;
+          }
+          
+          vl_fbqId := v_EPTF_TransportIPL4_connInfoList[vl_connInfofbqId].LGenTypeId;
+          // call the connectionClosed callback of the LGenType if not null
+          if(vl_fbqId >= 0 and v_EPTF_TransportIPL4_LGenInfoList[vl_fbqId].connClosedFn != null) {
+            v_EPTF_TransportIPL4_LGenInfoList[vl_fbqId].connClosedFn.apply(IPL4, v_EPTF_TransportIPL4_connInfoList[vl_connInfofbqId].uniqueId);
+          }
+          vl_connId := v_EPTF_TransportIPL4_connInfoList[vl_connInfofbqId].uniqueId;
+          v_EPTF_TransportIPL4_connInfoList[vl_connInfofbqId] := c_EPTF_TransportIPL4_connInfo_init;
+          f_EPTF_FBQ_moveFromBusyToFreeTail(vl_connInfofbqId,v_EPTF_TransportIPL4_connInfoFreeBusyQueue);    
+          f_EPTF_int2int_HashMap_Erase(v_EPTF_TransportIPL4_connInfoHashMapId,v_EPTF_CommPort_IPL4_aspEvent.connClosed.connId);
+          
+          vl_oldEventHandler := v_EPTF_TransportIPL4_LGenInfoList[vl_fbqId].eventHandlerOldFn      
+          vl_newEventHandler := v_EPTF_TransportIPL4_LGenInfoList[vl_fbqId].eventHandlerNewFn      
+          v_EPTF_CommPort_IPL4_aspEvent.connClosed.connId := vl_connId;
+        }
+        else
+        {
+          f_EPTF_TransportIPL4_warning("The Connection ID not found in the hashmap");
+        }
+      }
+      case ( ischosen(v_EPTF_CommPort_IPL4_aspEvent.result) ){
+        f_EPTF_TransportIPL4_updateIncomingStatistics(c_EPTF_TransportIPL4_incResult);
+        if (f_EPTF_int2int_HashMap_Find(v_EPTF_TransportIPL4_connInfoHashMapId,v_EPTF_CommPort_IPL4_aspEvent.result.connId,vl_connInfofbqId))
+        { 
+          if ((v_EPTF_CommPort_IPL4_aspEvent.result.errorCode == omit) or (v_EPTF_CommPort_IPL4_aspEvent.result.errorCode == IPL4_ERROR_AVAILABLE))
+          {         
+            v_EPTF_TransportIPL4_connInfoList[vl_connInfofbqId].connectionState := OPENED;
+          }
+          
+          vl_fbqId := v_EPTF_TransportIPL4_connInfoList[vl_connInfofbqId].LGenTypeId;
+          
+          // HK82614
+          if (v_EPTF_CommPort_IPL4_aspEvent.result.errorCode == IPL4_ERROR_AVAILABLE and
+            v_EPTF_TransportIPL4_LGenInfoList[vl_fbqId].defaultBufferingHandlerActivated) {
+            vl_oldEventHandler := refers(f_EPTF_TransportIPL4_defaultConnResultEventHandler);
+            vl_newEventHandler := null
+          }else{
+            vl_oldEventHandler := v_EPTF_TransportIPL4_LGenInfoList[vl_fbqId].eventHandlerOldFn
+            vl_newEventHandler := v_EPTF_TransportIPL4_LGenInfoList[vl_fbqId].eventHandlerNewFn
+          }
+          vl_connId := v_EPTF_TransportIPL4_connInfoList[vl_connInfofbqId].uniqueId;
+          if(ispresent(v_EPTF_CommPort_IPL4_aspEvent.result.connId)) {
+            v_EPTF_CommPort_IPL4_aspEvent.result.connId := vl_connId;
+          }
+        }
+        else
+        {
+          f_EPTF_TransportIPL4_warning("The Connection ID not found in the hashmap");
+        }
+      }
+      case ( ischosen(v_EPTF_CommPort_IPL4_aspEvent.sctpEvent) ){
+        
+        f_EPTF_TransportIPL4_updateIncomingStatistics(c_EPTF_TransportIPL4_incSCTPEvent);
+        
+        if (ischosen(v_EPTF_CommPort_IPL4_aspEvent.sctpEvent.sctpAssocChange)) {
+          vl_connId := v_EPTF_CommPort_IPL4_aspEvent.sctpEvent.sctpAssocChange.clientId;
+          vl_sac_state := v_EPTF_CommPort_IPL4_aspEvent.sctpEvent.sctpAssocChange.sac_state;
+        }
+        else if (ischosen(v_EPTF_CommPort_IPL4_aspEvent.sctpEvent.sctpPartialDeliveryEvent)) {
+          vl_connId := v_EPTF_CommPort_IPL4_aspEvent.sctpEvent.sctpPartialDeliveryEvent.clientId;
+        }
+        else if (ischosen(v_EPTF_CommPort_IPL4_aspEvent.sctpEvent.sctpPeerAddrChange)) {
+          vl_connId := v_EPTF_CommPort_IPL4_aspEvent.sctpEvent.sctpPeerAddrChange.clientId;
+        }
+        else if (ischosen(v_EPTF_CommPort_IPL4_aspEvent.sctpEvent.sctpRemoteError)) {
+          vl_connId := v_EPTF_CommPort_IPL4_aspEvent.sctpEvent.sctpRemoteError.clientId;
+        }
+        else if (ischosen(v_EPTF_CommPort_IPL4_aspEvent.sctpEvent.sctpShutDownEvent)) {
+          vl_connId := v_EPTF_CommPort_IPL4_aspEvent.sctpEvent.sctpShutDownEvent.clientId;
+        }
+        else if (ischosen(v_EPTF_CommPort_IPL4_aspEvent.sctpEvent.sctpAdaptationIndication)) {
+          vl_connId := v_EPTF_CommPort_IPL4_aspEvent.sctpEvent.sctpAdaptationIndication.clientId;
+        }
+        else {
+          f_EPTF_TransportIPL4_warning("Unknown SCTP event received!");
+          
+        }
+        
+        if (f_EPTF_int2int_HashMap_Find(v_EPTF_TransportIPL4_connInfoHashMapId,vl_connId,vl_connInfofbqId))
+        { 
+          if (vl_sac_state == SCTP_COMM_LOST) { // Connection lost so we try to reestablish it
+            // Try to reestablish only if the connection was made by us (connected from our side)
+            if (ispresent(v_EPTF_TransportIPL4_connInfoList[vl_connInfofbqId].sctpReestablishmentInfo)) {
+              f_EPTF_SchedulerComp_refreshSnapshotTime();
+              // Try to reestablish SCTP connection. 
+              // This snipet will run even if the automatic reestablishment is disabled.
+              // So there is always a reestablishment try. 
+              f_EPTF_TransportIPL4_reestablishSctpConnection(vl_connInfofbqId);
+              // Start the reestablishment timer with Scheduler
+              f_EPTF_TransportIPL4_scheduleSctpReestablismentAction(vl_connInfofbqId);
+            }
+          } else if (vl_sac_state == SCTP_COMM_UP) { // Connection is up
+            // Cancel scheduled SCTP reestablishment action if exists
+            if (ispresent(v_EPTF_TransportIPL4_connInfoList[vl_connInfofbqId].sctpReestablishmentInfo) 
+                and v_EPTF_TransportIPL4_connInfoList[vl_connInfofbqId].sctpReestablishmentInfo.timerIdx >= 0) {
+              f_EPTF_SchedulerComp_CancelEvent(v_EPTF_TransportIPL4_connInfoList[vl_connInfofbqId].sctpReestablishmentInfo.timerIdx)
+              v_EPTF_TransportIPL4_connInfoList[vl_connInfofbqId].sctpReestablishmentInfo.timerIdx := -1;
+            }
+          }
+          
+          vl_fbqId := v_EPTF_TransportIPL4_connInfoList[vl_connInfofbqId].LGenTypeId;
+          vl_oldEventHandler := v_EPTF_TransportIPL4_LGenInfoList[vl_fbqId].eventHandlerOldFn
+          vl_newEventHandler := v_EPTF_TransportIPL4_LGenInfoList[vl_fbqId].eventHandlerNewFn      
+        }
+        else
+        {
+          f_EPTF_TransportIPL4_warning("The Connection ID not found in the hashmap");
+          
+        }
+      }
+      case else
+      {
+        f_EPTF_TransportIPL4_error(%definitionId&": The incoming event type is unknown. Event: "&log2str(v_EPTF_CommPort_IPL4_aspEvent))
+      }
+    }
+    
+    v_EPTF_CommPort_IPL4_incomingMessage.asp_Event := v_EPTF_CommPort_IPL4_aspEvent;
+    
+    select( true ){
+      case ( null != vl_newEventHandler ){
+        vl_newEventHandler.apply(
+          IPL4,
+          vl_connId,
+          v_EPTF_CommPort_IPL4_aspEvent)
+      }
+      case ( null != vl_oldEventHandler ){
+        vl_oldEventHandler.apply(  )
+      }
+      case else{
+        f_EPTF_TransportIPL4_debug("Eventhandler not found!");  
+      }
+    }
+    repeat;
+  }
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_TransportIPL4_initStatistics
+// 
+//  Purpose:
+//    Function to initialize the statistics
+//
+//  Parameters:
+//    -
+//
+//  Return Value:
+//    - 
+//
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//    
+///////////////////////////////////////////////////////////  
+private function f_EPTF_TransportIPL4_initStatistics ()
+runs on EPTF_TransportIPL4_CT
+{
+  f_EPTF_Var_newInt(c_EPTF_TransportIPL4_incMessageName, 0, v_EPTF_TransportIPL4_incStats[c_EPTF_TransportIPL4_incMessage]);
+  f_EPTF_Var_newInt(c_EPTF_TransportIPL4_incConnOpenedName, 0, v_EPTF_TransportIPL4_incStats[c_EPTF_TransportIPL4_incConnOpened]);
+  f_EPTF_Var_newInt(c_EPTF_TransportIPL4_incConnClosedName, 0, v_EPTF_TransportIPL4_incStats[c_EPTF_TransportIPL4_incConnClosed]);
+  f_EPTF_Var_newInt(c_EPTF_TransportIPL4_incResultName, 0, v_EPTF_TransportIPL4_incStats[c_EPTF_TransportIPL4_incResult]);
+  f_EPTF_Var_newInt(c_EPTF_TransportIPL4_incSCTPEventName, 0, v_EPTF_TransportIPL4_incStats[c_EPTF_TransportIPL4_incSCTPEvent]);
+  v_EPTF_TransportIPL4_incStatCounters[c_EPTF_TransportIPL4_incMessage] := 0;
+  v_EPTF_TransportIPL4_incStatCounters[c_EPTF_TransportIPL4_incConnOpened] := 0;
+  v_EPTF_TransportIPL4_incStatCounters[c_EPTF_TransportIPL4_incConnClosed] := 0;
+  v_EPTF_TransportIPL4_incStatCounters[c_EPTF_TransportIPL4_incResult] := 0;
+  v_EPTF_TransportIPL4_incStatCounters[c_EPTF_TransportIPL4_incSCTPEvent] := 0;
+  
+  f_EPTF_Var_newInt(c_EPTF_TransportIPL4_outMessageName, 0, v_EPTF_TransportIPL4_outStats[c_EPTF_TransportIPL4_outMessage]);
+  f_EPTF_Var_newInt(c_EPTF_TransportIPL4_outCloseName, 0, v_EPTF_TransportIPL4_outStats[c_EPTF_TransportIPL4_outClose]);
+  f_EPTF_Var_newInt(c_EPTF_TransportIPL4_outConnectName, 0, v_EPTF_TransportIPL4_outStats[c_EPTF_TransportIPL4_outConnect]);
+  f_EPTF_Var_newInt(c_EPTF_TransportIPL4_outListenName, 0, v_EPTF_TransportIPL4_outStats[c_EPTF_TransportIPL4_outListen]);
+  v_EPTF_TransportIPL4_outStatCounters[c_EPTF_TransportIPL4_outMessage] := 0;
+  v_EPTF_TransportIPL4_outStatCounters[c_EPTF_TransportIPL4_outClose] := 0;
+  v_EPTF_TransportIPL4_outStatCounters[c_EPTF_TransportIPL4_outConnect] := 0;
+  v_EPTF_TransportIPL4_outStatCounters[c_EPTF_TransportIPL4_outListen] := 0;
+  
+  f_EPTF_Var_newInt(c_EPTF_TransportIPL4_nofErrorsName,0, v_EPTF_TransportIPL4_nofErrors);
+  f_EPTF_Var_newCharstring(c_EPTF_TransportIPL4_lastErrorStringName, "",  v_EPTF_TransportIPL4_lastErrorString);
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_TransportIPL4_resetStatistics
+// 
+//  Purpose:
+//    Function to reset the statistics
+//
+//  Parameters:
+//    -
+//
+//  Return Value:
+//    - 
+//
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//    
+///////////////////////////////////////////////////////////  
+private function f_EPTF_TransportIPL4_resetStatistics ()
+runs on EPTF_TransportIPL4_CT
+{
+  if(tsp_EPTF_TransportIPL4_enableStats) {
+    f_EPTF_Var_adjustContent(v_EPTF_TransportIPL4_incStats[c_EPTF_TransportIPL4_incMessage], {intVal:=0});
+    f_EPTF_Var_adjustContent(v_EPTF_TransportIPL4_incStats[c_EPTF_TransportIPL4_incConnOpened], {intVal:=0});
+    f_EPTF_Var_adjustContent(v_EPTF_TransportIPL4_incStats[c_EPTF_TransportIPL4_incConnClosed], {intVal:=0});
+    f_EPTF_Var_adjustContent(v_EPTF_TransportIPL4_incStats[c_EPTF_TransportIPL4_incResult], {intVal:=0});
+    f_EPTF_Var_adjustContent(v_EPTF_TransportIPL4_incStats[c_EPTF_TransportIPL4_incSCTPEvent], {intVal:=0});
+    v_EPTF_TransportIPL4_incStatCounters[c_EPTF_TransportIPL4_incMessage] := 0;
+    v_EPTF_TransportIPL4_incStatCounters[c_EPTF_TransportIPL4_incConnOpened] := 0;
+    v_EPTF_TransportIPL4_incStatCounters[c_EPTF_TransportIPL4_incConnClosed] := 0;
+    v_EPTF_TransportIPL4_incStatCounters[c_EPTF_TransportIPL4_incResult] := 0;
+    v_EPTF_TransportIPL4_incStatCounters[c_EPTF_TransportIPL4_incSCTPEvent] := 0;
+    
+    f_EPTF_Var_adjustContent(v_EPTF_TransportIPL4_outStats[c_EPTF_TransportIPL4_outMessage], {intVal:=0});
+    f_EPTF_Var_adjustContent(v_EPTF_TransportIPL4_outStats[c_EPTF_TransportIPL4_outClose], {intVal:=0});
+    f_EPTF_Var_adjustContent(v_EPTF_TransportIPL4_outStats[c_EPTF_TransportIPL4_outConnect], {intVal:=0});
+    f_EPTF_Var_adjustContent(v_EPTF_TransportIPL4_outStats[c_EPTF_TransportIPL4_outListen], {intVal:=0});
+    v_EPTF_TransportIPL4_outStatCounters[c_EPTF_TransportIPL4_outMessage] := 0;
+    v_EPTF_TransportIPL4_outStatCounters[c_EPTF_TransportIPL4_outClose] := 0;
+    v_EPTF_TransportIPL4_outStatCounters[c_EPTF_TransportIPL4_outConnect] := 0;
+    v_EPTF_TransportIPL4_outStatCounters[c_EPTF_TransportIPL4_outListen] := 0;
+    
+    
+    f_EPTF_Var_adjustContent(v_EPTF_TransportIPL4_nofErrors, {intVal:=0});
+    f_EPTF_Var_adjustContent(v_EPTF_TransportIPL4_lastErrorString, {charstringVal:=""});
+  }
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_TransportIPL4_updateIncomingStatistics
+// 
+//  Purpose:
+//    Function to update the incoming statistics
+//
+//  Parameters:
+//    pl_idx - *in* - *integer* - the index of the statistic
+//
+//  Return Value:
+//    - 
+//
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//    
+///////////////////////////////////////////////////////////  
+friend function f_EPTF_TransportIPL4_updateIncomingStatistics (
+  in integer pl_idx)
+runs on EPTF_TransportIPL4_CT
+{
+  if(tsp_EPTF_TransportIPL4_enableStats) {
+    var integer vl_varIdx := v_EPTF_TransportIPL4_incStats[pl_idx];
+    
+    v_EPTF_TransportIPL4_incStatCounters[pl_idx] := v_EPTF_TransportIPL4_incStatCounters[pl_idx] + 1;
+    
+    f_EPTF_Var_setContent(vl_varIdx, {intVal := v_EPTF_TransportIPL4_incStatCounters[pl_idx]});
+  }
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_TransportIPL4_increaseErrors
+// 
+//  Purpose:
+//    Function to increase the number of the errors
+//
+//  Parameters:
+//    -
+//
+//  Return Value:
+//    - 
+//
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//    
+///////////////////////////////////////////////////////////  
+friend function f_EPTF_TransportIPL4_increaseErrors ()
+runs on EPTF_TransportIPL4_CT
+{
+  var EPTF_Var_DirectContent vl_prevContent;
+  
+  f_EPTF_Var_getContent(v_EPTF_TransportIPL4_nofErrors, vl_prevContent);
+  
+  f_EPTF_Var_adjustContent(v_EPTF_TransportIPL4_nofErrors, {intVal := vl_prevContent.intVal + 1 });
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_TransportIPL4_updateOutgoingStatistics
+// 
+//  Purpose:
+//    Function to update the outgoing statistics
+//
+//  Parameters:
+//    pl_idx - *in* - *integer* - the index of the statistic
+//
+//  Return Value:
+//    - 
+//
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//    
+///////////////////////////////////////////////////////////   
+friend function f_EPTF_TransportIPL4_updateOutgoingStatistics (
+  in integer pl_idx)
+runs on EPTF_TransportIPL4_CT
+{
+  if(tsp_EPTF_TransportIPL4_enableStats) {
+    var integer vl_varIdx := v_EPTF_TransportIPL4_outStats[pl_idx];
+    
+    v_EPTF_TransportIPL4_outStatCounters[pl_idx] := v_EPTF_TransportIPL4_outStatCounters[pl_idx] + 1;
+    
+    f_EPTF_Var_setContent(vl_varIdx, {intVal := v_EPTF_TransportIPL4_outStatCounters[pl_idx]});
+  }
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_TransportIPL4_initExtendedComponents
+// 
+//  Purpose:
+//    Function to initialize extended components
+//
+//  Parameters:
+//    pl_selfName - *in* - *charstring* - The name of the LGen
+//
+//  Return Value:
+//    - 
+//
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//    
+///////////////////////////////////////////////////////////    
+private function f_EPTF_TransportIPL4_initExtendedComponents (
+  in charstring pl_selfName)
+runs on EPTF_TransportIPL4_CT
+{
+  f_EPTF_Base_init_CT(pl_selfName);
+  f_EPTF_FBQ_init_CT(pl_selfName);
+  f_EPTF_Logging_init_CT(pl_selfName);
+  f_EPTF_Var_init_CT(pl_selfName);
+  f_EPTF_Scheduler_init_CT(pl_selfName);
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_TransportIPL4_cleanup_CT
+// 
+//  Purpose:
+//    Function to cleanup the IPL4 Communicationport component
+//
+//  Parameters:
+//    - 
+//
+//  Return Value:
+//    - 
+//
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//    
+///////////////////////////////////////////////////////////  
+private function f_EPTF_TransportIPL4_cleanup_CT() runs on EPTF_TransportIPL4_CT 
+{
+  if(not v_EPTF_TransportIPL4_initialized) { return;}
+  
+  unmap(self:IPL4_PCO, system:IPL4_PCO);
+  
+  // HK82966
+  if(vd_EPTF_TransportIPL4_defaultReceive != null) { 
+    deactivate(vd_EPTF_TransportIPL4_defaultReceive);
+    vd_EPTF_TransportIPL4_defaultReceive := null;
+  }
+  if(vd_EPTF_TransportIPL4_defaultEvent != null) { 
+    deactivate(vd_EPTF_TransportIPL4_defaultEvent);
+    vd_EPTF_TransportIPL4_defaultEvent := null;
+  }
+  
+  v_EPTF_TransportIPL4_LGenInfoList := {};
+  f_EPTF_str2int_HashMap_Delete(c_EPTF_TransportIPL4_LGenTypesHashMapName);
+  f_EPTF_int2int_HashMap_Delete(c_EPTF_TransportIPL4_connInfoHashMapName);
+  
+  if (v_EPTF_TransportIPL4_interfaceInformationList != {})
+  {
+    var Result vl_result
+    f_EPTF_Transport_setDownInterfaces(IPL4, vl_result);
+  }
+  if (v_EPTF_TransportIPL4_isBufferManagerEnabled) {
+    //f_EPTF_MessageBufferManager_cleanup_CT();
+    v_EPTF_TransportIPL4_isBufferManagerEnabled := false;
+  }
+  
+  v_EPTF_TransportIPL4_initialized := false;
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_TransportIPL4_addLGenInfo
+// 
+//  Purpose:
+//    Retreives the index of the database entry belonging to an LGen type.
+//    If the entiry does not exist, adds a new entry to the database.
+//
+//  Parameters:
+//    pl_LGenType - *in* *charstring* - the LGen type name
+//    pl_idx - *in* *integer* - the index of the database entry
+//
+///////////////////////////////////////////////////////////
+friend function f_EPTF_TransportIPL4_addLGenInfo(in charstring pl_LGenType, inout integer pl_idx)
+runs on EPTF_TransportIPL4_CT
+{
+  if (f_EPTF_str2int_HashMap_Find(v_EPTF_TransportIPL4_LGenTypesHashMapId, pl_LGenType, pl_idx))
+  {
+    return;
+  }
+  
+  pl_idx := f_EPTF_FBQ_getOrCreateFreeSlot(v_EPTF_TransportIPL4_LGenInfoFreeBusyQueue); 
+  f_EPTF_FBQ_moveFromFreeToBusyTail(pl_idx,v_EPTF_TransportIPL4_LGenInfoFreeBusyQueue);       
+  
+  f_EPTF_str2int_HashMap_Insert(v_EPTF_TransportIPL4_LGenTypesHashMapId, pl_LGenType, pl_idx);
+  v_EPTF_TransportIPL4_LGenInfoList[pl_idx] := c_EPTF_TransportIPL4_LGenInfo_init
+  
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_TransportIPL4_portSend
+// 
+//  Purpose:
+//    Wrapper function for the f_IPL4_send external function 
+//
+//  Parameters:
+//    - portRef - IPL4 port reference
+//    - asp - the IPL4 ASP to be sent
+//    - sent_octets - number of sent octets (0..msg_size)
+//    - p_connInfofbqId - if present, the the connections state
+//      is stored in the connInfoFBQ record
+//
+//  Return Value:
+//    - 
+//
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//    
+///////////////////////////////////////////////////////////
+public function f_EPTF_TransportIPL4_portSend(
+  inout IPL4asp_PT portRef,
+  in ASP_Send asp,
+  out integer sent_octets,
+  in  integer p_connInfofbqId := -1
+)
+runs on EPTF_TransportIPL4_CT
+return Result
+{
+  var Result vl_res := f_IPL4_send(portRef, asp, sent_octets);
+  //f_EPTF_TransportIPL4_debug(log2str("f_EPTF_TransportIPL4_portSend: octets: ",asp.msg));
+  //f_EPTF_TransportIPL4_debug(log2str("f_EPTF_TransportIPL4_portSend: sent:", sent_octets));
+  //f_EPTF_TransportIPL4_debug(log2str("f_EPTF_TransportIPL4_portSend: result:", vl_res));
+  if (sent_octets < 0) { sent_octets := 0; }
+  if (ispresent(vl_res.errorCode) and (vl_res.errorCode == IPL4_ERROR_TEMPORARILY_UNAVAILABLE) and (p_connInfofbqId > 0))
+  {
+    v_EPTF_TransportIPL4_connInfoList[p_connInfofbqId].connectionState := TEMPORARILY_UNAVAILABLE
+  }
+  return vl_res;
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_TransportIPL4_portSendTo
+// 
+//  Purpose:
+//    Wrapper function for the f_IPL4_sendto external function 
+//
+//  Parameters:
+//    - portRef - IPL4 port reference
+//    - asp - the IPL4 ASP to be sent
+//    - sent_octets - number of sent octets (0..msg_size)
+//    - p_connInfofbqId - if present, the the connections state
+//      is stored in the connInfoFBQ record
+//
+//  Return Value:
+//    - 
+//
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//    
+///////////////////////////////////////////////////////////
+public function f_EPTF_TransportIPL4_portSendTo(
+  inout IPL4asp_PT portRef,
+  in ASP_SendTo asp,
+  out integer sent_octets,
+  in  integer p_connInfofbqId := -1
+)
+runs on EPTF_TransportIPL4_CT
+return Result
+{
+  var Result vl_res := f_IPL4_sendto(portRef, asp, sent_octets);
+  //f_EPTF_TransportIPL4_debug(log2str("f_EPTF_TransportIPL4_portSendTo: octets: ",asp.msg));
+  //f_EPTF_TransportIPL4_debug(log2str("f_EPTF_TransportIPL4_portSendTo: sent:", sent_octets));
+  //f_EPTF_TransportIPL4_debug(log2str("f_EPTF_TransportIPL4_portSendTo: result:", vl_res));
+  if (sent_octets < 0) { sent_octets := 0; }
+  if (ispresent(vl_res.errorCode) and (vl_res.errorCode == IPL4_ERROR_TEMPORARILY_UNAVAILABLE) and (p_connInfofbqId > 0))
+  {
+    v_EPTF_TransportIPL4_connInfoList[p_connInfofbqId].connectionState := TEMPORARILY_UNAVAILABLE
+  }
+  return vl_res;
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_TransportIPL4_portSend_retransmission
+// 
+//  Purpose:
+//    function for send retransmission handling
+//
+//  Parameters:
+//    - portRef - IPL4 port reference
+//    - asp - the IPL4 ASP to be sent
+//    - sent_octets - number of sent octets (0..msg_size)
+//    - protocolId - string identifier for the protocol in the buffer
+//    - p_connInfofbqId - if present, the the connections state
+//      is stored in the connInfoFBQ record
+//
+//  Return Value:
+//    - 
+//
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//    
+///////////////////////////////////////////////////////////
+public function f_EPTF_TransportIPL4_portSend_retransmission(
+  inout IPL4asp_PT portRef,
+  in ASP_Send asp,
+  out integer sent_octets,
+  in  charstring protocolId,
+  in  integer p_connInfofbqId := -1
+)
+runs on EPTF_TransportIPL4_CT
+return boolean
+{
+  v_TransportIPL4_dummyResult := f_EPTF_TransportIPL4_portSend(IPL4_PCO, asp , sent_octets, p_connInfofbqId);
+  if (sent_octets < lengthof(asp.msg))
+  {
+    //If the retransmission failed, we have to put back the last fragment into the buffer
+    //f_EPTF_TransportIPL4_debug("Partial send ["&int2str(asp.connId)&"]: retransmission also failed");
+    f_EPTF_MessageBufferManager_refillFirstMessageInBuffer(
+      substr(asp.msg, sent_octets, lengthof(asp.msg)-sent_octets),
+      protocolId,
+      asp.connId
+    );
+    return false;
+  }
+  else
+  {
+    f_EPTF_TransportIPL4_updateOutgoingStatistics(c_EPTF_TransportIPL4_outMessage);
+    //f_EPTF_TransportIPL4_debug("Partial send ["&int2str(asp.connId)&"]: retransmission OK"); 
+    return true;
+  }
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_TransportIPL4_portSendTo_retransmission
+// 
+//  Purpose:
+//    Function for sendTo retransmission handling
+//
+//  Parameters:
+//    - portRef - IPL4 port reference
+//    - asp - the IPL4 ASP to be sent
+//    - sent_octets - number of sent octets (0..msg_size)
+//    - protocolId - string identifier for the protocol in the buffer
+//    - p_connInfofbqId - if present, the the connections state
+//      is stored in the connInfoFBQ record
+//
+//  Return Value:
+//    - 
+//
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//    
+///////////////////////////////////////////////////////////
+public function f_EPTF_TransportIPL4_portSendTo_retransmission(
+  inout IPL4asp_PT portRef,
+  in ASP_SendTo asp,
+  out integer sent_octets,
+  in  charstring protocolId,
+  in  integer p_connInfofbqId := -1
+)
+runs on EPTF_TransportIPL4_CT
+return boolean
+{
+  //var Result vl_result := f_EPTF_TransportIPL4_portSendTo(IPL4_PCO, asp, sent_octets, p_connInfofbqId);
+  if (sent_octets < lengthof(asp.msg))
+  {
+    //If the retransmission failed, we have to put back the last fragment into the buffer
+    //f_EPTF_TransportIPL4_debug("Partial send ["&int2str(asp.connId)&"]: retransmission also failed");
+    f_EPTF_MessageBufferManager_refillFirstMessageInBuffer(
+      substr(asp.msg, sent_octets, lengthof(asp.msg)-sent_octets),
+      protocolId,
+      asp.connId
+    );
+    return false;
+  }
+  else
+  {
+    v_TransportIPL4_dummyInt := p_connInfofbqId;
+    f_EPTF_TransportIPL4_updateOutgoingStatistics(c_EPTF_TransportIPL4_outMessage);
+    //f_EPTF_TransportIPL4_debug("Partial send ["&int2str(asp.connId)&"]: retransmission OK"); 
+    return true;
+  }
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_TransportIPL4_defaultConnResultEventHandler
+// 
+//  Purpose:
+//    Function to receive the Connection available message and 
+//    send the message from the buffer. 
+//
+//  Parameters:
+//    -
+//
+//  Return Value:
+//    - 
+//
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//    
+///////////////////////////////////////////////////////////
+public function f_EPTF_TransportIPL4_defaultConnResultEventHandler()
+runs on EPTF_TransportIPL4_CT
+{
+  var octetstring vl_msg;
+  var charstring vl_proto;
+  var integer vl_fbqId := -1;
+  //var Result vl_result := { errorCode := omit, connId  := omit, os_error_code:=omit, os_error_text:= omit };
+  var integer vl_sentOctets := 0;
+  var boolean retransmissionOK := true;
+  /* asp_Event -> but no result: Artifact artf195095 : CLL - faulty IPl4 event handler?  */
+  if(ischosen(v_EPTF_CommPort_IPL4_incomingMessage.asp_Event.result) == true){
+    if (f_EPTF_int2int_HashMap_Find(v_EPTF_TransportIPL4_connInfoHashMapId,v_EPTF_CommPort_IPL4_incomingMessage.asp_Event.result.connId,vl_fbqId))
+    { // if IPL4_ERROR_AVAILABLE arrives set the state to ready
+      v_EPTF_TransportIPL4_connInfoList[vl_fbqId].connectionState := OPENED;
+    } 
+  
+    while (
+      retransmissionOK and
+      f_EPTF_MessageBufferManager_getMessageFromBuffer(v_EPTF_CommPort_IPL4_incomingMessage.asp_Event.result.connId,vl_msg,vl_proto)
+    )
+    {
+      //f_EPTF_TransportIPL4_debug("Partial send: Entering retransmission");
+      if (vl_proto == "tcp") {
+        retransmissionOK := f_EPTF_TransportIPL4_portSend_retransmission(
+          IPL4_PCO,
+          ASP_Send:{connId := v_EPTF_CommPort_IPL4_incomingMessage.asp_Event.result.connId,proto := {tcp:={}},msg := vl_msg},
+          vl_sentOctets,
+          "tcp",
+          vl_fbqId
+        );
+      }
+      else if (vl_proto == "udp"){
+        retransmissionOK := f_EPTF_TransportIPL4_portSend_retransmission(
+          IPL4_PCO,
+          ASP_Send:{connId := v_EPTF_CommPort_IPL4_incomingMessage.asp_Event.result.connId,proto := {udp:={}}, msg := vl_msg},
+          vl_sentOctets,
+          "udp",
+          vl_fbqId
+        );
+      }
+      else if (vl_proto == "sctp") {
+        retransmissionOK := f_EPTF_TransportIPL4_portSend_retransmission(
+          IPL4_PCO,
+          ASP_Send:{connId := v_EPTF_CommPort_IPL4_incomingMessage.asp_Event.result.connId,proto := {sctp := v_EPTF_TransportIPL4_connInfoList[vl_fbqId].sctpInformation},msg := vl_msg},
+          vl_sentOctets,
+          "sctp",
+          vl_fbqId
+        );
+      }
+      else if (vl_proto == "ssl"){
+        retransmissionOK := f_EPTF_TransportIPL4_portSend_retransmission(
+          IPL4_PCO,
+          ASP_Send:{connId := v_EPTF_CommPort_IPL4_incomingMessage.asp_Event.result.connId,proto := {ssl:={}},msg := vl_msg},
+          vl_sentOctets,
+          "ssl",
+          vl_fbqId
+        );
+      }
+      else if (vl_proto == "unspecified"){
+        retransmissionOK := f_EPTF_TransportIPL4_portSend_retransmission(
+          IPL4_PCO,
+          ASP_Send:{connId := v_EPTF_CommPort_IPL4_incomingMessage.asp_Event.result.connId,proto := {unspecified:={}},msg := vl_msg},
+          vl_sentOctets,
+          "unspecified",
+          vl_fbqId
+        );
+      }
+    
+      else {
+        var charstring vl_remName := "";
+        var charstring vl_remPort := "";
+        var integer i:= 4;
+        if (vl_proto[i]!="")
+        {
+          while (vl_proto[i] != "|") {
+            vl_remName := vl_remName & vl_proto[i];
+            i := i + 1;
+          }
+          i := i + 1;
+        
+          while (i != lengthof(vl_proto)) {
+            vl_remPort := vl_remPort & vl_proto[i];
+            i := i + 1;
+          }
+          if (vl_proto[0] == "t") {
+            retransmissionOK := f_EPTF_TransportIPL4_portSendTo_retransmission(
+              IPL4_PCO,
+              ASP_SendTo:{
+                connId := v_EPTF_CommPort_IPL4_incomingMessage.asp_Event.result.connId,
+                remName := vl_remName,
+                remPort := str2int(vl_remPort),
+                proto := {tcp:={}}, msg := vl_msg},
+              vl_sentOctets,
+              "tcp",
+              vl_fbqId
+            );
+          }
+          else if (vl_proto[0] == "u")  {
+            retransmissionOK := f_EPTF_TransportIPL4_portSendTo_retransmission(
+              IPL4_PCO,
+              ASP_SendTo:{
+                connId := v_EPTF_CommPort_IPL4_incomingMessage.asp_Event.result.connId,
+                remName := vl_remName,
+                remPort := str2int(vl_remPort),
+                proto := {udp:={}},msg := vl_msg},
+              vl_sentOctets,
+              "udp",
+              vl_fbqId
+            );
+          }
+          else if (vl_proto[1] == "c"){
+            retransmissionOK := f_EPTF_TransportIPL4_portSendTo_retransmission(
+              IPL4_PCO,
+              ASP_SendTo:{
+                connId := v_EPTF_CommPort_IPL4_incomingMessage.asp_Event.result.connId,
+                remName := vl_remName,
+                remPort := str2int(vl_remPort),
+                proto := {sctp:=v_EPTF_TransportIPL4_connInfoList[vl_fbqId].sctpInformation},msg := vl_msg},
+              vl_sentOctets,
+              "sctp",
+              vl_fbqId
+            );
+          }
+          else if (vl_proto[1] == "s"){
+            retransmissionOK := f_EPTF_TransportIPL4_portSendTo_retransmission(
+              IPL4_PCO,
+              ASP_SendTo:{
+                connId := v_EPTF_CommPort_IPL4_incomingMessage.asp_Event.result.connId,
+                remName := vl_remName,
+                remPort := str2int(vl_remPort),
+                proto := {ssl:={}},msg := vl_msg},
+              vl_sentOctets,
+              "ssl",
+              vl_fbqId
+            );
+          }
+          else if (vl_proto[1] == "n"){
+            retransmissionOK := f_EPTF_TransportIPL4_portSendTo_retransmission(
+              IPL4_PCO,
+              ASP_SendTo:{
+                connId := v_EPTF_CommPort_IPL4_incomingMessage.asp_Event.result.connId,
+                remName := vl_remName,
+                remPort := str2int(vl_remPort),
+                proto := {unspecified:={}},msg := vl_msg},
+              vl_sentOctets,
+              "unspecified",
+              vl_fbqId
+            );
+          }
+        }
+        else
+        {
+          f_EPTF_TransportIPL4_warning("Error, buffer contains invalid data:" & vl_proto);
+        }
+      }
+    }//end of while
+  }// end if
+} // end of function
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_TransportIPL4_setSctpReestablishmentTime
+//
+//  Purpose:
+//    Function to set time for SCTP connection reestablishment timer. 
+//
+//  Parameters:
+//    pl_timeout - *in* *float* - Time gap between SCTP connection reestablishment trials. 
+//
+//  Return Value:
+//    -
+//
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//    0.0 means try reestablish closed connection only once, if fails then stop application
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_TransportIPL4_setSctpReestablishmentTime(
+  in float pl_timeout )
+runs on EPTF_TransportIPL4_CT
+{
+  v_EPTF_TransportIPL4_sctpReestablishmentTime := pl_timeout;
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_TransportIPL4_getSctpReestablishmentTime
+//
+//  Purpose:
+//    Function to get the time for SCTP connection reestablishment timer. 
+//
+//  Parameters:
+//    - 
+//
+//  Return Value:
+//    *float* - Time gap between SCTP connection reestablishment trials.
+//
+//  Errors:
+//    -
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_TransportIPL4_getSctpReestablishmentTime()
+runs on EPTF_TransportIPL4_CT
+return float
+{
+  return v_EPTF_TransportIPL4_sctpReestablishmentTime;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//  Group: EPTF_TransportIPL4_Logging
+// 
+//  Purpose:
+//    The functions of the EPTF CommPort IPL4 Logging
+//
+///////////////////////////////////////////////////////////////////////////////
+group EPTF_TransportIPL4_Logging 
+{
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_TransportIPL4_error
+  // 
+  //  Purpose:
+  //    Function to log an error from StatMeasure feature.
+  //
+  //  Parameters:
+  //    - pl_message - *in* *charstring* - the message to log
+  //
+  //  Return Value:
+  //    -
+  //
+  //  Errors & assertions:
+  //    - 
+  //
+  //  Detailed Comments:
+  //    -
+  //
+  ///////////////////////////////////////////////////////////
+  friend function f_EPTF_TransportIPL4_error(
+    in charstring pl_message)
+  runs on EPTF_TransportIPL4_CT
+  {
+    f_EPTF_Logging_error(true, tsp_EPTF_TransportIPL4_loggingComponentMask&": "&pl_message);
+    f_EPTF_Base_stopAll();
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_TransportIPL4_warning
+  // 
+  //  Purpose:
+  //    Function to log a warning from StatMeasure feature.
+  //
+  //  Parameters:
+  //    - pl_message - *in* *charstring* - the message to log
+  //
+  //  Return Value:
+  //    -
+  //
+  //  Errors & assertions:
+  //    - 
+  //
+  //  Detailed Comments:
+  //    -
+  //
+  ///////////////////////////////////////////////////////////
+  friend function f_EPTF_TransportIPL4_warning(
+    in charstring pl_message)
+  runs on EPTF_TransportIPL4_CT
+  {
+    f_EPTF_Logging_warningV2(pl_message, 
+      v_EPTF_TransportIPL4_loggingMaskId, 
+      {c_EPTF_TransportIPL4_loggingClassIdx_Warning});
+    f_EPTF_Var_adjustContent(v_EPTF_TransportIPL4_lastErrorString, {charstringVal:=pl_message});
+    f_EPTF_TransportIPL4_increaseErrors();
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_TransportIPL4_debug
+  // 
+  //  Purpose:
+  //    Function to log a debug message from StatMeasure feature.
+  //
+  //  Parameters:
+  //    - pl_message - *in* *charstring* - the message to log
+  //
+  //  Return Value:
+  //    -
+  //
+  //  Errors & assertions:
+  //    - 
+  //
+  //  Detailed Comments:
+  //    -
+  //
+  ///////////////////////////////////////////////////////////
+  friend function f_EPTF_TransportIPL4_debug(
+    in charstring pl_message)
+  runs on EPTF_TransportIPL4_CT
+  {
+    f_EPTF_Logging_debugV2(pl_message, 
+      v_EPTF_TransportIPL4_loggingMaskId,  
+      {c_EPTF_TransportIPL4_loggingClassIdx_Debug});
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_TransportIPL4_debugEnabled
+  // 
+  //  Purpose:
+  //    Function to check if debug is enabled for StatMeasure
+  //
+  //  Parameters:
+  //    -
+  //
+  //  Return Value:
+  //    *boolean* - true if debug enalbed
+  //
+  //  Errors & assertions:
+  //    - 
+  //
+  //  Detailed Comments:
+  //    -
+  //
+  ///////////////////////////////////////////////////////////
+  friend function f_EPTF_TransportIPL4_debugEnabled()
+  runs on EPTF_TransportIPL4_CT
+  return boolean
+  {
+    return f_EPTF_Logging_isEnabled(
+      v_EPTF_TransportIPL4_loggingMaskId,  
+      c_EPTF_TransportIPL4_loggingClassIdx_Debug);
+  }
+} // group Logging
+
+friend function f_EPTF_Transport_protoError(
+  in charstring pl_fn,
+  in charstring pl_protoText)
+runs on EPTF_TransportIPL4_CT{
+  f_EPTF_TransportIPL4_error(pl_fn&": The specified prototuple "&pl_protoText&
+    " is unknown.")
+}
+
+private function f_EPTF_Transport_IPL4GetMsgLenWrapper(
+  in octetstring pl_stream,
+  inout ro_integer pl_args // variadic list of user defined parameters
+) 
+runs on EPTF_TransportIPL4_CT
+return integer{
+  var integer vl_ret := -1
+  var integer vl_fbqId := pl_args[0]
+  select( true ){
+    case ( null != v_EPTF_TransportIPL4_LGenInfoList[vl_fbqId].msgLenCalc.getMsgLenOldAPIFn){
+      vl_ret := v_EPTF_TransportIPL4_LGenInfoList[vl_fbqId].msgLenCalc.getMsgLenOldAPIFn.apply( 
+        pl_stream, 
+        v_EPTF_TransportIPL4_LGenInfoList[vl_fbqId].msgLenCalc.getMsgLenOldArgs)
+    }
+    case ( null != v_EPTF_TransportIPL4_LGenInfoList[vl_fbqId].msgLenCalc.getMsgLenNewFn){
+      vl_ret := v_EPTF_TransportIPL4_LGenInfoList[vl_fbqId].msgLenCalc.getMsgLenNewFn.apply(
+        IPL4,
+        pl_stream, 
+        v_EPTF_TransportIPL4_LGenInfoList[vl_fbqId].msgLenCalc.getMsgLenNewArgs)
+    }
+    case else{
+      f_EPTF_TransportIPL4_error(%definitionId&": There is no message length function. Programming error.")
+    }
+  }
+  return vl_ret
+}
+
+}

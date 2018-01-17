@@ -1,0 +1,1393 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_CLL_LGenBase_TemplateFunctions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 512
+//  Updated:  2009-06-18
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////
+//  Module: EPTF_CLL_LGenBase_TemplateFunctions
+// 
+//  Purpose:
+//    This module provides data types for handling templates on TitanSim load generator
+// 
+//  Module Parameters:
+//    -
+// 
+//  Module depends on:
+//    <EPTF_CLL_Common_Definitions>
+//    <EPTF_CLL_Base_Functions>
+//    <EPTF_CLL_LGenBase_Definitions>
+//    <EPTF_CLL_LGenBase_TemplateDefinitions>
+//    <EPTF_CLL_HashMapStr2Int_Functions>
+//    <TCCFileIO_Functions>
+// 
+//  Current Owner:    EISTFAL
+// 
+//  Last Review Date:
+//    2009-02-12
+// 
+//  Detailed Comments:
+// 
+///////////////////////////////////////////////////////////
+module EPTF_CLL_LGenBase_TemplateFunctions
+{
+import from EPTF_CLL_Common_Definitions all;
+import from EPTF_CLL_Base_Functions all;
+import from EPTF_CLL_LGenBase_Definitions all;
+import from EPTF_CLL_LGenBase_TemplateDefinitions all;
+import from EPTF_CLL_LGenBase_LoggingFunctions all;
+import from EPTF_CLL_HashMapStr2Int_Functions all;
+import from TCCFileIO_Functions all;
+import from TCCConversion_Functions all;
+
+friend module EPTF_CLL_LGenBase_TrafficFunctions; // f_EPTF_LGenBase_initTemplateSet
+friend module EPTF_CLL_LGenBase_Functions; // f_EPTF_LGenBase_loadExtTemplList
+
+///////////////////////////////////////////////////////////
+//  Group: PublicFunctions
+// 
+//  Purpose:
+//    The public functions of the EPTF_LGenBase_Templates feature
+//
+///////////////////////////////////////////////////////////
+group PublicFunctions
+{
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_LGenBase_loadExtTempl
+  // 
+  //  Purpose:
+  //    Loads an external template to memory. 
+  //    By default it performs a <CR><LF> conversion (unix2dos) during the load.
+  //
+  //  Parameters:
+  //    - p_fileName - *in charstring* - path and name of the text file on filesystem
+  //    - p_extTemplateName - *in charstring* - name of template
+  //    - p_convertLF2CRLF - *in boolean* - enable/disable CR/LF conversion
+  //
+  //  Return Value:
+  //    *integer* - Index of external template, or -1 if error occured.
+  //
+  //  Detailed Comments:
+  //    The returned index shall be used for further referring the external template
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_LGenBase_loadExtTempl(
+    in charstring p_fileName,
+    in charstring p_extTemplateName,
+    in boolean p_convertLF2CRLF := true
+  )
+  runs on EPTF_LGenBase_Private_CT
+  return integer
+  {
+    // parameter check
+    if (p_fileName=="")
+    {
+      f_EPTF_LGenBase_loggingWarning(%definitionId&": Path of external template cannot be empty!");
+      return -1;
+    }
+    if (p_extTemplateName=="")
+    {
+      f_EPTF_LGenBase_loggingWarning(%definitionId&": Name of external cannot be empty!");
+      return -1;
+    }
+    
+    var charstring vl_content;
+    if (not f_EPTF_LGenBase_loadTemplateFile(p_fileName, vl_content))
+    {
+      f_EPTF_LGenBase_loggingWarning(%definitionId&": Could not read file: "& p_fileName);
+      return -1;
+    }
+    //check if LF/CRLF conversion is needed
+    if (p_convertLF2CRLF)
+    {
+      // log a warning if the file already contains <CR><LF> pattern
+      for ( var integer i:=0; i<=lengthof(vl_content)-2; i:=i+1) 
+      {
+        if (substr(vl_content,i,2)== "\r\n")
+        {
+          f_EPTF_LGenBase_loggingWarning(%definitionId & ": Possible wrong CRLF conversion setting: There are <CR><LF> pattern in tmeplate file " & p_fileName);
+          break;
+        }
+      } 
+      vl_content := f_replaceEveryOccurenceOfSubstring(vl_content,"\n","\r\n");
+    }
+    
+    // process template and store in DB and return new index
+    var integer size := sizeof(v_LGenBase_extTemplateDB);
+    v_LGenBase_extTemplateDB[size].name := p_extTemplateName;
+    f_EPTF_LGenBase_parseTemplate(vl_content,v_LGenBase_extTemplateDB[size].repr);
+    f_EPTF_str2int_HashMap_Insert(v_LGenBase_extTemplHashMapId, p_extTemplateName, size);
+    return size;
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_LGenBase_declareTemplateType
+  // 
+  //  Purpose:
+  //    Declares a new template type.
+  //
+  //  Parameters:
+  //    - p_templateTypeKey - *in p_templateTypeKey* - identifies the template type
+  //    - p_compulsoryParams - *in EPTF_CharstringList* - list of compulsory parameters in this template type
+  //    - p_optionalParams - *in EPTF_CharstringList* - list of optional parameters in this template type
+  //
+  // Return Value:
+  //   *integer* - index of template type in the declaration table,
+  //               or -1 if declaration didn't succeed
+  //
+  //  Detailed Comments:
+  //    The <behaviour type; template name> pair identifies a template type.
+  //    The returned index shall be used for further referring to the declared template type.
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_LGenBase_declareTemplateType(
+    in EPTF_LGenBase_TemplateTypeKey p_templateTypeKey,
+    in EPTF_CharstringList p_compulsoryParams,
+    in EPTF_CharstringList p_optionalParams := {}
+  )
+  runs on EPTF_LGenBase_Private_CT
+  return integer
+  {
+    // check if template type already declared
+    if (-1 != f_EPTF_LGenBase_getTemplateTypeIdx(p_templateTypeKey))
+    {
+      f_EPTF_LGenBase_loggingWarning(%definitionId&"Template type with key (" & p_templateTypeKey.behaviourType & ";" & p_templateTypeKey.templateName & ") already exists")
+      return -1;
+    }
+    var EPTF_LGenBase_TemplateParameterList vl_compParamList := {};
+    for (var integer i:=0; i<sizeof(p_compulsoryParams); i:=i+1)
+    {
+      vl_compParamList[i] := {p_compulsoryParams[i], omit};
+    }
+    var EPTF_LGenBase_TemplateParameterList vl_optionalParamList := {};
+    for (var integer i:=0; i<sizeof(p_optionalParams); i:=i+1)
+    {
+      vl_optionalParamList[i] := {p_optionalParams[i], omit};
+    }
+    return f_EPTF_LGenBase_declareTemplateTypeWithCallbacks(p_templateTypeKey, vl_compParamList, vl_optionalParamList);
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_LGenBase_declareTemplateTypeWithCallbacks
+  // 
+  //  Purpose:
+  //    Declares a new template type with parameter callbacks
+  //
+  //  Parameters:
+  //    - p_templateTypeKey - *in p_templateTypeKey* - identifies the template type
+  //    - p_compulsoryParams - *in EPTF_LGenBase_TemplateParameterList* - list of compulsory parameters in this template type
+  //    - p_optionalParams - *in EPTF_LGenBase_TemplateParameterList* - list of optional parameters in this template type
+  //
+  // Return Value:
+  //   *integer* - index of template type in the declaration table,
+  //               or -1 if declaration didn't succeed
+  //
+  //  Detailed Comments:
+  //    For each parameter name an optional callback function can be defined.
+  //    The returned index shall be used for further referring to the declared template type.
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_LGenBase_declareTemplateTypeWithCallbacks(
+    in EPTF_LGenBase_TemplateTypeKey p_templateTypeKey,
+    in EPTF_LGenBase_TemplateParameterList p_compulsoryParams,
+    in EPTF_LGenBase_TemplateParameterList p_optionalParams := {}
+  )
+  runs on EPTF_LGenBase_Private_CT
+  return integer
+  {
+    // check if template type already declared
+    if (-1 != f_EPTF_LGenBase_getTemplateTypeIdx(p_templateTypeKey))
+    {
+      f_EPTF_LGenBase_loggingWarning(%definitionId&"Template type with key (" & p_templateTypeKey.behaviourType & ";" & p_templateTypeKey.templateName & ") already exists")
+      return -1;
+    }
+    
+    // administrate new template type
+    var charstring templTypeKeyString := p_templateTypeKey.behaviourType & c_EPTF_LGenBase_hashKeyDelimiter & p_templateTypeKey.templateName;
+    var integer newIdx := sizeof(v_LGenBase_templateTypeDB);
+    // put new index to hasmap
+    f_EPTF_str2int_HashMap_Insert(v_LGenBase_templTypeHashMapId, templTypeKeyString, newIdx);
+    // put new declaration into templateTypeDB
+    v_LGenBase_templateTypeDB[newIdx] := {p_templateTypeKey, p_compulsoryParams, p_optionalParams, omit, omit};
+    return newIdx;
+  }
+  
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_LGenBase_createTemplateSet
+  // 
+  //  Purpose:
+  //    creates a new, empty template set.
+  //
+  //  Parameters:
+  //    -
+  //
+  //  Return Value:
+  //    *integer* - Index of the template set
+  //
+  //  Detailed Comments:
+  //    The returned index shall be used for further referring the template set
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_LGenBase_createTemplateSet() 
+  runs on EPTF_LGenBase_Private_CT
+  return integer
+  {
+    var integer newIdx := sizeof(v_LGenBase_templateSetDB);
+    v_LGenBase_templateSetDB[newIdx] := {};
+    return newIdx;
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_LGenBase_assignExtTemplToTemplType
+  // 
+  //  Purpose:
+  //    Assigns an external template to a declared template type in a template set.
+  //
+  //  Parameters:
+  //    - p_templateSetIdx - *in integer* - index of template set
+  //    - p_templateTypeIdx - *in integer* - index of declared template type
+  //    - p_extTemplateIdx - *in integer* - index of external template
+  //
+  // Return Value:
+  //   *integer* - index of assigned template item in the template set
+  //               or -1 if assignment not possible
+  //
+  //  Detailed Comments:
+  //    Assigment can be successful only if external template has 
+  //    all the compulsory parameters what assigned template type expects.
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_LGenBase_assignExtTemplToTemplType(
+    in integer p_templateSetIdx,
+    in integer p_templateTypeIdx,
+    in integer p_extTemplateIdx
+  ) 
+  runs on EPTF_LGenBase_Private_CT
+  return integer
+  {
+    // parameter check
+    if ( (p_templateSetIdx >= sizeof(v_LGenBase_templateSetDB)) or (p_templateSetIdx<0) )
+    {
+      f_EPTF_LGenBase_loggingWarning(%definitionId&": Template set with index: "&int2str(p_templateSetIdx)& " doesn't exist");
+      return -1;
+    }
+    if ( (p_templateTypeIdx >= sizeof(v_LGenBase_templateTypeDB)) or (p_templateTypeIdx<0) )
+    {
+      f_EPTF_LGenBase_loggingWarning(%definitionId&": Template type declaration with index: "&int2str(p_templateTypeIdx)& " doesn't exist")
+      return -1;
+    }
+    if ( (p_extTemplateIdx >= sizeof(v_LGenBase_extTemplateDB)) or (p_extTemplateIdx<0) )
+    {
+      f_EPTF_LGenBase_loggingWarning(%definitionId&": External template with index: "&int2str(p_extTemplateIdx)& " doesn't exist");
+      return -1;
+    }
+    
+    //check if assignment is already exist
+    for (var integer i:=0; i<sizeof(v_LGenBase_templateSetDB[p_templateSetIdx]); i:=i+1)
+    {
+      if (v_LGenBase_templateSetDB[p_templateSetIdx][i].templateTypeIdx == p_templateTypeIdx)
+      {
+        f_EPTF_LGenBase_loggingWarning(%definitionId&": Assignment in the template set alredy exists");      
+        return -1;
+      }
+    }
+    
+    // check if assigment is legal and create jump table
+    var EPTF_LGenBase_PositionJumpList vl_paramJumpTable := {};
+    if (not f_EPTF_LGenBase_createJumpTable(p_templateTypeIdx, p_extTemplateIdx, vl_paramJumpTable))
+    {
+      f_EPTF_LGenBase_loggingWarning( %definitionId & 
+        ": Could not assign template type: " & int2str(p_templateTypeIdx) & 
+        "with external template: "&int2str(p_extTemplateIdx) );
+      return -1;
+    }
+    
+    // add new item in template set
+    var integer vl_newItemIdx := sizeof(v_LGenBase_templateSetDB[p_templateSetIdx]);
+    v_LGenBase_templateSetDB[p_templateSetIdx][vl_newItemIdx] := { p_templateTypeIdx, p_extTemplateIdx, vl_paramJumpTable };
+    return vl_newItemIdx;
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_LGenBase_getTemplateContent
+  // 
+  //  Purpose:
+  //    Gets the actual template content after parameter substitution.
+  //
+  //  Parameters:
+  //    - p_extTemplateIdx - *in integer* - index of external template
+  //    - p_dictionary - *in EPTF_LGenBase_TemplParamSubstList* - dictionary of parameter names and values
+  //    - p_content - *inout charstring* - the substituted template content
+  //
+  //  Return Value:
+  //    *boolean* - true, if substitution succeeded otherwise false
+  //
+  //  Detailed Comments:
+  //    Parameter sunstitution is done by dictionary.
+  //    Parameter names in dictionary and external templates can differ: 
+  //    missed parameters are not substituted, unneeded parameters don't cause trouble
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_LGenBase_getTemplateContent(
+    in integer p_extTemplateIdx,
+    in EPTF_LGenBase_TemplParamSubstList p_dictionary,
+    inout charstring p_content
+  )
+  runs on EPTF_LGenBase_Private_CT
+  return boolean
+  {
+    p_content := "";
+    // parameter check
+    if ( (p_extTemplateIdx >= sizeof(v_LGenBase_extTemplateDB)) or (p_extTemplateIdx<0) )
+    {
+      f_EPTF_LGenBase_loggingWarning(%definitionId&": External template with index: "&int2str(p_extTemplateIdx)& " does not exist");
+      return false;
+    }
+    var EPTF_LGenBase_ExtTemplate currentTemplate := v_LGenBase_extTemplateDB[p_extTemplateIdx];
+    // create position-correct values of params
+    var  EPTF_CharstringList vl_positionParamValues := {}
+    var  EPTF_LGenBase_TemplateParameterCallbackList vl_callbacks := {}
+    
+    f_EPTF_LGenBase_createPositionParameterListFromDict(currentTemplate.repr.paramNames, p_dictionary, vl_positionParamValues, vl_callbacks)
+    // perform parameter substitution and return content
+    var EPTF_IntegerList vl_dummyContextArgs := {};
+    f_EPTF_LGenBase_substituteTemplate(currentTemplate.repr, vl_positionParamValues, vl_callbacks, vl_dummyContextArgs, p_content);
+    return (p_content != "");
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_LGenBase_getTemplateContentFast
+  //
+  //  Purpose:
+  //    Gets the actual template content after parameter substitution.
+  //
+  //  Parameters:
+  //    - p_templateSetIdx - *in integer* - index of template set
+  //    - p_templateItemIdx - *in integer* - index of template set item
+  //    - p_paramValues - *in EPTF_CharstringList* - list of postiotnal parameter values
+  //    - p_content - *out charstring* - the substituted template content
+  //
+  //  Return Value:
+  //    *boolean* - true, if substitution succeeded otherwise false
+  //
+  //  Detailed Comments:
+  //    Parameter sunstitution is done by positional parameter list.
+  //    Parameter position order is defined by template type declaration. 
+  //    If template type declaration contains start or finish callback
+  //    functions, they are called before/after parameter substitution
+  //    with empty list as context argument.
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_LGenBase_getTemplateContentFast(
+    in integer p_templateSetIdx,
+    in integer p_templateItemIdx,
+    in EPTF_CharstringList p_paramValues,
+    inout charstring p_content
+  )
+  runs on EPTF_LGenBase_Private_CT
+  return boolean
+  {
+    var EPTF_IntegerList vl_list:={};
+    return f_EPTF_LGenBase_getTemplateContentFastWithCallbackArgs(
+      p_templateSetIdx, p_templateItemIdx, p_paramValues, vl_list, p_content );
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_LGenBase_getTemplateContentFastWithCallbackArgs
+  //
+  //  Purpose:
+  //    Gets the actual template content after parameter substitution.
+  //
+  //  Parameters:
+  //    - p_templateSetIdx - *in integer* - index of template set
+  //    - p_templateItemIdx - *in integer* - index of template set item
+  //    - p_paramValues - *in EPTF_CharstringList* - list of postiotnal parameter values
+  //    - p_callbackContextArgs - *inout EPTF_IntegerList* - context argument list for callbacks
+  //    - p_content - *out charstring* - the substituted template content
+  //
+  //  Return Value:
+  //    *boolean* - true, if substitution succeeded otherwise false
+  //
+  //  Detailed Comments:
+  //    Parameter sunstitution is done by positional parameter list.
+  //    Parameter position order is defined by template type declaration. 
+  //    If template type declaration contains start or finish callback
+  //    functions, they are called before/after parameter substitution.
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_LGenBase_getTemplateContentFastWithCallbackArgs(
+    in integer p_templateSetIdx,
+    in integer p_templateItemIdx,
+    in EPTF_CharstringList p_paramValues,
+    inout EPTF_IntegerList p_callbackContextArgs,
+    inout charstring p_content
+  )
+  runs on EPTF_LGenBase_Private_CT
+  return boolean
+  {
+    p_content := "";
+    // parameter check
+    if ( (p_templateSetIdx >= sizeof(v_LGenBase_templateSetDB)) or (p_templateSetIdx<0) )
+    {
+      f_EPTF_LGenBase_loggingWarning(%definitionId&": Template set with index: "&int2str(p_templateSetIdx)& " doesn't exist")
+      return false;
+    }
+    if ( (p_templateItemIdx >= sizeof(v_LGenBase_templateSetDB[p_templateSetIdx])) or (p_templateItemIdx<0) )
+    {
+      f_EPTF_LGenBase_loggingWarning(%definitionId&": Template set doesn't have item with index: "&int2str( p_templateItemIdx))
+      return false;
+    }
+    
+    // check if parameter number correct - num if parameters given are equal with template type parameter number
+    //var EPTF_LGenBase_TemplateTypeDeclaration vl_templType := v_LGenBase_templateTypeDB[v_LGenBase_templateSetDB[p_templateSetIdx][p_templateItemIdx].templateTypeIdx];
+    //if ( sizeof(vl_templType.compulsoryParams) + sizeof(vl_templType.optionalParams) != sizeof(p_paramValues) )
+    //{
+    //  f_EPTF_LGenBase_loggingWarning(%definitionId&": Expected param number of referred template not equals with given param number" );
+    //}
+    
+    // find template in template set
+    var EPTF_LGenBase_ExtTemplate currentTemplate := v_LGenBase_extTemplateDB[v_LGenBase_templateSetDB[p_templateSetIdx][p_templateItemIdx].externalTemplateIdx];
+    
+    // create right-ordered parameter  list    
+    var EPTF_CharstringList vl_newParamValues := {};
+    var EPTF_LGenBase_TemplateParameterCallbackList vl_callBacks := {} 
+    
+    var EPTF_LGenBase_PositionJumpList vl_jumpTable := v_LGenBase_templateSetDB[p_templateSetIdx][p_templateItemIdx].posJumpTable;
+    var EPTF_LGenBase_TemplateTypeDeclaration vl_templType := v_LGenBase_templateTypeDB[v_LGenBase_templateSetDB[p_templateSetIdx][p_templateItemIdx].templateTypeIdx];
+    for (var integer i:=0; i<sizeof(vl_jumpTable); i:=i+1)
+    {
+      vl_callBacks[i] := null;
+      if (vl_jumpTable[i] >= 0 and vl_jumpTable[i] < sizeof(p_paramValues))
+      {
+        // parametr exist
+        //vl_newParamList[i] := { p_paramValues[vl_jumpTable[i]], omit };
+        vl_newParamValues[i] :=  p_paramValues[vl_jumpTable[i]];
+      }
+      else
+      {
+        // parameter not exist
+        //vl_newParamList[i] := 
+        //{ tsp_LGenBase_templParamOpentoken & currentTemplate.repr.paramNames[i] & tsp_LGenBase_templParamClosetoken, omit }
+        vl_newParamValues[i] := tsp_LGenBase_templParamOpentoken & currentTemplate.repr.paramNames[i] & tsp_LGenBase_templParamClosetoken
+        
+      }
+      
+      if (vl_jumpTable[i] >=0 ) {
+        // gain callback function if exist
+        if (vl_jumpTable[i] < sizeof(vl_templType.compulsoryParams))
+        {
+          if (ispresent(vl_templType.compulsoryParams[vl_jumpTable[i]].callback))
+          {
+            //vl_newParamList[i].callback := vl_templType.compulsoryParams[vl_jumpTable[i]].callback;
+            vl_callBacks[i] := vl_templType.compulsoryParams[vl_jumpTable[i]].callback;
+          }
+        }
+        else
+        {
+          if (ispresent(vl_templType.optionalParams[vl_jumpTable[i] - sizeof(vl_templType.compulsoryParams)].callback))
+          {
+            //vl_newParamList[i].callback := vl_templType.optionalParams[vl_jumpTable[i] - sizeof(vl_templType.compulsoryParams)].callback;
+            vl_callBacks[i] := vl_templType.optionalParams[vl_jumpTable[i] - sizeof(vl_templType.compulsoryParams)].callback;
+          }
+        }
+      }
+    }
+    // call starter callback, if exist
+    if (ispresent(vl_templType.startCallback))
+    {
+      vl_templType.startCallback.apply(p_callbackContextArgs, p_paramValues);
+    }
+    // perform parameter substitution and return content
+    f_EPTF_LGenBase_substituteTemplate(currentTemplate.repr, vl_newParamValues, vl_callBacks, p_callbackContextArgs, p_content);
+    // call finish callback, if exist
+    if (ispresent(vl_templType.finishCallback))
+    {
+      vl_templType.finishCallback.apply(p_callbackContextArgs, p_paramValues);
+    }
+    return (p_content != "");
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_LGenBase_getExtTemplName
+  // 
+  //  Purpose:
+  //    Gets the name of an external template by its index.
+  //
+  //  Parameters:
+  //    - p_extTemplateIdx - *in integer* - index of external template in memory database
+  //
+  //  Return Value:
+  //    *charstring* - Name of external template, or "" if template doesn't exist
+  //
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_LGenBase_getExtTemplName(
+    in integer p_extTemplateIdx
+  )
+  runs on EPTF_LGenBase_Private_CT
+  return charstring
+  {
+    // parameter check
+    if ( (p_extTemplateIdx >= sizeof(v_LGenBase_extTemplateDB)) or (p_extTemplateIdx<0) )
+    {
+      f_EPTF_LGenBase_loggingWarning(%definitionId&": External tamplate with index: "&int2str(p_extTemplateIdx)& " doesn't exist");
+      return "";
+    }
+    
+    return v_LGenBase_extTemplateDB[p_extTemplateIdx].name;
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_LGenBase_getExtTemplIdx
+  // 
+  //  Purpose:
+  //    Gets the index of an external template by its name.
+  //
+  //  Parameters:
+  //    - p_extTemplateName - *in charstring* - name of external template
+  //
+  //  Return Value:
+  //    *integer* - Index of external template, or -1 if template doesn't exist
+  //
+  //  Detailed Comments:
+  //    This function performs effective search in a hashmap.
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_LGenBase_getExtTemplIdx(
+    in charstring p_extTemplateName
+  )
+  runs on EPTF_LGenBase_Private_CT
+  return integer
+  {
+    // parameter check
+    if (p_extTemplateName == "")
+    {
+      return -1;
+    }
+    
+    // find index in hashmap
+    var integer idx;
+    if (not f_EPTF_str2int_HashMap_Find(v_LGenBase_extTemplHashMapId, p_extTemplateName, idx))
+    {
+      return -1;
+    }
+    return idx;
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_LGenBase_getTemplateTypeIdx
+  // 
+  //  Purpose:
+  //    Returns index of a templatetype key in the dclaration table.
+  //
+  //  Parameters:
+  //    - p_templateTypeKey - *in p_templateTypeKey* - identifies the template type
+  //
+  // Return Value:
+  //   *integer* - index of template type in the declaration table, 
+  //               or -1 if declaration doesn't exist
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_LGenBase_getTemplateTypeIdx(
+    in EPTF_LGenBase_TemplateTypeKey p_templateTypeKey
+  )
+  runs on EPTF_LGenBase_Private_CT
+  return integer
+  {
+    var charstring hashKey := p_templateTypeKey.behaviourType & c_EPTF_LGenBase_hashKeyDelimiter & p_templateTypeKey.templateName;
+    var integer idx;
+    // get idx from hash map
+    if (not f_EPTF_str2int_HashMap_Find(v_LGenBase_templTypeHashMapId, hashKey, idx))
+    {
+      return -1;
+    }
+    return idx;
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_LGenBase_getTemplateItemIdxFromSet
+  // 
+  //  Purpose:
+  //    Gets the index of an external template assigned to a template type in a template set.
+  //
+  //  Parameters:
+  //    - p_templateSetIdx - *in integer* - index of template set
+  //    - p_templateTypeIdx - *in integer* - index of template type declaration
+  //
+  // Return Value:
+  //   *integer* - Index of the template set item or -1 if template type not present in the set
+  //
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_LGenBase_getTemplateItemIdxFromSet(
+    in integer p_templateSetIdx,
+    in integer p_templateTypeIdx
+  )
+  runs on EPTF_LGenBase_Private_CT
+  return integer
+  {
+    // parameter check
+    if ( (p_templateSetIdx >= sizeof(v_LGenBase_templateSetDB)) or (p_templateSetIdx<0) )
+    {
+      f_EPTF_LGenBase_loggingWarning(%definitionId&": Template set with index: "&int2str(p_templateSetIdx)& " doesn't exist");
+      return -1;
+    }
+    if ( (p_templateTypeIdx >= sizeof(v_LGenBase_templateTypeDB)) or (p_templateTypeIdx<0) )
+    {
+      f_EPTF_LGenBase_loggingWarning(%definitionId&": Template type declaration with index: "&int2str(p_templateTypeIdx)& " doesn't exist");
+      return -1;
+    }
+    
+    for ( var integer i:=0; i < sizeof(v_LGenBase_templateSetDB[p_templateSetIdx]); i := i+1)
+    {
+      if (v_LGenBase_templateSetDB[p_templateSetIdx][i].templateTypeIdx == p_templateTypeIdx)
+      {
+        return i;
+      }
+    }
+    return -1;
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_LGenBase_getExtTemplIdxFromSet
+  // 
+  //  Purpose:
+  //    Gets the index of an external template assigned to a template type in a template set.
+  //
+  //  Parameters:
+  //    - p_templateSetIdx - *in integer* - index of template set
+  //    - p_templateTypeIdx - *in integer* - index of template type declaration
+  //
+  // Return Value:
+  //   *integer* - Index of the external template or -1 if assignment does not exist
+  //
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_LGenBase_getExtTemplIdxFromSet(
+    in integer p_templateSetIdx,
+    in integer p_templateTypeIdx
+  ) 
+  runs on EPTF_LGenBase_Private_CT
+  return integer
+  {
+    // parameter check
+    if ( (p_templateSetIdx >= sizeof(v_LGenBase_templateSetDB)) or (p_templateSetIdx<0) )
+    {
+      f_EPTF_LGenBase_loggingWarning(%definitionId&": Template set with index: "&int2str(p_templateSetIdx)& " doesn't exist");
+      return -1;
+    }
+    if ( (p_templateTypeIdx >= sizeof(v_LGenBase_templateTypeDB)) or (p_templateTypeIdx<0) )
+    {
+      f_EPTF_LGenBase_loggingWarning(%definitionId&": Template type declaration with index: "&int2str(p_templateTypeIdx)& " doesn't exist");
+      return -1;
+    }
+    
+    var integer itemIdx := f_EPTF_LGenBase_getTemplateItemIdxFromSet(p_templateSetIdx, p_templateTypeIdx);
+    if (itemIdx >= 0)
+    {
+      return v_LGenBase_templateSetDB[p_templateSetIdx][itemIdx].externalTemplateIdx;
+    }
+    return -1;
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_LGenBase_extendTemplateType
+  // 
+  //  Purpose:
+  //    Extends a template type declaration with new optional parameters 
+  //    and updates all the template sets containing this template type. 
+  //
+  //  Parameters:
+  //    - p_templateTypeIdx - *in integer* - index of template type
+  //    - p_newOptionalParams - *in EPTF_CharstringList* - list of new optional parameter names
+  //
+  // Return Value:
+  //   *boolean* - true, if extension successed. If parameter already exist
+  //               in template type declaration, it returns false. 
+  //
+  //  Detailed Comments:
+  //    If function returns false, the template DB can be inconsistent.
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_LGenBase_extendTemplateType(
+    in integer p_templateTypeIdx,
+    in EPTF_CharstringList p_newOptionalParams
+  )
+  runs on EPTF_LGenBase_Private_CT
+  return boolean
+  {
+    // boundary cehck
+    if (p_templateTypeIdx < 0 or p_templateTypeIdx >= sizeof(v_LGenBase_templateTypeDB))
+    {
+      f_EPTF_LGenBase_loggingWarning(%definitionId&": Template type with index: "&int2str(p_templateTypeIdx)& " doesn't exist");
+      return false;
+    }
+    
+    // iterate through new parameters and update template type DB
+    for (var integer i := 0; i < sizeof(p_newOptionalParams); i := i + 1)
+    {
+      // check if parameter already exist in template type
+      for ( var integer j := 0; j < sizeof(v_LGenBase_templateTypeDB[p_templateTypeIdx].compulsoryParams) ; j := j+1 )
+      {
+        if(v_LGenBase_templateTypeDB[p_templateTypeIdx].compulsoryParams[j].parameter == p_newOptionalParams[i])
+        {
+          f_EPTF_LGenBase_loggingWarning(%definitionId&": The template parameter: "& 
+            p_newOptionalParams[i] & " is already declared as mandatory paramter in template type");
+          return false;
+        }
+      }
+      for ( var integer j := 0; j < sizeof(v_LGenBase_templateTypeDB[p_templateTypeIdx].optionalParams) ; j := j+1 )
+      {
+        if(v_LGenBase_templateTypeDB[p_templateTypeIdx].optionalParams[j].parameter == p_newOptionalParams[i])
+        {
+          f_EPTF_LGenBase_loggingWarning(%definitionId&": The optional parameter: "& 
+            p_newOptionalParams[i] & " is already declared in template type");
+          return false;
+        }
+      }
+      // add new parameter to template type declaration
+      v_LGenBase_templateTypeDB[p_templateTypeIdx].optionalParams[sizeof(v_LGenBase_templateTypeDB[p_templateTypeIdx].optionalParams)] 
+      := {p_newOptionalParams[i], omit};
+    }
+    
+    // update template set DB
+    return f_EPTF_LGenBase_updateTemplateSets(p_templateTypeIdx);
+  }  
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_LGenBase_extendTemplateTypeWithCallback
+  // 
+  //  Purpose:
+  //    Extends a template type declaration with new optional parameters
+  //    and allows to define callback functions to new and existing parameters.
+  //    It updates all the template sets containing this modified template type. 
+  //
+  //  Parameters:
+  //    - p_templateTypeIdx - *in integer* - index of template type
+  //    - p_paramList - *in EPTF_LGenBase_TemplateParameterList* - 
+  //                list of <parameter name, callback function> pairs
+  //
+  // Return Value:
+  //   *boolean* - true, if extension successed. 
+  //
+  //  Detailed Comments:
+  //    p_paramList can contain new and already existing parameters as well.
+  //    If function returns false, the template DB can be inconsistent.
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_LGenBase_extendTemplateTypeWithCallback(
+    in integer p_templateTypeIdx,
+    in EPTF_LGenBase_TemplateParameterList p_paramList
+  )
+  runs on EPTF_LGenBase_Private_CT
+  return boolean
+  {
+    // boundary cehck
+    if (p_templateTypeIdx < 0 or p_templateTypeIdx >= sizeof(v_LGenBase_templateTypeDB))
+    {
+      f_EPTF_LGenBase_loggingWarning(%definitionId&": Template type with index: "&int2str(p_templateTypeIdx)& " doesn't exist");
+      return false;
+    }
+    
+    // iterate through parameters and update template type DB
+    for (var integer i := 0; i < sizeof(p_paramList); i := i + 1)
+    {
+      // check if parameter already exist in template type
+      var integer j;
+      for ( j := 0; j < sizeof(v_LGenBase_templateTypeDB[p_templateTypeIdx].compulsoryParams) ; j := j+1 )
+      {
+        if(v_LGenBase_templateTypeDB[p_templateTypeIdx].compulsoryParams[j].parameter == p_paramList[i].parameter)
+        {
+          v_LGenBase_templateTypeDB[p_templateTypeIdx].compulsoryParams[j].callback := p_paramList[i].callback;
+          break;
+        }
+      }
+      if (j<sizeof(v_LGenBase_templateTypeDB[p_templateTypeIdx].compulsoryParams))
+      {
+        continue;
+      }
+      for ( j := 0; j < sizeof(v_LGenBase_templateTypeDB[p_templateTypeIdx].optionalParams) ; j := j+1 )
+      {
+        if(v_LGenBase_templateTypeDB[p_templateTypeIdx].optionalParams[j].parameter == p_paramList[i].parameter)
+        {
+          v_LGenBase_templateTypeDB[p_templateTypeIdx].optionalParams[j].callback := p_paramList[i].callback;
+          break;
+        }
+      }
+      if (j<sizeof(v_LGenBase_templateTypeDB[p_templateTypeIdx].optionalParams))
+      {
+        continue;
+      }
+      // add new parameter to template type declaration
+      v_LGenBase_templateTypeDB[p_templateTypeIdx].optionalParams[sizeof(v_LGenBase_templateTypeDB[p_templateTypeIdx].optionalParams)] 
+      := p_paramList[i];
+    }
+    
+    // update template set DB
+    return f_EPTF_LGenBase_updateTemplateSets(p_templateTypeIdx);
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_LGenBase_setStartCallbackToTemplateType
+  // 
+  //  Purpose:
+  //    Sets the start callback function of the template type
+  //
+  //  Parameters:
+  //    - p_templateTypeIdx - *in integer* - index of template type
+  //    - p_callback - *in EPTF_LGenBase_TemplateCallback* - the new start callback function
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_LGenBase_setStartCallbackToTemplateType(
+    in integer p_templateTypeIdx,
+    in EPTF_LGenBase_TemplateCallback p_callback
+  )
+  runs on EPTF_LGenBase_Private_CT
+  {
+    // boundary cehck
+    if (p_templateTypeIdx < 0 or p_templateTypeIdx >= sizeof(v_LGenBase_templateTypeDB))
+    {
+      f_EPTF_LGenBase_loggingWarning(%definitionId&": Template type with index: "&int2str(p_templateTypeIdx)& " doesn't exist");
+      return;
+    }
+    // add callback
+    v_LGenBase_templateTypeDB[p_templateTypeIdx].startCallback := p_callback;
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_LGenBase_setFinishCallbackToTemplateType
+  // 
+  //  Purpose:
+  //    Sets the finish callback function of the template type
+  //
+  //  Parameters:
+  //    - p_templateTypeIdx - *in integer* - index of template type
+  //    - p_callback - *in EPTF_LGenBase_TemplateCallback* - the new finish callback function
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_LGenBase_setFinishCallbackToTemplateType(
+    in integer p_templateTypeIdx,
+    in EPTF_LGenBase_TemplateCallback p_callback
+  )
+  runs on EPTF_LGenBase_Private_CT
+  {
+    // boundary cehck
+    if (p_templateTypeIdx < 0 or p_templateTypeIdx >= sizeof(v_LGenBase_templateTypeDB))
+    {
+      f_EPTF_LGenBase_loggingWarning(%definitionId&": Template type with index: "&int2str(p_templateTypeIdx)& " doesn't exist");
+      return;
+    }
+    // add callback
+    v_LGenBase_templateTypeDB[p_templateTypeIdx].finishCallback := p_callback;
+  }
+  
+  //===========================================================================
+  //  Convinience functions
+  //===========================================================================
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_LGenBase_getTemplateContentByTemplTypeKey
+  // 
+  //  Purpose:
+  //    Finds a template in a template set and gets its content after susbstituting its parameters.
+  //
+  //  Parameters:
+  //    - p_templateSetIdx - *in integer* - index of template set
+  //    - p_templateTypeKey - *in EPTF_LGenBase_TemplateTypeKey* - key to identify template type
+  //    - p_paramValues - *in EPTF_CharstringList* - list of positional parameter values
+  //    - p_content - *inout charstring* - the substituted template content
+  //
+  //  Return Value:
+  //    *boolean* - true, if substitution succeeded otherwise false
+  //
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_LGenBase_getTemplateContentByTemplTypeKey(
+    in integer p_templateSetIdx,
+    in EPTF_LGenBase_TemplateTypeKey p_templateTypeKey,
+    in EPTF_CharstringList p_paramValues,
+    inout charstring p_content
+  )
+  runs on EPTF_LGenBase_Private_CT
+  return boolean
+  {
+    p_content := "";
+    var integer templTypeIdx := f_EPTF_LGenBase_getTemplateTypeIdx(p_templateTypeKey);
+    if (templTypeIdx < 0)
+    {
+      f_EPTF_LGenBase_loggingWarning(%definitionId&": Template type declaration with key(" &log2str( p_templateTypeKey.behaviourType) & ";" & p_templateTypeKey.templateName & ") doesn't exist");
+      return false;
+    }
+    
+    var integer templItemIdx := f_EPTF_LGenBase_getTemplateItemIdxFromSet(p_templateSetIdx, templTypeIdx)
+    if (templItemIdx < 0)
+    { 
+      f_EPTF_LGenBase_loggingDebugTraffic(%definitionId&": Template type declaration is not present in the template set.");
+      return false;
+    }
+    return f_EPTF_LGenBase_getTemplateContentFast(p_templateSetIdx, templItemIdx, p_paramValues, p_content);
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_LGenBase_getTemplateContentByExtTemplName
+  // 
+  //  Purpose:
+  //    Finds an external template after its name and returns its content after susbstituting parameters.
+  //
+  //  Parameters:
+  //    - p_extTemplName - *in charstring* - name of external template
+  //    - p_dictionary - *in EPTF_LGenBase_TemplParamSubstList* - dictionary of parameter values
+  //    - p_content - *out charstring* - the substituted template content
+  //
+  //  Return Value:
+  //    *boolean* - true, if substitution succeeded otherwise false
+  //
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_LGenBase_getTemplateContentByExtTemplName(
+    in charstring p_extTemplName,
+    in EPTF_LGenBase_TemplParamSubstList p_dictionary,
+    inout charstring p_content
+  )
+  runs on EPTF_LGenBase_Private_CT
+  return boolean
+  {
+    p_content := "";
+    var integer extTemplIdx := f_EPTF_LGenBase_getExtTemplIdx(p_extTemplName);
+    if (extTemplIdx < 0)
+    {
+      f_EPTF_LGenBase_loggingWarning(%definitionId&": External template with name: "& p_extTemplName& " doesn't exist");
+      return false;
+    }
+    return f_EPTF_LGenBase_getTemplateContent(extTemplIdx, p_dictionary, p_content);
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_LGenBase_getExtTemplIdxFromSetByKey
+  // 
+  //  Purpose:
+  //    Gets the index of an external template assigned to a template type in a template set.
+  //
+  //  Parameters:
+  //    - p_templateSetIdx - *in integer* - index which identifies the template set
+  //    - p_templateTypeKey - *in p_templateTypeKey* - identifies the template type
+  //
+  // Return Value:
+  //   *integer* - Index of the external template or -1 if assignment does not exist
+  //
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_LGenBase_getExtTemplIdxFromSetByKey(
+    in integer p_templateSetIdx,
+    in EPTF_LGenBase_TemplateTypeKey p_templateTypeKey
+  )
+  runs on EPTF_LGenBase_Private_CT
+  return integer
+  {
+    var integer templateTypeIdx := f_EPTF_LGenBase_getTemplateTypeIdx(p_templateTypeKey);
+    if (templateTypeIdx < 0)
+    {
+      f_EPTF_LGenBase_loggingWarning(%definitionId&": Template type declaration with key (" & p_templateTypeKey.behaviourType & ";" & p_templateTypeKey.templateName & ") doesn't exist");
+      return -1;
+    }
+    return f_EPTF_LGenBase_getExtTemplIdxFromSet(p_templateSetIdx, templateTypeIdx);
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_LGenBase_assignExtTemplToTemplType2
+  // 
+  //  Purpose:
+  //    Assigns an external template to a declared template type in a template set.
+  //
+  //  Parameters:
+  //    - p_templateSetIdx - *in integer* - index of template set
+  //    - p_templateTypeKey - *in p_templateTypeKey* - identifies the template type
+  //    - p_extTemplateIdx - *in integer* - index of external template
+  //
+  // Return Value:
+  //   *integer* - index of assigned template item in template set
+  //               or -1 if assignment not possible
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_LGenBase_assignExtTemplToTemplType2(
+    in integer p_templateSetIdx,
+    in EPTF_LGenBase_TemplateTypeKey p_templateTypeKey,
+    in integer p_extTemplateIdx
+  )
+  runs on EPTF_LGenBase_Private_CT
+  return integer
+  {
+    // parameter check not needed, it is done in function assignExtTemplToTemplType()
+    
+    var integer templateTypeIdx := f_EPTF_LGenBase_getTemplateTypeIdx(p_templateTypeKey);
+    if (templateTypeIdx < 0)
+    {
+      f_EPTF_LGenBase_loggingWarning(%definitionId&": Template type declaration with key (" & p_templateTypeKey.behaviourType & ";" & p_templateTypeKey.templateName & ") doesn't exist");
+      return -1;
+    }
+    
+    return f_EPTF_LGenBase_assignExtTemplToTemplType(p_templateSetIdx, templateTypeIdx, p_extTemplateIdx);
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_LGenBase_assignExtTemplToTemplType3
+  // 
+  //  Purpose:
+  //    Assigns an external template to a declared template type in a template set.
+  //
+  //  Parameters:
+  //    - p_templateSetIdx - *in integer* - index of template set
+  //    - p_templateTypeKey - *in p_templateTypeKey* - identifies the template type
+  //    - p_extTemplateName - *in charstring* - name of external template
+  //
+  // Return Value:
+  //   *integer* - index of assigned template item in template set
+  //               or -1 if assignment not possible
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_LGenBase_assignExtTemplToTemplType3(
+    in integer p_templateSetIdx,
+    in EPTF_LGenBase_TemplateTypeKey p_templateTypeKey,
+    in charstring p_extTemplateName
+  ) 
+  runs on EPTF_LGenBase_Private_CT
+  return integer
+  {
+    // parameter check not needed, it is done in function assignExtTemplToTemplType2()
+    
+    var integer extTemplIdx := f_EPTF_LGenBase_getExtTemplIdx(p_extTemplateName);
+    if (extTemplIdx < 0)
+    {
+      f_EPTF_LGenBase_loggingWarning(%definitionId&": External template with name "& p_extTemplateName& " doesn't exist");
+      return -1;
+    }
+    return f_EPTF_LGenBase_assignExtTemplToTemplType2(p_templateSetIdx, p_templateTypeKey, extTemplIdx);
+  }
+  
+} // end of group PublicFunctions
+
+///////////////////////////////////////////////////////////
+//  Group: PrivateFunctions
+// 
+//  Purpose:
+//    The private functions of the EPTF_LGenBasetemplates feature
+//    Don't use them from outside of EPTF_LGenBasetemplates
+//
+///////////////////////////////////////////////////////////
+group PrivateFunctions
+{
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_LGenBase_loadTemplateFile
+  // 
+  //  Purpose:
+  //    Loads a file to a string.
+  ///////////////////////////////////////////////////////////
+  private function f_EPTF_LGenBase_loadTemplateFile(
+    in charstring p_fileName,
+    out charstring p_content
+  )
+  runs on EPTF_LGenBase_Private_CT
+  return boolean
+  {
+    // parameter check
+    f_EPTF_Base_assert( "Empty string as input parameter", p_fileName!="" );
+    p_content := "";
+    
+    // open the file and reads content
+    var integer fd := f_FIO_open_rdonly(p_fileName);
+    if (fd == -1)
+    {
+      f_EPTF_LGenBase_loggingWarning(%definitionId&": cannot open file: "& p_fileName);
+      return false;
+    }
+    
+    if (f_FIO_seek_home(fd) >= 0)
+    {
+      var integer len := f_FIO_seek_end(fd);
+      if (len >= 0)
+      {
+        if (f_FIO_seek_home(fd) >= 0)
+        {
+          if (f_FIO_read_text(fd, p_content, len) != -1)
+          {
+            if (f_FIO_close(fd) != -1)
+            {
+              return true;
+            }
+          }
+        }
+      }
+    }
+    f_EPTF_LGenBase_loggingWarning(%definitionId&": could not read the file");
+    if (f_FIO_close(fd) == -1)
+    {
+      f_EPTF_LGenBase_loggingWarning(%definitionId&": cannot not close file!");
+    }
+    return false;
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_LGenBase_parseTemplate
+  // 
+  //  Purpose:
+  //    Parses a text and returns the internal template representation.
+  ///////////////////////////////////////////////////////////
+  private function f_EPTF_LGenBase_parseTemplate(
+    in charstring p_content,
+    out EPTF_LGenBase_ExtTemplateRepr p_repr)
+  runs on EPTF_LGenBase_Private_CT{
+    // check preconditions
+    f_EPTF_Base_assert( "empty string as input parameter", p_content!="" );
+    f_EPTF_Base_assert( "open or close token is empty!", 
+      tsp_LGenBase_templParamOpentoken!="" and tsp_LGenBase_templParamClosetoken!="" );
+    p_repr := {{},"",{}};
+    
+    // collect parameter names from template
+    var charstring t_open := tsp_LGenBase_templParamOpentoken;
+    var charstring t_close := tsp_LGenBase_templParamClosetoken;
+    var integer fragmentStart := 0;
+    for (var integer i:=0; i<lengthof(p_content); i:=i+1)
+    {
+      if (p_content[i] == t_open[0]) // maybe its a variable in template? 
+      {
+        if (substr(p_content, i, lengthof(t_open)) == t_open) // it is a variable opening string
+        {
+          var integer tokenstart := i;
+          i := i + lengthof(t_open);
+          while(p_content[i] != t_close[0] and i < lengthof(p_content))
+          { 
+            i := i+1;
+          }
+          if (i < lengthof(p_content))
+          {
+            if (substr(p_content,i,lengthof(t_close)) == t_close)  // it is a variable closing string
+            {
+              i := i + lengthof(t_close);
+              // obtain text fragment and add to template
+              var integer idx := sizeof(p_repr.fragmentList);
+              p_repr.fragmentList[idx].text := substr(p_content, fragmentStart, tokenstart - fragmentStart);
+              // obtain paramname
+              var charstring paramName := substr(p_content, tokenstart + lengthof(t_open), i - tokenstart - lengthof(t_open) - lengthof(t_close));
+              var integer j;
+              for (j:=0; j<sizeof(p_repr.paramNames) and p_repr.paramNames[j] != paramName ; j:=j+1) {};
+              p_repr.fragmentList[idx].paramPosition := j; // add parameter position to template fragmnet
+              if (j == sizeof(p_repr.paramNames))
+              {
+                p_repr.paramNames[sizeof(p_repr.paramNames)] := paramName;  // if new parameter, add to the paramnames
+              }
+              fragmentStart := i;
+              i := i-1;
+            }
+          }
+          else
+          {
+            f_EPTF_LGenBase_loggingWarning(%definitionId&"No closing string in a variable!\n");
+          }
+        } // not a variable opening string, nothing to do
+      } // not a variable in template, nothing to do
+    }
+    p_repr.lastFragment := substr(p_content, fragmentStart, lengthof(p_content) - fragmentStart);
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_LGenBase_createPositionParameterListFromDict
+  // 
+  //  Purpose:
+  //    Returns list of parameter values with position-correct order.
+  ///////////////////////////////////////////////////////////
+  private function f_EPTF_LGenBase_createPositionParameterListFromDict(
+    in EPTF_CharstringList p_positionParamNames,
+    in EPTF_LGenBase_TemplParamSubstList p_dictionary,
+    out EPTF_CharstringList p_positionParamValues,
+    out EPTF_LGenBase_TemplateParameterCallbackList p_callbacks
+  )
+  {
+    p_positionParamValues := {};
+    p_callbacks := {}
+    for (var integer i:=0; i<sizeof(p_positionParamNames); i:=i+1)
+    {
+      // iterate through the dictionary and find the current name
+      var integer j;
+      for (j:=0; j<sizeof(p_dictionary) and p_positionParamNames[i]!= p_dictionary[j].paramName; j:=j+1) {}
+      if (j < sizeof(p_dictionary))
+      {
+        // param name found
+        p_positionParamValues[i] := p_dictionary[j].paramValue
+      }
+      else
+      {
+        // paramname name not found
+        p_positionParamValues[i] := tsp_LGenBase_templParamOpentoken & p_positionParamNames[i] & tsp_LGenBase_templParamClosetoken;
+      }
+      p_callbacks[i] := null;
+    }
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_LGenBase_substituteTemplate
+  // 
+  //  Purpose:
+  //    Returns a substituted template content.
+  ///////////////////////////////////////////////////////////
+  private function f_EPTF_LGenBase_substituteTemplate(
+    in EPTF_LGenBase_ExtTemplateRepr p_template,
+    in EPTF_CharstringList p_paramValues,
+    in EPTF_LGenBase_TemplateParameterCallbackList p_callbacks,
+    inout EPTF_IntegerList p_callbackContextArgs,
+    out charstring p_content
+  )
+  {
+    // parameter check
+    f_EPTF_Base_assert("Not enough parameter value is given", sizeof(p_paramValues) >= sizeof(p_template.paramNames)
+      and sizeof(p_callbacks) >= sizeof(p_template.paramNames));
+    p_content := "";
+    // concatenate fragments
+    var charstring vl_value;
+    var integer vl_position;
+    for (var integer i:=0; i<sizeof(p_template.fragmentList); i:=i+1)
+    {
+      vl_position := p_template.fragmentList[i].paramPosition;
+      vl_value := p_paramValues[vl_position]; //.parameter;
+      if (p_callbacks[vl_position] != null) //ispresent(p_paramValues[vl_position].callback))
+      {
+        p_callbacks[vl_position].apply(p_callbackContextArgs, vl_value);
+      }
+      p_content := p_content & p_template.fragmentList[i].text & vl_value;
+    }
+    p_content := p_content & p_template.lastFragment;
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_LGenBase_initTemplateSet
+  // 
+  //  Purpose:
+  //    Creates and initialises a templtate set and returns 
+  //    index of template set or -1 if template set is not created.
+  ///////////////////////////////////////////////////////////
+  friend function f_EPTF_LGenBase_initTemplateSet(
+    in EPTF_LGenBase_TemplateList p_templateList
+  ) 
+  runs on EPTF_LGenBase_Private_CT
+  return integer
+  {
+    var integer templateSetIdx := -1;
+    var integer numOfTemplates := sizeof(p_templateList);
+    if (numOfTemplates > 0)
+    {
+      templateSetIdx := f_EPTF_LGenBase_createTemplateSet();
+      for (var integer i:=0; i<numOfTemplates; i:=i+1)
+      {
+        var EPTF_LGenBase_TemplateTypeKey templKey := { p_templateList[i].behaviourType, p_templateList[i].templateName }; 
+        if (f_EPTF_LGenBase_assignExtTemplToTemplType3(templateSetIdx, templKey, p_templateList[i].externalTemplateName) < 0)
+        {
+          f_EPTF_LGenBase_loggingWarning(%definitionId&"Could not assign template"); //only warning, no need to stop
+        }
+      }
+    }
+    return templateSetIdx;
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_LGenBase_loadExtTemplList
+  // 
+  //  Purpose:
+  //    Loads a list of external template files.
+  ///////////////////////////////////////////////////////////
+  friend function f_EPTF_LGenBase_loadExtTemplList(
+    in EPTF_LGenBase_ExtTemplLoadList pl_extTemplLoadList
+  )
+  runs on EPTF_LGenBase_Private_CT
+  {
+    for (var integer i := 0; i<sizeof(pl_extTemplLoadList); i:=i+1)
+    {
+      if (-1 == f_EPTF_LGenBase_loadExtTempl(pl_extTemplLoadList[i].path, pl_extTemplLoadList[i].name, pl_extTemplLoadList[i].convertLF2CRLF))
+      {
+        f_EPTF_LGenBase_loggingDebugTraffic(%definitionId&"Could not load external template: "& pl_extTemplLoadList[i].name);
+      }
+    }
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_LGenBase_createJumpTable
+  //
+  //  Purpose:
+  //    Checks whether assigning an external template to a declared template type
+  //    is possible and creates the jump table to them
+  ///////////////////////////////////////////////////////////
+  private function f_EPTF_LGenBase_createJumpTable(
+    in integer p_templateTypeIdx,
+    in integer p_extTemplateIdx,
+    out EPTF_LGenBase_PositionJumpList p_jumpTable
+  ) 
+  runs on EPTF_LGenBase_Private_CT
+  return boolean
+  {
+    // parameter check
+    f_EPTF_Base_assert("Bad template type index", p_templateTypeIdx >=0 and p_templateTypeIdx < sizeof(v_LGenBase_templateTypeDB));
+    f_EPTF_Base_assert("Bad external template index", p_extTemplateIdx >=0 and p_extTemplateIdx < sizeof(v_LGenBase_extTemplateDB));
+    
+    // check if assigment is legal and create jump table
+    p_jumpTable := {};
+    var integer vl_compParamNum := sizeof(v_LGenBase_templateTypeDB[p_templateTypeIdx].compulsoryParams);
+    var integer vl_optParamNum := sizeof(v_LGenBase_templateTypeDB[p_templateTypeIdx].optionalParams);
+    var integer vl_extTemplParamNum := sizeof(v_LGenBase_extTemplateDB[p_extTemplateIdx].repr.paramNames);
+    var integer i,j;
+    // create empty jump table
+    for (i:=0; i<vl_extTemplParamNum; i:=i+1)
+    {
+      p_jumpTable[i] := -1;
+    }    
+    // iterate through compulsory parameters and check all of them exist
+    for (i:=0; i<vl_compParamNum; i:=i+1)
+    {
+      var charstring compParam := v_LGenBase_templateTypeDB[p_templateTypeIdx].compulsoryParams[i].parameter;
+      for ( j := 0; 
+        j < vl_extTemplParamNum and v_LGenBase_extTemplateDB[p_extTemplateIdx].repr.paramNames[j] != compParam; 
+        j := j+1 ) {};
+      if (j==vl_extTemplParamNum)
+      {
+        f_EPTF_LGenBase_loggingDebugTraffic(%definitionId&": Manadatory parameter: "&compParam&" is missing from external template");
+        return false;
+      }
+      p_jumpTable[j] := i;
+    }
+    // iterate through optional parameters and update jump table
+    for (i:=0; i<vl_optParamNum; i:=i+1)
+    {
+      var charstring optionalParam := v_LGenBase_templateTypeDB[p_templateTypeIdx].optionalParams[i].parameter;
+      for ( j := 0; 
+        j < vl_extTemplParamNum and v_LGenBase_extTemplateDB[p_extTemplateIdx].repr.paramNames[j] != optionalParam; 
+        j := j+1 ) {};
+      if (j != vl_extTemplParamNum)
+      {
+        p_jumpTable[j] := vl_compParamNum + i;
+      }
+    }
+    return true;
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_LGenBase_updateTemplateSets
+  //
+  //  Purpose:
+  //    Updates the template set Db after a template type declaration has been modified.
+  ///////////////////////////////////////////////////////////
+  private function f_EPTF_LGenBase_updateTemplateSets(
+    in integer p_templateTypeIdx
+  ) 
+  runs on EPTF_LGenBase_Private_CT
+  return boolean
+  {
+    // iterate trough the template sets and update relevant items
+    for (var integer i := 0; i < sizeof(v_LGenBase_templateSetDB); i := i + 1)
+    {
+      var integer vl_itemIdx := f_EPTF_LGenBase_getTemplateItemIdxFromSet(i, p_templateTypeIdx);
+      if (vl_itemIdx >= 0)
+      {
+        var EPTF_LGenBase_PositionJumpList vl_jumpTable := {};
+        if (not f_EPTF_LGenBase_createJumpTable(p_templateTypeIdx, v_LGenBase_templateSetDB[i][vl_itemIdx].externalTemplateIdx, vl_jumpTable))
+        {
+          f_EPTF_LGenBase_loggingWarning( %definitionId & 
+            ": Could not assign template type: " & int2str(p_templateTypeIdx) & 
+            "with external template: "&int2str(v_LGenBase_templateSetDB[i][vl_itemIdx].externalTemplateIdx) );
+          return false;
+        } 
+        // update template set item
+        v_LGenBase_templateSetDB[i][vl_itemIdx].posJumpTable := vl_jumpTable;
+      }
+    }
+    return true;
+  }
+  
+} // end of group PrivateFunctions
+
+}

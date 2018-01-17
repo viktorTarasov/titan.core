@@ -1,0 +1,209 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************///  File:     EPTF_CLL_LGenBase_LoggingFunctions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 512
+//  Updated:  2010-01-28
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////
+//  Module: EPTF_CLL_LGenBase_LoggingFunctions
+//
+//  Purpose:
+//    This module provides internal logging functions for TitanSim load generators
+//
+//  Module Parameters:
+//    -
+//
+//  Module depends on:
+//    <EPTF_CLL_Base_Functions>
+//    <EPTF_CLL_LGenBase_Definitions>
+//    <EPTF_CLL_Logging_Functions>
+//    <EPTF_CLL_Logging_Definitions>
+//    <EPTF_CLL_Logging_Functions>
+//    <EPTF_CLL_Variable_Functions>
+//    <EPTF_CLL_Common_Definitions>
+//
+//  Current Owner:
+//    ELSZSKU
+//
+//  Last Review Date:
+//    2008-
+//
+//  Detailed Comments:
+//
+///////////////////////////////////////////////////////////
+module EPTF_CLL_LGenBase_LoggingFunctions
+{
+import from EPTF_CLL_Base_Functions all;
+import from EPTF_CLL_LGenBase_Definitions all
+import from EPTF_CLL_Logging_Definitions all;
+import from EPTF_CLL_Logging_Functions all;
+import from EPTF_CLL_Variable_Functions all;
+import from EPTF_CLL_Common_Definitions all;
+
+friend module EPTF_CLL_LGenBase_ConfigFunctions;
+friend module EPTF_CLL_LGenBase_EventHandlingFunctions;
+friend module EPTF_CLL_LGenBase_ExternalFunctions;
+friend module EPTF_CLL_LGenBase_Functions;
+friend module EPTF_CLL_LGenBase_LoggingFunctions;
+friend module EPTF_CLL_LGenBase_PhaseConfigFunctions;
+friend module EPTF_CLL_LGenBase_PhaseFunctions;
+friend module EPTF_CLL_LGenBase_StepFunctions;
+friend module EPTF_CLL_LGenBase_TemplateFunctions;
+friend module EPTF_CLL_LGenBase_TrafficFunctions;
+friend module EPTF_CLL_LGenBaseStats_Functions;
+friend module EPTF_CLL_LGenBaseTrafficMixer_Functions;
+friend module EPTF_CLL_LGenBase_ILog_Functions;
+
+friend function f_EPTF_LGenBase_initLogging(in charstring pl_selfName)
+runs on EPTF_LGenBase_Private_CT{
+  f_EPTF_Logging_init_CT(pl_selfName);
+  v_LGenBase_loggingMaskId := f_EPTF_Logging_registerComponentMasks(tsp_LGenBase_loggingComponentMask, c_EPTF_LGenBase_loggingEventClasses, EPTF_Logging_CLL);
+  if(tsp_EPTF_LGenBaseDebug) {
+    f_EPTF_Logging_enableLocalMask(v_LGenBase_loggingMaskId, c_EPTF_LGenBase_loggingClassIdx_DebugEventDispatch);
+  } else {
+    f_EPTF_Logging_disableLocalMask(v_LGenBase_loggingMaskId, c_EPTF_LGenBase_loggingClassIdx_DebugEventDispatch);
+  }
+  if(tsp_EPTF_LGenBaseDebugTrafficMixer) {
+    f_EPTF_Logging_enableLocalMask(v_LGenBase_loggingMaskId, c_EPTF_LGenBase_loggingClassIdx_DebugTrafficMixer);
+  } else {
+    f_EPTF_Logging_disableLocalMask(v_LGenBase_loggingMaskId, c_EPTF_LGenBase_loggingClassIdx_DebugTrafficMixer);
+  }
+  if(tsp_EPTF_LGenBaseDebugTraffic) {
+    f_EPTF_Logging_enableLocalMask(v_LGenBase_loggingMaskId, c_EPTF_LGenBase_loggingClassIdx_DebugTraffic);
+  } else {
+    f_EPTF_Logging_disableLocalMask(v_LGenBase_loggingMaskId, c_EPTF_LGenBase_loggingClassIdx_DebugTraffic);
+  }
+  if(tsp_EPTF_LGenBaseDebugTrafficVerbose) {
+    f_EPTF_Logging_enableLocalMask(v_LGenBase_loggingMaskId, c_EPTF_LGenBase_loggingClassIdx_DebugTrafficVerbose);
+  } else {
+    f_EPTF_Logging_disableLocalMask(v_LGenBase_loggingMaskId, c_EPTF_LGenBase_loggingClassIdx_DebugTrafficVerbose);
+  }
+  if(tsp_EPTF_LGenBaseDebugConfig) {
+    f_EPTF_Logging_enableLocalMask(v_LGenBase_loggingMaskId, c_EPTF_LGenBase_loggingClassIdx_DebugConfig);
+  } else {
+    f_EPTF_Logging_disableLocalMask(v_LGenBase_loggingMaskId, c_EPTF_LGenBase_loggingClassIdx_DebugConfig);
+  }
+  if(tsp_EPTF_LGenBase_debugVars) {
+    f_EPTF_Logging_enableLocalMask(v_LGenBase_loggingMaskId, c_EPTF_LGenBase_loggingClassIdx_DebugFsmVars);
+  } else {
+    f_EPTF_Logging_disableLocalMask(v_LGenBase_loggingMaskId, c_EPTF_LGenBase_loggingClassIdx_DebugFsmVars);
+  }
+  if(tsp_EPTF_LGenBaseDebugFSMEventDispatch) {
+    f_EPTF_Logging_enableLocalMask(v_LGenBase_loggingMaskId, c_EPTF_LGenBase_loggingClassIdx_DebugFSMEventDispatch);
+  } else {
+    f_EPTF_Logging_disableLocalMask(v_LGenBase_loggingMaskId, c_EPTF_LGenBase_loggingClassIdx_DebugFSMEventDispatch);
+  }
+
+  f_EPTF_Logging_enableLocalMask(v_LGenBase_loggingMaskId, c_EPTF_LGenBase_loggingClassIdx_FsmDebugLight);
+  
+}
+
+public function f_EPTF_LGenBase_enableLocalMask( in integer pl_eventClass )
+runs on EPTF_LGenBase_Private_CT{
+  f_EPTF_Logging_enableLocalMask(v_LGenBase_loggingMaskId, pl_eventClass)
+}
+
+public function f_EPTF_LGenBase_disableLocalMask( in integer pl_eventClass )
+runs on EPTF_LGenBase_Private_CT{
+  f_EPTF_Logging_disableLocalMask(v_LGenBase_loggingMaskId, pl_eventClass)
+}
+
+public function f_EPTF_LGenBase_loggingError(in charstring pl_message)
+runs on EPTF_LGenBase_Private_CT{
+  f_EPTF_Logging_error(true, tsp_LGenBase_loggingComponentMask&": "&pl_message);
+  f_EPTF_Base_stopAll();
+}
+
+public function f_EPTF_LGenBase_loggingWarning(in charstring pl_message)
+runs on EPTF_LGenBase_Private_CT{
+  f_EPTF_Logging_warningV2(pl_message, v_LGenBase_loggingMaskId, {c_EPTF_LGenBase_loggingClassIdx_Warning});
+}
+
+friend function f_EPTF_LGenBase_loggingDebugEventDispatch(
+  in charstring pl_message)
+runs on EPTF_LGenBase_Private_CT{
+  f_EPTF_Logging_debugV2(pl_message, v_LGenBase_loggingMaskId, {c_EPTF_LGenBase_loggingClassIdx_DebugEventDispatch});
+}
+
+friend function f_EPTF_LGenBase_loggingDebugFSM(
+  in integer pl_eAbsIdx,
+  in integer pl_fCtxIdx,
+  in charstring pl_message)
+runs on EPTF_LGenBase_Private_CT{
+  f_EPTF_Base_assert(%definitionId&": Invalid entity index.",pl_eAbsIdx > -1 and pl_eAbsIdx < sizeof(v_LGenBase_entities));
+  f_EPTF_Base_assert(%definitionId&": Invalid FSM context index: "&int2str(pl_fCtxIdx), -1 < pl_fCtxIdx and pl_fCtxIdx < sizeof(v_LGenBase_entities[pl_eAbsIdx].fsmCtxList))
+  f_EPTF_Logging_debugV2(pl_message, v_LGenBase_loggingMaskId, {c_EPTF_LGenBase_loggingClassIdx_DebugFSMEventDispatch});
+  var integer vl_varIdx := v_LGenBase_entities[pl_eAbsIdx].fsmCtxList[pl_fCtxIdx].logBufferVariable
+  if(-1 != vl_varIdx){
+    f_EPTF_Var_adjustContent(vl_varIdx, {charstringVal := pl_message})
+  }
+  vl_varIdx := v_LGenBase_entities[pl_eAbsIdx].fsmCtxList[pl_fCtxIdx].singleShotLogBufferVariable
+  if(-1 != vl_varIdx){
+    f_EPTF_Var_adjustContent(vl_varIdx, {charstringVal := pl_message})
+  }
+}
+
+friend function f_EPTF_LGenBase_loggingDebugTrafficMixer(in charstring pl_message)
+runs on EPTF_LGenBase_Private_CT{
+  f_EPTF_Logging_debugV2(pl_message, v_LGenBase_loggingMaskId, {c_EPTF_LGenBase_loggingClassIdx_DebugTrafficMixer});
+}
+
+friend function f_EPTF_LGenBase_loggingDebugTraffic(in charstring pl_message)
+runs on EPTF_LGenBase_Private_CT{
+  f_EPTF_Logging_debugV2(pl_message, v_LGenBase_loggingMaskId, {c_EPTF_LGenBase_loggingClassIdx_DebugTraffic});
+}
+
+friend function f_EPTF_LGenBase_loggingDebugTrafficVerbose(in charstring pl_message)
+runs on EPTF_LGenBase_Private_CT{
+  f_EPTF_Logging_debugV2(pl_message, v_LGenBase_loggingMaskId, {c_EPTF_LGenBase_loggingClassIdx_DebugTrafficVerbose});
+}
+
+friend function f_EPTF_LGenBase_loggingDebugConfig(in charstring pl_message)
+runs on EPTF_LGenBase_Private_CT{
+  f_EPTF_Logging_debugV2(pl_message, v_LGenBase_loggingMaskId, {c_EPTF_LGenBase_loggingClassIdx_DebugConfig});
+}
+
+friend function f_EPTF_LGenBase_loggingDebugFsmVars(in charstring pl_message)
+runs on EPTF_LGenBase_Private_CT{
+  f_EPTF_Logging_debugV2(pl_message, v_LGenBase_loggingMaskId, {c_EPTF_LGenBase_loggingClassIdx_DebugFsmVars});
+}
+
+friend function f_EPTF_LGenBase_loggingFsmDebugLight(in charstring pl_message)
+runs on EPTF_LGenBase_Private_CT{
+  f_EPTF_Logging_operationalLogV2(pl_message, v_LGenBase_loggingMaskId, {c_EPTF_LGenBase_loggingClassIdx_FsmDebugLight});
+}
+
+friend function f_EPTF_LGenBase_isEnabled(in integer pl_logMask)
+runs on EPTF_LGenBase_Private_CT
+return boolean{
+  return f_EPTF_Logging_isEnabledList(v_LGenBase_loggingMaskId,{pl_logMask})
+}
+
+friend function f_EPTF_LGenBase_isFSMDebugEnabled(
+  in integer pl_eAbsIdx,
+  in integer pl_fCtxIdx,
+  in boolean pl_refresh := false)
+runs on EPTF_LGenBase_Private_CT
+return boolean{
+  //The input parameters are always checked in caller functions
+  if(pl_refresh){
+    f_EPTF_LGenBase_getFSMDebugEnabled()
+  }
+  return v_LGenBase_isFSMDebugEnabled or
+  v_LGenBase_entities[pl_eAbsIdx].fsmCtxList[pl_fCtxIdx].debugLog or
+  v_LGenBase_entities[pl_eAbsIdx].fsmCtxList[pl_fCtxIdx].singleShotDebugLog
+}
+
+friend function f_EPTF_LGenBase_getFSMDebugEnabled()
+runs on EPTF_LGenBase_Private_CT{
+  v_LGenBase_isFSMDebugEnabled := c_EPTF_Common_debugSwitch and 
+  f_EPTF_LGenBase_isEnabled(c_EPTF_LGenBase_loggingClassIdx_DebugFSMEventDispatch)
+}
+}  // end of module

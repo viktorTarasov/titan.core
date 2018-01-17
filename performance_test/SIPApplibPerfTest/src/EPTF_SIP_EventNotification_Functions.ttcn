@@ -1,0 +1,364 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_SIP_EventNotification_Functions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 522
+//  Updated:  2012-11-28
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////
+//  Module: EPTF_SIP_EventNotification_Functions
+//
+//  Purpose:  
+//    Functions for SIP Event Notification (RFC 3265) in the EPTF SIP application library.
+//
+//  Module depends on:  
+//    <EPTF_CLL_Common_Definitions>
+//
+//    <EPTF_CLL_LGenBase_ConfigFunctions>
+//
+//    <EPTF_CLL_FBQ_Functions>
+//
+//    <EPTF_CLL_HashMapStr2Int_Functions>
+//
+//    <EPTF_SIP_Common_Functions>
+//
+//    <EPTF_SIP_EventNotification_Definitions>
+//
+//    <EPTF_SIP_LGen_Definitions>
+//
+//    <SIPmsg_Types>
+//
+//  Last review date:  
+//    2010-01-29
+////////////////////////////////////////////////////
+
+module EPTF_SIP_EventNotification_Functions {
+
+import from EPTF_CLL_Common_Definitions all;
+//import from EPTF_CLL_LGenBase_ConfigFunctions all;
+import from EPTF_CLL_FBQ_Functions all;
+import from EPTF_CLL_HashMapStr2Int_Functions all;
+
+import from EPTF_SIP_Common_Functions all;
+import from EPTF_SIP_EventNotification_Definitions all;
+import from EPTF_SIP_LGen_Definitions all;
+
+import from SIPmsg_Types all;
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_SIP_Subscription_InitDatabase
+// 
+//  Purpose:
+//    Initializes a SIP subscription database
+// 
+//  Detailed Comments:
+//    The function initializes the EPTF_FreeBusyQueue and creates a number of free
+//    slots in advance.
+///////////////////////////////////////////////////////////
+function f_EPTF_SIP_Subscription_InitDatabase() 
+runs on EPTF_SIP_LGen_CT
+{
+  f_EPTF_FBQ_initFreeBusyQueue(v_db_subscription.queue);
+  v_db_subscription.data := {};
+  v_db_subscription.supportedEventTypes := {};
+
+  v_db_subscription.hashRef :=  f_EPTF_str2int_HashMap_New("SubscriptionHash");
+  f_EPTF_str2int_HashMap_Resize (v_db_subscription.hashRef,1000);
+
+  var integer i, dummy;
+  for(i := 0; i < 1000; i := i + 1) {
+    dummy := f_EPTF_FBQ_getOrCreateFreeSlot(v_db_subscription.queue);
+    f_EPTF_FBQ_moveFromFreeHeadToBusyTail(v_db_subscription.queue);
+  }
+  for(i := 0; i < 1000; i := i + 1) {
+    f_EPTF_FBQ_moveFromBusyToFreeTail(i, v_db_subscription.queue);
+  }
+
+  v_eventType_refer := f_EPTF_SIP_Subscription_AddSupportedEventType({event_package := "refer", event_templates := omit});
+}
+
+function f_EPTF_SIP_Subscription_cleanUpDatabase() 
+runs on EPTF_SIP_LGen_CT
+{
+  f_EPTF_FBQ_initFreeBusyQueue(v_db_subscription.queue);
+  v_db_subscription.data := {};
+  v_db_subscription.supportedEventTypes := {};
+
+  f_EPTF_str2int_HashMap_Delete("SubscriptionHash");
+}
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_Subscription_AddSupportedEventType
+//
+//Purpose:
+//  Adds a supported event type to the subscription database.
+//
+//Parameters:
+//  - pl_eventType - *in* <Event_type> - the event type
+//
+//Return value:
+//  integer - the index of the type, can be used the index the supported event type list
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_Subscription_AddSupportedEventType(
+  in Event_type pl_eventType
+) runs on EPTF_SIP_LGen_CT return integer
+{
+  return f_EPTF_SIP_AddSupportedEventType(pl_eventType, v_db_subscription.supportedEventTypes);
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_SIP_Subscription_GetNewIdx
+// 
+//  Purpose:
+//    This function sets its integer parameter to an index number that points to a free
+//    subscription data in the subscription database.
+// 
+//  Parameters:
+//    - pl_subscriptionIdx - *inout* *integer* - the returned subscription index
+// 
+//  Detailed Comments:
+//    This function either returns with an index to a free subscription in the subscription database
+//    or creates and initializes a new subscription in the database and returns with its index.
+//    The data element corresponding to the returned index is initialized with a constant.
+///////////////////////////////////////////////////////////
+function f_EPTF_SIP_Subscription_GetNewIdx(inout integer pl_subscriptionIdx) 
+runs on EPTF_SIP_LGen_CT
+{
+  //get new free slot 
+  pl_subscriptionIdx := f_EPTF_FBQ_getOrCreateFreeSlot(v_db_subscription.queue);
+
+  v_db_subscription.data[pl_subscriptionIdx] := c_SIP_SubscriptionData_init;
+
+  f_EPTF_FBQ_moveFromFreeHeadToBusyTail(v_db_subscription.queue);
+
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_Subscription_Create
+//
+//Purpose:  
+//
+//Parameters:
+//  - pl_subscriptionIdx - *inout* *integer* - the index of the newly created 
+//      subscription in v_db_subscription
+//  - pl_dialogIdx - *in* *integer* - the index of the dialog in v_db_dialog
+//      in which the subscription is created
+//  - pl_FSMIdx - *in* *integer* - the FSM context data index
+//  - pl_eventTypeIdx - *in* *integer* - the event type index returned by <f_EPTF_SIP_Subscription_AddSupportedEventType>
+//  - pl_id - *in* *charstring* - the event id
+//  - pl_callId - *in* <CallidString> - an identifier of the dialog of the subscription
+//  - pl_localTag - *in* *charstring* - an identifier of the dialog of the subscription
+//  - pl_remoteTag - *in* *charstring* - an identifier of the dialog of the subscription
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_Subscription_Create(
+  inout integer pl_subscriptionIdx,
+  in integer    pl_dialogIdx,
+  in integer    pl_FSMIdx,
+  in integer    pl_eventTypeIdx,
+  in charstring pl_id,
+  in CallidString pl_callId,
+  in charstring pl_localTag,
+  in charstring pl_remoteTag)
+runs on EPTF_SIP_LGen_CT
+{
+  var charstring vl_str := "";
+  
+  f_EPTF_SIP_Subscription_GetNewIdx(pl_subscriptionIdx);
+
+  v_db_subscription.data[pl_subscriptionIdx].userIdx := v_db_dialog.data[pl_dialogIdx].userIdx;
+
+  v_db_subscription.data[pl_subscriptionIdx].dialogIdx := pl_dialogIdx;
+
+  v_db_subscription.data[pl_subscriptionIdx].FSMIdx := pl_FSMIdx;
+
+  v_db_subscription.data[pl_subscriptionIdx].eventTypeIdx := pl_eventTypeIdx;
+
+  v_db_subscription.data[pl_subscriptionIdx].eventId := pl_id;
+  
+  if (0 <= pl_FSMIdx)
+  {
+    v_db_subscription.data[pl_subscriptionIdx].subscriptionStateReporting := 
+      v_db_users.data[v_db_dialog.data[pl_dialogIdx].userIdx].FSMs.data[pl_FSMIdx].subscriptionStateReporting;
+  }
+  
+  f_EPTF_SIP_eventType2str(v_db_subscription.supportedEventTypes[v_db_subscription.data[pl_subscriptionIdx].eventTypeIdx], vl_str);
+  
+  f_EPTF_str2int_HashMap_Insert(v_db_subscription.hashRef, pl_callId & pl_localTag & vl_str & pl_id, pl_subscriptionIdx);
+  
+  v_db_subscription.data[pl_subscriptionIdx].callId := pl_callId;
+  v_db_subscription.data[pl_subscriptionIdx].localTag := pl_localTag;
+  v_db_subscription.data[pl_subscriptionIdx].remoteTag := pl_remoteTag;
+
+  if(c_EPTF_Common_debugSwitch and f_SIP_Logging_debugEnabled()) {
+    f_SIP_Logging_DEBUG(log2str(%definitionId,": added subscription with id ", pl_subscriptionIdx, " and with key ", pl_callId & pl_localTag & vl_str & pl_id));
+  }
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_checkSubscription
+//
+//Purpose:
+//  Checks if a subscription index is still valid in the v_db_subscription database.
+//
+//Parameters:
+//  - pl_subscriptionIdx - *in* *integer* - the index of the subscription
+//
+//Return value:
+//  boolean - true if valid
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_checkSubscription(in integer pl_subscriptionIdx)
+runs on EPTF_SIP_LGen_CT
+return boolean
+{
+  if (0 > pl_subscriptionIdx or sizeof(v_db_subscription.data) <= pl_subscriptionIdx or f_EPTF_FBQ_itemIsFree(pl_subscriptionIdx, v_db_subscription.queue))
+  {
+    return false;
+  }
+
+  return true;
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_SIP_Subscription_Remove
+// 
+//  Purpose:
+//    Removes a subscription.
+// 
+//  Parameters:
+//    - pl_subscriptionIdx - *in* *integer* - the index pointing to the subscription in the subscription database
+// 
+///////////////////////////////////////////////////////////
+function f_EPTF_SIP_Subscription_Remove(in integer pl_subscriptionIdx)
+runs on EPTF_SIP_LGen_CT
+{
+  if(c_EPTF_Common_debugSwitch and f_SIP_Logging_debugEnabled()) {
+    f_SIP_Logging_DEBUG(log2str(%definitionId,": removed subscription with id ", pl_subscriptionIdx)); 
+  }
+  var charstring vl_str;
+  
+  f_EPTF_SIP_eventType2str(v_db_subscription.supportedEventTypes[v_db_subscription.data[pl_subscriptionIdx].eventTypeIdx], vl_str);
+
+  f_EPTF_str2int_HashMap_Erase(v_db_subscription.hashRef,
+    v_db_subscription.data[pl_subscriptionIdx].callId & v_db_subscription.data[pl_subscriptionIdx].localTag & vl_str &
+        v_db_subscription.data[pl_subscriptionIdx].eventId);
+
+  f_EPTF_FBQ_moveFromBusyToFreeTail(pl_subscriptionIdx, v_db_subscription.queue);
+
+//  v_db_subscription.data[pl_subscriptionIdx] := c_SIP_SubscriptionData_init; -- removed for speed optimization
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_checkSubsctiption
+//
+//Purpose:  
+//  Checks if a subscription index is still valid in the v_db_subscription database.
+//
+//Parameters:
+//  - pl_subscriptionIdx - *in* *integer* - the index of the subscription
+//
+//Return value:
+//  boolean - true if valid
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_checkSubsctiption(in integer pl_subscriptionIdx)
+runs on EPTF_SIP_LGen_CT
+return boolean
+{
+  if (pl_subscriptionIdx < 0 or pl_subscriptionIdx>= sizeof(v_db_subscription.data) or
+    f_EPTF_FBQ_itemIsFree(pl_subscriptionIdx, v_db_subscription.queue))
+  {
+    return false;
+  }
+
+  return true;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_stateInt2Str
+//
+//Purpose:
+//  Converts the state of the subscription into a character string.
+//
+//Parameters:
+//  - pl_stateInt - *in* *integer* - the index of the state
+//  - pl_stateStr - *inout* *charstring* - the character string
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_stateInt2Str(in integer pl_stateInt, inout charstring pl_stateStr)
+{
+  if (pl_stateInt < sizeof(c_SIP_SubscriptionState_List))
+  {
+    pl_stateStr := c_SIP_SubscriptionState_List[pl_stateInt];
+  }else{
+    pl_stateStr := "";
+  }
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_str2StateInt
+//
+//Purpose:
+//  Converts the state of the subscription into an integer.
+//
+//Parameters:
+//  - pl_stateStr - *in* *charstring* - the character string
+//  - pl_stateInt - *inout* *integer* - the index of the state
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_str2StateInt(in charstring pl_stateStr, inout integer pl_stateInt)
+{
+  if ("terminated" == pl_stateStr)
+  {
+    pl_stateInt := c_SIP_Subscribe_State_terminated;
+
+  }else if ("pending" == pl_stateStr)
+  {
+    pl_stateInt := c_SIP_Subscribe_State_pending;
+  }else if ("active" == pl_stateStr)
+  {
+    pl_stateInt := c_SIP_Subscribe_State_active;
+  }else{
+    pl_stateInt := -1;
+  }
+  
+  
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_eventType2str
+//
+//Purpose:
+//  Converts an <Event_type> to a character string.
+//
+//Parameters:
+//  - pl_eventType - *in* <Event_type> - the event type
+//  - pl_eventStr - *inout* *charstring* - the character string
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_eventType2str(in Event_type pl_eventType, inout charstring pl_eventStr)
+{
+  pl_eventStr := pl_eventType.event_package;
+  
+  if (ispresent(pl_eventType.event_templates))
+  {
+    for (var integer i := 0; i < sizeof(pl_eventType.event_templates); i := i + 1)
+    {
+      pl_eventStr := pl_eventStr & "." & pl_eventType.event_templates[i];
+    }
+  }
+}
+
+}//end of module
+with {
+extension "version <RnXnn>"
+}
+

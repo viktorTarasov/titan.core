@@ -1,0 +1,627 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_CLL_DataSource_Definitions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 512
+//  Updated:  2013-03-05
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////
+//  Module: EPTF_CLL_DataSource_Definitions
+// 
+//  Purpose:
+//    This module contains type definitions for EPTF_DataSource implementation.
+// 
+//  Module depends on:
+//    <EPTF_CLL_Base_Definitions>
+//    <EPTF_CLL_Common_Definitions>
+//    <EPTF_CLL_Semaphore_Definitions>
+//    <EPTF_CLL_Variable_Definitions>
+//    <EPTF_CLL_HashMap_Definitions>
+//    <EPTF_CLL_CLI_Definitions>
+// 
+//  Module Parameters:
+//    tsp_EPTF_DataSource_subscriptionMode - <EPTF_Var_SubscriptionMode> - The default subscription mode
+//     in the <f_EPTF_DataSource_getData> function. Default value is sampled
+//    tsp_EPTF_DataSource_refreshRate - integer - the default value of the refresh rate in the function
+//      <f_EPTF_DataSource_getData>. The default value is -1
+//    tsp_EPTF_Config_Scenario2EntityGroupList - <EPTF_Config_ScenarioInstanceTypeList> - Scenario-EntityGroup assignment
+//
+//  Current Owner:
+//    Jozsef Gyurusi (ethjgi)
+// 
+//  Last Review Date:
+//    2011-02-03
+//
+//  Detailed Comments:
+//    This module contains type definitions for EPTF_CLL_DataSource implementation.
+//
+///////////////////////////////////////////////////////////////
+
+module EPTF_CLL_DataSource_Definitions {
+
+import from EPTF_CLL_Logging_Definitions all;
+import from EPTF_CLL_Base_Definitions all;
+import from EPTF_CLL_Common_Definitions all;
+import from EPTF_CLL_Semaphore_Definitions all;
+import from EPTF_CLL_Variable_Definitions all;
+import from EPTF_CLL_HashMap_Definitions all;
+import from EPTF_CLL_CLI_Definitions all;
+
+modulepar EPTF_Var_SubscriptionMode tsp_EPTF_DataSource_subscriptionMode := sampled;
+modulepar integer tsp_EPTF_DataSource_refreshRate := -1;
+modulepar float tsp_EPTF_DataSource_maxWaitTime := 10.0;
+modulepar float tsp_EPTF_DataSourceClient_maxWaitTime := 10.0;
+
+
+///////////////////////////////////////////////////////////////////////
+//   DataSource "server"
+///////////////////////////////////////////////////////////////////////
+
+// group EPTF_DataSource_CT
+group EPTF_DataSource_CT {
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Constant: c_EPTF_DataSource_sourceId
+//
+// Purpose:
+//   This is the source ID of the dataElements of the DataSource feature.
+//
+///////////////////////////////////////////////////////////////////////////////
+const charstring c_EPTF_DataSource_sourceId := "DataSource";
+
+///////////////////////////
+// Conditions
+///////////////////////////
+group Conditions {
+
+///////////////////////////////////////////////////////////////////////////////
+// Constant: c_EPTF_DataSource_condition_equal
+//
+// Purpose:
+//   This condition tests if the value of the first argument is the same
+//   as of the second
+//
+// Parameters:
+//   Two parameters (not sorted by their names!) with any type
+//
+///////////////////////////////////////////////////////////////////////////////
+const charstring c_EPTF_DataSource_condition_equal := "==";
+
+///////////////////////////////////////////////////////////////////////////////
+// Constant: c_EPTF_DataSource_condition_notEqual
+//
+// Purpose:
+//   This condition tests if the value of the first argument is differs
+//   from the second
+//
+// Parameters:
+//   Two parameters (not sorted by their names!) with any type
+//
+///////////////////////////////////////////////////////////////////////////////
+const charstring c_EPTF_DataSource_condition_notEqual := "!=";
+
+///////////////////////////////////////////////////////////////////////////////
+// Constant: c_EPTF_DataSource_condition_more
+//
+// Purpose:
+//   This condition tests if the value of the first argument is more than the second
+//
+// Parameters:
+//   Two parameters (not sorted by their names!) with any type
+//
+///////////////////////////////////////////////////////////////////////////////
+const charstring c_EPTF_DataSource_condition_more := ">";
+
+///////////////////////////////////////////////////////////////////////////////
+// Constant: c_EPTF_DataSource_condition_notLess
+//
+// Purpose:
+//   This condition tests if the value of the first argument is more or equal
+//   than the second
+//
+// Parameters:
+//   Two parameters (not sorted by their names!) with float type
+//
+///////////////////////////////////////////////////////////////////////////////
+const charstring c_EPTF_DataSource_condition_notLess := ">=";
+
+///////////////////////////////////////////////////////////////////////////////
+// Constant: c_EPTF_DataSource_condition_less
+//
+// Purpose:
+//   This condition tests if the value of the first argument is less
+//   than the second
+//
+// Parameters:
+//   Two parameters (not sorted by their names!) with float type
+//
+///////////////////////////////////////////////////////////////////////////////
+const charstring c_EPTF_DataSource_condition_less := "<";
+
+///////////////////////////////////////////////////////////////////////////////
+// Constant: c_EPTF_DataSource_condition_notMore
+//
+// Purpose:
+//   This condition tests if the value of the first argument is less or equal
+//   than the second
+//
+// Parameters:
+//   Two parameters (not sorted by their names!) with float type
+//
+///////////////////////////////////////////////////////////////////////////////
+const charstring c_EPTF_DataSource_condition_notMore := "<=";
+
+///////////////////////////////////////////////////////////////////////////////
+// Constant: c_EPTF_DataSource_condition_match
+//
+// Purpose:
+//   This condition tests if the value of the first argument matches
+//   the second
+//
+// Parameters:
+//   Two parameters (not sorted by their names!) with float type
+//   The ttcn match function is called for the given arguments in order.
+//   The second parameter used as a pattern string for matching.
+//
+///////////////////////////////////////////////////////////////////////////////
+const charstring c_EPTF_DataSource_condition_match := "match";
+
+///////////////////////////////////////////////////////////////////////////////
+// Constant: c_EPTF_DataSource_condition_notMatch
+//
+// Purpose:
+//   This condition tests if the value of the first argument does not match
+//   the second
+//
+// Parameters:
+//   Two parameters (not sorted by their names!) with float type
+//   The ttcn 'not match' function is called for the given arguments in order.
+//   The second parameter used as a pattern string for matching.
+//
+///////////////////////////////////////////////////////////////////////////////
+const charstring c_EPTF_DataSource_condition_notMatch := "not match";
+
+///////////////////////////////////////////////////////////////////////////////
+// Constant: c_EPTF_DataSource_condition_and
+//
+// Purpose:
+//   This condition returns the logical 'and' of the arguments
+//
+// Parameters:
+//   Two parameters (not sorted by their names!) with boolean type
+//   The ttcn 'and' operator is called for the given arguments in order.
+//
+///////////////////////////////////////////////////////////////////////////////
+const charstring c_EPTF_DataSource_condition_and := "and";
+
+///////////////////////////////////////////////////////////////////////////////
+// Constant: c_EPTF_DataSource_condition_or
+//
+// Purpose:
+//   This condition returns the logical 'or' of the arguments
+//
+// Parameters:
+//   Two parameters (not sorted by their names!) with boolean type
+//   The ttcn 'or' operator is called for the given arguments in order.
+//
+///////////////////////////////////////////////////////////////////////////////
+const charstring c_EPTF_DataSource_condition_or := "or";
+
+///////////////////////////////////////////////////////////////////////////////
+// Constant: c_EPTF_DataSource_condition_not
+//
+// Purpose:
+//   This condition returns the logical 'not' of the argument
+//
+// Parameters:
+//   One parameter (not sorted by their names!) with boolean type
+//
+///////////////////////////////////////////////////////////////////////////////
+const charstring c_EPTF_DataSource_condition_not := "not";
+
+///////////////////////////////////////////////////////////////////////////////
+// Constant: c_EPTF_DataSource_condition_dataElementPresent
+//
+// Purpose:
+//   This condition returns the true if the specified dataElement is present
+//
+// Parameters:
+//   - <c_EPTF_DataSource_paramNameSource> - the data source
+//   - <c_EPTF_DataSource_paramNamePTCName> - the PTC name (optional)
+//   - <c_EPTF_DataSource_paramNameElement> - the Element
+//   Followed by an optional list of the pairs:
+//   - <c_EPTF_DataSource_paramNameParamName> - the ParamName
+//   - <c_EPTF_DataSource_paramNameParamValue> - the ParamValue
+//
+///////////////////////////////////////////////////////////////////////////////
+const charstring c_EPTF_DataSource_condition_dataElementPresent := "dataElementPresent";
+
+} // group Conditions
+
+///////////////////////////////////////////////////////////////////////////////
+// Constants for Data Elements
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+// Constant: c_EPTF_DataSource_externalDataVar_prefix
+//
+// Purpose:
+//   This is the prefix for DataSource externalData variables
+//
+///////////////////////////////////////////////////////////////////////////////
+const charstring c_EPTF_DataSource_externalDataVar_prefix := c_EPTF_DataSource_sourceId&"_var_";
+
+
+///////////////////////////
+// Iterators 
+//   These are dataElements with value type: charstringlist
+///////////////////////////
+group Iterators {
+
+///////////////////////////////////////////////////////////////////////////////
+// Constant: c_EPTF_DataSource_dataElement_Sources
+//
+// Purpose:
+//   This iterator enlists the data sources that have registered into the DataSource
+//   ValueType: charstringlist
+//
+// Parameters:
+//   -
+//
+///////////////////////////////////////////////////////////////////////////////
+const charstring c_EPTF_DataSource_dataElement_Sources := "Sources"
+
+} // group Iterators
+
+///////////////////////////
+// DataElements
+///////////////////////////
+group DataElements {
+
+///////////////////////////////////////////////////////////////////////////////
+// Constant: c_EPTF_DataSource_dataElement_PTCs
+//
+// Purpose:
+//   This data element returns the list of PTCs for a given data source
+//   ValueType: charstringlist
+//
+// Parameters:
+//   - <c_EPTF_DataSource_paramNameSource> - the data source
+//
+///////////////////////////////////////////////////////////////////////////////
+const charstring c_EPTF_DataSource_dataElement_PTCs := "PTCs";
+
+} // group DataElements
+
+///////////////////////////
+// ParamNames
+///////////////////////////
+group ParamNames {
+
+///////////////////////////////////////////////////////////////////////////////
+// Constant: c_EPTF_DataSource_paramNameSource
+//
+// Purpose:
+//   Specifies a data source
+//
+///////////////////////////////////////////////////////////////////////////////
+const charstring c_EPTF_DataSource_paramNameSource := "Source";
+
+///////////////////////////////////////////////////////////////////////////////
+// Constant: c_EPTF_DataSource_paramNamePTCName
+//
+// Purpose:
+//   Specifies a PTCName parameter name
+//
+///////////////////////////////////////////////////////////////////////////////
+const charstring c_EPTF_DataSource_paramNamePTCName := "PTCName";
+
+///////////////////////////////////////////////////////////////////////////////
+// Constant: c_EPTF_DataSource_paramNameElement
+//
+// Purpose:
+//   Specifies an Element parameter
+//
+///////////////////////////////////////////////////////////////////////////////
+const charstring c_EPTF_DataSource_paramNameElement := "Element";
+
+///////////////////////////////////////////////////////////////////////////////
+// Constant: c_EPTF_DataSource_paramNameParamName
+//
+// Purpose:
+//   Specifies a ParamName
+//
+///////////////////////////////////////////////////////////////////////////////
+const charstring c_EPTF_DataSource_paramNameParamName := "ParamName";
+
+///////////////////////////////////////////////////////////////////////////////
+// Constant: c_EPTF_DataSource_paramNameParamValue
+//
+// Purpose:
+//   Specifies a ParamValue
+//
+///////////////////////////////////////////////////////////////////////////////
+const charstring c_EPTF_DataSource_paramNameParamValue := "ParamValue";
+
+} // group ParamNames
+
+type record EPTF_DataSource_Msg_RegisterData {
+  charstring dataSource,
+  charstring ptcName
+}
+
+type record EPTF_DataSource_Param {
+  charstring paramName,
+  charstring paramValue
+}
+
+type record of EPTF_DataSource_Param EPTF_DataSource_Params;
+
+type record EPTF_DataSource_Msg_GetData {
+  integer transactionId,
+  charstring dataSource,
+  charstring ptcName,
+  charstring dataElement,
+  EPTF_DataSource_Params params
+}
+
+type record EPTF_DataSource_Msg_DataValue {
+  integer transactionId,
+  charstring dataSource,
+  charstring ptcName,
+  charstring dataElement,
+  EPTF_DataSource_Params params,
+  charstring dataVarName,
+  integer errorCode,
+  EPTF_Var_CT/*EPTF_DataSourceClient_CT*/ ownerCompRef // used only between Server -> Client direction for forwarding subscription to the source component directly
+}
+
+type record EPTF_DataSource_Msg_ReadyEvent {
+  charstring dataSource,
+  charstring ptcName
+}
+
+type record EPTF_DataSource_Msg_GetCondition {
+  integer transactionId,
+  charstring dataSource,
+  charstring ptcName,
+  charstring method,
+  EPTF_DataSource_Params params
+}
+
+type record EPTF_DataSource_Msg_ConditionValue {
+  integer transactionId,
+  charstring dataSource,
+  charstring ptcName,
+  charstring dataElement,
+  EPTF_DataSource_Params params,
+  boolean conditionValue,
+  integer errorCode
+}
+
+type union EPTF_DataSource_Msg {
+  EPTF_DataSource_Msg_RegisterData registerData,        // Client -> Server
+  EPTF_DataSource_Msg_GetData      getData,             // Client <- Server, Server <- Client
+  EPTF_DataSource_Msg_DataValue    dataValue,           // Client -> Server, Server -> Client
+  EPTF_DataSource_Msg_GetCondition getCondition,        // Client <- Server, Server <- Client
+  EPTF_DataSource_Msg_ConditionValue conditionValue,    // Client -> Server, Server -> Client
+  EPTF_DataSource_Msg_ReadyEvent   clientReady          // Client -> Server
+}
+
+type port EPTF_DataSource_PT message {
+  inout EPTF_DataSource_Msg;
+} with {extension "internal"}
+
+
+type record EPTF_DataSource_DataHandler {
+  charstring dataSource,
+  charstring ptcName,
+  EPTF_DataSourceClient_CT ownerCompRef
+}
+
+type function EPTF_DataSource_Ready_FT(
+  in charstring pl_source,
+  in charstring pl_ptcName) runs on self;
+  
+type record of EPTF_DataSource_Ready_FT EPTF_DataSource_Ready_FT_List;
+
+type record EPTF_DataSource_DataValue {
+  charstring dataVarName
+}
+
+type record of EPTF_DataSource_DataHandler EPTF_DataSource_DataHandler_List;
+
+type record of EPTF_DataSource_Msg EPTF_DataSource_Msg_List;
+
+type record of EPTF_DataSource_DataValue EPTF_DataSource_DataValue_List;
+
+const charstring c_EPTF_DataSource_dataHandlerHashName_NoPTCName := "c_EPTF_DataSource_dataHandlerHashName_NoPTCName";
+const charstring c_EPTF_DataSource_dataHandlerHashName := "c_EPTF_DataSource_dataHandlerHashName";
+const charstring c_EPTF_DataSource_dataValueHashName := "c_EPTF_DataSource_dataValueHashName";
+
+type function f_EPTF_DataSource_DScheckParams_FT(
+  in EPTF_DataSource_Params pl_params
+) runs on self return integer;
+
+// Commandline interface commands:
+group CLI {
+
+const charstring c_EPTF_DataSource_CLI_commandName := "ds";
+const charstring c_EPTF_DataSource_CLI_commandHelp := "executes DataSource commands"
+
+} //group CLI
+
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_DataSource_CT
+// 
+//  Purpose:
+//    The component type of the DataSource
+//
+//  Detailed Comments:
+//    Value for data sources and condition can be requested
+//    from this component
+///////////////////////////////////////////////////////////
+type component EPTF_DataSource_CT extends EPTF_Base_CT, EPTF_Semaphore_CT, EPTF_Var_CT, EPTF_HashMap_CT {
+  private var boolean v_EPTF_DataSource_initialized := false;
+  private port EPTF_DataSource_PT EPTF_DataSourceIf;
+  private var default v_DataSource_handler := null;
+  private var integer v_EPTF_DataSource_DataHandlerHash_NoPTCName := -1; // hashmap that belongs to v_EPTF_DataSource_DataHandler_List, PTCName is ignored
+  private var integer v_EPTF_DataSource_DataHandlerHash := -1; // hashmap that belongs to v_EPTF_DataSource_DataHandler_List
+  private var EPTF_DataSource_DataHandler_List v_EPTF_DataSource_DataHandler_List := {}; // database for the data handlers
+  private var integer v_EPTF_DataSource_dataValueHash := -1; // hashmap that belongs to v_EPTF_DataSource_dataValue_List
+  private var EPTF_DataSource_DataValue_List v_EPTF_DataSource_dataValue_List := {}; // stores the values of the data that was successfully requested before
+  private var EPTF_DataSource_Msg_List v_EPTF_DataSource_Msg_List := {}; // message buffer
+  private var EPTF_DataSource_Ready_FT_List v_EPTF_DataSource_ready_functions := {}; //list of registered functions that need to be notified
+}
+
+} // group EPTF_DataSource_CT
+
+///////////////////////////////////////////////////////////////////////
+//   DataSource CLI
+///////////////////////////////////////////////////////////////////////
+
+group EPTF_DataSource_CLI_CT {
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_DataSource_CLI_CT
+// 
+//  Purpose:
+//    The component type of the DataSource extended with Command Line Interface support
+//
+//  Detailed Comments:
+//    Value for data sources and condition can be requested
+//    from this component also from the command line interface
+///////////////////////////////////////////////////////////
+type component EPTF_DataSource_CLI_CT extends EPTF_DataSource_CT, EPTF_CLI_Client_CT {
+}
+
+} //group EPTF_DataSource_CLI_CT
+
+///////////////////////////////////////////////////////////////////////
+//   DataSource CLIENT
+///////////////////////////////////////////////////////////////////////
+
+group EPTF_DataSourceClient_CT {
+
+
+type record of fcb_EPTF_DataSourceClient_dataHandler fcb_EPTF_DataSourceClient_dataHandler_List;
+type record of fcb_EPTF_DataSourceClient_conditionHandler fcb_EPTF_DataSourceClient_conditionHandler_List;
+
+const charstring c_EPTF_DataSourceClient_dataHandlerHashName := "c_EPTF_DataSourceClient_dataHandlerHashName";
+const charstring c_EPTF_DataSourceClient_dataValueHashName := "c_EPTF_DataSourceClient_dataValueHashName";
+
+type record EPTF_DataSourceClient_DataValue {
+  charstring dataVarName,
+  EPTF_Var_CT ownerCompRef // EPTF_Var_CT needed instead of EPTF_DataSourceClient_CT because EPTF_DataSource_CT can be a source an well
+}
+
+type record of EPTF_DataSourceClient_DataValue EPTF_DataSourceClient_DataValue_List;
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_DataSourceClient_CT
+// 
+//  Purpose:
+//    The component type of the DataSource Client
+//
+//  Detailed Comments:
+//    The DataSource Client component can register data sources
+//    and conditions.
+///////////////////////////////////////////////////////////
+type component EPTF_DataSourceClient_CT extends EPTF_Base_CT, EPTF_Var_CT, EPTF_Logging_CT, EPTF_HashMap_CT, EPTF_Semaphore_CT {
+  private var boolean v_EPTF_DataSourceClient_initialized := false;
+  private port EPTF_DataSource_PT EPTF_DataSourceClientIf;
+  private var default v_DataSourceClient_handler := null;
+  private var integer v_EPTF_DataSourceClient_dataHandlerHash := -1; // hashmap that belongs to v_fcb_EPTF_DataSourceClient_dataHandler_List
+  private var fcb_EPTF_DataSourceClient_dataHandler_List v_fcb_EPTF_DataSourceClient_dataHandler_List := {}; // database for the data handlers
+  private var fcb_EPTF_DataSourceClient_conditionHandler_List v_fcb_EPTF_DataSourceClient_conditionHandler_List := {}; // database for the condition handlers
+
+  private var integer v_EPTF_DataSourceClient_dataValueHash := -1; // hashmap that belongs to v_EPTF_DataSource_dataValue_List
+  private var EPTF_DataSourceClient_DataValue_List v_EPTF_DataSourceClient_dataValue_List := {}; // stores the values of the data that was successfully requested before
+  private var EPTF_DataSource_Msg_List v_EPTF_DataSourceClient_Msg_List := {}; // message buffer
+  private var boolean v_EPTF_DataSourceClient_connected := false; // true if connection to dataSource exists
+}
+
+
+///////////////////////////////////////////////////////////
+//  Function: fcb_EPTF_DataSourceClient_dataHandler
+// 
+//  Purpose:
+//    Callback function type to handle registered data
+//
+//  Parameters:
+//    *out charstring pl_dataVarName* - this variable
+//      contains the value of the data  (e.g 2.5)
+//    *in charstring pl_source* - the name of the data source 'feature' (e.g. "LGenBase")
+//    *in charstring pl_ptcName* - the name of the ptc (ID of the PTC) (e.g. "LGen1")  
+//    *in charstring pl_element* - the name of the data element (e.g. "TC_CPS")
+//    *in* <EPTF_DataSource_Params> *pl_params* - the parameters
+//      of the data for the dataElement (e.g. "EG1.SC2.TC3" <= TC ID)
+//
+//  Return Value:
+//    integer - error code (0 of OK, non zero if unsuccessful:
+//     e.g. invalid parameters given in pl_params)
+//
+//  Detailed Comments:
+//    This function is called when <f_EPTF_DataSource_getData> is requested
+//    for the specified pl_source and pl_ptcName.
+//    Its return value (error code) and pl_dataVarName is forwarded
+//    to <f_EPTF_DataSource_getData>.
+//    When this function is called for the first time
+//    it may create the variable that contains the
+//    names of the variables that store the values
+//    of the elements of the data. This variable name
+//    is returned in pl_dataVarName.
+///////////////////////////////////////////////////////////
+type function fcb_EPTF_DataSourceClient_dataHandler(
+  out charstring pl_dataVarName,
+  in charstring pl_source,
+  in charstring pl_ptcName,
+  in charstring pl_element,
+  in EPTF_DataSource_Params pl_params
+) runs on self return integer;
+
+///////////////////////////////////////////////////////////
+//  Function: fcb_EPTF_DataSourceClient_conditionHandler
+// 
+//  Purpose:
+//    Callback function type to handle registered data
+//
+//  Parameters:
+//    *out boolean pl_conditionValue* - this argument
+//      contains the value of the condition
+//    *in charstring pl_source* - the name of the data source 'feature' (e.g. "LGenBase")
+//    *in charstring pl_ptcName* - the name of the ptc (ID of the PTC) (e.g. "LGen1")  
+//    *in charstring pl_method* - the name of the method (e.g. "isWeightedScenario")
+//    *in* <EPTF_DataSource_Params> *pl_params* - the parameters
+//      of the data for the dataElement (e.g. "EG1.SC2.TC3" <= TC ID)
+//
+//  Return Value:
+//    integer - error code (0 of OK, non zero if unsuccessful:
+//     e.g. invalid parameters given in pl_params)
+//
+//  Detailed Comments:
+//    This function is called when <f_EPTF_DataSource_getCondition> is requested
+//    for the specified pl_source,pl_ptcName and pl_method.
+//    Its return value (error code) and pl_conditionValue is forwarded
+//    to <f_EPTF_DataSource_getCondition>.
+///////////////////////////////////////////////////////////
+type function fcb_EPTF_DataSourceClient_conditionHandler(
+  out boolean pl_conditionValue,
+  in charstring pl_source,
+  in charstring pl_ptcName,
+  in charstring pl_method,
+  in EPTF_DataSource_Params pl_params
+) runs on self return integer;
+
+} // group EPTF_DataSourceClient_CT
+
+} // module EPTF_CLL_DataSource_Definitions

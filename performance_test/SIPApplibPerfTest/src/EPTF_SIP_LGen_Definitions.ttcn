@@ -1,0 +1,1529 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_SIP_LGen_Definitions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 522
+//  Updated:  2012-11-28
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////
+//  Module: EPTF_SIP_LGen_Definitions
+// 
+//  Purpose:
+//    Type definitions that are used in the SIP AppLib.
+// 
+//  Module Parameters:
+//    - tsp_SIP_maxBindableBCtx - *integer* - The maximum number of 
+//        bindable behaviour contexts. Default value: -1
+// 
+//  Module depends on:
+//    <EPTF_CLL_Common_Definitions>
+//
+//    <EPTF_CLL_LGenBase_Definitions>
+//
+//    <EPTF_CLL_Logging_Definitions>
+//
+//    <EPTF_SIP_Common_Definitions>
+//
+//    <EPTF_SIP_Dialog_Definitions>
+//
+//    <EPTF_SIP_EventNotification_Definitions>
+//
+//    <EPTF_SIP_Publish_Definitions>
+//
+//    <EPTF_SIP_Transaction_Definitions>
+//
+//    <EPTF_SIP_UserDatabase_Definitions>
+//
+//    <Socket_API_Definitions>
+//
+//    <SIPmsg_Types>
+//
+//    <TCCIPsec_Definitions>
+//
+//    <TCCSecurity_Functions>
+//
+//  Last review date:
+//    2012-11-08
+///////////////////////////////////////////////////////////
+module EPTF_SIP_LGen_Definitions {
+
+import from EPTF_CLL_Common_Definitions all;
+import from EPTF_CLL_LGenBase_Definitions all;
+import from EPTF_CLL_Logging_Definitions all;
+
+import from EPTF_SIP_Common_Definitions all;
+import from EPTF_SIP_Dialog_Definitions all;
+import from EPTF_SIP_EventNotification_Definitions all;
+import from EPTF_SIP_Publish_Definitions all;
+import from EPTF_SIP_Transaction_Definitions all;
+import from EPTF_SIP_UserDatabase_Definitions all;
+
+import from Socket_API_Definitions all;
+
+import from SIPmsg_Types all;
+
+import from TCCIPsec_Definitions all;
+
+import from TCCSecurity_Functions all;
+
+modulepar integer tsp_SIP_maxBindableBCtx := -1;
+
+modulepar boolean tsp_SIP_debugLogging := false; // obsolete, use tsp_EPTF_SIP_debugEnabled
+
+modulepar boolean tsp_SIP_responseStatEnabled := false;
+
+modulepar boolean tsp_SIP_automaticProxyMode := true;
+
+modulepar integer tsp_EPTF_SIP_maxRequestTemplates  := 5;
+modulepar integer tsp_EPTF_SIP_maxResponseTemplates := 5;
+
+modulepar integer tsp_EPTF_SIP_maxEventIndices := c_EPTF_SIP_maxEventIndices;
+
+///////////////////////////////////////////////////////////
+// Constant: c_SIP_myBName
+//
+// Description:
+//  SIP Application Library behaviour name.
+///////////////////////////////////////////////////////////
+
+const charstring c_SIP_myBName := "Behavior_SIP"
+
+const integer c_SIP_stepIdx_createREGISTER := 0;
+const charstring c_SIP_stepName_createREGISTER := c_SIP_stepFunction_createREGISTER
+const charstring c_SIP_stepFunction_createREGISTER := "SIPAppLib: StepFunction_createREGISTER";
+
+const integer c_SIP_stepIdx_createINVITE := 1;
+const charstring c_SIP_stepName_createINVITE := c_SIP_stepFunction_createINVITE
+const charstring c_SIP_stepFunction_createINVITE := "SIPAppLib: StepFunction_createINVITE";
+
+const integer c_SIP_stepIdx_createResponse := 2;
+const charstring c_SIP_stepName_createResponse := c_SIP_stepFunction_createResponse
+const charstring c_SIP_stepFunction_createResponse := "SIPAppLib: StepFunction_createResponse";
+
+const integer c_SIP_stepIdx_createACK := 3;
+const charstring c_SIP_stepName_createACK := c_SIP_stepFunction_createACK
+const charstring c_SIP_stepFunction_createACK := "SIPAppLib: StepFunction_createACK";
+
+const integer c_SIP_stepIdx_createBYE := 4;
+const charstring c_SIP_stepName_createBYE := c_SIP_stepFunction_createBYE
+const charstring c_SIP_stepFunction_createBYE := "SIPAppLib: StepFunction_createBYE";
+
+const integer c_SIP_stepIdx_handleINVITE := 5;
+const charstring c_SIP_stepName_handleINVITE := c_SIP_stepFunction_handleINVITE
+const charstring c_SIP_stepFunction_handleINVITE := "SIPAppLib: StepFunction_handleINVITE";
+
+const integer c_SIP_stepIdx_handleBYE := 6;
+const charstring c_SIP_stepName_handleBYE := c_SIP_stepFunction_handleBYE
+const charstring c_SIP_stepFunction_handleBYE := "SIPAppLib: StepFunction_handleBYE";
+
+const integer c_SIP_stepIdx_createMESSAGE := 7;
+const charstring c_SIP_stepName_createMESSAGE := c_SIP_stepFunction_createMESSAGE
+const charstring c_SIP_stepFunction_createMESSAGE := "SIPAppLib: StepFunction_createMESSAGE";
+
+const integer c_SIP_stepIdx_createCANCEL := 8;
+const charstring c_SIP_stepName_createCANCEL := c_SIP_stepFunction_createCANCEL
+const charstring c_SIP_stepFunction_createCANCEL := "SIPAppLib: StepFunction_createCANCEL";
+
+const integer c_SIP_stepIdx_createDEREGISTER := 9;
+const charstring c_SIP_stepName_createDEREGISTER := c_SIP_stepFunction_createDEREGISTER
+const charstring c_SIP_stepFunction_createDEREGISTER := "SIPAppLib: StepFunction_createDEREGISTER";
+
+const integer c_SIP_stepIdx_handleMESSAGE := 10;
+const charstring c_SIP_stepName_handleMESSAGE := c_SIP_stepFunction_handleMESSAGE
+const charstring c_SIP_stepFunction_handleMESSAGE := "SIPAppLib: StepFunction_handleMESSAGE";
+
+const integer c_SIP_stepIdx_handleCANCEL := 11;
+const charstring c_SIP_stepName_handleCANCEL := c_SIP_stepFunction_handleCANCEL
+const charstring c_SIP_stepFunction_handleCANCEL := "SIPAppLib: StepFunction_handleCANCEL";
+
+const integer c_SIP_stepIdx_createSUBSCRIBE := 12;
+const charstring c_SIP_stepName_createSUBSCRIBE := c_SIP_stepFunction_createSUBSCRIBE
+const charstring c_SIP_stepFunction_createSUBSCRIBE := "SIPAppLib: StepFunction_createSUBSCRIBE";
+
+const integer c_SIP_stepIdx_refreshSUBSCRIBE := 13;
+const charstring c_SIP_stepName_refreshSUBSCRIBE := c_SIP_stepFunction_refreshSUBSCRIBE
+const charstring c_SIP_stepFunction_refreshSUBSCRIBE := "SIPAppLib: StepFunction_refreshSUBSCRIBE";
+
+const integer c_SIP_stepIdx_removeSUBSCRIBE := 14;
+const charstring c_SIP_stepName_removeSUBSCRIBE := c_SIP_stepFunction_removeSUBSCRIBE
+const charstring c_SIP_stepFunction_removeSUBSCRIBE := "SIPAppLib: StepFunction_removeSUBSCRIBE";
+
+const integer c_SIP_stepIdx_handleNOTIFY := 15;
+const charstring c_SIP_stepName_handleNOTIFY := c_SIP_stepFunction_handleNOTIFY
+const charstring c_SIP_stepFunction_handleNOTIFY := "SIPAppLib: StepFunction_handleNOTIFY";
+
+const integer c_SIP_stepIdx_createPUBLISH := 16;
+const charstring c_SIP_stepName_createPUBLISH := c_SIP_stepFunction_createPUBLISH
+const charstring c_SIP_stepFunction_createPUBLISH := "SIPAppLib: StepFunction_createPUBLISH";
+
+const integer c_SIP_stepIdx_refreshPUBLISH := 17;
+const charstring c_SIP_stepName_refreshPUBLISH := c_SIP_stepFunction_refreshPUBLISH
+const charstring c_SIP_stepFunction_refreshPUBLISH := "SIPAppLib: StepFunction_refreshPUBLISH";
+
+const integer c_SIP_stepIdx_modifyPUBLISH := 18;
+const charstring c_SIP_stepName_modifyPUBLISH := c_SIP_stepFunction_modifyPUBLISH
+const charstring c_SIP_stepFunction_modifyPUBLISH := "SIPAppLib: StepFunction_modifyPUBLISH";
+
+const integer c_SIP_stepIdx_removePUBLISH := 19;
+const charstring c_SIP_stepName_removePUBLISH := c_SIP_stepFunction_removePUBLISH
+const charstring c_SIP_stepFunction_removePUBLISH := "SIPAppLib: StepFunction_removePUBLISH";
+
+const integer c_SIP_stepIdx_disableGroupEvent := 20;
+const charstring c_SIP_stepName_disableGroupEvent := c_SIP_stepFunction_disableGroupEvent
+const charstring c_SIP_stepFunction_disableGroupEvent := "SIPAppLib: StepFunction_disableGroupEvent";
+
+const integer c_SIP_stepIdx_cleanUp := 21;
+const charstring c_SIP_stepName_cleanUp := c_SIP_stepFunction_cleanUp
+const charstring c_SIP_stepFunction_cleanUp := "SIPAppLib: StepFunction_cleanUp";
+
+const integer c_SIP_stepIdx_setRetryAfterTimer := 22;
+const charstring c_SIP_stepName_setRetryAfterTimer := c_SIP_stepFunction_setRetryAfterTimer
+const charstring c_SIP_stepFunction_setRetryAfterTimer := "SIPAppLib: StepFunction_setRetryAfterTimer";
+
+const integer c_SIP_stepIdx_rejectRequest := 23;
+const charstring c_SIP_stepName_rejectRequest := c_SIP_stepFunction_rejectRequest
+const charstring c_SIP_stepFunction_rejectRequest := "SIPAppLib: StepFunction_rejectRequest";
+
+const integer c_SIP_stepIdx_createNOTIFY := 24;
+const charstring c_SIP_stepName_createNOTIFY := c_SIP_stepFunction_createNOTIFY
+const charstring c_SIP_stepFunction_createNOTIFY := "SIPAppLib: StepFunction_createNOTIFY";
+
+const integer c_SIP_stepIdx_createREFER := 25;
+const charstring c_SIP_stepName_createREFER := c_SIP_stepFunction_createREFER
+const charstring c_SIP_stepFunction_createREFER := "SIPAppLib: StepFunction_createREFER";
+
+const integer c_SIP_stepIdx_handleREFER := 26;
+const charstring c_SIP_stepName_handleREFER := c_SIP_stepFunction_handleREFER
+const charstring c_SIP_stepFunction_handleREFER := "SIPAppLib: StepFunction_handleREFER";
+
+const integer c_SIP_stepIdx_init := 27;
+const charstring c_SIP_stepName_init := c_SIP_stepFunction_init
+const charstring c_SIP_stepFunction_init := "SIPAppLib: StepFunction_init";
+
+const integer c_SIP_stepIdx_handleREGISTER := 28;
+const charstring c_SIP_stepName_handleREGISTER := c_SIP_stepFunction_handleREGISTER
+const charstring c_SIP_stepFunction_handleREGISTER := "SIPAppLib: StepFunction_handleREGISTER";
+
+const integer c_SIP_stepIdx_createREFERinDialog := 29;
+const charstring c_SIP_stepName_createREFERinDialog := c_SIP_stepFunction_createREFERinDialog
+const charstring c_SIP_stepFunction_createREFERinDialog:= "SIPAppLib: StepFunction_createREFERinDialog";
+
+const integer c_SIP_stepIdx_createReINVITE := 30;
+const charstring c_SIP_stepName_createReINVITE := c_SIP_stepFunction_createReINVITE
+const charstring c_SIP_stepFunction_createReINVITE := "SIPAppLib: StepFunction_createReINVITE";
+
+const integer c_SIP_stepIdx_handleReINVITE := 31;
+const charstring c_SIP_stepName_handleReINVITE := c_SIP_stepFunction_handleReINVITE
+const charstring c_SIP_stepFunction_handleReINVITE := "SIPAppLib: StepFunction_handleReINVITE";
+
+const integer c_SIP_stepIdx_createUPDATE := 32;
+const charstring c_SIP_stepName_createUPDATE := c_SIP_stepFunction_createUPDATE
+const charstring c_SIP_stepFunction_createUPDATE := "SIPAppLib: StepFunction_createUPDATE";
+
+const integer c_SIP_stepIdx_handleUPDATE := 33;
+const charstring c_SIP_stepName_handleUPDATE := c_SIP_stepFunction_handleUPDATE
+const charstring c_SIP_stepFunction_handleUPDATE := "SIPAppLib: StepFunction_handleUPDATE";
+
+const integer c_SIP_stepIdx_createPRACK := 34;
+const charstring c_SIP_stepName_createPRACK := c_SIP_stepFunction_createPRACK
+const charstring c_SIP_stepFunction_createPRACK := "SIPAppLib: StepFunction_createPRACK";
+
+const integer c_SIP_stepIdx_handlePRACK := 35;
+const charstring c_SIP_stepName_handlePRACK := c_SIP_stepFunction_handlePRACK
+const charstring c_SIP_stepFunction_handlePRACK := "SIPAppLib: StepFunction_handlePRACK";
+
+const integer c_SIP_stepIdx_createOPTIONS := 36;
+const charstring c_SIP_stepName_createOPTIONS := c_SIP_stepFunction_createOPTIONS
+const charstring c_SIP_stepFunction_createOPTIONS := "SIPAppLib: StepFunction_createOPTIONS";
+
+const integer c_SIP_stepIdx_handleOPTIONS := 37;
+const charstring c_SIP_stepName_handleOPTIONS := c_SIP_stepFunction_handleOPTIONS
+const charstring c_SIP_stepFunction_handleOPTIONS := "SIPAppLib: StepFunction_handleOPTIONS";
+
+const integer c_SIP_stepIdx_handleRequest := 38;
+const charstring c_SIP_stepName_handleRequest := c_SIP_stepFunction_handleRequest
+const charstring c_SIP_stepFunction_handleRequest := "SIPAppLib: StepFunction_handleRequest";
+
+const integer c_SIP_stepIdx_createForwardedRequest := 39;
+const charstring c_SIP_stepName_createForwardedRequest := c_SIP_stepFunction_createForwardedRequest
+const charstring c_SIP_stepFunction_createForwardedRequest := "SIPAppLib: StepFunction_createForwardedRequest";
+
+const integer c_SIP_stepIdx_createRequestStateless := 40;
+const charstring c_SIP_stepName_createRequestStateless := c_SIP_stepFunction_createRequestStateless
+const charstring c_SIP_stepFunction_createRequestStateless := "SIPAppLib: StepFunction_createRequestStateless";
+
+const integer c_SIP_stepIdx_createForwardedACK := 41;
+const charstring c_SIP_stepName_createForwardedACK := c_SIP_stepFunction_createForwardedACK
+const charstring c_SIP_stepFunction_createForwardedACK := "SIPAppLib: StepFunction_createForwardedACK";
+
+const integer c_SIP_stepIdx_createForwardedResponse := 42;
+const charstring c_SIP_stepName_createForwardedResponse := c_SIP_stepFunction_createForwardedResponse
+const charstring c_SIP_stepFunction_createForwardedResponse := "SIPAppLib: StepFunction_createForwardedResponse";
+
+const integer c_SIP_stepIdx_cleanUpDynamicData := 43;
+const charstring c_SIP_stepName_cleanUpDynamicData := c_SIP_stepFunction_cleanUpDynamicData
+const charstring c_SIP_stepFunction_cleanUpDynamicData := "SIPAppLib: StepFunction_cleanUpDynamicData";
+
+const integer c_SIP_stepIdx_handleINFO := 44;
+const charstring c_SIP_stepName_handleINFO := c_SIP_stepFunction_handleINFO
+const charstring c_SIP_stepFunction_handleINFO := "SIPAppLib: StepFunction_handleINFO";
+
+const integer c_SIP_stepIdx_createINFO := 45;
+const charstring c_SIP_stepName_createINFO := c_SIP_stepFunction_createINFO
+const charstring c_SIP_stepFunction_createINFO := "SIPAppLib: StepFunction_createINFO";
+
+const integer c_SIP_stepIdx_handleSUBSCRIBE := 46;
+const charstring c_SIP_stepName_handleSUBSCRIBE := c_SIP_stepFunction_handleSUBSCRIBE
+const charstring c_SIP_stepFunction_handleSUBSCRIBE := "SIPAppLib: StepFunction_handleSUBSCRIBE";
+
+const integer c_SIP_stepIdx_handleTransportError := 47;
+const charstring c_SIP_stepName_handleTransportError := c_SIP_stepFunction_handleTransportError
+const charstring c_SIP_stepFunction_handleTransportError := "SIPAppLib: StepFunction_handleTransportError";
+
+const integer c_SIP_stepIdx_handlePUBLISH := 48;
+const charstring c_SIP_stepName_handlePUBLISH := c_SIP_stepFunction_handlePUBLISH
+const charstring c_SIP_stepFunction_handlePUBLISH := "SIPAppLib: StepFunction_handlePUBLISH";
+
+const integer c_SIP_stepIdx_sendRequest := 49;
+const charstring c_SIP_stepName_sendRequest := c_SIP_stepFunction_sendRequest;
+const charstring c_SIP_stepFunction_sendRequest := "SIPAppLib: StepFunction_sendRequest";
+
+const integer c_SIP_stepIdx_modifyRequestCallBack := 50;
+const charstring c_SIP_stepName_modifyRequestCallBack := c_SIP_stepFunction_modifyRequestCallBack;
+const charstring c_SIP_stepFunction_modifyRequestCallBack := "SIPAppLib: StepFunction_modifyRequestCallBack";
+
+const integer c_SIP_stepIdx_generateINVITE := 51;
+const charstring c_SIP_stepName_generateINVITE := c_SIP_stepFunction_generateINVITE;
+const charstring c_SIP_stepFunction_generateINVITE := "SIPAppLib: StepFunction_generateINVITE";
+
+const integer c_SIP_stepIdx_generateREGISTER := 52;
+const charstring c_SIP_stepName_generateREGISTER := c_SIP_stepFunction_generateREGISTER;
+const charstring c_SIP_stepFunction_generateREGISTER := "SIPAppLib: StepFunction_generateREGISTER";
+
+const integer c_SIP_stepIdx_generateDEREGISTER := 53;
+const charstring c_SIP_stepName_generateDEREGISTER := c_SIP_stepFunction_generateDEREGISTER;
+const charstring c_SIP_stepFunction_generateDEREGISTER := "SIPAppLib: StepFunction_generateDEREGISTER";
+
+const integer c_SIP_stepIdx_generateReINVITE := 54;
+const charstring c_SIP_stepName_generateReINVITE := c_SIP_stepFunction_generateReINVITE;
+const charstring c_SIP_stepFunction_generateReINVITE := "SIPAppLib: StepFunction_generateReINVITE";
+
+const integer c_SIP_stepIdx_generateUPDATE := 55;
+const charstring c_SIP_stepName_generateUPDATE := c_SIP_stepFunction_generateUPDATE;
+const charstring c_SIP_stepFunction_generateUPDATE := "SIPAppLib: StepFunction_generateUPDATE";
+
+const integer c_SIP_stepIdx_generateMESSAGE := 56;
+const charstring c_SIP_stepName_generateMESSAGE := c_SIP_stepFunction_generateMESSAGE;
+const charstring c_SIP_stepFunction_generateMESSAGE := "SIPAppLib: StepFunction_generateMESSAGE";
+
+const integer c_SIP_stepIdx_generateCANCEL := 57;
+const charstring c_SIP_stepName_generateCANCEL := c_SIP_stepFunction_generateCANCEL;
+const charstring c_SIP_stepFunction_generateCANCEL := "SIPAppLib: StepFunction_generateCANCEL";
+
+const integer c_SIP_stepIdx_generateSUBSCRIBE := 58;
+const charstring c_SIP_stepName_generateSUBSCRIBE := c_SIP_stepFunction_generateSUBSCRIBE;
+const charstring c_SIP_stepFunction_generateSUBSCRIBE := "SIPAppLib: StepFunction_generateSUBSCRIBE";
+
+const integer c_SIP_stepIdx_generateRefreshSUBSCRIBE := 59;
+const charstring c_SIP_stepName_generateRefreshSUBSCRIBE := c_SIP_stepFunction_generateRefreshSUBSCRIBE;
+const charstring c_SIP_stepFunction_generateRefreshSUBSCRIBE := "SIPAppLib: StepFunction_generateRefreshSUBSCRIBE";
+
+const integer c_SIP_stepIdx_generateRemoveSUBSCRIBE := 60;
+const charstring c_SIP_stepName_generateRemoveSUBSCRIBE := c_SIP_stepFunction_generateRemoveSUBSCRIBE;
+const charstring c_SIP_stepFunction_generateRemoveSUBSCRIBE := "SIPAppLib: StepFunction_generateRemoveSUBSCRIBE";
+
+const integer c_SIP_stepIdx_generateREFER := 61;
+const charstring c_SIP_stepName_generateREFER := c_SIP_stepFunction_generateREFER;
+const charstring c_SIP_stepFunction_generateREFER := "SIPAppLib: StepFunction_generateREFER";
+
+const integer c_SIP_stepIdx_generateREFERinDialog := 62;
+const charstring c_SIP_stepName_generateREFERinDialog := c_SIP_stepFunction_generateREFERinDialog;
+const charstring c_SIP_stepFunction_generateREFERinDialog := "SIPAppLib: StepFunction_generateREFERinDialog";
+
+const integer c_SIP_stepIdx_generatePUBLISH := 63;
+const charstring c_SIP_stepName_generatePUBLISH := c_SIP_stepFunction_generatePUBLISH;
+const charstring c_SIP_stepFunction_generatePUBLISH := "SIPAppLib: StepFunction_generatePUBLISH";
+
+const integer c_SIP_stepIdx_generateRefreshPUBLISH := 64;
+const charstring c_SIP_stepName_generateRefreshPUBLISH := c_SIP_stepFunction_generateRefreshPUBLISH;
+const charstring c_SIP_stepFunction_generateRefreshPUBLISH := "SIPAppLib: StepFunction_generateRefreshPUBLISH";
+
+const integer c_SIP_stepIdx_generateModifyPUBLISH := 65;
+const charstring c_SIP_stepName_generateModifyPUBLISH := c_SIP_stepFunction_generateModifyPUBLISH;
+const charstring c_SIP_stepFunction_generateModifyPUBLISH := "SIPAppLib: StepFunction_generateModifyPUBLISH";
+
+const integer c_SIP_stepIdx_generateRemovePUBLISH := 66;
+const charstring c_SIP_stepName_generateRemovePUBLISH := c_SIP_stepFunction_generateRemovePUBLISH;
+const charstring c_SIP_stepFunction_generateRemovePUBLISH := "SIPAppLib: StepFunction_generateRemovePUBLISH";
+
+const integer c_SIP_stepIdx_generateResponse := 67;
+const charstring c_SIP_stepName_generateResponse := c_SIP_stepFunction_generateResponse;
+const charstring c_SIP_stepFunction_generateResponse := "SIPAppLib: StepFunction_generateResponse";
+
+const integer c_SIP_stepIdx_generateACK := 68;
+const charstring c_SIP_stepName_generateACK := c_SIP_stepFunction_generateACK;
+const charstring c_SIP_stepFunction_generateACK := "SIPAppLib: StepFunction_generateACK";
+
+const integer c_SIP_stepIdx_generateBYE := 69;
+const charstring c_SIP_stepName_generateBYE := c_SIP_stepFunction_generateBYE;
+const charstring c_SIP_stepFunction_generateBYE := "SIPAppLib: StepFunction_generateBYE";
+
+const integer c_SIP_stepIdx_generateNOTIFY := 70;
+const charstring c_SIP_stepName_generateNOTIFY := c_SIP_stepFunction_generateNOTIFY;
+const charstring c_SIP_stepFunction_generateNOTIFY := "SIPAppLib: StepFunction_generateNOTIFY";
+
+const integer c_SIP_stepIdx_generatePRACK := 71;
+const charstring c_SIP_stepName_generatePRACK := c_SIP_stepFunction_generatePRACK;
+const charstring c_SIP_stepFunction_generatePRACK := "SIPAppLib: StepFunction_generatePRACK";
+
+const integer c_SIP_stepIdx_generateOPTIONS := 72;
+const charstring c_SIP_stepName_generateOPTIONS := c_SIP_stepFunction_generateOPTIONS;
+const charstring c_SIP_stepFunction_generateOPTIONS := "SIPAppLib: StepFunction_generateOPTIONS";
+
+const integer c_SIP_stepIdx_generateINFO := 73;
+const charstring c_SIP_stepName_generateINFO := c_SIP_stepFunction_generateINFO;
+const charstring c_SIP_stepFunction_generateINFO := "SIPAppLib: StepFunction_generateINFO";
+
+const integer c_SIP_stepIdx_generateRejectRequest := 74;
+const charstring c_SIP_stepName_generateRejectRequest := c_SIP_stepFunction_generateRejectRequest;
+const charstring c_SIP_stepFunction_generateRejectRequest := "SIPAppLib: StepFunction_generateRejectRequest";
+
+const integer c_SIP_stepIdx_generateForwardedRequest := 75;
+const charstring c_SIP_stepName_generateForwardedRequest := c_SIP_stepFunction_generateForwardedRequest;
+const charstring c_SIP_stepFunction_generateForwardedRequest := "SIPAppLib: StepFunction_generateForwardedRequest";
+
+const integer c_SIP_stepIdx_generateRequestStateless := 76;
+const charstring c_SIP_stepName_generateRequestStateless := c_SIP_stepFunction_generateRequestStateless;
+const charstring c_SIP_stepFunction_generateRequestStateless := "SIPAppLib: StepFunction_generateRequestStateless";
+
+const integer c_SIP_stepIdx_generateForwardedACK := 77;
+const charstring c_SIP_stepName_generateForwardedACK := c_SIP_stepFunction_generateForwardedACK;
+const charstring c_SIP_stepFunction_generateForwardedACK := "SIPAppLib: StepFunction_generateForwardedACK";
+
+const integer c_SIP_stepIdx_generateForwardedResponse := 78;
+const charstring c_SIP_stepName_generateForwardedResponse := c_SIP_stepFunction_generateForwardedResponse;
+const charstring c_SIP_stepFunction_generateForwardedResponse := "SIPAppLib: StepFunction_generateForwardedResponse";
+
+const integer c_SIP_stepIdx_modifyResponseCallBack := 79;
+const charstring c_SIP_stepName_modifyResponseCallBack := c_SIP_stepFunction_modifyResponseCallBack;
+const charstring c_SIP_stepFunction_modifyResponseCallBack := "SIPAppLib: StepFunction_modifyResponseCallBack";
+
+const integer c_SIP_stepIdx_sendResponse := 80;
+const charstring c_SIP_stepName_sendResponse := c_SIP_stepFunction_sendResponse;
+const charstring c_SIP_stepFunction_sendResponse := "SIPAppLib: StepFunction_sendResponse";
+
+const integer c_SIP_stepIdx_sendSTUN := 81;
+const charstring c_SIP_stepName_sendSTUN := c_SIP_stepFunction_sendSTUN;
+const charstring c_SIP_stepFunction_sendSTUN := "SIPAppLib: StepFunction_sendSTUN";
+
+
+type function fcb_EPTF_SIP_requestHandlerTU() runs on self return boolean;
+
+///////////////////////////////////////////////////////////
+// Type: fcb_EPTF_SIP_ReceiveMessage_FT
+//
+// Purpose:
+//  Defines the call-back function type to process incoming SIP message.
+//
+///////////////////////////////////////////////////////////
+type function fcb_EPTF_SIP_ReceiveMessage_FT(inout EPTF_SIP_Message_IN pl_message)
+runs on self;
+
+///////////////////////////////////////////////////////////
+// Type: fcb_EPTF_SIP_SendMessage_FT
+//
+// Purpose:
+//  Defines the call-back function type to sending SIP message.
+//
+///////////////////////////////////////////////////////////
+type function fcb_EPTF_SIP_SendMessage_FT(inout EPTF_SIP_Message_OUT pl_message)
+runs on self;
+
+///////////////////////////////////////////////////////////
+// Type: fcb_EPTF_SIP_IPL4_ASPRecvFrom
+//
+// Purpose:
+//
+///////////////////////////////////////////////////////////
+type function fcb_EPTF_SIP_ASPRecvFrom(in integer p_user, in SIPHeader p_recvFrom, in ProtoTuple p_protocol, in float p_time) runs on self;
+
+///////////////////////////////////////////////////////////
+// Type: fcb_EPTF_SIP_IPL4_ASPSendTo
+//
+// Purpose:
+//
+///////////////////////////////////////////////////////////
+type function fcb_EPTF_SIP_ASPSendTo(in integer p_user, in SIPHeader p_sendTo, in ProtoTuple p_protocol, in float p_time) runs on self;
+
+///////////////////////////////////////////////////////////
+// Type: fcb_EPTF_SIP_User_FindByURI
+//
+// Purpose:
+//  Defines a function type t search the user database by a SIP URI.
+//
+///////////////////////////////////////////////////////////
+type function fcb_EPTF_SIP_User_FindByURI(
+  in PDU_SIP pl_message,
+  inout integer pl_userIdx)
+runs on self;
+
+///////////////////////////////////////////////////////////
+// Type: fcb_EPTF_SIP_LGen_ASPRecvFrom
+//
+// Purpose:
+//  
+//
+///////////////////////////////////////////////////////////
+type function fcb_EPTF_SIP_LGen_ASPRecvFrom(in integer pl_edx) runs on self;
+
+///////////////////////////////////////////////////////////
+// Type: fcb_EPTF_SIP_LGen_ASPRecvFrom
+//
+// Purpose:
+//  
+//
+///////////////////////////////////////////////////////////
+type function fcb_EPTF_SIP_LGen_ASPSendTo(in integer pl_edx) runs on self;
+
+///////////////////////////////////////////////////////////
+// Type: fcb_EPTF_SIP_LGen_ResponseStatCreated
+//
+// Purpose:
+//  Callback function type for notification about creation of response statistics.
+//
+///////////////////////////////////////////////////////////
+type function fcb_EPTF_SIP_LGen_ResponseStatCreated(
+  in integer pl_statusCode,
+  in charstring pl_reasonPhrase,
+  in integer pl_varIdxOutgoing,
+  in integer pl_varIdxOutgoingRetrans,
+  in integer pl_varIdxIncoming,
+  in integer pl_varIdxIncomingRetrans)
+runs on self;
+
+type record of fcb_EPTF_SIP_LGen_ResponseStatCreated fcb_EPTF_SIP_LGen_ResponseStatCreatedList;
+
+/*********************************************************/
+/*                                                       */
+/*                                                       */
+/*                   IPSec/IMS AKA                       */
+/*                                                       */
+/*********************************************************/
+///////////////////////////////////////////////////////////
+//Type: fcb_EPTF_SIP_LGen_createIPSecSA
+//
+//Purpose:
+//  Creates a security association(SA).
+//
+//Parameters:
+//  - pl_userId - *in* *integer* - the transport user index
+//  - pl_srcPort - *in* *integer* - source port
+//  - pl_dstPort - *in* *integer* - destination port
+//  - pl_protocol - *in* *TCCIPsec_Protocol* - the IPSec protocol (AH/ESP)
+//  - pl_spi - *in* *integer* - the Security Parameter Index
+//  - pl_lifeTime - *in* *integer* - the lifetime of the SA
+//  - pl_algo - *in* *TCCIPsec_Algorithm* - the encryption/integrity protection algorithms
+//  - pl_dir - *in* *TCCIPsec_PolicyDirection* - the direction of the SA (in/out)
+///////////////////////////////////////////////////////////
+type function fcb_EPTF_SIP_LGen_createIPSecSA(
+  in integer pl_userId,
+  in integer pl_srcPort,
+  in integer pl_dstPort,
+  in TCCIPsec_Protocol pl_protocol,
+  in integer pl_spi,
+  in integer pl_lifeTime,
+  in TCCIPsec_Algorithm pl_algo,
+  TCCIPsec_PolicyDirection  pl_dir
+) runs on self;
+
+///////////////////////////////////////////////////////////
+//Type: fcb_EPTF_SIP_LGen_eraseIPSecSA
+//
+//Purpose:
+//  Erases a security association(SA).
+//
+//Parameters:
+//  - pl_userId - *in* *integer* - the transport user index
+//  - pl_spi - *in* *integer* - the Security Parameter Index
+//  - pl_srcPort - *in* *integer* - source port
+//  - pl_dstPort - *in* *integer* - destination port
+//  - pl_protocol - *in* *TCCIPsec_Protocol* - the IPSec protocol (AH/ESP)
+//  - pl_dir - *in* *TCCIPsec_PolicyDirection* - the direction of the SA (in/out)
+///////////////////////////////////////////////////////////
+type function fcb_EPTF_SIP_LGen_eraseIPSecSA(
+  in integer pl_userId,
+  in integer pl_spi,
+  in integer pl_srcPort,
+  in integer pl_dstPort,
+  in TCCIPsec_Protocol pl_protocol,
+  TCCIPsec_PolicyDirection  pl_dir
+) runs on self;
+
+///////////////////////////////////////////////////////////
+//Type: f_EPTF_SIP_f1
+//
+//Purpose:
+//  Message authentication function used to compute MAC.
+//
+//Parameters:
+//  - pl_OP - *in* *octetstring* - operator dependent value
+//  - pl_k - *in* *octetstring* - key
+//  - pl_rand - *in* *octetstring* - random
+//  - pl_sqn - *in* *octetstring* - sequence number
+//  - pl_amf - *in* *octetstring* - authentication management field
+///////////////////////////////////////////////////////////
+type function f_EPTF_SIP_f1(in octetstring pl_OP, in octetstring pl_k, in octetstring pl_rand, in octetstring pl_sqn, in octetstring pl_amf)
+return octetstring;
+
+///////////////////////////////////////////////////////////
+//Type: f_EPTF_SIP_f2345
+//
+//Purpose:
+//  Message authentication function used to compute RES, XRES,
+//  and generates CK, IK and AK.
+//
+//Parameters:
+//  - pl_OP - *in* *octetstring* - operator dependent value
+//  - pl_k - *in* *octetstring* - key
+//  - pl_rand - *in* *octetstring* - random
+///////////////////////////////////////////////////////////
+type function f_EPTF_SIP_f2345(in octetstring pl_OP, in octetstring pl_k, in octetstring pl_rand)
+return TCCSecurity_Keys;
+
+///////////////////////////////////////////////////////////
+//Type: f_EPTF_SIP_f1star
+//
+//Purpose:
+//  Message authentication function used to compute MAC-S.
+//
+//Parameters:
+//  - pl_OP - *in* *octetstring* - operator dependent value
+//  - pl_k - *in* *octetstring* - key
+//  - pl_rand - *in* *octetstring* - random
+//  - pl_sqn - *in* *octetstring* - sequence number
+//  - pl_amf - *in* *octetstring* - authentication management field
+///////////////////////////////////////////////////////////
+type function f_EPTF_SIP_f1star(in octetstring pl_OP, in octetstring pl_k, in octetstring pl_rand, in octetstring pl_sqn, in octetstring pl_amf)
+return octetstring;
+
+///////////////////////////////////////////////////////////
+//Type: f_EPTF_SIP_f5star
+//
+//Purpose:
+//  Key generating function used to compute AK in re-synchronisation procedures
+//
+//Parameters:
+//  - pl_OP - *in* *octetstring* - operator dependent value
+//  - pl_k - *in* *octetstring* - key
+//  - pl_rand - *in* *octetstring* - random
+///////////////////////////////////////////////////////////
+type function f_EPTF_SIP_f5star(in octetstring pl_OP, in octetstring pl_k, in octetstring pl_rand)
+return octetstring;
+
+/*            END(IPSec/IMS AKA)                 */
+
+/*********************************************************/
+/*                                                       */
+/*                                                       */
+/*                     STUN                              */
+/*                                                       */
+/*********************************************************/
+
+type function fcb_EPTF_SIP_getSTUNPayload(inout octetstring p_payload, in EPTF_LGenBase_TestStepArgs pl_ptr, in EPTF_IntegerList pl_params := {}) runs on self;
+type function fcb_EPTF_SIP_getSTUNHostName(inout charstring p_hostname, in EPTF_LGenBase_TestStepArgs pl_ptr, in EPTF_IntegerList pl_params := {}) runs on self;
+////////////////////////////////////////////////////
+//Type: EPTF_SIP_Message_IN
+//
+//Purpose:
+//  Defines the incoming message type on the AppLib/Trasport layer interface
+//
+//Elements:
+//  - sipMessage - <PDU_SIP> - the decoded SIP PDU
+//  - transportParams - <EPTF_SIP_TransportParams_IN> - connection parameters
+//  - userId - *integer* - the index of the user in v_db_users if found by the transport layer. 
+//
+////////////////////////////////////////////////////
+type record EPTF_SIP_Message_IN
+{
+  integer userId,
+  octetstring sipMessage,
+  EPTF_SIP_TransportParams_IN transportParams
+}
+
+const EPTF_SIP_Message_IN c_SIP_MessageIN_init :={
+  userId := -1,
+  sipMessage := ''O,
+  transportParams := c_SIP_TransportParamsIN_init
+}
+
+////////////////////////////////////////////////////
+//Type: EPTF_SIP_Message_OUT
+//
+//Purpose:  
+//  Defines the outgoing message type on the AppLib/Trasport layer interface
+//
+//Elements:
+//  - sipMessage - *octetstring* - the encoded SIP message
+//  - transportParams - <EPTF_SIP_TransportParams_OUT> - transport parameters
+//  - userId - *integer* - the index of the user in v_db_users
+//  - sipHeader - <SIPHeader> - the SIP header
+//
+////////////////////////////////////////////////////
+type record EPTF_SIP_Message_OUT
+{
+  integer              userId,
+  EPTF_SIP_Message     sipMessage,
+  charstring           branchId,
+  EPTF_SIP_TransportParams_OUT  transportParams
+}
+
+const EPTF_SIP_Message_OUT c_SIP_MessageOUT_init:=
+{
+  userId := 1,
+  sipMessage := {request := ''O},
+  branchId := "",
+  transportParams := c_SIP_TransportParamsOUT_init
+}
+
+type union EPTF_SIP_Message
+{
+  octetstring request,
+  octetstring response  
+}
+
+type record EPTF_SIP_TransportParams_OUT
+{
+  SIP_Transport proto,
+  integer port_uc,
+  integer port_us,
+  integer port_ps,
+  charstring toAddr,
+  charstring connId
+}
+
+const EPTF_SIP_TransportParams_OUT c_SIP_TransportParamsOUT_init:=
+{
+  proto := UDP,
+  port_uc := -1,
+  port_us := -1,
+  port_ps := -1,
+  toAddr := "",
+  connId := ""
+}
+
+type record EPTF_SIP_TransportParams_IN
+{
+  integer port_us,
+  integer port_pc,
+  charstring connId,
+  SIP_Transport proto
+}
+
+const EPTF_SIP_TransportParams_IN c_SIP_TransportParamsIN_init :=
+{
+  port_us := -1,
+  port_pc := -1,
+  connId := "",
+  proto := UDP
+}
+////////////////////////////////////////////////////
+//Type: SIPHeader
+//
+//Purpose:
+//  
+//Elements:
+//  - request - <RequestHeader> -
+//  - response - <ResponseHeader> -
+//  - raw - *charstring* -
+//
+////////////////////////////////////////////////////
+type union SIPHeader
+{
+  RequestHeader   request,
+  ResponseHeader  response,
+  charstring      raw
+}
+
+////////////////////////////////////////////////////
+//Type: RequestHeader
+//
+//Purpose:  
+//
+//Elements:
+//  - requestLine - <RequestLine> -
+//  - msgHeader - <MessageHeader> -
+//
+////////////////////////////////////////////////////
+type record RequestHeader
+{
+  RequestLine     requestLine,
+  MessageHeader   msgHeader
+}
+
+////////////////////////////////////////////////////
+//Type: ResponseHeader
+//
+//Purpose:  
+//
+//Elements:
+//  - statusLine - <StatusLine> -
+//  - msgHeader - <MessageHeader> -
+//
+////////////////////////////////////////////////////
+type record ResponseHeader
+{
+  StatusLine      statusLine,
+  MessageHeader   msgHeader
+}
+
+/////////////////////////////////////////////////////////////////////////
+//
+//  Type: EPTF_SIP_LGen_CT
+//
+//  Purpose:
+//     Defines the component type of the SIP load generator.
+//
+//  Elements:
+//    - v_db_users - <SIP_UserDB> - user database
+//    - v_db_session - <SIP_SessionDB> - session database
+//    - v_db_dialog - <SIP_DialogDatabase> - dialog database
+//    - v_db_UAC - <SIP_TransactionDatabase> - UAC transaction database
+//    - v_db_UAS - <SIP_TransactionDatabase> - UAS transaction database
+//    - v_db_subscription - <SIP_SubscriptionDatabase> - event notification subscription database
+//    - v_db_publish - <SIP_PublishDatabase> - event publication database
+//    - v_db_published - <SIP_PublishedDatabase> - published events foreach Request-URI
+//    - v_db_UAs - <SIP_UADB> - User Agent database.
+//    - v_SIP_LGenInitialized - *boolean* - true if the SIP AppLib has already been initialized
+//    - v_SIP_Logging_MaskId - *integer* - the logging mask ID of the SIP AppLib
+//    - v_SIP_myBIdx - *integer* - stores the SIP behaviour index
+//    - v_currentUAC - *integer* - current UAC transaction index
+//    - v_currentUAS - *integer* - current UAS transaction index
+//    - v_currentDialog - *integer* - current dialog index
+//    - v_currentSubscription - *integer* - current subscription index
+//    - v_currentUser - *integer* - current user index
+//    - v_currentPublish - *integer* - current publish index
+//    - v_dispatchGroupEvent - *boolean* - if true the group events will be dispatched
+//    - v_insertAuthHeader - *boolean* - if false the Authorization header will not be plced in the outgoing requests
+//    - v_insertAuthHeaderOnChallengeOnly - *boolean* - if true, the Authorization header will be placed into the outgoing
+//        requests only if a challenge arrived in the previous response. If false, the Authorization header will be placed
+//        in every outoing request if a challenge is present.
+//    - v_lastMsgProcessed - *boolean* - true if the last incoming message was dispatched
+//    - v_dropReason - *charstring* - if v_lastMsgProcessed is false, contains a reason string
+//    - v_lastRequestRejected - true if the last request was rejected by the user
+//    - v_msgToSend - <PDU_SIP> - outgoing messages are put in this variable before sending
+//    - v_msgToProcess - <PDU_SIP> - incoming messages need to be in this var before calling the message handler
+//    - vf_EPTF_SIP_LGen_msgSender - <fcb_EPTF_SIP_SendMessage_FT> - call-back function for LocalTransport send
+//    - v_db_modifyMsgCallBack - <SIP_ModifyMsgCallBackDatabase> - call-back function database to modify message content or template parameters
+//    - v_setMsgREGISTER - <fcb_EPTF_SIP_setRequest> - call-back function for setting the outgoing REGISTER request
+//    - v_setMsgDEREGISTER - <fcb_EPTF_SIP_setRequest> - call-back function for setting the outgoing de-REGISTER request
+//    - v_setMsgINVITE - <fcb_EPTF_SIP_setRequest> - call-back function for setting the outgoing INVITE request
+//    - v_setMsgReINVITE - <fcb_EPTF_SIP_setRequest> - call-back function for setting the outgoing re-INVITE request
+//    - v_setMsgMESSAGE - <fcb_EPTF_SIP_setRequest> - call-back function for setting the outgoing MESSAGE request
+//    - v_setMsgCANCEL - <fcb_EPTF_SIP_setRequest> - call-back function for setting the outgoing CANCEL request
+//    - v_setMsgBYE - <fcb_EPTF_SIP_setRequest> - call-back function for setting the outgoing BYE request
+//    - v_setMsgSUBSCRIBE - <fcb_EPTF_SIP_setRequest> - call-back function for setting the outgoing SUBSCRIBE request
+//    - v_setMsgRefreshSUBSCRIBE - <fcb_EPTF_SIP_setRequest> - call-back function for setting the outgoing SUBSCRIBE request
+//    - v_setMsgRemoveSUBSCRIBE - <fcb_EPTF_SIP_setRequest> - call-back function for setting the outgoing SUBSCRIBE request
+//    - v_setMsgPUBLISH - <fcb_EPTF_SIP_setRequest> - call-back function for setting the outgoing PUBLISH request
+//    - v_setMsgRefreshPUBLISH - <fcb_EPTF_SIP_setRequest> - call-back function for setting the outgoing PUBLISH request
+//    - v_setMsgModifyPUBLISH - <fcb_EPTF_SIP_setRequest> - call-back function for setting the outgoing PUBLISH request
+//    - v_setMsgRemovePUBLISH - <fcb_EPTF_SIP_setRequest> - call-back function for setting the outgoing PUBLISH request
+//    - v_setMsgACKto3xxTo6xx - <fcb_EPTF_SIP_setRequest> - call-back function for setting the outgoing ACK request
+//    - v_setMsgACKto2xx - <fcb_EPTF_SIP_setRequest> - call-back function for setting the outgoing ACK request
+//    - v_setMsgNOTIFY - <fcb_EPTF_SIP_setRequest> - call-back function for setting the outgoing NOTIFY request
+//    - v_setMsgREFER - <fcb_EPTF_SIP_setRequest> - call-back function for setting the outgoing REFER request outside of a dialog
+//    - v_setMsgREFERinDialog - <fcb_EPTF_SIP_setRequest> - call-back function for setting the outgoing REFER request inside a dialog
+//    - v_setMsgUPDATE - <fcb_EPTF_SIP_setRequest> - call-back function for setting the outgoing UPDATE request
+//    - v_setMsgPRACK - <fcb_EPTF_SIP_setRequest> - call-back function for setting the outgoing PRACK request
+//    - v_setMsgOPTIONS - <fcb_EPTF_SIP_setRequest> - call-back function for setting the outgoing OPTIONS request
+//    - v_setMsgINFO - <fcb_EPTF_SIP_setRequest> - call-back function for setting the outgoing INFO request
+//    - v_setMsgResponse - <fcb_EPTF_SIP_setResponse> - call-back function for setting the outgoing responses
+//    - v_setMsgReject - <fcb_EPTF_SIP_setResponse> - call-back function for setting the outgoing "reject" responses
+//    - v_userSearchFunc - <fcb_EPTF_SIP_User_FindByURI> - optional user database search callback function
+//    - v_removeUAC - <fcb_EPTF_SIP_RemoveTransaction> - UAC destroy call-back function
+//    - v_removeUAS - <fcb_EPTF_SIP_RemoveTransaction> - UAS destroy call-back function
+//    - vf_SIP_LGen_hook_ASP_RecvFrom - <fcb_EPTF_SIP_LGen_ASPRecvFrom> - SIP message receive call-back function
+//    - vf_SIP_LGen_hook_ASP_RecvFrom - <fcb_EPTF_SIP_LGen_ASPSendTo> - SIP message sent call-back function
+//    - v_nofDiscarded - *integer* - number of messages discarded by the AppLib (retransmissions, not founded transactions, etc.)
+//    - v_nofUACRetransmissions - *integer* - number of received UAC retransmissions
+//    - v_nofUASRetransmissions - *integer* - number of received UAS retransmissions
+//    - v_nofRetransmissittedRequest - *integer* - number of requests retransmitted by the AppLib
+//    - v_nofRetransmissittedResponse - *integer* - number of responses retransmitted by the AppLib
+//    - v_nofCleanedUpUACs - *integer* - number of the UACs that was deleted before terminating properly (by f_SIP_step_cleanUp)
+//    - v_nofCleanedUpUASs - *integer* - number of the UASs that was deleted before terminating properly (by f_SIP_step_cleanUp)
+//    - v_eventType_refer - *integer* - the event type index of the "refer" event type in <SIP_SupportedEventTypes>
+//    - v_maxDialogDBSize - *integer* - if the size of the dialog database reaches a maximum size the database is logged
+//    - v_maxTrDBSize - *integer* - if the size of the transaction database reaches a maximum size the database is logged
+//    - vcb_EPTF_SIP_getSTUNPayload - <fcb_EPTF_SIP_getSTUNPayload> - function reference to handle STUN message body
+//    - vcb_EPTF_SIP_getSTUNHostName - <fcb_EPTF_SIP_getSTUNHostName> - function reference to get STUN host name
+//    - vcb_EPTF_SIP_getCallId - <fcb_EPTF_SIP_genCallId> - function reference to generate Call-ID
+//    - v_body - *charstring* - stores SIP message for vg_hook_ASP_SendTo and vg_hook_ASP_RecvFrom
+//
+//  Detailed Comments:
+//    extends EPTF_LGenBase_CT, EPTF_Scheduler_CT, EPTF_Logging_CT
+/////////////////////////////////////////////////////////////////////////
+type component EPTF_SIP_LGen_CT extends EPTF_LGenBase_CT, EPTF_Logging_CT {
+  var SIP_UserDB  v_db_users;
+  var SIP_DialogDatabase v_db_dialog;
+  var SIP_TransactionDatabase v_db_UAC;
+  var SIP_TransactionDatabase v_db_UAS;
+  var SIP_SubscriptionDatabase v_db_subscription;
+  var SIP_PublishDatabase v_db_publish;
+  var SIP_PublishedDatabase v_db_published;
+
+  var SIP_UADB v_db_UAs;
+
+  var SIP_RegisteredFunctionDB v_db_functions;
+
+  var boolean v_SIP_LGenInitialized := false;
+
+  var integer v_SIP_Logging_MaskId := -1;
+
+  var charstring v_EPTF_SIP_selfName := "";
+  var integer v_SIP_myBIdx := -1;
+
+  var integer v_currentUAC := -1;
+  var integer v_currentUAS := -1;
+  var integer v_currentDialog := -1;
+  var integer v_currentUser := -1;
+  var integer v_currentSubscription := -1;
+  var integer v_currentPublish := -1;
+  var integer v_currentSession := -1;
+
+  var integer v_currentETag := 0;
+  var charstring v_eTagPrefix := "";
+
+  var boolean v_dispatchGroupEvent := true;
+//  var boolean v_reportSubscriptionState := false;
+
+  var boolean v_insertAuthHeader := true;
+  var boolean v_insertAuthHeaderOnChallengeOnly := true;
+
+  var boolean v_lastMsgProcessed := true;
+  var charstring v_dropReason := "";
+
+  var boolean v_lastRequestRejected := false;
+
+  var PDU_SIP v_msgToProcess := { raw := "" };
+  var PDU_SIP v_msgToSend := { raw := "" };
+
+  var EPTF_SIP_TransportParams_IN v_SIP_transportParams;
+
+  var fcb_EPTF_SIP_SendMessage_FT  vf_EPTF_SIP_LGen_msgSender := null;  //callback function for LocalTransport send
+
+  var SIP_ModifyMsgCallBackDatabase v_db_modifyMsgCallBack;
+  var fcb_EPTF_SIP_setRequest v_setMsgREGISTER := null;
+  var fcb_EPTF_SIP_setRequest v_setMsgDEREGISTER := null;
+  var fcb_EPTF_SIP_setRequest v_setMsgINVITE := null;
+  var fcb_EPTF_SIP_setRequest v_setMsgReINVITE := null;
+  var fcb_EPTF_SIP_setRequest v_setMsgMESSAGE := null;
+  var fcb_EPTF_SIP_setRequest v_setMsgCANCEL := null;
+  var fcb_EPTF_SIP_setRequest v_setMsgBYE := null;
+  var fcb_EPTF_SIP_setRequest v_setMsgSUBSCRIBE := null;
+  var fcb_EPTF_SIP_setRequest v_setMsgRefreshSUBSCRIBE := null;
+  var fcb_EPTF_SIP_setRequest v_setMsgRemoveSUBSCRIBE := null;
+  var fcb_EPTF_SIP_setRequest v_setMsgPUBLISH := null;
+  var fcb_EPTF_SIP_setRequest v_setMsgRefreshPUBLISH := null;
+  var fcb_EPTF_SIP_setRequest v_setMsgModifyPUBLISH := null;
+  var fcb_EPTF_SIP_setRequest v_setMsgRemovePUBLISH := null;
+  var fcb_EPTF_SIP_setRequest v_setMsgACKto3xxTo6xx := null;
+  var fcb_EPTF_SIP_setRequest v_setMsgACKto2xx := null;
+  var fcb_EPTF_SIP_setRequest v_setMsgNOTIFY := null;
+  var fcb_EPTF_SIP_setRequest v_setMsgREFER := null;
+  var fcb_EPTF_SIP_setRequest v_setMsgREFERinDialog := null;
+  var fcb_EPTF_SIP_setRequest v_setMsgUPDATE := null;
+  var fcb_EPTF_SIP_setRequest v_setMsgPRACK := null;
+  var fcb_EPTF_SIP_setRequest v_setMsgOPTIONS := null;
+  var fcb_EPTF_SIP_setRequest v_setMsgINFO := null;
+
+  var fcb_EPTF_SIP_setResponse v_setMsgResponse := null;
+  var fcb_EPTF_SIP_setResponse v_setMsgReject := null;
+
+  var fcb_EPTF_SIP_User_FindByURI v_userSearchFunc := null;
+
+  var fcb_EPTF_SIP_RemoveTransaction v_removeUAC := null;
+  var fcb_EPTF_SIP_RemoveTransaction v_removeUAS := null;
+
+//tamplate indices
+  var integer v_templateTypeIdx_REGISTER := -1;
+  var integer v_templateTypeIdx_DEREGISTER := -1;
+  var integer v_templateTypeIdx_INVITE := -1;
+  var integer v_templateTypeIdx_UPDATE := -1;
+  var EPTF_IntegerArray2D v_templateTypeIdx_Responses := { {} };
+  //var integer v_templateTypeIdx_100TRYING := -1;
+  //var integer v_templateTypeIdx_180RINGING := -1;
+  //var integer v_templateTypeIdx_183SESSIONPROGRESS := -1;
+  //var integer v_templateTypeIdx_200OK := -1;
+  var integer v_templateTypeIdx_reINVITE := -1;
+  var integer v_templateTypeIdx_PRACK := -1;
+  var integer v_templateTypeIdx_BYE := -1;
+  var EPTF_IntegerList v_templateTypeIdx_ACK := {};
+  var integer v_templateTypeIdx_initPUBLISH := -1;
+  var integer v_templateTypeIdx_modifyPUBLISH := -1;
+  var integer v_templateTypeIdx_initSUBSCRIBE := -1;
+  var integer v_templateTypeIdx_refreshSUBSCRIBE := -1;
+  var integer v_templateTypeIdx_MESSAGE := -1;
+  var integer v_templateTypeIdx_OPTIONS := -1;
+  var integer v_templateTypeIdx_CANCEL := -1;
+  var integer v_templateTypeIdx_INFO := -1;
+  var integer v_templateTypeIdx_NOTIFY := -1;
+  var integer v_templateTypeIdx_REFER := -1;
+
+  var integer v_templateTypeIdx_REGISTER_BODY := -1;
+  var integer v_templateTypeIdx_DEREGISTER_BODY := -1;
+  var integer v_templateTypeIdx_INVITE_BODY := -1;
+  var integer v_templateTypeIdx_UPDATE_BODY := -1;
+  var EPTF_IntegerArray2D v_templateTypeIdx_Responses_BODY := { {} };
+  //var integer v_templateTypeIdx_100TRYING_BODY := -1;
+  //var integer v_templateTypeIdx_180RINGING_BODY := -1;
+  //var integer v_templateTypeIdx_183SESSIONPROGRESS_BODY := -1;
+  //var integer v_templateTypeIdx_200OK_BODY := -1;
+  var integer v_templateTypeIdx_reINVITE_BODY := -1;
+  var integer v_templateTypeIdx_PRACK_BODY := -1;
+  var integer v_templateTypeIdx_BYE_BODY := -1;
+  var EPTF_IntegerList v_templateTypeIdx_ACK_BODY := {};
+  var integer v_templateTypeIdx_initPUBLISH_BODY := -1;
+  var integer v_templateTypeIdx_modifyPUBLISH_BODY := -1;
+  var integer v_templateTypeIdx_initSUBSCRIBE_BODY := -1;
+  var integer v_templateTypeIdx_refreshSUBSCRIBE_BODY := -1;
+  var integer v_templateTypeIdx_MESSAGE_BODY := -1;
+  var integer v_templateTypeIdx_OPTIONS_BODY := -1;
+  var integer v_templateTypeIdx_CANCEL_BODY := -1;
+  var integer v_templateTypeIdx_INFO_BODY := -1;    
+  var integer v_templateTypeIdx_NOTIFY_BODY := -1;
+  var integer v_templateTypeIdx_REFER_BODY := -1; 
+
+  //obselete, not coutned in these wariables any more
+  var integer v_nofDiscarded := 0;
+  var integer v_nofUACRetransmissions := 0;
+  var integer v_nofUASRetransmissions := 0;
+  var integer v_nofRetransmissittedRequest := 0;
+  var integer v_nofRetransmissittedResponse := 0;
+  var integer v_nofUACTimeouts := 0;
+  var integer v_nofUASTimeouts := 0;
+  var integer v_nofFSMRetransmission := 0;
+
+  //statistics
+  var integer v_statIdx_nofDiscarded := -1;
+  var integer v_statIdx_nofUACTimeouts := -1;
+  var integer v_statIdx_nofUASTimeouts := -1;
+
+  var integer v_statIdx_nofUACRetransmissions := -1;
+  var integer v_statIdx_nofUASRetransmissions := -1;
+  var integer v_statIdx_nofRetransmittedRequest := -1;
+  var integer v_statIdx_nofRetransmittedResponse := -1;
+  var integer v_statIdx_nofFSMRetransmission := -1;
+
+  var EPTF_SIP_Statistics v_statistics;
+
+  private var fcb_EPTF_SIP_LGen_ResponseStatCreatedList vcb_EPTF_SIP_responseStatCreatedList := {};
+  private var boolean v_EPTF_SIP_responseStatEnabled := tsp_SIP_responseStatEnabled;
+
+  //internal ststistics
+  var integer v_nofCleanedUpUACs := 0;
+  var integer v_nofCleanedUpUASs := 0;
+
+  var integer v_eventType_refer := -1;
+
+  var integer v_maxDialogDBSize := tsp_SIP_maxDialogDBSize;
+  var integer v_maxTrDBSize := tsp_SIP_maxTrDBSize;
+
+  var fcb_EPTF_SIP_LGen_createIPSecSA v_createIPSecSA := null;
+  var fcb_EPTF_SIP_LGen_eraseIPSecSA  v_eraseIPSecSA := null;
+
+  var f_EPTF_SIP_f1 v_SIP_f1 := refers(f_IMSAKA_f1);
+  var f_EPTF_SIP_f1star v_SIP_f1star := refers(f_IMSAKA_f1star);
+  var f_EPTF_SIP_f5star v_SIP_f5star := refers(f_IMSAKA_f5star);
+  var f_EPTF_SIP_f2345 v_SIP_f2345 := refers(f_IMSAKA_f2345);
+
+  var fcb_EPTF_SIP_ASPRecvFrom       vg_hook_ASP_RecvFrom := null;
+  var fcb_EPTF_SIP_ASPSendTo         vg_hook_ASP_SendTo := null;
+
+  var SIP_TimerValues v_TransactionTimerValues := tsp_SIP_TransactionTimerValues;
+  var float v_timerC := 180.0;
+
+//proxy parameters
+  private var boolean vl_automaticProxyMode := tsp_SIP_automaticProxyMode;
+  var SIP_TargetURI_List v_targetURIList := {};
+  var EPTF_CharstringList v_domains := {};
+
+  var fcb_EPTF_SIP_requestHandlerTU v_requestHandlerTU := null;
+
+  /*STUN*/
+  var fcb_EPTF_SIP_getSTUNPayload vcb_EPTF_SIP_getSTUNPayload := null;
+  var fcb_EPTF_SIP_getSTUNHostName vcb_EPTF_SIP_getSTUNHostName := null;
+
+  var fcb_EPTF_SIP_genCallId vcb_EPTF_SIP_getCallId := null;
+
+  //stores SIP message for vg_hook_ASP_SendTo and vg_hook_ASP_RecvFrom
+  var charstring v_header := "";
+  var octetstring v_body := ''O;
+  
+  var fcb_EPTF_SIP_sipEncodeRequest vcb_EPTF_SIP_sipEncodeRequest := null;
+  var fcb_EPTF_SIP_sipEncodeResponse vcb_EPTF_SIP_sipEncodeResponse := null;
+}
+
+////////////////////////////////////////////////////
+//Constant: Inidices used in the call-back functions setting outgoing messages.
+//
+//Elements:
+//  c_EPTF_SIP_cbPar_UACIdx - 
+//  c_EPTF_SIP_cbPar_UASIdx - 
+//  c_EPTF_SIP_cbPar_dialogIdx - 
+////////////////////////////////////////////////////
+const integer c_EPTF_SIP_cbPar_UACIdx := 2;
+const integer c_EPTF_SIP_cbPar_UASIdx := 3;
+const integer c_EPTF_SIP_cbPar_dialogIdx := 4;
+
+const octetstring c_EPTF_SIP_endSeparator := '0d0a0d0a'O;
+const integer c_EPTF_SIP_lengthEndSeparator := lengthof(c_EPTF_SIP_endSeparator);
+
+const integer c_EPTF_SIP_maxEventIndices := 20000;
+
+const charstring c_EPTF_SIP_extTemplateType_REGISTER := "SIP_REGISTER";
+const charstring c_EPTF_SIP_extTemplateType_DEREGISTER := "SIP_DEREGISTER";
+const charstring c_EPTF_SIP_extTemplateType_INVITE := "SIP_INVITE";
+const charstring c_EPTF_SIP_extTemplateType_UPDATE := "SIP_UPDATE";
+const charstring c_EPTF_SIP_extTemplateType_100TRYING := "SIP_100TRYING";
+const charstring c_EPTF_SIP_extTemplateType_180RINGING := "SIP_180RINGING";
+const charstring c_EPTF_SIP_extTemplateType_181CallIsBeingForwarded := "SIP_181CallIsBeingForwarded";
+const charstring c_EPTF_SIP_extTemplateType_183SESSIONPROGRESS := "SIP_183SESSIONPROGRESS";
+const charstring c_EPTF_SIP_extTemplateType_200OK := "SIP_200OK";
+const charstring c_EPTF_SIP_extTemplateType_reINVITE := "SIP_REINVITE";
+const charstring c_EPTF_SIP_extTemplateType_PRACK := "SIP_PRACK";
+const charstring c_EPTF_SIP_extTemplateType_BYE := "SIP_BYE";
+const charstring c_EPTF_SIP_extTemplateType_ACK := "SIP_ACK";
+const charstring c_EPTF_SIP_extTemplateType_initPUBLISH := "SIP_initPUBLISH";
+const charstring c_EPTF_SIP_extTemplateType_modifyPUBLISH := "SIP_modifyPUBLISH";
+const charstring c_EPTF_SIP_extTemplateType_initSUBSCRIBE := "SIP_initSUBSCRIBE";
+const charstring c_EPTF_SIP_extTemplateType_refreshSUBSCRIBE := "SIP_refreshSUBSCRIBE";
+const charstring c_EPTF_SIP_extTemplateType_MESSAGE := "SIP_MESSAGE";
+const charstring c_EPTF_SIP_extTemplateType_OPTIONS := "SIP_OPTIONS";
+const charstring c_EPTF_SIP_extTemplateType_CANCEL := "SIP_CANCEL";
+const charstring c_EPTF_SIP_extTemplateType_INFO := "SIP_INFO";
+const charstring c_EPTF_SIP_extTemplateType_NOTIFY := "SIP_NOTIFY";
+const charstring c_EPTF_SIP_extTemplateType_REFER := "SIP_REFER";
+
+const charstring c_EPTF_SIP_extTemplateType_REGISTER_BODY := "SIP_REGISTER_BODY";
+const charstring c_EPTF_SIP_extTemplateType_DEREGISTER_BODY := "SIP_DEREGISTER_BODY";
+const charstring c_EPTF_SIP_extTemplateType_INVITE_BODY := "SIP_INVITE_BODY";
+const charstring c_EPTF_SIP_extTemplateType_UPDATE_BODY := "SIP_UPDATE_BODY";
+const charstring c_EPTF_SIP_extTemplateType_100TRYING_BODY := "SIP_100TRYING_BODY";
+const charstring c_EPTF_SIP_extTemplateType_180RINGING_BODY := "SIP_180RINGING_BODY";
+const charstring c_EPTF_SIP_extTemplateType_181CallIsBeingForwarded_BODY := "SIP_181CallIsBeingForwarded_BODY";
+const charstring c_EPTF_SIP_extTemplateType_183SESSIONPROGRESS_BODY := "SIP_183SESSIONPROGRESS_BODY";
+const charstring c_EPTF_SIP_extTemplateType_200OK_BODY := "SIP_200OK_BODY";
+const charstring c_EPTF_SIP_extTemplateType_reINVITE_BODY := "SIP_REINVITE_BODY";
+const charstring c_EPTF_SIP_extTemplateType_PRACK_BODY := "SIP_PRACK_BODY";
+const charstring c_EPTF_SIP_extTemplateType_BYE_BODY := "SIP_BYE_BODY";
+const charstring c_EPTF_SIP_extTemplateType_ACK_BODY := "SIP_ACK_BODY";
+const charstring c_EPTF_SIP_extTemplateType_initPUBLISH_BODY := "SIP_initPUBLISH_BODY";
+const charstring c_EPTF_SIP_extTemplateType_modifyPUBLISH_BODY := "SIP_modifyPUBLISH_BODY";
+const charstring c_EPTF_SIP_extTemplateType_initSUBSCRIBE_BODY := "SIP_initSUBSCRIBE_BODY";
+const charstring c_EPTF_SIP_extTemplateType_refreshSUBSCRIBE_BODY := "SIP_refreshSUBSCRIBE_BODY";
+const charstring c_EPTF_SIP_extTemplateType_MESSAGE_BODY := "SIP_MESSAGE_BODY";
+const charstring c_EPTF_SIP_extTemplateType_OPTIONS_BODY := "SIP_OPTIONS_BODY";
+const charstring c_EPTF_SIP_extTemplateType_CANCEL_BODY := "SIP_CANCEL_BODY";
+const charstring c_EPTF_SIP_extTemplateType_INFO_BODY := "SIP_INFO_BODY";
+const charstring c_EPTF_SIP_extTemplateType_NOTIFY_BODY := "SIP_NOTIFY_BODY";
+const charstring c_EPTF_SIP_extTemplateType_REFER_BODY := "SIP_REFER_BODY";
+
+//STATISTIC NAMES
+const charstring c_EPTF_SIP_statName_nofDiscarded := "SIP_nofDiscarded"
+const charstring c_EPTF_SIP_statName_UACRetransmissions := "SIP_UACRetransmissions"
+const charstring c_EPTF_SIP_statName_UASRetransmissions := "SIP_UASRetransmissions"
+const charstring c_EPTF_SIP_statName_RetransmittedRequest := "SIP_RetransmittedRequest"
+const charstring c_EPTF_SIP_statName_RetransmittedResponse := "SIP_RetransmittedResponse"
+const charstring c_EPTF_SIP_statName_UACTimeouts := "SIP_UACTimeouts"
+const charstring c_EPTF_SIP_statName_UASTimeouts := "SIP_UASTimeouts"
+const charstring c_EPTF_SIP_statName_nofFSMRetransmission := "SIP_nofFSMRetransmission"
+
+const charstring c_EPTF_SIP_statName_nofIncACK := "SIP_nofIncACK";
+const charstring c_EPTF_SIP_statName_nofIncBYE := "SIP_nofIncBYE";
+const charstring c_EPTF_SIP_statName_nofIncCANCEL := "SIP_nofIncCANCEL";
+const charstring c_EPTF_SIP_statName_nofIncINFO := "SIP_nofIncINFO";
+const charstring c_EPTF_SIP_statName_nofIncINVITE := "SIP_nofIncINVITE";
+const charstring c_EPTF_SIP_statName_nofIncOPTIONS := "SIP_nofIncOPTIONS";
+const charstring c_EPTF_SIP_statName_nofIncMESSAGE := "SIP_nofIncMESSAGE";
+const charstring c_EPTF_SIP_statName_nofIncNOTIFY := "SIP_nofIncNOTIFY";
+const charstring c_EPTF_SIP_statName_nofIncPRACK := "SIP_nofIncPRACK";
+const charstring c_EPTF_SIP_statName_nofIncPUBLISH := "SIP_nofIncPUBLISH";
+const charstring c_EPTF_SIP_statName_nofIncREFER := "SIP_nofIncREFER";
+const charstring c_EPTF_SIP_statName_nofIncREGISTER := "SIP_nofIncREGISTER";
+const charstring c_EPTF_SIP_statName_nofIncSUBSCRIBE := "SIP_nofIncSUBSCRIBE";
+const charstring c_EPTF_SIP_statName_nofIncUPDATE := "SIP_nofIncUPDATE";
+
+const charstring c_EPTF_SIP_statName_nofIncRetransACK := "SIP_nofIncRetransACK";
+const charstring c_EPTF_SIP_statName_nofIncRetransBYE := "SIP_nofIncRetransBYE";
+const charstring c_EPTF_SIP_statName_nofIncRetransCANCEL := "SIP_nofIncRetransCANCEL";
+const charstring c_EPTF_SIP_statName_nofIncRetransINFO := "SIP_nofIncRetransINFO";
+const charstring c_EPTF_SIP_statName_nofIncRetransINVITE := "SIP_nofIncRetransINVITE";
+const charstring c_EPTF_SIP_statName_nofIncRetransOPTIONS := "SIP_nofIncRetransOPTIONS";
+const charstring c_EPTF_SIP_statName_nofIncRetransMESSAGE := "SIP_nofIncRetransMESSAGE";
+const charstring c_EPTF_SIP_statName_nofIncRetransNOTIFY := "SIP_nofIncRetransNOTIFY";
+const charstring c_EPTF_SIP_statName_nofIncRetransPRACK := "SIP_nofIncRetransPRACK";
+const charstring c_EPTF_SIP_statName_nofIncRetransPUBLISH := "SIP_nofIncRetransPUBLISH";
+const charstring c_EPTF_SIP_statName_nofIncRetransREFER := "SIP_nofIncRetransREFER";
+const charstring c_EPTF_SIP_statName_nofIncRetransREGISTER := "SIP_nofIncRetransREGISTER";
+const charstring c_EPTF_SIP_statName_nofIncRetransSUBSCRIBE := "SIP_nofIncRetransSUBSCRIBE";
+const charstring c_EPTF_SIP_statName_nofIncRetransUPDATE := "SIP_nofIncRetransUPDATE";
+
+const charstring c_EPTF_SIP_statName_nofOutACK := "SIP_nofOutACK";
+const charstring c_EPTF_SIP_statName_nofOutBYE := "SIP_nofOutBYE";
+const charstring c_EPTF_SIP_statName_nofOutCANCEL := "SIP_nofOutCANCEL";
+const charstring c_EPTF_SIP_statName_nofOutINFO := "SIP_nofOutINFO";
+const charstring c_EPTF_SIP_statName_nofOutINVITE := "SIP_nofOutINVITE";
+const charstring c_EPTF_SIP_statName_nofOutOPTIONS := "SIP_nofOutOPTIONS";
+const charstring c_EPTF_SIP_statName_nofOutMESSAGE := "SIP_nofOutMESSAGE";
+const charstring c_EPTF_SIP_statName_nofOutNOTIFY := "SIP_nofOutNOTIFY";
+const charstring c_EPTF_SIP_statName_nofOutPRACK := "SIP_nofOutPRACK";
+const charstring c_EPTF_SIP_statName_nofOutPUBLISH := "SIP_nofOutPUBLISH";
+const charstring c_EPTF_SIP_statName_nofOutREFER := "SIP_nofOutREFER";
+const charstring c_EPTF_SIP_statName_nofOutREGISTER := "SIP_nofOutREGISTER";
+const charstring c_EPTF_SIP_statName_nofOutSUBSCRIBE := "SIP_nofOutSUBSCRIBE";
+const charstring c_EPTF_SIP_statName_nofOutUPDATE := "SIP_nofOutUPDATE";
+
+const charstring c_EPTF_SIP_statName_nofOutRetransACK := "SIP_nofOutRetransACK";
+const charstring c_EPTF_SIP_statName_nofOutRetransBYE := "SIP_nofOutRetransBYE";
+const charstring c_EPTF_SIP_statName_nofOutRetransCANCEL := "SIP_nofOutRetransCANCEL";
+const charstring c_EPTF_SIP_statName_nofOutRetransINFO := "SIP_nofOutRetransINFO";
+const charstring c_EPTF_SIP_statName_nofOutRetransINVITE := "SIP_nofOutRetransINVITE";
+const charstring c_EPTF_SIP_statName_nofOutRetransOPTIONS := "SIP_nofOutRetransOPTIONS";
+const charstring c_EPTF_SIP_statName_nofOutRetransMESSAGE := "SIP_nofOutRetransMESSAGE";
+const charstring c_EPTF_SIP_statName_nofOutRetransNOTIFY := "SIP_nofOutRetransNOTIFY";
+const charstring c_EPTF_SIP_statName_nofOutRetransPRACK := "SIP_nofOutRetransPRACK";
+const charstring c_EPTF_SIP_statName_nofOutRetransPUBLISH := "SIP_nofOutRetransPUBLISH";
+const charstring c_EPTF_SIP_statName_nofOutRetransREFER := "SIP_nofOutRetransREFER";
+const charstring c_EPTF_SIP_statName_nofOutRetransREGISTER := "SIP_nofOutRetransREGISTER";
+const charstring c_EPTF_SIP_statName_nofOutRetransSUBSCRIBE := "SIP_nofOutRetransSUBSCRIBE";
+const charstring c_EPTF_SIP_statName_nofOutRetransUPDATE := "SIP_nofOutRetransUPDATE";
+
+const charstring c_EPTF_SIP_statName_nofOut100Trying := "SIP_nofOut100Trying";
+const charstring c_EPTF_SIP_statName_nofOut180Ringing := "SIP_nofOut180Ringing";
+const charstring c_EPTF_SIP_statName_nofOut181CallIsBeingForwarded := "SIP_nofOut181CallIsBeingForwarded";
+const charstring c_EPTF_SIP_statName_nofOut182Queued := "SIP_nofOut182Queued";
+const charstring c_EPTF_SIP_statName_nofOut183SessionProgress := "SIP_nofOut183SessionProgress";
+
+const charstring c_EPTF_SIP_statName_nofOut200OK := "SIP_nofOut200OK";
+const charstring c_EPTF_SIP_statName_nofOut202Accepted := "SIP_nofOut202Accepted";
+
+const charstring c_EPTF_SIP_statName_nofOut300MultipleChoices := "SIP_nofOut300MultipleChoices";
+const charstring c_EPTF_SIP_statName_nofOut301MovedPermanently := "SIP_nofOut301MovedPermanently";
+const charstring c_EPTF_SIP_statName_nofOut302MovedTemporarily := "SIP_nofOut302MovedTemporarily";
+const charstring c_EPTF_SIP_statName_nofOut305UseProxy := "SIP_nofOut305UseProxy";
+const charstring c_EPTF_SIP_statName_nofOut380AlternativeService := "SIP_nofOut380AlternativeService";
+
+const charstring c_EPTF_SIP_statName_nofOut400BadRequest := "SIP_nofOut400BadRequest";
+const charstring c_EPTF_SIP_statName_nofOut401Unauthorized := "SIP_nofOut401Unauthorized";
+const charstring c_EPTF_SIP_statName_nofOut402PaymentRequired := "SIP_nofOut402PaymentRequired";
+const charstring c_EPTF_SIP_statName_nofOut403Forbidden := "SIP_nofOut403Forbidden";
+const charstring c_EPTF_SIP_statName_nofOut404NotFound := "SIP_nofOut404NotFound";
+const charstring c_EPTF_SIP_statName_nofOut405MethodNotAllowed := "SIP_nofOut405MethodNotAllowed";
+const charstring c_EPTF_SIP_statName_nofOut406NotAcceptable := "SIP_nofOut406NotAcceptable";
+const charstring c_EPTF_SIP_statName_nofOut407ProxyAuthenticationRequired := "SIP_nofOut407ProxyAuthenticationRequired";
+const charstring c_EPTF_SIP_statName_nofOut408RequestTimeout := "SIP_nofOut408RequestTimeout";
+const charstring c_EPTF_SIP_statName_nofOut409Conflict := "SIP_nofOut409Conflict";
+const charstring c_EPTF_SIP_statName_nofOut410Gone := "SIP_nofOut410Gone";
+const charstring c_EPTF_SIP_statName_nofOut412ConditionalRequestFailed := "SIP_nofOut412ConditionalRequestFailed";
+const charstring c_EPTF_SIP_statName_nofOut413RequestEntityTooLarge := "SIP_nofOut413RequestEntityTooLarge";
+const charstring c_EPTF_SIP_statName_nofOut414RequestURITooLong := "SIP_nofOut414RequestURITooLong";
+const charstring c_EPTF_SIP_statName_nofOut415UnsupportedMediaType := "SIP_nofOut415UnsupportedMediaType";
+const charstring c_EPTF_SIP_statName_nofOut416UnsupportedURIScheme := "SIP_nofOut416UnsupportedURIScheme";
+const charstring c_EPTF_SIP_statName_nofOut417UnknownResourcePriority := "SIP_nofOut417UnknownResourcePriority";
+const charstring c_EPTF_SIP_statName_nofOut420BadExtension := "SIP_nofOut420BadExtension";
+const charstring c_EPTF_SIP_statName_nofOut421ExtensionRequired := "SIP_nofOut421ExtensionRequired";
+const charstring c_EPTF_SIP_statName_nofOut422SessionIntervalTooSmall := "SIP_nofOut422SessionIntervalTooSmall";
+const charstring c_EPTF_SIP_statName_nofOut423IntervalTooBrief := "SIP_nofOut423IntervalTooBrief";
+const charstring c_EPTF_SIP_statName_nofOut424BadLocationInformation := "SIP_nofOut424BadLocationInformation";
+const charstring c_EPTF_SIP_statName_nofOut428UseIdentityHeader := "SIP_nofOut428UseIdentityHeader";
+const charstring c_EPTF_SIP_statName_nofOut429ProvideReferrerIdentity := "SIP_nofOut429ProvideReferrerIdentity";
+const charstring c_EPTF_SIP_statName_nofOut433AnonymityDisallowed := "SIP_nofOut433AnonymityDisallowed";
+const charstring c_EPTF_SIP_statName_nofOut436BadIdentityInfo := "SIP_nofOut436BadIdentityInfo";
+const charstring c_EPTF_SIP_statName_nofOut437UnsupportedCertificate := "SIP_nofOut437UnsupportedCertificate";
+const charstring c_EPTF_SIP_statName_nofOut438InvalidIdentityHeader := "SIP_nofOut438InvalidIdentityHeader";
+const charstring c_EPTF_SIP_statName_nofOut480TemporarilyUnavailable := "SIP_nofOut480TemporarilyUnavailable";
+const charstring c_EPTF_SIP_statName_nofOut481CallTransactionDoesNotExist := "SIP_nofOut481CallTransactionDoesNotExist";
+const charstring c_EPTF_SIP_statName_nofOut482LoopDetected := "SIP_nofOut482LoopDetected";
+const charstring c_EPTF_SIP_statName_nofOut483TooManyHops := "SIP_nofOut483TooManyHops";
+const charstring c_EPTF_SIP_statName_nofOut484AddressIncomplete := "SIP_nofOut484AddressIncomplete";
+const charstring c_EPTF_SIP_statName_nofOut485Ambiguous := "SIP_nofOut485Ambiguous";
+const charstring c_EPTF_SIP_statName_nofOut486BusyHere := "SIP_nofOut486BusyHere";
+const charstring c_EPTF_SIP_statName_nofOut487RequestTerminated := "SIP_nofOut487RequestTerminated";
+const charstring c_EPTF_SIP_statName_nofOut488NotAcceptableHere := "SIP_nofOut488NotAcceptableHere";
+const charstring c_EPTF_SIP_statName_nofOut489BadEvent := "SIP_nofOut489BadEvent";
+const charstring c_EPTF_SIP_statName_nofOut491RequestPending := "SIP_nofOut491RequestPending";
+const charstring c_EPTF_SIP_statName_nofOut493Undecipherable := "SIP_nofOut493Undecipherable";
+const charstring c_EPTF_SIP_statName_nofOut494SecurityAgreementRequired := "SIP_nofOut494SecurityAgreementRequired";
+
+const charstring c_EPTF_SIP_statName_nofOut500ServerInternalError := "SIP_nofOut500ServerInternalError";
+const charstring c_EPTF_SIP_statName_nofOut501NotImplemented := "SIP_nofOut501NotImplemented";
+const charstring c_EPTF_SIP_statName_nofOut502BadGateway := "SIP_nofOut502BadGateway";
+const charstring c_EPTF_SIP_statName_nofOut503ServiceUnavailable := "SIP_nofOut503ServiceUnavailable";
+const charstring c_EPTF_SIP_statName_nofOut504ServerTimeout := "SIP_nofOut504ServerTimeout";
+const charstring c_EPTF_SIP_statName_nofOut505VersionNotSupported := "SIP_nofOut505VersionNotSupported";
+const charstring c_EPTF_SIP_statName_nofOut513MessageTooLarge := "SIP_nofOut513MessageTooLarge";
+const charstring c_EPTF_SIP_statName_nofOut580PreconditionFailure := "SIP_nofOut580PreconditionFailure";
+
+const charstring c_EPTF_SIP_statName_nofOut600BusyEverywhere := "SIP_nofOut600BusyEverywhere";
+const charstring c_EPTF_SIP_statName_nofOut603Decline := "SIP_nofOut603Decline";
+const charstring c_EPTF_SIP_statName_nofOut604DoesNotExistAnywhere := "SIP_nofOut604DoesNotExistAnywhere";
+const charstring c_EPTF_SIP_statName_nofOut606NotAcceptable := "SIP_nofOut606NotAcceptable";
+
+const charstring c_EPTF_SIP_statName_nofInc100Trying := "SIP_nofInc100Trying";
+const charstring c_EPTF_SIP_statName_nofInc180Ringing := "SIP_nofInc180Ringing";
+const charstring c_EPTF_SIP_statName_nofInc181CallIsBeingForwarded := "SIP_nofInc181CallIsBeingForwarded";
+const charstring c_EPTF_SIP_statName_nofInc182Queued := "SIP_nofInc182Queued";
+const charstring c_EPTF_SIP_statName_nofInc183SessionProgress := "SIP_nofInc183SessionProgress";
+
+const charstring c_EPTF_SIP_statName_nofInc200OK := "SIP_nofInc200OK";
+const charstring c_EPTF_SIP_statName_nofInc202Accepted := "SIP_nofInc202Accepted";
+
+const charstring c_EPTF_SIP_statName_nofInc300MultipleChoices := "SIP_nofInc300MultipleChoices";
+const charstring c_EPTF_SIP_statName_nofInc301MovedPermanently := "SIP_nofInc301MovedPermanently";
+const charstring c_EPTF_SIP_statName_nofInc302MovedTemporarily := "SIP_nofInc302MovedTemporarily";
+const charstring c_EPTF_SIP_statName_nofInc305UseProxy := "SIP_nofInc305UseProxy";
+const charstring c_EPTF_SIP_statName_nofInc380AlternativeService := "SIP_nofInc380AlternativeService";
+
+const charstring c_EPTF_SIP_statName_nofInc400BadRequest := "SIP_nofInc400BadRequest";
+const charstring c_EPTF_SIP_statName_nofInc401Unauthorized := "SIP_nofInc401Unauthorized";
+const charstring c_EPTF_SIP_statName_nofInc402PaymentRequired := "SIP_nofInc402PaymentRequired";
+const charstring c_EPTF_SIP_statName_nofInc403Forbidden := "SIP_nofInc403Forbidden";
+const charstring c_EPTF_SIP_statName_nofInc404NotFound := "SIP_nofInc404NotFound";
+const charstring c_EPTF_SIP_statName_nofInc405MethodNotAllowed := "SIP_nofInc405MethodNotAllowed";
+const charstring c_EPTF_SIP_statName_nofInc406NotAcceptable := "SIP_nofInc406NotAcceptable";
+const charstring c_EPTF_SIP_statName_nofInc407ProxyAuthenticationRequired := "SIP_nofInc407ProxyAuthenticationRequired";
+const charstring c_EPTF_SIP_statName_nofInc408RequestTimeout := "SIP_nofInc408RequestTimeout";
+const charstring c_EPTF_SIP_statName_nofInc409Conflict := "SIP_nofInc409Conflict";
+const charstring c_EPTF_SIP_statName_nofInc410Gone := "SIP_nofInc410Gone";
+const charstring c_EPTF_SIP_statName_nofInc412ConditionalRequestFailed := "SIP_nofInc412ConditionalRequestFailed";
+const charstring c_EPTF_SIP_statName_nofInc413RequestEntityTooLarge := "SIP_nofInc413RequestEntityTooLarge";
+const charstring c_EPTF_SIP_statName_nofInc414RequestURITooLong := "SIP_nofInc414RequestURITooLong";
+const charstring c_EPTF_SIP_statName_nofInc415UnsupportedMediaType := "SIP_nofInc415UnsupportedMediaType";
+const charstring c_EPTF_SIP_statName_nofInc416UnsupportedURIScheme := "SIP_nofInc416UnsupportedURIScheme";
+const charstring c_EPTF_SIP_statName_nofInc417UnknownResourcePriority := "SIP_nofInc417UnknownResourcePriority";
+const charstring c_EPTF_SIP_statName_nofInc420BadExtension := "SIP_nofInc420BadExtension";
+const charstring c_EPTF_SIP_statName_nofInc421ExtensionRequired := "SIP_nofInc421ExtensionRequired";
+const charstring c_EPTF_SIP_statName_nofInc422SessionIntervalTooSmall := "SIP_nofInc422SessionIntervalTooSmall";
+const charstring c_EPTF_SIP_statName_nofInc423IntervalTooBrief := "SIP_nofInc423IntervalTooBrief";
+const charstring c_EPTF_SIP_statName_nofInc424BadLocationInformation := "SIP_nofInc424BadLocationInformation";
+const charstring c_EPTF_SIP_statName_nofInc428UseIdentityHeader := "SIP_nofInc428UseIdentityHeader";
+const charstring c_EPTF_SIP_statName_nofInc429ProvideReferrerIdentity := "SIP_nofInc429ProvideReferrerIdentity";
+const charstring c_EPTF_SIP_statName_nofInc433AnonymityDisallowed := "SIP_nofInc433AnonymityDisallowed";
+const charstring c_EPTF_SIP_statName_nofInc436BadIdentityInfo := "SIP_nofInc436BadIdentityInfo";
+const charstring c_EPTF_SIP_statName_nofInc437UnsupportedCertificate := "SIP_nofInc437UnsupportedCertificate";
+const charstring c_EPTF_SIP_statName_nofInc438InvalidIdentityHeader := "SIP_nofInc438InvalidIdentityHeader";
+const charstring c_EPTF_SIP_statName_nofInc480TemporarilyUnavailable := "SIP_nofInc480TemporarilyUnavailable";
+const charstring c_EPTF_SIP_statName_nofInc481CallTransactionDoesNotExist := "SIP_nofInc481CallTransactionDoesNotExist";
+const charstring c_EPTF_SIP_statName_nofInc482LoopDetected := "SIP_nofInc482LoopDetected";
+const charstring c_EPTF_SIP_statName_nofInc483TooManyHops := "SIP_nofInc483TooManyHops";
+const charstring c_EPTF_SIP_statName_nofInc484AddressIncomplete := "SIP_nofInc484AddressIncomplete";
+const charstring c_EPTF_SIP_statName_nofInc485Ambiguous := "SIP_nofInc485Ambiguous";
+const charstring c_EPTF_SIP_statName_nofInc486BusyHere := "SIP_nofInc486BusyHere";
+const charstring c_EPTF_SIP_statName_nofInc487RequestTerminated := "SIP_nofInc487RequestTerminated";
+const charstring c_EPTF_SIP_statName_nofInc488NotAcceptableHere := "SIP_nofInc488NotAcceptableHere";
+const charstring c_EPTF_SIP_statName_nofInc489BadEvent := "SIP_nofInc489BadEvent";
+const charstring c_EPTF_SIP_statName_nofInc491RequestPending := "SIP_nofInc491RequestPending";
+const charstring c_EPTF_SIP_statName_nofInc493Undecipherable := "SIP_nofInc493Undecipherable";
+const charstring c_EPTF_SIP_statName_nofInc494SecurityAgreementRequired := "SIP_nofInc494SecurityAgreementRequired";
+
+const charstring c_EPTF_SIP_statName_nofInc500ServerInternalError := "SIP_nofInc500ServerInternalError";
+const charstring c_EPTF_SIP_statName_nofInc501NotImplemented := "SIP_nofInc501NotImplemented";
+const charstring c_EPTF_SIP_statName_nofInc502BadGateway := "SIP_nofInc502BadGateway";
+const charstring c_EPTF_SIP_statName_nofInc503ServiceUnavailable := "SIP_nofInc503ServiceUnavailable";
+const charstring c_EPTF_SIP_statName_nofInc504ServerTimeout := "SIP_nofInc504ServerTimeout";
+const charstring c_EPTF_SIP_statName_nofInc505VersionNotSupported := "SIP_nofInc505VersionNotSupported";
+const charstring c_EPTF_SIP_statName_nofInc513MessageTooLarge := "SIP_nofInc513MessageTooLarge";
+const charstring c_EPTF_SIP_statName_nofInc580PreconditionFailure := "SIP_nofInc580PreconditionFailure";
+
+const charstring c_EPTF_SIP_statName_nofInc600BusyEverywhere := "SIP_nofInc600BusyEverywhere";
+const charstring c_EPTF_SIP_statName_nofInc603Decline := "SIP_nofInc603Decline";
+const charstring c_EPTF_SIP_statName_nofInc604DoesNotExistAnywhere := "SIP_nofInc604DoesNotExistAnywhere";
+const charstring c_EPTF_SIP_statName_nofInc606NotAcceptable := "SIP_nofInc606NotAcceptable";
+
+const charstring c_EPTF_SIP_statName_nofOutRetrans100Trying := "SIP_nofOutRetrans100Trying";
+const charstring c_EPTF_SIP_statName_nofOutRetrans180Ringing := "SIP_nofOutRetrans180Ringing";
+const charstring c_EPTF_SIP_statName_nofOutRetrans181CallIsBeingForwarded := "SIP_nofOutRetrans181CallIsBeingForwarded";
+const charstring c_EPTF_SIP_statName_nofOutRetrans182Queued := "SIP_nofOutRetrans182Queued";
+const charstring c_EPTF_SIP_statName_nofOutRetrans183SessionProgress := "SIP_nofOutRetrans183SessionProgress";
+
+const charstring c_EPTF_SIP_statName_nofOutRetrans200OK := "SIP_nofOutRetrans200OK";
+const charstring c_EPTF_SIP_statName_nofOutRetrans202Accepted := "SIP_nofOutRetrans202Accepted";
+
+const charstring c_EPTF_SIP_statName_nofOutRetrans300MultipleChoices := "SIP_nofOutRetrans300MultipleChoices";
+const charstring c_EPTF_SIP_statName_nofOutRetrans301MovedPermanently := "SIP_nofOutRetrans301MovedPermanently";
+const charstring c_EPTF_SIP_statName_nofOutRetrans302MovedTemporarily := "SIP_nofOutRetrans302MovedTemporarily";
+const charstring c_EPTF_SIP_statName_nofOutRetrans305UseProxy := "SIP_nofOutRetrans305UseProxy";
+const charstring c_EPTF_SIP_statName_nofOutRetrans380AlternativeService := "SIP_nofOutRetrans380AlternativeService";
+
+const charstring c_EPTF_SIP_statName_nofOutRetrans400BadRequest := "SIP_nofOutRetrans400BadRequest";
+const charstring c_EPTF_SIP_statName_nofOutRetrans401Unauthorized := "SIP_nofOutRetrans401Unauthorized";
+const charstring c_EPTF_SIP_statName_nofOutRetrans402PaymentRequired := "SIP_nofOutRetrans402PaymentRequired";
+const charstring c_EPTF_SIP_statName_nofOutRetrans403Forbidden := "SIP_nofOutRetrans403Forbidden";
+const charstring c_EPTF_SIP_statName_nofOutRetrans404NotFound := "SIP_nofOutRetrans404NotFound";
+const charstring c_EPTF_SIP_statName_nofOutRetrans405MethodNotAllowed := "SIP_nofOutRetrans405MethodNotAllowed";
+const charstring c_EPTF_SIP_statName_nofOutRetrans406NotAcceptable := "SIP_nofOutRetrans406NotAcceptable";
+const charstring c_EPTF_SIP_statName_nofOutRetrans407ProxyAuthenticationRequired := "SIP_nofOutRetrans407ProxyAuthenticationRequired";
+const charstring c_EPTF_SIP_statName_nofOutRetrans408RequestTimeout := "SIP_nofOutRetrans408RequestTimeout";
+const charstring c_EPTF_SIP_statName_nofOutRetrans409Conflict := "SIP_nofOutRetrans409Conflict";
+const charstring c_EPTF_SIP_statName_nofOutRetrans410Gone := "SIP_nofOutRetrans410Gone";
+const charstring c_EPTF_SIP_statName_nofOutRetrans412ConditionalRequestFailed := "SIP_nofOutRetrans412ConditionalRequestFailed";
+const charstring c_EPTF_SIP_statName_nofOutRetrans413RequestEntityTooLarge := "SIP_nofOutRetrans413RequestEntityTooLarge";
+const charstring c_EPTF_SIP_statName_nofOutRetrans414RequestURITooLong := "SIP_nofOutRetrans414RequestURITooLong";
+const charstring c_EPTF_SIP_statName_nofOutRetrans415UnsupportedMediaType := "SIP_nofOutRetrans415UnsupportedMediaType";
+const charstring c_EPTF_SIP_statName_nofOutRetrans416UnsupportedURIScheme := "SIP_nofOutRetrans416UnsupportedURIScheme";
+const charstring c_EPTF_SIP_statName_nofOutRetrans417UnknownResourcePriority := "SIP_nofOutRetrans417UnknownResourcePriority";
+const charstring c_EPTF_SIP_statName_nofOutRetrans420BadExtension := "SIP_nofOutRetrans420BadExtension";
+const charstring c_EPTF_SIP_statName_nofOutRetrans421ExtensionRequired := "SIP_nofOutRetrans421ExtensionRequired";
+const charstring c_EPTF_SIP_statName_nofOutRetrans422SessionIntervalTooSmall := "SIP_nofOutRetrans422SessionIntervalTooSmall";
+const charstring c_EPTF_SIP_statName_nofOutRetrans423IntervalTooBrief := "SIP_nofOutRetrans423IntervalTooBrief";
+const charstring c_EPTF_SIP_statName_nofOutRetrans424BadLocationInformation := "SIP_nofOutRetrans424BadLocationInformation";
+const charstring c_EPTF_SIP_statName_nofOutRetrans428UseIdentityHeader := "SIP_nofOutRetrans428UseIdentityHeader";
+const charstring c_EPTF_SIP_statName_nofOutRetrans429ProvideReferrerIdentity := "SIP_nofOutRetrans429ProvideReferrerIdentity";
+const charstring c_EPTF_SIP_statName_nofOutRetrans433AnonymityDisallowed := "SIP_nofOutRetrans433AnonymityDisallowed";
+const charstring c_EPTF_SIP_statName_nofOutRetrans436BadIdentityInfo := "SIP_nofOutRetrans436BadIdentityInfo";
+const charstring c_EPTF_SIP_statName_nofOutRetrans437UnsupportedCertificate := "SIP_nofOutRetrans437UnsupportedCertificate";
+const charstring c_EPTF_SIP_statName_nofOutRetrans438InvalidIdentityHeader := "SIP_nofOutRetrans438InvalidIdentityHeader";
+const charstring c_EPTF_SIP_statName_nofOutRetrans480TemporarilyUnavailable := "SIP_nofOutRetrans480TemporarilyUnavailable";
+const charstring c_EPTF_SIP_statName_nofOutRetrans481CallTransactionDoesNotExist := "SIP_nofOutRetrans481CallTransactionDoesNotExist";
+const charstring c_EPTF_SIP_statName_nofOutRetrans482LoopDetected := "SIP_nofOutRetrans482LoopDetected";
+const charstring c_EPTF_SIP_statName_nofOutRetrans483TooManyHops := "SIP_nofOutRetrans483TooManyHops";
+const charstring c_EPTF_SIP_statName_nofOutRetrans484AddressIncomplete := "SIP_nofOutRetrans484AddressIncomplete";
+const charstring c_EPTF_SIP_statName_nofOutRetrans485Ambiguous := "SIP_nofOutRetrans485Ambiguous";
+const charstring c_EPTF_SIP_statName_nofOutRetrans486BusyHere := "SIP_nofOutRetrans486BusyHere";
+const charstring c_EPTF_SIP_statName_nofOutRetrans487RequestTerminated := "SIP_nofOutRetrans487RequestTerminated";
+const charstring c_EPTF_SIP_statName_nofOutRetrans488NotAcceptableHere := "SIP_nofOutRetrans488NotAcceptableHere";
+const charstring c_EPTF_SIP_statName_nofOutRetrans489BadEvent := "SIP_nofOutRetrans489BadEvent";
+const charstring c_EPTF_SIP_statName_nofOutRetrans491RequestPending := "SIP_nofOutRetrans491RequestPending";
+const charstring c_EPTF_SIP_statName_nofOutRetrans493Undecipherable := "SIP_nofOutRetrans493Undecipherable";
+const charstring c_EPTF_SIP_statName_nofOutRetrans494SecurityAgreementRequired := "SIP_nofOutRetrans494SecurityAgreementRequired";
+
+const charstring c_EPTF_SIP_statName_nofOutRetrans500ServerInternalError := "SIP_nofOutRetrans500ServerInternalError";
+const charstring c_EPTF_SIP_statName_nofOutRetrans501NotImplemented := "SIP_nofOutRetrans501NotImplemented";
+const charstring c_EPTF_SIP_statName_nofOutRetrans502BadGateway := "SIP_nofOutRetrans502BadGateway";
+const charstring c_EPTF_SIP_statName_nofOutRetrans503ServiceUnavailable := "SIP_nofOutRetrans503ServiceUnavailable";
+const charstring c_EPTF_SIP_statName_nofOutRetrans504ServerTimeout := "SIP_nofOutRetrans504ServerTimeout";
+const charstring c_EPTF_SIP_statName_nofOutRetrans505VersionNotSupported := "SIP_nofOutRetrans505VersionNotSupported";
+const charstring c_EPTF_SIP_statName_nofOutRetrans513MessageTooLarge := "SIP_nofOutRetrans513MessageTooLarge";
+const charstring c_EPTF_SIP_statName_nofOutRetrans580PreconditionFailure := "SIP_nofOutRetrans580PreconditionFailure";
+
+const charstring c_EPTF_SIP_statName_nofOutRetrans600BusyEverywhere := "SIP_nofOutRetrans600BusyEverywhere";
+const charstring c_EPTF_SIP_statName_nofOutRetrans603Decline := "SIP_nofOutRetrans603Decline";
+const charstring c_EPTF_SIP_statName_nofOutRetrans604DoesNotExistAnywhere := "SIP_nofOutRetrans604DoesNotExistAnywhere";
+const charstring c_EPTF_SIP_statName_nofOutRetrans606NotAcceptable := "SIP_nofOutRetrans606NotAcceptable";
+
+const charstring c_EPTF_SIP_statName_nofIncRetrans100Trying := "SIP_nofIncRetrans100Trying";
+const charstring c_EPTF_SIP_statName_nofIncRetrans180Ringing := "SIP_nofIncRetrans180Ringing";
+const charstring c_EPTF_SIP_statName_nofIncRetrans181CallIsBeingForwarded := "SIP_nofIncRetrans181CallIsBeingForwarded";
+const charstring c_EPTF_SIP_statName_nofIncRetrans182Queued := "SIP_nofIncRetrans182Queued";
+const charstring c_EPTF_SIP_statName_nofIncRetrans183SessionProgress := "SIP_nofIncRetrans183SessionProgress";
+
+const charstring c_EPTF_SIP_statName_nofIncRetrans200OK := "SIP_nofIncRetrans200OK";
+const charstring c_EPTF_SIP_statName_nofIncRetrans202Accepted := "SIP_nofIncRetrans202Accepted";
+
+const charstring c_EPTF_SIP_statName_nofIncRetrans300MultipleChoices := "SIP_nofIncRetrans300MultipleChoices";
+const charstring c_EPTF_SIP_statName_nofIncRetrans301MovedPermanently := "SIP_nofIncRetrans301MovedPermanently";
+const charstring c_EPTF_SIP_statName_nofIncRetrans302MovedTemporarily := "SIP_nofIncRetrans302MovedTemporarily";
+const charstring c_EPTF_SIP_statName_nofIncRetrans305UseProxy := "SIP_nofIncRetrans305UseProxy";
+const charstring c_EPTF_SIP_statName_nofIncRetrans380AlternativeService := "SIP_nofIncRetrans380AlternativeService";
+
+const charstring c_EPTF_SIP_statName_nofIncRetrans400BadRequest := "SIP_nofIncRetrans400BadRequest";
+const charstring c_EPTF_SIP_statName_nofIncRetrans401Unauthorized := "SIP_nofIncRetrans401Unauthorized";
+const charstring c_EPTF_SIP_statName_nofIncRetrans402PaymentRequired := "SIP_nofIncRetrans402PaymentRequired";
+const charstring c_EPTF_SIP_statName_nofIncRetrans403Forbidden := "SIP_nofIncRetrans403Forbidden";
+const charstring c_EPTF_SIP_statName_nofIncRetrans404NotFound := "SIP_nofIncRetrans404NotFound";
+const charstring c_EPTF_SIP_statName_nofIncRetrans405MethodNotAllowed := "SIP_nofIncRetrans405MethodNotAllowed";
+const charstring c_EPTF_SIP_statName_nofIncRetrans406NotAcceptable := "SIP_nofIncRetrans406NotAcceptable";
+const charstring c_EPTF_SIP_statName_nofIncRetrans407ProxyAuthenticationRequired := "SIP_nofIncRetrans407ProxyAuthenticationRequired";
+const charstring c_EPTF_SIP_statName_nofIncRetrans408RequestTimeout := "SIP_nofIncRetrans408RequestTimeout";
+const charstring c_EPTF_SIP_statName_nofIncRetrans409Conflict := "SIP_nofIncRetrans409Conflict";
+const charstring c_EPTF_SIP_statName_nofIncRetrans410Gone := "SIP_nofIncRetrans410Gone";
+const charstring c_EPTF_SIP_statName_nofIncRetrans412ConditionalRequestFailed := "SIP_nofIncRetrans412ConditionalRequestFailed";
+const charstring c_EPTF_SIP_statName_nofIncRetrans413RequestEntityTooLarge := "SIP_nofIncRetrans413RequestEntityTooLarge";
+const charstring c_EPTF_SIP_statName_nofIncRetrans414RequestURITooLong := "SIP_nofIncRetrans414RequestURITooLong";
+const charstring c_EPTF_SIP_statName_nofIncRetrans415UnsupportedMediaType := "SIP_nofIncRetrans415UnsupportedMediaType";
+const charstring c_EPTF_SIP_statName_nofIncRetrans416UnsupportedURIScheme := "SIP_nofIncRetrans416UnsupportedURIScheme";
+const charstring c_EPTF_SIP_statName_nofIncRetrans417UnknownResourcePriority := "SIP_nofIncRetrans417UnknownResourcePriority";
+const charstring c_EPTF_SIP_statName_nofIncRetrans420BadExtension := "SIP_nofIncRetrans420BadExtension";
+const charstring c_EPTF_SIP_statName_nofIncRetrans421ExtensionRequired := "SIP_nofIncRetrans421ExtensionRequired";
+const charstring c_EPTF_SIP_statName_nofIncRetrans422SessionIntervalTooSmall := "SIP_nofIncRetrans422SessionIntervalTooSmall";
+const charstring c_EPTF_SIP_statName_nofIncRetrans423IntervalTooBrief := "SIP_nofIncRetrans423IntervalTooBrief";
+const charstring c_EPTF_SIP_statName_nofIncRetrans424BadLocationInformation := "SIP_nofIncRetrans424BadLocationInformation";
+const charstring c_EPTF_SIP_statName_nofIncRetrans428UseIdentityHeader := "SIP_nofIncRetrans428UseIdentityHeader";
+const charstring c_EPTF_SIP_statName_nofIncRetrans429ProvideReferrerIdentity := "SIP_nofIncRetrans429ProvideReferrerIdentity";
+const charstring c_EPTF_SIP_statName_nofIncRetrans433AnonymityDisallowed := "SIP_nofIncRetrans433AnonymityDisallowed";
+const charstring c_EPTF_SIP_statName_nofIncRetrans436BadIdentityInfo := "SIP_nofIncRetrans436BadIdentityInfo";
+const charstring c_EPTF_SIP_statName_nofIncRetrans437UnsupportedCertificate := "SIP_nofIncRetrans437UnsupportedCertificate";
+const charstring c_EPTF_SIP_statName_nofIncRetrans438InvalidIdentityHeader := "SIP_nofIncRetrans438InvalidIdentityHeader";
+const charstring c_EPTF_SIP_statName_nofIncRetrans480TemporarilyUnavailable := "SIP_nofIncRetrans480TemporarilyUnavailable";
+const charstring c_EPTF_SIP_statName_nofIncRetrans481CallTransactionDoesNotExist := "SIP_nofIncRetrans481CallTransactionDoesNotExist";
+const charstring c_EPTF_SIP_statName_nofIncRetrans482LoopDetected := "SIP_nofIncRetrans482LoopDetected";
+const charstring c_EPTF_SIP_statName_nofIncRetrans483TooManyHops := "SIP_nofIncRetrans483TooManyHops";
+const charstring c_EPTF_SIP_statName_nofIncRetrans484AddressIncomplete := "SIP_nofIncRetrans484AddressIncomplete";
+const charstring c_EPTF_SIP_statName_nofIncRetrans485Ambiguous := "SIP_nofIncRetrans485Ambiguous";
+const charstring c_EPTF_SIP_statName_nofIncRetrans486BusyHere := "SIP_nofIncRetrans486BusyHere";
+const charstring c_EPTF_SIP_statName_nofIncRetrans487RequestTerminated := "SIP_nofIncRetrans487RequestTerminated";
+const charstring c_EPTF_SIP_statName_nofIncRetrans488NotAcceptableHere := "SIP_nofIncRetrans488NotAcceptableHere";
+const charstring c_EPTF_SIP_statName_nofIncRetrans489BadEvent := "SIP_nofIncRetrans489BadEvent";
+const charstring c_EPTF_SIP_statName_nofIncRetrans491RequestPending := "SIP_nofIncRetrans491RequestPending";
+const charstring c_EPTF_SIP_statName_nofIncRetrans493Undecipherable := "SIP_nofIncRetrans493Undecipherable";
+const charstring c_EPTF_SIP_statName_nofIncRetrans494SecurityAgreementRequired := "SIP_nofIncRetrans494SecurityAgreementRequired";
+
+const charstring c_EPTF_SIP_statName_nofIncRetrans500ServerInternalError := "SIP_nofIncRetrans500ServerInternalError";
+const charstring c_EPTF_SIP_statName_nofIncRetrans501NotImplemented := "SIP_nofIncRetrans501NotImplemented";
+const charstring c_EPTF_SIP_statName_nofIncRetrans502BadGateway := "SIP_nofIncRetrans502BadGateway";
+const charstring c_EPTF_SIP_statName_nofIncRetrans503ServiceUnavailable := "SIP_nofIncRetrans503ServiceUnavailable";
+const charstring c_EPTF_SIP_statName_nofIncRetrans504ServerTimeout := "SIP_nofIncRetrans504ServerTimeout";
+const charstring c_EPTF_SIP_statName_nofIncRetrans505VersionNotSupported := "SIP_nofIncRetrans505VersionNotSupported";
+const charstring c_EPTF_SIP_statName_nofIncRetrans513MessageTooLarge := "SIP_nofIncRetrans513MessageTooLarge";
+const charstring c_EPTF_SIP_statName_nofIncRetrans580PreconditionFailure := "SIP_nofIncRetrans580PreconditionFailure";
+
+const charstring c_EPTF_SIP_statName_nofIncRetrans600BusyEverywhere := "SIP_nofIncRetrans600BusyEverywhere";
+const charstring c_EPTF_SIP_statName_nofIncRetrans603Decline := "SIP_nofIncRetrans603Decline";
+const charstring c_EPTF_SIP_statName_nofIncRetrans604DoesNotExistAnywhere := "SIP_nofIncRetrans604DoesNotExistAnywhere";
+const charstring c_EPTF_SIP_statName_nofIncRetrans606NotAcceptable := "SIP_nofIncRetrans606NotAcceptable";
+
+const charstring c_EPTF_SIP_hashMapName_statusCode2Idx := "SIP_HashMap_statusCode2Idx";
+const charstring c_EPTF_SIP_hashMapName_reasonPhrase2Idx := "SIP_HashMap_reasonPhrase2Idx";
+
+type record EPTF_SIP_Statistics
+{
+  integer statusCode2Idx,
+  integer reasonPhrase2Idx,
+  EPTF_SIP_MessageStatistics incoming,
+  EPTF_SIP_MessageStatistics outgoing
+}
+
+type record EPTF_SIP_MessageStatistics
+{
+  EPTF_SIP_MessageStatistic_List requests,
+  EPTF_SIP_MessageStatistic_List responses
+}
+
+type record EPTF_SIP_MessageStatistic
+{
+  integer msgCounter_k,
+  integer retrans_k
+}
+
+type record of EPTF_SIP_MessageStatistic EPTF_SIP_MessageStatistic_List;
+
+///////////////////////////////////////////////////////////////////////////////
+// Constant: c_EPTF_SIP_DS_sourceId
+//
+// Purpose:
+//   SIP iterators and data elements belong to this dataSource name
+//
+///////////////////////////////////////////////////////////////////////////////
+const charstring c_EPTF_SIP_DS_sourceId := "SIP_DS"
+}//end of module
+with {
+extension "version <RnXnn>"
+}
+

@@ -1,0 +1,655 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_SIP_Transaction_Definitions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 522
+//  Updated:  2012-11-28
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////
+//  Module: EPTF_SIP_Transaction_Definitions
+// 
+//  Purpose:
+//    Type definitions and constants for modelling SIP transactions.
+// 
+//  Module Parameters:
+//    - tsp_SIP_TransactionTimerValues - <SIP_TimerValues> - contains transaction timer values.
+//        Default value: c_SIP_TransactionTimerDefaultValues
+//    - tsp_SIP_TUTimerValues - <SIP_TimerValues> - contains retransmission timers for the TU
+//    - tsp_SIP_maxTrDBSize - *integer* - if the size of the transaction database
+//        increases above this size the AppLib logs an error message. Default value: 5000.
+// 
+//  Module depends on:
+//    <EPTF_CLL_FBQ_Definitions>
+//    <EPTF_CLL_LGenBase_TemplateDefinitions>
+//    <EPTF_CLL_LGenBase_Definitions>
+//    <EPTF_CLL_Common_Definitions>
+//
+//    <EPTF_SIP_Common_Definitions>
+//
+//    <SIPmsg_Types>
+// 
+//  Last Review Date:
+//    2012-11-08
+///////////////////////////////////////////////////////////
+module EPTF_SIP_Transaction_Definitions {
+
+import from EPTF_CLL_FBQ_Definitions all;
+import from EPTF_CLL_LGenBase_TemplateDefinitions all;
+import from EPTF_CLL_LGenBase_Definitions all;
+import from EPTF_CLL_Common_Definitions all;
+
+import from EPTF_SIP_Common_Definitions all;
+
+import from SIPmsg_Types all;
+
+modulepar
+{
+  SIP_TimerValues tsp_SIP_TransactionTimerValues := c_SIP_TransactionTimerDefaultValues;
+  SIP_TimerValues tsp_SIP_TUTimerValues := c_SIP_TUTimerDefaultValues;
+  integer tsp_SIP_maxTrDBSize := 5000;
+}
+
+type record SIP_TransactionDataUAC
+{
+  SIP_FlatSipUrl                toAddr,
+  PDU_SIP_Request               request optional,
+  charstring                    requestRaw
+}
+
+type record SIP_TransactionDataUAS
+{
+  ViaBody                       via,
+  PDU_SIP_Response              response optional,
+  charstring                    responseRaw
+}
+
+
+/////////////////////////////////////////////////////////////////////////
+//
+//  Type:  SIP_TransactionData
+//
+//  Purpose:
+//    "A SIP transaction occurs between a client and a server and comprises
+//    all messages from the first request sent from the client to the server
+//    up to the final response sent from the server to the client" This type
+//    describes a transaction and stores essential information about it.
+//
+//  Elements:
+//    state - *integer* - State of the transaction (constants are defined later).
+//    method - <Method>- Method of the transaction.
+//    transactionId - *charstring* - Transaction identifier.
+//    request - <PDU_SIP_Request> - The request message of the transaction.
+//    requestRaw - *octetstring* - The encoded request message.
+//    response - <PDU_SIP_Response> - The response message of the transaction.
+//    responseRaw - *octetstring* - The encoded response message.
+//    sendNACK - *boolean* - true if the nack is constructed for the transaction
+//    transport - <SIP_Transport> - SIP transport
+//    insideDialog - *boolean* - true if the transaction is inside a dialog
+//    insideSubscription - *boolean* - true if the transaction is inside a subscription
+//    retransmissionTime - *float* - UDP retransmission time in seconds.
+//    transactionTimeout - *float* - The maximum duration of the transaction in seconds.
+//    keepAliveTime - *float* - After the transaction is finished the transaction will not be deleted for keepAliveTime 
+//                              seconds to handle retransmissions from the other side. Used only in case of UDP transport.
+//    maxRetransTime - *float* - The maximum of the retransmission interval. 0.0 means that there is no maximum
+//    dialogIdx - *integer* - Index of the dialog of the transaction in v_db_dialog
+//    subscriptionIdx - *integer* - Index of the subscription of the transaction in v_db_subscription
+//    publishIdx - *integer* - Index of the publication of the transaction in v_db_publish
+//    sessionIdx - *integer* - session index
+//    userIdx - *integer* - Index of the user in v_db_users
+//    FSMIdx - *integer* - The FSM context data index
+//    nextTrRef - *integer* - Index of another transaction (used in case of a CANCEL).
+//    sendTime - *float* - The time when the first message of the transaction was sent
+//    receiveTime - *float* - The time when the firs response in the trasaction was received
+//    timers - <SIP_TimerDB> - Used to store running timer indices
+//    methodList - <Method_List> - stores the methods and status-lines of the messges of the transaction
+//    distinctResponse - *boolean* - true if the response must be distinguished by methods
+//    prack - *boolean* - true if the transaction needs PRACK messages
+//    cleanedUp - *boolean* - true if the transaction has been cleaned up
+//    templateParams - <EPTF_LGenBase_TemplParamSubstList> - template parameters for the outgoing message
+//    templateHeaderIdx - *integer* - template header index used for outgoing message
+//    templateBodyIdx - *integer* - template body index used for outgoing message
+//    unackRespData - <SIP_UnacknowledgedRespData> - contains data to handle the reliable transport of provisional responses
+//    currentRSeq - *integer* - the current response number
+//
+//  Detailed Comments:
+//      -
+/////////////////////////////////////////////////////////////////////////
+type record SIP_TransactionData
+{
+  integer                       state,
+  Method                        method,
+  charstring                    transactionId,
+  charstring                    cSeq,
+  SIP_TransactionInDialog       trInDialog,
+  SIP_FlatSipUrl                toAddr,
+  ViaBody                       via,
+  charstring                    connId,
+  PDU_SIP_Request               request optional,
+  octetstring                   requestRaw,
+  PDU_SIP_Response              response optional,
+  octetstring                   responseRaw,
+  boolean                       sendNACK,
+  SIP_Transport                 transport,
+  float                         retransmissionTime,
+  float                         transactionTimeout,
+  float                         keepAliveTime,
+  float                         maxRetransTime,
+  integer                       dialogIdx, // -1 if not related to dialog
+  integer                       subscriptionIdx, // -1 if not related to subscription
+  integer                       publishIdx, // -1 if not related to a publish entity
+  integer                       sessionIdx,
+  integer                       userIdx,
+  integer                       FSMIdx,
+  float                         sendTime,
+  float                         receiveTime,
+  SIP_TimerDB                   timers,
+  Method_List                   methodList,
+  boolean                       distinctResponse,
+  boolean                       prack,
+  boolean                       cleanedUp,
+//store for UAC Request
+  EPTF_LGenBase_TemplParamSubstList   templateParams,
+  integer                       templateHeaderIdx,
+  integer                       templateBodyIdx,
+//store for PRACK
+  SIP_UnacknowledgedRespData    unackRespData,
+  integer                       currentRSeq
+};
+
+type enumerated SIP_TransactionInDialog
+{CREATE_DIALOG, REMOVE_DIALOG, REFRESH_DIALOG, OUTOF_DIALOG, INSIDE_DIALOG}
+
+///////////////////////////////////////////////////////////
+// Constant: c_SIP_TransactionData_init
+//
+// Purpose:
+//   Contains initialization data of the <SIP_TransactionData>.
+//
+///////////////////////////////////////////////////////////
+const SIP_TransactionData c_SIP_TransactionData_init :=
+{
+  state         := c_SIP_TrState_Unknown,
+  method        := REGISTER_E,
+  transactionId := "",
+  cSeq := "",
+  trInDialog := OUTOF_DIALOG,
+  toAddr := cg_FlatSipUrl_base,
+  via := {{"", "", ""}, {omit, omit}, omit},
+  connId := "",
+  request := omit,//cg_PDU_SIP_Request_base,
+  requestRaw := ''O,
+  response := omit,//cg_PDU_SIP_Response_base,
+  responseRaw := ''O,
+  sendNACK := false,
+  transport := UDP,
+  retransmissionTime := 0.0,
+  transactionTimeout := 0.0,
+  keepAliveTime := 0.0,
+  maxRetransTime := 0.0,
+  dialogIdx := -1,
+  subscriptionIdx := -1,
+  publishIdx := -1,
+  sessionIdx := -1,
+  userIdx := -1,
+  FSMIdx := -1,
+  sendTime := 0.0,
+  receiveTime := 0.0,
+  timers := { -1, -1, -1, -1, -1, -1, -1},
+  methodList := {},
+  distinctResponse := false,
+  prack := false,
+  cleanedUp := false,
+  templateParams := {},
+  templateHeaderIdx := -1,
+  templateBodyIdx := -1,
+  unackRespData := {-1,-1},
+  currentRSeq := -1
+};
+
+/////////////////////////////////////////////////////////////////////////
+//
+//  Type:  SIP_UnacknowledgedRespData
+//
+//  Purpose:
+//   Stores data for the un-acknowledged response.
+//
+//  Elements:
+//    - rSeq - *integer* - the response number of the un-acknowledged response
+//    - seqNumber - *integer* - the CSeq number of the un-acknowledged response
+/////////////////////////////////////////////////////////////////////////
+type record SIP_UnacknowledgedRespData
+{
+  integer rSeq,
+  integer seqNumber
+}
+
+///////////////////////////////////////////////////////////
+// Type: SIP_TransactionDataList
+//
+// Purpose:
+//   Provides a container for arbitrary number of transactions.
+///////////////////////////////////////////////////////////
+type record of SIP_TransactionData SIP_TransactionDataList;
+
+/////////////////////////////////////////////////////////////////////////
+//
+//  Type:  SIP_TransactionDatabase
+//
+//  Purpose:
+//   SIP transaction database.
+//
+//  Elements:
+//    - queue - <EPTF_FreeBusyQueue> - FreeBusy queue for index management.
+//    - data - <SIP_TransactionDataList> - Stores transaction data.
+//    - hashRef - *integer* - Reference to a hash table.
+//
+/////////////////////////////////////////////////////////////////////////
+type record SIP_TransactionDatabase {
+    EPTF_FreeBusyQueue queue, 
+    SIP_TransactionDataList data,
+    integer hashRef
+}
+
+///////////////////////////////////////////////////////////
+// Type: fcb_EPTF_SIP_modifyRequestHeaderAndBody
+//
+// Purpose:
+//  Defines the call-back function type to set outgoing request header and body.
+//
+///////////////////////////////////////////////////////////
+type function fcb_EPTF_SIP_modifyRequestHeaderAndBody(
+    inout PDU_SIP_Request pl_request,
+    in EPTF_IntegerList pl_params := {},
+    in EPTF_LGenBase_TestStepArgs pl_ptr := c_EPTF_LGenBase_emptyTestStepArgs)
+  runs on self;
+
+///////////////////////////////////////////////////////////
+// Type: fcb_EPTF_SIP_modifyRequestHeaderAndTemplateBody
+//
+// Purpose:
+//  Defines the call-back function type to set outgoing request header and template params of body.
+//
+///////////////////////////////////////////////////////////
+type function fcb_EPTF_SIP_modifyRequestHeaderAndTemplateBody(
+    inout MessageHeader pl_requestHeader,
+    inout EPTF_LGenBase_TemplParamSubstList pl_templateParams,
+    in EPTF_IntegerList pl_params := {},
+    in EPTF_LGenBase_TestStepArgs pl_ptr := c_EPTF_LGenBase_emptyTestStepArgs)
+  runs on self;
+
+///////////////////////////////////////////////////////////
+// Type: fcb_EPTF_SIP_modifyRequestTemplateHeaderAndBody
+//
+// Purpose:
+//  Defines the call-back function type to set outgoing request
+//   template params only for the header and contents of the body.
+//
+///////////////////////////////////////////////////////////
+type function fcb_EPTF_SIP_modifyRequestTemplateHeaderAndBody(
+    inout EPTF_LGenBase_TemplParamSubstList pl_templateParams,
+    inout charstring pl_requestBody,
+    in EPTF_IntegerList pl_params := {},
+    in EPTF_LGenBase_TestStepArgs pl_ptr := c_EPTF_LGenBase_emptyTestStepArgs)
+  runs on self;
+
+///////////////////////////////////////////////////////////
+// Type: fcb_EPTF_SIP_modifyRequestTemplateParams
+//
+// Purpose:
+//  Defines the call-back function type to set outgoing request
+//   template params both for header and body.
+//
+///////////////////////////////////////////////////////////
+type function fcb_EPTF_SIP_modifyRequestTemplateParams(
+    inout EPTF_LGenBase_TemplParamSubstList pl_templateParams,
+    in EPTF_IntegerList pl_params := {},
+    in EPTF_LGenBase_TestStepArgs pl_ptr := c_EPTF_LGenBase_emptyTestStepArgs)
+  runs on self;
+
+///////////////////////////////////////////////////////////
+// Type: fcb_EPTF_SIP_modifyResponseHeaderAndBody
+//
+// Purpose:
+//  Defines the call-back function type to set outgoing response header and body.
+//
+///////////////////////////////////////////////////////////
+type function fcb_EPTF_SIP_modifyResponseHeaderAndBody(
+    inout PDU_SIP_Response pl_response,
+    in EPTF_IntegerList pl_params := {},
+    in EPTF_LGenBase_TestStepArgs pl_ptr := c_EPTF_LGenBase_emptyTestStepArgs)
+  runs on self;
+
+/////////////////////////////////////////////////////////////////////////
+//
+//  Type:  SIP_ModifyMsgCallBackRecord
+//
+//  Purpose:
+//   Stores call-back functions for modifying outgoing requests.
+//
+//  Elements:
+//    - name - *charstring* - The name of the call-back record
+//    - defaultParams - <EPTF_IntegerList> - default list of parameter which are passed in call-back functions
+//    - modifyRequestHeaderAndBody - <fcb_EPTF_SIP_modifyRequestHeaderAndBody> -
+//       Call-back function to modify the contents of both Request Header and Body
+//    - modifyRequestHeaderAndTemplateBody - <fcb_EPTF_SIP_modifyRequestHeaderAndTemplateBody> -
+//       Call-back function to modify outgoing Request contents of the Header and Template params of Body
+//    - modifyRequestTemplateHeaderAndBody - <fcb_EPTF_SIP_modifyRequestTemplateHeaderAndBody> -
+//       Call-back function to modify outgoing Request Template params only for the Header and contents of the Body
+//    - modifyRequestTemplateParams - <fcb_EPTF_SIP_modifyRequestTemplateParams> -
+//       Call-back function to modify outgoing Request Template params for both Header and Body
+//    - modifyResponseHeaderAndBody - <fcb_EPTF_SIP_modifyResponseHeaderAndBody> -
+//       Call-back function to modify the contents of outgoing Response Header and Body 
+//
+/////////////////////////////////////////////////////////////////////////
+type record SIP_ModifyMsgCallBackRecord {
+  charstring name,
+  fcb_EPTF_SIP_modifyRequestHeaderAndBody modifyRequestHeaderAndBody,
+  fcb_EPTF_SIP_modifyRequestHeaderAndTemplateBody modifyRequestHeaderAndTemplateBody,
+  fcb_EPTF_SIP_modifyRequestTemplateHeaderAndBody modifyRequestTemplateHeaderAndBody,
+  fcb_EPTF_SIP_modifyRequestTemplateParams modifyRequestTemplateParams,
+  fcb_EPTF_SIP_modifyResponseHeaderAndBody modifyResponseHeaderAndBody
+}
+
+///////////////////////////////////////////////////////////
+// Type: SIP_ModifyMsgCallBackList
+//
+// Purpose:
+//   Provides a container for arbitrary number of call-back functions to modify outgoing messages.
+//
+///////////////////////////////////////////////////////////
+type record of SIP_ModifyMsgCallBackRecord SIP_ModifyMsgCallBackList;
+
+////////////////////////////////////////////////////
+// Type: SIP_ModifyMsgCallBackDatabase
+//
+// Purpose:  
+//   Contains the function types that can be registered in the SIP AppLib
+//
+// Elements:
+//   - hashRef - *integer* - Hash index that contains the name -> index associations
+//   - data - <SIP_ModifyMsgCallBackList> - contains the list of registered functions
+//
+////////////////////////////////////////////////////
+type record SIP_ModifyMsgCallBackDatabase {
+  integer hashRef,
+  SIP_ModifyMsgCallBackList data
+}
+
+///////////////////////////////////////////////////////////
+// Constant: Transaction states.
+//
+// Elements:
+//  (The states are equivalent to the states in RFC3261)
+//
+//  c_SIP_TrState_Unknown - 
+//  c_SIP_TrState_Calling - 
+//  c_SIP_TrState_Proceeding - 
+//  c_SIP_TrState_Completed - 
+//  c_SIP_TrState_Terminated - 
+//  c_SIP_TrState_Trying - 
+//  c_SIP_TrState_Confirmed -
+//  c_SIP_TrState_Keepalive -
+//  c_SIP_TrState_ProxyUnknown - 
+///////////////////////////////////////////////////////////
+
+// Transaction states
+const integer c_SIP_TrState_Unknown := 0;
+const integer c_SIP_TrState_Calling := 1;
+const integer c_SIP_TrState_Proceeding := 2;
+const integer c_SIP_TrState_Completed := 3;
+const integer c_SIP_TrState_Terminated := 4;
+const integer c_SIP_TrState_Trying := 5;
+const integer c_SIP_TrState_Confirmed := 6;
+const integer c_SIP_TrState_Keepalive := 7;
+const integer c_SIP_TrState_ProxyUnknown := 8;
+
+// this should be changed if type enumerated Method changes in SIP testport
+const Method_List c_SIP_Methods:=
+{
+  "ACK",
+  "BYE",
+  "CANCEL",
+  "INFO",
+  "INVITE",
+  "OPTIONS",
+  "MESSAGE",
+  "NOTIFY",
+  "PRACK",
+  "PUBLISH",
+  "REFER",
+  "REGISTER",
+  "SUBSCRIBE",
+  "UPDATE"
+};
+
+///////////////////////////////////////////////////////////
+// Constant: Request type indices.
+//
+// Elements:
+//  c_SIP_Method_ACK - 
+//  c_SIP_Method_BYE - 
+//  c_SIP_Method_CANCEL - 
+//  c_SIP_Method_INFO - 
+//  c_SIP_Method_INVITE - 
+//  c_SIP_Method_OPTIONS - 
+//  c_SIP_Method_MESSAGE - 
+//  c_SIP_Method_NOTIFY - 
+//  c_SIP_Method_PRACK - 
+//  c_SIP_Method_PUBLISH - 
+//  c_SIP_Method_REFER - 
+//  c_SIP_Method_REGISTER - 
+//  c_SIP_Method_SUBSCRIBE - 
+//  c_SIP_Method_UPDATE - 
+///////////////////////////////////////////////////////////
+// SIP methods
+// this should be changed if type enumerated Method changes in SIP testport
+const integer c_SIP_Method_ACK := 0; // == enum2int(ACK_E)
+const integer c_SIP_Method_BYE := 1; // == enum2int(BYE_E)
+const integer c_SIP_Method_CANCEL := 2; // == enum2int(CANCEL_E)
+const integer c_SIP_Method_INFO := 3; // == enum2int(INFO_E)
+const integer c_SIP_Method_INVITE := 4; // == enum2int(INVITE_E)
+const integer c_SIP_Method_OPTIONS := 5; // == enum2int(OPTIONS_E)
+const integer c_SIP_Method_MESSAGE := 6; // == enum2int(MESSAGE_E)
+const integer c_SIP_Method_NOTIFY := 7; // == enum2int(NOTIFY_E)
+const integer c_SIP_Method_PRACK  := 8; // == enum2int(PRACK_E)
+const integer c_SIP_Method_PUBLISH := 9; // == enum2int(PUBLISH_E)
+const integer c_SIP_Method_REFER := 10; // == enum2int(REFER_E)
+const integer c_SIP_Method_REGISTER := 11; // == enum2int(REGISTER_E)
+const integer c_SIP_Method_SUBSCRIBE := 12; // == enum2int(SUBSCRIBE_E)
+const integer c_SIP_Method_UPDATE := 13; // == enum2int(UPDATE_E)
+
+///////////////////////////////////////////////////////////
+// Constant: Used for differentiated response report
+//
+// Elements:
+//  c_SIP_EventOffset - 
+///////////////////////////////////////////////////////////
+const integer c_SIP_EventOffset := 1000;
+
+///////////////////////////////////////////////////////////
+// Constant: c_SIP_AllowedMethods
+//
+// Purpose:
+//   Contains list of allowed SIP methods.
+//
+// Detailed comments:
+//    -
+///////////////////////////////////////////////////////////
+const Method_List c_SIP_AllowedMethods :=
+{
+  "INVITE", "BYE", "UPDATE", "CANCEL", "PRACK", "REGISTER", "ACK", "NOTIFY"
+}
+
+
+///////////////////////////////////////////////////////////
+// Constant: c_SIP_TransactionTimerDefaultValues
+//
+// Purpose:
+//   Contains a list of default transaction timer values
+//
+// Detailed comments:
+//    - base retransmission time for INVITE UACs (T1, Timer A)
+//    - max retransmission time interval for INVITE UACs (0.0 means no limit)
+//    - transaction timeout for INVITE UACs (64*T1, Timer B)
+//    - keepalive timer for INVITE UACs (Timer D, >= 32.0)
+//    - base retransmission time for non-INVITE UACs (T1, Timer E)
+//    - max retransmission time interval for non-INVITE UACs (T2)
+//    - transaction timeout for non-INVITE UACs (64*T1, Timer F)
+//    - keepalive timer for non-INVITE UACs (T4, Timer K)
+//    - base retransmission time for INVITE UASs (T1, Timer G)
+//    - max retransmission time interval for INVITE UASs (T2)
+//    - transaction timeout for INVITE UASs (64*T1, Timer H)
+//    - keepalive timer for INVITE UASs (T4, Timer I)
+//    - keepalive timer for non-INVITE UASs (64*T1, Timer J)
+///////////////////////////////////////////////////////////
+const SIP_TimerValues c_SIP_TransactionTimerDefaultValues
+:=
+{
+  0.5,//T1
+  0.0,//no max
+  32.0,//64*T1
+  32.0,//Timer D, >= 32.0
+  0.5,//T1
+  4.0,//T2
+  32.0,//64*T1
+  5.0,//T4
+  0.5,//T1
+  4.0,//T2,
+  32.0,//64*T1
+  5.0,//T4
+  32.0//64*T1
+};
+
+///////////////////////////////////////////////////////////
+//Constant: Named indexes in <c_SIP_TransactionTimerDefaultValues>
+//
+//Elements:
+//  c_SIP_TimerUACINVITE_Retransmission - 
+//  c_SIP_TimerUACINVITE_MaxRetransmission - 
+//  c_SIP_TimerUACINVITE_TransactionTimeout - 
+//  c_SIP_TimerUACINVITE_KeepAlive - 
+//  c_SIP_TimerUACnonINVITE_Retransmission - 
+//  c_SIP_TimerUACnonINVITE_MaxRetransmission - 
+//  c_SIP_TimerUACnonINVITE_TransactionTimeout - 
+//  c_SIP_TimerUACnonINVITE_KeepAlive - 
+//  c_SIP_TimerUASINVITE_Retransmission - 
+//  c_SIP_TimerUASINVITE_MaxRetransmission - 
+//  c_SIP_TimerUASINVITE_TransactionTimeout - 
+//  c_SIP_TimerUASINVITE_KeepAlive - 
+//  c_SIP_TimerUASnonINVITE_KeepAlive - 
+///////////////////////////////////////////////////////////
+const integer c_SIP_TimerUACINVITE_Retransmission := 0;
+const integer c_SIP_TimerUACINVITE_MaxRetransmission := 1;
+const integer c_SIP_TimerUACINVITE_TransactionTimeout := 2;
+const integer c_SIP_TimerUACINVITE_KeepAlive := 3;
+
+const integer c_SIP_TimerUACnonINVITE_Retransmission := 4;
+const integer c_SIP_TimerUACnonINVITE_MaxRetransmission :=5;
+const integer c_SIP_TimerUACnonINVITE_TransactionTimeout := 6;
+const integer c_SIP_TimerUACnonINVITE_KeepAlive := 7;
+
+const integer c_SIP_TimerUASINVITE_Retransmission := 8;
+const integer c_SIP_TimerUASINVITE_MaxRetransmission := 9;
+const integer c_SIP_TimerUASINVITE_TransactionTimeout := 10;
+const integer c_SIP_TimerUASINVITE_KeepAlive := 11;
+
+const integer c_SIP_TimerUASnonINVITE_KeepAlive := 12;
+
+///////////////////////////////////////////////////////////
+// Constant: c_SIP_TUTimerDefaultValues
+//
+// Purpose:
+//   Contains a list of default Transaction User (TU) timer values
+//
+// Detailed comments:
+//    - base retransmission time for 2xx reponses in case of an INVITE (T1)
+//    - max retransmission time for 2xx reponses in case of an INVITE
+//    - timeout for the retransmission of 2xx reponses in case of an INVITE (64*T1)
+//    - base retransmission time for reliable provisional responses (T1)
+//    - max retransmission time interval for reliable provisional responses (0.0 means no limit)
+//    - timeout for the retransmission of reliable provisional responses (64*T1)
+///////////////////////////////////////////////////////////
+const SIP_TimerValues c_SIP_TUTimerDefaultValues :=
+{
+  0.5, //T1
+  4.0, //T2
+  32.0, //64*T1
+  0.5, //T1
+  0.0, //no max
+  32.0 //64*T1
+}
+
+///////////////////////////////////////////////////////////
+//Constant: Named indexes in <c_SIP_TUTimerDefaultValues>
+//
+//Elements:
+//  c_SIP_TimerTU2xx_Retransmission - 
+//  c_SIP_TimerTU2xx_MaxRetransmission - 
+//  c_SIP_TimerTU2xx_RetransTimeout - 
+//  c_SIP_TimerTUProvisional_Retransmission - 
+//  c_SIP_TimerTUProvisional_MaxRetransmission - 
+//  c_SIP_TimerTUProvisional_RetransTimeout - 
+///////////////////////////////////////////////////////////
+const integer c_SIP_TimerTU2xx_Retransmission := 0;
+const integer c_SIP_TimerTU2xx_MaxRetransmission := 1;
+const integer c_SIP_TimerTU2xx_RetransTimeout := 2;
+const integer c_SIP_TimerTUProvisional_Retransmission := 3;
+const integer c_SIP_TimerTUProvisional_MaxRetransmission := 4;
+const integer c_SIP_TimerTUProvisional_RetransTimeout := 5;
+
+///////////////////////////////////////////////////////////
+//Constant: Transaction timer indices.
+//
+//Elements:
+//  c_SIP_TimerIdxUAC_Retransmission - 
+//  c_SIP_TimerIdxUAC_TransactionTimeout - 
+//  c_SIP_TimerIdxUAC_KeepAlive - 
+//  c_SIP_TimerIdxUAS_Retransmission - 
+//  c_SIP_TimerIdxUAS_TransactionTimeout - 
+//  c_SIP_TimerIdxUAS_KeepAlive - 
+///////////////////////////////////////////////////////////
+const integer c_SIP_TimerIdxUAC_Retransmission := 0;
+const integer c_SIP_TimerIdxUAC_TransactionTimeout := 1;
+const integer c_SIP_TimerIdxUAC_KeepAlive := 2;
+
+const integer c_SIP_TimerIdxUAS_Retransmission := 3;
+const integer c_SIP_TimerIdxUAS_TransactionTimeout := 4;
+const integer c_SIP_TimerIdxUAS_KeepAlive := 5;
+
+const integer c_SIP_TimerIdxUAC_C := 6;
+
+
+///////////////////////////////////////////////////////////
+//Constant: Indices used in <EPTF_ActionId>
+//
+//Elements:
+//  c_AIdx_TransactionIdx - 
+//  c_AIdx_TransactionTimerId - 
+//////////////////////////////////////////////////////////
+const integer c_AIdx_TransactionIdx := 0;
+const integer c_AIdx_TransactionTimerId := 1;
+///////////////////////////////////////////////////////////
+// Type: fcb_EPTF_SIP_RemoveTransaction
+//
+// Purpose:
+//  Defines the type of the function that is called every time
+//  a trasaction is destroyed.
+//
+///////////////////////////////////////////////////////////
+type function fcb_EPTF_SIP_RemoveTransaction(in charstring pl_transactionId)
+runs on self;
+
+const boolean c_SIP_checkTRDatabase := false;
+
+}//end of module
+with {
+extension "version <RnXnn>"
+}
+

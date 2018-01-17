@@ -1,0 +1,276 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_SIP_Dialog_Definitions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 522
+//  Updated:  2012-11-28
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////
+//  Module: EPTF_SIP_Dialog_Definitions
+// 
+//  Purpose:
+//    Type definitions and constants for modelling SIP dialogs.
+// 
+//  Module Parameters:
+//    - tsp_SIP_maxDialogDBSize - *integer* - Each time the sizeof of the dialog database increases this size,
+//                                            the AppLib logs an error message. Default value: 5000.
+//
+//  Module depends on:
+//    <EPTF_CLL_Common_Definitions>
+//
+//    <EPTF_CLL_FBQ_Definitions>
+//
+//    <SIPmsg_Types>
+//
+//    <EPTF_SIP_Common_Definitions>
+//
+//    <EPTF_SIP_Templates>
+// 
+//    <EPTF_CLL_LGenBase_TemplateDefinitions>
+//
+//  Last Review Date:
+//    2010-01-29
+// 
+///////////////////////////////////////////////////////////
+module EPTF_SIP_Dialog_Definitions {
+
+//import from EPTF_CLL_Common_Definitions all;
+import from EPTF_CLL_FBQ_Definitions all;
+
+import from EPTF_SIP_Common_Definitions all;
+//import from EPTF_SIP_Templates all;
+import from EPTF_CLL_LGenBase_TemplateDefinitions all;
+
+import from SIPmsg_Types all;
+
+//=========================================================================
+// Module Parameters
+//=========================================================================
+modulepar boolean tsp_EPTF_SIP_removeDialogsOnlyOnTermination := false;
+
+modulepar integer tsp_SIP_maxDialogDBSize := 5000;
+
+////////////////////////////////////////////////////
+//Type: SIP_DialogData
+//
+//Purpose:
+//  Contains data of a dialog
+//
+//Elements:
+//  - state - *integer* - state of the dialog (constants are defined later)
+//  - subscriptionIdx - *integer* - the index of the subscription in the dialog
+//  - userSessionAssociated - *boolean* - true if the dialog contains a session (dialog established with an INVITE)
+//  - userIdx - *integer* - the index of a user in v_db_users
+//  - FSMIdx - *integer* - the FSM context data index
+//  - nofRefs - *integer* - number of reference pointing to the dialog. The dialog is not ermoved until it is > 0.
+//  - requestUri - <SIP_FlatSipUrl> - Request-URI to put in requests in the dialog
+//  - localUri - <SIP_FlatSipUrl> - the local URI
+//  - remoteUri - <SIP_FlatSipUrl> - the remote URI
+//  - remoteTarget - <SIP_FlatSipUrl> - remote target
+//  - callId - <CallidString> - call ID (dialog identifier)
+//  - localTag - *charstring* - local tag (dialog identifier)
+//  - remoteTag - *charstring* - remote tag (dialog identifier)
+//  - stateSet - *boolean* - true if the dialog state is set
+//  - localSeqNum - *integer* - CSeq number of the local party
+//  - remoteSeqNum - *integer* - CSeq number of the remote party
+//  - route - *optional* <Route> - the Route header field
+//  - looseRouting - *boolean* - true if loose routing is used
+//  - timers - <SIP_TimerDB> - dialog related timer references
+//  - UASIdx - *integer* - an index of a re-INVITE UAS transaction
+//  - earlyDialog - *boolean* - if false, no early dialogs will be created
+//
+////////////////////////////////////////////////////
+type record SIP_DialogData {
+  integer                       state,
+  integer                       subscriptionIdx,
+  boolean                       userSessionAssociated,
+  integer                       userIdx,
+  integer                       FSMIdx,
+  integer                       nofRefs,
+
+  SIP_FlatSipUrl                requestUri,
+
+  // "A dialog is a peer-to-peer SIP relationship between two user agents
+  // that persists for some time."
+  SIP_FlatSipUrl                localUri,
+  SIP_FlatSipUrl                remoteUri,
+  SIP_FlatSipUrl                remoteTarget,
+  
+  // dialog identifiers:
+  CallidString                  callId,
+  charstring                    localTag,
+  charstring                    remoteTag,
+
+  boolean                       stateSet,
+
+  // message sequence numbers:
+  integer                       initSeqNum,
+  integer                       localSeqNum,
+  integer                       remoteSeqNum,
+  SIP_RouteBodyList             route,
+  boolean                       looseRouting,
+
+//ELIMINATE DIALOG WATHCDOG
+//  SIP_TimerDB                   timers,
+  integer                       UASIdx,
+  boolean                       earlyDialog,
+
+//storing for ACK
+  SIP_ACKData                       ACKData
+}
+
+///////////////////////////////////////////////////////////
+// Type: SIP_DialogDataList
+//
+// Purpose:
+//   Provides a container for <SIP_DialogData>.
+///////////////////////////////////////////////////////////
+type record of SIP_DialogData SIP_DialogDataList;
+
+////////////////////////////////////////////////////
+//Type: SIP_DialogDatabase
+//
+//Purpose:  
+//  SIP dialog database,                                                          
+//
+//Elements:
+//  - queue - <EPTF_FreeBusyQueue> - FreeBusy queue for index management
+//  - data - <SIP_DialogDataList> - dialog list
+//  - hashRef - *integer* - Reference to a hash table.
+//
+////////////////////////////////////////////////////
+
+type record SIP_DialogDatabase {
+     EPTF_FreeBusyQueue queue, 
+     SIP_DialogDataList data,
+     integer hashRef
+}
+
+///////////////////////////////////////////////////////////
+// Constant: c_SIP_DialogData_init
+//
+// Purpose:
+//  Contains initialization data for <SIP_DialogData>
+//
+///////////////////////////////////////////////////////////
+const SIP_DialogData c_SIP_DialogData_init :=
+{
+  state                 := c_SIP_DlgState_Unknown,
+  subscriptionIdx       := -1,
+  userSessionAssociated := false,
+  userIdx               := -1,
+  FSMIdx                := -1,
+  nofRefs               := 1,
+  requestUri            := cg_FlatSipUrl_base,
+  localUri              := cg_FlatSipUrl_base,
+  remoteUri             := cg_FlatSipUrl_base,
+  remoteTarget          := cg_FlatSipUrl_base,
+  callId                := "",
+  localTag              := "",
+  remoteTag             := "",
+  stateSet              := false,
+  initSeqNum            := -1,
+  localSeqNum           := -1,
+  remoteSeqNum          := -1,
+  route                 := {},
+  looseRouting          := true,
+//  timers                := {-1, -1, -1},
+  UASIdx                := -1,
+  earlyDialog           := true,
+  ACKData               := c_SIP_ACKData_init
+}
+
+type record SIP_ACKData
+{
+  PDU_SIP_Request               ACK optional,
+  boolean                       ACKReady,
+  SIP_FlatSipUrl                toAddr,
+  charstring                    trId,
+  SIP_Transport                 transport,
+  octetstring                   ACKRaw,
+  boolean                       ACKSent,
+  SIP_AuthCredentials           authInfo optional,
+  SIP_ACK_Template_DB           ACKTemplateData optional     
+}
+
+type record SIP_ACK_Template_DB
+{
+  integer templateBodyIdx,
+  integer templateHeaderIdx,
+  EPTF_LGenBase_TemplParamSubstList templateParams
+}
+
+const SIP_ACKData c_SIP_ACKData_init := {
+  ACK := omit,//cg_PDU_SIP_Request_base,
+  ACKReady := false,
+  toAddr := cg_FlatSipUrl_base,
+  trId := "",
+  transport := UDP,
+  ACKRaw := ''O,
+  ACKSent := false,
+  authInfo := omit,
+  ACKTemplateData := omit
+}
+
+const SIP_ACK_Template_DB c_SIP_ACK_Template_DB_init := {
+  templateBodyIdx := -1,
+  templateHeaderIdx := -1,
+  templateParams := {}
+}
+
+type record SIP_AuthCredentials
+{
+  FieldName   fieldName,
+  Credentials credentials
+}
+///////////////////////////////////////////////////////////
+// Constant: Dialog states.
+//
+// Elements:
+//  c_SIP_DlgState_Unknown - state after initialization
+//  c_SIP_DlgState_EarlyDialog - early
+//  c_SIP_DlgState_Confirmed - confirmed
+//  c_SIP_DlgState_Terminated - terminated
+///////////////////////////////////////////////////////////
+const integer c_SIP_DlgState_Unknown := 0;
+const integer c_SIP_DlgState_EarlyDialog := 1;
+const integer c_SIP_DlgState_Confirmed := 2;
+const integer c_SIP_DlgState_Terminated := 3;
+
+////////////////////////////////////////////////////
+//Constant: Dialog timer index constants.
+//
+//Purpose:
+//  Used to determine the index of a timer reference in 
+//  SIP_DialogData.timers.
+//
+//Elements:
+//  c_SIP_TimerIdxDialog_Watchdog - watchdog timer
+//
+////////////////////////////////////////////////////
+//const integer c_SIP_TimerIdxDialog_Watchdog := 0;
+
+////////////////////////////////////////////////////
+//Constant: Scheduled action indices.
+//
+//Elements:
+//  c_AIdx_DialogIdx - index of a dialog
+//  c_AIdx_DialogTimerId - index of the timer
+////////////////////////////////////////////////////
+const integer c_AIdx_DialogIdx := 0;
+const integer c_AIdx_DialogTimerId := 1;
+
+const boolean c_SIP_checkDialogDatabase := false;
+
+}//end of module
+with {
+extension "version <RnXnn>"
+}
+

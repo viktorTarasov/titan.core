@@ -1,0 +1,564 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_CLL_Semaphore_Functions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 512
+//  Updated:  2012-02-16
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////
+//  Module: EPTF_CLL_Semaphore_Functions
+// 
+//  Purpose:
+//    This module contains the function implementations for EPTF Semaphore.
+// 
+//  Module Parameters:
+//    tsp_debug_EPTF_Semaphore_Functions - boolean
+//
+//  Module depends on:
+//    <EPTF_CLL_Base_Definitions>
+//    <EPTF_CLL_Base_Functions>
+//    <EPTF_CLL_Semaphore_Definitions>
+//    <EPTF_CLL_Logging_Definitions>
+//    <EPTF_CLL_Logging_Functions>
+//    <EPTF_CLL_FBQ_Functions>
+// 
+//  Current Owner:
+//    Jozsef Gyurusi (ETHJGI)
+// 
+//  Last Review Date:
+//    2007-12-06
+//
+//  Detailed Comments:
+//    See the description of <EPTF_CLL_Semaphore_Definitions>.
+//
+//    Public functions:
+//      <f_EPTF_Semaphore_init_CT>
+//      <f_EPTF_Semaphore_new>
+//      <f_EPTF_Semaphore_delete>
+//      <f_EPTF_Semaphore_lock>
+//      <f_EPTF_Semaphore_unlock>
+//      <f_EPTF_Semaphore_increaseLock>
+//      <f_EPTF_Semaphore_decreaseLock>
+//      <f_EPTF_Semaphore_waitForUnlock>
+//      <f_EPTF_Semaphore_isLocked>
+//      <f_EPTF_Semaphore_init_CT>
+//
+///////////////////////////////////////////////////////////////
+
+module EPTF_CLL_Semaphore_Functions {
+
+import from EPTF_CLL_Base_Definitions all;
+import from EPTF_CLL_Base_Functions all;
+import from EPTF_CLL_Semaphore_Definitions all;
+import from EPTF_CLL_Logging_Definitions all;
+import from EPTF_CLL_Logging_Functions all;
+import from EPTF_CLL_FBQ_Functions all;
+
+modulepar boolean tsp_debug_EPTF_Semaphore_Functions := false;
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Semaphore_init_CT
+// 
+//  Purpose:
+//    Initializes the <EPTF_Semaphore_CT> component
+//
+//  Parameters:
+//    pl_selfName - *in* *charstring* - name of the component
+//
+//  Return Value:
+//    -
+//
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//    This function should be called before using the EPTF_Semaphore_CT
+//    component.
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_Semaphore_init_CT(in charstring pl_selfName) runs on EPTF_Semaphore_CT {
+  if (v_EPTF_Semaphore_initialized) {
+    return; // already initialized
+  }
+  f_EPTF_Base_init_CT(pl_selfName);
+  f_EPTF_FBQ_init_CT(pl_selfName);
+  f_EPTF_Logging_init_CT(pl_selfName);
+  v_Semaphore_loggingMaskId := f_EPTF_Logging_registerComponentMasks(tsp_EPTF_Semaphore_loggingComponentMask, c_EPTF_Semaphore_loggingEventClasses, EPTF_Logging_CLL);
+  if(tsp_debug_EPTF_Semaphore_Functions) {
+    f_EPTF_Logging_enableLocalMask(v_Semaphore_loggingMaskId, c_EPTF_Semaphore_loggingClassIdx_Debug);
+  } else {
+    f_EPTF_Logging_disableLocalMask(v_Semaphore_loggingMaskId, c_EPTF_Semaphore_loggingClassIdx_Debug);
+  }
+  
+  f_EPTF_initintegerPool(v_EPTF_Semaphore_integerPool);
+  t_EPTF_Semaphore_timer.start;
+  f_EPTF_Base_registerCleanup(refers(f_EPTF_Semaphore_cleanup_CT));
+  v_EPTF_Semaphore_initialized := true;
+  f_EPTF_Semaphore_debug("---- EPTF_Semaphore INIT "&pl_selfName&" DONE ----");
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Semaphore_new
+// 
+//  Purpose:
+//    Creates a new semaphore and returns its index.
+//
+//  Parameters:
+//    -
+//
+//  Return Value:
+//    integer - the id of the created semaphore
+//
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//    The created semaphore is locked (its locked level is one).
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_Semaphore_new() runs on EPTF_Semaphore_CT return integer {
+  var integer vl_semaphoreIdx := f_EPTF_setNewinteger(v_EPTF_Semaphore_integerPool,c_EPTF_Semaphore_locked);
+  return vl_semaphoreIdx;
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Semaphore_delete
+// 
+//  Purpose:
+//    Deletes the semaphore.
+//
+//  Parameters:
+//    pl_idx - *in* *integer* - index of the semaphore
+//
+//  Return Value:
+//    -
+//
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//    Deleted semaphores cannot be locked.
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_Semaphore_delete(in integer pl_idx) runs on EPTF_Semaphore_CT {
+  f_EPTF_Semaphore_unlock(pl_idx);
+  f_EPTF_deleteinteger(v_EPTF_Semaphore_integerPool,pl_idx);
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Semaphore_lock
+// 
+//  Purpose:
+//    Locks the semaphore.
+//
+//  Parameters:
+//    pl_idx - *in* *integer* - index of the semaphore
+//
+//  Return Value:
+//    -
+//
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//    Deleted semaphores cannot be locked. If the semaphore is locked (lock level is > 0)
+//    the function has no effect and a warning is shown.
+//    If called for an unlock semaphore the semaphore will be locked with lock level one.
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_Semaphore_lock(in integer pl_idx) runs on EPTF_Semaphore_CT {
+  // check if semaphore is valid:
+  f_EPTF_Base_assert(%definitionId&": Semaphore is invalid: " & int2str(pl_idx),
+    (pl_idx>=0 and pl_idx<f_EPTF_getNumberOfSemaphores() and f_EPTF_integerIsBusy(v_EPTF_Semaphore_integerPool,pl_idx)) );
+
+  // check if semaphore is locked:
+  if (not f_EPTF_Semaphore_isUnlocked(pl_idx)) {
+    f_EPTF_Semaphore_warning("Semaphore is already locked: "&int2str(pl_idx));
+    return;
+  }
+  f_EPTF_setValueinteger(v_EPTF_Semaphore_integerPool,pl_idx,c_EPTF_Semaphore_locked);
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Semaphore_unlock
+// 
+//  Purpose:
+//    Unlocks the semaphore.
+//
+//  Parameters:
+//    pl_idx - *in* *integer* - index of the semaphore
+//
+//  Return Value:
+//    -
+//
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//    Unlocks the multi-locked semaphore also, i.e. if its "lock level" was increased
+//    with <f_EPTF_Semaphore_increaseLock>.
+//    If the semaphore was already unlocked, it has no effect.
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_Semaphore_unlock(in integer pl_idx) runs on EPTF_Semaphore_CT {
+  // check if semaphore is unlocked:
+  if (f_EPTF_Semaphore_isUnlocked(pl_idx)) {
+    return;
+  }
+  f_EPTF_setValueinteger(v_EPTF_Semaphore_integerPool,pl_idx,c_EPTF_Semaphore_unlocked);
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Semaphore_increaseLock
+// 
+//  Purpose:
+//    Increases the lock level of the semaphore by one (multi-lock).
+//
+//  Parameters:
+//    pl_idx - *in* *integer* - index of the semaphore
+//
+//  Return Value:
+//    -
+//
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//    Deleted semaphores cannot be locked.
+//    To unlock the semaphore, use as many <f_EPTF_Semaphore_decreaseLock> function calls
+//    as many <f_EPTF_Semaphore_increaseLock> was issued. To unlock the semphore at once
+//    use the function <f_EPTF_Semaphore_unlock>.
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_Semaphore_increaseLock(in integer pl_idx) runs on EPTF_Semaphore_CT {
+  // check if semaphore is valid:
+  f_EPTF_Base_assert(%definitionId&": Semaphore is invalid: " & int2str(pl_idx),
+    (pl_idx>=0 and pl_idx<f_EPTF_getNumberOfSemaphores() and f_EPTF_integerIsBusy(v_EPTF_Semaphore_integerPool,pl_idx)) );
+
+  f_EPTF_setValueinteger(v_EPTF_Semaphore_integerPool,pl_idx,f_EPTF_getValueinteger(v_EPTF_Semaphore_integerPool,pl_idx)+1);
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Semaphore_decreaseLock
+// 
+//  Purpose:
+//    Decreases the lock level of the semaphore by one (multi-lock).
+//
+//  Parameters:
+//    pl_idx - *in* *integer* - index of the semaphore
+//
+//  Return Value:
+//    -
+//
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//    If the lock-level reaches zero, the semaphore is unlocked.
+//    If the semaphore was already unlocked, it has no effect.
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_Semaphore_decreaseLock(in integer pl_idx) runs on EPTF_Semaphore_CT {
+  // check if semaphore is unlocked:
+  if (f_EPTF_Semaphore_isUnlocked(pl_idx)) {
+    return;
+  }
+  f_EPTF_setValueinteger(v_EPTF_Semaphore_integerPool,pl_idx,f_EPTF_getValueinteger(v_EPTF_Semaphore_integerPool,pl_idx)-1);
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Semaphore_waitForUnlock
+// 
+//  Purpose:
+//    Blocks the execution until the semaphore is unlocked.
+//
+//  Parameters:
+//    pl_idx - *in* *integer* - index of the semaphore
+//    pl_maxWaitTime - *float* - max waiting time. Function will exit even if the semaphore was not unlocked after this time. Default: infinity (-1.0)
+//      Negative values correspont to infinite waiting time.
+//    pl_autoDeleteSemaphore - *in boolean* - if true: deletes semaphore automatically before function returns, false: keeps the semaphore.
+//      In this case the samphore has to be deleted by <f_EPTF_Semaphore_delete>. Default: true
+//
+//  Return Value:
+//    boolean - true if maxWaitTime expired, false if not, before the function returned
+//
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//    This function waits until the semaphore is unlocked. Meanwhile all default altsteps are executing in the background.
+//    The function exits when the semaphore is unlocked or the specified time has passed.
+//    Automatically deletes the semaphore at exit if pl_autoDeleteSemaphore is not specified.
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_Semaphore_waitForUnlock(in integer pl_idx, in float pl_maxWaitTime := -1.0, in boolean pl_autoDeleteSemaphore := true) runs on EPTF_Semaphore_CT return boolean {
+  var boolean vl_maxTimerExpired := false;
+  timer t_EPTF_Semaphore_maxWaitTimer;
+  if (pl_maxWaitTime>0.0) {
+    t_EPTF_Semaphore_maxWaitTimer.start(pl_maxWaitTime);
+  }
+  alt {
+    [f_EPTF_Semaphore_isUnlocked(pl_idx)] t_EPTF_Semaphore_timer.timeout {
+      t_EPTF_Semaphore_timer.start; // restart the timer
+    }
+    [pl_maxWaitTime>0.0] t_EPTF_Semaphore_maxWaitTimer.timeout {
+      f_EPTF_Semaphore_warning(log2str("Semaphore ", pl_idx, " was not unlocked before max waiting time expired. Semaphore unlocked"));
+      f_EPTF_Semaphore_unlock(pl_idx);
+      vl_maxTimerExpired := true;
+      repeat;
+    }
+  }
+  if (pl_autoDeleteSemaphore) {
+    f_EPTF_Semaphore_delete(pl_idx);
+  }
+  return vl_maxTimerExpired;
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Semaphore_isLocked
+// 
+//  Purpose:
+//    Checks if the semaphore is Locked.
+//
+//  Parameters:
+//    pl_idx - *in* *integer* - index of the semaphore
+//
+//  Return Value:
+//    boolean - true if the semaphore is locked, false if unlocked
+//
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//    This function is non-blocking. It does not wait until the semaphore is unlocked.
+//    It returns the result instantly.
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_Semaphore_isLocked(in integer pl_idx) runs on EPTF_Semaphore_CT return boolean {
+  return (pl_idx>=0 and pl_idx<f_EPTF_getNumberOfSemaphores() and f_EPTF_integerIsBusy(v_EPTF_Semaphore_integerPool,pl_idx));
+}
+
+///////////////////////////////////////////////////////////
+// Group: Private
+//
+// Purpose:
+//   Private functions. These functions must not be called by the user of <EPTF_Semaphore_CT>
+//
+// Elements:
+///////////////////////////////////////////////////////////
+
+group Private {
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Semaphore_cleanup_CT
+// 
+//  Purpose:
+//    Cleans up the <EPTF_Semaphore_CT> component
+//
+//  Parameters:
+//    -
+//
+//  Return Value:
+//    -
+//
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//    This function should be called before terminating the EPTF_Semaphore_CT
+//    component. Never call this function explicitly! It is registered into the <EPTF_Base_CT> by <f_EPTF_Semaphore_init_CT>
+//    and will be called automatically.
+//
+///////////////////////////////////////////////////////////
+private function f_EPTF_Semaphore_cleanup_CT() runs on EPTF_Semaphore_CT {
+  if (v_EPTF_Semaphore_initialized == false) {
+    return;
+  }
+  // do nothing
+  v_EPTF_Semaphore_initialized := false;
+  f_EPTF_Semaphore_debug("----- Semaphore CLEANUP DONE -------");
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Semaphore_isUnlocked
+// 
+//  Purpose:
+//    Checks if the semaphore is unlocked.
+//
+//  Parameters:
+//    pl_idx - *in* *integer* - index of the semaphore
+//
+//  Return Value:
+//    boolean - true if the semaphore is unlocked, false if locked
+//
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//    This function is non-blocking. It does not wait until the semaphore is unlocked.
+//    It returns the result instantly.
+//
+///////////////////////////////////////////////////////////
+private function f_EPTF_Semaphore_isUnlocked(in integer pl_idx) runs on EPTF_Semaphore_CT return boolean {
+  f_EPTF_Base_assert(%definitionId&": Semaphore is invalid: " & int2str(pl_idx),
+    (pl_idx>=0 and pl_idx<f_EPTF_getNumberOfSemaphores() and f_EPTF_integerIsBusy(v_EPTF_Semaphore_integerPool,pl_idx)) );
+  return (f_EPTF_getValueinteger(v_EPTF_Semaphore_integerPool,pl_idx)==c_EPTF_Semaphore_unlocked);
+}
+
+group Logging {
+
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_Semaphore_error
+  // 
+  //  Purpose:
+  //    Function to log an error from Semaphore feature.
+  //
+  //  Parameters:
+  //    - pl_message - *in* *charstring* - the message to log
+  //
+  //  Return Value:
+  //    -
+  //
+  //  Errors & assertions:
+  //    - 
+  //
+  //  Detailed Comments:
+  //    -
+  //
+  ///////////////////////////////////////////////////////////
+  private function f_EPTF_Semaphore_error(in charstring pl_message)
+  runs on EPTF_Semaphore_CT
+  {
+    f_EPTF_Logging_error(true, tsp_EPTF_Semaphore_loggingComponentMask&": "&pl_message);
+    f_EPTF_Base_stopAll();
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_Semaphore_warning
+  // 
+  //  Purpose:
+  //    Function to log a warning from Semaphore feature.
+  //
+  //  Parameters:
+  //    - pl_message - *in* *charstring* - the message to log
+  //
+  //  Return Value:
+  //    -
+  //
+  //  Errors & assertions:
+  //    - 
+  //
+  //  Detailed Comments:
+  //    -
+  //
+  ///////////////////////////////////////////////////////////
+  private function f_EPTF_Semaphore_warning(in charstring pl_message)
+  runs on EPTF_Semaphore_CT
+  {
+    f_EPTF_Logging_warningV2(pl_message, v_Semaphore_loggingMaskId, {c_EPTF_Semaphore_loggingClassIdx_Warning});
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_Semaphore_debug
+  // 
+  //  Purpose:
+  //    Function to log a debug message from Semaphore feature.
+  //
+  //  Parameters:
+  //    - pl_message - *in* *charstring* - the message to log
+  //
+  //  Return Value:
+  //    -
+  //
+  //  Errors & assertions:
+  //    - 
+  //
+  //  Detailed Comments:
+  //    -
+  //
+  ///////////////////////////////////////////////////////////
+  private function f_EPTF_Semaphore_debug(in charstring pl_message)
+  runs on EPTF_Semaphore_CT
+  {
+    f_EPTF_Logging_debugV2(pl_message, v_Semaphore_loggingMaskId, {c_EPTF_Semaphore_loggingClassIdx_Debug});
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_Semaphore_debugEnabled
+  // 
+  //  Purpose:
+  //    Function to check if debug is enabled for Semaphore
+  //
+  //  Parameters:
+  //    -
+  //
+  //  Return Value:
+  //    *boolean* - true if debug enalbed
+  //
+  //  Errors & assertions:
+  //    - 
+  //
+  //  Detailed Comments:
+  //    -
+  //
+  ///////////////////////////////////////////////////////////
+  private function f_EPTF_Semaphore_debugEnabled()
+  runs on EPTF_Semaphore_CT
+  return boolean
+  {
+    return f_EPTF_Logging_isEnabled(v_Semaphore_loggingMaskId, c_EPTF_Semaphore_loggingClassIdx_Debug);
+  }
+} // group Logging
+
+group IntegerPool {
+
+private function f_EPTF_getNumberOfSemaphores() runs on EPTF_Semaphore_CT return integer {
+  return f_EPTF_FBQ_getLengthOfBusyChain(v_EPTF_Semaphore_integerPool.order)+f_EPTF_FBQ_getLengthOfFreeChain(v_EPTF_Semaphore_integerPool.order);
+}
+
+/*
+// THE GENERATED CODE BELOW IS EQUIVALENT WITH THE FOLLOWING MACRO:
+// define POOL for integer
+//#define EPTF_POOLTYPE integer
+//#include "EPTF_CLL_PoolMgmt_Functions.ttcnin"
+//#undef EPTF_POOLTYPE
+*/
+
+//# 104 "EPTF_CLL_PoolMgmt_Functions.ttcnin"
+private function f_EPTF_initintegerPool(inout integerPool pl_pool) { f_EPTF_FBQ_initFreeBusyQueue(pl_pool.order); pl_pool.userData := c_EPTF_emptyintegerList; }
+//# 145 "EPTF_CLL_PoolMgmt_Functions.ttcnin"
+private function f_EPTF_getNewinteger(inout integerPool pl_pool) return integer { if (tsp_debugVerbose_PoolMgmt){ log("f_EPTF_getNew##EPTF_POOLTYPE has been called"); } var integer idx := f_EPTF_FBQ_getOrCreateFreeSlot(pl_pool.order); if (idx >= sizeof(pl_pool.userData)){ pl_pool.userData[idx]:=c_emptyinteger; if (tsp_debugVerbose_PoolMgmt) { log("f_EPTF_getNew##EPTF_POOLTYPE needed to allocate new ##EPTF_POOLTYPE", " at idx:",idx, ", initialized to:",pl_pool.userData[idx]); } } return idx; }
+//# 184 "EPTF_CLL_PoolMgmt_Functions.ttcnin"
+private function f_EPTF_putBackinteger(inout integerPool pl_pool, in integer pl_qidx) return boolean { if (tsp_debugVerbose_PoolMgmt) { log("f_putBack##EPTF_POOLTYPE:", pl_qidx); } if (not f_EPTF_integerIsBusy(pl_pool, pl_qidx)){ log("Error: f_EPTF_putBack##EPTF_POOLTYPE: clearing invalid pool item at pl_qidx:", pl_qidx,", pl_##EPTF_POOLTYPE##Pool.order.itemList[pl_qidx]:"); return false; } f_EPTF_FBQ_moveFromBusyToFreeHead(pl_qidx,pl_pool.order); return true; }
+//# 219 "EPTF_CLL_PoolMgmt_Functions.ttcnin"
+private function f_EPTF_getFirstintegerIndex(in integerPool pl_pool) return integer { if (tsp_debugVerbose_PoolMgmt) { log("f_EPTF_getFirst##EPTF_POOLTYPE##Index has been called"); } if (f_EPTF_integerPoolIsEmpty(pl_pool)){ log("Error: f_EPTF_getFirst##EPTF_POOLTYPE##Index: busy chain is empty:"); return -1; } var integer vl_head; f_EPTF_FBQ_getBusyHeadIdx(vl_head,pl_pool.order);return vl_head; }
+//# 250 "EPTF_CLL_PoolMgmt_Functions.ttcnin"
+private function f_EPTF_getNextintegerIndex(in integerPool pl_pool,inout integer pl_idx) return boolean { if (f_EPTF_integerIsBusy(pl_pool,pl_idx)) { return f_EPTF_FBQ_getFwdBusyItemIdx(pl_idx,pl_pool.order); } else { return false; } }
+//# 286 "EPTF_CLL_PoolMgmt_Functions.ttcnin"
+private function f_EPTF_integerPoolIsEmpty(in integerPool pl_pool) return boolean { if(f_EPTF_FBQ_getLengthOfBusyChain(pl_pool.order) <=0) { return true } else { return false }; }
+//# 314 "EPTF_CLL_PoolMgmt_Functions.ttcnin"
+private function f_EPTF_integerIsBusy(in integerPool pl_pool,in integer pl_idx) return boolean { return f_EPTF_FBQ_itemIsBusy(pl_idx,pl_pool.order); }
+//# 350 "EPTF_CLL_PoolMgmt_Functions.ttcnin"
+private function f_EPTF_getinteger(in integerPool pl_pool,in integer pl_idx,out integer pl_poolItem) return boolean { if (not f_EPTF_integerIsBusy(pl_pool, pl_idx)) { return false } else { pl_poolItem := pl_pool.userData[pl_idx]; return true; } }
+//# 387 "EPTF_CLL_PoolMgmt_Functions.ttcnin"
+private function f_EPTF_setinteger(inout integerPool pl_pool,in integer pl_idx,in integer pl_poolItem) return boolean { if (not f_EPTF_integerIsBusy(pl_pool, pl_idx)) { pl_pool.userData[pl_idx] := pl_poolItem; f_EPTF_FBQ_moveFromFreeToBusyTail(pl_idx,pl_pool.order); return true; } else {return false } }
+//# 427 "EPTF_CLL_PoolMgmt_Functions.ttcnin"
+private function f_EPTF_setNewinteger(inout integerPool pl_pool,in integer pl_poolItem) return integer { var integer idx := f_EPTF_FBQ_getOrCreateFreeSlot(pl_pool.order); if (idx >= sizeof(pl_pool.userData)){ if (tsp_debugVerbose_PoolMgmt) { log("f_EPTF_setNew##EPTF_POOLTYPE needed to allocate new ##EPTF_POOLTYPE", " at idx:",idx, ", initialized to:",pl_poolItem); } } pl_pool.userData[idx] := pl_poolItem; f_EPTF_FBQ_moveFromFreeToBusyTail(idx,pl_pool.order); return idx; }
+//# 454 "EPTF_CLL_PoolMgmt_Functions.ttcnin"
+private function f_EPTF_setValueinteger(inout integerPool pl_pool,in integer pl_idx,in integer pl_poolItem) { pl_pool.userData[pl_idx] := pl_poolItem; }
+//# 479 "EPTF_CLL_PoolMgmt_Functions.ttcnin"
+private function f_EPTF_getValueinteger(inout integerPool pl_pool,in integer pl_idx) return integer { return pl_pool.userData[pl_idx]; }
+//# 519 "EPTF_CLL_PoolMgmt_Functions.ttcnin"
+private function f_EPTF_deleteinteger(inout integerPool pl_pool, in integer pl_qidx) { if (tsp_debugVerbose_PoolMgmt) { log("f_delete##EPTF_POOLTYPE:", pl_qidx); } if (not f_EPTF_integerIsBusy(pl_pool, pl_qidx)){ log("Warning: f_EPTF_delete##EPTF_POOLTYPE: clearing free/invalid pool item at pl_qidx:", pl_qidx,", pl_##EPTF_POOLTYPE##Pool.order.itemList[pl_qidx]:"); return; } f_EPTF_FBQ_moveFromBusyToFreeTail(pl_qidx,pl_pool.order); pl_pool.userData[pl_qidx] := c_emptyinteger; return; }
+//# 6 "tmp.ttcnpp" 2
+} // group IntegerPool
+
+} // group Private
+
+} // module

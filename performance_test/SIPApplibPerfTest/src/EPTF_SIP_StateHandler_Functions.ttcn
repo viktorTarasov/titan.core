@@ -1,0 +1,1388 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_SIP_StateHandler_Functions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 522
+//  Updated:  2012-11-28
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////
+//  Module: EPTF_SIP_StateHandler_Functions
+//
+//  Purpose:
+//    Contains the transactoin and dialog FSM handling functions.
+//
+//  Module depends on:  
+//    <EPTF_CLL_Common_Definitions>
+//
+//    <EPTF_CLL_RBTScheduler_Functions>
+//
+//    <EPTF_CLL_Scheduler_Definitions>
+//
+//    <EPTF_CLL_Variable_Functions>
+//
+//    <EPTF_SIP_Dialog_Definitions>
+//
+//    <EPTF_SIP_Dialog_Functions>
+//
+//    <EPTF_SIP_Common_Functions>
+//
+//    <EPTF_SIP_CreateRemove_Functions>
+//
+//    <EPTF_SIP_EventNotification_Definitions>
+//
+//    <EPTF_SIP_EventNotification_Functions>
+//
+//    <EPTF_SIP_Events>
+//
+//    <EPTF_SIP_LGen_Definitions>
+//
+//    <EPTF_SIP_MessageCreator_Functions>
+//
+//    <EPTF_SIP_Templates>
+//
+//    <EPTF_SIP_Transaction_Definitions>
+//
+//    <EPTF_SIP_Transaction_Functions>
+//
+//    <EPTF_SIP_UserDatabase_Definitions>
+//
+//    <EPTF_SIP_UserDatabase_Functions>
+//
+//    <SIPmsg_Types>
+//
+//  Last review date:  
+//    2010-05-25
+////////////////////////////////////////////////////
+module EPTF_SIP_StateHandler_Functions
+{
+import from EPTF_CLL_Common_Definitions all;
+import from EPTF_CLL_RBTScheduler_Functions all;
+import from EPTF_CLL_Scheduler_Definitions all;
+import from EPTF_CLL_Variable_Functions all;
+
+import from EPTF_SIP_Dialog_Definitions all;
+import from EPTF_SIP_Dialog_Functions all;
+import from EPTF_SIP_Common_Functions all;
+import from EPTF_SIP_CreateRemove_Functions all;
+import from EPTF_SIP_EventNotification_Definitions all;
+import from EPTF_SIP_EventNotification_Functions all;
+import from EPTF_SIP_Events all;
+import from EPTF_SIP_LGen_Definitions all;
+import from EPTF_SIP_MessageCreator_Functions all;
+//import from EPTF_SIP_Templates all;
+import from EPTF_SIP_Transaction_Definitions all;
+import from EPTF_SIP_Transaction_Functions all;
+import from EPTF_SIP_UserDatabase_Definitions all;
+import from EPTF_SIP_UserDatabase_Functions all;
+
+import from SIPmsg_Types all;
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_TransactionState_ResponseUAS
+//
+//Purpose:  
+//  Changes UAS transaction state on generating a response.
+//
+//Parameters:
+//  - pl_msgToProcess - *in* <PDU_SIP_Response> - the generated response
+//  - pl_UAS - *in* *integer* - the index of the UAS in v_db_UAS
+////////////////////////////////////////////////////
+function f_EPTF_SIP_TransactionState_ResponseUAS(in PDU_SIP_Response pl_msgToProcess, in integer pl_UAS)
+runs on EPTF_SIP_LGen_CT
+{
+  if(c_EPTF_Common_debugSwitch and f_SIP_Logging_debugEnabled()) {
+    f_SIP_Logging_DEBUG(log2str(%definitionId,
+      ": current transaction: ", pl_UAS, " current state: ", v_db_UAS.data[pl_UAS].state));
+  }
+
+  var Method vl_method;
+  f_EPTF_SIP_str2method(pl_msgToProcess.msgHeader.cSeq.method, vl_method);
+  var integer vl_status := pl_msgToProcess.statusLine.statusCode;
+
+  if(c_EPTF_Common_debugSwitch) {
+    v_db_UAS.data[pl_UAS].methodList[sizeof(v_db_UAS.data[pl_UAS].methodList)] := int2str(vl_status);
+  }
+
+  v_db_UAS.data[pl_UAS].response := pl_msgToProcess;
+
+  if (INVITE_E == vl_method)
+  {
+    if (c_SIP_TrState_Proceeding == v_db_UAS.data[pl_UAS].state)
+    {
+      if (vl_status >= 100 and vl_status <= 199)
+      {
+        //do nothing
+      }else if (vl_status >= 200 and vl_status <= 299)
+      {
+        f_EPTF_SIP_UASStateChangeINVITE_ProceedKeepalive(pl_UAS);
+      }else if (vl_status >= 300 and vl_status <= 699)
+      {
+        f_EPTF_SIP_UASStateChangeINVITE_ProceedCompleted(pl_UAS);
+      }
+    }
+  }else{
+    if (c_SIP_TrState_Trying == v_db_UAS.data[pl_UAS].state)
+    {
+      if (vl_status >= 100 and vl_status <= 199)
+      {
+        f_EPTF_SIP_UASStateChangeNonINVITE_TryProceed(pl_UAS);
+      }else if(vl_status >= 200 and vl_status <= 699)
+      {
+        if (0.0 < v_db_UAS.data[pl_UAS].keepAliveTime)
+        {
+          f_EPTF_SIP_UASStateChangeNonINVITE_TryCompleted(pl_UAS);
+        }else{
+          f_EPTF_SIP_terminateUAS(pl_UAS);
+        }
+      }      
+    }else if (c_SIP_TrState_Proceeding == v_db_UAS.data[pl_UAS].state)
+    {
+      if (vl_status >= 100 and vl_status <= 199)
+      {
+        //do nothing
+      }else if (vl_status >= 200 and vl_status <= 699)
+      {
+        if (0.0 < v_db_UAS.data[pl_UAS].keepAliveTime)
+        {
+          f_EPTF_SIP_UASStateChangeNonINVITE_ProceedCompleted(pl_UAS);
+        }else{
+          f_EPTF_SIP_terminateUAS(pl_UAS);
+        }
+      }
+    }
+  }
+
+  if(c_EPTF_Common_debugSwitch and f_SIP_Logging_debugEnabled()) {
+    f_SIP_Logging_DEBUG(log2str(%definitionId,
+      ": current transaction: ", pl_UAS, " current state: ", v_db_UAS.data[pl_UAS].state));
+  }
+
+/*moved to EPTF_SIP_TestSteps.ttcn
+  if (c_SIP_TrState_Terminated == v_db_UAS.data[pl_UAS].state)
+  {
+    f_EPTF_SIP_removeUAS(pl_UAS);
+  }
+*/
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_TransactionState_TimerUAS
+//
+//Purpose:
+//  Changes UAS transaction state on timer event.
+//
+//Parameters:
+//  - pl_timerId - *in* *integer* - the index of the timer event
+//  - pl_UAS - *in* *integer* - the index of the UAS in v_db_UAS
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_TransactionState_TimerUAS(in integer pl_timerId, in integer pl_UAS)
+runs on EPTF_SIP_LGen_CT
+{
+  if(c_EPTF_Common_debugSwitch and f_SIP_Logging_debugEnabled()) {
+    f_SIP_Logging_DEBUG(log2str(
+      %definitionId,": UAS: ", pl_UAS, ", timer :", pl_timerId ,", UAS sate: ",v_db_UAS.data[pl_UAS].state));
+  }
+
+  if (INVITE_E == v_db_UAS.data[pl_UAS].method)
+  {
+    if (c_SIP_TrState_Completed == v_db_UAS.data[pl_UAS].state)
+    {
+      if (c_SIP_TimerIdxUAS_Retransmission == pl_timerId)
+      {
+        f_EPTF_SIP_handleUASRetransmitTimer(pl_UAS);
+      }else if (c_SIP_TimerIdxUAS_TransactionTimeout == pl_timerId)
+      {
+        f_EPTF_SIP_terminateUAS(pl_UAS);
+      }
+    }else if (c_SIP_TrState_Confirmed == v_db_UAS.data[pl_UAS].state)
+    {
+      if (c_SIP_TimerIdxUAS_KeepAlive == pl_timerId)
+      {
+        f_EPTF_SIP_terminateUAS(pl_UAS);
+      }
+    }else if (c_SIP_TrState_Keepalive == v_db_UAS.data[pl_UAS].state)
+    {
+      if (c_SIP_TimerIdxUAS_Retransmission == pl_timerId)
+      {
+        f_EPTF_SIP_handleUASRetransmitTimer(pl_UAS);
+      }else if (c_SIP_TimerIdxUAS_TransactionTimeout == pl_timerId)
+      {
+        f_EPTF_SIP_terminateUAS(pl_UAS);
+      }
+    }
+  }else{
+    if (c_SIP_TrState_Completed == v_db_UAS.data[pl_UAS].state)
+    {
+      if (c_SIP_TimerIdxUAS_KeepAlive == pl_timerId)
+      {
+        f_EPTF_SIP_terminateUAS(pl_UAS);
+      }
+    }
+  }
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_TransactionState_RequestUAS
+//
+//Purpose:
+//  Changes UAS transaction state on receiving a request.
+//
+//Parameters:
+//  - pl_msgToProcess - *in* <PDU_SIP_Request> - the received request
+//  - pl_UAS - *in* *integer* - the index of the UAS in v_db_UAS
+//  - vl_event - *inout* *integer* - the event to dispatch
+//
+//Detailed comments:
+//  In two cases can it happen that a request arrives in an existing UAS:
+//    retransmitted request or ACK arrived in an INVITE transaction where the
+//    response to the INVITE was 3xxto6xx.
+//  In case of a retransmitted request vl_event == c_SIP_eventIdx_retransmittedRequest, else vl_event == 0.
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_TransactionState_RequestUAS(in PDU_SIP_Request pl_msgToProcess, in integer pl_UAS, inout boolean vl_retrans)
+runs on EPTF_SIP_LGen_CT
+{
+  if(c_EPTF_Common_debugSwitch and f_SIP_Logging_debugEnabled()) {
+    f_SIP_Logging_DEBUG(log2str(%definitionId,
+        ": UAS: ", pl_UAS, ", UAS sate: ",v_db_UAS.data[pl_UAS].state));
+  }
+
+  var Method vl_method := pl_msgToProcess.requestLine.method;
+  vl_retrans := false;
+
+  var charstring vl_methodStr := "";
+  f_EPTF_SIP_method2str(vl_method, vl_methodStr);
+
+  if(c_EPTF_Common_debugSwitch) {
+    v_db_UAS.data[pl_UAS].methodList[sizeof(v_db_UAS.data[pl_UAS].methodList)] := vl_methodStr;
+  }
+ 
+  if (INVITE_E == v_db_UAS.data[pl_UAS].method)
+  {
+    if (c_SIP_TrState_Proceeding == v_db_UAS.data[pl_UAS].state)
+    {
+        vl_retrans := true;
+        if (''O != v_db_UAS.data[pl_UAS].responseRaw and
+            ispresent(v_db_UAS.data[pl_UAS].response))//damn user has not sent response yet
+        {
+          //retransmitting response
+          f_EPTF_SIP_retransmitUAS(pl_UAS);
+        }
+    }else if (c_SIP_TrState_Completed == v_db_UAS.data[pl_UAS].state)
+    {
+      if (ACK_E == vl_method)
+      {
+        if (0.0 < v_db_UAS.data[pl_UAS].keepAliveTime)
+        {
+          f_EPTF_SIP_UASStateChangeINVITE_CompletedConfirmed(pl_UAS);
+        }else{
+          f_EPTF_SIP_terminateUAS(pl_UAS);
+        }
+      }else if (INVITE_E == vl_method){
+        vl_retrans := true;
+        //retransmitting response
+        f_EPTF_SIP_retransmitUAS(pl_UAS);
+      }
+    }else if (c_SIP_TrState_Confirmed == v_db_UAS.data[pl_UAS].state)
+    {
+      vl_retrans := true;
+      //do nothing
+    }else if (c_SIP_TrState_Terminated == v_db_UAS.data[pl_UAS].state)//hack, SIP sucks
+    {
+      if (ACK_E == vl_method or INVITE_E == vl_method)
+      {
+        vl_retrans := true;
+      }
+    }
+  }else{
+    if (c_SIP_TrState_Trying == v_db_UAS.data[pl_UAS].state)
+    {
+      //response has not been sent yet
+      vl_retrans := true;
+    }else if (c_SIP_TrState_Proceeding == v_db_UAS.data[pl_UAS].state)
+    {
+      vl_retrans := true;
+      //retransmitting response
+      f_EPTF_SIP_retransmitUAS(pl_UAS);
+    }else if (c_SIP_TrState_Completed == v_db_UAS.data[pl_UAS].state)
+    {
+      vl_retrans := true;
+      //retransmitting response
+      f_EPTF_SIP_retransmitUAS(pl_UAS);
+    }
+  }
+}
+
+function f_EPTF_SIP_UASStateChangeINVITE_ProceedCompleted(in integer pl_UAS)
+runs on EPTF_SIP_LGen_CT
+{
+  if (v_db_UAS.data[pl_UAS].retransmissionTime > 0.0)
+  {
+    if(not f_EPTF_SIP_StartT_UAS(pl_UAS, c_SIP_TimerIdxUAS_Retransmission,
+      v_db_UAS.data[pl_UAS].retransmissionTime)) {
+      f_SIP_Logging_WARNING(log2str(
+        %definitionId,": (from sate: Proceeding -> Completed) ",
+        "could not start UAS retransmission timer"));
+    }
+  }
+
+  if(not f_EPTF_SIP_StartT_UAS(pl_UAS, c_SIP_TimerIdxUAS_TransactionTimeout, v_db_UAS.data[pl_UAS].transactionTimeout)) {
+    f_SIP_Logging_WARNING(log2str(
+      %definitionId,": (from sate: Proceeding -> Completed) ",
+      "could not start UAS transaction timeout timer"));
+  }
+  
+  v_db_UAS.data[pl_UAS].state := c_SIP_TrState_Completed;
+}
+
+function f_EPTF_SIP_UASStateChangeINVITE_ProceedKeepalive(in integer pl_UAS)
+runs on EPTF_SIP_LGen_CT
+{
+  //hack, SIP sucks: INVITE UAS should not be destroyed on 2xx response to handle INVITE retransmissions
+
+  v_db_UAS.data[pl_UAS].retransmissionTime := tsp_SIP_TUTimerValues[c_SIP_TimerTU2xx_Retransmission];
+  v_db_UAS.data[pl_UAS].maxRetransTime := tsp_SIP_TUTimerValues[c_SIP_TimerTU2xx_MaxRetransmission];
+  v_db_UAS.data[pl_UAS].transactionTimeout := tsp_SIP_TUTimerValues[c_SIP_TimerTU2xx_RetransTimeout];
+
+  if(not f_EPTF_SIP_StartT_UAS(pl_UAS, c_SIP_TimerIdxUAS_Retransmission,
+    v_db_UAS.data[pl_UAS].retransmissionTime)) {
+    f_SIP_Logging_WARNING(log2str(
+      %definitionId,": (from sate: Proceeding -> Completed) ",
+      "could not start UAS retransmission timer"));
+  }
+
+  if(not f_EPTF_SIP_StartT_UAS(pl_UAS, c_SIP_TimerIdxUAS_TransactionTimeout, v_db_UAS.data[pl_UAS].transactionTimeout)) {
+    f_SIP_Logging_WARNING(log2str(
+      %definitionId,": (Proceeding -> Terminated) ",
+      "could not start UAS transaction timeout timer"));
+  }
+  
+  v_db_UAS.data[pl_UAS].state := c_SIP_TrState_Keepalive;
+}
+
+function f_EPTF_SIP_UASStateChangeINVITE_CompletedConfirmed(in integer pl_UAS)
+runs on EPTF_SIP_LGen_CT
+{
+  f_EPTF_SIP_CancelT_UAS(pl_UAS, c_SIP_TimerIdxUAS_Retransmission)
+  f_EPTF_SIP_CancelT_UAS(pl_UAS, c_SIP_TimerIdxUAS_TransactionTimeout)
+  
+  if(not f_EPTF_SIP_StartT_UAS(pl_UAS, c_SIP_TimerIdxUAS_KeepAlive, v_db_UAS.data[pl_UAS].keepAliveTime)) {
+    f_SIP_Logging_WARNING(log2str(
+      %definitionId,": (Completed -> Confirmed) ",
+      "could not start UAS keep alive timer"));
+  }
+  v_db_UAS.data[pl_UAS].state := c_SIP_TrState_Confirmed;
+}
+
+function f_EPTF_SIP_UASStateChangeNonINVITE_TryProceed(in integer pl_UAS)
+runs on EPTF_SIP_LGen_CT
+{
+  v_db_UAS.data[pl_UAS].state := c_SIP_TrState_Proceeding;
+}
+
+function f_EPTF_SIP_UASStateChangeNonINVITE_ProceedCompleted(in integer pl_UAS)
+runs on EPTF_SIP_LGen_CT
+{
+  if(not f_EPTF_SIP_StartT_UAS(pl_UAS, c_SIP_TimerIdxUAS_KeepAlive, v_db_UAS.data[pl_UAS].keepAliveTime)) {
+    f_SIP_Logging_WARNING(log2str(
+      %definitionId,": (Proceeding -> Completed) ",
+      "could not start UAS keep alive timer"));
+  }
+
+  v_db_UAS.data[pl_UAS].state := c_SIP_TrState_Completed;
+}
+
+function f_EPTF_SIP_UASStateChangeNonINVITE_TryCompleted(in integer pl_UAS)
+runs on EPTF_SIP_LGen_CT
+{
+  if(not f_EPTF_SIP_StartT_UAS(pl_UAS, c_SIP_TimerIdxUAS_KeepAlive, v_db_UAS.data[pl_UAS].keepAliveTime)) {
+    f_SIP_Logging_WARNING(log2str(
+      %definitionId,": (Trying -> Completed) ",
+      "could not start UAS keep alive timer"));
+  }
+
+  v_db_UAS.data[pl_UAS].state := c_SIP_TrState_Completed;
+  
+}
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_TransactionState_startUAC
+//
+//Purpose:
+//  Starts UAC timers and sets the state of a starting UAC.
+//
+//Parameters:
+//  - pl_UAC - *in* *integer* - the index of the UAC transaction in v_db_UAC
+//
+//Errors:
+//  - *could not start UAC retransmission timer*
+//  - *could not start UAC transaction timeout timer*:
+////////////////////////////////////////////////////
+function f_EPTF_SIP_TransactionState_startUAC(in integer pl_UAC, in integer pl_retransIdx, in integer pl_timeoutIdx)
+runs on EPTF_SIP_LGen_CT
+{
+  v_db_UAC.data[pl_UAC].sendTime :=  T_EPTF_componentClock.read;
+
+  var charstring vl_method := "";
+  f_EPTF_SIP_method2str(v_db_UAC.data[pl_UAC].method, vl_method);
+
+  if(c_EPTF_Common_debugSwitch) {
+    v_db_UAC.data[pl_UAC].methodList[sizeof(v_db_UAC.data[pl_UAC].methodList)] := vl_method;
+  }
+
+  if (INVITE_E == v_db_UAC.data[pl_UAC].method)
+  {
+    v_db_UAC.data[pl_UAC].state := c_SIP_TrState_Calling;
+  }else{
+    v_db_UAC.data[pl_UAC].state := c_SIP_TrState_Trying;
+  }
+
+  if (0.0 < v_db_UAC.data[pl_UAC].retransmissionTime)
+  {
+    if(not f_EPTF_SIP_StartT_UAC(pl_UAC, pl_retransIdx,
+          v_db_UAC.data[pl_UAC].retransmissionTime)) {
+      f_SIP_Logging_WARNING(log2str(   %definitionId,
+        "could not start UAC retransmission timer"));
+    }
+  }
+
+  if(not f_EPTF_SIP_StartT_UAC(pl_UAC, pl_timeoutIdx,
+    v_db_UAC.data[pl_UAC].transactionTimeout)) 
+  {
+    f_SIP_Logging_WARNING(log2str(%definitionId,
+      "could not start UAC transaction timeout timer"));
+  }
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_TransactionState_TimerUAC
+//
+//Purpose:  
+//  Changes UAS transaction state on timer event.
+//
+//Parameters:
+//  - pl_timerId - *in* *integer* - the index of the timer event
+//  - pl_UAC - *in* *integer* - the index of the UAC transaction in v_db_UAC
+//
+//Errors:
+//  - *v_msgToSend is still valid, there will be not retransmission*: still there 
+//      is a message in the buffer to send. The message will not be sent out.
+//  - *could not start UAC retransmission timer*
+////////////////////////////////////////////////////
+function f_EPTF_SIP_TransactionState_TimerUAC(in integer pl_timerId, in integer pl_UAC)
+runs on EPTF_SIP_LGen_CT
+{
+  if(c_EPTF_Common_debugSwitch and f_SIP_Logging_debugEnabled()) {
+    f_SIP_Logging_DEBUG(log2str(
+      %definitionId," :UAC: ", pl_UAC, ", timer :", pl_timerId ,", UAC sate: ",v_db_UAC.data[pl_UAC].state));
+  }
+  
+  if(c_EPTF_Common_debugSwitch) {
+    v_db_UAC.data[pl_UAC].methodList[sizeof(v_db_UAC.data[pl_UAC].methodList)] := int2str(pl_timerId);
+  }
+
+  if (INVITE_E == v_db_UAC.data[pl_UAC].method)
+  {
+    if (c_SIP_TimerIdxUAC_C == pl_timerId)
+    {
+      f_EPTF_SIP_terminateUAC(pl_UAC);
+      return;
+    }
+    
+    if (c_SIP_TrState_Calling == v_db_UAC.data[pl_UAC].state)
+    {
+      if (c_SIP_TimerIdxUAC_Retransmission == pl_timerId)//handle retransmission timer
+      {
+        f_EPTF_SIP_handleUACRetransmitTimer(pl_UAC);
+      }else if (c_SIP_TimerIdxUAC_TransactionTimeout == pl_timerId)
+      {
+        f_EPTF_SIP_terminateUAC(pl_UAC);
+      }
+      else{
+        f_SIP_Logging_WARNING(log2str(
+          %definitionId,": unknown timer (", pl_timerId ,") for UAC(",pl_UAC ,") in state ", v_db_UAC.data[pl_UAC].state));
+      }
+    }else if (c_SIP_TrState_Completed == v_db_UAC.data[pl_UAC].state)
+    {
+      if (c_SIP_TimerIdxUAC_KeepAlive == pl_timerId)
+      {
+        f_EPTF_SIP_terminateUAC(pl_UAC);
+      }
+      else{
+        f_SIP_Logging_WARNING(log2str(
+          %definitionId,": unknown timer (", pl_timerId ,") for UAC(",pl_UAC ,") in state ", v_db_UAC.data[pl_UAC].state));
+      }
+    }
+    else{
+      f_SIP_Logging_WARNING(log2str(
+        %definitionId,": timer (", pl_timerId ,") for UAC(",pl_UAC ,") in unknown state ", v_db_UAC.data[pl_UAC].state));
+    }
+  }else{
+    if (c_SIP_TrState_Trying == v_db_UAC.data[pl_UAC].state)
+    {
+      if (c_SIP_TimerIdxUAC_Retransmission == pl_timerId)
+      {
+        f_EPTF_SIP_handleUACRetransmitTimer(pl_UAC);
+      }else if (c_SIP_TimerIdxUAC_TransactionTimeout == pl_timerId)
+      {
+        f_EPTF_SIP_terminateUAC(pl_UAC);
+      }
+      else{
+        f_SIP_Logging_WARNING(log2str(
+          %definitionId,": unknown timer (", pl_timerId ,") for UAC(",pl_UAC ,") in state ", v_db_UAC.data[pl_UAC].state));
+      }
+    }else if (c_SIP_TrState_Proceeding == v_db_UAC.data[pl_UAC].state)
+    {
+      if (c_SIP_TimerIdxUAC_Retransmission == pl_timerId)
+      {
+        f_EPTF_SIP_handleUACRetransmitTimer(pl_UAC);
+      }else if (c_SIP_TimerIdxUAC_TransactionTimeout == pl_timerId)
+      {
+        f_EPTF_SIP_terminateUAC(pl_UAC);
+      }
+      else{
+        f_SIP_Logging_WARNING(log2str(   %definitionId,
+          ": unknown timer (", pl_timerId ,") for UAC(",pl_UAC ,") in state ", v_db_UAC.data[pl_UAC].state));
+      }
+    }else if (c_SIP_TrState_Completed == v_db_UAC.data[pl_UAC].state)
+    {
+      if (c_SIP_TimerIdxUAC_KeepAlive == pl_timerId)
+      {
+        f_EPTF_SIP_terminateUAC(pl_UAC);
+      }
+      else{
+        f_SIP_Logging_WARNING(log2str(%definitionId,
+          ": unknown timer (", pl_timerId ,") for UAC(",pl_UAC ,") in state ", v_db_UAC.data[pl_UAC].state));
+      }
+    }
+  }
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_TransactionState_ResponseUAC
+//
+//Purpose:
+//  Changes UAC transaction state on incoming response.
+//
+//Parameters:
+//  - pl_msgToProcess - *in* <PDU_SIP_Response> - the incoming response
+//  - pl_UAC - *in* *integer* - the index of the UAC transaction in v_db_UAC
+//  - pl_eventToReport - *out* *integer* - the event reported by the "transaction layer"
+////////////////////////////////////////////////////
+function f_EPTF_SIP_TransactionState_ResponseUAC(in PDU_SIP_Response pl_msgToProcess, in integer pl_UAC, inout boolean pl_retrans)
+runs on EPTF_SIP_LGen_CT
+{
+  if(c_EPTF_Common_debugSwitch and f_SIP_Logging_debugEnabled()) {
+    f_SIP_Logging_DEBUG(log2str(
+      %definitionId, ": current transaction: ", pl_UAC, " current state: ", v_db_UAC.data[pl_UAC].state));
+  }
+
+  pl_retrans := false;
+
+  var integer vl_status := pl_msgToProcess.statusLine.statusCode;
+
+  if(c_EPTF_Common_debugSwitch) {
+    v_db_UAC.data[pl_UAC].methodList[sizeof(v_db_UAC.data[pl_UAC].methodList)] := int2str(vl_status);
+  }
+
+  var Method vl_method := v_db_UAC.data[pl_UAC].method;
+
+  if (INVITE_E == vl_method) //INVITE client transaction
+  {
+    if (0 <= v_db_UAC.data[pl_UAC].timers[c_SIP_TimerIdxUAC_C])
+    //proxy
+    {
+      if (vl_status > 100 and vl_status <= 199)
+      {
+        //restart C timer
+        f_EPTF_SIP_CancelT_UAC(pl_UAC, c_SIP_TimerIdxUAC_C);
+        if(not f_EPTF_SIP_StartT_UAC(pl_UAC, c_SIP_TimerIdxUAC_C,
+          v_db_UAC.data[pl_UAC].transactionTimeout)) 
+        {
+          f_SIP_Logging_WARNING(log2str(%definitionId,
+            "could not start UAC transaction timeout timer"));
+        }
+      }
+    }
+  
+    if (c_SIP_TrState_Calling == v_db_UAC.data[pl_UAC].state)
+    {
+      if (vl_status >= 100 and vl_status <= 199)
+      {
+        f_EPTF_SIP_UACStateChangeINVITE_CallProceed(pl_UAC);
+      }else if (vl_status >= 200 and vl_status <= 299)
+      {
+        f_EPTF_SIP_terminateUAC(pl_UAC);
+
+      }else if (vl_status >= 300 and  vl_status <= 699)
+      {
+        var PDU_SIP_Request vl_ACK;
+
+        f_EPTF_SIP_createACKTo3xxto6xx(pl_UAC, pl_msgToProcess, vl_ACK);
+
+        v_db_UAC.data[pl_UAC].request := vl_ACK;
+        v_db_UAC.data[pl_UAC].requestRaw := f_EPTF_SIP_sipEncodeRequest(v_db_UAC.data[pl_UAC].request);
+
+        f_EPTF_SIP_CancelT_UAC(pl_UAC, c_SIP_TimerIdxUAC_Retransmission);
+        f_EPTF_SIP_CancelT_UAC(pl_UAC, c_SIP_TimerIdxUAC_TransactionTimeout);
+        //state change: f_EPTF_SIP_TrasactionState_ACKTo3xxto6xx
+      }
+
+      if (0.0 == v_db_UAC.data[pl_UAC].receiveTime)
+      {
+        v_db_UAC.data[pl_UAC].receiveTime := T_EPTF_componentClock.read;
+      }
+    }else if (c_SIP_TrState_Proceeding == v_db_UAC.data[pl_UAC].state)
+    {
+      if (vl_status >= 100 and vl_status <= 199)
+      {
+        //do nothing
+      }else if (vl_status >= 200 and vl_status <= 299)
+      {
+        f_EPTF_SIP_terminateUAC(pl_UAC);
+      }else if (vl_status >= 300 and  vl_status <= 699)
+      {
+        var PDU_SIP_Request vl_ACK;
+
+        f_EPTF_SIP_createACKTo3xxto6xx(pl_UAC, pl_msgToProcess, vl_ACK);
+        
+        v_db_UAC.data[pl_UAC].request := vl_ACK
+        v_db_UAC.data[pl_UAC].requestRaw := f_EPTF_SIP_sipEncodeRequest(v_db_UAC.data[pl_UAC].request);
+
+        //state change: f_EPTF_SIP_TrasactionState_ACKTo3xxto6xx
+      }
+
+    }else if (c_SIP_TrState_Completed == v_db_UAC.data[pl_UAC].state)
+    {
+      if (vl_status >= 300 and vl_status <= 699)
+      {
+        //retransmit ACK
+        pl_retrans := true;
+        f_EPTF_SIP_retransmitUAC(pl_UAC);
+      }
+    }
+  }else{ //non-INVITE client transaction
+    if (c_SIP_TrState_Trying == v_db_UAC.data[pl_UAC].state)
+    {
+      if (vl_status >= 100 and vl_status <= 199)
+      {
+        f_EPTF_SIP_UACStateChangeNonINVITE_TryProceed(pl_UAC);
+      }else if(vl_status >= 200 and vl_status <= 699)
+      {
+        if (0.0 < v_db_UAC.data[pl_UAC].keepAliveTime)
+        {
+          f_EPTF_SIP_UACStateChangeNonINVITE_TryCompleted(pl_UAC);
+        }else
+        {
+          f_EPTF_SIP_terminateUAC(pl_UAC);
+        }
+      }
+      v_db_UAC.data[pl_UAC].receiveTime := T_EPTF_componentClock.read;
+
+    }else if (c_SIP_TrState_Proceeding == v_db_UAC.data[pl_UAC].state)
+    {
+      if (vl_status >= 100 and vl_status <= 199)
+      {
+        //do nothing
+      }else if (vl_status >= 200 and vl_status <= 699)
+      {
+        if (0.0 < v_db_UAC.data[pl_UAC].keepAliveTime)
+        {
+          f_EPTF_SIP_UACStateChangeNonINVITE_ProceedCompleted(pl_UAC);
+        }else
+        {
+          f_EPTF_SIP_terminateUAC(pl_UAC);
+        }
+      }
+
+    }else if (c_SIP_TrState_Completed == v_db_UAC.data[pl_UAC].state)
+    {
+      if (vl_status >= 100 and vl_status <= 699)
+      {
+        pl_retrans := true;
+        //do nothing
+      }
+    }
+  }
+
+  if(c_EPTF_Common_debugSwitch and f_SIP_Logging_debugEnabled()) {
+    f_SIP_Logging_DEBUG(log2str(   %definitionId,
+      ": current state: " & int2str(v_db_UAC.data[pl_UAC].state)));
+  }
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_TrasactionState_ACKTo3xxto6xx
+//
+//Purpose:
+//  Changes UAC transaction state on sending an ACK to an error response.
+//
+//Parameters:
+//  - pl_UAC - *in* *integer* - in index of the UAC transaction in v_db_UAC
+////////////////////////////////////////////////////
+function f_EPTF_SIP_TrasactionState_ACKTo3xxto6xx(in integer pl_UAC)
+runs on EPTF_SIP_LGen_CT
+{
+  if(c_EPTF_Common_debugSwitch and f_SIP_Logging_debugEnabled()) {
+    f_SIP_Logging_DEBUG(log2str(
+      %definitionId,": current transaction: " & int2str(pl_UAC) & " current state: " & int2str(v_db_UAC.data[pl_UAC].state)));
+  }
+
+  if(c_EPTF_Common_debugSwitch) {
+    v_db_UAC.data[pl_UAC].methodList[sizeof(v_db_UAC.data[pl_UAC].methodList)] := "ACK";
+  }
+
+  if (c_SIP_TrState_Calling == v_db_UAC.data[pl_UAC].state)
+  {
+    if (0.0 < v_db_UAC.data[pl_UAC].keepAliveTime)
+    {
+      f_EPTF_SIP_UACStateChangeINVITE_CallCompleted(pl_UAC)
+    }else{
+      f_EPTF_SIP_terminateUAC(pl_UAC);
+    }
+  }else if (c_SIP_TrState_Proceeding == v_db_UAC.data[pl_UAC].state)
+  {
+    if (0.0 < v_db_UAC.data[pl_UAC].keepAliveTime)
+    {
+      f_EPTF_SIP_UACStateChangeINVITE_ProceedCompleted(pl_UAC)
+    }else{
+      f_EPTF_SIP_terminateUAC(pl_UAC);
+    }
+  }
+}
+
+function f_EPTF_SIP_UACStateChangeINVITE_CallProceed(in integer pl_UAC)
+runs on EPTF_SIP_LGen_CT
+{
+  f_EPTF_SIP_CancelT_UAC(pl_UAC, c_SIP_TimerIdxUAC_Retransmission);
+  f_EPTF_SIP_CancelT_UAC(pl_UAC, c_SIP_TimerIdxUAC_TransactionTimeout);
+  
+  v_db_UAC.data[pl_UAC].state := c_SIP_TrState_Proceeding;
+}
+
+function f_EPTF_SIP_UACStateChangeINVITE_CallCompleted(in integer pl_UAC)
+runs on EPTF_SIP_LGen_CT
+{
+  if(not f_EPTF_SIP_StartT_UAC(pl_UAC, c_SIP_TimerIdxUAC_KeepAlive,
+    v_db_UAC.data[pl_UAC].keepAliveTime)) {
+    f_SIP_Logging_WARNING(log2str(%definitionId,
+      "could not start UAC keep alive timer"));
+  }
+  v_db_UAC.data[pl_UAC].state := c_SIP_TrState_Completed;
+}
+
+function f_EPTF_SIP_UACStateChangeINVITE_ProceedCompleted(in integer pl_UAC)
+runs on EPTF_SIP_LGen_CT
+{
+  if(not f_EPTF_SIP_StartT_UAC(pl_UAC, c_SIP_TimerIdxUAC_KeepAlive,
+    v_db_UAC.data[pl_UAC].keepAliveTime)) {
+    f_SIP_Logging_WARNING(log2str(%definitionId,
+      "could not start UAC keep alive timer"));
+  }
+
+  v_db_UAC.data[pl_UAC].state := c_SIP_TrState_Completed;
+}
+
+function f_EPTF_SIP_UACStateChangeNonINVITE_TryProceed(in integer pl_UAC)
+runs on EPTF_SIP_LGen_CT
+{
+  v_db_UAC.data[pl_UAC].state := c_SIP_TrState_Proceeding;
+}
+
+function f_EPTF_SIP_UACStateChangeNonINVITE_TryCompleted(in integer pl_UAC)
+runs on EPTF_SIP_LGen_CT
+{
+  f_EPTF_SIP_CancelT_UAC(pl_UAC, c_SIP_TimerIdxUAC_Retransmission);
+  f_EPTF_SIP_CancelT_UAC(pl_UAC, c_SIP_TimerIdxUAC_TransactionTimeout);
+
+  if(not f_EPTF_SIP_StartT_UAC(pl_UAC, c_SIP_TimerIdxUAC_KeepAlive,
+    v_db_UAC.data[pl_UAC].keepAliveTime)) {
+    f_SIP_Logging_WARNING(log2str(%definitionId,
+      "could not start UAC keep alive timer"));
+  }
+  v_db_UAC.data[pl_UAC].state := c_SIP_TrState_Completed;
+}
+
+function f_EPTF_SIP_UACStateChangeNonINVITE_ProceedCompleted(in integer pl_UAC)
+runs on EPTF_SIP_LGen_CT
+{
+  f_EPTF_SIP_CancelT_UAC(pl_UAC, c_SIP_TimerIdxUAC_Retransmission);
+  f_EPTF_SIP_CancelT_UAC(pl_UAC, c_SIP_TimerIdxUAC_TransactionTimeout);
+
+  if(not f_EPTF_SIP_StartT_UAC(pl_UAC, c_SIP_TimerIdxUAC_KeepAlive,
+    v_db_UAC.data[pl_UAC].keepAliveTime)) {
+    f_SIP_Logging_WARNING(log2str(%definitionId,
+      "could not start UAC keep alive timer"));
+  }
+  v_db_UAC.data[pl_UAC].state := c_SIP_TrState_Completed;
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_SIP_StartT_UAC
+// 
+//  Purpose:
+//    Starts a transaction timer for an UAC
+// 
+//  Parameters:
+//    pl_trIdx - *in* *integer* - in index of the UAC transaction in v_db_UAC
+//    pl_timerId - *in* *integer* - index of transaction timer
+//    pl_deltaSec - *in* *float* - if greater than 0.0, the relative schedule time
+// 
+//  Errors:
+//  - *timer #id already running*
+//
+//  Return Value:
+//    boolean - false if operation failed
+///////////////////////////////////////////////////////////
+function f_EPTF_SIP_StartT_UAC(in integer pl_trIdx, in integer pl_timerId, in float pl_deltaSec) 
+runs on EPTF_SIP_LGen_CT 
+return boolean
+{
+  var boolean retval;
+  var EPTF_ActionId vl_actionId;
+
+  if(c_EPTF_Common_debugSwitch and f_SIP_Logging_debugEnabled()) {
+    f_SIP_Logging_DEBUG(log2str(
+      %definitionId,": starting timer with idx ", pl_timerId,"(",pl_deltaSec,"s) for UAC ", pl_trIdx));
+  }
+
+  vl_actionId[c_AIdx_TransactionIdx] := pl_trIdx;
+  vl_actionId[c_AIdx_TransactionTimerId] := pl_timerId;
+
+  if (v_db_UAC.data[pl_trIdx].timers[pl_timerId] >= 0)
+  { 
+    f_SIP_Logging_WARNING(log2str(  %definitionId,
+      ": timer " & int2str(pl_timerId) & " already running"));
+    return false;
+  }
+
+  retval := f_EPTF_SchedulerComp_scheduleAction(f_EPTF_SchedulerComp_snapshotTime() + pl_deltaSec,
+    refers(f_EPTF_SIP_TimerHandler_UAC), vl_actionId,
+    v_db_UAC.data[pl_trIdx].timers[pl_timerId]);
+
+  return retval;
+} 
+
+///////////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_StartT_UAS
+// 
+//Purpose:
+//  Starts transaction timer for an UAS
+// 
+//Parameters:
+//  pl_trIdx - *in* *integer* - in index of the UAS transaction in v_db_UAS
+//  pl_timerId - *in* *integer* - index of transaction timer                      
+//  pl_deltaSec - *in* *float* - if greater than 0.0, the relative schedule time  
+//                                                                                
+//Errors:
+//  - *timer #id already running*
+//
+//Return Value:
+//  boolean - false if operation failed
+// 
+///////////////////////////////////////////////////////////
+function f_EPTF_SIP_StartT_UAS(in integer pl_trIdx, in integer pl_timerId, in float pl_deltaSec) 
+runs on EPTF_SIP_LGen_CT 
+return boolean
+{
+  var boolean retval;
+  var EPTF_ActionId vl_actionId;
+
+  if(c_EPTF_Common_debugSwitch and f_SIP_Logging_debugEnabled()) {
+    f_SIP_Logging_DEBUG(log2str(
+      %definitionId,": starting timer with idx ", pl_timerId,"(",pl_deltaSec,"s) for UAS ", pl_trIdx));
+  }
+
+  vl_actionId[c_AIdx_TransactionIdx] := pl_trIdx;
+  vl_actionId[c_AIdx_TransactionTimerId] := pl_timerId;
+
+  if (v_db_UAS.data[pl_trIdx].timers[pl_timerId] >= 0)
+  { 
+    f_SIP_Logging_WARNING(log2str(  %definitionId,
+      ": timer " & int2str(pl_timerId) & " already running"));
+    return false;
+  }
+
+  retval := f_EPTF_SchedulerComp_scheduleAction(f_EPTF_SchedulerComp_snapshotTime() + pl_deltaSec,
+    refers(f_EPTF_SIP_TimerHandler_UAS), vl_actionId,
+    v_db_UAS.data[pl_trIdx].timers[pl_timerId]);
+
+  return retval;
+
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_TimerHandler_UAC
+//
+//Purpose:
+//  Handles UAC timer events
+//
+//Parameters:
+//  - pl_action - *in* <EPTF_ScheduledAction> - the scheduled action
+//  - pl_eventIndex - *in* *integer* - the index of the scheduled action in the event queue
+//
+//Errors:
+//  - *timer #id not running*
+////////////////////////////////////////////////////
+function f_EPTF_SIP_TimerHandler_UAC(in EPTF_ScheduledAction pl_action, in integer pl_eventIndex)
+runs on EPTF_SIP_LGen_CT
+return boolean
+{
+  var integer vl_UAC :=  pl_action.actionId[c_AIdx_TransactionIdx];
+
+  var integer vl_dialog := v_db_UAC.data[vl_UAC].dialogIdx;
+  var integer vl_subscription := v_db_UAC.data[vl_UAC].subscriptionIdx;
+
+  var integer vl_timerId := pl_action.actionId[c_AIdx_TransactionTimerId];
+
+  if(c_EPTF_Common_debugSwitch and f_SIP_Logging_debugEnabled()) {
+    f_SIP_Logging_DEBUG(log2str(%definitionId,": handling timer(",vl_timerId,") for UAC(",vl_UAC,") "));
+  }
+
+  if (0 <= v_db_UAC.data[vl_UAC].timers[vl_timerId])
+  {
+    v_db_UAC.data[vl_UAC].timers[vl_timerId] := -1;
+  }else{
+    f_SIP_Logging_WARNING(log2str(%definitionId,
+      ": timer ", vl_timerId, " not running"));
+    return false;
+  }
+
+  f_EPTF_SIP_TransactionState_TimerUAC(vl_timerId, vl_UAC);
+
+  if (c_SIP_TrState_Terminated == v_db_UAC.data[vl_UAC].state)
+  {
+    if (c_SIP_TimerIdxUAC_KeepAlive != vl_timerId)
+    {
+      var integer vl_userIdx := v_db_UAC.data[vl_UAC].userIdx;
+
+      f_EPTF_Var_adjustContent(v_statIdx_nofUACTimeouts,{ intVal := f_EPTF_Var_getIntValue(v_statIdx_nofUACTimeouts) + 1 });
+      f_EPTF_SIP_dispatchEvent(c_SIP_eventIdx_UACTransactionTimeout, vl_userIdx, f_EPTF_SIP_getUserData_FSMs_fsmCtx(vl_userIdx, v_db_UAC.data[vl_UAC].FSMIdx), {});
+      if (REGISTER_E == v_db_UAC.data[vl_UAC].method)
+      {
+        if (c_SIP_Reg_State_reregistering == v_db_users.data[vl_userIdx].regData.state or
+            c_SIP_Reg_State_deregistering == v_db_users.data[vl_userIdx].regData.state)
+        {
+          v_db_users.data[vl_userIdx].regData.state := c_SIP_Reg_State_registered;
+        }else
+        {
+          v_db_users.data[vl_userIdx].regData.state := c_SIP_Reg_State_unregistered;
+        }
+      }
+
+      if(OUTOF_DIALOG != v_db_UAC.data[vl_UAC].trInDialog and
+          -1 != v_db_UAC.data[vl_UAC].FSMIdx and
+          v_db_users.data[v_db_UAC.data[vl_UAC].userIdx].FSMs.data[v_db_UAC.data[vl_UAC].FSMIdx].dialogIdx ==
+            vl_dialog)
+      {
+        f_EPTF_SIP_DialogState_UACTimeout(vl_timerId, vl_dialog, vl_subscription);
+      }
+    }
+    
+    f_EPTF_SIP_removeUAC(vl_UAC);
+  }
+  
+  return true;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_TimerHandler_UAS
+//
+//Purpose:
+//  Handles UAS timer events
+//
+//Parameters:
+//  - pl_action - *in* <EPTF_ScheduledAction> - the scheduled action
+//  - pl_eventIndex - *in* *integer* - the index of the scheduled action in the event queue
+//
+//Errors:
+//  - *timer #id not running*
+////////////////////////////////////////////////////
+function f_EPTF_SIP_TimerHandler_UAS(in EPTF_ScheduledAction pl_action, in integer pl_eventIndex)
+runs on EPTF_SIP_LGen_CT
+return boolean
+{
+  var integer vl_UAS := pl_action.actionId[c_AIdx_TransactionIdx];
+
+  var integer vl_timerId := pl_action.actionId[c_AIdx_TransactionTimerId];
+
+  if (v_db_UAS.data[vl_UAS].timers[vl_timerId] >= 0)
+  {
+    v_db_UAS.data[vl_UAS].timers[vl_timerId] := -1;
+  }else{
+    f_SIP_Logging_WARNING(log2str(%definitionId,
+      ": timer ", vl_timerId, " not running"));
+    return false;
+  }
+
+  f_EPTF_SIP_TransactionState_TimerUAS(vl_timerId, vl_UAS);
+
+  if (c_SIP_TimerIdxUAS_TransactionTimeout == vl_timerId)
+  {
+    f_EPTF_Var_adjustContent(v_statIdx_nofUASTimeouts,{ intVal := f_EPTF_Var_getIntValue(v_statIdx_nofUASTimeouts) + 1 });
+    f_EPTF_SIP_dispatchEvent(c_SIP_eventIdx_UASTransactionTimeout, v_db_UAS.data[vl_UAS].userIdx, f_EPTF_SIP_getUserData_FSMs_fsmCtx(v_db_UAS.data[vl_UAS].userIdx, v_db_UAS.data[vl_UAS].FSMIdx), {});
+  }
+
+  if (c_SIP_TrState_Terminated == v_db_UAS.data[vl_UAS].state)
+  {
+    f_EPTF_SIP_removeUAS(vl_UAS);
+  }
+  
+  return true;
+}
+
+
+//DIALOG
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_DialogState_UACTimeout
+//
+//Purpose:  
+//  Changes dialog state on UAC transaction timer event
+//
+//Parameters:
+//  - pl_timerId - *in* *integer* - the index of the UAC transactoin timer
+//  - pl_UAC - *in* *integer* - in index of the UAC transaction in v_db_UAC
+////////////////////////////////////////////////////
+function f_EPTF_SIP_DialogState_UACTimeout(in integer pl_timerId, in integer pl_dialog, in integer pl_subscription)
+runs on EPTF_SIP_LGen_CT
+{
+  v_db_dialog.data[pl_dialog].state := c_SIP_DlgState_Terminated;
+  f_SIP_Logging_DEBUG(%definitionId & ": dialog is terminated.");
+
+  if (c_SIP_DlgState_Terminated == v_db_dialog.data[pl_dialog].state)
+  {
+    //REMOVE DIALOG WITH f_SIP_step_cleanUp
+    //f_EPTF_SIP_removeDialog(pl_dialog);
+    if (f_EPTF_SIP_checkSubscription(pl_subscription))
+    {
+      f_EPTF_SIP_removeSubscription(pl_subscription, pl_dialog);
+    }
+  }
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_DialogState_ResponseUAS
+//
+//Purpose:
+//  Changes UAS dialog state on outgoing response
+//
+//Parameters:
+//  - pl_msgToProcess - *in* <PDU_SIP_Response> - the outgoing response
+//  - pl_dialog - *in* *integer* - the index of the dialog in v_db_dialog
+//  - pl_subscription - *in* *integer* - the index of the subscription if the response belongs to
+//      to a subscription
+////////////////////////////////////////////////////
+function f_EPTF_SIP_DialogState_ResponseUAS(
+  in PDU_SIP_Response pl_msgToProcess, 
+  in integer pl_dialog, 
+  in integer pl_subscription,
+  in SIP_TransactionInDialog pl_trInDialog)
+runs on EPTF_SIP_LGen_CT
+{
+  f_EPTF_SIP_DialogState_Response(pl_msgToProcess, pl_dialog, false, pl_trInDialog);
+  
+  if (0 <= pl_subscription)
+  {
+    f_EPTF_SIP_SubscriptionState_Response(pl_msgToProcess, pl_dialog, pl_subscription);
+    if (c_SIP_Subscribe_State_terminated == v_db_subscription.data[pl_subscription].state)
+    {
+      f_EPTF_SIP_removeSubscription(pl_subscription, pl_dialog);
+    }
+  }
+
+  if (not f_EPTF_SIP_Dialog_KeepAlive(pl_dialog))
+  {
+    v_db_dialog.data[pl_dialog].state := c_SIP_DlgState_Terminated;
+    //f_EPTF_SIP_removeDialog(pl_dialog);
+  }
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_DialogState_ResponseUAC
+//
+//Purpose:  
+//  Changes UAC dialog state on incoming response
+//
+//Parameters:
+//  - pl_msgToProcess - *in* <PDU_SIP_Response> - the incoming response
+//  - pl_dialog - *in* *integer* - the index of the dialog in v_db_dialog
+////////////////////////////////////////////////////
+function f_EPTF_SIP_DialogState_ResponseUAC(
+  in PDU_SIP_Response pl_msgToProcess, 
+  in integer pl_dialog, 
+  in integer pl_subscription,
+  in SIP_TransactionInDialog pl_trInDialog)
+runs on EPTF_SIP_LGen_CT
+{
+  f_EPTF_SIP_DialogState_Response(pl_msgToProcess, pl_dialog, true, pl_trInDialog);
+  if (0 <= pl_subscription)
+  {
+    f_EPTF_SIP_SubscriptionState_Response(pl_msgToProcess, pl_dialog, pl_subscription);
+  }
+
+  if (not f_EPTF_SIP_Dialog_KeepAlive(pl_dialog))
+  {
+    v_db_dialog.data[pl_dialog].state := c_SIP_DlgState_Terminated;
+    f_SIP_Logging_DEBUG(%definitionId & ": dialog is terminated.");
+  }
+}
+
+function f_EPTF_SIP_SubscriptionState_Response(
+  in PDU_SIP_Response pl_msgToProcess,
+  in integer pl_dialog, 
+  in integer pl_subscription)
+runs on EPTF_SIP_LGen_CT
+{
+  if (c_SIP_DlgState_Terminated == v_db_dialog.data[pl_dialog].state)
+  {
+    if(c_EPTF_Common_debugSwitch and f_SIP_Logging_debugEnabled()) {
+      f_SIP_Logging_DEBUG(log2str(%definitionId, ": subscription is terminated in dialog ", pl_dialog));
+    }
+    v_db_subscription.data[pl_subscription].state := c_SIP_Subscribe_State_terminated;
+  }else{
+    var integer vl_status := pl_msgToProcess.statusLine.statusCode;
+    
+    var Method vl_method; 
+    f_EPTF_SIP_str2method(pl_msgToProcess.msgHeader.cSeq.method, vl_method);
+
+    if(c_EPTF_Common_debugSwitch and f_SIP_Logging_debugEnabled()) {
+      f_SIP_Logging_DEBUG(log2str(%definitionId,
+        ": subscription index: ", pl_subscription, 
+        " input: ", vl_status,
+        " method: ", vl_method, 
+        " state: ", v_db_subscription.data[pl_subscription].state));
+    }
+
+    if (NOTIFY_E == vl_method)
+    {
+      //NOTIFY failed
+      if (300 <= vl_status and 
+          699 >= vl_status and 
+          vl_status != 401 and 
+          not ispresent(pl_msgToProcess.msgHeader.retryAfter))
+      {
+        if(c_EPTF_Common_debugSwitch and f_SIP_Logging_debugEnabled()) {
+          f_SIP_Logging_DEBUG(log2str(%definitionId, ": subscription is terminated in dialog ", pl_dialog));
+        }
+        v_db_subscription.data[pl_subscription].state := c_SIP_Subscribe_State_terminated;
+        return;
+      }
+    }
+
+    if (c_SIP_Subscribe_State_unknown == v_db_subscription.data[pl_subscription].state)
+    {
+      if (SUBSCRIBE_E == vl_method or REFER_E == vl_method)
+      {
+        if(200 <= pl_msgToProcess.statusLine.statusCode and 299 >= pl_msgToProcess.statusLine.statusCode)
+        {
+          v_db_subscription.data[pl_subscription].remoteTag := v_db_dialog.data[pl_dialog].remoteTag;
+          v_db_subscription.data[pl_subscription].state := c_SIP_Subscribe_State_created;
+        }else if (300 <= vl_status and 699 >= vl_status)
+        {
+          if(c_EPTF_Common_debugSwitch and f_SIP_Logging_debugEnabled()) {
+            f_SIP_Logging_DEBUG(log2str(%definitionId, ": subscription is terminated in dialog ", pl_dialog));
+          }
+          v_db_subscription.data[pl_subscription].state := c_SIP_Subscribe_State_terminated;
+        }
+      }
+    }else if (c_SIP_Subscribe_State_terminated == v_db_subscription.data[pl_subscription].state or
+                c_SIP_Subscribe_State_toBeterminated == v_db_subscription.data[pl_subscription].state)
+    {
+      if (NOTIFY_E == vl_method)
+      {
+        if(c_EPTF_Common_debugSwitch and f_SIP_Logging_debugEnabled()) {
+          f_SIP_Logging_DEBUG(log2str(%definitionId,": subscription is terminated in dialog ", pl_dialog));
+        }
+        v_db_subscription.data[pl_subscription].state := c_SIP_Subscribe_State_terminated;
+      }
+    }
+  }
+
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_DialogState_Response
+//
+//Purpose:  
+//  Changes dialog state on incoming response
+//
+//Parameters:
+//  - pl_msgToProcess - *in* <PDU_SIP_Response> - the incoming response
+//  - pl_dialog - *in* *integer* - the index of the dialog in v_db_dialog
+//  - pl_isUAC - *in* *boolean* - true if the state change takes place for an UAC
+////////////////////////////////////////////////////
+function f_EPTF_SIP_DialogState_Response(
+  in PDU_SIP_Response pl_msgToProcess, 
+  in integer pl_dialog, 
+  in boolean pl_isUAC,
+  in SIP_TransactionInDialog pl_trInDialog)
+runs on EPTF_SIP_LGen_CT
+{
+  var integer vl_status := pl_msgToProcess.statusLine.statusCode;
+
+  var Method vl_method; 
+  f_EPTF_SIP_str2method(pl_msgToProcess.msgHeader.cSeq.method, vl_method);
+
+  if(c_EPTF_Common_debugSwitch and f_SIP_Logging_debugEnabled()) {
+    f_SIP_Logging_DEBUG(log2str(%definitionId,
+      ": index: ", pl_dialog, " input: ", vl_status,", method: ", vl_method, " state: ", v_db_dialog.data[pl_dialog].state));
+  }
+
+  if (CREATE_DIALOG == pl_trInDialog)
+  {
+    if (c_SIP_DlgState_Unknown == v_db_dialog.data[pl_dialog].state)
+    {
+      if (101 <= vl_status and 299 >= vl_status)
+      {
+        if (200 > vl_status)
+        {
+          if (pl_isUAC){ f_EPTF_SIP_Dialog_setUACState(pl_dialog, pl_msgToProcess, v_db_dialog.data[pl_dialog].earlyDialog);}
+          if (v_db_dialog.data[pl_dialog].earlyDialog)
+          {
+            v_db_dialog.data[pl_dialog].state := c_SIP_DlgState_EarlyDialog;
+          }
+        }else
+        {
+          if (pl_isUAC){ f_EPTF_SIP_Dialog_setUACState(pl_dialog, pl_msgToProcess);}
+          v_db_dialog.data[pl_dialog].state := c_SIP_DlgState_Confirmed;
+       }
+
+      }else if (300 <= vl_status and 699 >= vl_status)
+      {
+        v_db_dialog.data[pl_dialog].state := c_SIP_DlgState_Terminated;
+      }
+    }else if (c_SIP_DlgState_EarlyDialog == v_db_dialog.data[pl_dialog].state) //an early dialog has been created through provisional responses to a request
+    {
+      if (200 <= vl_status and 299 >= vl_status)
+      {
+        if (pl_isUAC){f_EPTF_SIP_Dialog_setUACState(pl_dialog, pl_msgToProcess);}
+        v_db_dialog.data[pl_dialog].state := c_SIP_DlgState_Confirmed;
+      }else if (300 <= vl_status and 699 >= vl_status)
+      {
+        //v_db_dialog.data[pl_dialog].userSessionAssociated := false;
+        v_db_dialog.data[pl_dialog].state := c_SIP_DlgState_Terminated;
+      }
+    }else if (c_SIP_DlgState_Confirmed == v_db_dialog.data[pl_dialog].state)
+    {
+      if (200 <= vl_status and 299 >= vl_status)
+      {
+        if (pl_isUAC)
+        {
+          f_EPTF_SIP_Dialog_setUACState(pl_dialog, pl_msgToProcess);
+        }
+      }else
+      {
+          if(c_EPTF_Common_debugSwitch and f_SIP_Logging_debugEnabled()) {
+            f_SIP_Logging_DEBUG(log2str(%definitionId, ": dialog terminated ", pl_dialog));
+          }
+          v_db_dialog.data[pl_dialog].state := c_SIP_DlgState_Terminated;
+      }
+    }
+  }else if(REFRESH_DIALOG == pl_trInDialog)
+  {
+    if (408 == vl_status or 481 == vl_status)
+    {
+      if(c_EPTF_Common_debugSwitch and f_SIP_Logging_debugEnabled()) {
+        f_SIP_Logging_DEBUG(log2str(%definitionId, ": dialog terminated ", pl_dialog));
+      }
+      v_db_dialog.data[pl_dialog].state := c_SIP_DlgState_Terminated;
+    }else if(ispresent(pl_msgToProcess.msgHeader.contact) and
+            ischosen(pl_msgToProcess.msgHeader.contact.contactBody.contactAddresses))
+    {
+      var SipUrl vl_remoteTarget;
+
+      f_EPTF_SIP_GetUri(pl_msgToProcess.msgHeader.contact.contactBody.contactAddresses[0].addressField,
+        vl_remoteTarget);
+
+      f_EPTF_SIP_refreshTarget(pl_dialog, vl_remoteTarget);
+
+    }
+  }else if (INSIDE_DIALOG == pl_trInDialog)
+  {
+    if ((408 == vl_status and SUBSCRIBE_E != vl_method) or 481 == vl_status)
+    {
+      if(c_EPTF_Common_debugSwitch and f_SIP_Logging_debugEnabled()) {
+        f_SIP_Logging_DEBUG(log2str(%definitionId, ": dialog terminated ", pl_dialog));
+      }
+      v_db_dialog.data[pl_dialog].state := c_SIP_DlgState_Terminated;
+    }
+  }else if (REMOVE_DIALOG == pl_trInDialog)
+  {
+    if (408 == vl_status or 481 == vl_status)
+    {
+      if(c_EPTF_Common_debugSwitch and f_SIP_Logging_debugEnabled()) {
+        f_SIP_Logging_DEBUG(log2str(%definitionId, ": dialog terminated ", pl_dialog));
+      }
+      v_db_dialog.data[pl_dialog].state := c_SIP_DlgState_Terminated
+    }else if (200 <= vl_status and 299 >= vl_status)
+    {
+      if (vl_method == BYE_E)
+      {
+        v_db_dialog.data[pl_dialog].userSessionAssociated := false;
+      }
+    }
+  }
+
+  if(c_EPTF_Common_debugSwitch and f_SIP_Logging_debugEnabled()) {
+    f_SIP_Logging_DEBUG(log2str(%definitionId,":  state: ", v_db_dialog.data[pl_dialog].state));
+  }
+}
+
+function f_EPTF_SIP_handleUASRetransmitTimer(in integer pl_UAS)
+runs on EPTF_SIP_LGen_CT
+{
+  f_EPTF_SIP_min(2.0*v_db_UAS.data[pl_UAS].retransmissionTime,
+    v_db_UAS.data[pl_UAS].maxRetransTime,
+    v_db_UAS.data[pl_UAS].retransmissionTime);
+
+  if(not f_EPTF_SIP_StartT_UAS(pl_UAS, c_SIP_TimerIdxUAS_Retransmission,
+    v_db_UAS.data[pl_UAS].retransmissionTime)) {
+    f_SIP_Logging_WARNING(log2str(%definitionId,
+      "could not start UAS retransmission timer"));
+  }
+  
+  f_EPTF_SIP_retransmitUAS(pl_UAS);
+}
+
+function f_EPTF_SIP_handleUACRetransmitTimer(in integer pl_UAC)
+runs on EPTF_SIP_LGen_CT
+{
+  f_EPTF_SIP_min(2.0*v_db_UAC.data[pl_UAC].retransmissionTime,
+    v_db_UAC.data[pl_UAC].maxRetransTime,
+    v_db_UAC.data[pl_UAC].retransmissionTime);
+
+  if(not f_EPTF_SIP_StartT_UAC(pl_UAC, c_SIP_TimerIdxUAC_Retransmission,
+    v_db_UAC.data[pl_UAC].retransmissionTime)) {
+    f_SIP_Logging_WARNING(log2str(%definitionId,
+      "could not start UAC retransmission timer"));
+  }
+
+  f_EPTF_SIP_retransmitUAC(pl_UAC);
+}
+
+function f_EPTF_SIP_terminateUAC(in integer pl_UAC)
+runs on EPTF_SIP_LGen_CT
+{
+  f_EPTF_SIP_CancelAllTimers_UAC(pl_UAC);
+  v_db_UAC.data[pl_UAC].state := c_SIP_TrState_Terminated;
+}
+
+function f_EPTF_SIP_terminateUAS(in integer pl_UAS)
+runs on EPTF_SIP_LGen_CT
+{
+  f_EPTF_SIP_CancelAllTimers_UAS(pl_UAS);
+  v_db_UAS.data[pl_UAS].state := c_SIP_TrState_Terminated;
+}
+
+}//end of module
+with {
+extension "version <RnXnn>"
+}
+

@@ -1,0 +1,1361 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_SIP_Templates.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 522
+//  Updated:  2012-11-28
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////
+// Module: EPTF_SIP_Templates
+//
+// Purpose:
+//   This module contains the SIP message and header templates
+//
+//  Module depends on:
+//    <SIPMsg_Types>
+// 
+// Last Review Date:
+//   2009-06-10
+//
+///////////////////////////////////////////////////////////
+module EPTF_SIP_Templates {
+
+import from SIPmsg_Types all;
+
+//=========================================================================
+// Constants
+//=========================================================================
+
+///////////////////////////////////////////////////////////
+// Constant: c_SIP_NAME_VERSION
+//
+// Purpose:
+//   Constant string for SIP protocol name plus version
+///////////////////////////////////////////////////////////
+const charstring c_SIP_NAME_VERSION := "SIP/2.0";
+
+///////////////////////////////////////////////////////////
+// Constant: c_SIP_NAME
+//
+// Purpose:
+//   Constant string for SIP protocol name
+///////////////////////////////////////////////////////////
+const charstring c_SIP_NAME := "SIP";
+
+///////////////////////////////////////////////////////////
+// Constant: c_SIP_VERSION
+//
+// Purpose:
+//   Constant string for SIP version
+///////////////////////////////////////////////////////////
+const charstring c_SIP_VERSION := "2.0";
+
+///////////////////////////////////////////////////////////
+// Constant: 
+//
+// Purpose:
+//   Constant string for SIP scheme
+///////////////////////////////////////////////////////////
+const charstring c_SIP_SCHEME := "sip";
+
+///////////////////////////////////////////////////////////
+// Constant: c_SIP_TAG_ID
+//
+// Purpose:
+//   Constant string for SIP tag
+///////////////////////////////////////////////////////////
+const charstring c_SIP_TAG_ID := "tag";
+
+///////////////////////////////////////////////////////////
+// Constant: c_SIP_BRANCH_ID
+//
+// Purpose:
+//   Constant string for SIP branch ID parameter name
+///////////////////////////////////////////////////////////
+const charstring c_SIP_BRANCH_ID := "branch";
+
+///////////////////////////////////////////////////////////
+// Constant: c_SIP_BRANCH_COOKIE
+//
+// Purpose:
+//   Constant string for SIP branch cookie "z9hG4bK"
+///////////////////////////////////////////////////////////
+const charstring c_SIP_BRANCH_COOKIE := "z9hG4bK";
+
+///////////////////////////////////////////////////////////
+// Constant: c_SIP_BRANCH_COOKIE_LEN
+//
+// Purpose:
+//   Constant for length of SIP branch cookie
+///////////////////////////////////////////////////////////
+const integer c_SIP_BRANCH_COOKIE_LEN := 7;
+
+///////////////////////////////////////////////////////////
+// Constant: c_SIP_EXPIRES_ID
+//
+// Purpose:
+//   Constant string for expires parameter name
+///////////////////////////////////////////////////////////
+const charstring c_SIP_EXPIRES_ID := "expires";
+
+///////////////////////////////////////////////////////////
+// Constant: c_SIP_MADDR_ID
+//
+// Purpose:
+//   Constant string for maddr parameter name
+///////////////////////////////////////////////////////////
+const charstring c_SIP_MADDR_ID := "maddr";
+
+///////////////////////////////////////////////////////////
+// Constant: c_SIP_TRANSPORT_ID
+//
+// Purpose:
+//   Constant string for maddr parameter name
+///////////////////////////////////////////////////////////
+const charstring c_SIP_TRANSPORT_ID := "transport";
+
+///////////////////////////////////////////////////////////
+// Constant: c_SIP_METHOD_ID
+//
+// Purpose:
+//   Constant string for sip method parameter name
+///////////////////////////////////////////////////////////
+const charstring c_SIP_METHOD_ID := "method";
+
+///////////////////////////////////////////////////////////
+// Constant: c_SIP_RECEIVED_ID
+//
+// Purpose:
+//   Constant string for `received' parameter name
+///////////////////////////////////////////////////////////
+const charstring c_SIP_RECEIVED_ID := "received";
+
+///////////////////////////////////////////////////////////
+// Constant: c_SIP_TTL_ID
+//
+// Purpose:
+//   Constant string for time-to-live parameter name
+///////////////////////////////////////////////////////////
+const charstring c_SIP_TTL_ID := "ttl";
+
+///////////////////////////////////////////////////////////
+// Constant: c_SIP_USER_ID
+//
+// Purpose:
+//   Constant string for user parameter name
+///////////////////////////////////////////////////////////
+const charstring c_SIP_USER_ID := "user";
+
+///////////////////////////////////////////////////////////
+// Constant: c_SIP_ID_ID
+//
+// Purpose:
+//   Ftring for id parameter name
+///////////////////////////////////////////////////////////
+const charstring c_SIP_ID_ID := "id";
+
+///////////////////////////////////////////////////////////
+// Constant: c_SIP_SDP_APPLICATION
+//
+// Purpose:
+//   Constant string for application/sdp content type
+///////////////////////////////////////////////////////////
+const charstring c_SIP_SDP_APPLICATION := "application/sdp";
+
+///////////////////////////////////////////////////////////
+// Constant: c_AT
+//
+// Purpose:
+//   Constant string for @ (at) sign
+///////////////////////////////////////////////////////////
+const charstring c_AT := "@";
+
+///////////////////////////////////////////////////////////
+// Constant: c_WILDCARD
+//
+// Purpose:
+//   Constant string for * (wildchard) sign
+///////////////////////////////////////////////////////////
+const charstring c_WILDCARD := "*";
+
+///////////////////////////////////////////////////////////
+// Constant: c_SLASH
+//
+// Purpose:
+//   Constant string for / (slash) sign
+///////////////////////////////////////////////////////////
+const charstring c_SLASH := "/";
+
+///////////////////////////////////////////////////////////
+// Constant: c_LT
+//
+// Purpose:
+//   Constant string for < (less than) sign
+///////////////////////////////////////////////////////////
+const charstring c_LT := "<";
+
+///////////////////////////////////////////////////////////
+// Constant: c_GT
+//
+// Purpose:
+//   Constant string for > (greater than) sign
+///////////////////////////////////////////////////////////
+const charstring c_GT := ">";
+
+///////////////////////////////////////////////////////////
+// Constant: c_LP
+//
+// Purpose:
+//   Constant string for ( (left parenthesis) sign
+///////////////////////////////////////////////////////////
+const charstring c_LP := " (";
+
+///////////////////////////////////////////////////////////
+// Constant: c_RP
+//
+// Purpose:
+//   Constant string for ) (right parenthesis) sign
+///////////////////////////////////////////////////////////
+const charstring c_RP := ") ";
+
+///////////////////////////////////////////////////////////
+// Constant: c_QUOTE
+//
+// Purpose:
+//   Constant string for Quote sign
+///////////////////////////////////////////////////////////
+const charstring c_QUOTE := """";
+
+///////////////////////////////////////////////////////////
+// Constant: c_SP
+//
+// Purpose:
+//   Constant string for %d32 ; US-ASCII SP, space character
+///////////////////////////////////////////////////////////
+const charstring c_SP := " ";
+
+///////////////////////////////////////////////////////////
+// Constant: c_TAB
+//
+// Purpose:
+//   Constant string for %d09  ; US-ASCII HT, horizontal tab character
+///////////////////////////////////////////////////////////
+const charstring c_TAB := int2char(9);
+
+///////////////////////////////////////////////////////////
+// Constant: c_CR
+//
+// Purpose:
+//   Constant string for %d13  ; US-ASCII CR, carriage return character
+///////////////////////////////////////////////////////////
+const charstring c_CR := int2char(13);
+
+///////////////////////////////////////////////////////////
+// Constant: c_LF
+//
+// Purpose:
+//   Constant string for %d10  ; US-ASCII LF, line feed character
+///////////////////////////////////////////////////////////
+const charstring c_LF := int2char(10);
+
+///////////////////////////////////////////////////////////
+// Constant: c_CRLF
+//
+// Purpose:
+//   Constant string for CR LF  ; typically the end of a line
+///////////////////////////////////////////////////////////
+const charstring c_CRLF := c_CR & c_LF;
+
+///////////////////////////////////////////////////////////
+// Constant: c_DEFAULT_SIP_PORT
+//
+// Purpose:
+//   Constant for default SIP port number : 5060
+///////////////////////////////////////////////////////////
+const integer c_DEFAULT_SIP_PORT := 5060;
+
+///////////////////////////////////////////////////////////
+// Constant: c_DEFAULT_SIP_PROT
+//
+// Purpose:
+//   Constant string for default SIP protocol : UDP
+///////////////////////////////////////////////////////////
+const charstring c_DEFAULT_SIP_PROT := "UDP";
+
+///////////////////////////////////////////////////////////
+// Constant: c_MCAST_SIP_IPADDR
+//
+// Purpose:
+//   Constant string for Fixed IP multicast address
+///////////////////////////////////////////////////////////
+const charstring c_MCAST_SIP_IPADDR := "224.0.1.75";
+
+///////////////////////////////////////////////////////////
+// Constant: c_SIP_SHORT_REGISTRATION
+//
+// Purpose:
+//   Constant for short delta-second used in expires parameter to acknowledge a registration
+///////////////////////////////////////////////////////////
+const charstring c_SIP_SHORT_REGISTRATION := "3";
+
+///////////////////////////////////////////////////////////
+// Constant: c_SIP_EXT_100REL
+//
+// Purpose:
+//   Constant string for SIP extension 100rel
+///////////////////////////////////////////////////////////
+const charstring c_SIP_EXT_100REL := "100rel";
+
+///////////////////////////////////////////////////////////
+// Constant: c_SIP_EXT_PRECONDITION
+//
+// Purpose:
+//   Constant string for precondition extension
+///////////////////////////////////////////////////////////
+const charstring c_SIP_EXT_PRECONDITION := "precondition";
+
+const charstring c_SIP_PARAM_NONCE := "nonce"
+const charstring c_SIP_PARAM_REALM := "realm"
+const charstring c_SIP_PARAM_ALGORITHM := "algorithm"
+const charstring c_SIP_PARAM_OPAQUE := "opaque"
+const charstring c_SIP_PARAM_USERNAME := "username"
+const charstring c_SIP_PARAM_URI := "uri"
+const charstring c_SIP_PARAM_RESPONSE := "response"
+const charstring c_SIP_PARAM_CNONCE := "cnonce"
+const charstring c_SIP_PARAM_QOP:= "qop"
+const charstring c_SIP_PARAM_NC:= "nc"
+
+const charstring c_SIP_SECPARAM_ALG := "alg"
+const charstring c_SIP_SECPARAM_EALG := "ealg"
+const charstring c_SIP_SECPARAM_SPI_C := "spi-c"
+const charstring c_SIP_SECPARAM_SPI_S := "spi-s"
+const charstring c_SIP_SECPARAM_PORT_C := "port-c"
+const charstring c_SIP_SECPARAM_PORT_S := "port-s"
+const charstring c_SIP_SECPARAM_PROTO := "prot"
+const charstring c_SIP_SECPARAM_PROTONAME_AH := "ah"
+const charstring c_SIP_SECPARAM_PROTONAME_ESP := "esp"
+const charstring c_SIP_SECPARAM_MOD := "mod"
+const charstring c_SIP_SECPARAM_MODNAME_TRANS := "trans"
+const charstring c_SIP_SECPARAM_MODNAME_UDP_ENC_TUN := "UDP-enc-tun"
+
+//=========================================================================
+// Constatnts for SIP messages
+//=========================================================================
+
+///////////////////////////////////////////////////////////
+// Constant: cg_SipUrl_base
+//
+// Purpose:
+//   Constant for initializing SIP URIs
+///////////////////////////////////////////////////////////
+const SipUrl cg_SipUrl_base :=
+{
+  scheme := c_SIP_SCHEME,
+  userInfo := omit,
+  hostPort :=
+  {
+    host := omit,
+    portField := omit
+  },
+  urlParameters := omit,
+  headers := omit
+}
+
+///////////////////////////////////////////////////////////
+// Constant: cg_From_base
+//
+// Purpose:
+//   Constant for initializing From header field
+///////////////////////////////////////////////////////////
+const From cg_From_base:=
+{
+  fieldName := FROM_E,
+  addressField :=
+  {
+    addrSpecUnion := cg_SipUrl_base
+  },
+  fromParams := omit
+};
+
+///////////////////////////////////////////////////////////
+// Constant: cg_To_base
+//
+// Purpose:
+//   Constant for initializing To header field
+///////////////////////////////////////////////////////////
+const To cg_To_base:=
+{
+  fieldName := TO_E,
+  addressField :=
+  {
+    addrSpecUnion := cg_SipUrl_base
+  },
+  toParams := omit
+};
+
+///////////////////////////////////////////////////////////
+// Constant: cg_Via_base
+//
+// Purpose:
+//   Constant for initializing Via header field
+///////////////////////////////////////////////////////////
+const Via cg_Via_base :=
+{
+  fieldName := VIA_E,
+  viaBody := {}
+};
+
+///////////////////////////////////////////////////////////
+// Constant: cg_MaxForwards_base
+//
+// Purpose:
+//   Constant for initializing max-forwards header field
+///////////////////////////////////////////////////////////
+const MaxForwards cg_MaxForwards_base :=
+{
+  fieldName := MAX_FORWARDS_E,
+  forwards := 70
+}
+
+///////////////////////////////////////////////////////////
+// Constant: cg_PDU_SIP_Request_base
+//
+// Purpose:
+//   Constant for initializing a SIP request
+//
+// Detailed comments:
+//    Base const for all SIP Requests for sending
+//    The purpose of this const to save copy paste work of omit headers
+//    for all consts. In case of SIP extension, only this const has to be 
+//    updated!
+///////////////////////////////////////////////////////////
+const PDU_SIP_Request cg_PDU_SIP_Request_base :=
+{
+  requestLine	:=
+  {
+    method := REGISTER_E,
+    requestUri := cg_SipUrl_base,
+    sipVersion := c_SIP_NAME_VERSION
+  },
+  msgHeader := c_SIP_msgHeader_empty,
+  messageBody             := omit,
+  payload                 := omit
+}
+
+///////////////////////////////////////////////////////////
+// Constant: cg_PDU_SIP_Response_base
+//
+// Purpose:
+//   Constant for initializing SIP responses
+//
+// Detailed comments:
+//    Base const for all SIP Responses for sending
+//    The purpose of this const to save copy paste work of omit headers
+//    for all consts. In case of SIP extension, only this const has to be 
+//    updated!
+///////////////////////////////////////////////////////////
+const PDU_SIP_Response cg_PDU_SIP_Response_base :=
+{
+  statusLine :=
+  {
+    sipVersion := c_SIP_NAME_VERSION,
+    statusCode := 200,
+    reasonPhrase := "OK"
+  },
+  msgHeader := c_SIP_msgHeader_empty,
+  messageBody             := omit,
+  payload                 := omit
+}
+
+
+////////////////////////////////////////////////////////////////////////
+// SIP Response status codes and reason phrases as defined in RFC 3261
+////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////
+// Provisional responses
+//////////////////////////////
+
+///////////////////////////////////////////////////////////
+// Constant: c_status_100Trying
+//
+// Purpose:
+//   Constant for SIP status line 100 Trying
+///////////////////////////////////////////////////////////
+const integer    c_status_100Trying_idx := 0;
+const StatusLine c_status_100Trying :=
+{
+  sipVersion := c_SIP_NAME_VERSION,
+  statusCode := 100,
+  reasonPhrase := "Trying"
+}
+
+///////////////////////////////////////////////////////////
+// Constant: c_status_180Ringing
+//
+// Purpose:
+//   Constant for SIP status line 180 Ringing
+///////////////////////////////////////////////////////////
+const integer    c_status_180Ringing_idx := 1;
+const StatusLine c_status_180Ringing :=
+{
+  sipVersion := c_SIP_NAME_VERSION,
+  statusCode := 180,
+  reasonPhrase := "Ringing"
+}
+
+///////////////////////////////////////////////////////////
+// Constant: c_status_181CallIsBeingForwarded
+//
+// Purpose:
+//   Constant for SIP status line 181 Call Is Being Forwarded
+///////////////////////////////////////////////////////////
+const integer    c_status_181CallIsBeingForwarded_idx := 2;
+const StatusLine c_status_181CallIsBeingForwarded :=
+{
+  sipVersion := c_SIP_NAME_VERSION,
+  statusCode := 181,
+  reasonPhrase := "Call Is Being Forwarded"
+}
+
+///////////////////////////////////////////////////////////
+// Constant: c_status_182Queued
+//
+// Purpose:
+//   Constant for SIP status line 182 Queued
+///////////////////////////////////////////////////////////
+const integer    c_status_182Queued_idx := 3;
+const StatusLine c_status_182Queued :=
+{
+  sipVersion := c_SIP_NAME_VERSION,
+  statusCode := 182,
+  reasonPhrase := "Queued"
+}
+
+///////////////////////////////////////////////////////////
+// Constant: c_status_183SessionProgress
+//
+// Purpose:
+//   Constant for SIP status line 183 Session Progress
+///////////////////////////////////////////////////////////
+const integer    c_status_183SessionProgress_idx := 4;
+const StatusLine c_status_183SessionProgress :=
+{
+  sipVersion := c_SIP_NAME_VERSION,
+  statusCode := 183,
+  reasonPhrase := "Session Progress"
+}
+
+//////////////////////////////
+// Success responses
+//////////////////////////////
+
+///////////////////////////////////////////////////////////
+// Constant: c_status_200OK
+//
+// Purpose:
+//   Constant for SIP status line 200 OK
+///////////////////////////////////////////////////////////
+const integer    c_status_200OK_idx := 5;
+const StatusLine c_status_200OK :=
+{
+  sipVersion := c_SIP_NAME_VERSION,
+  statusCode := 200,
+  reasonPhrase := "OK"
+}
+
+///////////////////////////////////////////////////////////
+// Constant: c_status_202Accepted
+//
+// Purpose:
+//   Constant for SIP status line 202 Accepted
+///////////////////////////////////////////////////////////
+const integer    c_status_202Accepted_idx := 6;
+const StatusLine c_status_202Accepted :=
+{
+  sipVersion := c_SIP_NAME_VERSION,
+  statusCode := 202,
+  reasonPhrase := "Accepted"
+}
+
+//////////////////////////////
+// Redirection responses
+//////////////////////////////
+
+///////////////////////////////////////////////////////////
+// Constant: c_status_300MultipleChoices
+//
+// Purpose:
+//   Constant for SIP status line 300 Multiple Choices
+///////////////////////////////////////////////////////////
+const integer    c_status_300MultipleChoices_idx := 7;
+const StatusLine c_status_300MultipleChoices :=
+{
+  sipVersion := c_SIP_NAME_VERSION,
+  statusCode := 300,
+  reasonPhrase := "Multiple Choices"
+}
+
+///////////////////////////////////////////////////////////
+// Constant: c_status_301MovedPermanently
+//
+// Purpose:
+//   Constant for SIP status line 301 Moved Permanently
+///////////////////////////////////////////////////////////
+const integer    c_status_301MovedPermanently_idx := 8;
+const StatusLine c_status_301MovedPermanently :=
+{
+  sipVersion := c_SIP_NAME_VERSION,
+  statusCode := 301,
+  reasonPhrase := "Moved Permanently"
+}
+
+///////////////////////////////////////////////////////////
+// Constant: c_status_302MovedTemporarily
+//
+// Purpose:
+//   Constant for SIP status line 302 Moved Temporarily
+///////////////////////////////////////////////////////////
+const integer    c_status_302MovedTemporarily_idx := 9;
+const StatusLine c_status_302MovedTemporarily :=
+{
+  sipVersion := c_SIP_NAME_VERSION,
+  statusCode := 302,
+  reasonPhrase := "Moved Temporarily"
+}
+
+///////////////////////////////////////////////////////////
+// Constant: c_status_305UseProxy
+//
+// Purpose:
+//   Constant for SIP status line 305 Use Proxy
+///////////////////////////////////////////////////////////
+const integer    c_status_305UseProxy_idx := 10;
+const StatusLine c_status_305UseProxy :=
+{
+  sipVersion := c_SIP_NAME_VERSION,
+  statusCode := 305,
+  reasonPhrase := "Use Proxy"
+}
+
+///////////////////////////////////////////////////////////
+// Constant: c_status_380AlternativeService
+//
+// Purpose:
+//   Constant for SIP status line 380 Alternative Service
+///////////////////////////////////////////////////////////
+const integer    c_status_380AlternativeService_idx := 11;
+const StatusLine c_status_380AlternativeService :=
+{
+  sipVersion := c_SIP_NAME_VERSION,
+  statusCode := 380,
+  reasonPhrase := "Alternative Service"
+}
+
+//////////////////////////////
+// Request failure responses
+//////////////////////////////
+
+///////////////////////////////////////////////////////////
+// Constant: c_status_400BadRequest
+//
+// Purpose:
+//   Constant for SIP status line 400 Bad Request
+///////////////////////////////////////////////////////////
+const integer    c_status_400BadRequest_idx := 12;
+const StatusLine c_status_400BadRequest :=
+{
+  sipVersion := c_SIP_NAME_VERSION,
+  statusCode := 400,
+  reasonPhrase := "Bad Request"
+}
+
+///////////////////////////////////////////////////////////
+// Constant: c_status_401Unauthorized
+//
+// Purpose:
+//   Constant for SIP status line 401 Unauthorized
+///////////////////////////////////////////////////////////
+const integer    c_status_401Unauthorized_idx := 13;
+const StatusLine c_status_401Unauthorized :=
+{
+  sipVersion := c_SIP_NAME_VERSION,
+  statusCode := 401,
+  reasonPhrase := "Unauthorized"
+}
+
+///////////////////////////////////////////////////////////
+// Constant: c_status_402PaymentRequired
+//
+// Purpose:
+//   Constant for SIP status line 402 Payment Required
+///////////////////////////////////////////////////////////
+const integer    c_status_402PaymentRequired_idx := 14;
+const StatusLine c_status_402PaymentRequired :=
+{
+  sipVersion := c_SIP_NAME_VERSION,
+  statusCode := 402,
+  reasonPhrase := "Payment Required"
+}
+
+///////////////////////////////////////////////////////////
+// Constant: c_status_403Forbidden
+//
+// Purpose:
+//   Constant for SIP status line 403 Forbidden
+///////////////////////////////////////////////////////////
+const integer    c_status_403Forbidden_idx := 15;
+const StatusLine c_status_403Forbidden :=
+{
+  sipVersion := c_SIP_NAME_VERSION,
+  statusCode := 403,
+  reasonPhrase := "Forbidden"
+}
+
+///////////////////////////////////////////////////////////
+// Constant: c_status_404NotFound
+//
+// Purpose:
+//   Constant for SIP status line 404 Not Found
+///////////////////////////////////////////////////////////
+const integer    c_status_404NotFound_idx := 16;
+const StatusLine c_status_404NotFound :=
+{
+  sipVersion := c_SIP_NAME_VERSION,
+  statusCode := 404,
+  reasonPhrase := "Not Found"
+}
+
+///////////////////////////////////////////////////////////
+// Constant: c_status_405MethodNotAllowed
+//
+// Purpose:
+//   Constant for SIP status line 405 Method Not Allowed
+///////////////////////////////////////////////////////////
+const integer    c_status_405MethodNotAllowed_idx := 17;
+const StatusLine c_status_405MethodNotAllowed :=
+{
+  sipVersion := c_SIP_NAME_VERSION,
+  statusCode := 405,
+  reasonPhrase := "Method Not Allowed"
+}
+
+///////////////////////////////////////////////////////////
+// Constant: c_status_406NotAcceptable
+//
+// Purpose:
+//   Constant for SIP status line 406 Not Acceptable
+///////////////////////////////////////////////////////////
+const integer    c_status_406NotAcceptable_idx := 18;
+const StatusLine c_status_406NotAcceptable :=
+{
+  sipVersion := c_SIP_NAME_VERSION,
+  statusCode := 406,
+  reasonPhrase := "Not Acceptable"
+}
+
+///////////////////////////////////////////////////////////
+// Constant: c_status_407ProxyAuthenticationRequired
+//
+// Purpose:
+//   Constant for SIP status line 407 Proxy Authentication Required
+///////////////////////////////////////////////////////////
+const integer    c_status_407ProxyAuthenticationRequired_idx := 19;
+const StatusLine c_status_407ProxyAuthenticationRequired :=
+{
+  sipVersion := c_SIP_NAME_VERSION,
+  statusCode := 407,
+  reasonPhrase := "Proxy Authentication Required"
+}
+
+///////////////////////////////////////////////////////////
+// Constant: c_status_408RequestTimeout
+//
+// Purpose:
+//   Constant for SIP status line 408 Request Timeout
+///////////////////////////////////////////////////////////
+const integer    c_status_408RequestTimeout_idx := 20;
+const StatusLine c_status_408RequestTimeout :=
+{
+  sipVersion := c_SIP_NAME_VERSION,
+  statusCode := 408,
+  reasonPhrase := "Request Timeout"
+}
+
+///////////////////////////////////////////////////////////
+// Constant: c_status_409Conflict
+//
+// Purpose:
+//   Constant for SIP status line 409 Conflict
+///////////////////////////////////////////////////////////
+const integer    c_status_409Conflict_idx := 21;
+const StatusLine c_status_409Conflict :=
+{
+  sipVersion := c_SIP_NAME_VERSION,
+  statusCode := 409,
+  reasonPhrase := "Conflict"
+}
+
+///////////////////////////////////////////////////////////
+// Constant: c_status_410Gone
+//
+// Purpose:
+//   Constant for SIP status line 410 Gone
+///////////////////////////////////////////////////////////
+const integer    c_status_410Gone_idx := 22;
+const StatusLine c_status_410Gone :=
+{
+  sipVersion := c_SIP_NAME_VERSION,
+  statusCode := 410,
+  reasonPhrase := "Gone"
+}
+
+///////////////////////////////////////////////////////////
+// Constant: c_status_412ConditionalRequestFailed
+//
+// Purpose:
+//   Constant for SIP status line 412 Conditional Request Failed
+///////////////////////////////////////////////////////////
+const integer    c_status_412ConditionalRequestFailed_idx := 23;
+const StatusLine c_status_412ConditionalRequestFailed :=
+{
+  sipVersion := c_SIP_NAME_VERSION,
+  statusCode := 412,
+  reasonPhrase := "Conditional Request Failed"
+}
+
+///////////////////////////////////////////////////////////
+// Constant: c_status_413RequestEntityTooLarge
+//
+// Purpose:
+//   Constant for SIP status line 413 Request Entity Too Large
+///////////////////////////////////////////////////////////
+const integer    c_status_413RequestEntityTooLarge_idx := 24;
+const StatusLine c_status_413RequestEntityTooLarge :=
+{
+  sipVersion := c_SIP_NAME_VERSION,
+  statusCode := 413,
+  reasonPhrase := "Request Entity Too Large"
+}
+
+///////////////////////////////////////////////////////////
+// Constant: c_status_414RequestUriTooLong
+//
+// Purpose:
+//   Constant for SIP status line 414 Request Uri Too Long
+///////////////////////////////////////////////////////////
+const integer    c_status_414RequestUriTooLong_idx := 25;
+const StatusLine c_status_414RequestUriTooLong :=
+{
+  sipVersion := c_SIP_NAME_VERSION,
+  statusCode := 414,
+  reasonPhrase := "Request-URI Too Long"
+}
+
+///////////////////////////////////////////////////////////
+// Constant: c_status_415UnsupportedMediaType
+//
+// Purpose:
+//   Constant for SIP status line 415 Unsupported Media Type
+///////////////////////////////////////////////////////////
+const integer    c_status_415UnsupportedMediaType_idx := 26;
+const StatusLine c_status_415UnsupportedMediaType :=
+{
+  sipVersion := c_SIP_NAME_VERSION,
+  statusCode := 415,
+  reasonPhrase := "Unsupported Media Type"
+}
+
+///////////////////////////////////////////////////////////
+// Constant: c_status_416UnsupportedUriScheme
+//
+// Purpose:
+//   Constant for SIP status line 416 Unsupported Uri Scheme
+///////////////////////////////////////////////////////////
+const integer    c_status_416UnsupportedUriScheme_idx := 27;
+const StatusLine c_status_416UnsupportedUriScheme :=
+{
+  sipVersion := c_SIP_NAME_VERSION,
+  statusCode := 416,
+  reasonPhrase := "Unsupported URI Scheme"
+}
+
+///////////////////////////////////////////////////////////
+// Constant: c_status_420BadExtension
+//
+// Purpose:
+//   Constant for SIP status line 420 Bad Extension
+///////////////////////////////////////////////////////////
+const integer    c_status_420BadExtension_idx := 28;
+const StatusLine c_status_420BadExtension :=
+{
+  sipVersion := c_SIP_NAME_VERSION,
+  statusCode := 420,
+  reasonPhrase := "Bad Extension"
+}
+
+///////////////////////////////////////////////////////////
+// Constant: c_status_421ExtensionRequired
+//
+// Purpose:
+//   Constant for SIP status line 421 Extension Required
+///////////////////////////////////////////////////////////
+const integer    c_status_421ExtensionRequired_idx := 29;
+const StatusLine c_status_421ExtensionRequired :=
+{
+  sipVersion := c_SIP_NAME_VERSION,
+  statusCode := 421,
+  reasonPhrase := "Extension Required"
+}
+
+///////////////////////////////////////////////////////////
+// Constant: c_status_423IntervalTooBrief
+//
+// Purpose:
+//   Constant for SIP status line 423 Interval Too Brief
+///////////////////////////////////////////////////////////
+const integer    c_status_423IntervalTooBrief_idx := 30;
+const StatusLine c_status_423IntervalTooBrief :=
+{
+  sipVersion := c_SIP_NAME_VERSION,
+  statusCode := 423,
+  reasonPhrase := "Interval Too Brief"
+}
+
+///////////////////////////////////////////////////////////
+// Constant: c_status_480TemporarilyUnavailable
+//
+// Purpose:
+//   Constant for SIP status line 480 Temporarily Unavailable
+///////////////////////////////////////////////////////////
+const integer    c_status_480TemporarilyUnavailable_idx := 31;
+const StatusLine c_status_480TemporarilyUnavailable :=
+{
+  sipVersion := c_SIP_NAME_VERSION,
+  statusCode := 480,
+  reasonPhrase := "Temporarily Unavailable"
+}
+
+///////////////////////////////////////////////////////////
+// Constant: c_status_481CallTransactionDoesNotExist
+//
+// Purpose:
+//   Constant for SIP status line 481 Call/Transaction Does Not Exist
+///////////////////////////////////////////////////////////
+const integer    c_status_481CallTransactionDoesNotExist_idx := 32;
+const StatusLine c_status_481CallTransactionDoesNotExist :=
+{
+  sipVersion := c_SIP_NAME_VERSION,
+  statusCode := 481,
+  reasonPhrase := "Call/Transaction Does Not Exist"
+}
+
+///////////////////////////////////////////////////////////
+// Constant: c_status_482LoopDetected
+//
+// Purpose:
+//   Constant for SIP status line 482 Loop Detected
+///////////////////////////////////////////////////////////
+const integer    c_status_482LoopDetected_idx := 33;
+const StatusLine c_status_482LoopDetected :=
+{
+  sipVersion := c_SIP_NAME_VERSION,
+  statusCode := 482,
+  reasonPhrase := "Loop Detected"
+}
+
+///////////////////////////////////////////////////////////
+// Constant: c_status_483TooManyHops
+//
+// Purpose:
+//   Constant for SIP status line 483 Too Many Hops
+///////////////////////////////////////////////////////////
+const integer    c_status_483TooManyHops_idx := 34;
+const StatusLine c_status_483TooManyHops :=
+{
+  sipVersion := c_SIP_NAME_VERSION,
+  statusCode := 483,
+  reasonPhrase := "Too Many Hops"
+}
+
+///////////////////////////////////////////////////////////
+// Constant: c_status_484AddressIncomplete
+//
+// Purpose:
+//   Constant for SIP status line 484 Address Incomplete
+///////////////////////////////////////////////////////////
+const integer    c_status_484AddressIncomplete_idx := 35;
+const StatusLine c_status_484AddressIncomplete :=
+{
+  sipVersion := c_SIP_NAME_VERSION,
+  statusCode := 484,
+  reasonPhrase := "Address Incomplete"
+}
+
+///////////////////////////////////////////////////////////
+// Constant: c_status_485Ambiguous
+//
+// Purpose:
+//   Constant for SIP status line 485 Ambiguous
+///////////////////////////////////////////////////////////
+const integer    c_status_485Ambiguous_idx := 36;
+const StatusLine c_status_485Ambiguous :=
+{
+  sipVersion := c_SIP_NAME_VERSION,
+  statusCode := 485,
+  reasonPhrase := "Ambiguous"
+}
+
+///////////////////////////////////////////////////////////
+// Constant: c_status_486BusyHere
+//
+// Purpose:
+//   Constant for SIP status line 486 Busy Here
+///////////////////////////////////////////////////////////
+const integer    c_status_486BusyHere_idx := 37;
+const StatusLine c_status_486BusyHere :=
+{
+  sipVersion := c_SIP_NAME_VERSION,
+  statusCode := 486,
+  reasonPhrase := "Busy Here"
+}
+
+///////////////////////////////////////////////////////////
+// Constant: c_status_487RequestTerminated
+//
+// Purpose:
+//   Constant for SIP status line 487 Request Terminated
+///////////////////////////////////////////////////////////
+const integer    c_status_487RequestTerminated_idx := 38;
+const StatusLine c_status_487RequestTerminated :=
+{
+  sipVersion := c_SIP_NAME_VERSION,
+  statusCode := 487,
+  reasonPhrase := "Request Terminated"
+}
+
+///////////////////////////////////////////////////////////
+// Constant: c_status_488NotAcceptableHere
+//
+// Purpose:
+//   Constant for SIP status line 488 Not Acceptable Here
+///////////////////////////////////////////////////////////
+const integer    c_status_488NotAcceptableHere_idx := 39;
+const StatusLine c_status_488NotAcceptableHere :=
+{
+  sipVersion := c_SIP_NAME_VERSION,
+  statusCode := 488,
+  reasonPhrase := "Not Acceptable Here"
+}
+
+///////////////////////////////////////////////////////////
+// Constant: c_status_489BadEvent
+//
+// Purpose:
+//   Constant for SIP status line 489 Bad Event
+///////////////////////////////////////////////////////////
+const integer    c_status_489BadEvent_idx := 40;
+const StatusLine c_status_489BadEvent :=
+{
+  sipVersion := c_SIP_NAME_VERSION,
+  statusCode := 489,
+  reasonPhrase := "Bad Event"
+}
+
+///////////////////////////////////////////////////////////
+// Constant: c_status_491RequestPending
+//
+// Purpose:
+//   Constant for SIP status line 491 Request Pending
+///////////////////////////////////////////////////////////
+const integer    c_status_491RequestPending_idx := 41;
+const StatusLine c_status_491RequestPending :=
+{
+  sipVersion := c_SIP_NAME_VERSION,
+  statusCode := 491,
+  reasonPhrase := "Request Pending"
+}
+
+///////////////////////////////////////////////////////////
+// Constant: c_status_493Undecipherable
+//
+// Purpose:
+//   Constant for SIP status line 493 Undecipherable
+///////////////////////////////////////////////////////////
+const integer    c_status_493Undecipherable_idx := 42;
+const StatusLine c_status_493Undecipherable :=
+{
+  sipVersion := c_SIP_NAME_VERSION,
+  statusCode := 493,
+  reasonPhrase := "Undecipherable"
+}
+
+//////////////////////////////
+// Server failure responses
+//////////////////////////////
+
+///////////////////////////////////////////////////////////
+// Constant: c_status_500ServerInternalError
+//
+// Purpose:
+//   Constant for SIP status line 500 Server Internal Error
+///////////////////////////////////////////////////////////
+const integer    c_status_500ServerInternalError_idx := 43;
+const StatusLine c_status_500ServerInternalError :=
+{
+  sipVersion := c_SIP_NAME_VERSION,
+  statusCode := 500,
+  reasonPhrase := "Server Internal Error"
+}
+
+///////////////////////////////////////////////////////////
+// Constant: c_status_501NotImplemented
+//
+// Purpose:
+//   Constant for SIP status line 501 Not Implemented
+///////////////////////////////////////////////////////////
+const integer    c_status_501NotImplemented_idx := 44;
+const StatusLine c_status_501NotImplemented :=
+{
+  sipVersion := c_SIP_NAME_VERSION,
+  statusCode := 501,
+  reasonPhrase := "Not Implemented"
+}
+
+///////////////////////////////////////////////////////////
+// Constant: c_status_502BadGateway
+//
+// Purpose:
+//   Constant for SIP status line 502 Bad Gateway
+///////////////////////////////////////////////////////////
+const integer    c_status_502BadGateway_idx := 45;
+const StatusLine c_status_502BadGateway :=
+{
+  sipVersion := c_SIP_NAME_VERSION,
+  statusCode := 502,
+  reasonPhrase := "Bad Gateway"
+}
+
+///////////////////////////////////////////////////////////
+// Constant: c_status_503ServiceUnavailable
+//
+// Purpose:
+//   Constant for SIP status line 503 Service Unavailable
+///////////////////////////////////////////////////////////
+const integer    c_status_503ServiceUnavailable_idx := 46;
+const StatusLine c_status_503ServiceUnavailable :=
+{
+  sipVersion := c_SIP_NAME_VERSION,
+  statusCode := 503,
+  reasonPhrase := "Service Unavailable"
+}
+
+///////////////////////////////////////////////////////////
+// Constant: c_status_504ServerTimeout
+//
+// Purpose:
+//   Constant for SIP status line 504 Server Timeout
+///////////////////////////////////////////////////////////
+const integer    c_status_504ServerTimeout_idx := 47;
+const StatusLine c_status_504ServerTimeout :=
+{
+  sipVersion := c_SIP_NAME_VERSION,
+  statusCode := 504,
+  reasonPhrase := "Server Timeout"
+}
+
+///////////////////////////////////////////////////////////
+// Constant: c_status_505VersionNotSupported
+//
+// Purpose:
+//   Constant for SIP status line 505 Version Not Supported
+///////////////////////////////////////////////////////////
+const integer    c_status_505VersionNotSupported_idx := 48;
+const StatusLine c_status_505VersionNotSupported :=
+{
+  sipVersion := c_SIP_NAME_VERSION,
+  statusCode := 505,
+  reasonPhrase := "Version Not Supported"
+}
+
+///////////////////////////////////////////////////////////
+// Constant: c_status_513MessageTooLarge
+//
+// Purpose:
+//   Constant for SIP status line 513 Message Too Large
+///////////////////////////////////////////////////////////
+const integer    c_status_513MessageTooLarge_idx := 49;
+const StatusLine c_status_513MessageTooLarge :=
+{
+  sipVersion := c_SIP_NAME_VERSION,
+  statusCode := 513,
+  reasonPhrase := "Message Too Large"
+}
+
+///////////////////////////////////////////////////////////
+// Constant: c_status_580PreconditionFailure
+//
+// Purpose:
+//   Constant for SIP status line 580 Precondition Failure
+///////////////////////////////////////////////////////////
+const integer    c_status_580PreconditionFailure_idx := 50;
+const StatusLine c_status_580PreconditionFailure :=
+{
+  sipVersion := c_SIP_NAME_VERSION,
+  statusCode := 580,
+  reasonPhrase := "Precondition Failure"
+}
+
+//////////////////////////////
+// Global failure responses
+//////////////////////////////
+
+///////////////////////////////////////////////////////////
+// Constant: c_status_600BusyEverywhere
+//
+// Purpose:
+//   Constant for SIP status line 600 Busy Everywhere
+///////////////////////////////////////////////////////////
+const integer    c_status_600BusyEverywhere_idx := 51;
+const StatusLine c_status_600BusyEverywhere :=
+{
+  sipVersion := c_SIP_NAME_VERSION,
+  statusCode := 600,
+  reasonPhrase := "Busy Everywhere"
+}
+
+///////////////////////////////////////////////////////////
+// Constant: c_status_603Decline
+//
+// Purpose:
+//   Constant for SIP status line 603 Decline
+///////////////////////////////////////////////////////////
+const integer    c_status_603Decline_idx := 52;
+const StatusLine c_status_603Decline :=
+{
+  sipVersion := c_SIP_NAME_VERSION,
+  statusCode := 603,
+  reasonPhrase := "Decline"
+}
+
+///////////////////////////////////////////////////////////
+// Constant: c_status_604DoesNotExistAnywhere
+//
+// Purpose:
+//   Constant for SIP status line 604 Does Not Exist Anywhere
+///////////////////////////////////////////////////////////
+const integer    c_status_604DoesNotExistAnywhere_idx := 53;
+const StatusLine c_status_604DoesNotExistAnywhere :=
+{
+  sipVersion := c_SIP_NAME_VERSION,
+  statusCode := 604,
+  reasonPhrase := "Does Not Exist Anywhere"
+}
+
+///////////////////////////////////////////////////////////
+// Constant: c_status_606NotAcceptable
+//
+// Purpose:
+//   Constant for SIP status line 606 Not Acceptable
+///////////////////////////////////////////////////////////
+const integer    c_status_606NotAcceptable_idx := 54;
+const StatusLine c_status_606NotAcceptable :=
+{
+  sipVersion := c_SIP_NAME_VERSION,
+  statusCode := 606,
+  reasonPhrase := "Not Acceptable"
+}
+
+type record of StatusLine StatusLine_List;
+
+///////////////////////////////////////////////////////////
+// Constant: c_EPTF_SIP_StatusLines
+//
+// Purpose:
+//   Used to convert integer indices to <StatusLine>.
+///////////////////////////////////////////////////////////
+const StatusLine_List c_EPTF_SIP_StatusLines :=
+{
+  c_status_100Trying,
+  c_status_180Ringing,
+  c_status_181CallIsBeingForwarded,
+  c_status_182Queued,
+  c_status_183SessionProgress,
+  c_status_200OK,
+  c_status_202Accepted,
+  c_status_300MultipleChoices,
+  c_status_301MovedPermanently,
+  c_status_302MovedTemporarily,
+  c_status_305UseProxy,
+  c_status_380AlternativeService,
+  c_status_400BadRequest,
+  c_status_401Unauthorized,
+  c_status_402PaymentRequired,
+  c_status_403Forbidden,
+  c_status_404NotFound,
+  c_status_405MethodNotAllowed,
+  c_status_406NotAcceptable,
+  c_status_407ProxyAuthenticationRequired,
+  c_status_408RequestTimeout,
+  c_status_409Conflict,
+  c_status_410Gone,
+  c_status_412ConditionalRequestFailed,
+  c_status_413RequestEntityTooLarge,
+  c_status_414RequestUriTooLong,
+  c_status_415UnsupportedMediaType,
+  c_status_416UnsupportedUriScheme,
+  c_status_420BadExtension,
+  c_status_421ExtensionRequired,
+  c_status_423IntervalTooBrief,
+  c_status_480TemporarilyUnavailable,
+  c_status_481CallTransactionDoesNotExist,
+  c_status_482LoopDetected,
+  c_status_483TooManyHops,
+  c_status_484AddressIncomplete,
+  c_status_485Ambiguous,
+  c_status_486BusyHere,
+  c_status_487RequestTerminated,
+  c_status_488NotAcceptableHere,
+  c_status_489BadEvent,
+  c_status_491RequestPending,
+  c_status_493Undecipherable,
+  c_status_500ServerInternalError,
+  c_status_501NotImplemented,
+  c_status_502BadGateway,
+  c_status_503ServiceUnavailable,
+  c_status_504ServerTimeout,
+  c_status_505VersionNotSupported,
+  c_status_513MessageTooLarge,
+  c_status_580PreconditionFailure,
+  c_status_600BusyEverywhere,
+  c_status_603Decline,
+  c_status_604DoesNotExistAnywhere,
+  c_status_606NotAcceptable
+}
+
+const integer c_IMSAKA_RANDLength := 16;
+const integer c_IMSAKA_SQNLength := 6;
+const integer c_IMSAKA_MAC_SLength := 8;
+
+const charstring c_IMSAKA_mechanismName := "ipsec-3gpp";
+
+const charstring c_IMSAKA_algName_null := "null";
+
+const charstring c_IMSAKA_ealgName_DES_EDE3_CBC := "des-ede3-cbc";
+const charstring c_IMSAKA_ealgName_AES_CBC := "aes-cbc";
+
+const charstring c_IMSAKA_algName_HMAC_MD5_96 := "hmac-md5-96";
+const charstring c_IMSAKA_algName_HMAC_SHA_1_96 := "hmac-sha-1-96";
+
+}//end of module
+with {
+extension "version <RnXnn>"
+}
+

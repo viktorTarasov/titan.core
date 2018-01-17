@@ -1,0 +1,55 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_CLL_Common_PrivateDebugDefinitions.ttcnpp
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 512
+//  Updated:  2008-11-03
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////
+//  Module: EPTF_CLL_Common_PrivateDebugDefinitions
+// 
+//  Purpose:
+//    This module provides private debug definitions for EPTF_Common.
+// 
+//  Module Parameters:
+//    -
+// 
+//  Module depends on:
+//    -
+// 
+//  Current Owner:
+//    Gabor Tatarka (EGBOTAT)
+// 
+//  Last Review Date:
+//    2008-10-31
+// 
+//  Detailed Comments:
+// 
+///////////////////////////////////////////////////////////
+
+module EPTF_CLL_Common_PrivateDebugDefinitions {
+
+///////////////////////////////////////////////////////////
+//  Constant: c_EPTF_Common_debugSwitchPrivate
+// 
+//  Purpose:
+//    Boolean constant to switch on/off debugging in the CLL code
+// 
+//  Detailed Comments:
+//    The actual value depends on the preprocessor macro EPTF_DEBUG.
+//    If EPTF_DEBUG is defined, the value is true.
+///////////////////////////////////////////////////////////
+#ifdef EPTF_DEBUG
+const boolean c_EPTF_Common_debugSwitchPrivate := true;
+#else   
+const boolean c_EPTF_Common_debugSwitchPrivate := false;
+#endif
+
+}

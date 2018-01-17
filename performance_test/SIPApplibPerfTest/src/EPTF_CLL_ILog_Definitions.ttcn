@@ -1,0 +1,235 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_CLL_ILog_Definitions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 512
+//  Updated:  2012-05-17
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////
+//  Module: EPTF_CLL_ILog_Definitions
+// 
+//  Purpose:
+//  This module contains the type and constant definitions of the EPTF ILog feature. 
+// 
+//  Module Parameters:
+//    -
+//
+//  Module depends on:
+//    <EPTF_CLL_Base_Definitions>
+//    <EPTF_CLL_Common_Definitions>
+//    <EPTF_CLL_HashMap_Definitions>
+//    <EPTF_CLL_NQueue_Definitions>
+//    <EPTF_CLL_FBQ_Definitions>
+// 
+//  Current Owner:
+//    Ildiko Vancsa (EILDVNC)
+// 
+//  Last Review Date:
+//    2012-06-05
+//
+//  Detailed Comments:
+//    -
+// 
+///////////////////////////////////////////////////////////////
+
+module EPTF_CLL_ILog_Definitions {
+
+import from EPTF_CLL_Base_Definitions all;
+import from EPTF_CLL_Common_Definitions all;
+import from EPTF_CLL_HashMap_Definitions all;
+import from EPTF_CLL_NQueue_Definitions all;
+import from EPTF_CLL_FBQ_Definitions all;
+
+modulepar charstring tsp_EPTF_ILog_logFileName := "";
+
+const integer c_EPTF_ILog_warning := -1;
+const integer c_EPTF_ILog_success := 0;
+const charstring c_EPTF_ILog_Invalid_warning := "";
+
+type integer EPTF_ILog_QueueId;
+type integer EPTF_ILog_ChainId;
+type integer EPTF_ILog_DbItemUsage;
+
+type enumerated EPTF_ILog_chainType{
+  detailed,
+  short
+}
+
+type record of EPTF_ILog_DbItemUsage EPTF_ILog_DbItemUsage_List;
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_ILog_LogItem_FT
+// 
+//  Purpose:
+//     Function type for EPTF_ILog_LogItem to save the log items into
+//     a user defined destination on the user side.
+// 
+//  Parameters:
+//    pl_elementIdx - *in* *integer*          - element index in the user database
+//    pl_dbId       - *in* *integer*          - id of the user database
+//    pl_chainId    - *in* *integer*          - id of the chain that contains the elements
+//    pl_paramList  - *in* <EPTF_IntegerList> - user defined parameter list for the database
+//
+//  Detailed Comments:
+//    
+//     
+///////////////////////////////////////////////////////////
+type function EPTF_ILog_LogItem_FT(in integer pl_elementIdx, in integer pl_dbId, in integer pl_chainId, in EPTF_IntegerList pl_paramList )
+runs on self;
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_ILog_LogHeader_FT
+// 
+//  Purpose:
+//     Function type for EPTF_ILog_LogItem to create the log header.
+// 
+//  Parameters:
+//    pl_dbId      - *in* *integer* - database id
+//    pl_chainId   - *in* *integer* - chain id
+//    pl_paramList - *in* <EPTF_IntegerList> - user defined parameter list for the chain
+//
+//  Detailed Comments:
+//    
+//     
+///////////////////////////////////////////////////////////
+type function EPTF_ILog_LogHeader_FT( in integer pl_chainId, in EPTF_IntegerList pl_paramList )
+runs on self;
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_ILog_Database
+// 
+//  Purpose:
+//     Descriptor of log elemnts database.
+// 
+//  Elements:
+//     logItemFn          - <EPTF_ILog_LogItem_FT>       - reference for the function that creates the log from the items
+//     fbq                - <EPTF_FreeBusyQueue>                 - FreeBusyQueue that stores the state oft he user database items
+//     dbParams            - <EPTF_IntegerList>                   - user defined parameter list for the database
+//     listOfDbItemUsage  - <EPTF_ILog_DbItemUsage_List> - the list, which registers for each db item that how many chains have a reference to it
+//
+//  Detailed Comments:
+//     
+///////////////////////////////////////////////////////////
+type record EPTF_ILog_Database {
+  EPTF_ILog_LogItem_FT logItemFn,
+  EPTF_FreeBusyQueue fbq,
+  EPTF_IntegerList dbParams,
+  EPTF_ILog_DbItemUsage_List listOfDbItemUsage
+}
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_ILog_Database_List
+// 
+//  Purpose:
+//     List of <EPTF_ILog_Database> elements.
+// 
+//  Elements:    
+//
+//  Detailed Comments:
+//     
+///////////////////////////////////////////////////////////
+type record of EPTF_ILog_Database EPTF_ILog_Database_List;
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_ILog_Chain
+// 
+//  Purpose:
+//     Descriptor of chains that store the log items.
+// 
+//  Elements:
+//     chainName    - *charstring*                     - name of the chain that were registered to this database
+//     chainType    - <EPTF_ILog_chainType>    - this parameter defines, whether the chain is "short" or "detailed"
+//     logHeaderFn  - <EPTF_ILog_LogHeader_FT> - reference for the function that creates the log header
+//     chainParams  - <EPTF_IntegerList>               - user defined parameter list for the chain
+//
+//  Detailed Comments:
+//     
+///////////////////////////////////////////////////////////
+type record EPTF_ILog_Chain {
+  charstring chainName,
+  EPTF_ILog_chainType chainType,
+  EPTF_ILog_LogHeader_FT logHeaderFn,
+  EPTF_IntegerList chainParams
+}
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_ILog_Chain_List
+// 
+//  Purpose:
+//     List of <EPTF_ILog_Chain> elements.
+// 
+///////////////////////////////////////////////////////////
+type record of EPTF_ILog_Chain EPTF_ILog_Chain_List;
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_ILog_ChainItem
+// 
+//  Purpose:
+//     Descriptor of chain items.
+// 
+//  Elements:
+//     databaseId    - *integer* - the id of the previously registered user database
+//     databaseIdx   - *integer* - index of the log items in the user database on the user side
+//
+//  Detailed Comments:
+//     
+///////////////////////////////////////////////////////////
+type record EPTF_ILog_ChainItem {
+  integer databaseId,
+  integer databaseIdx
+}
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_ILog_ChainItem_List
+// 
+//  Purpose:
+//     List of <EPTF_ILog_ChainItem> elements.
+//      
+///////////////////////////////////////////////////////////
+type record of EPTF_ILog_ChainItem EPTF_ILog_ChainItem_List;
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_ILog_CT
+// 
+//  Purpose:
+//     List of component level elements.
+// 
+//  Elements:    
+//    v_EPTF_ILog_initialized   - *boolean* - prevents multiple init by calling <EPTF_ILog_init_CT> several times
+//    v_EPTF_ILog_queueId                - <EPTF_ILog_QueueId> - queue for the log items
+//    v_EPTF_ILog_chainQueueId           - <EPTF_ILog_QueueId> - queue for the chains that store the log items
+//    v_EPTF_ILog_freeChainId            - <EPTF_ILog_ChainId> - chain for registering unused chains (empty chains)
+//    v_EPTF_ILog_busyChainId            - <EPTF_ILog_ChainId> - chain for registering chains that are in use (containing the log items)
+//    v_EPTF_ILog_freeChainItemsChainId  - <EPTF_ILog_ChainId> - chain for administering the unused chain items
+//    v_EPTF_ILog_administrativeChainId  - <EPTF_ILog_ChainId> - storing the chain which contains the free chain items (used for synchronizing chain ids)
+//    v_EPTF_ILog_databaseList           - <EPTF_ILog_Database_List>  - database of the registered user databases
+//    v_EPTF_ILog_chainList              - <EPTF_ILog_Chain_List>     - database of the created chains
+//    v_EPTF_ILog_chainItemList          - <EPTF_ILog_ChainItem_List> - database of the log items
+//    
+//  Detailed Comments:
+//     
+///////////////////////////////////////////////////////////
+type component EPTF_ILog_CT extends EPTF_Base_CT, EPTF_HashMap_CT, EPTF_NQueue_CT, EPTF_FBQ_CT{
+
+  private var boolean v_EPTF_ILog_initialized := false;
+  private var EPTF_ILog_QueueId v_EPTF_ILog_queueId;
+  private var EPTF_ILog_QueueId v_EPTF_ILog_chainQueueId;
+  private var EPTF_ILog_ChainId v_EPTF_ILog_freeChainId;
+  private var EPTF_ILog_ChainId v_EPTF_ILog_busyDetailedChainId;
+  private var EPTF_ILog_ChainId v_EPTF_ILog_busyShortChainId;
+  private var EPTF_ILog_ChainId v_EPTF_ILog_freeChainItemsChainId;
+  private var EPTF_ILog_ChainId v_EPTF_ILog_administrativeChainId;
+  private var EPTF_ILog_Database_List v_EPTF_ILog_databaseList := {};
+  private var EPTF_ILog_Chain_List v_EPTF_ILog_chainList := {};
+  private var EPTF_ILog_ChainItem_List v_EPTF_ILog_chainItemList := {};
+
+}
+
+}

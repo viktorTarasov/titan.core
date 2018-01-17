@@ -1,0 +1,88 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//
+//  File:               TELNETasp_PortType.ttcn
+//  Description:        TELNET testport port definition file
+//  Rev:                <RnXnn>
+//  Prodnr:             CNL 113 320
+//  Updated:            2006.04.10.
+//  Contact:            http://ttcn.ericsson.se
+//
+
+module TELNETasp_PortType
+{
+
+ external function FindString(in charstring msg_ch, in charstring pattern_ch) return integer;
+
+ type enumerated TelnetReadMode
+	{
+	 UNBUFFERED	(0),
+	 BUFFERED	(1)
+	}
+
+ type record TelnetWindowSize
+	{
+	 integer	width	(0..65535),
+	 integer	height	(0..65535)
+	}
+
+ type record TelnetPrompt
+	{
+	 integer        id,
+	 charstring     prompt,
+	 boolean        has_wildcards
+	}
+
+ type record of TelnetPrompt TelnetPrompts;
+
+ type boolean TelnetEcho;
+
+ type record ASP_TelnetPortParameters
+	{
+	 charstring	ctrl_hostname			optional,
+	 integer	ctrl_portnum			optional,
+	 charstring	ctrl_username			optional,
+	 charstring	ctrl_password			optional,
+	 charstring	ctrl_domain			optional,
+	 TelnetReadMode	ctrl_readmode			optional,
+	 boolean	ctrl_login_skipped		optional,
+	 boolean	ctrl_detect_server_disconnected	optional,
+	 TelnetPrompts	prompts				optional,
+	 charstring	ctrl_terminal_type		optional,
+	 TelnetEcho	ctrl_echo			optional,
+	 boolean	ctrl_CRLF			optional,
+	 TelnetWindowSize ctrl_window_size		optional
+	}
+
+
+ type union ASP_TelnetDynamicConfig
+	{
+	 TelnetReadMode		readmode,
+	 TelnetWindowSize	window_size,
+	 TelnetEcho		echo,
+	 TelnetPrompt		prompt
+	}
+
+ type enumerated ASP_TelnetConnection
+	{
+	 CONNECT(0)
+	}
+
+ type record ASP_TelnetClose {}
+ 
+ type port TELNETasp_PT message
+	{
+	 inout	charstring;
+	 in	integer;
+	 out	ASP_TelnetPortParameters,
+		ASP_TelnetDynamicConfig,
+		ASP_TelnetConnection,
+                ASP_TelnetClose;
+	}
+
+}

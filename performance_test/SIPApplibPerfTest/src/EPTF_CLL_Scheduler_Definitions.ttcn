@@ -1,0 +1,281 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_CLL_Scheduler_Definitions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 512
+//  Updated:  2010-01-28
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////
+//  Module: EPTF_CLL_Scheduler_Definitions
+// 
+//  Purpose:
+//    This module contains global definitions for all kinds of scheduler implementations
+// 
+//  Module Parameters:
+//      tsp_debug_EPTF_SchedulerFunctions - *boolean* := false;
+//            set it to true for debugging  of scheduler functions
+//      tsp_debugVerbose_EPTF_SchedulerFunctions - *boolean*:= false;
+//            set it to true for verbose debugging of scheduler functions
+//      tsp_EPTF_ELEMENTARY_TIMESTEP_PARAM - *float* := 0.01 
+//            timer resolution of the scheduler in seconds.
+//      tsp_EPTF_cpsUpdateInterval - *float* := 1.0 
+//            used for calculating time intervals between call generation events.
+//
+//  Module depends on:
+//    <EPTF_CLL_Common_Definitions>
+//    <EPTF_CLL_Logging_Definitions>
+// 
+//  Current Owner:
+//    Gabor Ziegler (EGBOZIE)
+// 
+//  Last Review Date:
+//    2007-06-19
+// 
+//  Detailed Comments:
+//    This module contains generic definitions for event scheduling. 
+// 
+///////////////////////////////////////////////////////////
+module EPTF_CLL_Scheduler_Definitions 
+{
+
+//=========================================================================
+// Import Part
+//=========================================================================
+import from EPTF_CLL_Common_Definitions all;
+import from EPTF_CLL_Logging_Definitions all;
+
+//=========================================================================
+// Module Parameters
+//=========================================================================
+
+modulepar charstring tsp_EPTF_Scheduler_loggingComponentMask := "EPTF_Scheduler";
+
+///////////////////////////////////////////////////////////
+// Module parameter: 
+//   tsp_debug_EPTF_SchedulerFunctions
+//
+// Default value: 
+//    false
+//
+// Detailed description:
+//    This debug parameter is used for enabling/disabling debugging in Scheduler_Functions
+///////////////////////////////////////////////////////////
+modulepar  boolean tsp_debug_EPTF_SchedulerFunctions := false;
+
+///////////////////////////////////////////////////////////
+// Module parameter: 
+//   tsp_debugVerbose_EPTF_SchedulerFunctions
+//
+// Default value: 
+//    false
+//
+// Detailed description:
+//    This debug parameter is used for enabling/disabling verbose debugging in Scheduler_Functions
+///////////////////////////////////////////////////////////
+modulepar  boolean tsp_debugVerbose_EPTF_SchedulerFunctions := false;
+
+///////////////////////////////////////////////////////////
+// Module parameter: 
+//   tsp_EPTF_cpsUpdateInterval
+//
+// Default value: 
+//    1.0 -  Corresponds to 1 sec
+//
+// Detailed description:
+//    The value is used for calculating time intervals between call generation events.
+///////////////////////////////////////////////////////////
+modulepar float tsp_EPTF_cpsUpdateInterval := 1.0;
+
+
+///////////////////////////////////////////////////////////
+// Module parameter: 
+//    tsp_EPTF_ELEMENTARY_TIMESTEP_PARAM 
+//
+// Default value: 
+//    0.01 -  Corresponds to 10 msec
+//
+// Detailed description:
+//    The value defines the granularity of the time-axis of the EPTF_EventQueue
+///////////////////////////////////////////////////////////
+modulepar float tsp_EPTF_ELEMENTARY_TIMESTEP_PARAM := 0.01;
+
+
+//=========================================================================
+// Data Types
+//=========================================================================
+///////////////////////////////////////////////////////////
+//  Type: EPTF_ActionId
+// 
+//  Purpose:
+//    Identifier of a scheduled Action
+// 
+//  Elements:
+//    <EPTF_IntegerList>
+// 
+// Detailed Comments:
+//    List of integer indexes, which can be used for identifying the event type,
+//    entity, entity groups etc. according to the users' need.
+// 
+///////////////////////////////////////////////////////////
+type EPTF_IntegerList EPTF_ActionId;
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_ScheduledAction
+// 
+//  Purpose:
+//    Contains a scheduled action
+// 
+//  Elements:
+//    when - *float* - absolute component-time of the scheduled event when it will be executed
+//    actionHandler - <EPTF_Scheduler_ActionHandler> - the handler function that will be called to handle this action
+//    actionId  - <EPTF_ActionId> - parameters passed to the handler when the action will be executed
+// 
+// Detailed Comments:
+//    For the actionId: list of integer indices can be used for identifying the event type,
+//    entity, entity groups etc.
+// 
+///////////////////////////////////////////////////////////
+type record EPTF_ScheduledAction
+{
+  float when,
+  EPTF_Scheduler_ActionHandler actionHandler,
+  EPTF_IntegerList actionId
+};
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_ScheduledActionList
+// 
+//  Purpose:
+//    Contains an array of scheduled actions (i.e, the event descriptors).
+//    The elements of the array shall be ordered by and indexed via 
+//    a corresponding event queue. 
+// 
+//  Elements:
+//    record of <EPTF_ScheduledAction>
+// 
+// Detailed Comments:
+//    This is an array of scheduled actions. It shall be used together
+//    with an <EPTF_FreeBusyQueue>, or with an <EPTF_Float_RedBlackTree>
+// 
+///////////////////////////////////////////////////////////
+type record of EPTF_ScheduledAction EPTF_ScheduledActionList;
+
+///////////////////////////////////////////////////////////
+//  Function: EPTF_Scheduler_ActionHandler
+// 
+//  Purpose:
+//     Callback function type for handling any type of Scheduler actions
+// 
+// Parameters:
+//    pl_action - *in* <EPTF_ScheduledAction> - Action to be handled
+//    pl_eventIndex - *in* *integer* - the position of the current event within the queue
+// 
+// Return Value:
+//    *boolean* - false if operation failed
+//
+//  Detailed Comments:
+//     
+/////////////////////////////////////////////////////////// 
+type function EPTF_Scheduler_ActionHandler(
+  in EPTF_ScheduledAction pl_action, in integer pl_eventIndex) runs on self
+  return boolean;
+
+//=========================================================================
+// Signatures
+//=========================================================================
+
+// Insert signature definitions here if applicable!
+// You can use the signature skeleton!
+
+//=========================================================================
+//Port Types
+//=========================================================================
+
+// Insert port type defintions here if applicable!
+// You can use the port_type skeleton!
+
+//=========================================================================
+//Component Types
+//=========================================================================
+
+// Insert component type defintions here if applicable!
+// You can use the component_type skeleton!
+
+//=========================================================================
+// Constants
+//=========================================================================
+///////////////////////////////////////////////////////////
+//  Constant: c_EPTF_Scheduler_loggingEventClasses
+// 
+//  Purpose:
+//    list of logging event class names used on the Scheduler
+// 
+//  Detailed Comments:
+//    <EPTF_Logging_EventClassPrefixList> { "Warning", "Debug" }
+///////////////////////////////////////////////////////////
+const EPTF_Logging_EventClassPrefixList c_EPTF_Scheduler_loggingEventClasses := { "Warning", "Debug" };
+
+///////////////////////////////////////////////////////////
+//  Constant: c_EPTF_Scheduler_loggingClassIdx_Warning
+// 
+//  Purpose:
+//    logging class index for Error
+// 
+//  Detailed Comments:
+//    *0*
+///////////////////////////////////////////////////////////
+const integer c_EPTF_Scheduler_loggingClassIdx_Warning := 0;
+///////////////////////////////////////////////////////////
+//  Constant: c_EPTF_Scheduler_loggingClassIdx_Debug
+// 
+//  Purpose:
+//    logging class index for Error
+// 
+//  Detailed Comments:
+//    *1*
+///////////////////////////////////////////////////////////
+const integer c_EPTF_Scheduler_loggingClassIdx_Debug := 1;
+
+//=========================================================================
+// Templates
+//=========================================================================
+
+// Insert templates here if applicable!
+// You can use the template skeleton!
+
+//=========================================================================
+// Altsteps
+//=========================================================================
+
+// Insert altsteps here if applicable!
+// You can use the altstep skeleton!
+
+//=========================================================================
+// Functions
+//=========================================================================
+
+// Insert functions here if applicable!
+// You can use the function skeleton!
+
+//=========================================================================
+// Testcases
+//=========================================================================
+
+// Insert test cases here if applicable!
+// You can use the test_case skeleton!
+
+//=========================================================================
+// Control
+//=========================================================================
+
+// Insert control part here if applicable!
+// You can use the control_part skeleton!
+
+}  // end of module

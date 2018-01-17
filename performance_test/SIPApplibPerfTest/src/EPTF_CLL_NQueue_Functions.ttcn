@@ -1,0 +1,518 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_CLL_NQueue_Functions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 512
+//  Updated:  2011-07-29
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+// Module: EPTF_CLL_NQueue_Functions
+//
+// Purpose:
+//  This module contains the function definitions of the EPTF NQueue feature
+//
+// Module Parameters:
+//  -
+//
+// Module depends on:
+//  <EPTF_CLL_Base_Functions>
+//  <EPTF_CLL_Common_Definitions>
+//  <EPTF_CLL_Common_Functions>
+//  <EPTF_CLL_NQueue_Definitions>
+//
+// Current Owner:
+//  Gabor Tatarka (EGBOTAT)
+//
+// Public functions:
+//  - <f_EPTF_NQueue_init_CT> (pl_selfName)
+//  - <f_EPTF_NQueue_createQueue> (pl_name) return EPTF_NQueue_QueueId
+//  - <f_EPTF_NQueue_deleteQueue> (pl_queue)
+//  - <f_EPTF_NQueue_getNameOfQueue> (pl_queue) return charstring
+//  - <f_EPTF_NQueue_createChain> (pl_queue) return EPTF_NQueue_ChainId
+//  - <f_EPTF_NQueue_createItemAtChainHead> (pl_queue, pl_chain) return EPTF_NQueue_ItemIdx
+//  - <f_EPTF_NQueue_createItemAtChainTail> (pl_queue, pl_chain) return EPTF_NQueue_ItemIdx
+//  - <f_EPTF_NQueue_createItemAfter> (pl_queue, pl_afterIdx) return EPTF_NQueue_ItemIdx
+//  - <f_EPTF_NQueue_createItemBefore> (pl_queue, pl_beforeIdx) return EPTF_NQueue_ItemIdx
+//  - <f_EPTF_NQueue_createItemsAtChainHead> (pl_queue, pl_chain, pl_count)
+//  - <f_EPTF_NQueue_createItemsAtChainTail> (pl_queue, pl_chain, pl_count)
+//  - <f_EPTF_NQueue_moveToHead> (pl_queue, pl_toChain, pl_item)
+//  - <f_EPTF_NQueue_moveToTail> (pl_queue, pl_toChain, pl_item)
+//  - <f_EPTF_NQueue_moveAfter> (pl_queue, pl_afterIdx, pl_item)
+//  - <f_EPTF_NQueue_moveBefore> (pl_queue, pl_beforeIdx, pl_item)
+//  - <f_EPTF_NQueue_getChainOfItem> (pl_queue, pl_item) return EPTF_NQueue_ChainId
+//  - <f_EPTF_NQueue_getLengthOfQueue> (pl_queue) return integer
+//  - <f_EPTF_NQueue_getLengthOfChain> (pl_queue, pl_chain) return integer
+//  - <f_EPTF_NQueue_getHeadOfChain> (pl_queue, pl_chain) return EPTF_NQueue_ItemIdx
+//  - <f_EPTF_NQueue_getTailOfChain> (pl_queue, pl_chain) return EPTF_NQueue_ItemIdx
+//  - <f_EPTF_NQueue_getNextItemIdx> (pl_queue, pl_item) return boolean
+//  - <f_EPTF_NQueue_getPrevItemIdx> (pl_queue, pl_item) return boolean
+//  - <f_EPTF_NQueue_logQueue> (pl_queue)
+//  - <f_EPTF_NQueue_logChain> (pl_queue, pl_chain)
+//  - <f_EPTF_NQueue_logChainFields> (pl_queue, pl_chain)
+//  - <f_EPTF_NQueue_dumpToPng> (pl_queue, pl_name)
+//
+// Last Review Date:
+//  2011-02-03
+//
+///////////////////////////////////////////////////////////////////////////////
+
+module EPTF_CLL_NQueue_Functions {
+
+import from EPTF_CLL_Base_Functions all;
+import from EPTF_CLL_Common_Definitions all;
+import from EPTF_CLL_Common_Functions all;
+import from EPTF_CLL_NQueue_Definitions all;
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_NQueue_init_CT
+// 
+//  Purpose:
+//    Initializes the NQueue feature
+//
+//  Parameters:
+//    pl_selfName - *in* *charstring* - EPTF self name
+///////////////////////////////////////////////////////////
+public function f_EPTF_NQueue_init_CT(in charstring pl_selfName)
+runs on EPTF_NQueue_CT
+{
+  if(v_EPTF_NQueue_initialized) { return }
+  f_EPTF_Base_init_CT(pl_selfName);
+  f_EPTF_Base_registerCleanup(refers(f_EPTF_NQueue_cleanup_CT));
+  f_EPTF_NQueue_init();
+  v_EPTF_NQueue_initialized := true;
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_NQueue_createQueue
+// 
+//  Purpose:
+//    Creates a new empty queue
+//
+//  Parameters:
+//    pl_name - *in* *charstring* - optional name for the queue
+//
+//  Return Value:
+//    <EPTF_NQueue_QueueId> - the ID of the created queue
+///////////////////////////////////////////////////////////
+public external function f_EPTF_NQueue_createQueue(
+  in charstring pl_name := "")
+return EPTF_NQueue_QueueId;
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_NQueue_deleteQueue
+// 
+//  Purpose:
+//    Deletes an existing queue and all the resources it uses
+//
+//  Parameters:
+//    pl_queue - *in* <EPTF_NQueue_QueueId> - the ID of the queue to delete
+///////////////////////////////////////////////////////////
+public external function f_EPTF_NQueue_deleteQueue(
+  in EPTF_NQueue_QueueId pl_queue);
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_NQueue_getNameOfQueue
+// 
+//  Purpose:
+//    Returns the name of a queue
+//
+//  Parameters:
+//    pl_queue - *in* <EPTF_NQueue_QueueId> - the ID of the queue
+//
+//  Return Value:
+//    *charstring* - the name of the queue
+///////////////////////////////////////////////////////////
+public external function f_EPTF_NQueue_getNameOfQueue(
+  in EPTF_NQueue_QueueId pl_queue)
+return charstring;
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_NQueue_createChain
+// 
+//  Purpose:
+//    Creates a new chain in an existing queue
+//
+//  Parameters:
+//    pl_queue - *in* <EPTF_NQueue_QueueId> - the queue ID
+//
+//  Return Value:
+//    <EPTF_NQueue_ChainId> - the ID of the created chain
+///////////////////////////////////////////////////////////
+public external function f_EPTF_NQueue_createChain(
+  in EPTF_NQueue_QueueId pl_queue)
+return EPTF_NQueue_ChainId;
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_NQueue_createItemAtChainHead
+// 
+//  Purpose:
+//    Creates a new item at the head of a chain
+//
+//  Parameters:
+//    pl_queue - *in* <EPTF_NQueue_QueueId> - the queue ID
+//    pl_chain - *in* <EPTF_NQueue_ChainId> - the chain ID
+//
+//  Return Value:
+//    <EPTF_NQueue_ItemIdx> - the index of the created item
+///////////////////////////////////////////////////////////
+public external function f_EPTF_NQueue_createItemAtChainHead(
+  in EPTF_NQueue_QueueId pl_queue,
+  in EPTF_NQueue_ChainId pl_chain)
+return EPTF_NQueue_ItemIdx;
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_NQueue_createItemAtChainTail
+// 
+//  Purpose:
+//    Creates a new item at the tail of a chain
+//
+//  Parameters:
+//    pl_queue - *in* <EPTF_NQueue_QueueId> - the queue ID
+//    pl_chain - *in* <EPTF_NQueue_ChainId> - the chain ID
+//
+//  Return Value:
+//    <EPTF_NQueue_ItemIdx> - the index of the created item
+///////////////////////////////////////////////////////////
+public external function f_EPTF_NQueue_createItemAtChainTail(
+  in EPTF_NQueue_QueueId pl_queue,
+  in EPTF_NQueue_ChainId pl_chain)
+return EPTF_NQueue_ItemIdx;
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_NQueue_createItemAfter
+// 
+//  Purpose:
+//    Creates a new item after another item (and in its chain)
+//
+//  Parameters:
+//    pl_queue - *in* <EPTF_NQueue_QueueId> - the queue ID
+//    pl_afterIdx - *in* <EPTF_NQueue_ItemIdx> - the item index after which to create the item
+//
+//  Return Value:
+//    <EPTF_NQueue_ItemIdx> - the index of the created item
+///////////////////////////////////////////////////////////
+public external function f_EPTF_NQueue_createItemAfter(
+  in EPTF_NQueue_QueueId pl_queue,
+  in EPTF_NQueue_ItemIdx pl_afterIdx)
+return EPTF_NQueue_ItemIdx;
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_NQueue_createItemBefore
+// 
+//  Purpose:
+//    Creates a new item before another item (and in its chain)
+//
+//  Parameters:
+//    pl_queue - *in* <EPTF_NQueue_QueueId> - the queue ID
+//    pl_beforeIdx - *in* <EPTF_NQueue_ItemIdx> - the item index before which to create the item
+//
+//  Return Value:
+//    <EPTF_NQueue_ItemIdx> - the index of the created item
+///////////////////////////////////////////////////////////
+public external function f_EPTF_NQueue_createItemBefore(
+  in EPTF_NQueue_QueueId pl_queue,
+  in EPTF_NQueue_ItemIdx pl_beforeIdx)
+return EPTF_NQueue_ItemIdx;
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_NQueue_createItemsAtChainHead
+// 
+//  Purpose:
+//    Creates items at the head of a chain
+//
+//  Parameters:
+//    pl_queue - *in* <EPTF_NQueue_QueueId> - the queue ID
+//    pl_chain - *in* <EPTF_NQueue_ChainId> - the chain ID
+//    pl_count - *in* *integer* - the number of items to create
+///////////////////////////////////////////////////////////
+public external function f_EPTF_NQueue_createItemsAtChainHead(
+  in EPTF_NQueue_QueueId pl_queue,
+  in EPTF_NQueue_ChainId pl_chain,
+  in integer pl_count);
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_NQueue_createItemsAtChainTail
+// 
+//  Purpose:
+//    Creates items at the tail of a chain
+//
+//  Parameters:
+//    pl_queue - *in* <EPTF_NQueue_QueueId> - the queue ID
+//    pl_chain - *in* <EPTF_NQueue_ChainId> - the chain ID
+//    pl_count - *in* *integer* - the number of items to create
+///////////////////////////////////////////////////////////
+public external function f_EPTF_NQueue_createItemsAtChainTail(
+  in EPTF_NQueue_QueueId pl_queue,
+  in EPTF_NQueue_ChainId pl_chain,
+  in integer pl_count);
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_NQueue_moveToHead
+// 
+//  Purpose:
+//    Moves an item to the head of a chain
+//
+//  Parameters:
+//    pl_queue - *in* <EPTF_NQueue_QueueId> - the queue ID
+//    pl_toChain - *in* <EPTF_NQueue_ChainId> - the target chain ID
+//    pl_item - *in* <EPTF_NQueue_ItemIdx> - the item index
+///////////////////////////////////////////////////////////
+public external function f_EPTF_NQueue_moveToHead(
+  in EPTF_NQueue_QueueId pl_queue,
+  in EPTF_NQueue_ChainId pl_toChain, // note: can be the same chain -> move to front
+  in EPTF_NQueue_ItemIdx pl_item);
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_NQueue_moveToTail
+// 
+//  Purpose:
+//    Moves an item to the tail of a chain
+//
+//  Parameters:
+//    pl_queue - *in* <EPTF_NQueue_QueueId> - the queue ID
+//    pl_toChain - *in* <EPTF_NQueue_ChainId> - the target chain ID
+//    pl_item - *in* <EPTF_NQueue_ItemIdx> - the item index
+///////////////////////////////////////////////////////////
+public external function f_EPTF_NQueue_moveToTail(
+  in EPTF_NQueue_QueueId pl_queue,
+  in EPTF_NQueue_ChainId pl_toChain, // note: can be the same chain -> move to back
+  in EPTF_NQueue_ItemIdx pl_item);
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_NQueue_moveAfter
+// 
+//  Purpose:
+//    Moves an item after another item (and to its chain)
+//
+//  Parameters:
+//    pl_queue - *in* <EPTF_NQueue_QueueId> - the queue ID
+//    pl_afterIdx - *in* <EPTF_NQueue_ItemIdx> - the item index after which to move pl_item
+//    pl_item - *in* <EPTF_NQueue_ItemIdx> - the index of the item to move
+///////////////////////////////////////////////////////////
+public external function f_EPTF_NQueue_moveAfter(
+  in EPTF_NQueue_QueueId pl_queue,
+  in EPTF_NQueue_ItemIdx pl_afterIdx, // index of the item after which to move item pl_item
+  in EPTF_NQueue_ItemIdx pl_item);
+
+// note: target chain is the chain of the item at pl_beforeIdx
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_NQueue_moveBefore
+// 
+//  Purpose:
+//    Moves an item before another item (and to its chain)
+//
+//  Parameters:
+//    pl_queue - *in* <EPTF_NQueue_QueueId> - the queue ID
+//    pl_beforeIdx - *in* <EPTF_NQueue_ItemIdx> - the item index before which to move pl_item
+//    pl_item - *in* <EPTF_NQueue_ItemIdx> - the index of the item to move
+///////////////////////////////////////////////////////////
+public external function f_EPTF_NQueue_moveBefore(
+  in EPTF_NQueue_QueueId pl_queue,
+  in EPTF_NQueue_ItemIdx pl_beforeIdx, // index of the item before which to move item pl_idx
+  in EPTF_NQueue_ItemIdx pl_item); // FIXME: pl_item
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_NQueue_getChainOfItem
+// 
+//  Purpose:
+//    Returns the chain ID of an item
+//
+//  Parameters:
+//    pl_queue - *in* <EPTF_NQueue_QueueId> - the queue ID
+//    pl_item - *in* <EPTF_NQueue_ItemIdx> - the item index
+//
+//  Return Value:
+//    <EPTF_NQueue_ChainId> - the chain ID of the item
+///////////////////////////////////////////////////////////
+public external function f_EPTF_NQueue_getChainOfItem(
+  in EPTF_NQueue_QueueId pl_queue,
+  in EPTF_NQueue_ItemIdx pl_item)
+return EPTF_NQueue_ChainId;
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_NQueue_getLengthOfQueue
+// 
+//  Purpose:
+//    Returns the length (total number of items) of the queue
+//
+//  Parameters:
+//    pl_queue - *in* <EPTF_NQueue_QueueId> - the queue ID
+//
+//  Return Value:
+//    *integer* - the length of the queue
+///////////////////////////////////////////////////////////
+public external function f_EPTF_NQueue_getLengthOfQueue(
+  in EPTF_NQueue_QueueId pl_queue)
+return integer;
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_NQueue_getLengthOfChain
+// 
+//  Purpose:
+//    Returns the length of a chain
+//
+//  Parameters:
+//    pl_queue - *in* <EPTF_NQueue_QueueId> - the queue ID
+//    pl_chain - *in* <EPTF_NQueue_ChainId> - the chain ID
+//
+//  Return Value:
+//    *integer* - the length of the chain
+///////////////////////////////////////////////////////////
+public external function f_EPTF_NQueue_getLengthOfChain(
+  in EPTF_NQueue_QueueId pl_queue,
+  in EPTF_NQueue_ChainId pl_chain)
+return integer;
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_NQueue_getHeadOfChain
+// 
+//  Purpose:
+//    Returns the head item index of the chain or -1 if empty
+//
+//  Parameters:
+//    pl_queue - *in* <EPTF_NQueue_QueueId> - the queue ID
+//    pl_chain - *in* <EPTF_NQueue_ChainId> - the chain ID
+//
+//  Return Value:
+//    <EPTF_NQueue_ItemIdx> - the head item index or -1 if empty
+///////////////////////////////////////////////////////////
+public external function f_EPTF_NQueue_getHeadOfChain(
+  in EPTF_NQueue_QueueId pl_queue,
+  in EPTF_NQueue_ChainId pl_chain)
+return EPTF_NQueue_ItemIdx;
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_NQueue_getTailOfChain
+// 
+//  Purpose:
+//    Returns the tail item index of the chain or -1 if empty
+//
+//  Parameters:
+//    pl_queue - *in* <EPTF_NQueue_QueueId> - the queue ID
+//    pl_chain - *in* <EPTF_NQueue_ChainId> - the chain ID
+//
+//  Return Value:
+//    <EPTF_NQueue_ItemIdx> - the tail item index or -1 if empty
+///////////////////////////////////////////////////////////
+public external function f_EPTF_NQueue_getTailOfChain(
+  in EPTF_NQueue_QueueId pl_queue,
+  in EPTF_NQueue_ChainId pl_chain)
+return EPTF_NQueue_ItemIdx;
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_NQueue_getNextItemIdx
+// 
+//  Purpose:
+//    Gets the next item index in a chain
+//
+//  Parameters:
+//    pl_queue - *in* <EPTF_NQueue_QueueId> - the queue ID
+//    pl_item - *inout* <EPTF_NQueue_ItemIdx> - the item index
+//
+//  Return Value:
+//    *boolean* - true if pl_item changed, false if end of chain reached
+///////////////////////////////////////////////////////////
+public external function f_EPTF_NQueue_getNextItemIdx(
+  in EPTF_NQueue_QueueId pl_queue,
+  inout EPTF_NQueue_ItemIdx pl_item) // changed to next item index if any
+return boolean;
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_NQueue_getPrevItemIdx
+// 
+//  Purpose:
+//    Gets the previous item index in a chain
+//
+//  Parameters:
+//    pl_queue - *in* <EPTF_NQueue_QueueId> - the queue ID
+//    pl_item - *inout* <EPTF_NQueue_ItemIdx> - the item index
+//
+//  Return Value:
+//    *boolean* - true if pl_item changed, false if start of chain reached
+///////////////////////////////////////////////////////////
+public external function f_EPTF_NQueue_getPrevItemIdx(
+  in EPTF_NQueue_QueueId pl_queue,
+  inout EPTF_NQueue_ItemIdx pl_item) // changed to previous item index if any
+return boolean;
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_NQueue_logQueue
+// 
+//  Purpose:
+//    Logs a queue
+//
+//  Parameters:
+//    pl_queue - *in* <EPTF_NQueue_QueueId> - the queue ID
+///////////////////////////////////////////////////////////
+public external function f_EPTF_NQueue_logQueue(
+  in EPTF_NQueue_QueueId pl_queue);
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_NQueue_logChain
+// 
+//  Purpose:
+//    Logs a chain including its items
+//
+//  Parameters:
+//    pl_queue - *in* <EPTF_NQueue_QueueId> - the queue ID
+///////////////////////////////////////////////////////////
+public external function f_EPTF_NQueue_logChain(
+  in EPTF_NQueue_QueueId pl_queue,
+  in EPTF_NQueue_ChainId pl_chain);
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_NQueue_logChainFields
+// 
+//  Purpose:
+//    Logs the header fields of a chain
+//
+//  Parameters:
+//    pl_queue - *in* <EPTF_NQueue_QueueId> - the queue ID
+//    pl_chain - *in* <EPTF_NQueue_ChainId> - the chain ID
+///////////////////////////////////////////////////////////
+public external function f_EPTF_NQueue_logChainFields(
+  in EPTF_NQueue_QueueId pl_queue,
+  in EPTF_NQueue_ChainId pl_chain);
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_NQueue_dumpToPng
+// 
+//  Purpose:
+//    Dumps the queue to dot and PNG files (requires `dot` to be installed)
+//
+//  Parameters:
+//    pl_queue - *in* <EPTF_NQueue_QueueId> - the queue ID
+//    pl_name - *in* *charstring* - file name *without extension*
+//
+//  Detailed Comments:
+//    For testing purposes, number of items in the queue should not
+//    be too large, due to the limitations of `dot`
+///////////////////////////////////////////////////////////
+public external function f_EPTF_NQueue_dumpToPng(
+  in EPTF_NQueue_QueueId pl_queue,
+  in charstring pl_name);
+
+
+group EPTF_NQueue_PrivateFunctions {
+
+  private function f_EPTF_NQueue_cleanup_CT()
+  runs on EPTF_NQueue_CT
+  {
+    if(not v_EPTF_NQueue_initialized) { return }
+    f_EPTF_NQueue_cleanup();
+    v_EPTF_NQueue_initialized := false;
+  }
+
+  private external function f_EPTF_NQueue_init();
+  private external function f_EPTF_NQueue_cleanup();
+
+} // group EPTF_NQueue_PrivateFunctions
+
+} // module

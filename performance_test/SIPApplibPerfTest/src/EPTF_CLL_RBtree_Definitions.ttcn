@@ -1,0 +1,394 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_CLL_RBtree_Definitions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 512
+//  Updated:  2010-07-21
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////
+//  Module: EPTF_CLL_RBtree_Definitions
+// 
+//  Purpose:
+//    This module provides constants and types for TTCN-3 Red-Black tree implementation.
+// 
+//  Module depends on:
+//    <EPTF_CLL_Common_Definitions>
+// 
+//  Current Owner:
+//    Rita Kovacs (ERITKOV)
+// 
+//  Last Review Date:
+//    2007-12-06
+// 
+//  Detailed Comments:
+//   The event chain is the balanced binary red-black tree itself. The nodes are described within the tree by color (red or black) and
+//   their place in the tree (left and right children and parent item). All operations on the tree maintain red-black tree properties:
+//    1. Every node is colored red or black. 
+//    2. Every leaf is a NIL node, and is colored black. 
+//    3. If a node is red, then both its children are black. 
+//    4. Every simple path from a node to a descendant leaf contains the same number of black nodes. 
+//   This implementation of the red-black tree algorithm includes sentinel nodes as a convenient means of flagging that you have reached
+//   a leaf node. Tree root is a special sentinel item, 'real' tree root is root.left.
+//   During insert and delete operations, nodes may be rotated to maintain tree balance. 
+//   Both average and worst-case search time is O(lg n). 
+//
+//   The elements of the nodes list in the tree shall be ordered by and indexed via a corresponding floatKeyData list. (That is, 
+//   elements of this record_of structure of nodes has a bijective mapping to/from elements of a corresponding floatKeyData list.)
+//   Root item of tree is 'cached' at all times in EPTF_Float_RedBlackTree.root value.
+//   Events of equal key values are stored in a cluster chain within the tree and, considering tree management, they are regarded as
+//   only one tree node. EPTF_RBTreeNode.fwd is used as a forward chaining pointer index, EPTF_RBTreeNode.bwd is used as a backward chaining 
+//   pointer index for cluster chain items. EPTF_RBTreeNode.isHeadInSameKeysCluster shows if item is head of such a cluster chain. 
+//
+//   After removal of an event from the tree, the node's color is set 'invalid' while processing and event is not member of the tree 
+//   nor the free queue.
+//
+//   After processing the event, the node's color is set 'unused' and node is put to the free-nodes chain, a series of bothway 
+//   linked free slots within the record structure of the tree (i.e., a list). Now, EPTF_RBTreeNode.right is used as a forward chaining 
+//   pointer index, EPTF_RBTreeNode.left is used as a backward chaining pointer index for free chain items. EPTF_Float_RedBlackTree.freeHead is the 
+//   first, EPTF_Float_RedBlackTree.freeTail is the last index of chain of free slots. Smallest tree index's 'cache' is valid only if flag 
+//   EPTF_Float_RedBlackTree.isSmallestCacheValid is set true.
+//
+// 
+///////////////////////////////////////////////////////////
+module EPTF_CLL_RBtree_Definitions {
+
+import from EPTF_CLL_Common_Definitions all;
+
+
+///////////////////////////////////////////////////////////
+// Constant: c_EPTF_emptyRBTNode
+//
+// Purpose:
+//   Useful constant to init a EPTF_RBTreeNode at once
+//
+// References:
+//   <EPTF_RBTreeNode> := {color := red,left := -1,right := -1,parent := -1,fwd :=-1,bwd:= -1,isHeadInSameKeysCluster := false,isSentinel := false}
+///////////////////////////////////////////////////////////
+
+const EPTF_RBTreeNode c_EPTF_emptyRBTNode := {
+        color := red,
+        left := -1,
+        right := -1,
+        parent := -1,
+        fwd := -1,
+        bwd := -1,
+        isHeadInSameKeysCluster := false,
+	isSentinel := false,
+        startOfClusterIdx := -1,
+        endOfClusterIdx := -1
+}
+
+
+///////////////////////////////////////////////////////////
+// Type: EPTF_TreeColor
+//
+// Purpose:
+//   enumerated type for tree node coloring
+//
+// Elements:
+//   black - is used to denote slots that are linked into the busy chain (that is the tree itself) and black
+//
+//   red - is used to denote slots that are linked into the busy chain and red
+//
+//   invalid - is used to denote slots that are not linked into any chain
+//
+//   unused - is used to denote slots that are linked into the free chain
+//
+//   incluster - is used to denote slots that are linked into the chain 'busy' and belong to a cluster of events of equal key values
+//
+// Detailed Comments:
+//   Possible extension of this type in later releases!
+//
+///////////////////////////////////////////////////////////
+
+type enumerated EPTF_TreeColor { black (0), red(1), invalid(2), unused(3), incluster(4)};
+
+///////////////////////////////////////////////////////////
+// Type: EPTF_RBTreeNode
+//
+// Purpose:
+//   This is the definition of EPTF_RBTreeNode, which is a record of 
+//   the node's generic attributes
+//
+// Elements:
+//   color - <EPTF_TreeColor> - tree node color
+//
+//   left - *integer* - index of the left child of the node, also bwd pointer of free (invalid) queue
+//
+//   right - *integer* - index of the right child of the node, also fwd pointer of free (invalid) queue
+//
+//   parent - *integer* - parent index of tree node (-1 if root)
+//
+//   fwd - *integer* - index pointer to forward in cluster chain
+//
+//   bwd - *integer* - index pointer to backward in cluster chain
+//
+//   isHeadInSameKeysCluster  - *boolean* - denotes if node is head of a cluster chain
+//
+//   isSentinel - *boolean* - denotes if node is a leaf node
+//
+// Detailed Comments:
+//   NOTE: If (color==invalid) all record fields are out of use.
+//         If (color==incluster) then left, right and parent are invalid.
+//         If (color==unused) then color, parent, fwd, bwd and isHeadInSameKeysCluster are invalid.
+///////////////////////////////////////////////////////////
+
+type record EPTF_RBTreeNode {
+    EPTF_TreeColor           color,
+    integer             left,
+    integer             right,
+    integer             parent,
+    integer             fwd,
+    integer             bwd,
+    boolean             isHeadInSameKeysCluster,
+    boolean 		isSentinel,
+    integer             startOfClusterIdx, // valid only if node is in cluster (isHeadInSameKeysCluster==true or color==incluster)
+    integer             endOfClusterIdx // valid only if node is in cluster
+};
+
+///////////////////////////////////////////////////////////
+// Type: EPTF_RBTreeNodeList
+//
+// Purpose:
+//   A record containing the items of RBTree nodes 
+//
+// Elements:
+//   record of <EPTF_RBTreeNode>
+///////////////////////////////////////////////////////////
+
+type record of EPTF_RBTreeNode EPTF_RBTreeNodeList;
+
+
+///////////////////////////////////////////////////////////
+//  Group: FloatRBTreeImpl
+// 
+//  Purpose:
+//    Group for definitons of FloatRBTree-s
+//
+//  Detailed Comments:
+///////////////////////////////////////////////////////////
+group FloatRBTreeImpl {
+
+
+///////////////////////////////////////////////////////////
+// Type: EPTF_FloatNode
+//
+// Purpose:
+//   This is the float-specific attributes' definition of EPTF_RBTreeNode.
+//
+// Elements:
+//   key - *integer* - float key value of the node (when)
+//
+//   data - <EPTF_IntegerList> - data items that belong to the node identified by key field
+///////////////////////////////////////////////////////////
+
+type record EPTF_FloatNode {
+    float               key,
+    EPTF_IntegerList         data
+};
+
+///////////////////////////////////////////////////////////
+// Type: EPTF_FloatNodeList
+//
+// Purpose:
+//   A record containing the items of nodes with float key field
+//
+// Elements:
+//   record of <EPTF_FloatNode>
+//
+///////////////////////////////////////////////////////////
+
+type record of EPTF_FloatNode EPTF_FloatNodeList;
+
+///////////////////////////////////////////////////////////
+// Type: EPTF_Float_RedBlackTree
+//
+// Purpose:
+//   Definition of the float red-black tree.
+//
+// Elements:
+//   nodes - <EPTF_RBTreeNodeList> - list of items of all chains
+//
+//   floatKeyData - <EPTF_FloatNodeList> - float key and data values of nodes of all chains
+//
+//   nodesCurMaxIndex - *integer* - end index of nodes array
+//
+//   root  - *integer* - root item index of tree, -1 if empty tree
+//
+//   freeHead - *integer* - head of free chain
+//
+//   freeTail - *integer* - tail of free chain
+//
+//   smallestKeyIndex  - *integer* - index of item of smallest key value 
+//
+//   isSmallestCacheValid - *boolean* - true if value of smallestKeyIndex is valid
+//
+//   nOfElements - *integer* - stores how many elements are in the tree currently
+//
+//   acceptableMaxSize - *integer* - max size for debugging memory leak
+///////////////////////////////////////////////////////////
+
+type record EPTF_Float_RedBlackTree {
+  EPTF_RBTreeNodeList        nodes,
+  EPTF_FloatNodeList         floatKeyData,
+  integer               nodesCurMaxIndex,
+  integer               root,
+  integer		nil,
+  integer               freeHead,
+  integer               freeTail,
+  integer               smallestKeyIndex,
+  boolean               isSmallestCacheValid,
+  integer               nOfElements,
+  integer               acceptableMaxSize
+};
+
+///////////////////////////////////////////////////////////
+// Constant: c_EPTF_emptyFloatNode
+//
+// Purpose:
+//   Useful constant to init EPTF_FloatNode at once
+//
+// References:
+//   <EPTF_FloatNode> := {key := 0.0, data := {}}
+///////////////////////////////////////////////////////////
+const EPTF_FloatNode c_EPTF_emptyFloatNode := {
+        key := 0.0,
+        data := {}
+}
+
+///////////////////////////////////////////////////////////
+// Constant: c_EPTF_emptyFloatRBTree
+//
+// Purpose:
+//   Useful constant to init EPTF_Float_RedBlackTree at once
+//
+// References:
+//   <EPTF_Float_RedBlackTree> := {nodes := {},floatKeyData := {}
+//   ,nodesCurMaxIndex := -1,root := -1,freeHead := -1,
+//   freeTail := -1,smallestKeyIndex := -1, 
+//   isSmallestCacheValid := false,nOfElements := 0,acceptableMaxSize := -1}
+///////////////////////////////////////////////////////////
+const EPTF_Float_RedBlackTree c_EPTF_emptyFloatRBTree := {
+        nodes := {},
+        floatKeyData := {},
+        nodesCurMaxIndex := -1,        
+        root := -1,
+	nil := -1,
+        freeHead := -1,
+        freeTail := -1,
+        smallestKeyIndex := -1,
+        isSmallestCacheValid := false,
+        nOfElements := 0,
+        acceptableMaxSize := -1
+}
+
+} //group FloatRBTreeImpl
+
+///////////////////////////////////////////////////////////
+//  Group: IntegerRBTreeImpl
+// 
+//  Purpose:
+//    Group for definitons of IntegerRBTree-s
+//
+//  Detailed Comments:
+///////////////////////////////////////////////////////////
+group IntegerRBTreeImpl {
+
+
+///////////////////////////////////////////////////////////
+// Type: EPTF_IntegerNode
+//
+// Purpose:
+//   This is the integer-specific attributes' definition of EPTF_RBTreeNode.
+//
+// Elements:
+//   key - *integer* - integer key value of the node (when)
+//
+//   data - <EPTF_IntegerList> - data items that belong to the node identified by key field
+///////////////////////////////////////////////////////////
+
+type record EPTF_IntegerNode {
+    integer             key,
+    EPTF_IntegerList         data
+};
+
+///////////////////////////////////////////////////////////
+// Type: EPTF_IntegerNodeList
+//
+// Purpose:
+//   A record containing the items of nodes with integer key field
+//
+// Elements:
+//   record of <EPTF_IntegerNode>
+//
+///////////////////////////////////////////////////////////
+
+type record of EPTF_IntegerNode EPTF_IntegerNodeList;
+
+///////////////////////////////////////////////////////////
+// Type: EPTF_Integer_RedBlackTree
+//
+// Purpose:
+//   Definition of the integer red-black tree.
+//
+// Elements:
+//   nodes - <EPTF_RBTreeNodeList> - list of items of all chains
+//
+//   integerKeyData - <EPTF_IntegerNodeList> - integer key and data values of nodes of all chains
+//
+//   nodesCurMaxIndex - *integer* - end index of nodes array
+//
+//   root  - *integer* - root item index of tree, -1 if empty tree
+//
+//   freeHead - *integer* - head of free chain
+//
+//   freeTail - *integer* - tail of free chain
+//
+//   smallestKeyIndex  - *integer* - index of item of smallest key value 
+//
+//   isSmallestCacheValid - *boolean* - true if value of smallestKeyIndex is valid
+//
+//   nOfElements - *integer* - stores how many elements are in the tree currently 
+//
+//   acceptableMaxSize - *integer* - max size for debugging memory leak
+///////////////////////////////////////////////////////////
+
+type record EPTF_Integer_RedBlackTree {
+  EPTF_RBTreeNodeList        nodes,
+  EPTF_IntegerNodeList         integerKeyData,
+  integer               nodesCurMaxIndex,
+  integer               root,
+  integer		nil,
+  integer               freeHead,
+  integer               freeTail,
+  integer               smallestKeyIndex,
+  boolean               isSmallestCacheValid,
+  integer               nOfElements,
+  integer               acceptableMaxSize
+};
+
+///////////////////////////////////////////////////////////
+// Constant: c_EPTF_emptyIntegerNode
+//
+// Purpose:
+//   Useful constant to init EPTF_IntegerNode at once
+//
+// References:
+//   <EPTF_IntegerNode> := {key := 0.0, data := {}}
+///////////////////////////////////////////////////////////
+
+const EPTF_IntegerNode c_EPTF_emptyIntegerNode := {
+        key := 0,
+        data := {}
+}
+
+
+} //group IntegerRBTreeImpl
+}

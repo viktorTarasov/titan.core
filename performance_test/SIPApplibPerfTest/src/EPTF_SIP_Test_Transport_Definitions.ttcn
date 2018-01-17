@@ -1,0 +1,52 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_SIP_Test_Transport_Definitions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 522
+//  Updated:  2009-01-30
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+module EPTF_SIP_Test_Transport_Definitions
+{
+
+import from EPTF_SIP_Transport_Definitions all;
+
+modulepar
+{
+  TransportParams  tsp_Transport_Orig_params :=
+  {
+    localName := "127.0.0.1",
+    localPort := 11111,
+    remoteName := "127.0.0.1",
+    remotePort := 22222
+  };
+  
+  TransportParams  tsp_Transport_Term_params :=
+  {
+    localName := "127.0.0.1",
+    localPort := 22222,
+    remoteName := "127.0.0.1",
+    remotePort := 11111
+  };
+  
+  charstring tsp_Transport_protocol := "UDP";
+}
+
+type record  TransportParams
+{
+  charstring  localName,
+  integer     localPort,
+  charstring  remoteName,
+  integer     remotePort
+}
+
+type component EPTF_SIP_Test_Transport_CT extends EPTF_SIP_LocalTransport_CT
+{
+  var TransportParams       v_transportParams;
+}
+}

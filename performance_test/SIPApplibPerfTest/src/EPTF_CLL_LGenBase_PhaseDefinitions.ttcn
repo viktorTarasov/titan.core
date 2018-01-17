@@ -1,0 +1,498 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_CLL_LGenBase_PhaseDefinitions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 512
+//  Updated:  2009-02-16
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+//  Module: EPTF_CLL_LGenBase_PhaseDefinitions
+// 
+//  Purpose:
+//    This module contains type definitions for EPTF_CLL_LGenBase phase 
+//      handling implementation.
+// 
+//  Module depends on:
+//    <EPTF_CLL_Common_Definitions>
+//    <EPTF_CLL_FBQ_Definitions>
+// 
+//  Module Parameters:
+//    -
+//
+//  Current Owner:
+//    Bence Molnar(EBENMOL)
+// 
+//  Last Review Date:
+//    2009-02-16
+//
+//  Detailed Comments:
+//    This module contains type definitions for EPTF_CLL_LGenBase phase 
+//      handling implementation.
+//
+///////////////////////////////////////////////////////////////////////////////
+module EPTF_CLL_LGenBase_PhaseDefinitions
+{
+
+  import from EPTF_CLL_Common_Definitions all;
+  import from EPTF_CLL_FBQ_Definitions all;
+
+group Phase
+{ 
+///////////////////////////////////////////////////////////////////////////////
+// Type: EPTF_LGenBase_Phase_Type
+//
+// Purpose:
+//   Type for storing data that describes a phase. 
+//
+// Elements:
+//   - name - *charstring* - the name of the phase
+//   - enabled - *boolean* - shows whether the phase is enabled
+//       
+///////////////////////////////////////////////////////////////////////////////
+  type record EPTF_LGenBase_Phase_Type
+  {
+    charstring  name,
+    boolean     enabled
+  }
+
+///////////////////////////////////////////////////////////////////////////////
+// Type: EPTF_LGenBase_Phase_Instance
+//
+// Purpose:
+//   Type for storing data that describes a phase instance.
+//
+// Elements:
+//   - name - *charstring* - the name of the phase instance
+//   - enabled - *boolean* - shows whether the phase instance is enabled
+//   - state - <EPTF_LGenBase_Phase_States> - state of the phase instance
+//       
+///////////////////////////////////////////////////////////////////////////////
+  type record EPTF_LGenBase_Phase_Instance
+  {
+    charstring                  name,
+    boolean                     enabled,
+    EPTF_LGenBase_Phase_States  state
+  }
+  
+///////////////////////////////////////////////////////////////////////////////
+// Type: EPTF_LGenBase_Phase_Instance_List
+//
+// Purpose:
+//   Type for storing list of phase instances
+//
+// Elements:
+//   <EPTF_LGenBase_Phase_Instance>
+///////////////////////////////////////////////////////////////////////////////
+  type record of EPTF_LGenBase_Phase_Instance EPTF_LGenBase_Phase_Instance_List;
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Type: EPTF_LGenBase_Phase_States
+//
+// Purpose:
+//   Type for modelling the available states for a phase instance
+//
+// Elements:
+//    - IDLE
+//    - RUNNING
+//    - SKIPPING
+//    - STOPPING
+//    - FINISHED
+//       
+///////////////////////////////////////////////////////////////////////////////
+  type enumerated EPTF_LGenBase_Phase_States
+  {
+    IDLE,
+    RUNNING,
+    SKIPPING,
+    STOPPING,
+    FINISHED
+  }
+
+  ///////////////////////////////////////////////////////////
+  //  Type: EPTF_LGenBase_customPhaseAction_FT
+  // 
+  //  Purpose:
+  //     Callback function for handling custom phase actions
+  // 
+  //  Elements:
+  //    - tcIdx - *integer* - traffic case index    
+  //
+  //  Detailed Comments:
+  //     Can be declared with <f_EPTF_LGenBase_declareFunction>
+  ///////////////////////////////////////////////////////////
+  type function EPTF_LGenBase_customPhaseAction_FT(
+    integer tcIdx) 
+  runs on self;
+  
+  ///////////////////////////////////////////////////////////
+  //  Type: EPTF_LGenBase_PhaseFinished_FT
+  // 
+  //  Purpose:
+  //     Callback function for handling actions after finishing a phase
+  // 
+  //  Elements:
+  //    - pl_eGrpName - *in* - *charstring* - entity group name
+  //    - pl_scName - *in* - *charstring* - scenario name
+  //    - pl_phase - *charstring* - name of the phase
+  //    - pl_args - <EPTF_IntegerList> - custom arguments
+  ///////////////////////////////////////////////////////////
+  type function EPTF_LGenBase_PhaseFinished_FT(
+    in charstring pl_eGrpName,
+    in charstring pl_scName,
+    in charstring pl_phase,
+    in EPTF_IntegerList pl_args) 
+  runs on self;  
+
+} //end of Phase group
+
+
+group PhaseActions_and_Conditions
+{
+
+  ///////////////////////////////////////////////////////////
+  // Type: EPTF_LGenBase_TcMgmt_PhaseActionDesc
+  //
+  // Purpose: union of actions a phase can do
+  //
+  // Elements:
+  //   - startTc - *charstring* - starting a traffic case
+  //   - stopTc - *charstring* - stopping a traffic case
+  //   - restoreTc - *charstring* - restoring a traffic case
+  //   - disableTc - *charstring* - disabling a traffic case    
+  //   - startScenario - *charstring* - starting a scenario (all traffic cases in the senario)
+  //   - stopScenario - *charstring* - stopping a scenario (all traffic cases in the senario)
+  //   - restoreScenario - *charstring* - restoring a scenario  
+  //   - reportActualPhaseFinished - *charstring* - skipping the actual phase and report it is finished
+  //   - customAction - *charstring* - doing a custom action with the traffic case    
+  //  Detailed Comments:
+  //   Other conditions can be added later 
+  ///////////////////////////////////////////////////////////
+  type union EPTF_LGenBase_TcMgmt_PhaseActionDesc{
+    charstring startTc,
+    charstring stopTc,
+    charstring restoreTc,
+    charstring disableTc,
+    charstring startScenario,
+    charstring stopScenario,
+    charstring restoreScenario,
+    charstring reportActualPhaseFinished,
+    charstring customAction
+  }
+  
+  ///////////////////////////////////////////////////////////
+  // Type: EPTF_LGenBase_TcMgmt_PhaseActionDescList
+  //
+  // Purpose: the action list
+  //   A list of <EPTF_LGenBase_TcMgmt_PhaseActionDesc> 
+  ///////////////////////////////////////////////////////////
+  type record of EPTF_LGenBase_TcMgmt_PhaseActionDesc EPTF_LGenBase_TcMgmt_PhaseActionDescList;
+
+  ///////////////////////////////////////////////////////////
+  // Type: EPTF_LGenBase_TcMgmt_PhaseConditionDesc
+  //
+  // Purpose: union of finish conditions
+  //
+  // Elements:
+  //   - tcFinished - *charstring* - a traffic case finished
+  //   - scenarioFinished - *charstring* - a scenario finished (all traffic cases finished) 
+  //   - customFinishCondition - *charstring* - custom finish condition
+  //  Detailed Comments:
+  //   Other conditions can be added later 
+  ///////////////////////////////////////////////////////////
+  type union EPTF_LGenBase_TcMgmt_PhaseConditionDesc{
+    charstring tcFinished,
+    charstring tcStopped,
+    charstring scenarioFinished,
+    charstring customFinishCondition
+  }
+  
+  ///////////////////////////////////////////////////////////
+  // Type: EPTF_LGenBase_TcMgmt_PhaseConditionList
+  //
+  // Purpose: the finish condition list
+  //   A list of <EPTF_LGenBase_TcMgmt_PhaseConditionDesc> 
+  ///////////////////////////////////////////////////////////
+  type record of EPTF_LGenBase_TcMgmt_PhaseConditionDesc EPTF_LGenBase_TcMgmt_PhaseConditionList;
+
+  ///////////////////////////////////////////////////////////
+  // Type: EPTF_LGenBase_TcMgmt_PhaseFinishConditions
+  //
+  // Purpose: stores the finish conditions for a detailed phase
+  //
+  // Elements:
+  //   - phase - *charstring* - name of the phase
+  //   - conditions - <EPTF_LGenBase_TcMgmt_PhaseFinish> - the finish conditions
+  ///////////////////////////////////////////////////////////
+  type record EPTF_LGenBase_TcMgmt_PhaseFinishConditions{
+    charstring phase,
+    EPTF_LGenBase_TcMgmt_PhaseConditionList conditions
+  }
+
+  ///////////////////////////////////////////////////////////
+  // Type: EPTF_LGenBase_TcMgmt_PhaseActions
+  //
+  // Purpose: stores the actions the phase should do
+  //
+  // Elements:
+  //   - phase - *charstring* - name of the phase
+  //   - state - <EPTF_LGenBase_Phase_States> - name of the phase 
+  //   - actions - <EPTF_LGenBase_TcMgmt_PhaseActionDescList> - list of actions 
+  ///////////////////////////////////////////////////////////
+  type record EPTF_LGenBase_TcMgmt_PhaseActions{
+    charstring phase,
+    EPTF_LGenBase_Phase_States state,
+    EPTF_LGenBase_TcMgmt_PhaseActionDescList actions
+  }
+
+  ///////////////////////////////////////////////////////////
+  // Type: EPTF_LGenBase_TcMgmt_PhaseFinishConditionList
+  //
+  // Purpose: List of <EPTF_LGenBase_TcMgmt_PhaseFinishConditions> records for TitanSim R3.
+  ///////////////////////////////////////////////////////////
+  type record of EPTF_LGenBase_TcMgmt_PhaseFinishConditions EPTF_LGenBase_TcMgmt_PhaseFinishConditionList;
+
+  ///////////////////////////////////////////////////////////
+  // Type: EPTF_LGenBase_TcMgmt_PhaseActionList
+  //
+  // Purpose: List of <EPTF_LGenBase_TcMgmt_PhaseActions> records for TitanSim R3.
+  ///////////////////////////////////////////////////////////
+  type record of EPTF_LGenBase_TcMgmt_PhaseActions EPTF_LGenBase_TcMgmt_PhaseActionList;
+
+} //PhaseActions_and_Conditions
+
+group PhaseList
+{
+
+///////////////////////////////////////////////////////////////////////////////
+// Type: EPTF_LGenBase_PhaseList_Type
+//
+// Purpose:
+//   Type for storing list of phase declarators
+//
+// Elements:
+//   <EPTF_LGenBase_Phase_Type>
+///////////////////////////////////////////////////////////////////////////////
+  type record of EPTF_LGenBase_Phase_Type EPTF_LGenBase_PhaseList_Type;
+
+///////////////////////////////////////////////////////////////////////////////
+// Type: EPTF_LGenBase_PhaseList_Declarator
+//
+// Purpose:
+//   Type for declaring a phase list
+//
+// Elements:
+//   - name - *charstring* - the name of the phase list
+//   - phases - <EPTF_LGenBase_PhaseList_Type> - phases of the phase list
+//       
+///////////////////////////////////////////////////////////////////////////////
+  type record EPTF_LGenBase_PhaseList_Declarator
+  {
+    charstring                    name,
+    EPTF_LGenBase_PhaseList_Type  phases
+  }
+  
+///////////////////////////////////////////////////////////////////////////////
+// Constant: c_EPTF_LGenBase_PhaseList_empty
+//
+// Purpose:
+//   To init an empty <EPTF_LGenBase_PhaseList_Declarator>
+//     value.
+//
+// Elements:
+//  name := ""
+//  phases := {}
+///////////////////////////////////////////////////////////////////////////////
+  const EPTF_LGenBase_PhaseList_Declarator c_EPTF_LGenBase_PhaseList_empty :=
+  {
+    name := "",
+    phases := {}
+  }
+
+///////////////////////////////////////////////////////////////////////////////
+// Type: EPTF_LGenBase_PhaseList_Declarators
+//
+// Purpose:
+//   Type for storing list of phase list declarators
+//
+// Elements:
+//   <EPTF_LGenBase_PhaseList_Declarator>
+///////////////////////////////////////////////////////////////////////////////
+  type record of EPTF_LGenBase_PhaseList_Declarator 
+    EPTF_LGenBase_PhaseList_Declarators;
+
+} //end of PhaseList group
+
+group Private
+{
+///////////////////////////////////////////////////////////////////////////////
+// Type: EPTF_LGenBase_PhaseData
+//
+// Purpose:
+//   Internal record for storing all phase related information for a scenario
+//
+// Elements:
+//   - phaseListName - *charstring* - name of the supported phase list  
+//   - actualPhase - *charstring* - the actual phase
+//   - handlerFn - <EPTF_LGenBase_PhaseFinished_FT> - phase finished handler callback function reference
+//   - handlerArgs - <EPTF_IntegerList> - phase finished handler function arguments
+//   - phaseList - <EPTF_LGenBase_PhasesInternalList> - all information of a list of phases
+///////////////////////////////////////////////////////////////////////////////
+  type record EPTF_LGenBase_PhaseData
+  {
+    charstring phaseListName,
+    charstring actualPhase optional,
+    EPTF_LGenBase_PhaseFinished_FT handlerFn optional,
+    EPTF_IntegerList handlerArgs optional,  
+    EPTF_LGenBase_PhasesInternalList phaseList 
+  }
+  
+  const EPTF_LGenBase_PhaseData c_EPTF_LGenBase_emptyPhaseData := {
+    phaseListName := "",
+    actualPhase := omit,
+    handlerFn := null,    
+    handlerArgs := omit,
+    phaseList := {} 
+  } 
+
+///////////////////////////////////////////////////////////////////////////////
+// Type: EPTF_LGenBase_PhasesInternal
+//
+// Purpose:
+//   Internal record for storing all information of one phase for a scenario
+//
+// Elements:
+//   - name - *charstring* - name of the phase
+//   - enabled - *boolean* - shows whether the phase is enabled
+//   - actualState - <EPTF_LGenBase_Phase_States> - the actual state of the phase
+//   - conditions - <EPTF_LGenBase_TcMgmt_PhaseConditionList> - all finish conditions of the phase
+//   - actionList - <EPTF_LGenBase_PhaseAction_InstanceList> - the phase actions in all states
+///////////////////////////////////////////////////////////////////////////////
+  type record EPTF_LGenBase_PhasesInternal
+  {        
+    charstring name,
+    boolean enabled,
+    EPTF_LGenBase_Phase_States actualState,    
+    EPTF_LGenBase_PhaseCondition_InstanceList conditionList optional,
+    EPTF_LGenBase_PhaseAction_InstanceList actionList optional   
+  }
+
+///////////////////////////////////////////////////////////////////////////////
+// Type: EPTF_LGenBase_PhasesInternalList
+//
+// Purpose:
+//   Internal record for storing all information of a list of phases for a scenario
+//
+// Elements:
+//   <EPTF_LGenBase_PhasesInternal>
+///////////////////////////////////////////////////////////////////////////////
+  type record of EPTF_LGenBase_PhasesInternal EPTF_LGenBase_PhasesInternalList;
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Type: EPTF_LGenBase_PhaseAction_Instance
+//
+// Purpose:
+//   Type for storing data that describes the phase actions in one state
+//
+// Elements:
+//   - state - <EPTF_LGenBase_Phase_States> - the named state 
+//   - actions - <EPTF_LGenBase_TcMgmt_PhaseActionDescList> - list of actions in that state
+//       
+///////////////////////////////////////////////////////////////////////////////
+  type record EPTF_LGenBase_PhaseAction_Instance
+  {
+    EPTF_LGenBase_Phase_States state,
+    EPTF_LGenBase_TcMgmt_PhaseActionDescList actions
+  }
+  
+///////////////////////////////////////////////////////////////////////////////
+// Type: EPTF_LGenBase_PhaseAction_InstanceList
+//
+// Purpose:
+//    Type for storing data that describes a list of phase actions and states
+//
+// Elements:
+//   <EPTF_LGenBase_PhaseAction_Instance>
+///////////////////////////////////////////////////////////////////////////////
+  type record of EPTF_LGenBase_PhaseAction_Instance
+    EPTF_LGenBase_PhaseAction_InstanceList;
+
+///////////////////////////////////////////////////////////////////////////////
+// Type: EPTF_LGenBase_PhaseCondition_Instance
+//
+// Purpose:
+//   Type for storing data that describes the phase finish conditions
+//
+// Elements:
+//   - finished - *boolean* - if the finish condition successfully finished
+//   - condition - <EPTF_LGenBase_TcMgmt_PhaseConditionDesc> - a finish condition
+//       
+///////////////////////////////////////////////////////////////////////////////
+  type record EPTF_LGenBase_PhaseCondition_Instance
+  {
+    boolean finished,
+    EPTF_LGenBase_TcMgmt_PhaseConditionDesc condition
+  }
+
+///////////////////////////////////////////////////////////////////////////////
+// Type: EPTF_LGenBase_PhaseCondition_InstanceList
+//
+// Purpose:
+//    Type for storing data that describes a list of phase finish conditions
+//
+// Elements:
+//   <EPTF_LGenBase_PhaseAction_Instance>
+///////////////////////////////////////////////////////////////////////////////
+  type record of EPTF_LGenBase_PhaseCondition_Instance
+    EPTF_LGenBase_PhaseCondition_InstanceList;
+
+} //Private
+
+group Databases
+{
+///////////////////////////////////////////////////////////////////////////////
+// Type: EPTF_LGenBase_PhaseListDeclaratorDB
+//
+// Purpose:
+//   Type for storing a the phase list declarators
+//
+// Elements:
+//   - queue - <EPTF_FreeBusyQueue> - FBQ for the declarators 
+//   - data - <EPTF_LGenBase_PhaseList_Declarators> - phase list declarators
+//   - hashRef - *integer* - str2int hash id. the hash key is the name, the 
+//      value is the index in the data field.
+//       
+///////////////////////////////////////////////////////////////////////////////
+  type record EPTF_LGenBase_PhaseListDeclaratorDB 
+  {
+    EPTF_FreeBusyQueue                    queue, 
+    EPTF_LGenBase_PhaseList_Declarators   data,
+    integer                               hashRef
+  }
+  
+///////////////////////////////////////////////////////////////////////////////
+// Constant: c_EPTF_LGenBase_PhaseListDeclaratorDB_HashName
+//
+// Purpose:
+//   To assign a name for the str2int hashmap used in the
+//      v_LGenBasel_PhaseListDeclaratorDB database.
+//
+// Elements:
+//    "EPTF_LGenBase_PhaseListDeclaratorDB_Hash"
+//
+///////////////////////////////////////////////////////////////////////////////
+  const charstring c_EPTF_LGenBase_PhaseListDeclaratorDB_HashName :=
+    "EPTF_LGenBase_PhaseListDeclaratorDB_Hash";
+
+} // end of Databases group
+
+  
+}

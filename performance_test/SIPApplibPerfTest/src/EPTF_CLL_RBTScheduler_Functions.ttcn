@@ -1,0 +1,1414 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_CLL_RBTScheduler_Functions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 512
+//  Updated:  2012-10-05
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////
+//  Module: EPTF_CLL_RBTScheduler_Functions
+// 
+//  Purpose:
+//    This module contains the event queue handling functions of the
+//    Red-Black tree based scheduler.
+// 
+//  Module Parameters:
+//    tsp_EPTF_Scheduler_enableRounding - Enables/disables rounding the desired time of the scheduled event.
+// 
+//  Module depends on:
+//    <EPTF_CLL_Common_Definitions>
+//    <EPTF_CLL_Common_Functions>
+//    <EPTF_CLL_Scheduler_Definitions>
+//    <EPTF_CLL_Scheduler_Functions.ttcnin>
+//    <EPTF_CLL_RBTScheduler_Definitions>
+//    <EPTF_CLL_RBT_Functions>
+//    <EPTF_CLL_Base_Functions>
+//    <EPTF_CLL_Logging_Definitions>
+//    <EPTF_CLL_Logging_Functions>
+// 
+//  Current Owner:
+//    Rita Kovacs (ERITKOV), Gabor Ziegler (egbozie), Gabor Tatarka (egbotat), Jozsef Gyurusi (ethjgi)
+// 
+//  Last Review Date:
+//    2007-06-19
+// 
+//  Detailed Comments:
+//    This module contains generic functions for Red-blak tree based event scheduling.
+//    These functions handle the <EPTF_EventQueue> database created from <EPTF_RBT>.
+//
+//    This module uses the RBT scheduler functions in this file to define
+//    the functions that run on the <EPTF_Scheduler_CT> generic scheduler component.
+//
+//    - To initialize the scheduler, call <f_EPTF_Scheduler_init_CT>.
+// 
+//    - To register an event for the queue, call <f_EPTF_SchedulerComp_scheduleAction>.
+// 
+//    - To remove a registered event from the queue <f_EPTF_SchedulerComp_CancelEvent>
+// 
+//    - Upon the action timer timeout the user defined call-back function
+//       <EPTF_Scheduler_ActionHandler> is called with the action to be processed.
+//
+//    - To refresh the current time accessible at <v_EPTF_snapshotTime> call <f_EPTF_SchedulerComp_refreshSnapshotTime>.
+//
+//    - To access the current snapshotTime call <f_EPTF_SchedulerComp_snapshotTime>.
+//
+//    Public functions:
+//      <f_EPTF_Scheduler_init_CT>
+//      <f_EPTF_SchedulerComp_scheduleAction>
+//      <f_EPTF_SchedulerComp_CancelEvent>
+//      <f_EPTF_SchedulerComp_refreshSnapshotTime>
+//      <f_EPTF_SchedulerComp_snapshotTime>
+//      <f_EPTF_SchedulerComp_eventIsValid>
+//      <f_EPTF_SchedulerComp_eventIsInvalid>
+// 
+///////////////////////////////////////////////////////////
+module EPTF_CLL_RBTScheduler_Functions {
+
+import from EPTF_CLL_Scheduler_Definitions all;
+import from EPTF_CLL_RBTScheduler_Definitions all;
+import from EPTF_CLL_RBT_Functions all;
+import from EPTF_CLL_Common_Definitions all;
+import from EPTF_CLL_Common_Functions all;
+import from EPTF_CLL_Base_Functions all;
+import from EPTF_CLL_Logging_Definitions all;
+import from EPTF_CLL_Logging_Functions all;
+
+modulepar boolean tsp_EPTF_Scheduler_enableRounding := true;
+
+
+///////////////////////////////////////////////////////////
+//  Group: Scheduler_GenericFunctions
+// 
+//  Purpose:
+//    Group of functions without "runs on EPTF_Scheduler_CT" clause
+// 
+//  Detailed comments:
+//    Alternative version of these functions are in the group <Scheduler_RunsOnFunctions>
+///////////////////////////////////////////////////////////
+group Scheduler_GenericFunctions {
+
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Scheduler_setSchedulerAction
+// 
+//  Purpose:
+//    function to register a new action to the action queue,
+//    the when parameter of the action will be rounded.
+// 
+//  Parameters:
+//    pl_NextEventQueue - *inout* <EPTF_EventQueue> - the event queue
+// 
+//    pl_scheduledAction - *in* <EPTF_ScheduledAction> - action to be scheduled
+// 
+//    pl_eventIndex - *out* *integer*  - returns the position within the queue
+//
+//  Errors:
+//    -
+// 
+//  Detailed description:
+//    it just passess the call to <f_EPTF_Scheduler_setSchedulerActionRoundable>
+//
+//  Return Value:
+//    boolean - false if operation failed
+// 
+///////////////////////////////////////////////////////////
+private function f_EPTF_Scheduler_setSchedulerAction(
+  inout EPTF_EventQueue pl_NextEventQueue, 
+  in EPTF_ScheduledAction pl_scheduledAction,
+  out integer pl_eventIndex 
+) 
+return boolean
+{
+  if (c_EPTF_Common_debugSwitch and tsp_debug_EPTF_SchedulerFunctions and tsp_debugVerbose_EPTF_SchedulerFunctions) 
+  {
+    f_EPTF_Common_user(log2str("f_SetSchedulerAction, params: actionId:",
+      pl_scheduledAction.actionId, ", when:",pl_scheduledAction.when));
+    f_EPTF_Common_user("Passing the call along to f_EPTF_Scheduler_setSchedulerActionRoundable with rounding==true...");
+  }
+
+  return f_EPTF_Scheduler_setSchedulerActionRoundable(
+    pl_NextEventQueue, 
+    pl_scheduledAction,
+    tsp_EPTF_Scheduler_enableRounding,
+    pl_eventIndex);
+
+}//SetSchedulerAction
+
+} //group Scheduler_GenericFunctions
+
+///////////////////////////////////////////////////////////
+//  Group: Scheduler_RunsOnFunctions
+// 
+//  Purpose:
+//    Group of functions with "runs on EPTF_Scheduler_CT" clause.
+//
+//  Detailed comments:
+//    Alternative version of these functions are in the groups <Scheduler_GenericFunctions>,
+//    <FBQScheduler_GenericFunctions> or <RBTScheduler_GenericFunctions>
+// 
+///////////////////////////////////////////////////////////
+group Scheduler_RunsOnFunctions {
+
+///////////////////////////////////////////////////////////
+// Function: f_EPTF_SchedulerComp_initEventQueue
+// 
+// Purpose:
+//   OBSOLETE, use <f_EPTF_Scheduler_init_CT> instead
+//   function to init the eventQueue of <EPTF_Scheduler_CT>
+// 
+// Parameters:
+//   -
+//
+// Return Value:
+//   -
+// 
+///////////////////////////////////////////////////////////
+/*public*/ function f_EPTF_SchedulerComp_initEventQueue() 
+runs on EPTF_Scheduler_CT {
+f_EPTF_Scheduler_initEventQueue(v_EPTF_eventQueue);
+}
+
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_SchedulerComp_getNewTimerVal
+// 
+//  Purpose:
+//    function to get relative time of next event on <EPTF_Scheduler_CT>
+// 
+//  Parameters:
+//    - 
+// 
+//  Return Value:
+//    float
+// 
+//  Errors:
+//  - Calling the function when v_EPTF_eventQueue is empty  makes no sense, 
+//    therefore it is an error, which will cause the execution to stop
+// 
+//  Detailed Comments:
+//    This function returns a time value (float) that is the difference between 
+//    the 
+//    - current simulation time (obtained as T_EPTF_componentClock.read()) and
+//    - the ideal schedule (absolute timepoint) of the event at the head of the 
+//      queue. 
+//
+//    If the return value is 
+//    - positive, then the event shall happen in the future, i.e., use this value
+//      as the timeout value for your scheduler timer
+//    - non-positive (zero, or negative) then event is already "due", that is,
+//      the scheduler is late and the event shall be executed immediately.
+//   
+//   Use this functions as follows:
+//  > 
+//  >var float currentTime, duration;
+//  > alt{
+//  > [] schedulerTimer.timeout {
+//  >   currentTime := clockTimer.read();
+//  >   label processevents;
+//  >   //...
+//  >   //... process the head event of the event queue....
+//  >   //...
+//  >   if (f_EPTF_SchedulerComp_eventQueueIsNotEmpty()) {
+//  >        duration := f_EPTF_SchedulerComp_getNewTimerVal();
+//  >        if (duration <= 0.0) {f_processevents();}
+//  >        else {T_EPTF_nextEvent.start(duration)}
+//  >   }
+//  >   repeat;
+//  >   } 
+///////////////////////////////////////////////////////////
+private function f_EPTF_SchedulerComp_getNewTimerVal() 
+runs on EPTF_Scheduler_CT return float {
+return f_EPTF_Scheduler_getNewTimerVal(v_EPTF_eventQueue, T_EPTF_componentClock);
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_SchedulerComp_refreshEventTimer
+// 
+//  Purpose:
+//    function update T_EPTF_nextEvent timer to the next event
+// 
+//  Parameters:
+//    - 
+//
+//  Return Value:
+//    -
+// 
+//  Detailed Comments:
+//    This function sets the event timer to the next scheduled event time. 
+//    If necessary (e.g., an event has been inserted before the head of the queue),
+//    then it restarts the timer.
+//    This function is automatically called in <as_EPTF_SchedulerComp_ActionHandler>,
+//    <f_EPTF_SchedulerComp_scheduleAction> and <f_EPTF_SchedulerComp_CancelEvent>.
+// 
+///////////////////////////////////////////////////////////
+private function f_EPTF_SchedulerComp_refreshEventTimer() 
+runs on EPTF_Scheduler_CT {
+  f_EPTF_Scheduler_refreshEventTimer(v_EPTF_eventQueue, T_EPTF_componentClock, T_EPTF_nextEvent, v_EPTF_nextEventIsActive)
+}
+ 
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_SchedulerComp_refreshSnapshotTime
+// 
+//  Purpose:
+//    function to update v_EPTF_snapshotTime
+// 
+//  Parameters:
+//    - 
+//
+//  Return Value:
+//    -
+// 
+//  Detailed Comments:
+//    This function reads the T_EPTF_componentClock and stores the
+//    time into v_EPTF_snapshotTime. Proposed usage is to call it
+//    in the begining of any altstep where v_EPTF_snapshotTime is
+//    used e.g. to schedule a new event.
+// 
+///////////////////////////////////////////////////////////
+public function f_EPTF_SchedulerComp_refreshSnapshotTime()
+runs on EPTF_Scheduler_CT {
+  v_EPTF_snapshotTime := T_EPTF_componentClock.read;
+}
+ 
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_SchedulerComp_snapshotTime
+// 
+//  Purpose:
+//    function to get the value of v_EPTF_snapshotTime
+// 
+//  Parameters:
+//    - 
+//
+//  Return Value:
+//    float
+// 
+//  Detailed Comments:
+//    This function returns the current value of v_EPTF_snapshotTime.
+// 
+///////////////////////////////////////////////////////////
+public function f_EPTF_SchedulerComp_snapshotTime()
+runs on EPTF_Scheduler_CT return float {
+  return v_EPTF_snapshotTime;
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_SchedulerComp_schedulerIsNotLate
+// 
+//  Purpose:
+//    function to check whether the event queue is not empty, or is empty
+// 
+//  Parameters:
+//    -
+//
+//  Return Value:
+//    boolean
+// 
+//  Errors:
+//  - Calling the function with an empty v_EPTF_eventQueue makes no sense, 
+//    therefore it is an error, which will cause the execution to stop
+// 
+//  Detailed Comments:
+//    This function returns a true if the head event within the event queue 
+//    is scheduled later than "T_EPTF_componentClock.read", otherwise returns false. 
+//    See also <f_EPTF_Scheduler_getNewTimerVal>
+//    
+// 
+///////////////////////////////////////////////////////////
+private function f_EPTF_SchedulerComp_schedulerIsNotLate() 
+runs on EPTF_Scheduler_CT return boolean {
+return f_EPTF_Scheduler_schedulerIsNotLate(v_EPTF_eventQueue, T_EPTF_componentClock.read)
+} // f_EPTF_SchedulerComp_schedulerIsNotLate
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_SchedulerComp_eventQueueIsNotEmpty
+// 
+//  Purpose:
+//    function to check whether the event queue is not empty, or is empty
+// 
+//  Parameters:
+//    -
+// 
+//  Return Value:
+//    boolean
+// 
+//  Errors:
+//  - (none) 
+// 
+//  Detailed Comments:
+//    This function returns a true if the event queue is not empty, false otherwise.
+//    Use this function to decide whether calling  <f_EPTF_SchedulerComp_getNewTimerVal> ()
+//    makes sense, or not.
+//    
+// 
+///////////////////////////////////////////////////////////
+private function f_EPTF_SchedulerComp_eventQueueIsNotEmpty() 
+runs on EPTF_Scheduler_CT return boolean {
+return f_EPTF_Scheduler_eventQueueIsNotEmpty(v_EPTF_eventQueue);
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_SchedulerComp_eventQueueIsEmpty
+// 
+//  Purpose:
+//    function to check whether the event queue is empty, or not empty
+// 
+//  Parameters:
+//    -
+// 
+//  Return Value:
+//    boolean
+// 
+//  Errors:
+//  - (none) 
+// 
+//  Detailed Comments:
+//    This function returns a true if the event queue is  empty, false otherwise.
+//    
+// 
+///////////////////////////////////////////////////////////
+private function f_EPTF_SchedulerComp_eventQueueIsEmpty() 
+runs on EPTF_Scheduler_CT return boolean  {
+return f_EPTF_Scheduler_eventQueueIsEmpty(v_EPTF_eventQueue);
+}
+
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_SchedulerComp_eventIsValid
+// 
+//  Purpose:
+//    function to check whether an event is valid within the queue
+// 
+//  Parameters:
+//    pl_qidx - *in* *integer* - index  of the element to be checked 
+// 
+//  Return Value:
+//    boolean - true, if valid, false otherwise
+// 
+//  Errors:
+//  - 
+///////////////////////////////////////////////////////////
+public function f_EPTF_SchedulerComp_eventIsValid(in integer pl_qidx) 
+runs on EPTF_Scheduler_CT return boolean {
+  return f_EPTF_Scheduler_eventIsValid(v_EPTF_eventQueue, pl_qidx);
+}//f_EPTF_Scheduler_eventIsValid
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_SchedulerComp_eventIsInvalid
+// 
+//  Purpose:
+//    function to check whether an event is valid within the queue
+// 
+//  Parameters:
+//    pl_qidx - *in* *integer* - index  of the element to be checked 
+// 
+//  Return Value:
+//    boolean - true, if invalid, false otherwise
+// 
+//  Errors:
+//  - 
+///////////////////////////////////////////////////////////
+public function f_EPTF_SchedulerComp_eventIsInvalid(in integer pl_qidx) 
+runs on EPTF_Scheduler_CT return boolean {
+  return not f_EPTF_Scheduler_eventIsValid(v_EPTF_eventQueue,pl_qidx);
+}//f_EPTF_Scheduler_eventIsInvalid
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_SchedulerComp_setSchedulerAction
+// 
+//  Purpose:
+//    function to register a new action to the action queue,
+//    the when parameter of the action will be rounded.
+// 
+//  Parameters:
+//    pl_scheduledAction - *in* <EPTF_ScheduledAction> - action to be scheduled
+// 
+//    pl_eventIndex - *out* *integer*  - returns the position within the queue
+//
+//  Errors:
+//  - if the same action exists in the queue, and that is not in the busy queue
+//    then f_EPTF_SchedulerComp_setSchedulerAction fails
+// 
+//  Detailed description:
+//  it just passess the call to <f_EPTF_Scheduler_setSchedulerActionRoundable>
+//
+//  Return Value:
+//    boolean - false if operation failed
+// 
+///////////////////////////////////////////////////////////
+private function f_EPTF_SchedulerComp_setSchedulerAction(
+  in EPTF_ScheduledAction pl_scheduledAction,
+  out integer pl_eventIndex 
+) 
+runs on EPTF_Scheduler_CT return boolean {
+return f_EPTF_Scheduler_setSchedulerAction(
+  v_EPTF_eventQueue, 
+  pl_scheduledAction,
+  pl_eventIndex 
+) 
+}//SetSchedulerAction
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_SchedulerComp_setSchedulerActionRoundable
+// 
+//  Purpose:
+//    function to register a new action to the action queue, 
+//    the rounding of the schedule  is switchable
+// 
+//  Parameters:
+//    pl_scheduledAction - *in* <EPTF_ScheduledAction> - action to be scheduled
+//
+//    pl_roundIt - *in boolean* - whether to round, or not the schedule
+// 
+//    pl_eventIndex - *out* *integer*  - returns the position within the queue
+//
+//  Errors:
+//  - if the same action exists in the queue, and that is not in the busy queue
+//    then f_EPTF_SchedulerComp_setSchedulerActionRoundable fails
+// 
+//  Return Value:
+//    boolean - false if operation failed
+// 
+///////////////////////////////////////////////////////////
+private function f_EPTF_SchedulerComp_setSchedulerActionRoundable(
+  in EPTF_ScheduledAction pl_scheduledAction,
+  in boolean pl_roundIt,
+  out integer pl_eventIndex 
+) 
+runs on EPTF_Scheduler_CT return boolean {
+return f_EPTF_Scheduler_setSchedulerActionRoundable(
+    v_EPTF_eventQueue, 
+    pl_scheduledAction,
+    pl_roundIt,
+    pl_eventIndex); 
+}//SetSchedulerActionRoundable
+
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_SchedulerComp_getBusyEventHeadIndex
+// 
+//  Purpose:
+//    function to get head index of busy queue
+// 
+//  Parameters:
+//    -
+// 
+//  Return Value:
+//    integer - found head index, -1 if empty
+// 
+//  Errors:
+//    - (none)
+// 
+//  Detailed Comments:
+//    -
+///////////////////////////////////////////////////////////
+private function f_EPTF_SchedulerComp_getBusyEventHeadIndex() 
+runs on EPTF_Scheduler_CT return integer {
+return f_EPTF_Scheduler_getBusyEventHeadIndex (v_EPTF_eventQueue);
+} //f_EPTF_Scheduler_getBusyEventHeadIndex
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_SchedulerComp_CancelEvent
+// 
+//  Purpose:
+//    function to remove a valid event from the event queue
+// 
+//  Parameters:
+//    pl_qidx - *in* *integer* - index  of the event to be removed
+// 
+//  Return Value:
+//    boolean - false if operation failed
+// 
+//  Errors:
+//  - If the event at index pl_qidx is not valid, 
+//   then <f_EPTF_SchedulerComp_CancelEvent> fails 
+// 
+// 
+///////////////////////////////////////////////////////////
+public function f_EPTF_SchedulerComp_CancelEvent(in integer qidx) runs on EPTF_Scheduler_CT 
+return boolean 
+{
+  if ( c_EPTF_Common_debugSwitch and tsp_debug_EPTF_SchedulerFunctions) 
+      {f_EPTF_Common_user(log2str("f_EPTF_SchedulerComp_CancelEvent:", qidx) );}
+  
+
+  //check validity and emptiness of the event 
+  if (not f_EPTF_SchedulerComp_eventIsValid(qidx)) 
+  {
+    f_EPTF_Scheduler_warning(log2str("Error: f_EPTF_SchedulerComp_CancelEvent: clearing invalid_chain, or non-empty  event at qidx:", qidx));
+    return false;
+  }
+  //dequeue the event
+  f_EPTF_RBT_removeItem(v_EPTF_eventQueue.order,qidx);
+  //refresh the timer
+  f_EPTF_SchedulerComp_refreshEventTimer();
+
+  return true;
+}// f_EPTF_SchedulerComp_CancelEvent
+
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_SchedulerComp_scheduleAction
+// 
+//  Purpose:
+//    function to register a new action to the action queue
+// 
+//  Parameters:
+//    pl_when - *in* *float*  - the time of the action when it should be processed
+// 
+//    pl_actionHandler - *in* <EPTF_Scheduler_ActionHandler> - the handler function that will be called to handle the action
+// 
+//    pl_action - *in* <EPTF_ActionId> - action parameters passed to the action handler when the event is processed
+//
+//    pl_eventIndex - *out* *integer*  - returns the position within the queue
+//
+//    pl_roundIt - *in boolean* - whether to round, or not the schedule time
+//       (default: true)
+// 
+//  Errors:
+//    -
+// 
+//  Detailed description:
+//    It just passess the call to <f_EPTF_Scheduler_setSchedulerAction>
+//    The pl_when parameter of the action will be rounded.
+//
+//  Return Value:
+//    boolean - false if operation failed
+// 
+///////////////////////////////////////////////////////////
+public function f_EPTF_SchedulerComp_scheduleAction(
+  in float pl_when,
+  in EPTF_Scheduler_ActionHandler pl_actionHandler, 
+  in EPTF_ActionId pl_action,
+  out integer pl_eventIndex,
+  in boolean pl_roundIt := tsp_EPTF_Scheduler_enableRounding
+) 
+runs on EPTF_Scheduler_CT return boolean
+{
+  if ( c_EPTF_Common_debugSwitch and tsp_debug_EPTF_SchedulerFunctions) 
+      {f_EPTF_Common_user(log2str("f_EPTF_SchedulerComp_scheduleAction, params: pl_a:",pl_action, ", pl_t:",pl_when));}
+  
+  if (not tsp_EPTF_Scheduler_enableRounding) { pl_roundIt := false; }
+
+  if (pl_roundIt) {
+    // corrigate:
+    pl_when := pl_when - tsp_EPTF_ELEMENTARY_TIMESTEP_PARAM*0.99;
+  }
+  
+  var boolean vl_result := f_EPTF_Scheduler_setSchedulerActionRoundable(
+    v_EPTF_eventQueue,
+    {when:=pl_when, actionHandler:=pl_actionHandler, actionId:= pl_action},
+    pl_roundIt,
+    pl_eventIndex);
+    
+  f_EPTF_SchedulerComp_refreshEventTimer();
+
+  return vl_result;
+
+} // f_EPTF_SchedulerComp_setSchedulerAction
+
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_SchedulerComp_performActions
+// 
+//  Purpose:
+//    function for handling all actions
+// 
+//  Parameters:
+//    -
+// 
+//  Errors:
+//  - 
+// 
+//  Detailed description:
+//  -
+//
+//  Return Value:
+//    boolean - false if operation failed
+// 
+///////////////////////////////////////////////////////////
+private function f_EPTF_SchedulerComp_performActions() runs on EPTF_Scheduler_CT 
+return boolean
+{
+  var boolean actresult := true;
+  var integer currentIdx := f_EPTF_Scheduler_getBusyEventHeadIndex(v_EPTF_eventQueue);
+
+  var float vl_now := v_EPTF_eventQueue.events[currentIdx].when;
+
+  if ( c_EPTF_Common_debugSwitch and tsp_debug_EPTF_SchedulerFunctions) 
+      {f_EPTF_Common_user("f_EPTF_SchedulerComp_performActions() has been called.");}
+
+  if(f_EPTF_RBT_getRoot(v_EPTF_eventQueue.order) < 0) {
+    f_EPTF_Scheduler_warning(%definitionId&": Has been called with events length <=0");
+    return false;
+  }
+
+  //use same scheduling time base for all new events for scheduling efficiency
+  if ( c_EPTF_Common_debugSwitch and tsp_debug_EPTF_SchedulerFunctions) 
+      {f_EPTF_Common_user(log2str("f_EPTF_SchedulerComp_performActions: v_EPTF_snapshotTime:", v_EPTF_snapshotTime));}
+  
+  var boolean vl_eventExecuted := false;
+  while (
+    f_EPTF_RBT_getRoot(v_EPTF_eventQueue.order) >= 0
+    and v_EPTF_eventQueue.events[f_EPTF_Scheduler_getBusyEventHeadIndex(v_EPTF_eventQueue)].when <=v_EPTF_snapshotTime)
+  {
+    vl_eventExecuted := true;
+    //prepare next cycle
+    currentIdx := f_EPTF_SchedulerComp_getBusyEventHeadIndex(); 
+
+    if ( c_EPTF_Common_debugSwitch and tsp_debug_EPTF_SchedulerFunctions) 
+      {f_EPTF_Common_user(log2str("f_EPTF_SchedulerComp_performActions() processing expired events"
+      ,", vl_now:",vl_now
+      ,", head event.actionId:", v_EPTF_eventQueue.events[currentIdx].actionId
+      ,", head event.when:", v_EPTF_eventQueue.events[currentIdx].when));}
+
+    //handle event we had been sleeping for
+    //temporarily remove event from busy
+    f_EPTF_RBT_removeItemWithoutFree(v_EPTF_eventQueue.order, currentIdx);
+    //check event we have been sleeping for
+    if ( c_EPTF_Common_debugSwitch and tsp_debug_EPTF_SchedulerFunctions) 
+      {f_EPTF_Common_user(log2str("Processing event action: ", 
+      v_EPTF_eventQueue.events[currentIdx].actionHandler, " with arguments: ",
+      v_EPTF_eventQueue.events[currentIdx].actionId));}
+    if (actresult)
+    {
+      if (v_EPTF_eventQueue.events[currentIdx].actionHandler != null) {
+        actresult := v_EPTF_eventQueue.events[currentIdx].actionHandler.apply(v_EPTF_eventQueue.events[currentIdx],currentIdx);
+      }
+    } 
+    else 
+    {
+      f_EPTF_Scheduler_warning(log2str("f_EPTF_SchedulerComp_performActions has failed to freeze event:", v_EPTF_eventQueue.events[currentIdx]));
+      return false;
+    }
+
+
+    if (not actresult) {
+      f_EPTF_Scheduler_warning(log2str("f_EPTF_SchedulerComp_performActions has failed to handle event:", v_EPTF_eventQueue.events[currentIdx]));
+      return false;
+    }
+    else {
+      if ( c_EPTF_Common_debugSwitch and tsp_debug_EPTF_SchedulerFunctions) 
+        {f_EPTF_Common_user(log2str("Succesfully executed event action: ", 
+        v_EPTF_eventQueue.events[currentIdx].actionHandler, " with arguments: ", 
+        v_EPTF_eventQueue.events[currentIdx].actionId));}
+
+    }
+    //remove lead event
+
+    f_EPTF_RBT_freeInvalidItem(v_EPTF_eventQueue.order, currentIdx);
+  }//while
+  
+  if (not vl_eventExecuted) {
+    // time warp detected!
+    // the nextEvent timeout event happened before the time of the first event "when"
+    // no event was handled
+    var float vl_warpTime := 0.0;
+    if (f_EPTF_RBT_getRoot(v_EPTF_eventQueue.order) >= 0) {
+      vl_warpTime := v_EPTF_eventQueue.events[f_EPTF_Scheduler_getBusyEventHeadIndex(v_EPTF_eventQueue)].when - v_EPTF_snapshotTime;
+    }
+    f_EPTF_Scheduler_warning("f_EPTF_SchedulerComp_performActions: Time warp detected! Amout of warp (difference between the scheduled event time and the real time): "&
+      float2str(vl_warpTime));
+    // trigger the restart of the eventTimer by f_EPTF_Scheduler_refreshEventTimer:
+    v_EPTF_eventQueue.schedulerRunsFor := -1.0;
+    actresult := true;
+  }
+  
+  if ( c_EPTF_Common_debugSwitch and tsp_debug_EPTF_SchedulerFunctions) 
+     {f_EPTF_Common_user("f_EPTF_SchedulerComp_performActions is finished.");}
+
+  if ( c_EPTF_Common_debugSwitch and tsp_debug_EPTF_SchedulerFunctions) {
+    var float tmp:=T_EPTF_componentClock.read;
+    f_EPTF_Common_user(log2str("f_EPTF_SchedulerComp_performActions: current clock time:",tmp));
+  }
+  return actresult;
+}; // f_EPTF_SchedulerComp_performActions
+
+
+///////////////////////////////////////////////////////////
+//  Altstep: as_EPTF_SchedulerComp_ActionHandler
+// 
+//  Purpose:
+//    To handle scheduled events in the queue
+// 
+//  Parameters:
+//    -
+// 
+//  Detailed description:
+//    This altstep should be placed into the main alt-loop.
+//    The component on which the main alt-loop runs should
+//    extend <EPTF_Scheduler_CT>.
+//    This altstep is activated as default by <f_EPTF_Scheduler_init_CT>
+//
+//    In this altstep the following is done:
+// 
+//    1.  Calls the <f_EPTF_SchedulerComp_freezeBusyEventHead> to indicate that the processing the
+//        current event has started.
+// 
+//    2. Calls your <EPTF_Scheduler_ActionHandler> call-back function handling the event.
+// 
+//    3. Calls the <f_EPTF_SchedulerComp_removeInvalidEvent> to clear the event from the 
+//       scheduler.
+//
+//
+///////////////////////////////////////////////////////////
+private altstep as_EPTF_SchedulerComp_ActionHandler() runs on EPTF_Scheduler_CT
+{
+  [] T_EPTF_nextEvent.timeout
+    {
+      v_EPTF_snapshotTime := T_EPTF_componentClock.read;
+      v_EPTF_nextEventIsActive := false;
+      if (not f_EPTF_SchedulerComp_performActions()) {
+        f_EPTF_Scheduler_warning("f_EPTF_SchedulerComp_performActions() has been failed");
+      }
+      f_EPTF_SchedulerComp_refreshEventTimer();
+      repeat;
+    } 
+} // as_EPTF_SchedulerComp_ActionHandler
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Scheduler_init_CT
+// 
+//  Purpose:
+//    function for initializing the scheduler event queue and parameters
+//
+//  Parameters:
+//    pl_f_EPTF_Scheduler_ActionHandler - *in* <EPTF_Scheduler_ActionHandler> - call back function
+//         to handle actions
+// 
+//  Errors:
+//  - 
+// 
+//  Detailed description:
+//    This function should be called before using the EPTF_Scheduler.
+//    The call back function should be implemented by the user. If it is to be a function
+//    that must run on a user defined component, that function can be implemented as an
+//    external function in which the handler function running on the user component
+//    can be called.
+//
+//  Return Value:
+//  -
+// 
+///////////////////////////////////////////////////////////
+public function f_EPTF_Scheduler_init_CT(in charstring pl_selfName)
+runs on EPTF_Scheduler_CT 
+{
+  if (v_Scheduler_initialized) {
+    return;
+  }
+  f_EPTF_RBT_init_CT(pl_selfName);
+  f_EPTF_Logging_init_CT(pl_selfName);
+  v_Scheduler_loggingMaskId := f_EPTF_Logging_registerComponentMasks(tsp_EPTF_Scheduler_loggingComponentMask, c_EPTF_Scheduler_loggingEventClasses, EPTF_Logging_CLL);
+  if(tsp_debug_EPTF_SchedulerFunctions) {
+    f_EPTF_Logging_enableLocalMask(v_Scheduler_loggingMaskId, c_EPTF_Scheduler_loggingClassIdx_Debug);
+  } else {
+    f_EPTF_Logging_disableLocalMask(v_Scheduler_loggingMaskId, c_EPTF_Scheduler_loggingClassIdx_Debug);
+  }
+
+
+  f_EPTF_SchedulerComp_initEventQueue();
+  v_EPTF_Scheduler_def := activate(as_EPTF_SchedulerComp_ActionHandler());
+  v_Scheduler_initialized := true;
+  f_EPTF_Base_registerCleanup(refers(f_EPTF_Scheduler_cleanup_CT));
+};
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_SchedulerComp_InitScheduler
+// 
+//  Purpose:
+//    OBSOLETE
+//    Function for initializing the scheduler event queue and parameters
+//    Kept for backward compatibility purpose, will be removed later!
+//
+//  Parameters:
+//    pl_name - *in* *charstring*  - name of the component, default is "default component name"
+//
+//  Errors:
+//  - 
+// 
+//  Detailed description:
+//    This function is deprecated and will be removed! Use <f_EPTF_Scheduler_init_CT> instead!
+//
+//  Return Value:
+//  -
+// 
+///////////////////////////////////////////////////////////
+/*public*/ function f_EPTF_SchedulerComp_InitScheduler(in charstring pl_name := "default component name")
+runs on EPTF_Scheduler_CT 
+{
+  f_EPTF_Scheduler_warning("Warning: "&%definitionId& ": This function is deprecated and will be removed! Use f_EPTF_Scheduler_init_CT instead!");
+  f_EPTF_Scheduler_init_CT(pl_name);
+};
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Scheduler_cleanup_CT
+// 
+//  Purpose:
+//    Destructs the EPTF_Scheduler_CT
+// 
+//  Parameters:
+//    -
+// 
+//  Return Value:
+//    -
+// 
+//  Errors:
+//    none
+// 
+//  Detailed Comments:
+//    This function mustn't be called directly. You must call f_EPTF_Base_cleanup_CT instead.
+///
+///////////////////////////////////////////////////////////
+private function f_EPTF_Scheduler_cleanup_CT() runs on EPTF_Scheduler_CT {
+  if (v_Scheduler_initialized == false) {
+    return;
+  }
+  deactivate(v_EPTF_Scheduler_def);
+  v_EPTF_Scheduler_def := null;
+  v_Scheduler_initialized := false;
+  if ( c_EPTF_Common_debugSwitch and tsp_debug_EPTF_SchedulerFunctions) 
+     {f_EPTF_Scheduler_debug("----EPTF_Scheduler cleanup DONE----");}
+}
+
+group Logging {
+
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_Scheduler_error
+  // 
+  //  Purpose:
+  //    Function to log an error from Scheduler feature.
+  //
+  //  Parameters:
+  //    - pl_message - *in* *charstring* - the message to log
+  //
+  //  Return Value:
+  //    -
+  //
+  //  Errors & assertions:
+  //    - 
+  //
+  //  Detailed Comments:
+  //    -
+  //
+  ///////////////////////////////////////////////////////////
+  private function f_EPTF_Scheduler_error(in charstring pl_message)
+  runs on EPTF_Scheduler_CT
+  {
+    f_EPTF_Logging_error(true, tsp_EPTF_Scheduler_loggingComponentMask&": "&pl_message);
+    f_EPTF_Base_stopAll();
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_Scheduler_warning
+  // 
+  //  Purpose:
+  //    Function to log a warning from Scheduler feature.
+  //
+  //  Parameters:
+  //    - pl_message - *in* *charstring* - the message to log
+  //
+  //  Return Value:
+  //    -
+  //
+  //  Errors & assertions:
+  //    - 
+  //
+  //  Detailed Comments:
+  //    -
+  //
+  ///////////////////////////////////////////////////////////
+  private function f_EPTF_Scheduler_warning(in charstring pl_message)
+  runs on EPTF_Scheduler_CT
+  {
+    f_EPTF_Logging_warningV2(pl_message, v_Scheduler_loggingMaskId, {c_EPTF_Scheduler_loggingClassIdx_Warning});
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_Scheduler_debug
+  // 
+  //  Purpose:
+  //    Function to log a debug message from Scheduler feature.
+  //
+  //  Parameters:
+  //    - pl_message - *in* *charstring* - the message to log
+  //
+  //  Return Value:
+  //    -
+  //
+  //  Errors & assertions:
+  //    - 
+  //
+  //  Detailed Comments:
+  //    -
+  //
+  ///////////////////////////////////////////////////////////
+  private function f_EPTF_Scheduler_debug(in charstring pl_message)
+  runs on EPTF_Scheduler_CT
+  {
+    f_EPTF_Logging_debugV2(pl_message, v_Scheduler_loggingMaskId, {c_EPTF_Scheduler_loggingClassIdx_Debug});
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_Scheduler_debugEnabled
+  // 
+  //  Purpose:
+  //    Function to check if debug is enabled for Scheduler
+  //
+  //  Parameters:
+  //    -
+  //
+  //  Return Value:
+  //    *boolean* - true if debug enalbed
+  //
+  //  Errors & assertions:
+  //    - 
+  //
+  //  Detailed Comments:
+  //    -
+  //
+  ///////////////////////////////////////////////////////////
+  private function f_EPTF_Scheduler_debugEnabled()
+  runs on EPTF_Scheduler_CT
+  return boolean
+  {
+    return f_EPTF_Logging_isEnabled(v_Scheduler_loggingMaskId, c_EPTF_Scheduler_loggingClassIdx_Debug);
+  }
+} // group Logging
+
+
+} //group Scheduler_RunsOnFunctions
+
+///////////////////////////////////////////////////////////
+//  Group: RBTScheduler_GenericFunctions
+// 
+//  Purpose:
+//    Group of functions without "runs on EPTF_Scheduler_CT" clause
+// 
+//  Detailed comments:
+//    Alternative version of these functions are in the group <Scheduler_RunsOnFunctions>.
+//    This group is included from <EPTF_CLL_Scheduler_Functions.ttcnin>
+//    Additional functions are in the group <RBTScheduler_RunsOnFunctions>
+///////////////////////////////////////////////////////////
+group RBTScheduler_GenericFunctions {
+
+///////////////////////////////////////////////////////////
+// Function: f_EPTF_Scheduler_initEventQueue
+// 
+// Purpose:
+//   function to init an empty eventQueue
+// 
+// Parameters:
+//   pl_EventQueue - *inout* <EPTF_EventQueue>
+// 
+// Return Value:
+//   -
+// 
+///////////////////////////////////////////////////////////
+private function f_EPTF_Scheduler_initEventQueue(inout EPTF_EventQueue pl_EventQueue) {
+  pl_EventQueue.schedulerRunsFor := -1.0;
+  pl_EventQueue.order := f_EPTF_RBT_createFloatTree("Scheduler event queue");
+  pl_EventQueue.events :={}
+}
+
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Scheduler_getNewTimerVal
+// 
+//  Purpose:
+//    function to get relative time of next event 
+// 
+//  Parameters:
+//    pl_NextEventQueue - *inout* <EPTF_EventQueue> - the event queue
+// 
+//    pl_componentClock - *timer* - the component timer counting absolute time 
+// 
+//  Return Value:
+//    float
+// 
+//  Errors:
+//  - Calling the function with an empty pl_NextEventQueue makes no sense, 
+//    therefore it is an error, which will cause the execution to stop
+// 
+//  Detailed Comments:
+//    This function returns a time value (float) that is the difference between 
+//    the 
+//    - current simulation time (obtained as pl_componentClock.read()) and
+//    - the ideal schedule (absolute timepoint) of the event at the head of the 
+//      queue. 
+//
+//    If the return value is 
+//    - positive, then the event shall happen in the future, i.e., use this value
+//      as the timeout value for your scheduler timer
+//    - non-positive (zero, or negative) then event is already "due", that is,
+//      the scheduler is late and the event shall be executed immediately.
+//   
+//   Use this functions as follows:
+//  > 
+//  >var float currentTime, duration;
+//  > alt{
+//  > [] schedulerTimer.timeout {
+//  >   currentTime := clockTimer.read();
+//  >   label processevents;
+//  >   //...
+//  >   //... process the head event of the event queue....
+//  >   //...
+//  >   if (f_EPTF_Scheduler_eventQueueIsNotEmpty(myQueue)) {
+//  >        duration := f_EPTF_Scheduler_getNewTimerVal(clockTimer);
+//  >        if (duration <= 0.0) {goto processevents;}
+//  >        else {schedulerTimer.start(duration)}
+//  >   }
+//  >   repeat;
+//  >   } 
+///////////////////////////////////////////////////////////
+private function f_EPTF_Scheduler_getNewTimerVal(
+  inout EPTF_EventQueue pl_NextEventQueue, 
+  timer pl_componentClock 
+)
+return float  
+{
+  var integer qidx := f_EPTF_RBT_getItemWithSmallestKey(pl_NextEventQueue.order);
+
+  if(qidx < 0) {
+    f_EPTF_Common_error("[f_EPTF_Scheduler_getNewTimerVal] Error: getNewTimerVal: Cannot get smallest element. Tree could be empty");
+    var verdicttype tmpverdict:=error;
+    setverdict(tmpverdict);
+    stop;
+  }
+  //indexes within queue
+  var float timerval:= pl_NextEventQueue.events[qidx].when - pl_componentClock.read + pl_NextEventQueue.events[qidx].when*1e-10; // 1e-10 is needed to avoid timeout before event.when
+  if (timerval <= 0.0) {
+    if (c_EPTF_Common_debugSwitch and tsp_debug_EPTF_SchedulerFunctions) 
+    {
+      f_EPTF_Common_warning(log2str("Warning: getNewTimerVal: scheduler is behind clock, timerval:",
+        timerval, ", event:",pl_NextEventQueue.events[qidx]));
+    }
+    timerval:=tsp_EPTF_ELEMENTARY_TIMESTEP_PARAM;
+  }
+  return timerval;
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Scheduler_refreshEventTimer
+// 
+//  Purpose:
+//    function to update event timer to the next event
+// 
+//  Parameters:
+//    pl_NextEventQueue - *inout* <EPTF_EventQueue> - the event queue
+// 
+//    pl_componentClock - *float* - the "current simulated time"
+//
+//    pl_eventTimer - *float* - the event timer
+//
+//    pl_isActive - *inout* *boolean* - boolean flag to indicate if the scheduler is active
+//
+//  Return Value:
+//    -
+// 
+//  Detailed Comments:
+//    This function sets the event timer to the next scheduled event time. 
+//    If necessary (e.g., an event has been inserted before the head of the queue),
+//    then it restarts the timer. It takes a boolean flag (which will be updated as needed)
+//    that indicates the activeness of the timer (workaround for the limitations of the 
+//    timer.running operator of the TTCN-3 language)
+// 
+///////////////////////////////////////////////////////////
+private function f_EPTF_Scheduler_refreshEventTimer(
+  inout EPTF_EventQueue pl_NextEventQueue, 
+  timer pl_componentClock, 
+  timer pl_eventTimer,
+  inout boolean pl_isActive)
+{  //if queue is empty and schedulerRunsFor is not invalid, i.e.,
+   // the timer has been started previously
+  var integer head_idx := f_EPTF_RBT_getItemWithSmallestKey(pl_NextEventQueue.order);
+  if ((head_idx < 0)
+      and pl_NextEventQueue.schedulerRunsFor != -1.0
+     )
+  {
+      pl_eventTimer.stop; pl_isActive := false;
+      pl_NextEventQueue.schedulerRunsFor := -1.0;
+  } 
+    
+   //if there is any event in the queue
+  if ((head_idx >= 0)
+      //and if the timer is not running for the schedule of the current head
+      and pl_NextEventQueue.schedulerRunsFor != 
+       pl_NextEventQueue.events[head_idx].when)
+   {
+     //avoid unecessary timer restart warnings
+     if (pl_isActive) {pl_eventTimer.stop;} else {pl_isActive := true}
+     //(re-)start timer
+     pl_eventTimer.start(f_EPTF_Scheduler_getNewTimerVal(pl_NextEventQueue, pl_componentClock));
+     //remember that the timer runs for what schedule
+     pl_NextEventQueue.schedulerRunsFor := 
+     pl_NextEventQueue.events[head_idx].when
+  } 
+}
+ 
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Scheduler_schedulerIsNotLate
+// 
+//  Purpose:
+//    function to check whether the event queue is not empty, or is empty
+// 
+//  Parameters:
+//    pl_NextEventQueue - *inout* <EPTF_EventQueue> - the event queue
+// 
+//    pl_now - *float* - the "current simulated time"
+//
+//  Return Value:
+//    boolean
+// 
+//  Errors:
+//  - Calling the function with an empty pl_NextEventQueue makes no sense, 
+//    therefore it is an error, which will cause the execution to stop
+// 
+//  Detailed Comments:
+//    This function returns a true if the head event within the event queue 
+//    is scheduled later than "pl_now", itherwise returns false. 
+//    See also <f_EPTF_Scheduler_getNewTimerVal>
+//    
+// 
+///////////////////////////////////////////////////////////
+private function f_EPTF_Scheduler_schedulerIsNotLate(
+  inout EPTF_EventQueue pl_NextEventQueue, 
+  in float pl_now
+)
+return boolean  
+{
+  var integer idx := f_EPTF_RBT_getItemWithSmallestKey(pl_NextEventQueue.order);
+
+  if(idx < 0) {
+    f_EPTF_Common_error("[f_EPTF_Scheduler_schedulerIsNotLate] Error: Cannot get smallest element, maybe tree is empty");
+    var verdicttype tmpverdict:=error;
+    setverdict(tmpverdict);
+    stop;
+  }
+  
+  if (pl_NextEventQueue.events[idx].when - pl_now> 0.0) 
+  {return true} else {return false};
+} // f_EPTF_Scheduler_schedulerIsNotLate
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Scheduler_eventQueueIsNotEmpty
+// 
+//  Purpose:
+//    function to check whether the event queue is not empty, or is empty
+// 
+//  Parameters:
+//    pl_NextEventQueue - *inout* <EPTF_EventQueue> - the event queue
+// 
+//  Return Value:
+//    boolean
+// 
+//  Errors:
+//  - (none) 
+// 
+//  Detailed Comments:
+//    This function returns a true if the event queue is not empty, false otherwise.
+//    Use this function to decide whether calling  <f_EPTF_Scheduler_getNewTimerVal> () 
+//    makes sense, or not.
+//    
+// 
+///////////////////////////////////////////////////////////
+private function f_EPTF_Scheduler_eventQueueIsNotEmpty(
+  inout EPTF_EventQueue pl_NextEventQueue
+)
+return boolean  
+{
+  return not f_EPTF_Scheduler_eventQueueIsEmpty(pl_NextEventQueue);
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Scheduler_eventQueueIsEmpty
+// 
+//  Purpose:
+//    function to check whether the event queue is empty, or not empty
+// 
+//  Parameters:
+//    pl_NextEventQueue - *inout* <EPTF_EventQueue> - the event queue
+// 
+//  Return Value:
+//    boolean
+// 
+//  Errors:
+//  - (none) 
+// 
+//  Detailed Comments:
+//    This function returns a true if the event queue is  empty, false otherwise.
+//    
+// 
+///////////////////////////////////////////////////////////
+private function f_EPTF_Scheduler_eventQueueIsEmpty(
+  inout EPTF_EventQueue pl_NextEventQueue
+)
+return boolean  
+{
+  return f_EPTF_RBT_getRoot(pl_NextEventQueue.order)==-1 ;
+}
+
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Scheduler_eventIsValid
+// 
+//  Purpose:
+//    function to check whether an event is valid within the queue
+// 
+//  Parameters:
+//    pl_NextEventQueue - *in* <EPTF_EventQueue> - the event queue
+// 
+//    pl_qidx - *in* *integer* - index  of the element to be checked 
+// 
+//  Return Value:
+//    boolean - true, if valid, false otherwise
+// 
+//  Errors:
+//  - 
+///////////////////////////////////////////////////////////
+private function f_EPTF_Scheduler_eventIsValid(
+  inout EPTF_EventQueue pl_NextEventQueue, 
+  in integer pl_qidx
+) 
+return boolean 
+{
+  if (c_EPTF_Common_debugSwitch and tsp_debugVerbose_EPTF_SchedulerFunctions) {f_EPTF_Common_user(log2str("f_EPTF_Scheduler_eventIsValid:", pl_qidx));}
+
+  return f_EPTF_RBT_isItemValid(pl_NextEventQueue.order, pl_qidx);
+}//f_EPTF_Scheduler_eventIsValid
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Scheduler_eventIsInvalid
+// 
+//  Purpose:
+//    function to check whether an event is valid within the queue
+// 
+//  Parameters:
+//    pl_NextEventQueue - *in* <EPTF_EventQueue> - the event queue
+// 
+//    pl_qidx - *in* *integer* - index  of the element to be checked 
+// 
+//  Return Value:
+//    boolean - true, if invalid, false otherwise
+// 
+//  Errors:
+//  - 
+///////////////////////////////////////////////////////////
+private function f_EPTF_Scheduler_eventIsInvalid(
+  inout EPTF_EventQueue pl_NextEventQueue, 
+  in integer pl_qidx
+) 
+return boolean 
+{
+  return not f_EPTF_Scheduler_eventIsValid(pl_NextEventQueue, pl_qidx);
+}//f_EPTF_Scheduler_eventIsInvalid
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Scheduler_setSchedulerActionRoundable
+// 
+//  Purpose:
+//    function to register a new action to the action queue, 
+//    the rounding of the schedule  is switchable
+// 
+//  Parameters:
+//    pl_NextEventQueue - *inout* <EPTF_FreeBusyQueue> - the event queue
+// 
+//    pl_scheduledAction - *in* <EPTF_ScheduledAction> - action to be scheduled
+//
+//    pl_roundIt - *in boolean* - whether to round, or not the schedule
+// 
+//    pl_eventIndex - *out* *integer*  - returns the position within the queue
+//
+//  Errors:
+//    -
+// 
+//  Return Value:
+//    boolean - false if operation failed
+// 
+///////////////////////////////////////////////////////////
+private function f_EPTF_Scheduler_setSchedulerActionRoundable(
+  inout EPTF_EventQueue pl_NextEventQueue, 
+  in EPTF_ScheduledAction pl_scheduledAction,
+  in boolean pl_roundIt,
+  out integer pl_eventIndex
+) 
+return boolean
+{
+  pl_eventIndex := -1;  
+
+  if (c_EPTF_Common_debugSwitch and tsp_debug_EPTF_SchedulerFunctions and tsp_debugVerbose_EPTF_SchedulerFunctions) 
+  {
+    f_EPTF_Common_user(log2str("f_SetSchedulerActionRoundable, params: actionId:",
+      pl_scheduledAction.actionId, ", when:",pl_scheduledAction.when));
+  }
+
+  //if round timer
+  if (pl_roundIt) {
+    pl_scheduledAction.when := tsp_EPTF_ELEMENTARY_TIMESTEP_PARAM*int2float(
+      1+float2int(pl_scheduledAction.when/tsp_EPTF_ELEMENTARY_TIMESTEP_PARAM));
+    if (c_EPTF_Common_debugSwitch and tsp_debugVerbose_EPTF_SchedulerFunctions) 
+    {
+      f_EPTF_Common_user(log2str("f_SetSchedulerActionRoundable: rounded pl_scheduledAction.when to:"
+        ,pl_scheduledAction.when));
+    }
+  }
+
+  //we need to create new item
+  pl_eventIndex := f_EPTF_RBT_insertFloatItem(
+    pl_NextEventQueue.order,
+    pl_scheduledAction.when
+  );
+
+  //update the element
+  pl_NextEventQueue.events[pl_eventIndex] := pl_scheduledAction;
+
+  if (c_EPTF_Common_debugSwitch and tsp_debugVerbose_EPTF_SchedulerFunctions) {
+    f_EPTF_Common_user(log2str("Created new event at pl_eventIndex:",pl_eventIndex));
+  }				
+
+  if (c_EPTF_Common_debugSwitch and tsp_debugVerbose_EPTF_SchedulerFunctions) {
+  	f_EPTF_Common_user(log2str("New event at pl_eventIndex:",pl_eventIndex
+      ,", event data:", pl_NextEventQueue.events[pl_eventIndex]));
+  }
+	
+  return true;	
+}//SetSchedulerActionRoundable
+
+
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Scheduler_getBusyEventHeadIndex
+// 
+//  Purpose:
+//    function to get head index of busy queue
+// 
+//  Parameters:
+//    pl_NextEventQueue - *in* <EPTF_EventQueue> - the event queue
+// 
+//  Return Value:
+//    integer - found head index, -1 if empty
+// 
+//  Errors:
+//    - (none)
+// 
+//  Detailed Comments:
+//    -
+///////////////////////////////////////////////////////////
+private function f_EPTF_Scheduler_getBusyEventHeadIndex (inout EPTF_EventQueue pl_EventQueue) return integer {
+
+  return f_EPTF_RBT_getItemWithSmallestKey(pl_EventQueue.order);
+
+} //f_EPTF_Scheduler_getBusyEventHeadIndex
+
+
+} //group RBTScheduler_GenericFunctions 
+
+
+} //module

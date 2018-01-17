@@ -1,0 +1,1366 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_SIP_UserDatabase_Definitions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 522
+//  Updated:  2012-11-28
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////
+//  Module: EPTF_SIP_UserDatabase_Definitions
+//
+//  Purpose:
+//    Type definitions for user database in the EPTF SIP Application library
+//
+//  Module paramters:
+//    -
+//
+//  Module depends on:
+//    <EPTF_CLL_Common_Definitions>
+//
+//    <EPTF_CLL_Common_IndexArrayDefinitions>
+//
+//    <EPTF_CLL_LGenBase_Definitions>
+//
+//    <EPTF_CLL_FBQ_Definitions>
+//
+//    <EPTF_SIP_Common_Definitions>
+//
+//    <SIPmsg_Types>
+//
+//  Last review date:
+//    2012-11-08
+////////////////////////////////////////////////////
+
+module EPTF_SIP_UserDatabase_Definitions {
+
+import from EPTF_CLL_Common_Definitions all;
+import from EPTF_CLL_Common_IndexArrayDefinitions all;
+import from EPTF_CLL_LGenBase_Definitions all;
+import from EPTF_CLL_FBQ_Definitions all;
+
+import from EPTF_SIP_Common_Definitions all;
+
+import from SIPmsg_Types all;
+
+///////////////////////////////////////////////////////////
+// Type: fcb_EPTF_SIP_setRequest
+//
+// Purpose:
+//  Defines the call-back function type to set outgoing requests.
+//
+///////////////////////////////////////////////////////////
+type function fcb_EPTF_SIP_setRequest(inout PDU_SIP_Request pl_request, in EPTF_LGenBase_TestStepArgs pl_ptr, in EPTF_IntegerList pl_params := {}) runs on self;
+
+///////////////////////////////////////////////////////////
+// Type: fcb_EPTF_SIP_setResponse
+//
+// Purpose:
+//  Defines the call-back function type to set outgoing responses.
+//
+///////////////////////////////////////////////////////////
+type function fcb_EPTF_SIP_setResponse(inout PDU_SIP_Response pl_response, in EPTF_LGenBase_TestStepArgs pl_ptr, in EPTF_IntegerList pl_params := {}) runs on self;
+
+type function fcb_EPTF_SIP_setTemplateBody(
+  inout charstring pl_body, 
+  inout integer pl_length, 
+  in EPTF_LGenBase_TestStepArgs pl_ptr, 
+  in EPTF_IntegerList pl_params := {})
+runs on self;
+
+type record SIP_UADB
+{
+  SIP_UAData uaData
+}
+
+type record SIP_UAData
+{
+  AcceptBody_List acceptList,
+  Method_List     allowedMethods,
+  ContentCoding_List acceptEncodingList,
+  LanguageBody_List  acceptLanguageList,
+  OptionTag_List supportedList
+}
+
+///////////////////////////////////////////////////////////
+// Type: SIP_User
+//
+// Purpose:
+//    SIP behaviour context. Stores data of a SIP user.
+//
+// Elements:
+//    - iD - <SIP_FlatUserIDList> - the SIP URIs of the user
+//    - localHost - *charstring* - the local host of the user
+//    - secondaryLocalHost - *charstring* - the optional secondary local host of the user
+//    - secondaryRemoteHost - *charstring* - the optional secondary remote host of the user
+//    - mediaParams - *optional* <SIP_MediaParametersList> - media related parameters
+//    - poCData - <SIP_PoCData> - static data of a PoC session
+//    - eIdx - *integer* - reference to an LGenBase entity
+//    - proxyName - *charstring* - proxy Name
+//    - proxyPort - *integer* - proxy Port
+//    - regData - <SIP_UserRegistrationData> - registration data
+//    - authData - <SIP_AuthData> - authentication data
+//    - calledUsers - <SIP_FlatSipUrlList> - list of called users
+//    - forwardedToUsers - <SIP_FlatSipUrlList> - list of forwarded to users
+//    - additionalHosts - <SIP_FlatSipUrlList> - list of additional Hosts
+//    - route - <SIP_RouteBodyList> - route
+//    - preferredTransport - <SIP_Transport> - preferred transport protocol
+//    - secondaryTransport - <SIP_Transport> - optional secondary transport protocol
+//    - FSMs - <SIP_FSMDataDB> - stores data for each FSM beonging to the user
+//    - imsAKAData <SIP_IMSAKA_Data> - data related to IMS AKA
+//    - sessions <SIP_SessionList> - session data
+//    - currentSession *integer* - index of the current session
+//    - defaultSession *integer* - index of the default session
+//    - cSeq - *integer* - command sequence
+///////////////////////////////////////////////////////////
+type record SIP_User {
+  SIP_FlatUserIDList                iD,
+  charstring                        localHost,
+  charstring                        secondaryLocalHost optional,
+  charstring                        secondaryRemoteHost optional,
+  SIP_MediaParametersList           mediaParams,
+  SIP_PoCData                       poCData optional,
+  integer                           eIdx,
+  charstring                        proxyName,
+  integer                           proxyPort,
+  //registration data
+  SIP_UserRegistrationData          regData,
+  //authentication data
+  SIP_AuthData                      authData,
+  //other:
+  SIP_FlatSipUrlList                calledUsers,
+  SIP_FlatSipUrlList                forwardedToUsers,
+  SIP_FlatSipUrlList                additionalHosts,
+  SIP_RouteBodyList                 route,
+  SIP_Transport                     preferredTransport,
+  SIP_Transport                     secondaryTransport optional,
+  SIP_FSMDataDB                     FSMs,
+  SIP_IMSAKA_Data                   imsAKAData optional,
+  SIP_SessionList                   sessions,
+  integer                           currentSession,
+  integer                           defaultSession,
+  integer                           cSeq
+}
+
+///////////////////////////////////////////////////////////
+// Type: SIP_MediaParameters
+//
+// Purpose:
+//    SIP Media Parameters. Stores data of a SIP user.
+//
+// Elements:
+//    - localIP - *charstring* *optional* - local SIP media IP address
+//    - localPort - *integer* *optional* - local SIP media port
+//    - remoteIP - *charstring* *optional* - remote SIP media IP address
+//    - remotePort - *integer* *optional* - remote SIP media port
+///////////////////////////////////////////////////////////
+type record SIP_MediaParameters {
+  charstring localIP optional,
+  integer localPort optional,
+  charstring remoteIP optional,
+  integer remotePort optional
+}
+
+///////////////////////////////////////////////////////////
+// Constant: c_SIP_MediaParameters_empty
+//
+// Purpose:
+//   Contains initialization data of the <SIP_MediaParameters>.
+//
+///////////////////////////////////////////////////////////
+const SIP_MediaParameters c_SIP_MediaParameters_empty := {
+  localIP    := omit,
+  localPort  := omit,
+  remoteIP   := omit,
+  remotePort := omit
+}
+
+///////////////////////////////////////////////////////////
+// Type: SIP_MediaParametersList
+//
+// Purpose:
+//    Container for arbitrary number of <SIP_MediaParameters> values.
+///////////////////////////////////////////////////////////
+type record of SIP_MediaParameters SIP_MediaParametersList;
+
+///////////////////////////////////////////////////////////
+// Constant: c_SIP_UserData_init
+//
+// Purpose:
+//   Contains initialization data of the <SIP_User>.
+//
+///////////////////////////////////////////////////////////
+const SIP_User c_SIP_UserData_init := 
+{
+  iD := {},
+  localHost := "",
+  secondaryLocalHost := omit,
+  secondaryRemoteHost := omit,
+  mediaParams := {},
+  poCData := omit,
+  eIdx := -1,
+  proxyName := "",
+  proxyPort := -1,
+  regData := c_SIP_userRegistrationData_init,
+  authData := c_SIP_init_AuthData,
+  calledUsers := {},
+  forwardedToUsers := {},
+  additionalHosts := {},
+  route := {},
+  preferredTransport := UDP,
+  secondaryTransport := omit,
+  FSMs := c_SIP_initFSMDB,
+  imsAKAData := omit,
+  sessions := {},
+  currentSession := 0,
+  defaultSession := 0,
+  cSeq := -1
+}
+
+///////////////////////////////////////////////////////////
+// Type: SIP_UserDB
+//
+// Purpose:
+//    SIP user database.
+//
+// Elements:
+//    - queue - <EPTF_FreeBusyQueue> - FreeBusy queue for index management
+//    - data - <SIP_UserList> - list of users
+///////////////////////////////////////////////////////////
+type record SIP_UserDB {
+  EPTF_FreeBusyQueue  queue, 
+  SIP_UserList        data,
+  integer             hashRef
+}
+
+///////////////////////////////////////////////////////////
+// Type: AddrUnionList
+//
+// Purpose:
+//    Container for  arbitrary number of <Addr_Union> values.
+///////////////////////////////////////////////////////////
+type record of Addr_Union AddrUnionList;
+
+///////////////////////////////////////////////////////////
+// Type: SIP_UserID
+//
+// Purpose:
+//    Contains user ID information.
+//
+// Elements:
+//    - addr - <Addr_Union> - SIP URI.
+//    - domain - *charstring* - password for user authentication.
+///////////////////////////////////////////////////////////
+type record SIP_UserID{
+  Addr_Union  addr,
+  charstring  password
+}
+
+type record SIP_FlatUserID {
+  SIP_FlatSipUrl addr,
+  charstring password // not the password field of the SIP URI!
+}
+
+///////////////////////////////////////////////////////////
+// Type: SIP_UserIDList
+//
+// Purpose:
+//   Provides a container for arbitrary number of <SIP_UserID> values.
+///////////////////////////////////////////////////////////
+type record of SIP_UserID SIP_UserIDList;
+
+type record of SIP_FlatUserID SIP_FlatUserIDList;
+
+///////////////////////////////////////////////////////////
+// Type: SIP_UserList
+//
+// Purpose:
+//   Container for arbitrary number of <SIP_User> values.
+///////////////////////////////////////////////////////////
+type record of SIP_User SIP_UserList;
+
+///////////////////////////////////////////////////////////
+// Type: SIP_UserRegistrationData
+//
+// Purpose:
+//   Contains user registration data.
+//
+// Elements:
+//    - state - *integer* - registration state
+//    - expireInterval - *integer* - registration expire interval
+//    - callId - <CallidString> - the callId of the previously sent REGISTER message
+//    - cSeq - *integer* - the CSeq number of the previously sent REGISTER message
+//    - currentID - *integer* - the index of the user ID (<SIP_User>)
+//      to use in outgoing messages
+//    - registrar - *optional* <SipUrl> - contains the SIP URI of the registrar
+///////////////////////////////////////////////////////////
+type record SIP_UserRegistrationData
+{
+  integer         state,
+  boolean         authRequired,
+  integer         expireInterval,
+  CallidString    callId,
+  integer         cSeq,
+  integer         currentID,
+  SipUrl          registrar optional,
+  AddrIndex       toIdx,
+  integer         contactId
+}
+
+const SIP_UserRegistrationData c_SIP_userRegistrationData_init :=
+{
+  state := c_SIP_Reg_State_unregistered, 
+  authRequired := false, 
+  expireInterval := 0, 
+  callId := "",
+  cSeq := -1,
+  currentID := 0, 
+  registrar := omit, 
+  toIdx := {userId := 0}, 
+  contactId := 0
+}
+
+///////////////////////////////////////////////////////////
+// Type: SIP_AuthData
+//
+// Purpose:
+//   Authentication data.
+//
+// Elements:
+//    - credentials - <Credentials> - authorization credentials
+//    - challenge - <CommaParam_List> - authorization challenge
+//    - nonceCount - *integer* - nonce count
+//    - insertAuthHeaderInRequest - *boolean* - true if authentication data should be inserted into 
+//      the outgoing message
+///////////////////////////////////////////////////////////
+type record SIP_AuthData
+{
+  Credentials     credentials,
+  charstring      userName,
+  charstring      password,
+  CommaParam_List challenge,
+  integer         nonceCount,
+  boolean         insertAuthHeaderInRequest
+}
+
+const SIP_AuthData c_SIP_init_AuthData := 
+{
+  credentials := {digestResponse := {}},
+  userName := "",
+  password := "",
+  challenge := {}, 
+  nonceCount := -1,
+  insertAuthHeaderInRequest := false
+}
+
+////////////////////////////////////////////////////
+//Type: SIP_TransactionList
+//
+//Purpose:  
+//  Stores a list of transaction references in the FSM context
+////////////////////////////////////////////////////
+type EPTF_IntegerList SIP_TransactionList;
+
+////////////////////////////////////////////////////
+//Type: SIP_TransactionDB
+//
+//Purpose:  
+//  Stores transaction references to transactions belonging to the FSM.
+//
+//Elements:
+//  - data - <SIP_TransactionList> - transaction reference list
+//
+////////////////////////////////////////////////////
+type record SIP_TransactionDB
+{
+  SIP_TransactionList data
+}
+
+////////////////////////////////////////////////////
+// Constant: c_SIP_initTransactionDB
+//
+// Purpose:
+//    Contains initialization data for <SIP_TransactionDB>
+//
+///////////////////////////////////////////////////////////
+const SIP_TransactionDB c_SIP_initTransactionDB :=
+{
+  data := {}
+}
+
+///////////////////////////////////////////////////////////
+//Constant: Request types to be sent.
+//
+//Purpose:
+//  Constatns for "SIP_FSMData.requestType"
+//
+//Elements:
+//  c_SIP_RequestType_ACKnotInDialog - 
+//  c_SIP_RequestType_ACKinDialog - 
+//  c_SIP_RequestType_DEREGISTER -
+//  c_SIP_RequestType_REGISTER -
+//  c_SIP_RequestType_ForwardedACK -
+//  c_SIP_RequestType_RequestStateless -
+//
+///////////////////////////////////////////////////////////
+const integer c_SIP_RequestType_ACKnotInDialog := 0;
+const integer c_SIP_RequestType_ACKinDialog := 1;
+const integer c_SIP_RequestType_DEREGISTER := 2;
+const integer c_SIP_RequestType_REGISTER := 3;
+const integer c_SIP_RequestType_ForwardedACK := 4;
+const integer c_SIP_RequestType_RequestStateless := 5;
+
+///////////////////////////////////////////////////////////
+//Constant: Response codes to be sent.
+//
+//Perpose:
+//  Constants for "SIP_FSMData.responseCode"
+//  User defined constants should start from 1001, because normal status codes are
+//   also stored in "SIP_FSMData.responseCode"
+//
+//Elements:
+//  c_SIP_ResponseCode_ForwardedResponse -
+//  c_SIP_ResponseCode_ForwardedResponseStateless - 
+//
+///////////////////////////////////////////////////////////
+const integer c_SIP_ResponseCode_ForwardedResponse := 1001;
+const integer c_SIP_ResponseCode_ForwardedResponseStateless := 1002;
+const integer c_SIP_ResponseCode_RejectRequest := 1003;
+
+////////////////////////////////////////////////////
+//Type: SIP_RegsiterdFuncition
+//
+//Purpose:  
+//  Contains the function types that can be registered in the SIP AppLib
+//
+//Elements:
+//  - setRequest - <fcb_EPTF_SIP_setRequest> - function to manipulate the outgoing SIP
+//                                              requests
+//  - setResponse - <fcb_EPTF_SIP_setResponse> - function to manipulate the outgoing SIP
+//                                                responses
+//  - setTemplateBody - <fcb_EPTF_SIP_setTemplateBody> - function to manipulate the outgoing message. usd in case of the external templates
+////////////////////////////////////////////////////
+type union SIP_RegsiteredFuncition
+{
+  fcb_EPTF_SIP_setRequest   setRequest,
+  fcb_EPTF_SIP_setResponse  setResponse,
+  fcb_EPTF_SIP_setTemplateBody setTemplateBody
+}
+
+////////////////////////////////////////////////////
+//Type: SIP_RegsiterdFuncition
+//
+//Purpose:  
+//  Contains the function types that can be registered in the SIP AppLib
+//
+//Elements:
+//  - hashRef - *integer*- Hash index that contains the name -> index associations
+//  - data - <SIP_RegisteredFunctionData_List> - contains the list of registered functions
+//
+////////////////////////////////////////////////////
+type record SIP_RegisteredFunctionDB
+{
+  integer hashRef,
+  SIP_RegisteredFunctionData_List data
+}
+
+///////////////////////////////////////////////////////////
+// Type: SIP_RegisteredFunctionData_List
+//
+// Purpose:
+//   Container for arbitrary number of <SIP_RegisteredFunctionData> values.
+///////////////////////////////////////////////////////////
+type record of SIP_RegisteredFunctionData SIP_RegisteredFunctionData_List;
+
+////////////////////////////////////////////////////
+//Type: SIP_RegisteredFunctionData
+//
+//Purpose:  
+//  Contains data of a regsitered function.
+//
+//Elements:
+//  - name - *charstring*- the name of the function
+//  - functionRef - <SIP_RegsiterdFuncition> - the reference to the function
+//
+////////////////////////////////////////////////////
+type record SIP_RegisteredFunctionData
+{
+  charstring name,
+  SIP_RegsiteredFuncition functionRef
+}
+
+////////////////////////////////////////////////////
+//Type: SIP_CallBack4Request
+//
+//Purpose:  
+//  Contains call-back function reference to modify outgoing requests.
+//
+//Elements:
+//  - func - <fcb_EPTF_SIP_setRequest>- call-back function reference
+//  - params - <EPTF_IntegerList> - the parameters will be passed to the call-back function
+//
+////////////////////////////////////////////////////
+type record SIP_CallBack4Request
+{
+  fcb_EPTF_SIP_setRequest func,
+  EPTF_IntegerList params
+}
+
+///////////////////////////////////////////////////////////
+// Type: SIP_CallBack4Request_List
+//
+// Purpose:
+//   Container for arbitrary number of <SIP_CallBack4Request> values.
+///////////////////////////////////////////////////////////
+type record of SIP_CallBack4Request SIP_CallBack4Request_List;
+
+////////////////////////////////////////////////////
+//Type: SIP_CallBack4Response
+//
+//Purpose:  
+//  Contains call-back function reference to modify outgoing responses.
+//
+//Elements:
+//  - func - <fcb_EPTF_SIP_setRequest>- call-back function reference
+//  - params - <EPTF_IntegerList> - the parameters will be passed to the call-back function
+//
+////////////////////////////////////////////////////
+type record SIP_CallBack4Response
+{
+  fcb_EPTF_SIP_setResponse func,
+  EPTF_IntegerList params
+}
+
+///////////////////////////////////////////////////////////
+// Type: SIP_CallBack4Response_List
+//
+// Purpose:
+//   Container for arbitrary number of <SIP_CallBack4Response> values.
+///////////////////////////////////////////////////////////
+type record of SIP_CallBack4Response SIP_CallBack4Response_List;
+
+////////////////////////////////////////////////////
+//Type: SIP_CallBack4Response
+//
+//Purpose:  
+//  Contains call-back function reference to modify outgoing template bodies.
+//
+//Elements:
+//  - func - <fcb_EPTF_SIP_setTemplateBody>- call-back function reference
+//  - params - <EPTF_IntegerList> - the parameters will be passed to the call-back function
+//
+////////////////////////////////////////////////////
+type record SIP_CallBack4TemplateBody
+{
+  fcb_EPTF_SIP_setTemplateBody func,
+  EPTF_IntegerList params
+}
+
+///////////////////////////////////////////////////////////
+// Type: SIP_CallBack4TemplateBody_List
+//
+// Purpose:
+//   Container for arbitrary number of <SIP_CallBack4TemplateBody> values.
+///////////////////////////////////////////////////////////
+type record of SIP_CallBack4TemplateBody SIP_CallBack4TemplateBody_List;
+
+///////////////////////////////////////////////////////////
+// Type: SIP_RetryRequest
+//
+// Purpose:
+//   Contains the last sent request's method and call-id.
+//   It's used when an 401, 407 message needed to retry the request.
+///////////////////////////////////////////////////////////
+type record SIP_RetryRequest
+{
+  Method method optional,
+  CallidString callId,
+  integer cSeq
+}
+
+///////////////////////////////////////////////////////////
+// Constant: cg_SIP_RetryRequest
+//
+// Purpose:
+//   Contains initialization data of the <SIP_RetryRequest>.
+//
+///////////////////////////////////////////////////////////
+const SIP_RetryRequest cg_SIP_RetryRequest := {
+  method := omit,
+  callId := "",
+  cSeq := -1
+} 
+
+///////////////////////////////////////////////////////////
+// Type: SIP_FSMData
+//
+// Purpose:
+//   Defines the FSM context data.
+//
+// Elements:
+//    - distinctResponse - *boolean* - true if the different events must be reported for different methods
+//    - fsmCtx - *integer* - the FSM context index
+//    - dialogIdx - *integer* - the index of a dialog in v_db_dialog
+//    - subscriptionIdx - *integer* - the index of a subscription in v_db_subscription
+//    - subscriptionEventIdx - *integer* - the index of the event type of the subscription in v_db_subscription.<SIP_SupportedEventTypes>
+//    - subscriptionExpireTime - *integer* - the expire time set for the subsctiption in the FSM
+//    - eventId - *charstring* - the id used with the event type
+//    - notifierURI - <SIP_FlatSipUrl> - the SIP URI of the notifier
+//    - referToURI - <SIP_FlatSipUrl> - the value of the Refer-To header filed in a REFER request
+//    - publishIdx - *integer* - the index of a publication in v_db_publish
+//    - publishEventIdx - *integer* - the index of the event type of the publication in v_db_publish.<SIP_SupportedEventTypes>
+//    - publishExpireTime - *integer* - the expire time set for the publish in the FSM
+//    - UACidx - *integer* - UAC index in which the outgoing generated message is stored
+//    - UASidx - *integer* - UAS index in which the outgoing generated message is stored 
+//    - UACs - <SIP_TransactionDB> - the list of UAC trasactions belonging to the FSM
+//    - UASs - <SIP_TransactionDB> - the list of UAS trasactions belonging to the FSM
+//    - retryRequest - <SIP_RetryRequest> - the last sent request's method and call-id
+//    - requestType - *integer* - the type of outgoing request (see: "c_SIP_RequestType_*****")
+//    - request - <PDU_SIP_Request> - the outgoing request message if no UAC is associated with it
+//    - responseCode - *integer* - the outgoing response code
+//       If it's associated with UAS then it is the normal response code (1XX-6XX)
+//       If not then see "c_SIP_ResponseCode_*****"
+//    - response - <PDU_SIP_Response> - if no UAS is associated then the outgoing response message
+//    - timers - <SIP_TimerDB> - stores timer indices for the FSM
+//    - retransCache - <SIP_RetransmissionCache> - the retransmission cache belonging to the FSM
+//    - setRequest - <SIP_CallBack4Request_List> - the call-back functions to modify the outgoing request
+//    - setResponse - <SIP_CallBack4Response_List> - the call-back functions to modify the outgoing response
+//    - setTemplateBody - <SIP_CallBack4TemplateBody_List> - the call-back functions to modify the outgoing template body
+//    - extTemplateSetIdx - *integer* - external template set index for testing
+///////////////////////////////////////////////////////////
+type record SIP_FSMData
+{
+  boolean distinctResponse,
+  integer fsmCtx,
+//dialog data
+  integer dialogIdx,
+//subscription data
+  integer subscriptionIdx,
+  integer subscriptionEventIdx,
+  integer subscriptionExpireTime,
+  charstring eventId,
+  SIP_FlatSipUrl notifierURI optional,
+  SIP_FlatSipUrl referToURI optional,
+  boolean           subscriptionStateReporting,
+//publication data
+  integer publishIdx,
+  integer publishEventIdx,
+  integer publishExpireTime,
+//transaction data
+  integer UACidx,
+  integer UASidx,
+  SIP_TransactionDB UACs,
+  SIP_TransactionDB UASs,
+  SIP_RetryRequest retryRequest,
+  integer requestType,
+  PDU_SIP_Request request optional,
+  integer responseCode,
+  PDU_SIP_Response response optional,
+
+  SIP_TimerDB timers,
+  SIP_RetransmissionCache retransCache optional,
+  SIP_CallBack4Request_List setRequest,
+  SIP_CallBack4Response_List  setResponse,
+  SIP_CallBack4TemplateBody_List setTemplateBody,
+//for testing external templates
+  integer extTemplateSetIdx,
+  EPTF_IntegerList bodyElementList
+}
+
+///////////////////////////////////////////////////////////
+// Constant: c_SIP_initFSMData
+//
+// Purpose:
+//   Contains initialization data of the <SIP_FSMData>.
+//
+///////////////////////////////////////////////////////////
+const SIP_FSMData c_SIP_initFSMData :={
+  distinctResponse := false,
+  fsmCtx := -1,
+  dialogIdx := -1,
+  subscriptionIdx := -1,
+  subscriptionEventIdx := -1,
+  subscriptionExpireTime := 3600,
+  eventId := "",
+  notifierURI := omit,//cg_FlatSipUrl_base,
+  referToURI := omit,//cg_FlatSipUrl_base,
+  subscriptionStateReporting := true,
+  publishIdx := -1,
+  publishEventIdx := -1,
+  publishExpireTime := 3600,
+  UACidx := -1,
+  UASidx := -1,
+  UACs := c_SIP_initTransactionDB,
+  UASs := c_SIP_initTransactionDB,
+  retryRequest := cg_SIP_RetryRequest,
+  requestType := -1,
+  request := omit,
+  responseCode := -1,
+  response := omit,
+  timers := {-1},
+  retransCache := omit,//c_SIP_RetransCache_init,
+  setRequest := {},
+  setResponse := {},
+  setTemplateBody := {},
+  extTemplateSetIdx := -1,
+  bodyElementList := {}
+}
+
+
+///////////////////////////////////////////////////////////
+// Type: SIP_FSMDataList
+//
+// Purpose:
+//    Container for  arbitrary number of <SIP_FSMData> values.
+///////////////////////////////////////////////////////////
+type record of SIP_FSMData SIP_FSMDataList;
+
+///////////////////////////////////////////////////////////
+// Type: SIP_FSMDataDB
+//
+// Purpose:
+//    FSM context database.
+//
+// Elements:
+//    - queue - <EPTF_Common_IndexArray> - queue for index management
+//    - data - <SIP_UserList> - list of FSM context data
+///////////////////////////////////////////////////////////
+type record SIP_FSMDataDB
+{
+  EPTF_Common_IndexArray  queue,
+  SIP_FSMDataList         data
+}
+
+///////////////////////////////////////////////////////////
+// Constant: c_SIP_initFSMDB
+//
+// Purpose:
+//   Contains initialization data of the <SIP_FSMDataDB>.
+//
+///////////////////////////////////////////////////////////
+const SIP_FSMDataDB c_SIP_initFSMDB :={
+  queue := c_EPTF_emptyCommon_IndexArray,
+  data := {}
+}
+///////////////////////////////////////////////////////////
+// Type: SIP_PoCData
+//
+// Purpose:
+//   Push-to-talk Over Cellular data.
+//
+// Elements:
+//    - pocSessionID - <SipUrl>- session ID
+//    - pocSettings - <SIP_PoCSettings> - PoC settings for the user
+///////////////////////////////////////////////////////////
+type record SIP_PoCData
+{
+    SipUrl                    conferenceFactoryURI,
+    SIP_PoC_PoCSettings       pocSettings
+}
+
+////////////////////////////////////////////////////
+//Type: SIP_PoC_IncomingSessionBarring
+//
+//Purpose:
+//  Contains Incoming Session Barring settings.
+//
+//Elements:
+//  - active - *boolean* - true/false
+//
+////////////////////////////////////////////////////
+type record SIP_PoC_IncomingSessionBarring
+{
+  boolean active
+}
+
+////////////////////////////////////////////////////
+//Type: SIP_PoC_ISBSettings
+//
+//Purpose:
+//  "Incoming PoC Session Barring is a PoC Session Setting for the PoC client
+//    that conveys the PoC User's desire for the PoC service to block all
+//    incoming PoC Session request."
+//
+//Elements:
+//  - incomingSessionBarring - <SIP_PoC_IncomingSessionBarring> - settings
+//
+////////////////////////////////////////////////////
+type record SIP_PoC_ISBSettings
+{
+  SIP_PoC_IncomingSessionBarring incomingSessionBarring
+}
+
+////////////////////////////////////////////////////
+//Type: SIP_PoC_AnswerMode
+//
+//Purpose:
+//  Contains Answer Mode settings.
+//
+//Elements:
+//  - AUTOMATIC - automatic answer mode
+//  - MANUAL - manual anwer mode
+//
+////////////////////////////////////////////////////
+type enumerated SIP_PoC_AnswerMode {AUTOMATIC, MANUAL}
+
+////////////////////////////////////////////////////
+//Type: SIP_PoC_AMSettings
+//
+//Purpose:  
+//  "The current Answer Mode setting preference of the PoC User."
+//
+//Elements:
+//  - answerMode - <SIP_PoC_AnswerMode> - settings
+//
+////////////////////////////////////////////////////
+type record SIP_PoC_AMSettings
+{
+  SIP_PoC_AnswerMode answerMode
+}
+
+////////////////////////////////////////////////////
+//Type: SIP_PoC_IncomingPersonalAlertBarring
+//
+//Purpose:  
+//  Contains Icoming Instant Personal Alert Barring settings.
+//
+//Elements:
+//  - active - *boolean* - true/false
+//
+////////////////////////////////////////////////////
+type record SIP_PoC_IncomingPersonalAlertBarring
+{
+  boolean active
+}
+
+////////////////////////////////////////////////////
+//Type: SIP_PoC_IPABSettings
+//
+//Purpose:  
+//  "Incoming Instant Personal Alert Barring is a PoC Session Setting
+//    for the PoC client that conveys the PoC User's desire for block
+//    all incoming Instant Personal Alerts"
+//
+//Elements:
+//  - incomingPersonalAlertBarring - <SIP_PoC_IncomingPersonalAlertBarring> - settings
+//
+////////////////////////////////////////////////////
+type record SIP_PoC_IPABSettings
+{
+  SIP_PoC_IncomingPersonalAlertBarring incomingPersonalAlertBarring
+}
+
+////////////////////////////////////////////////////
+//Type: SIP_PoC_SimultaneousSessionsSupport
+//
+//Purpose:  
+//  Contains Simultaneous PoC Session Support settings.
+//
+//Elements:
+//  - active - *boolean* - true/false
+//
+////////////////////////////////////////////////////
+type record SIP_PoC_SimultaneousSessionsSupport
+{
+  boolean active
+}
+
+////////////////////////////////////////////////////
+//Type: SIP_PoC_SSSSettings
+//
+//Purpose:  
+//  "Simultaneous PoC Session Support is a PoC Session Setting for the PoC
+//    Client that conveys that the PoC Client is able and PoC User is willing
+//    to user Simultaneous PoC Sessions."
+//
+//Elements:
+// -  simultaneousSessionsSupport - <SIP_PoC_SimultaneousSessionsSupport> - settings
+//
+////////////////////////////////////////////////////
+type record SIP_PoC_SSSSettings
+{
+  SIP_PoC_SimultaneousSessionsSupport simultaneousSessionsSupport
+}
+
+/*type record SIP_PoC_MMInviteSupport
+{
+  boolean active
+}
+
+type record SIP_PoC_MMSettings
+{
+  SIP_PoC_MMInviteSupport mmInviteSupport
+}*/
+
+////////////////////////////////////////////////////
+//Type: SIP_PoC_PoCSettings
+//
+//Purpose:  
+//
+//Elements:
+//  - isbSettings - <SIP_PoC_ISBSettings> - Incoming Session Barring settings
+//  - amSettings - <SIP_PoC_AMSettings> - Answer Mode settings
+//  - ipabSettings - <SIP_PoC_IPABSettings> - Icoming Instant Personal Alert Barring settings
+//  - sssSettings - <SIP_PoC_SSSSettings> - Simultaneous PoC Session Support settings
+//
+////////////////////////////////////////////////////
+type record SIP_PoC_PoCSettings
+{
+  SIP_PoC_ISBSettings  isbSettings,
+  SIP_PoC_AMSettings   amSettings,
+  SIP_PoC_IPABSettings ipabSettings,
+  SIP_PoC_SSSSettings  sssSettings/*,
+  SIP_PoC_MMSettings   mmSettings*/
+}
+
+///////////////////////////////////////////////////////////
+// Constant: c_SIP_portNumberSIP
+//
+// Purpose:
+//   Index of the SIP port number in <SIP_User>.portNumbers.
+//
+///////////////////////////////////////////////////////////
+const integer c_SIP_portNumberSIP := 0;
+
+const integer c_SIP_portNumberProtected := 1;
+
+///////////////////////////////////////////////////////////
+//Constant: Registration states.
+//
+//Elements:
+//  c_SIP_Reg_State_unregistered - 
+//  c_SIP_Reg_State_registered - 
+//  c_SIP_Reg_State_registereing -
+//  c_SIP_Reg_State_reregistering -
+//  c_SIP_Reg_State_deregistering -
+///////////////////////////////////////////////////////////
+const integer c_SIP_Reg_State_unregistered := 0;
+const integer c_SIP_Reg_State_registered := 1;
+const integer c_SIP_Reg_State_registering := 2;
+const integer c_SIP_Reg_State_reregistering := 3;
+const integer c_SIP_Reg_State_deregistering := 4;
+
+///////////////////////////////////////////////////////////
+//Constant: Timer indices.
+//
+//Elements:
+//  c_SIP_TimerIdxFSM_Retransmission - 
+///////////////////////////////////////////////////////////
+const integer c_SIP_TimerIdxFSM_Retransmission := 0;
+
+///////////////////////////////////////////////////////////
+//Constant: Action indices.
+//
+//Elements:
+//  c_AIdx_FSMContextDataUserIdx - 
+//  c_AIdx_FSMContextDataIdx - 
+//  c_AIdx_FSMContextDataTimerId - 
+///////////////////////////////////////////////////////////
+const integer c_AIdx_FSMContextDataUserIdx := 0;
+const integer c_AIdx_FSMContextDataIdx := 1;
+const integer c_AIdx_FSMContextDataTimerId := 2;
+const integer c_AIdx_FSMContextSessionIdx := 3;
+
+////////////////////////////////////////////////////
+//Type: SIP_MessageCache
+//
+//Purpose:
+//  Stores a SIP message.
+//
+//Elements:
+//  - sipMessageRaw - *octetstring* - the encoded SIP message
+//  - sipMessage - <PDU_SIP> - the SIP message without encode
+//  - transactionId - *charstring*
+//
+////////////////////////////////////////////////////
+type record SIP_MessageCache
+{
+  octetstring    sipMessageRaw,
+  PDU_SIP        sipMessage,
+  charstring     transactionId,
+  integer        trIdx
+}
+
+////////////////////////////////////////////////////
+//Type: SIP_RetransmissionCache
+//
+//Purpose:
+//  Stores the retransmission data and the SIP message to retransmit.
+//
+//Elements:
+//  - messageCache - <SIP_MessageCache> - the SIP message to retransmit
+//  - retransmissionTime - *float* - the actual retransmission interval
+//  - maxRetransTime - *float* - the ratransmission interval will not be greater then maxRetransTime
+//  - totalRetransTime - *float*
+//  - retransTimeout - *float*
+//  - timedOut - *boolean*
+//  - timerIdx - *integer*
+//
+////////////////////////////////////////////////////
+type record SIP_RetransmissionCache
+{
+  SIP_MessageCache  messageCache,
+  float             retransmissionTime,
+  float             maxRetransTime,
+  float             totalRetransTime,
+  float             retransTimeout,
+  boolean           timedOut,
+  integer           timerIdx
+}
+
+///////////////////////////////////////////////////////////
+// Constant: c_SIP_RetransCache_init
+//
+// Purpose:
+//   Contains initialization data of the <SIP_RetransmissionCache>.
+//
+///////////////////////////////////////////////////////////
+const SIP_RetransmissionCache c_SIP_RetransCache_init :=
+{
+  messageCache := {
+    sipMessageRaw := ''O, 
+    sipMessage := {raw := ""}, 
+    transactionId := "",
+    trIdx := -1
+  },
+  retransmissionTime := 0.0,
+  maxRetransTime := 0.0,
+  totalRetransTime := 0.0,
+  retransTimeout := 0.0,
+  timedOut := false,
+  timerIdx := -1
+}
+
+
+////////////////////////////////////////////////////
+//Type: SIP_Session
+//
+//Purpose:
+//  Stores the data of a session.
+//
+//Elements:
+//  - terminate - *boolean* - true if the session should be terminated if all of the transactions are terminated
+//  - nofTransactions - *integer* - the number of transactions belonging to the session
+//  - sessionId - *integer* - the identifier given to the session on creation
+//  - port_uc - *integer* - the client port of the UE
+//  - port_us - *integer* - the server port of the UE
+//  - port_pc - *integer* - the cilent port of the P-CSCF
+//  - port_ps - *integer* - the server port of the P-CSCF
+//  - secureSessionData - <SIP_SecureSessionData> - secure session data
+//
+////////////////////////////////////////////////////
+type record SIP_Session
+{
+  boolean terminate,
+  integer nofTransactions,
+  integer sessionId,
+  integer       port_uc,
+  integer       port_us,
+  integer       port_pc,
+  integer       port_ps,
+  SIP_SecureSessionData secureSessionData optional
+}
+
+////////////////////////////////////////////////////
+//Type: SIP_SecureSessionData
+//
+//Purpose:
+//  Stores the data of a secure session.
+//
+//Elements:
+//  - CK - *octetstring* - cipher key
+//  - IK - *octetstring* - integrity key
+//  - RES - *octetstring* - RES sent by the P-CSCF
+//  - nonce - *octetstring* - the decoded nonce sent by the P-CSCF
+//  - SAs - <SIP_IMSAKA_SAs> - the security asssociations if the session is secure
+//
+////////////////////////////////////////////////////
+type record SIP_SecureSessionData
+{
+  octetstring   CK,
+  octetstring   IK,
+  octetstring   RES,
+  octetstring   nonce,
+  SIP_IMSAKA_SAs  SAs
+}
+
+///////////////////////////////////////////////////////////
+// Type: SIP_SessionList
+//
+// Purpose:
+//    Container for  arbitrary number of <SIP_Session> values.
+///////////////////////////////////////////////////////////
+type record of SIP_Session SIP_SessionList;
+
+///////////////////////////////////////////////////////////
+// Constant: c_SIP_Session_init
+//
+// Purpose:
+//   Contains initialization data of the <SIP_Session>.
+//
+///////////////////////////////////////////////////////////
+const SIP_Session c_SIP_Session_init :=
+{
+  terminate := true,
+  nofTransactions := 0,
+  sessionId := -1,
+  port_uc := -1,
+  port_us := -1,
+  port_pc := -1,
+  port_ps := -1,
+  secureSessionData := omit
+}
+
+const SIP_SecureSessionData c_SIP_SecureSessionData_init := {
+  CK := ''O,
+  IK := ''O,
+  RES := ''O,
+  nonce := ''O,
+  SAs := c_SIP_IMSAKA_SAs_init
+}
+
+type record SIP_UEParams
+{
+  integer port_c,
+  integer port_s,
+  integer spi_c,
+  integer spi_s
+}
+
+const SIP_UEParams c_SIP_initUEParams :={
+  port_c := -1,
+  port_s := -1,
+  spi_c := -1,
+  spi_s := -1
+}
+
+type charstring SIP_IMSAKA_algorithm;
+type record of SIP_IMSAKA_algorithm SIP_IMSAKA_algorithmList;
+
+type charstring SIP_IMSAKA_protocol;
+
+type record SIP_IMSAKA_SA
+{
+  integer spi,
+  integer lifeTime
+}
+
+///////////////////////////////////////////////////////////
+// Constant: c_SIP_IMSAKA_SA_init
+//
+// Purpose:
+//   Contains initialization data of the <SIP_IMSAKA_SA>.
+//
+///////////////////////////////////////////////////////////
+const SIP_IMSAKA_SA c_SIP_IMSAKA_SA_init :=
+{
+  spi := -1,
+  lifeTime := -1
+}
+
+////////////////////////////////////////////////////
+//Type: SIP_IMSAKA_SAs
+//
+//Purpose:
+//  Contains the SAs of the secured session.
+//
+//Elements:
+//  - uc_ps - <SIP_IMSAKA_SA> - the SA for the uc -> ps connection
+//  - us_pc - *optional* <SIP_IMSAKA_SA> - the SA for the us -> pc connection
+//  - pc_us - <SIP_IMSAKA_SA> - the SA for the pc -> us connection
+//  - ps_uc - *optional* <SIP_IMSAKA_SA> - the SA for the ps -> uc connection
+//
+////////////////////////////////////////////////////
+type record SIP_IMSAKA_SAs
+{
+  SIP_IMSAKA_SA uc_ps,
+  SIP_IMSAKA_SA us_pc, //used only in case of TCP
+  SIP_IMSAKA_SA ps_uc, //used only in case of TCP
+  SIP_IMSAKA_SA pc_us
+}
+
+///////////////////////////////////////////////////////////
+// Constant: c_SIP_IMSAKA_SAs_init
+//
+// Purpose:
+//   Contains initialization data of the <SIP_IMSAKA_SAs>.
+//
+///////////////////////////////////////////////////////////
+const SIP_IMSAKA_SAs c_SIP_IMSAKA_SAs_init :=
+{
+  uc_ps := c_SIP_IMSAKA_SA_init,
+  us_pc := c_SIP_IMSAKA_SA_init,
+  ps_uc := c_SIP_IMSAKA_SA_init,
+  pc_us := c_SIP_IMSAKA_SA_init
+}
+
+////////////////////////////////////////////////////
+//Type: SIP_IMSAKA_Data
+//
+//Purpose:
+//  Contains data related to IMS AKA
+//
+//Elements:
+//  - privateUsername - *charstring*
+//  - longtermKey - *octetstring*
+//  - OP - *octetstring*
+//  - supportedALGs - <SIP_IMSAKA_algorithmList>
+//  - supportedEALGs - <SIP_IMSAKA_algorithmList>
+//  - selectedALG - <SIP_IMSAKA_algorithm>
+//  - selectedEALG - <SIP_IMSAKA_algorithm>
+//  - proto - <SIP_IMSAKA_protocol>
+//  - mode - *charstring*
+//  - clientPorts - <EPTF_IntegerList>
+//  - currentUc - *integer*
+//  - negotiatedSession - *integer*
+//  - protectedPortNumber - *integer*
+//  - negotiatedSessionParams - <SIP_UEParams>
+//  - oldSession - *integer*
+//  - isValidSecSeverData - *boolean*
+//  - securityServerData - <Security_mechanism_list>
+//  - genSecClientData - *boolean*
+//  - securityClientDat - <Security_mechanism_list>
+//
+////////////////////////////////////////////////////
+type record SIP_IMSAKA_Data
+{
+  charstring                privateUsername,
+  octetstring               longtermKey,
+  octetstring               OP,
+  SIP_IMSAKA_algorithmList  supportedALGs,
+  SIP_IMSAKA_algorithmList  supportedEALGs,
+  SIP_IMSAKA_algorithm      selectedALG,
+  SIP_IMSAKA_algorithm      selectedEALG,
+  SIP_IMSAKA_protocol       proto,
+  charstring                mode,
+  EPTF_IntegerList          clientPorts,
+  integer                   currentUc,
+  integer                   negotiatedSession,
+  integer                   protectedPortNumber,
+  SIP_UEParams              negotiatedSessionParams,
+  integer                   oldSession,
+  boolean                   isValidSecSeverData,
+  Security_mechanism_list   securityServerData,
+  boolean                   genSecClientData,
+  Security_mechanism_list   securityClientData
+}
+
+///////////////////////////////////////////////////////////
+// Constant: c_SIP_IMSAKA_Data_init
+//
+// Purpose:
+//   Contains initialization data of the <SIP_IMSAKA_Data>.
+//
+///////////////////////////////////////////////////////////
+const SIP_IMSAKA_Data c_SIP_IMSAKA_Data_init :=
+{
+  privateUsername := "",
+  longtermKey := ''O,
+  OP := ''O,
+  supportedALGs := {},
+  supportedEALGs := {},
+  selectedALG := "",
+  selectedEALG := "",
+  proto := "",
+  mode := "",
+  clientPorts := {},
+  currentUc := 0,
+  negotiatedSession := -1,
+  protectedPortNumber := -1,
+  negotiatedSessionParams := c_SIP_initUEParams,
+  oldSession := -1,
+  isValidSecSeverData := false,
+  securityServerData := {},
+  genSecClientData := true,
+  securityClientData := {}
+}
+
+////////////////////////////////////////////////////
+//Type: SIP_IPSec_Params
+//
+//Purpose:
+//  Contains the parameters of an IPSec session.
+//
+//Elements:
+//  - CK - *octetstring* - chiper key
+//  - IK - *octetstring* - integrity key
+//  - uc_ps - <SIP_SA> - the SA for the uc -> ps connection
+//  - us_pc - *optional* <SIP_SA> - the SA for the us -> pc connection
+//  - pc_us - <SIP_SA> - the SA for the pc -> us connection
+//  - ps_uc - *optional* <SIP_SA> - the SA for the ps -> uc connection
+//
+////////////////////////////////////////////////////
+type record SIP_IPSec_Params
+{
+  octetstring CK,
+  octetstring IK,
+  SIP_SA          uc_ps,
+  SIP_SA          us_pc optional,
+  SIP_SA          pc_us,
+  SIP_SA          ps_uc optional
+}
+
+///////////////////////////////////////////////////////////
+// Constant: c_SIP_initSIPIPSecParams
+//
+// Purpose:
+//   Contains initialization data of the <SIP_IPSec_Params>.
+//
+///////////////////////////////////////////////////////////
+const SIP_IPSec_Params c_SIP_initSIPIPSecParams :=
+{
+  CK := ''O,
+  IK := ''O,
+  uc_ps := c_SIP_initSIPSA,
+  us_pc := omit,
+  pc_us := c_SIP_initSIPSA,
+  ps_uc := omit
+}
+
+////////////////////////////////////////////////////
+//Type: SIP_SA
+//
+//Purpose:
+//  Describes a security association (SA).
+//
+//Elements:
+//  - port_s - *integer* - source port
+//  - port_d - *integer* - destination port
+//  - spi - *integer* - Security Parameter Index (SPI)
+//  - lifeTime - *integer* - the lifetime of the SA
+//
+////////////////////////////////////////////////////
+type record SIP_SA
+{
+  integer port_s, //source port
+  integer port_d, //destination port
+  integer spi,
+  integer lifeTime
+}
+
+///////////////////////////////////////////////////////////
+// Constant: c_SIP_initSIPSA
+//
+// Purpose:
+//   Contains initialization data of the <SIP_SA>.
+//
+///////////////////////////////////////////////////////////
+const SIP_SA c_SIP_initSIPSA :=
+{
+  port_s := -1,
+  port_d := -1,
+  spi := -1,
+  lifeTime := -1
+}
+
+}//end of module
+with {
+extension "version <RnXnn>"
+}
+

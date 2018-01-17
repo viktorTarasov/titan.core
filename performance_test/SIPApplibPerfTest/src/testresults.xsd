@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+ Copyright (c) 2000-2018 Ericsson Telecom AB
+ All rights reserved. This program and the accompanying materials
+ are made available under the terms of the Eclipse Public License v1.0
+ which accompanies this distribution, and is available at
+ http://www.eclipse.org/legal/epl-v10.html
+
+ Contributors:
+  Balasko, Jeno
+-->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+            xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+	        xmlns="http://ttcn.ericsson.se/TitanSim/Perftest"
+	        targetNamespace="http://ttcn.ericsson.se/TitanSim/Perftest"
+	        attributeFormDefault="unqualified"
+	        elementFormDefault="qualified"
+>
+  
+  <xs:element name="testresults">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="testresult" type="testresult" minOccurs="0" maxOccurs="unbounded" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+    <xs:complexType name="testresult">
+      <xs:sequence>
+        <xs:element name="name" type="xs:string" />
+        <xs:element name="purpose" type="xs:string" />
+        <xs:element name="start_time" type="xs:string" />
+        <xs:element name="end_time" type="xs:string" />
+        <xs:element name="environment" type="environment_type"/>
+        <xs:element name="parameter" type="data_type" minOccurs="0" maxOccurs="unbounded"/>
+        <xs:element name="result" type="data_type" minOccurs="0" maxOccurs="unbounded"/>
+        <!--<xs:element name="parameters" type="data_type_list" />
+        <xs:element name="result" type="data_type_list2" />-->
+      </xs:sequence>
+    </xs:complexType>
+  
+  
+<!--   <xs:complexType name="data_type_list">
+    <xs:sequence >
+      <xs:element name="parameter" type="data_type" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+  
+   <xs:complexType name="data_type_list2">
+    <xs:sequence >
+      <xs:element name="data" type="data_type2" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+  
+  <xs:complexType name="data_type2">
+    <xs:sequence>
+      <xs:element name="name" type="xs:string" />
+      <xs:element name="value" type="xs:string" />
+      <xs:element name="unit" type="xs:string" />
+    </xs:sequence>
+  </xs:complexType>-->
+  
+  <xs:complexType name="data_type">
+    <xs:simpleContent>
+    <xs:extension  base="xs:string">
+      <xs:attribute name="name" type="xs:string" use="required" />
+      <xs:attribute name="unit" type="xs:string" use="required"  />
+   </xs:extension>
+   </xs:simpleContent>
+  </xs:complexType>
+  
+  <xs:complexType name="environment_type">
+    <xs:sequence>
+      <xs:element name="user" type="xs:string" />
+      <xs:element name="host" type="xs:string" />
+      <xs:element name="kernel" type="xs:string" />
+      <xs:element name="gcc_version" type="xs:string" />
+      <xs:element name="titan_version" type="xs:string" />
+      <xs:element name="cpu_info" type="xs:string" />
+      <xs:element name="memory_info" type="xs:string" />
+    </xs:sequence>
+  </xs:complexType>
+
+</xs:schema>

@@ -1,0 +1,211 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_SIP_Publish_Definitions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 522
+//  Updated:  2012-11-28
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////
+//  Module: EPTF_SIP_Publish_Definitions
+//
+//  Purpose:
+//    Type definitions and constants for SIP Event State Publication (RFC 3903)
+//
+//  Module paramters:
+//
+//  Module depends on:  
+//    <EPTF_CLL_FBQ_Definitions>
+//
+//    <EPTF_CLL_Common_Definitions>
+//
+//    <EPTF_SIP_Common_Definitions>
+//
+//    <EPTF_SIP_Templates>
+//
+//    <SIPmsg_Types>
+//
+//  Last review date:  
+//    2009-04-20
+////////////////////////////////////////////////////
+module EPTF_SIP_Publish_Definitions {
+
+import from EPTF_CLL_FBQ_Definitions all;
+import from EPTF_CLL_Common_Definitions all;
+
+import from EPTF_SIP_Common_Definitions all;
+//import from EPTF_SIP_Templates all;
+
+import from SIPmsg_Types all;
+
+////////////////////////////////////////////////////
+//Type: SIP_PublishData
+//
+//Purpose:  
+//
+//Elements:
+//  - state - *integer* - state of the publication (constants are defined later)
+//  - userIdx - *integer* - reference to a v_db_users element
+//  - FSMIdx - *integer* - the FSM data index within the user
+//  - eventType - <Event_type> - the event type
+//  - eTag - *charstring* - SIP entity tag of the publication
+//  - expireInterval - *integer* - the expire interval of the publication
+//  - eventState - *charstring* - the published event state
+//  - escURI - <AddrIndex> - the index to the URI of the Event State Compositor
+//  - creationtime - *float* - the time of the creation (see: relative component clock)
+//
+////////////////////////////////////////////////////
+type record SIP_PublishData {
+  integer                     state,
+  integer                     userIdx,
+  integer                     FSMIdx,
+  Event_type                  eventType,
+  charstring                  eTag,
+  integer                     expireInterval,
+  charstring                  eventState,
+  AddrIndex                   escURI,
+  float                       creationtime
+}
+
+///////////////////////////////////////////////////////////
+// Type: SIP_PublishDataList
+//
+// Purpose:
+//   Provides a container for <SIP_PublishData>.
+///////////////////////////////////////////////////////////
+type record of SIP_PublishData SIP_PublishDataList;
+
+/////////////////////////////////////////////////////////////////////////
+//
+//  Type: SIP_PublishDatabase
+//
+//  Purpose:
+//    SIP publication database.
+//
+//  Elements:
+//    - queue - <EPTF_FreeBusyQueue> - FreeBusy queue for index management
+//    - data - <SIP_PublishDataList> - publication list
+//    - supportedEventTypes - <SIP_SupportedEventTypes> - the supported event type list
+//
+/////////////////////////////////////////////////////////////////////////
+type record SIP_PublishDatabase {
+  EPTF_FreeBusyQueue          queue,
+  SIP_PublishDataList         data,
+  SIP_SupportedEventTypes     supportedEventTypes
+}
+
+///////////////////////////////////////////////////////////
+// Type: SIP_PublishIdxList
+//
+// Purpose:
+//   Provides a container for publish indexes.
+///////////////////////////////////////////////////////////
+type EPTF_IntegerList SIP_PublishIdxList;
+
+/////////////////////////////////////////////////////////////////////////
+//
+//  Type: SIP_PublishedData
+//
+//  Purpose:
+//
+//  Elements:
+//    - publishIdxList - <EPTF_IntegerList> - list of publish db indexes which are related to the given Request-URI
+//
+/////////////////////////////////////////////////////////////////////////
+type record SIP_PublishedData {
+  SIP_PublishIdxList publishIdxList
+}
+
+///////////////////////////////////////////////////////////
+// Type: SIP_PublishedDataList
+//
+// Purpose:
+//   Provides a container for <SIP_PublishedData>.
+///////////////////////////////////////////////////////////
+type record of SIP_PublishedData SIP_PublishedDataList;
+
+/////////////////////////////////////////////////////////////////////////
+//
+//  Type: SIP_PublishedDatabase
+//
+//  Purpose:
+//    SIP publication database to store the publish db indexes foreach Request-URI.
+//
+//  Elements:
+//    - hashRef - *integer* - hashmap reference for Request-URI -> database index
+//    - queue - <EPTF_FreeBusyQueue> - FreeBusy queue for index management
+//    - data - <SIP_PublishDataList> - publication data list
+//
+/////////////////////////////////////////////////////////////////////////
+type record SIP_PublishedDatabase {
+  integer                 hashRef,
+  EPTF_FreeBusyQueue      queue,
+  SIP_PublishedDataList   data
+}
+
+///////////////////////////////////////////////////////////
+// Constant: c_SIP_PublishData_init
+//
+// Purpose:
+//   Contains initialization data for <SIP_PublishData>
+//
+///////////////////////////////////////////////////////////
+const SIP_PublishData c_SIP_PublishData_init := {
+  state := c_SIP_Publish_State_unknown,
+  userIdx := -1,
+  FSMIdx := -1,
+  eventType := { event_package := "",event_templates := omit},
+  eTag := "",
+  expireInterval := 3600,
+  eventState := "",
+  escURI := { userId := 0},
+  creationtime := 0.0
+}
+
+///////////////////////////////////////////////////////////
+// Constant: c_SIP_PublishedData_init
+//
+// Purpose:
+//   Contains initialization data for <SIP_PublishedData>
+//
+///////////////////////////////////////////////////////////
+const SIP_PublishedData c_SIP_PublishedData_init := {
+  publishIdxList := {}
+}
+
+///////////////////////////////////////////////////////////
+// Constant: Publication states
+//
+// Elements:
+//  c_SIP_Publish_State_unknown - 
+//  c_SIP_Publish_State_active - 
+//  c_SIP_Publish_State_terminated - 
+//  c_SIP_Publish_State_expired - 
+//  c_SIP_Publish_State_failed - 
+///////////////////////////////////////////////////////////
+const integer c_SIP_Publish_State_unknown := 0;
+const integer c_SIP_Publish_State_active := 1;
+const integer c_SIP_Publish_State_terminated := 2;
+const integer c_SIP_Publish_State_expired := 3;
+const integer c_SIP_Publish_State_failed := 4;
+
+///////////////////////////////////////////////////////////
+// Constant: c_SIP_Publish_hashMapName_RequestURI2Idx
+//
+// Purpose:
+//   Constant name of the hashmap used for Request-URI -> published db index
+//
+///////////////////////////////////////////////////////////
+const charstring c_SIP_Publish_hashMapName_RequestURI2Idx := "SIP_Publish_HashMap_RequestURI2Idx";
+
+}//end of module
+with {
+extension "version <RnXnn>"
+}
+

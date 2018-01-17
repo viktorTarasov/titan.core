@@ -1,0 +1,166 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_CLL_LGenBaseStats_Functions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 512
+//  Updated:  2008-11-11
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////
+//  Module: EPTF_CLL_LGenBaseStats_Functions
+// 
+//  Purpose:
+//    This module provides functions for TitanSim load generator statistics
+// 
+//  Module Parameters:
+//    -
+// 
+//  Module depends on:
+//    <EPTF_CLL_LGenBase_Functions>
+//    <EPTF_CLL_LGenBaseStats_Definitions>
+//    <EPTF_CLL_LGenBase_Functions>
+//    <EPTF_CLL_LGenBase_TemplateDefinitions>
+//	  <EPTF_CLL_LGenBase_ConfigFunctions>
+//    <EPTF_CLL_StatHandler_Definitions>
+// 
+//  Current Owner:    ELSZSKU
+// 
+//  Last Review Date:
+//    2008-02-26
+// 
+//  Detailed Comments:
+//    The component <EPTF_LGenBaseStats_CT> was merged into the component
+//    <EPTF_LGenBase_CT>. Since hte module contained almost only private functions,
+//    those functions were moved to the modules of the LGenBase. The remaining 
+//    functions are here anly because of backward compatibility. 
+///////////////////////////////////////////////////////////
+module EPTF_CLL_LGenBaseStats_Functions
+
+// identified_organization(127) ericsson(5) testing(0)
+// <put further nodes here if needed>}]
+{
+//=========================================================================
+// Import Part
+//=========================================================================
+import from EPTF_CLL_LGenBaseStats_Definitions all;
+import from EPTF_CLL_LGenBase_Functions all;
+import from EPTF_CLL_LGenBase_TemplateDefinitions all;
+import from EPTF_CLL_StatHandler_Definitions all;
+import from EPTF_CLL_LGenBase_Definitions all;
+import from EPTF_CLL_LGenBase_ConfigFunctions all;
+
+///////////////////////////////////////////////////////////
+//  Group: PublicFunctions
+// 
+//  Purpose:
+//    The public functions of the EPTF_LGenBaseStats feature
+//
+///////////////////////////////////////////////////////////
+group PublicFunctions {
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_LGenBaseStats_init
+  // 
+  //  Purpose:
+  //    Init EPTF_LGenBase feature since the component 
+  //    <EPTF_LGenBaseStats_CT> was merged into the component
+  //    <EPTF_LGenBase_CT>
+  //
+  //  Parameters:
+  //    - pl_selfName - *in charstring* - the name of the component
+  //    - entityNamePrefix - *in charstring* -  the name prefix for the entities
+  //
+  //  Return Value:
+  //    -
+  //
+  //  Detailed Comments:
+  //    Wrapper for the <f_EPTF_LGenBase_init>
+  //
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_LGenBaseStats_init(
+    in charstring pl_selfName,
+    in charstring pl_entityNamePrefix := "",
+    in EPTF_LGenBase_ExtTemplLoadList pl_extTemplLoadList := tsp_LGenBase_extTemplLoadList,
+    in EPTF_StatHandler_CT pl_statHandlerCompRef := null)
+  runs on EPTF_LGenBaseStats_CT {
+    f_EPTF_LGenBase_init(
+      pl_selfName, 
+      0, 
+      pl_entityNamePrefix, 
+      tsp_LGenBase_BustCalcMethod,
+      pl_extTemplLoadList,
+      pl_statHandlerCompRef);
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_LGenBaseStats_createVars
+  // 
+  //  Purpose:
+  //    Obsolete function to create variables. Now the variables are created automatically, this function does nothing.
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_LGenBaseStats_createVars()
+  runs on EPTF_LGenBaseStats_CT {
+  }
+
+    ///////////////////////////////////////////////////////////
+    //  Function: f_EPTF_LGenBaseStats_getNamePrefix
+    // 
+    //  Purpose:
+    //    Returns the prefix for the specified TC
+    ///////////////////////////////////////////////////////////
+    public function f_EPTF_LGenBaseStats_getNamePrefix(
+      in charstring pl_eGrpName,
+      in charstring pl_scName,
+      in charstring pl_tcName
+    ) return charstring {
+      return f_EPTF_LGenBase_getNamePrefix(pl_eGrpName,pl_scName,pl_tcName);
+    }
+    
+    ///////////////////////////////////////////////////////////
+    //  Function: f_EPTF_LGenBaseStats_getScNamePrefix
+    // 
+    //  Purpose:
+    //    Returns the prefix for the specified scenario
+    ///////////////////////////////////////////////////////////
+    public function f_EPTF_LGenBaseStats_getScNamePrefix(
+      in charstring pl_eGrpName,
+      in charstring pl_scName
+    )
+    return charstring{
+      return f_EPTF_LGenBase_getScNamePrefix(pl_eGrpName,pl_scName)
+    }
+    
+    ///////////////////////////////////////////////////////////
+    //  Function: f_EPTF_LGenBaseStats_eGrpName
+    // 
+    //  Purpose:
+    //    Returns the name of an entity group
+    ///////////////////////////////////////////////////////////
+    public function f_EPTF_LGenBaseStats_eGrpName(in integer pl_eGrpIdx)
+    runs on EPTF_LGenBase_Private_CT
+    return charstring{
+      return f_EPTF_LGenBase_entityGroupName(pl_eGrpIdx);
+    }
+    
+    ///////////////////////////////////////////////////////////
+    //  Function: f_EPTF_LGenBaseStats_scenarioName
+    // 
+    //  Purpose:
+    //    Returns the name of a scenario
+    ///////////////////////////////////////////////////////////
+    public function f_EPTF_LGenBaseStats_scenarioName(
+      in integer pl_eGrpIdx,
+      in integer pl_scIdx
+    )
+    runs on EPTF_LGenBase_Private_CT
+    return charstring{
+      return f_EPTF_LGenBase_scenarioName(pl_eGrpIdx, pl_scIdx);
+    }
+  
+}//PublicFunctions
+}  // end of module

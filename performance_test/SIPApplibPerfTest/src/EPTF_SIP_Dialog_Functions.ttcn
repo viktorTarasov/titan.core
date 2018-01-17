@@ -1,0 +1,656 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_SIP_Dialog_Functions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 522
+//  Updated:  2012-11-28
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////
+//  Module: EPTF_SIP_Dialog_Functions
+// 
+//  Purpose:
+//    Functions for Dialogs in the SIP AppLib.
+// 
+//  Module depends on:  
+//    <EPTF_CLL_Common_Definitions>
+//
+//    <EPTF_CLL_Logging_Definitions>
+//
+//    <EPTF_CLL_Logging_Functions>
+//
+//    <EPTF_CLL_FBQ_Functions>
+//
+//    <EPTF_CLL_RBTScheduler_Functions>
+//
+//    <EPTF_CLL_Scheduler_Definitions>
+//
+//    <EPTF_CLL_HashMapStr2Int_Functions>
+//
+//    <EPTF_SIP_Common_Definitions>
+//
+//    <EPTF_SIP_Common_Functions>
+//
+//    <EPTF_SIP_Dialog_Definitions>
+//
+//    <EPTF_SIP_EventNotification_Definitions>
+//
+//    <EPTF_SIP_LGen_Definitions>
+//
+//    <EPTF_SIP_Templates>
+//
+//    <EPTF_SIP_Transaction_Functions>
+//
+//    <SIPmsg_Types>
+//
+//  Last review date:  
+//   2010-05-25
+////////////////////////////////////////////////////
+module EPTF_SIP_Dialog_Functions {
+
+import from EPTF_CLL_Common_Definitions all;
+//import from EPTF_CLL_Logging_Definitions all;
+//import from EPTF_CLL_Logging_Functions all;
+import from EPTF_CLL_FBQ_Functions all;
+//import from EPTF_CLL_RBTScheduler_Functions all;
+//import from EPTF_CLL_Scheduler_Definitions all;
+import from EPTF_CLL_HashMapStr2Int_Functions all;
+
+//import from EPTF_SIP_Common_Definitions all;
+import from EPTF_SIP_Common_Functions all;
+import from EPTF_SIP_Dialog_Definitions all;
+import from EPTF_SIP_EventNotification_Definitions all;
+import from EPTF_SIP_LGen_Definitions all;
+import from EPTF_SIP_Templates all;
+//import from EPTF_SIP_Transaction_Functions all;
+
+import from SIPmsg_Types all;
+
+///////////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_Dialog_InitDatabase                                           
+//                                                                                   
+//Purpose:                                                                           
+//  Initializes a SIP dialog database                                           
+//                                                                                   
+//Detailed Comments:                                                                 
+//  The function initializes the EPTF_FreeBusyQueue and creates a number of free     
+//  slots in advance.                                                                
+///////////////////////////////////////////////////////////
+function f_EPTF_SIP_Dialog_InitDatabase() 
+runs on EPTF_SIP_LGen_CT
+{
+  f_EPTF_FBQ_initFreeBusyQueue(v_db_dialog.queue);
+  v_db_dialog.data :={}
+
+  v_db_dialog.hashRef :=  f_EPTF_str2int_HashMap_New("DialogHash");
+  f_EPTF_str2int_HashMap_Resize (v_db_dialog.hashRef,1000);
+
+  var integer i, dummy;
+  for(i := 0; i < 1000; i := i + 1) {
+    dummy := f_EPTF_FBQ_getOrCreateFreeSlot(v_db_dialog.queue);
+    f_EPTF_FBQ_moveFromFreeHeadToBusyTail(v_db_dialog.queue);
+  }
+  for(i := 0; i < 1000; i := i + 1) {
+    f_EPTF_FBQ_moveFromBusyToFreeTail(i, v_db_dialog.queue);
+  }
+}
+
+function f_EPTF_SIP_Dialog_cleanUpDatabase() 
+runs on EPTF_SIP_LGen_CT
+{
+  f_EPTF_FBQ_initFreeBusyQueue(v_db_dialog.queue);
+  v_db_dialog.data :={}
+
+  f_EPTF_str2int_HashMap_Delete("DialogHash");
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_SIP_Dialog_GetNewIdx
+// 
+//  Purpose:
+//    This function sets its integer parameter to an index number that points to a free
+//    dialog in the dialog database.
+// 
+//  Parameters:
+//    pl_dialogIdx - *inout* *integer* - the returned dialog index
+// 
+//  Detailed Comments:
+//    This function either returns with an index to a free dialog in the dialog database
+//    or creates and initializes a new dialog in the database and returns with its index.
+//    The data element corresponding to the returned index is initialized with a constant.
+///////////////////////////////////////////////////////////
+function f_EPTF_SIP_Dialog_GetNewIdx(
+  inout integer pl_dialogIdx
+)
+runs on EPTF_SIP_LGen_CT
+{
+  //get new free slot 
+  pl_dialogIdx := f_EPTF_FBQ_getOrCreateFreeSlot(v_db_dialog.queue);
+  //log("Created dialog: #", pl_dialogIdx);
+
+    //move from free chain to busy chain
+  f_EPTF_FBQ_moveFromFreeHeadToBusyTail(v_db_dialog.queue);
+
+  v_db_dialog.data[pl_dialogIdx] := c_SIP_DialogData_init;
+
+  if (c_SIP_checkDialogDatabase)
+  {
+    if (v_maxDialogDBSize < pl_dialogIdx)
+    {
+      f_SIP_Logging_WARNING(%definitionId & ": possible dialog database leak.");
+
+      var integer vl_idx;
+      var integer vl_lengthOfBusy;
+      var boolean vl_dummy;
+      var EPTF_IntegerList vl_counters := {};
+      
+      vl_counters[c_SIP_DlgState_Unknown] := 0;
+      vl_counters[c_SIP_DlgState_EarlyDialog] := 0;
+      vl_counters[c_SIP_DlgState_Confirmed] := 0;
+      vl_counters[c_SIP_DlgState_Terminated] := 0;
+      
+      if (f_EPTF_FBQ_getBusyHeadIdx(vl_idx, v_db_dialog.queue))
+      {
+        vl_lengthOfBusy := f_EPTF_FBQ_getLengthOfBusyChain(v_db_dialog.queue);
+        for (var integer i := 0; i < vl_lengthOfBusy; i := i + 1)
+        {
+          vl_counters[v_db_dialog.data[vl_idx].state] := vl_counters[v_db_dialog.data[vl_idx].state] + 1;
+
+          vl_dummy := f_EPTF_FBQ_getFwdBusyItemIdx(vl_idx, v_db_dialog.queue);
+        }
+      }
+
+      action(/*tsp_SIP_debugLogging,v_SIP_Logging_MaskId, {c_EPTF_SIP_Logging_WARNING},*/
+        %definitionId,": dialog database is bigger than ", v_maxDialogDBSize,". Dialog state counter: ", vl_counters);
+
+      v_maxDialogDBSize := v_maxDialogDBSize + 5000;
+
+    }
+  }
+
+}
+
+///////////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_Dialog_CreateOutgoing                                                    
+//                                                                                             
+//Purpose:                                                                                      
+//  Function for creating an outgoing dialog                                                    
+//                                                                                             
+//Parameters:                                                                                   
+//  - pl_dialogIdx - *inout* *integer* - the index pointing to the dialog in the dialog database  
+//  - pl_userIdx - *in* *integer* - index of user in the user database                            
+//  - pl_FSMIdx - *in* *integer* - the FSM context data index
+//  - pl_localUserUri - *in* <Addr_Union> - the local URI
+//  - pl_remoteUserUri - *in* <Addr_Union> - the remote URI
+//  - pl_method - *in* <Method> - the SIP method creating the dialog (e.g. INVITE, SUBSCRIBE) 
+//                                                                                             
+///////////////////////////////////////////////////////////
+function f_EPTF_SIP_Dialog_CreateOutgoing(
+  inout integer pl_dialogIdx,
+  in integer pl_userIdx,
+  in integer pl_FSMIdx,
+  in Addr_Union pl_localUserUri,
+  in Addr_Union pl_remoteUserUri,
+  in Method pl_method)
+runs on EPTF_SIP_LGen_CT
+{
+  f_EPTF_SIP_Dialog_GetNewIdx(pl_dialogIdx);
+
+  v_db_dialog.data[pl_dialogIdx].state := c_SIP_DlgState_Unknown;
+
+  v_db_dialog.data[pl_dialogIdx].localSeqNum := f_EPTF_SIP_genCSeq();
+  v_db_dialog.data[pl_dialogIdx].initSeqNum := v_db_dialog.data[pl_dialogIdx].localSeqNum;
+
+  f_EPTF_SIP_genCallId(pl_dialogIdx,
+    v_db_users.data[pl_userIdx].localHost,
+    v_db_dialog.data[pl_dialogIdx].callId);
+
+  f_EPTF_SIP_genLocalTag(pl_dialogIdx,
+    v_db_dialog.data[pl_dialogIdx].localTag);
+
+  f_EPTF_SIP_AddrUnion2FlatSipUrl(pl_localUserUri, v_db_dialog.data[pl_dialogIdx].localUri);
+
+  f_EPTF_SIP_AddrUnion2FlatSipUrl( pl_remoteUserUri, v_db_dialog.data[pl_dialogIdx].remoteUri);
+
+  f_EPTF_SIP_AddrUnion2FlatSipUrl(pl_remoteUserUri, v_db_dialog.data[pl_dialogIdx].requestUri);
+  v_db_dialog.data[pl_dialogIdx].requestUri.displayName := "";
+
+  v_db_dialog.data[pl_dialogIdx].userIdx := pl_userIdx;
+
+  v_db_dialog.data[pl_dialogIdx].FSMIdx := pl_FSMIdx;
+  
+//ELIMINATING references to dialogs
+/*  if (0 <= pl_FSMIdx)
+  {
+    v_db_dialog.data[pl_dialogIdx].nofRefs := 1;
+  }*/
+
+  if(c_EPTF_Common_debugSwitch and f_SIP_Logging_debugEnabled()) {
+    f_SIP_Logging_DEBUG(log2str(%definitionId,
+      ": added dialog with id ", pl_dialogIdx));
+  }
+}
+
+///////////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_Dialog_CreateIncoming                                                      
+//                                                                                                
+//Purpose:                                                                                        
+//  Creates an incoming dialog                                                      
+//                                                                                                
+//Parameters:                                                                                     
+//  - pl_request - *in* <PDU_SIP_Request> - the SIP request creating the dialog
+//  - pl_dialogIdx - *inout* *integer* - the index pointing to the dialog in the dialog database
+//  - pl_userIdx - *in* *integer* - index of user in the user database
+//  - pl_FSMIdx - *in* *integer* - the FSM context data index
+//                                                                                                
+///////////////////////////////////////////////////////////
+function f_EPTF_SIP_Dialog_CreateIncoming(
+  in PDU_SIP_Request  pl_request,
+  inout integer       pl_dialogIdx,
+  in integer          pl_userIdx,
+  in integer          pl_FSMIdx)
+runs on EPTF_SIP_LGen_CT
+{
+  f_EPTF_SIP_Dialog_GetNewIdx(pl_dialogIdx);
+
+  v_db_dialog.data[pl_dialogIdx].state := c_SIP_DlgState_Unknown;
+
+  v_db_dialog.data[pl_dialogIdx].userIdx := pl_userIdx;
+  v_db_dialog.data[pl_dialogIdx].FSMIdx := pl_FSMIdx
+
+  if (INVITE_E == pl_request.requestLine.method)
+  {
+    v_db_dialog.data[pl_dialogIdx].userSessionAssociated := true;
+  }
+
+  if (ispresent(pl_request.msgHeader.recordRoute))
+  {
+    v_db_dialog.data[pl_dialogIdx].looseRouting :=
+      f_EPTF_SIP_RecordRoute2Route(pl_request.msgHeader.recordRoute, v_db_dialog.data[pl_dialogIdx].route, false);
+  }else{
+    v_db_dialog.data[pl_dialogIdx].route := {};
+  }
+
+  if(ispresent(pl_request.msgHeader.contact) and
+     ischosen(pl_request.msgHeader.contact.contactBody.contactAddresses))
+  {
+    f_EPTF_SIP_AddrUnion2FlatSipUrl(pl_request.msgHeader.contact.contactBody.contactAddresses[0].addressField,
+      v_db_dialog.data[pl_dialogIdx].remoteTarget);
+    v_db_dialog.data[pl_dialogIdx].remoteTarget.displayName := "";
+  }
+
+  v_db_dialog.data[pl_dialogIdx].remoteSeqNum := pl_request.msgHeader.cSeq.seqNumber
+
+  v_db_dialog.data[pl_dialogIdx].callId := pl_request.msgHeader.callId.callid;
+
+  f_EPTF_SIP_GetParameter(
+    pl_request.msgHeader.fromField.fromParams,
+    c_SIP_TAG_ID,
+    v_db_dialog.data[pl_dialogIdx].remoteTag);
+
+  f_EPTF_SIP_AddrUnion2FlatSipUrl(pl_request.msgHeader.fromField.addressField,
+    v_db_dialog.data[pl_dialogIdx].remoteUri);
+  f_EPTF_SIP_AddrUnion2FlatSipUrl(pl_request.msgHeader.toField.addressField,
+    v_db_dialog.data[pl_dialogIdx].localUri);
+
+  f_EPTF_SIP_genLocalTag(pl_dialogIdx, v_db_dialog.data[pl_dialogIdx].localTag);
+
+  v_db_dialog.data[pl_dialogIdx].localSeqNum := f_EPTF_SIP_genCSeq();
+  v_db_dialog.data[pl_dialogIdx].initSeqNum := v_db_dialog.data[pl_dialogIdx].localSeqNum;
+
+  f_EPTF_str2int_HashMap_Insert(v_db_dialog.hashRef,
+    v_db_dialog.data[pl_dialogIdx].callId & v_db_dialog.data[pl_dialogIdx].localTag & v_db_dialog.data[pl_dialogIdx].remoteTag, pl_dialogIdx);
+  //log("adding dialog to hashmap, callId: ", v_db_dialog.data[pl_dialogIdx].callId, ", localTag(generated here): ", v_db_dialog.data[pl_dialogIdx].localTag, ", remoteTag (fromTag): ", v_db_dialog.data[pl_dialogIdx].remoteTag);
+
+//ELIMINATING references to dialogs
+/*  if (0 <= pl_FSMIdx)
+  {
+    v_db_dialog.data[pl_dialogIdx].nofRefs := 1;
+  }
+*/
+  v_db_dialog.data[pl_dialogIdx].stateSet := true;
+
+  f_EPTF_SIP_Dialog_GenRequestURIandRoute(pl_dialogIdx);
+}
+
+///////////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_Dialog_Remove                                                          
+//                                                                                            
+//Purpose:                                                                                    
+//  Removes a dialog                                                            
+//                                                                                            
+//Parameters:                                                                                 
+//  - pl_dialogIdx - *in* *integer* - the index of the dialog in v_db_dialog
+//                                                                                            
+///////////////////////////////////////////////////////////
+function f_EPTF_SIP_Dialog_Remove(
+  in integer pl_dialogIdx)
+runs on EPTF_SIP_LGen_CT
+{
+  //log(%definitionId, " terminating and erasing memory of dialog: ", pl_dialogIdx);
+
+  if(c_EPTF_Common_debugSwitch and f_SIP_Logging_debugEnabled()) {
+    f_SIP_Logging_DEBUG(log2str(%definitionId,
+      ": removed dialog with id ", pl_dialogIdx));
+  }
+
+//ELIMINATE DIALOG WATCHDOG
+//  f_EPTF_SIP_CancelAllTimers_Dialog(pl_dialogIdx);
+
+  if (v_db_dialog.data[pl_dialogIdx].stateSet)
+  {
+    f_EPTF_str2int_HashMap_Erase(v_db_dialog.hashRef, 
+      v_db_dialog.data[pl_dialogIdx].callId & v_db_dialog.data[pl_dialogIdx].localTag & v_db_dialog.data[pl_dialogIdx].remoteTag);
+  }
+
+//  v_db_dialog.data[pl_dialogIdx] := c_SIP_DialogData_init; -- removed for speed optimization
+
+  f_EPTF_FBQ_moveFromBusyToFreeTail(pl_dialogIdx, v_db_dialog.queue);
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_Dialog_GenRequestURIandRoute
+//
+//Purpose:
+//  Generates the Request-URI and the Route header fiels for the outgoing
+//    requests within the dialog.
+//
+//Parameters:
+//  - pl_dialogIdx - *in* *integer* - the index of the dialog in v_db_dialog
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_Dialog_GenRequestURIandRoute(in integer pl_dialogIdx)
+runs on EPTF_SIP_LGen_CT
+{
+  if (v_db_dialog.data[pl_dialogIdx].looseRouting)
+  {
+    v_db_dialog.data[pl_dialogIdx].requestUri := v_db_dialog.data[pl_dialogIdx].remoteTarget;
+  }else{
+    v_db_dialog.data[pl_dialogIdx].requestUri := v_db_dialog.data[pl_dialogIdx].route[0].routeAddr;
+    f_EPTF_SIP_StripFirstRouteBodyFlat(v_db_dialog.data[pl_dialogIdx].route);
+  }
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_Dialog_setUACState
+//
+//Purpose:
+//  Sets the UAC state of a dialog.
+//
+//Parameters:
+//  - pl_dialogIdx - *in* *integer* - the index of the dialog in v_db_dialog
+//  - pl_msgToProcess - *in* <PDU_SIP_Response> - the response that created the dialog
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_Dialog_setUACState(in integer pl_dialogIdx, in PDU_SIP_Response pl_msgToProcess, in boolean pl_setState := true)
+runs on EPTF_SIP_LGen_CT
+{
+  if (v_db_dialog.data[pl_dialogIdx].stateSet)
+  {
+    return;
+  }
+
+  v_db_dialog.data[pl_dialogIdx].stateSet := true;
+  
+  var charstring vl_remoteTag := "";
+
+  if (ispresent(pl_msgToProcess.msgHeader.toField.toParams))
+  {
+    f_EPTF_SIP_GetParameter(pl_msgToProcess.msgHeader.toField.toParams,
+          c_SIP_TAG_ID, vl_remoteTag);
+  }
+  
+  if ("" == vl_remoteTag)
+  {
+    v_db_dialog.data[pl_dialogIdx].stateSet := false;
+    f_SIP_Logging_WARNING(%definitionId & ": dialog state could not be constructed from response, no To tag header.");
+  }else{
+    v_db_dialog.data[pl_dialogIdx].remoteTag := vl_remoteTag;
+  }
+  
+  if(ispresent(pl_msgToProcess.msgHeader.contact) and
+     ischosen(pl_msgToProcess.msgHeader.contact.contactBody.contactAddresses))
+  {
+    f_EPTF_SIP_AddrUnion2FlatSipUrl(pl_msgToProcess.msgHeader.contact.contactBody.contactAddresses[0].addressField,
+      v_db_dialog.data[pl_dialogIdx].remoteTarget);
+    v_db_dialog.data[pl_dialogIdx].remoteTarget.displayName := "";
+  }else{
+    v_db_dialog.data[pl_dialogIdx].stateSet := false;
+    f_SIP_Logging_WARNING(%definitionId & ": dialog state could not be constructed from response, no Contact header");
+  }
+
+  if(ispresent(pl_msgToProcess.msgHeader.recordRoute))
+  {
+    v_db_dialog.data[pl_dialogIdx].looseRouting := 
+      f_EPTF_SIP_RecordRoute2Route(pl_msgToProcess.msgHeader.recordRoute,
+        v_db_dialog.data[pl_dialogIdx].route, true);
+  }
+
+  f_EPTF_SIP_Dialog_GenRequestURIandRoute(pl_dialogIdx);
+  
+  if (not pl_setState)
+  {
+    v_db_dialog.data[pl_dialogIdx].stateSet := false;
+  }
+  
+  if (v_db_dialog.data[pl_dialogIdx].stateSet)
+  {
+    if(c_EPTF_Common_debugSwitch and f_SIP_Logging_debugEnabled()) {
+      f_SIP_Logging_DEBUG(log2str(  %definitionId,
+        ": dialog state is set. ",  v_db_dialog.data[pl_dialogIdx]));
+    }
+    f_EPTF_str2int_HashMap_Insert(v_db_dialog.hashRef, 
+      v_db_dialog.data[pl_dialogIdx].callId & v_db_dialog.data[pl_dialogIdx].localTag & v_db_dialog.data[pl_dialogIdx].remoteTag,
+      pl_dialogIdx);
+/*    if (f_EPTF_str2int_HashMap_Size(v_db_dialog.hashRef) > v_maxDialogDBSize)
+    {
+      action("Dialog hashmap size: ", f_EPTF_str2int_HashMap_Size(v_db_dialog.hashRef));
+    }*/
+      
+  }
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_refreshTarget
+//
+//Purpose:
+//  Refreshes the dialog database with the new remote target retreived from
+//  a target refresh request (e.g. re-INVITE)
+//
+//Parameters:
+//  - pl_dialogIdx - *in* *integer* - the index of the dialog in v_db_dialog
+//  - pl_remoteTarget - <SipUrl> - the SIP URI from the Contact header
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_refreshTarget(in integer pl_dialogIdx, in SipUrl pl_remoteTarget)
+runs on EPTF_SIP_LGen_CT
+{
+  f_EPTF_SIP_SipUrl2FlatSipUrl(pl_remoteTarget, v_db_dialog.data[pl_dialogIdx].remoteTarget);
+  
+  if (v_db_dialog.data[pl_dialogIdx].looseRouting or 0 == sizeof(v_db_dialog.data[pl_dialogIdx].route))
+  {
+    v_db_dialog.data[pl_dialogIdx].requestUri := v_db_dialog.data[pl_dialogIdx].remoteTarget;
+  }
+
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_checkDialog
+//
+//Purpose:
+//  Checks if a dialog index is still valid in the v_db_dialog database.
+//
+//Parameters:
+//  - pl_dialogIdx - *in* *integer* - the index of the dialog
+//
+//Return value:
+//  boolean - true if valid
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_checkDialog(in integer pl_dialogIdx)
+runs on EPTF_SIP_LGen_CT
+return boolean
+{
+  if (0 > pl_dialogIdx or sizeof(v_db_dialog.data) <= pl_dialogIdx or f_EPTF_FBQ_itemIsFree(pl_dialogIdx, v_db_dialog.queue))
+  {
+    return false;
+  }
+
+  return true;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_getNofBusyDialogs
+//
+//Purpose:
+//  Gets the number of dialogs.
+//
+//Return value:
+//  integer - the number of the dialogs
+////////////////////////////////////////////////////
+function f_EPTF_SIP_getNofBusyDialogs()
+runs on EPTF_SIP_LGen_CT
+return integer
+{
+  return f_EPTF_FBQ_getLengthOfBusyChain(v_db_dialog.queue);
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_Dialog_KeepAlive
+//
+//Purpose:
+//  Checks if a dialog should be terminated or not.
+//
+//Parameters:
+//  - pl_dialog - *in* *integer* - the index of the dialog in v_db_dialog
+//
+//Return value:
+//  boolean - false if the dialog can be removed
+//
+//Detailed comments:  
+//  The dialog can be removed if no subscription or user session belongs
+//    to the dialog.
+////////////////////////////////////////////////////
+function f_EPTF_SIP_Dialog_KeepAlive(in integer pl_dialog)
+runs on EPTF_SIP_LGen_CT
+return boolean
+{
+/*  var boolean vl_keepAlive := false;
+
+
+  for (var integer i := 0; i < sizeof(v_db_dialog.data[pl_dialog].subscriptions.data) and not vl_keepAlive; i := i + 1)
+  {
+    if (c_SIP_Subscribe_State_terminated != v_db_subscription.data[v_db_dialog.data[pl_dialog].subscriptions.data[i].subscriptionIdx].state)
+    {
+      vl_keepAlive := true;
+    }
+  }*/
+
+  return (v_db_dialog.data[pl_dialog].subscriptionIdx != -1 and 
+         c_SIP_Subscribe_State_terminated != v_db_subscription.data[v_db_dialog.data[pl_dialog].subscriptionIdx].state) or
+         v_db_dialog.data[pl_dialog].userSessionAssociated;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_CancelT_Dialog
+//
+//Purpose:
+//  Cancels a dialog timer.
+//
+//Parameters:
+//  - pl_dialogIdx - *in* *integer* - the index of the dialog in v_db_dialog
+//  - pl_timerId - *in* *integer* - the index of the dialog timer (for the indices see <EPTF_SIP_Dialog_Definitions>)
+//
+//Return value:
+//  *boolean* - true if the cancellation was successful
+//
+//Errors:
+//  - *timer #id is not running for dialog #id*
+//
+////////////////////////////////////////////////////
+//ELIMINATE DIALOG WATCHDOG
+/*function f_EPTF_SIP_CancelT_Dialog(in integer pl_dialogIdx, in integer pl_timerId)
+runs on EPTF_SIP_LGen_CT
+return boolean
+{
+  f_SIP_Logging_DEBUG(log2str(
+    %definitionId,": cancelling dialog timer ", pl_timerId," for dialog ", pl_dialogIdx));
+
+  if (v_db_dialog.data[pl_dialogIdx].timers[pl_timerId] >= 0)
+  { 
+    if(not f_EPTF_SchedulerComp_CancelEvent(v_db_dialog.data[pl_dialogIdx].timers[pl_timerId]))
+    {
+      v_db_dialog.data[pl_dialogIdx].timers[pl_timerId] := -1;
+      return false;
+    }
+    else {
+      v_db_dialog.data[pl_dialogIdx].timers[pl_timerId] := -1;
+      return true;
+    }
+  }
+  else
+  {
+    f_SIP_Logging_WARNING(log2str(
+      %definitionId, ": timer ", pl_timerId, " is not running for dialog ", pl_dialogIdx));
+    return false
+  }
+}*/
+
+///////////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_CancelAllTimers_Dialog       
+//                                                  
+//Purpose:                                          
+// Cancels all of the dialog timers.                   
+//                                                  
+//Parameters:                                       
+//  pl_dialogIdx - *in integer* - the index of the dialog in v_db_dialog
+//                                                  
+///////////////////////////////////////////////////////////
+//ELIMINATE DIALOG WATCHDOG
+/*function f_EPTF_SIP_CancelAllTimers_Dialog(in integer pl_dialogIdx)
+runs on EPTF_SIP_LGen_CT
+{
+  var integer i;
+  for(i := 0; i < sizeof(v_db_dialog.data[pl_dialogIdx].timers); i := i + 1) {
+    if(v_db_dialog.data[pl_dialogIdx].timers[i] >= 0) {
+      f_EPTF_SIP_CancelT_Dialog(pl_dialogIdx, i);
+    }
+  }
+}*/
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_requestInDialog
+//
+//Purpose:
+//  Checks if the request shlould be in a dialog.
+//
+//Parameters:
+//  - pl_method - *in* <Method> - the method of the request
+//
+//Return value:
+//  boolean - true if the request should be in a dialog
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_requestInDialog(in Method pl_method)
+return boolean
+{
+  return (NOTIFY_E == pl_method) or (BYE_E == pl_method) or (PRACK_E == pl_method) or (UPDATE_E == pl_method);
+}
+
+function f_EPTF_SIP_handleRequestInDialog(in integer pl_dialogIdx, in PDU_SIP_Request pl_request)
+runs on EPTF_SIP_LGen_CT
+{
+  v_db_dialog.data[pl_dialogIdx].remoteSeqNum := pl_request.msgHeader.cSeq.seqNumber;
+}
+
+}//end of module
+with {
+extension "version <RnXnn>"
+}
+

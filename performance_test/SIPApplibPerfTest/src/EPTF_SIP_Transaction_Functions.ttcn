@@ -1,0 +1,1353 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_SIP_Transaction_Functions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 522
+//  Updated:  2012-11-28
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////
+//  Module: EPTF_SIP_Transaction_Functions
+//
+//  Purpose:
+//    Function definitions for SIP transactions.
+//
+//  Module depends on:
+//    <EPTF_CLL_Common_Definitions>
+//
+//    <EPTF_CLL_FBQ_Functions>
+//
+//    <EPTF_CLL_RBTScheduler_Functions>
+//
+//    <EPTF_CLL_HashMapStr2Int_Functions>
+//
+//    <EPTF_CLL_Variable_Functions>
+//
+//    <EPTF_SIP_Common_Definitions>
+//
+//    <EPTF_SIP_Common_Functions>
+//
+//    <EPTF_SIP_LGen_Definitions>
+//
+//    <EPTF_SIP_MessageCreator_Functions>
+//
+//    <EPTF_SIP_Transaction_Definitions>
+//
+//    <EPTF_SIP_Templates>
+//
+//    <SIPmsg_Types>
+//
+//    <TCCSecurity_Functions>
+//
+//  Last review date:
+//    2012-11-08
+////////////////////////////////////////////////////
+module EPTF_SIP_Transaction_Functions {
+
+import from EPTF_CLL_Common_Definitions all;
+import from EPTF_CLL_LGenBase_Definitions all;
+import from EPTF_CLL_FBQ_Functions all;
+import from EPTF_CLL_RBTScheduler_Functions all;
+import from EPTF_CLL_HashMapStr2Int_Functions all;
+import from EPTF_CLL_Variable_Functions all;
+import from EPTF_CLL_LGenBase_TemplateDefinitions all;
+
+import from EPTF_SIP_Common_Definitions all;
+import from EPTF_SIP_Common_Functions all;
+import from EPTF_SIP_LGen_Definitions all;
+import from EPTF_SIP_MessageCreator_Functions all;
+import from EPTF_SIP_Transaction_Definitions all;
+import from EPTF_SIP_Templates all;
+
+import from SIPmsg_Types all;
+
+import from TCCSecurity_Functions all;
+
+/////////////////////////////////
+// database handling functions //
+/////////////////////////////////
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_SIP_Transaction_InitDatabase
+// 
+//  Purpose:
+//    Initializes the transaction database.
+// 
+//  Detailed Comments:
+//    The initial size of the database will be 1000 to prevent
+//      reusing the same transaction IDs too frequently.
+///////////////////////////////////////////////////////////
+function f_EPTF_SIP_Transaction_InitDatabase ()
+runs on EPTF_SIP_LGen_CT
+{
+  var integer i, idx;
+
+  //init UAC database
+  f_EPTF_FBQ_initFreeBusyQueue(v_db_UAC.queue);
+  v_db_UAC.data :={}
+  // allocate 1000 transaction, so the IDs will rotate even if we only use 1 tr. at a time
+  for(i := 0; i < 1000; i := i + 1) {
+    idx := f_EPTF_FBQ_getOrCreateFreeSlot(v_db_UAC.queue);
+    f_EPTF_FBQ_moveFromFreeHeadToBusyTail(v_db_UAC.queue);
+  }
+  for(i := 0; i < 1000; i := i + 1) {
+    f_EPTF_FBQ_moveFromBusyToFreeTail(i, v_db_UAC.queue);
+  }
+
+  v_db_UAC.hashRef :=  f_EPTF_str2int_HashMap_New("UACHash");
+  f_EPTF_str2int_HashMap_Resize (v_db_UAC.hashRef,1000);
+
+  //init UAC database
+  f_EPTF_FBQ_initFreeBusyQueue(v_db_UAS.queue);
+  v_db_UAS.data :={}
+  // allocate 1000 transaction, so the IDs will rotate even if we only use 1 tr. at a time
+  for(i := 0; i < 1000; i := i + 1) {
+    idx := f_EPTF_FBQ_getOrCreateFreeSlot(v_db_UAS.queue);
+    f_EPTF_FBQ_moveFromFreeHeadToBusyTail(v_db_UAS.queue);
+  }
+  for(i := 0; i < 1000; i := i + 1) {
+    f_EPTF_FBQ_moveFromBusyToFreeTail(i, v_db_UAS.queue);
+  }
+
+  v_db_UAS.hashRef :=  f_EPTF_str2int_HashMap_New("UASHash");
+  f_EPTF_str2int_HashMap_Resize (v_db_UAS.hashRef,1000);
+}
+
+function f_EPTF_SIP_Transaction_cleanUpDatabase ()
+runs on EPTF_SIP_LGen_CT
+{
+  var integer i, idx;
+
+  //init UAC database
+  for(i:=0; i<lengthof(v_db_UAC.data); i:=i+1) { // TR HM72602
+    if(f_EPTF_FBQ_itemIsBusy(i, v_db_UAC.queue)) {
+      f_EPTF_SIP_CancelAllTimers_UAC(i);
+    }
+  }
+  f_EPTF_FBQ_initFreeBusyQueue(v_db_UAC.queue);
+  v_db_UAC.data :={}
+
+  f_EPTF_str2int_HashMap_Delete("UACHash");
+
+  //init UAC database
+  for(i:=0; i<lengthof(v_db_UAS.data); i:=i+1) { // TR HM72602
+    if(f_EPTF_FBQ_itemIsBusy(i, v_db_UAS.queue)) {
+      f_EPTF_SIP_CancelAllTimers_UAS(i);
+    }
+  }
+  f_EPTF_FBQ_initFreeBusyQueue(v_db_UAS.queue);
+  v_db_UAS.data :={}
+
+  f_EPTF_str2int_HashMap_Delete("UASHash");
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_SIP_Transaction_GetNewIdx
+// 
+//  Purpose:
+//    Retrieves a new transaction index from the transaction database.
+// 
+//  Parameters:
+//    - pl_db_TR - *inout* <SIP_TransactionDatabase> - the transaction database
+//    - pl_trIdx - *inout* *integer* - the transaction index
+// 
+//  Detailed Comments:
+//    This function either returns with an index of a free transaction in the transaction database
+//    or creates and initializes a new transaction in the database and returns with its index.
+//    The data element corresponding to the returned index is initialized with a constant.
+///////////////////////////////////////////////////////////
+function f_EPTF_SIP_Transaction_GetNewIdx(
+  inout SIP_TransactionDatabase pl_db_TR,
+  inout integer pl_trIdx
+)
+runs on EPTF_SIP_LGen_CT
+{
+  //get new free slot 
+  pl_trIdx := f_EPTF_FBQ_getOrCreateFreeSlot(pl_db_TR.queue);
+
+  pl_db_TR.data[pl_trIdx] := c_SIP_TransactionData_init;
+
+    //move from free chain to busy chain
+  f_EPTF_FBQ_moveFromFreeHeadToBusyTail(pl_db_TR.queue);
+
+  if (c_SIP_checkTRDatabase)
+  {
+    if (v_maxTrDBSize < pl_trIdx)
+    {
+      var integer vl_idx;
+      var integer vl_lengthOfBusy;
+      var boolean vl_dummy;
+
+      var EPTF_IntegerList vl_counters := {};
+
+      vl_counters[c_SIP_TrState_Unknown] := 0;
+      vl_counters[c_SIP_TrState_Calling] := 0;
+      vl_counters[c_SIP_TrState_Proceeding] := 0;
+      vl_counters[c_SIP_TrState_Completed] := 0;
+      vl_counters[c_SIP_TrState_Terminated] := 0;
+      vl_counters[c_SIP_TrState_Trying] := 0;
+      vl_counters[c_SIP_TrState_Confirmed] := 0;
+
+      f_SIP_Logging_WARNING(log2str(%definitionId,": possible transaction database leak."));
+      if (f_EPTF_FBQ_getBusyHeadIdx(vl_idx, pl_db_TR.queue))
+      {
+        vl_lengthOfBusy := f_EPTF_FBQ_getLengthOfBusyChain(pl_db_TR.queue);
+        for (var integer i := 0; i < vl_lengthOfBusy; i := i + 1)
+        {
+          vl_counters[pl_db_TR.data[vl_idx].state] := vl_counters[pl_db_TR.data[vl_idx].state] + 1;
+          vl_dummy := f_EPTF_FBQ_getFwdBusyItemIdx(vl_idx, pl_db_TR.queue);
+        }
+      }
+
+      action(/*tsp_SIP_debugLogging,v_SIP_Logging_MaskId, {c_EPTF_SIP_Logging_WARNING},*/
+        %definitionId,": Transaction database is bigger than ", v_maxTrDBSize,". Transaction state counter: ", vl_counters);
+
+      v_maxTrDBSize := v_maxTrDBSize + v_maxTrDBSize;
+    }
+  }
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_SIP_Transaction_CreateNewUAC
+// 
+//  Purpose:
+//    Creates a new UAC.
+// 
+//  Parameters:
+//  - pl_trIdx - *inout integer* - the index of the UAC transaction in the v_db_UAC database
+//  - pl_method - <Method> - the SIP method
+//  - pl_sessionIdx -*in integer* - the index of the session of the transaction
+//  - pl_userIdx -*in integer* - the index of the user in the v_db_users database
+//  - pl_fsmCtx - *in integer* - the FSM context index
+//  - pl_FSMIdx - *in* *integer* - the FSM context data index
+//  - pl_transport - *in* <SIP_Transport> - the transport protocol
+//  - pl_transactionId - *in* *charstring* - the transaction id of the UAC
+// 
+///////////////////////////////////////////////////////////
+function f_EPTF_SIP_Transaction_CreateNewUAC(
+  inout integer pl_trIdx,
+  in    Method pl_method,
+  in    integer pl_sessionIdx,
+  in    integer pl_userIdx,
+  in    integer pl_fsmCtx,
+  in    integer pl_FSMIdx,
+  in    SIP_Transport pl_transport,
+  in    charstring pl_transactionId)
+runs on EPTF_SIP_LGen_CT
+{
+  f_EPTF_SIP_Transaction_GetNewIdx(v_db_UAC, pl_trIdx);
+
+  if ("" == pl_transactionId)
+  {
+    f_EPTF_SIP_Transaction_GenerateId(pl_trIdx, v_db_UAC.data[pl_trIdx].transactionId);
+  }else{
+    v_db_UAC.data[pl_trIdx].transactionId := pl_transactionId;
+  }
+
+  v_db_UAC.data[pl_trIdx].state := c_SIP_TrState_Unknown;
+
+  v_db_UAC.data[pl_trIdx].userIdx := pl_userIdx;
+
+  v_db_UAC.data[pl_trIdx].method := pl_method;
+
+  v_db_UAC.data[pl_trIdx].FSMIdx := pl_FSMIdx;
+
+  v_db_UAC.data[pl_trIdx].sessionIdx := pl_sessionIdx;
+  
+  if (0 <= pl_FSMIdx)
+  {
+    v_db_UAC.data[pl_trIdx].distinctResponse := 
+      v_db_users.data[pl_userIdx].FSMs.data[pl_FSMIdx].distinctResponse;
+  }
+  
+  f_EPTF_str2int_HashMap_Insert(v_db_UAC.hashRef, v_db_UAC.data[pl_trIdx].transactionId & c_SIP_Methods[enum2int(pl_method)] , pl_trIdx)
+  
+  v_db_UAC.data[pl_trIdx].transport := pl_transport;
+  
+  f_EPTF_SIP_setUACTimers(pl_trIdx, pl_transport, v_TransactionTimerValues);
+  
+  v_db_UAC.data[pl_trIdx].request := cg_PDU_SIP_Request_base;
+  
+  if(c_EPTF_Common_debugSwitch and f_SIP_Logging_debugEnabled()) {
+    f_SIP_Logging_DEBUG(log2str(%definitionId,": added UAC with id ", pl_trIdx));
+  }
+}
+
+function f_EPTF_SIP_setUACTimers(in integer pl_UAC, in SIP_Transport pl_transport, in SIP_TimerValues pl_timerValues)
+runs on EPTF_SIP_LGen_CT
+{
+  if (INVITE_E == v_db_UAC.data[pl_UAC].method) //set timer values
+  {
+    if (UDP == pl_transport)
+    {
+      v_db_UAC.data[pl_UAC].retransmissionTime := pl_timerValues[c_SIP_TimerUACINVITE_Retransmission];
+      v_db_UAC.data[pl_UAC].maxRetransTime := pl_timerValues[c_SIP_TimerUACINVITE_MaxRetransmission];
+      v_db_UAC.data[pl_UAC].keepAliveTime := pl_timerValues[c_SIP_TimerUACINVITE_KeepAlive];
+    }
+
+    v_db_UAC.data[pl_UAC].transactionTimeout := pl_timerValues[c_SIP_TimerUACINVITE_TransactionTimeout];
+
+  }else{
+    if (UDP == pl_transport)
+    {
+      v_db_UAC.data[pl_UAC].retransmissionTime := pl_timerValues[c_SIP_TimerUACnonINVITE_Retransmission];
+      v_db_UAC.data[pl_UAC].maxRetransTime := pl_timerValues[c_SIP_TimerUACnonINVITE_MaxRetransmission];
+      v_db_UAC.data[pl_UAC].keepAliveTime := pl_timerValues[c_SIP_TimerUACnonINVITE_KeepAlive];
+    }
+
+    v_db_UAC.data[pl_UAC].transactionTimeout := pl_timerValues[c_SIP_TimerUACnonINVITE_TransactionTimeout];
+
+  }
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_SIP_Transaction_CreateNewUAS
+// 
+//  Purpose:
+//    Creates a new UAS transaction.
+// 
+//  Parameters:
+//  - pl_msg - *inout* <PDU_SIP> - the incoming SIP message
+//  - pl_trIdx - *inout integer* - the transaction index
+//  - pl_sessionIdx -*in integer* - the index of the session of the transaction
+//  - pl_userIdx -*in integer* - the user index
+//  - pl_fsmCtx - *in integer* - the FSM context index
+//  - pl_FSMIdx - *in* *integer* - the FSM context data index
+// 
+///////////////////////////////////////////////////////////
+function f_EPTF_SIP_Transaction_CreateNewUAS(
+  inout PDU_SIP pl_msg,
+  inout integer pl_trIdx,
+  in integer pl_sessionIdx,
+  in integer pl_userIdx,
+  in integer pl_fsmCtx,
+  in integer pl_FSMIdx)
+runs on EPTF_SIP_LGen_CT
+{
+  f_EPTF_SIP_Transaction_GetNewIdx(v_db_UAS, pl_trIdx);
+  
+  v_db_UAS.data[pl_trIdx].transport := UDP;
+
+  v_db_UAS.data[pl_trIdx].method := pl_msg.request.requestLine.method;
+
+  if (omit != pl_msg.request.msgHeader.via and
+      0 < sizeof(pl_msg.request.msgHeader.via.viaBody)
+  )
+  {
+    v_db_UAS.data[pl_trIdx].transport := f_EPTF_SIP_getTransport(pl_msg.request.msgHeader.via.viaBody[0].sentProtocol.transport);
+  }
+
+
+  if (INVITE_E == pl_msg.request.requestLine.method)
+  {
+    v_db_UAS.data[pl_trIdx].state := c_SIP_TrState_Proceeding;
+    if (UDP == v_db_UAS.data[pl_trIdx].transport)
+    {
+      v_db_UAS.data[pl_trIdx].retransmissionTime := v_TransactionTimerValues[c_SIP_TimerUASINVITE_Retransmission];
+      v_db_UAS.data[pl_trIdx].maxRetransTime := v_TransactionTimerValues[c_SIP_TimerUASINVITE_MaxRetransmission];
+      v_db_UAS.data[pl_trIdx].keepAliveTime := v_TransactionTimerValues[c_SIP_TimerUASINVITE_KeepAlive];
+    }
+
+    v_db_UAS.data[pl_trIdx].transactionTimeout := v_TransactionTimerValues[c_SIP_TimerUASINVITE_TransactionTimeout];
+  }else{
+    if (UDP == v_db_UAS.data[pl_trIdx].transport)
+    {
+      v_db_UAS.data[pl_trIdx].keepAliveTime := v_TransactionTimerValues[c_SIP_TimerUASnonINVITE_KeepAlive];
+    }
+    v_db_UAS.data[pl_trIdx].state := c_SIP_TrState_Trying;
+  }
+
+  f_EPTF_SIP_Transaction_prepareUASResponse(pl_trIdx, pl_msg.request.msgHeader);
+
+  f_EPTF_SIP_GetTransactionId(pl_msg.request.msgHeader, v_db_UAS.data[pl_trIdx].transactionId);
+  v_db_UAS.data[pl_trIdx].cSeq := int2str(pl_msg.request.msgHeader.cSeq.seqNumber);
+
+  var integer vl_idx := -1;
+
+  if (f_EPTF_str2int_HashMap_Find(
+        v_db_UAS.hashRef, 
+        v_db_UAS.data[pl_trIdx].transactionId & 
+          c_SIP_Methods[enum2int(pl_msg.request.requestLine.method)] & 
+          v_db_UAS.data[pl_trIdx].cSeq,
+        vl_idx))
+  {
+      f_SIP_Logging_WARNING(log2str(
+        %definitionId,": not unique UAS key!"));
+  }
+  else
+  {
+    f_EPTF_str2int_HashMap_Insert(
+      v_db_UAS.hashRef, 
+      v_db_UAS.data[pl_trIdx].transactionId & 
+        c_SIP_Methods[enum2int(pl_msg.request.requestLine.method)] & 
+        v_db_UAS.data[pl_trIdx].cSeq,
+      pl_trIdx)
+  }
+
+  v_db_UAS.data[pl_trIdx].FSMIdx := pl_FSMIdx;
+
+  v_db_UAS.data[pl_trIdx].userIdx := pl_userIdx;
+
+  v_db_UAS.data[pl_trIdx].via := pl_msg.request.msgHeader.via.viaBody[0];
+
+  v_db_UAS.data[pl_trIdx].sessionIdx := pl_sessionIdx;
+
+  if(c_EPTF_Common_debugSwitch) {
+    var charstring vl_method := "";
+    f_EPTF_SIP_method2str(v_db_UAS.data[pl_trIdx].method, vl_method);
+
+    v_db_UAS.data[pl_trIdx].methodList[sizeof(v_db_UAS.data[pl_trIdx].methodList)] := vl_method;
+  }
+  
+  if (ispresent(pl_msg.request.msgHeader.require) and
+        f_EPTF_SIP_containsTag(pl_msg.request.msgHeader.require.optionsTags, c_SIP_EXT_100REL))
+  {
+    v_db_UAS.data[pl_trIdx].prack := true;
+  }
+
+  if(c_EPTF_Common_debugSwitch and f_SIP_Logging_debugEnabled()) {
+    f_SIP_Logging_DEBUG(log2str(%definitionId,": added UAS with id ", pl_trIdx)); 
+  }
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_SIP_Transaction_prepareUASResponse
+// 
+//  Purpose:
+//    Prepares the relevant fields of the response message for an UAS.
+// 
+//  Parameters:
+//  - pl_trIdx - *in* *integer* - the UAS transaction index
+//  - pl_requestHeaders - *in* <MessageHeader> - the message header of the incoming request
+// 
+///////////////////////////////////////////////////////////
+function f_EPTF_SIP_Transaction_prepareUASResponse(
+  in integer pl_trIdx,
+  in MessageHeader pl_reqestHeaders)
+runs on EPTF_SIP_LGen_CT
+{
+  v_db_UAS.data[pl_trIdx].response := cg_PDU_SIP_Response_base;
+
+  v_db_UAS.data[pl_trIdx].response.msgHeader.fromField :=
+    pl_reqestHeaders.fromField;
+
+  v_db_UAS.data[pl_trIdx].response.msgHeader.callId :=
+    pl_reqestHeaders.callId;
+
+  v_db_UAS.data[pl_trIdx].response.msgHeader.cSeq :=
+    pl_reqestHeaders.cSeq;
+
+  v_db_UAS.data[pl_trIdx].response.msgHeader.toField :=
+    pl_reqestHeaders.toField;
+
+  v_db_UAS.data[pl_trIdx].response.msgHeader.via :=
+    pl_reqestHeaders.via;
+
+  v_db_UAS.data[pl_trIdx].response.msgHeader.recordRoute :=
+    pl_reqestHeaders.recordRoute;
+
+  v_db_UAS.data[pl_trIdx].response.msgHeader.contentLength :=
+  {
+    fieldName := CONTENT_LENGTH_E,
+    len := 0
+  }
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_SIP_Transaction_RemoveUAC
+// 
+//  Purpose:
+//    Removes an existing UAC transaction.
+// 
+//  Parameters:
+//    - pl_trIdx - *in integer* - the index of the transaction in v_db_UAC
+// 
+///////////////////////////////////////////////////////////
+function f_EPTF_SIP_Transaction_RemoveUAC(
+  in integer pl_trIdx)
+runs on EPTF_SIP_LGen_CT
+{
+  f_EPTF_SIP_CancelAllTimers_UAC(pl_trIdx);
+
+  if (null != v_removeUAC)
+  {
+    v_removeUAC.apply(v_db_UAC.data[pl_trIdx].transactionId);
+  }
+  
+  f_EPTF_str2int_HashMap_Erase(
+    v_db_UAC.hashRef,
+    v_db_UAC.data[pl_trIdx].transactionId & c_SIP_Methods[enum2int(v_db_UAC.data[pl_trIdx].method)]);
+  
+  f_EPTF_SIP_Transaction_Remove(v_db_UAC, pl_trIdx);
+
+  if(c_EPTF_Common_debugSwitch and f_SIP_Logging_debugEnabled()) {
+    f_SIP_Logging_DEBUG(log2str(%definitionId,": removed UAC with id ", pl_trIdx)); 
+  }
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_SIP_Transaction_RemoveUAS
+// 
+//  Purpose:
+//    Removes an existing UAS transaction.
+// 
+//  Parameters:
+//    - pl_trIdx - *in integer* - the index of the transaction in v_db_UAS
+// 
+///////////////////////////////////////////////////////////
+function f_EPTF_SIP_Transaction_RemoveUAS(
+  in integer pl_trIdx)
+runs on EPTF_SIP_LGen_CT
+{
+  f_EPTF_SIP_CancelAllTimers_UAS(pl_trIdx);
+
+  if (null != v_removeUAS)
+  {
+    v_removeUAS.apply(v_db_UAS.data[pl_trIdx].transactionId);
+  }
+
+  f_EPTF_str2int_HashMap_Erase(
+    v_db_UAS.hashRef, 
+    v_db_UAS.data[pl_trIdx].transactionId & c_SIP_Methods[enum2int(v_db_UAS.data[pl_trIdx].method)] & v_db_UAS.data[pl_trIdx].cSeq);
+
+  f_EPTF_SIP_Transaction_Remove(v_db_UAS, pl_trIdx);
+  if(c_EPTF_Common_debugSwitch and f_SIP_Logging_debugEnabled()) {
+    f_SIP_Logging_DEBUG(log2str(%definitionId,": removed UAS with id ", pl_trIdx)); 
+  }
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_SIP_Transaction_Remove
+// 
+//  Purpose:
+//    Removes an existing transaction.
+// 
+//  Parameters:
+//    - pl_db_TR - *inout* <SIP_TransactionDatabase> - the transaction database
+//    - pl_trIdx - *in integer* - the transaction index
+// 
+///////////////////////////////////////////////////////////
+function f_EPTF_SIP_Transaction_Remove(
+  inout SIP_TransactionDatabase pl_db_TR,
+  in integer pl_trIdx)
+{
+//  pl_db_TR.data[pl_trIdx] := c_SIP_TransactionData_init; -- removed for speed optimization
+  f_EPTF_FBQ_moveFromBusyToFreeTail(pl_trIdx, pl_db_TR.queue);
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_SIP_Transaction_GenerateId
+// 
+//  Purpose:
+//    Generates a transaction ID
+// 
+//  Parameters:
+//    - pl_trIdx - *in integer* - the transaction index to encode in the ID
+//    - pl_TrIDstr - *inout charstring* - the returned transaction ID
+// 
+//  Detailed Comments:
+//    The generated ID will have the following format:
+//      six random digits & "T" & pl_trIdx encoded in 6 digits, prefixed with "0"s if needed
+///////////////////////////////////////////////////////////
+function f_EPTF_SIP_Transaction_GenerateId(
+  in integer pl_trIdx,
+  inout charstring pl_TrIDstr)
+{
+  var charstring vl_prefix := int2str(float2int(10000000.0 * rnd()));
+
+  pl_TrIDstr := int2str(pl_trIdx);
+  pl_TrIDstr := substr("000000",0,6-lengthof(pl_TrIDstr)) & pl_TrIDstr;
+  pl_TrIDstr := vl_prefix & "T" & pl_TrIDstr;
+};
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_retransmitUAS
+//
+//Purpose:  
+//  Retransits the last UAS response.
+//
+//Parameters:
+//  - pl_UAC - *in* *integer* - the index of the UAS transaction in v_db_UAS.
+//
+//Errors:
+//  - *could not start UAS retransmission timer*: the retransmission timer could not be started.
+//      No more retransmissions will occur.
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_retransmitUAS(in integer pl_UAS)
+runs on EPTF_SIP_LGen_CT
+{
+  var charstring vl_method := "";
+  f_EPTF_SIP_method2str(v_db_UAS.data[pl_UAS].method, vl_method);
+
+  if(c_EPTF_Common_debugSwitch) {
+    v_db_UAS.data[pl_UAS].methodList[sizeof(v_db_UAS.data[pl_UAS].methodList)] := vl_method;
+  }
+
+  v_currentUser := v_db_UAS.data[pl_UAS].userIdx;
+
+  f_EPTF_Var_adjustContent(v_statIdx_nofUASRetransmissions,
+    { intVal := f_EPTF_Var_getIntValue(v_statIdx_nofUASRetransmissions) + 1 });
+
+  f_EPTF_SIP_Message_RetransmitResponse(
+    v_db_UAS.data[pl_UAS].userIdx,
+    v_db_UAS.data[pl_UAS].sessionIdx,
+    v_db_UAS.data[pl_UAS].transport,
+    v_db_UAS.data[pl_UAS].responseRaw,
+    v_db_UAS.data[pl_UAS].via,
+    v_db_UAS.data[pl_UAS].connId,
+    v_db_UAS.data[pl_UAS].response);
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_retransmitUAC
+//
+//Purpose:  
+//  Retransits the last UAC response.
+//
+//Parameters:
+//  - pl_UAC - *in* *integer* - the index of the UAC transaction in v_db_UAC.
+//
+//Errors:
+//  - *could not start UAC retransmission timer*: the retransmission timer could not be started.
+//      No more retransmissions will occur.
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_retransmitUAC(in integer pl_UAC)
+runs on EPTF_SIP_LGen_CT
+{
+  var charstring vl_method := "";
+  f_EPTF_SIP_method2str(v_db_UAC.data[pl_UAC].method, vl_method);
+
+  if(c_EPTF_Common_debugSwitch) {
+    v_db_UAC.data[pl_UAC].methodList[sizeof(v_db_UAC.data[pl_UAC].methodList)] := vl_method;
+  }
+
+  if(not ispresent(v_db_UAC.data[pl_UAC].request)) {
+    f_SIP_Logging_WARNING(%definitionId&": request field not present in UAC.");
+    return;
+  }
+  
+  v_currentUser := v_db_UAC.data[pl_UAC].userIdx;
+
+  f_EPTF_Var_adjustContent(v_statIdx_nofUACRetransmissions,
+    { intVal := f_EPTF_Var_getIntValue(v_statIdx_nofUACRetransmissions) + 1 });
+
+  f_EPTF_SIP_Message_RetransmitRequest(
+      v_db_UAC.data[pl_UAC].userIdx,
+      v_db_UAC.data[pl_UAC].sessionIdx,
+      v_db_UAC.data[pl_UAC].transport,
+      v_db_UAC.data[pl_UAC].requestRaw,
+      v_db_UAC.data[pl_UAC].toAddr,
+      v_db_UAC.data[pl_UAC].request);
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_SIP_Transaction_GenerateId_2
+// 
+//  Purpose:
+//    Generates a transaction ID for a request to forward
+// 
+//  Parameters:
+//    - pl_request - *in* <PDU_SIP_Request> - the original message to forward
+//    - pl_TrIDstr - *inout charstring* - the returned transaction ID
+// 
+///////////////////////////////////////////////////////////
+function f_EPTF_SIP_Transaction_GenerateId_2(
+  in PDU_SIP_Request pl_request,
+  inout charstring pl_TrIDstr)
+{
+//generate branchID
+  var charstring vl_toTag := "";
+  var charstring vl_fromTag := "";
+  var charstring vl_requestURI := "";
+  var charstring vl_branchId := ""
+
+  f_EPTF_SIP_SIPUrl2str(pl_request.requestLine.requestUri, vl_requestURI);
+
+  if (ispresent(pl_request.msgHeader.toField.toParams))
+  {
+    f_EPTF_SIP_GetParameter(pl_request.msgHeader.toField.toParams,
+      c_SIP_TAG_ID, vl_toTag);
+  }
+
+  if (ispresent(pl_request.msgHeader.fromField.fromParams))
+  {
+    f_EPTF_SIP_GetParameter(pl_request.msgHeader.fromField.fromParams,
+      c_SIP_TAG_ID, vl_fromTag);
+  }
+  
+  if(ispresent(pl_request.msgHeader.via.viaBody) and
+      sizeof(pl_request.msgHeader.via.viaBody) > 0 and
+      ispresent(pl_request.msgHeader.via.viaBody[0].viaParams)) {
+    f_EPTF_SIP_GetParameter(pl_request.msgHeader.via.viaBody[0].viaParams,
+      c_SIP_BRANCH_ID, vl_branchId);
+  }
+
+  pl_TrIDstr := f_calculateMD5(
+    vl_branchId &
+    vl_toTag & 
+    vl_fromTag & 
+    pl_request.msgHeader.callId.callid & 
+    int2str(pl_request.msgHeader.cSeq.seqNumber) &
+    vl_requestURI);
+};
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_SIP_CancelAllTimers_UAC
+// 
+//  Purpose:
+//    Cancels all the runninve timers belonging to the UAC transaction.
+// 
+//  Parameters:
+//    - pl_trIdx - *in integer* - the transaction index
+// 
+///////////////////////////////////////////////////////////
+function f_EPTF_SIP_CancelAllTimers_UAC(in integer pl_trIdx)
+runs on EPTF_SIP_LGen_CT
+{
+  var integer i;
+  for(i := 0; i < sizeof(v_db_UAC.data[pl_trIdx].timers); i := i + 1) {
+    if(v_db_UAC.data[pl_trIdx].timers[i] >= 0) {
+      f_EPTF_SIP_CancelT_UAC(pl_trIdx, i);
+    }
+  }
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_SIP_CancelAllTimers_UAS
+// 
+//  Purpose:
+//   Cancels all the runninve timers belonging to the UAS transaction.
+// 
+//  Parameters:
+//    - pl_trIdx - *in integer* - the index of the transaction in v_db_UAS
+// 
+///////////////////////////////////////////////////////////
+function f_EPTF_SIP_CancelAllTimers_UAS(in integer pl_trIdx)
+runs on EPTF_SIP_LGen_CT
+{
+  var integer i;
+  for(i := 0; i < sizeof(v_db_UAS.data[pl_trIdx].timers); i := i + 1) {
+    if(v_db_UAS.data[pl_trIdx].timers[i] >= 0) {
+     f_EPTF_SIP_CancelT_UAS(pl_trIdx, i);
+    }
+  }
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_SIP_CancelT_UAC
+// 
+//  Purpose:
+//    Cancels a transaction timer for an UAC.
+// 
+//  Parameters:
+//    - pl_trIdx - *in integer* - the index of the transaction in v_db_UAC
+//    - pl_timerId - *in integer* - the index of transaction timer
+// 
+//  Errors:
+//    - *Timer #id is not running for UAC #idx*
+// 
+//  Return value:
+//    boolean - false if operation failed
+// 
+///////////////////////////////////////////////////////////
+function f_EPTF_SIP_CancelT_UAC(in integer pl_trIdx, in integer pl_timerId ) 
+runs on EPTF_SIP_LGen_CT 
+{
+  if(c_EPTF_Common_debugSwitch and f_SIP_Logging_debugEnabled()) {
+    f_SIP_Logging_DEBUG(log2str(%definitionId,": canceling timer ", pl_timerId, " for UAC ", pl_trIdx));
+  }
+  
+  if (v_db_UAC.data[pl_trIdx].timers[pl_timerId] >= 0)
+  { 
+    if(not f_EPTF_SchedulerComp_CancelEvent(v_db_UAC.data[pl_trIdx].timers[pl_timerId]))
+    {
+      f_SIP_Logging_WARNING(log2str(%definitionId,": could not cancel timer. "));
+    }
+    v_db_UAC.data[pl_trIdx].timers[pl_timerId] := -1;
+  }
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_SIP_CancelT_UAS
+// 
+//  Purpose:
+//    Cancels transaction timer for an UAS
+// 
+//  Parameters:
+//    - pl_trIdx - *in* *integer* - UAS entity index
+//    - pl_timerId - *in* *integer* - index of transaction timer
+// 
+//  Errors:
+//    - *Timer #id is not running for UAS #idx*
+// 
+//  Return value:
+//    boolean - false if operation failed
+// 
+///////////////////////////////////////////////////////////
+function f_EPTF_SIP_CancelT_UAS(in integer pl_trIdx, in integer pl_timerId ) 
+runs on EPTF_SIP_LGen_CT 
+{
+  if(c_EPTF_Common_debugSwitch and f_SIP_Logging_debugEnabled()) {
+    f_SIP_Logging_DEBUG(log2str(%definitionId,": canceling timer ", pl_timerId, " for UAS ", pl_trIdx));
+  }
+
+  if (v_db_UAS.data[pl_trIdx].timers[pl_timerId] >= 0)
+  { 
+    if(not f_EPTF_SchedulerComp_CancelEvent(v_db_UAS.data[pl_trIdx].timers[pl_timerId]))
+    {
+      f_SIP_Logging_WARNING(log2str(%definitionId,": could not cancel timer "));
+    }
+
+    v_db_UAS.data[pl_trIdx].timers[pl_timerId] := -1;
+  }
+} 
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_checkTransaction
+//
+//Purpose:
+//  Checks if a trasaction index is valid.
+//
+//Parameters:
+//  - pl_db_TR - *inout* <SIP_TransactionDatabase> - the transaction database
+//  - pl_trIdx - *in* *integer* - the index to check
+//
+//Return value:
+//  boolean - false: invalid; true: valid, i.e. the index can be used to
+//    retrieve data from the transaction database.
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_checkTransaction(inout SIP_TransactionDatabase pl_db_TR, in integer pl_trIdx)
+return boolean
+{
+  if (0 > pl_trIdx or sizeof(pl_db_TR.data) <= pl_trIdx or f_EPTF_FBQ_itemIsFree(pl_trIdx, pl_db_TR.queue))
+  {
+    return false;
+  }
+  
+  return true;
+}
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_getNofBusyUACs
+//
+//Purpose:
+//  Gets the number of active UACs.
+//
+//Return value:
+//  integer - the number of UACs.
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_getNofBusyUACs()
+runs on EPTF_SIP_LGen_CT
+return integer
+{
+  return f_EPTF_FBQ_getLengthOfBusyChain(v_db_UAC.queue);
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_getNofBusyUASs
+//
+//Purpose:
+//  Get the number of active UASs.
+//
+//Return value:
+//  integer - the number of UASs.
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_getNofBusyUASs()
+runs on EPTF_SIP_LGen_CT
+return integer
+{
+  return f_EPTF_FBQ_getLengthOfBusyChain(v_db_UAS.queue);
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_setMsgUACRequest
+//
+//Purpose:
+//  Adds the encoded SIP request to the transaction database.
+//
+//Parameters:
+//  - pl_trIdx - *in* *integer* - the index of the transaction in v_db_UAC
+//  - pl_message - *in* *octetstring* - the encoded SIP request
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_setMsgUACRequest(in integer pl_trIdx, in octetstring pl_message)
+runs on EPTF_SIP_LGen_CT
+{
+  v_db_UAC.data[pl_trIdx].requestRaw := pl_message;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_setMsgUACRequest
+//
+//Purpose:
+//  Adds the encoded SIP response to the transaction database.
+//
+//Parameters:
+//  - pl_trIdx - *in* *integer* - the index of the transaction in v_db_UAS
+//  - pl_message - *in* *octetstring* - the encoded SIP response
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_setMsgUASResponse(in integer pl_trIdx, in octetstring pl_message)
+runs on EPTF_SIP_LGen_CT
+{
+  v_db_UAS.data[pl_trIdx].responseRaw := pl_message;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_getCurrentUACLatency
+//
+//Purpose:
+//  Calculates the latency in the current UAC.
+//
+//Return value:
+//  float - the latency of the UAC, get by substracting the time of the first request sent from the
+//            time of the first response received
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_getCurrentUACLatency()
+runs on EPTF_SIP_LGen_CT
+return float
+{
+  return v_db_UAC.data[v_currentUAC].receiveTime - v_db_UAC.data[v_currentUAC].sendTime;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_modifyResponseHeaderAndBody_Default
+//
+//Purpose:
+//  Default call-back function which gives WARNING if it is invoked.
+//  Call-back function was not registered but it was invoked.
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_modifyResponseHeaderAndBody_Default(
+    inout PDU_SIP_Response pl_response,
+    in EPTF_IntegerList pl_params := {},
+    in EPTF_LGenBase_TestStepArgs pl_ptr := c_EPTF_LGenBase_emptyTestStepArgs)
+  runs on EPTF_SIP_LGen_CT
+{
+  f_SIP_Logging_DEBUG(
+    %definitionId & 
+    ": Call-back function was invoked but there is no registered function.");
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_modifyRequestHeaderAndBody_Default
+//
+//Purpose:
+//  Default call-back function which gives WARNING if it is invoked.
+//  Call-back function was not registered but it was invoked.
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_modifyRequestHeaderAndBody_Default(
+    inout PDU_SIP_Request pl_request,
+    in EPTF_IntegerList pl_params := {},
+    in EPTF_LGenBase_TestStepArgs pl_ptr := c_EPTF_LGenBase_emptyTestStepArgs)
+  runs on EPTF_SIP_LGen_CT
+{
+  f_SIP_Logging_DEBUG(
+    %definitionId & 
+    ": Call-back function was invoked but there is no registered function.");
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_modifyRequestHeaderAndTemplateBody_Default
+//
+//Purpose:
+//  Default call-back function which gives WARNING if it is invoked.
+//  Call-back function was not registered but it was invoked.
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_modifyRequestHeaderAndTemplateBody_Default(
+    inout MessageHeader pl_requestHeader,
+    inout EPTF_LGenBase_TemplParamSubstList pl_templateParams,
+    in EPTF_IntegerList pl_params := {},
+    in EPTF_LGenBase_TestStepArgs pl_ptr := c_EPTF_LGenBase_emptyTestStepArgs)
+  runs on EPTF_SIP_LGen_CT
+{
+  f_SIP_Logging_DEBUG(
+    %definitionId & 
+    ": Call-back function was invoked but there is no registered function.");
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_modifyRequestTemplateHeaderAndBody_Default
+//
+//Purpose:
+//  Default call-back function which gives WARNING if it is invoked.
+//  Call-back function was not registered but it was invoked.
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_modifyRequestTemplateHeaderAndBody_Default(
+    inout EPTF_LGenBase_TemplParamSubstList pl_templateParams,
+    inout charstring pl_requestBody,
+    in EPTF_IntegerList pl_params := {},
+    in EPTF_LGenBase_TestStepArgs pl_ptr := c_EPTF_LGenBase_emptyTestStepArgs)
+  runs on EPTF_SIP_LGen_CT
+{
+  f_SIP_Logging_DEBUG(
+    %definitionId & 
+    ": Call-back function was invoked but there is no registered function.");
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_modifyRequestTemplateParams_Default
+//
+//Purpose:
+//  Default call-back function which gives WARNING if it is invoked.
+//  Call-back function was not registered but it was invoked.
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_modifyRequestTemplateParams_Default(
+    inout EPTF_LGenBase_TemplParamSubstList pl_templateParams,
+    in EPTF_IntegerList pl_params := {},
+    in EPTF_LGenBase_TestStepArgs pl_ptr := c_EPTF_LGenBase_emptyTestStepArgs)
+  runs on EPTF_SIP_LGen_CT
+{
+  f_SIP_Logging_DEBUG(
+    %definitionId & 
+    ": Call-back function was invoked but there is no registered function.");
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_registerModifyMsgCallBackData
+//
+//Purpose:
+//  Register request call-back functions.
+//
+//Parameters:
+//  - pl_name - *in* *charstring* - the name of the call-back functions
+//  - pl_defaultParams - *in* <EPTF_IntegerList> - default list of parameter which are passed in call-back functions
+//  - pl_fn_modifyRequestHeaderAndBody - *in* <fcb_EPTF_SIP_modifyRequestHeaderAndBody> -
+//     Call-back function to modify the contents of both Request Header and Body
+//  - pl_fn_modifyRequestHeaderAndTemplateBody - *in* <fcb_EPTF_SIP_modifyRequestHeaderAndTemplateBody> - 
+//     Call-back function to modify outgoing Request contents of the Header and Template params of Body
+//  - pl_fn_modifyRequestTemplateHeaderAndBody - *in* <fcb_EPTF_SIP_modifyRequestTemplateHeaderAndBody> - 
+//     Call-back function to modify outgoing Request Template params only for the Header and contents of the Body
+//  - pl_fn_modifyRequestTemplateParams - *in* <fcb_EPTF_SIP_modifyRequestTemplateParams> - 
+//     Call-back function to modify outgoing Request Template params for both Header and Body
+//  - pl_fn_modifyResponseHeaderAndBody - <fcb_EPTF_SIP_modifyResponseHeaderAndBody> -
+//     Call-back function to modify the contents of outgoing Response Header and Body
+//
+//Return value:
+//  integer - the index of the call-back functions which could be used in test step functions
+//            if the functions are allready registered then -1 is returned
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_registerModifyMsgCallBackData(
+    in charstring pl_name,
+    in fcb_EPTF_SIP_modifyRequestHeaderAndBody pl_fn_modifyRequestHeaderAndBody := refers(f_EPTF_SIP_modifyRequestHeaderAndBody_Default),
+    in fcb_EPTF_SIP_modifyRequestHeaderAndTemplateBody pl_fn_modifyRequestHeaderAndTemplateBody := refers(f_EPTF_SIP_modifyRequestHeaderAndTemplateBody_Default),
+    in fcb_EPTF_SIP_modifyRequestTemplateHeaderAndBody pl_fn_modifyRequestTemplateHeaderAndBody := refers(f_EPTF_SIP_modifyRequestTemplateHeaderAndBody_Default),
+    in fcb_EPTF_SIP_modifyRequestTemplateParams pl_fn_modifyRequestTemplateParams := refers(f_EPTF_SIP_modifyRequestTemplateParams_Default),
+    in fcb_EPTF_SIP_modifyResponseHeaderAndBody pl_fn_modifyResponseHeaderAndBody := refers(f_EPTF_SIP_modifyResponseHeaderAndBody_Default))
+  runs on EPTF_SIP_LGen_CT
+  return integer
+{
+  if(c_EPTF_Common_debugSwitch and f_SIP_Logging_debugEnabled()) {
+    f_SIP_Logging_DEBUG(
+      log2str(%definitionId,": registering functions:",
+      pl_fn_modifyRequestHeaderAndBody, "; ",
+      pl_fn_modifyRequestHeaderAndTemplateBody, "; ",
+      pl_fn_modifyRequestTemplateHeaderAndBody, "; ",
+      pl_fn_modifyRequestTemplateParams, "; ",
+      "with name: ", pl_name));
+  }
+  
+  var integer vl_idx;
+  if (f_EPTF_str2int_HashMap_Find(v_db_modifyMsgCallBack.hashRef, pl_name, vl_idx))
+  {
+    f_SIP_Logging_WARNING(log2str(
+      %definitionId,": registered function (name:",pl_name,",index:",vl_idx,") is not unique: ", v_db_modifyMsgCallBack.data[vl_idx]));
+    return -1;
+  }
+  
+  vl_idx := sizeof(v_db_modifyMsgCallBack.data);
+  
+  v_db_modifyMsgCallBack.data[vl_idx].name := pl_name;
+  v_db_modifyMsgCallBack.data[vl_idx].modifyRequestHeaderAndBody := pl_fn_modifyRequestHeaderAndBody;
+  v_db_modifyMsgCallBack.data[vl_idx].modifyRequestHeaderAndTemplateBody := pl_fn_modifyRequestHeaderAndTemplateBody;
+  v_db_modifyMsgCallBack.data[vl_idx].modifyRequestTemplateHeaderAndBody := pl_fn_modifyRequestTemplateHeaderAndBody;
+  v_db_modifyMsgCallBack.data[vl_idx].modifyRequestTemplateParams := pl_fn_modifyRequestTemplateParams;
+  v_db_modifyMsgCallBack.data[vl_idx].modifyResponseHeaderAndBody := pl_fn_modifyResponseHeaderAndBody;
+  f_EPTF_str2int_HashMap_Insert(v_db_modifyMsgCallBack.hashRef, pl_name, vl_idx);
+  
+  return vl_idx;
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_modifyMsgCallBack_initDatabase
+//
+//Purpose:
+//  Initializes the call-back function database for outgoing messages (v_db_modifyMsgCallBack).
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_ModifyMsgCallBack_initDatabase()
+  runs on EPTF_SIP_LGen_CT
+{
+  v_db_modifyMsgCallBack.hashRef := f_EPTF_str2int_HashMap_New("EPTF_SIP_RequestCallBackDatabase_FunctionsHash");
+  v_db_modifyMsgCallBack.data := {};
+}
+
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_modifyMsgCallBack_cleanUpDatabase
+//
+//Purpose:  
+//  Cleans up the call-back function database for outgoing messages (v_db_modifyMsgCallBack).
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_ModifyMsgCallBack_cleanUpDatabase()
+  runs on EPTF_SIP_LGen_CT
+{
+  f_EPTF_str2int_HashMap_Delete("EPTF_SIP_RequestCallBackDatabase_FunctionsHash");
+  v_db_modifyMsgCallBack.data := {};
+}
+
+////////////////////////////////////////////////////
+//Function: BYE
+//
+//Purpose:
+//  Calculates the index of the received response event in case of the BYE method.
+//  Can be used only in case of differentiated responses.
+//
+//Parameters:
+//  - pl_statusCode - *in* *integer* - the status code of the response
+//
+//Return value:
+//  integer - the event index
+////////////////////////////////////////////////////
+function BYE(in integer pl_statusCode) return integer
+{
+  return c_SIP_Method_BYE * c_SIP_EventOffset + pl_statusCode;
+}
+
+////////////////////////////////////////////////////
+//Function: CANCEL
+//
+//Purpose:
+//  Calculates the index of the received response event in case of the CANCEL method.
+//  Can be used only in case of differentiated responses.
+//
+//Parameters:
+//  - pl_statusCode - *in* *integer* - the status code of the response
+//
+//Return value:
+//  integer - the event index
+////////////////////////////////////////////////////
+function CANCEL(in integer pl_statusCode) return integer
+{
+  return c_SIP_Method_CANCEL * c_SIP_EventOffset + pl_statusCode;
+}
+
+////////////////////////////////////////////////////
+//Function: INFO
+//
+//Purpose:
+//  Calculates the index of the received response event in case of the INFO method.
+//  Can be used only in case of differentiated responses.
+//
+//Parameters:
+//  - pl_statusCode - *in* *integer* - the status code of the response
+//
+//Return value:
+//  integer - the event index
+////////////////////////////////////////////////////
+function INFO(in integer pl_statusCode) return integer
+{
+  return c_SIP_Method_INFO * c_SIP_EventOffset + pl_statusCode;
+}
+
+////////////////////////////////////////////////////
+//Function: INVITE
+//
+//Purpose:
+//  Calculates the index of the received response event in case of the INVITE method.
+//  Can be used only in case of differentiated responses.
+//
+//Parameters:
+//  - pl_statusCode - *in* *integer* - the status code of the response
+//
+//Return value:
+//  integer - the event index
+////////////////////////////////////////////////////
+function INVITE(in integer pl_statusCode) return integer
+{
+  return c_SIP_Method_INVITE * c_SIP_EventOffset + pl_statusCode;
+}
+
+////////////////////////////////////////////////////
+//Function: OPTIONS
+//
+//Purpose:
+//  Calculates the index of the received response event in case of the OPTIONS method.
+//  Can be used only in case of differentiated responses.
+//
+//Parameters:
+//  - pl_statusCode - *in* *integer* - the status code of the response
+//
+//Return value:
+//  integer - the event index
+////////////////////////////////////////////////////
+function OPTIONS(in integer pl_statusCode) return integer
+{
+  return c_SIP_Method_OPTIONS * c_SIP_EventOffset + pl_statusCode;
+}
+
+////////////////////////////////////////////////////
+//Function: MESSAGE
+//
+//Purpose:
+//  Calculates the index of the received response event in case of the MESSAGE method.
+//  Can be used only in case of differentiated responses.
+//
+//Parameters:
+//  - pl_statusCode - *in* *integer* - the status code of the response
+//
+//Return value:
+//  integer - the event index
+////////////////////////////////////////////////////
+function MESSAGE(in integer pl_statusCode) return integer
+{
+  return c_SIP_Method_MESSAGE * c_SIP_EventOffset + pl_statusCode;
+}
+
+////////////////////////////////////////////////////
+//Function: NOTIFY
+//
+//Purpose:
+//  Calculates the index of the received response event in case of the NOTIFY method.
+//  Can be used only in case of differentiated responses.
+//
+//Parameters:
+//  - pl_statusCode - *in* *integer* - the status code of the response
+//
+//Return value:
+//  integer - the event index
+////////////////////////////////////////////////////
+function NOTIFY(in integer pl_statusCode) return integer
+{
+  return c_SIP_Method_NOTIFY * c_SIP_EventOffset + pl_statusCode;
+}
+
+////////////////////////////////////////////////////
+//Function: PRACK
+//
+//Purpose:
+//  Calculates the index of the received response event in case of the PRACK method.
+//  Can be used only in case of differentiated responses.
+//
+//Parameters:
+//  - pl_statusCode - *in* *integer* - the status code of the response
+//
+//Return value:
+//  integer - the event index
+////////////////////////////////////////////////////
+function PRACK(in integer pl_statusCode) return integer
+{
+  return c_SIP_Method_PRACK * c_SIP_EventOffset + pl_statusCode;
+}
+
+////////////////////////////////////////////////////
+//Function: PUBLISH
+//
+//Purpose:
+//  Calculates the index of the received response event in case of the PUBLISH method.
+//  Can be used only in case of differentiated responses.
+//
+//Parameters:
+//  - pl_statusCode - *in* *integer* - the status code of the response
+//
+//Return value:
+//  integer - the event index
+////////////////////////////////////////////////////
+function PUBLISH(in integer pl_statusCode) return integer
+{
+  return c_SIP_Method_PUBLISH * c_SIP_EventOffset + pl_statusCode;
+}
+
+////////////////////////////////////////////////////
+//Function: REFER
+//
+//Purpose:
+//  Calculates the index of the received response event in case of the REFER method.
+//  Can be used only in case of differentiated responses.
+//
+//Parameters:
+//  - pl_statusCode - *in* *integer* - the status code of the response
+//
+//Return value:
+//  integer - the event index
+////////////////////////////////////////////////////
+function REFER(in integer pl_statusCode) return integer
+{
+  return c_SIP_Method_REFER * c_SIP_EventOffset + pl_statusCode;
+}
+
+////////////////////////////////////////////////////
+//Function: REGISTER
+//
+//Purpose:
+//  Calculates the index of the received response event in case of the REGISTER method.
+//  Can be used only in case of differentiated responses.
+//
+//Parameters:
+//  - pl_statusCode - *in* *integer* - the status code of the response
+//
+//Return value:
+//  integer - the event index
+////////////////////////////////////////////////////
+function REGISTER(in integer pl_statusCode) return integer
+{
+  return c_SIP_Method_REGISTER * c_SIP_EventOffset + pl_statusCode;
+}
+
+////////////////////////////////////////////////////
+//Function: SUBSCRIBE
+//
+//Purpose:
+//  Calculates the index of the received response event in case of the SUBSCRIBE method.
+//  Can be used only in case of differentiated responses.
+//
+//Parameters:
+//  - pl_statusCode - *in* *integer* - the status code of the response
+//
+//Return value:
+//  integer - the event index
+////////////////////////////////////////////////////
+function SUBSCRIBE(in integer pl_statusCode) return integer
+{
+  return c_SIP_Method_SUBSCRIBE * c_SIP_EventOffset + pl_statusCode;
+}
+
+////////////////////////////////////////////////////
+//Function: UPDATE
+//
+//Purpose:
+//  Calculates the index of the received response event in case of the UPDATE method.
+//  Can be used only in case of differentiated responses.
+//
+//Parameters:
+//  - pl_statusCode - *in* *integer* - the status code of the response
+//
+//Return value:
+//  integer - the event index
+////////////////////////////////////////////////////
+function UPDATE(in integer pl_statusCode) return integer
+{
+  return c_SIP_Method_UPDATE * c_SIP_EventOffset + pl_statusCode;
+}
+
+}//end of module
+with {
+extension "version <RnXnn>"
+}
+

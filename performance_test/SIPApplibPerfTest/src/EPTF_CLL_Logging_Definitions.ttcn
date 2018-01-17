@@ -1,0 +1,288 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_CLL_Logging_Definitions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 512
+//  Updated:  2011-06-29
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////
+//  Module: EPTF_CLL_Logging_Definitions
+// 
+//  Purpose:
+//    This module contains type definitions for TTCN-3 EPTF_Logging implementation.
+// 
+//  Module Parameters:
+//    tsp_EPTF_Logging_debug - *boolean* - enables debug logging. Default: false
+//    tsp_EPTF_Logging_debugM - *boolean* - enables medium debug logging. Default: false
+//    tsp_EPTF_Logging_debugV - *boolean* - enables verbose debug logging. Default: false
+//
+//  Module depends on:
+//    <EPTF_CLL_Base_Definitions>
+// 
+//  Current Owner:
+//    EFLOATT
+// 
+//  Last Review Date:
+//    2010-xx-xx
+//
+//  Detailed Comments:
+//    This module contains type definitions for TTCN-3 EPTF_Logging implementation.
+// 
+///////////////////////////////////////////////////////////////
+
+module EPTF_CLL_Logging_Definitions {
+import from EPTF_CLL_Common_Definitions all;
+import from EPTF_CLL_Base_Definitions all;
+
+type EPTF_CharstringList EPTF_Logging_strList;
+//modulepar EPTF_Logging_EventClassPrefixList tsp_EPTF_UserEventClassPrefixList := { "Error", "Warning", "Debug" };
+//modulepar EPTF_Logging_EventClassPrefixList tsp_EPTF_CoreEventClassPrefixList := { "CLL Error", "CLL Warning", "CLL Debug", "CLL DebugM" , "CLL DebugV"  };
+
+modulepar boolean tsp_EPTF_Logging_debug := false;
+modulepar boolean tsp_EPTF_Logging_debugM := false;
+modulepar boolean tsp_EPTF_Logging_debugV := false;
+
+const integer EPTF_Logging_WARNING := 0;
+const integer EPTF_Logging_DEBUG   := 1;
+const integer EPTF_Logging_DEBUGM  := 2;
+const integer EPTF_Logging_DEBUGV  := 3;
+
+//const EPTF_Logging_strList EPTF_Logging_SelectionList := {"EPTF_CLL", "EPTF_User"};
+//Just for the naming convention...
+//const EPTF_Logging_strList c_Logging_selectionList := EPTF_Logging_SelectionList;
+
+//type enumerated EPTF_Logging_selection {
+const integer EPTF_Logging_CLL := 0;//,
+const integer EPTF_Logging_user := 1;
+//}
+type integer EPTF_Logging_Selection(EPTF_Logging_CLL,EPTF_Logging_user);
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Logging_EventClassPrefixList
+// 
+//  Purpose:
+//     List of Event class prefixes.
+// 
+//  Elements:
+//
+//  Detailed Comments:
+//     
+/////////////////////////////////////////////////////////// 
+type EPTF_CharstringList EPTF_Logging_EventClassPrefixList;
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Logging_LogMaskList
+// 
+//  Purpose:
+//     List of booleans.
+// 
+//  Elements:
+//
+//  Detailed Comments:
+//     
+/////////////////////////////////////////////////////////// 
+type record of boolean EPTF_Logging_LogMaskList;
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Logging_LoggerData
+// 
+//  Purpose:
+//     Contains logging flags for the current component
+// 
+//  Elements:
+//    v_EventClassPrefixList - <EPTF_Logging_EventClassPrefixList> - The prefixes of the logging classes
+//    globalLogIsEnabled - *boolean* - the globalLogIsEnabled parameter
+//    globalLogMask_List - <EPTF_LogMaskKeyList> - the global Log Masks
+//
+//    EPTF_componentLogIsEnabled - *integer* - the componentLogIsEnabled parameter
+//    EPTF_componentLogMask_List - <EPTF_LogMaskKeyList> - the component Log Masks
+//
+//  Detailed Comments:
+//     
+/////////////////////////////////////////////////////////// 
+type record EPTF_Logging_ComponentMask {
+  integer selection,
+  charstring componentTypeName,  // name of the componentType
+  EPTF_Logging_EventClassPrefixList eventClassNames,   // logmasks names defined for this component type
+
+  boolean componentGlobalEnable,          // disables logging on all components with the same type
+  EPTF_Logging_LogMaskList componentGlobalMask,  // disables a given logging class on all components with the same type
+
+  boolean componentLocalEnable,           // disables logging of the component type on the current component
+  EPTF_Logging_LogMaskList componentLocalMask // disables a given logging class on the current component
+}
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Logging_LoggerData
+// 
+//  Purpose:
+//     Contains logging flags for all components with the same type
+// 
+//  Elements:
+//    v_EventClassPrefixList - <EPTF_Logging_EventClassPrefixList> - The prefixes of the logging classes
+//    globalLogIsEnabled - *boolean* - the globalLogIsEnabled parameter
+//    globalLogMask_List - <EPTF_LogMaskKeyList> - the global Log Masks
+//
+//  Detailed Comments:
+//     
+/////////////////////////////////////////////////////////// 
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Logging_ComponentMask_List
+// 
+//  Purpose:
+//     List of <EPTF_Logging_LoggerData>. Contains all data for <EPTF_Logging>.
+// 
+//  Elements:
+//
+//  Detailed Comments:
+//     This list contains two elements: one for the logger data for CORE
+//     and the other for the USER.
+//     
+/////////////////////////////////////////////////////////// 
+type record of EPTF_Logging_ComponentMask EPTF_Logging_ComponentMask_List;
+
+
+///////////////////////////////////////////////////////////
+// Constant: c_default_EPTF_Logging_ComponentMask
+//
+// Purpose:
+//   Default <EPTF_Logging_LoggerData>.
+//
+// Elements:
+//  selection := EPTF_Logging_user,
+//  componentTypeName := "",  // name of the componentType
+//  eventClassNames := {},   // logmasks names defined for this component type
+//
+//  componentGlobalEnable := false,
+//  componentGlobalMask := {},
+//
+//  componentLocalEnable := false,
+//  componentLocalMask := {}
+///////////////////////////////////////////////////////////
+const EPTF_Logging_ComponentMask c_default_EPTF_Logging_ComponentMask :=
+{
+  selection := EPTF_Logging_user,
+  componentTypeName := "",  // name of the componentType
+  eventClassNames := {},   // logmasks names defined for this component type
+
+  componentGlobalEnable := false,
+  componentGlobalMask := {},
+
+  componentLocalEnable := false,
+  componentLocalMask := {}
+}
+
+///////////////////////////////////////////////////////////
+//  Type: fcb_EPTF_LoggingUI_update_FT
+// 
+//  Purpose:
+//     Function type for EPTF_LoggingUI to update the gui of the given loggingMask
+// 
+//  Parameters:
+//    pl_logMaskIdx - *in* *integer* - id of the loggingMask
+//
+//  Detailed Comments:
+//     
+/////////////////////////////////////////////////////////// 
+type function fcb_EPTF_LoggingUI_update_FT(in integer pl_logMaskIdx) runs on self;
+
+///////////////////////////////////////////////////////////
+//  Type: fcb_EPTF_LoggingUI_refreshVar_FT
+// 
+//  Purpose:
+//     Function type for EPTF_LoggingUI to refresh the EPTF Var that belongs to the
+//     given logging variable
+// 
+//  Parameters:
+//    pl_logVar - *inout* *boolean* - the component variable for the logging flag
+//
+//  Detailed Comments:
+//    the inout for pl_logVar is needed so it is not copied
+//    (resulting in incorrect memory address for the EPTF variable)
+//     
+/////////////////////////////////////////////////////////// 
+type function fcb_EPTF_LoggingUI_refreshVar_FT(inout boolean pl_logVar) runs on self;
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Logging_preamble_FT
+// 
+//  Purpose:
+//     Function type for EPTF_Logging to run it before the actual logging is performed
+//    
+// 
+//  Parameters:
+//    pl_message - *in* *charstring* - message to log
+//
+//  Detailed Comments:
+//    -
+//     
+/////////////////////////////////////////////////////////// 
+type function EPTF_Logging_preamble_FT(in charstring pl_message) runs on self;
+
+//TODO comment
+type function EPTF_Logging_SelectionUpdate_FT(in integer pl_idx) runs on self;
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Logging_preambleFunctionsList
+// 
+//  Purpose:
+//     List of callback functions class prefixes.
+// 
+//  Elements:
+//
+//  Detailed Comments:
+//     
+/////////////////////////////////////////////////////////// 
+type record of EPTF_Logging_preamble_FT EPTF_Logging_preambleFunctionsList;
+
+
+///////////////////////////////////////////////////////////
+//  Component: EPTF_Logging_CT
+// 
+//  Purpose:
+//     Component type for EPTF Generic Logger interface.
+// 
+//  Elements:
+//    v_EPTF_Logging_initialized - *boolean* - true if logging is initalized with its init function <f_EPTF_initComponentLogging>
+//    v_EPTF_LoggerDataList - <EPTF_LoggerDataList> - contains all logger data for USER/CORE logging
+//
+//  Detailed Comments:
+//     
+/////////////////////////////////////////////////////////// 
+type component EPTF_Logging_CT extends EPTF_Base_CT {
+  private var boolean v_EPTF_Logging_initialized := false;
+  // these variables are used to create EPTF_Variables in EPTF_CLL_LoggingUI_Functions => they must be public (logging cannot extend EPTF_Var: circular extend)
+  public var boolean v_EPTF_Logging_allComponentGlobalEnable := true;                // disables all logging on all components
+  public var boolean v_EPTF_Logging_allComponentLocalEnable := true;                         // disables all logging on the current component
+  public var EPTF_Logging_ComponentMask_List v_EPTF_Logging_ComponentMask_List := {};         // comp masks
+  private var fcb_EPTF_LoggingUI_update_FT f_loggingUI_update := null;
+  private var fcb_EPTF_LoggingUI_refreshVar_FT f_loggingUI_refreshVar := null;
+  private var EPTF_Logging_SelectionUpdate_FT v_Logging_selectionUpdate := null;
+  private var EPTF_Logging_preambleFunctionsList v_EPTF_Logging_preambleFnList := {};
+  private var boolean v_EPTF_Logging_isRegisteredPreambleFn := false; 
+  private var integer v_EPTF_Logging_myMaskId; // the Id of my logging masks
+  //private var EPTF_CharstringList v_EPTF_Logging_errorMsgs := {}; // the list of error messages - global var used in Common instead
+  private var charstring v_EPTF_Logging_expectedError := ""; // the expected assert message at cleanup
+  public var EPTF_Logging_strList v_Logging_selectionList := {"EPTF_CLL", "EPTF_User"};
+}
+
+///////////////////////////////////////////////////////////
+//  Constant: c_EPTF_Logging_invalidMaskId
+// 
+//  Purpose:
+//     Invalid component mask ID.
+// 
+//  Detailed Comments:
+//    *const* *integer* *-1*
+//     
+///////////////////////////////////////////////////////////
+const integer c_EPTF_Logging_invalidMaskId := -1;
+
+} // end of module EPTF_CLL_Logging_Definitions

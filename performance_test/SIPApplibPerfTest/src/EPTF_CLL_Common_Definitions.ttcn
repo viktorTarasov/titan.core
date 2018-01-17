@@ -1,0 +1,218 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_CLL_Common_Definitions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 512
+//  Updated:  2008-11-03
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////
+//  Module: EPTF_CLL_Common_Definitions
+// 
+//  Purpose:
+//    This module provides common data types for EPTF framework.
+// 
+//  Module Parameters:
+//    tsp_EPTF_maxRunningTime - *float* - refresh period time for TITAN Runtime GUI
+//    tsp_CLL_debug_acceptableMaxSizeOfGrowingVariables - *integer* - initial threshold for debugging FBQ, RBT, etc. "memory leak"
+//    tsp_CLL_debug_increasePercentage4AcceptableMaxSize - *float* - increase factor for max size threshold
+// 
+//  Module depends on:
+//    <EPTF_CLL_Common_PrivateDebugDefinitions>
+// 
+//  Current Owner:
+//    ENORPIN
+// 
+//  Last Review Date:
+//    2008-10-31
+// 
+//  Detailed Comments:
+// 
+///////////////////////////////////////////////////////////
+module EPTF_CLL_Common_Definitions
+{
+
+import from EPTF_CLL_Common_PrivateDebugDefinitions all;
+
+modulepar float tsp_EPTF_maxRunningTime := 2147483.0; // Default value: 
+                                                 // 2147483.0 -  This value is cca. 24 days. Under Solaris if you use a period 
+                                                 // longer than 24 days, you might get warnings about truncated select()
+                                                 // syscalls in the log
+                                                 //
+                                                 // Detailed description:
+                                                 // The value is used for setting timeouts that are not supposed 
+                                                // to expire within the test campaing
+
+modulepar integer tsp_CLL_debug_acceptableMaxSizeOfGrowingVariables := -1;
+modulepar float tsp_CLL_debug_increasePercentage4AcceptableMaxSize := 0.1;
+
+//=========================================================================
+// Data Types
+//=========================================================================
+///////////////////////////////////////////////////////////
+// Type: EPTF_DefaultList
+//
+// Purpose:
+//   Record of defaults to provide a container for arbitrary number of defaults
+//
+// Elements:
+//   record of *default*
+///////////////////////////////////////////////////////////
+type record of default EPTF_DefaultList;
+///////////////////////////////////////////////////////////
+// Type: EPTF_IntegerList
+//
+// Purpose:
+//   Record of integers to provide a container for arbitrary number of integers
+//
+// Elements:
+//   record of *integer*
+///////////////////////////////////////////////////////////
+type record of integer EPTF_IntegerList;
+
+///////////////////////////////////////////////////////////
+// Type: EPTF_IntegerArray2D
+//
+// Purpose:
+//   2D Record of integers to provide a container for arbitrary number of integers
+//
+// Elements:
+//   record of <EPTF_IntegerList>
+///////////////////////////////////////////////////////////
+type record of EPTF_IntegerList EPTF_IntegerArray2D;
+
+
+///////////////////////////////////////////////////////////
+// Type: EPTF_CharstringList
+//
+// Purpose:
+//   Record of charstring to provide a container for arbitrary number of charstrings
+//
+// Elements:
+//   *charstring*
+///////////////////////////////////////////////////////////
+type record of charstring EPTF_CharstringList;
+
+///////////////////////////////////////////////////////////
+// Type: EPTF_FloatList
+//
+// Purpose:
+//   Record of float to provide a container for arbitrary number of floats
+//
+// Elements:
+//   *float*
+///////////////////////////////////////////////////////////
+type record of float EPTF_FloatList;
+
+///////////////////////////////////////////////////////////
+// Type: EPTF_BooleanList
+//
+// Purpose:
+//   Record of *boolean* to provide a container for arbitrary number of booleans
+//
+// Elements:
+//   *boolean*
+///////////////////////////////////////////////////////////
+type record of boolean EPTF_BooleanList;
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_LEDColors
+// 
+//  Purpose:
+//     Enumerated type for the known led colors.
+// 
+//  Elements:
+//   led_blue - for value: "[led:blue]"
+//   led_black - for value: "[led:black]"
+//   led_yellow - for value: "[led:yellow]"
+//   led_green - for value: "[led:green]"
+//   led_red - for value: "[led:red]"
+// 
+//  Detailed Comments:
+//    
+///////////////////////////////////////////////////////////
+type enumerated EPTF_LEDColors {
+   led_blue,
+   led_black,
+   led_yellow,
+   led_green,
+   led_red
+}
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_StatusLED
+// 
+//  Purpose:
+//     Record type for status leds with text.
+// 
+//  Elements:
+//   color - <EPTF_LEDColors> - the color of the StatusLED
+//   text - *charstring* - the text of the StatusLED
+// 
+//  Detailed Comments:
+//    
+///////////////////////////////////////////////////////////
+type record EPTF_StatusLED {
+   EPTF_LEDColors color,
+   charstring     text optional
+}
+
+///////////////////////////////////////////////////////////
+// Type: EPTF_ParamRangeDescriptor
+//
+// Purpose:
+//   Record type for defining an integer parameter range
+//
+// Elements:
+//   - name - *charstring* - the name of the range
+//   - baseOffset - *integer* - the first value of the range
+//   - count - *integer* - the size of the range
+//   - iterator - *integer* - the actual value
+//
+///////////////////////////////////////////////////////////
+type record EPTF_ParamRangeDescriptor{
+  charstring name,
+  integer    baseOffset,
+  integer    count,
+  integer    iterator
+}
+
+///////////////////////////////////////////////////////////
+// Type: EPTF_ParamRangeDescriptorList
+//
+// Purpose:
+//   Record of <EPTF_ParamRangeDescriptor> to provide a container for arbitrary
+//   number of <EPTF_ParamRangeDescriptor> elements
+//
+// Elements:
+//   <EPTF_ParamRangeDescriptor>
+///////////////////////////////////////////////////////////
+type record of EPTF_ParamRangeDescriptor EPTF_ParamRangeDescriptorList;
+
+
+
+
+
+//=========================================================================
+// Constants
+//=========================================================================
+
+///////////////////////////////////////////////////////////
+//  Constant: c_EPTF_Common_debugSwitch
+// 
+//  Purpose:
+//    Boolean constant to switch on/off debugging in the CLL code
+// 
+//  Detailed Comments:
+//    The actual value depends on the preprocessor macro EPTF_DEBUG.
+//    If EPTF_DEBUG is defined, the value is true.
+///////////////////////////////////////////////////////////
+const boolean c_EPTF_Common_debugSwitch := c_EPTF_Common_debugSwitchPrivate;
+
+}  // end of module

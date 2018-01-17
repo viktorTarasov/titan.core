@@ -1,0 +1,219 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//
+//  File:               TCCIPsec_Functions.ttcn
+//  Description:        TCC Useful Functions: IPsec Functions
+//  Rev:                <RnXnn>
+//  Prodnr:             CNL 113 472
+//  Updated:            2012-10-31
+//  Contact:            http://ttcn.ericsson.se
+//
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+//  Module: TCCIPsec_Functions
+//
+//  Purpose:
+//    This module provides access to the IPsec parameter databases: SADB and SPDB
+//
+//  Module Parameters:
+//      -
+//
+//  Module depends on:
+//    -
+//
+///////////////////////////////////////////////////////////////////////////////
+module TCCIPsec_Functions {
+  import from TCCIPsec_Definitions all;
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_IPsec_SADB_add
+//
+//  Purpose:
+//    Adds a Security Association to the database (SADB)
+//
+//  Parameters:
+//    srcAddress - *in* *charstring* - source IP address
+//    dstAddress - *in* *charstring* - destination IP address
+//    protocol - *in* <TCCIPsec_Protocol> - security protocol (esp or ah)
+//    spi - *in* *integer* - Security Parameter Index
+//    extensionList - *in* <TCCIPsec_ExtensionList> - list of extensions
+//    alg - *in* - <TCCIPsec_Algorithm> - encryption and integrity algorithms and keys
+//    setparitybit - *in* *boolean* - paritybit
+//    useNatt - *in* *boolean* - nat traversal support
+//    ipSecMode - *in* <TCCIPsec_IPsecMode> - mode transport, tunnel or anymode
+//
+//  Return Value:
+//    TCCIPsec_Result - indicates success (ok) or error
+//
+//  Errors:
+//    -
+//
+//  Detailed description:
+//    -
+//
+///////////////////////////////////////////////////////////////////////////////
+  external function f_IPsec_SADB_add (
+    in charstring               srcAddress,
+    in charstring               dstAddress,
+    in TCCIPsec_Protocol        protocol,
+    in integer                  spi,
+    in TCCIPsec_ExtensionList   extensionList := {},
+    in TCCIPsec_Algorithm       alg,
+    in boolean                  setparitybit := false,
+    in boolean                  useNatt := false,
+    in TCCIPsec_IPsecMode       ipSecMode := anyMode
+  ) return TCCIPsec_Result;
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_IPsec_SADB_delete
+//
+//  Purpose:
+//    Deletes a Security Association from the database (SADB)
+//
+//  Parameters:
+//    srcAddress - *in* *charstring* - source IP address
+//    dstAddress - *in* *charstring* - destination IP address
+//    protocol - *in* *TCCIPsec_Protocol* - security protocol (esp or ah)
+//    spi - *in* *integer* - Security Parameter Index
+//
+//  Return Value:
+//    TCCIPsec_Result - indicates success (ok) or error
+//
+//  Errors:
+//    -
+//
+//  Detailed description:
+//    -
+//
+///////////////////////////////////////////////////////////////////////////////
+  external function f_IPsec_SADB_delete (
+    in charstring               srcAddress,
+    in charstring               dstAddress,
+    in TCCIPsec_Protocol        protocol,
+    in integer                  spi
+  ) return TCCIPsec_Result;
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_IPsec_SADB_flush
+//
+//  Purpose:
+//    Deletes all Security Associations from the database (SADB)
+//
+//  Parameters:
+//    -
+//
+//  Return Value:
+//    TCCIPsec_Result - indicates success (ok) or error
+//
+//  Errors:
+//    -
+//
+//  Detailed description:
+//    -
+//
+///////////////////////////////////////////////////////////////////////////////
+  external function f_IPsec_SADB_flush () return TCCIPsec_Result;
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_IPsec_SPDB_add
+//
+//  Purpose:
+//    Adds a Security Policy to the database (SPDB)
+//
+//  Parameters:
+//    srcAddress - *in* *charstring* - source IP address
+//    srcPrefixLen - *in* *integer* - indicates the source address range
+//    srcPort - *in* *integer* - source port
+//    dstAddress - *in* *charstring* - destination IP address
+//    srcPrefixLen - *in* *integer* - indicates the destination address range
+//    srcPort - *in* *integer* - destination port
+//    transpProto - *in* *TCCIPsec_TranspProto* - transport protocol (TCP or UDP)
+//    dir - *in* *TCCIPsec_PolicyDirection* - Direction of data traffic
+//    rule - *in* *TCCIPsec_PolicyRule* - Rule: how to handle the packet
+//
+//  Return Value:
+//    TCCIPsec_Result - indicates success (ok) or error
+//
+//  Errors:
+//    -
+//
+//  Detailed description:
+//    -
+//
+///////////////////////////////////////////////////////////////////////////////
+  external function f_IPsec_SPDB_add (
+    in charstring               srcAddress,
+    in integer                  srcPrefixLen := c_TCCIPsec_prefixAll,
+    in integer                  srcPort := c_TCCIPsec_anyPort,
+    in charstring               dstAddress,
+    in integer                  dstPrefixLen := c_TCCIPsec_prefixAll,
+    in integer                  dstPort := c_TCCIPsec_anyPort,
+    in TCCIPsec_TranspProto     transpProto := anyTranspProto,
+    in TCCIPsec_PolicyDirection dir,
+    in TCCIPsec_PolicyRule      rule
+  ) return TCCIPsec_Result;
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_IPsec_SPDB_delete
+//
+//  Purpose:
+//    Deletes a Security Policy from the database (SPD)
+//
+//  Parameters:
+//    srcAddress - *in* *charstring* - source IP address
+//    srcPrefixLen - *in* *integer* - indicates the source address range
+//    srcPort - *in* *integer* - source port
+//    dstAddress - *in* *charstring* - destination IP address
+//    srcPrefixLen - *in* *integer* - indicates the destination address range
+//    srcPort - *in* *integer* - destination port
+//    transpProto - *in* *TCCIPsec_TranspProto* - transport protocol (TCP or UDP)
+//    dir - *in* *TCCIPsec_PolicyDirection* - Direction of data traffic
+//
+//  Return Value:
+//    TCCIPsec_Result - indicates success (ok) or error
+//
+//  Errors:
+//    -
+//
+//  Detailed description:
+//    -
+//
+///////////////////////////////////////////////////////////////////////////////
+  external function f_IPsec_SPDB_delete (
+    in charstring               srcAddress,
+    in integer                  srcPrefixLen := c_TCCIPsec_prefixAll,
+    in integer                  srcPort := c_TCCIPsec_anyPort,
+    in charstring               dstAddress,
+    in integer                  dstPrefixLen := c_TCCIPsec_prefixAll,
+    in integer                  dstPort := c_TCCIPsec_anyPort,
+    in TCCIPsec_TranspProto     transpProto := anyTranspProto,
+    in TCCIPsec_PolicyDirection dir
+  ) return TCCIPsec_Result;
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_IPsec_SPDB_flush
+//
+//  Purpose:
+//    Deletes all Security Policies from the database (SPD)
+//
+//  Parameters:
+//    -
+//
+//  Return Value:
+//    TCCIPsec_Result - indicates success (ok) or error
+//
+//  Errors:
+//    -
+//
+//  Detailed description:
+//    -
+//
+///////////////////////////////////////////////////////////////////////////////
+  external function f_IPsec_SPDB_flush () return TCCIPsec_Result;
+} // TCCIPsec_Functions

@@ -1,0 +1,221 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_CLL_StatHandlerClient_Definitions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 512
+//  Updated:  2009-11-16
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////
+//  Module: EPTF_CLL_StatHandlerClient_Definitions
+// 
+//  Purpose:
+//    This module contains type definitions for StatHandlerClient.
+// 
+//  Module depends on:
+//    <EPTF_CLL_Semaphore_Definitions>
+//    <EPTF_CLL_StatHandler_Definitions>
+//    <EPTF_CLL_StatHandlerLogging_Definitions>
+//    <EPTF_CLL_StatMeasure_Definitions>
+//    <EPTF_CLL_Variable_Definitions>
+//
+//  Module Parameters:
+//    tsp_EPTF_StatHandlerClient_autoDisconnectTimeout - *float* - inactivity timeout value for automatic disconnect from master components, default: 5.0
+//
+//  Current Owner:
+//    Gabor Tatarka (EGBOTAT)
+// 
+//  Last Review Date:
+//    -
+//
+//  Detailed Comments:
+//    This module contains type definitions for StatHandlerClient.
+//
+///////////////////////////////////////////////////////////////
+
+module EPTF_CLL_StatHandlerClient_Definitions {
+
+import from EPTF_CLL_Semaphore_Definitions all;
+import from EPTF_CLL_StatHandler_Definitions all;
+import from EPTF_CLL_StatHandlerLogging_Definitions all;
+import from EPTF_CLL_StatMeasure_Definitions all;
+import from EPTF_CLL_Variable_Definitions all;
+
+modulepar float tsp_EPTF_StatHandlerClient_autoDisconnectTimeout := 5.0;
+
+/////////////////////////////////////////////////////////////////////////
+//  Component: EPTF_StatHandlerClient_CT
+//
+//  Purpose:
+//    Component type for StatHandlerClient
+//
+//  Elements:
+//    v_EPTF_StatHandlerClient_initialized - *boolean*
+//    v_EPTF_StatHandlerClient_MgmtPCO - <EPTF_StatHandler_MgmtPT>
+//    v_EPTF_StatHandlerClient_defaultMasterCompRef - <EPTF_StatHandler_CT>
+//    v_EPTF_StatHandlerClient_connectedCompRefList - <EPTF_StatHandler_CTList>
+//    v_EPTF_StatHandlerClient_subscribingCompRefList - <EPTF_StatHandler_CTList>
+//    v_EPTF_StatHandlerClient_responseBuffer - <EPTF_StatHandler_MgmtMsg_ResponseList>
+//    v_EPTF_StatHandlerClient_pendingMessages - *integer*
+//    vd_EPTF_StatHandlerClient_msgHandler - *default*
+//    v_EPTF_StatHandlerClient_catchInvalidMessages - *boolean*
+//    vd_EPTF_StatHandlerClient_autoDisconnect - *default*
+//    T_EPTF_StatHandlerClient_autoDisconnect - *timer*
+//    v_EPTF_StatHandlerClient_resetFunctions - <EPTF_StatHandlerClient_ResetCallback_FTList>
+//    v_EPTF_StatHandlerClient_resetVarIdx - *integer*
+//
+//  Detailed Comments:
+//    Extends EPTF_StatHandlerLogging_CT, EPTF_Semaphore_CT, EPTF_Var_C, EPTF_StatMeasure_CT
+/////////////////////////////////////////////////////////////////////////
+type component EPTF_StatHandlerClient_CT extends EPTF_StatHandlerLogging_CT, EPTF_Semaphore_CT, EPTF_Var_CT, EPTF_StatMeasure_CT
+{
+  private var boolean v_EPTF_StatHandlerClient_initialized := false;
+
+  private port EPTF_StatHandler_MgmtPT v_EPTF_StatHandlerClient_MgmtPCO;
+  private var EPTF_StatHandler_CT v_EPTF_StatHandlerClient_defaultMasterCompRef := null;
+  private var EPTF_StatHandler_CTList v_EPTF_StatHandlerClient_connectedCompRefList := {};
+  private var EPTF_StatHandler_CTList v_EPTF_StatHandlerClient_subscribingCompRefList := {};
+  private var EPTF_StatHandler_MgmtMsg_ResponseList v_EPTF_StatHandlerClient_responseBuffer := {};
+  private var integer v_EPTF_StatHandlerClient_pendingMessages := 0;
+  private var default vd_EPTF_StatHandlerClient_msgHandler := null;
+  private var boolean v_EPTF_StatHandlerClient_catchInvalidMessages := true;
+
+  private var default vd_EPTF_StatHandlerClient_autoDisconnect := null;
+  private timer T_EPTF_StatHandlerClient_autoDisconnect := tsp_EPTF_StatHandlerClient_autoDisconnectTimeout;
+
+  private var EPTF_StatHandlerClient_ResetCallback_FTList v_EPTF_StatHandlerClient_resetFunctions := {};
+  private var integer v_EPTF_StatHandlerClient_resetVarIdx := -1;
+}
+
+/////////////////////////////////////////////////////////////////////////
+//  Type: EPTF_StatHandlerClient_ResetCallback_FT
+//
+//  Purpose:
+//    Function type for reset callback functions.
+/////////////////////////////////////////////////////////////////////////
+type function EPTF_StatHandlerClient_ResetCallback_FT() runs on self;
+
+/////////////////////////////////////////////////////////////////////////
+//  Type: EPTF_StatHandlerClient_ResetCallback_FTList
+//
+//  Purpose:
+//    Type for storing a list of reset callback function references.
+//
+//  Elements:
+//    record of <EPTF_StatHandlerClient_ResetCallback_FT>
+/////////////////////////////////////////////////////////////////////////
+type record of EPTF_StatHandlerClient_ResetCallback_FT EPTF_StatHandlerClient_ResetCallback_FTList;
+
+/////////////////////////////////////////////////////////////////////////
+//  Type: EPTF_StatHandler_CTList
+//
+//  Purpose:
+//    Type for storing a list of component references to StatHandlers
+//
+//  Elements:
+//    record of <EPTF_StatHandler_CT>
+/////////////////////////////////////////////////////////////////////////
+type record of EPTF_StatHandler_CT EPTF_StatHandler_CTList;
+
+/////////////////////////////////////////////////////////////////////////
+//  Type: EPTF_StatHandler_MgmtMsg_ResponseList
+//
+//  Purpose:
+//    Type for buffering responses
+//
+//  Elements:
+//    record of <EPTF_StatHandler_MgmtMsg_Response>
+/////////////////////////////////////////////////////////////////////////
+type record of EPTF_StatHandler_MgmtMsg_Response EPTF_StatHandler_MgmtMsg_ResponseList;
+
+/////////////////////////////////////////////////////////////////////////
+//  Type: EPTF_StatHandler_StatMethod
+//
+//  Purpose:
+//    Type for possible stat methods
+//
+//  Elements:
+//    charstring with value restriction to c_EPTF_StatHandler_Method_X
+/////////////////////////////////////////////////////////////////////////
+type charstring EPTF_StatHandler_StatMethod (
+  c_EPTF_StatHandler_Method_Min,
+  c_EPTF_StatHandler_Method_Max,
+  c_EPTF_StatHandler_Method_Mean,
+  c_EPTF_StatHandler_Method_StandardDev,
+  c_EPTF_StatHandler_Method_Sum,
+  c_EPTF_StatHandler_Method_GlobalAverage,
+  c_EPTF_StatHandler_Method_Density,
+  c_EPTF_StatHandler_Method_Percentile95,
+  c_EPTF_StatHandler_Method_PercentileP
+);
+
+/////////////////////////////////////////////////////////////////////////
+// Constant: c_EPTF_StatHandlerClient_loggingComponentMask
+//
+// Purpose:
+//    Logging component class for StatHandlerClient
+/////////////////////////////////////////////////////////////////////////
+const charstring c_EPTF_StatHandlerClient_loggingComponentMask := "EPTF_StatHandlerClient";
+
+/////////////////////////////////////////////////////////////////////////
+// Constant: c_EPTF_StatHandler_Method
+//
+// Purpose:
+//    Stats aggregating methods.
+//
+// Other values:
+//    - c_EPTF_StatHandler_Method_Min
+//    - c_EPTF_StatHandler_Method_Max
+//    - c_EPTF_StatHandler_Method_Mean
+//    - c_EPTF_StatHandler_Method_StandardDev
+//    - c_EPTF_StatHandler_Method_Sum
+//    - c_EPTF_StatHandler_Method_GlobalAverage
+//    - c_EPTF_StatHandler_Method_Density
+//    - c_EPTF_StatHandler_Method_Percentile95
+/////////////////////////////////////////////////////////////////////////
+const charstring c_EPTF_StatHandler_Method_Min := "Min";
+const charstring c_EPTF_StatHandler_Method_Max := "Max";
+const charstring c_EPTF_StatHandler_Method_Mean := "Mean";
+const charstring c_EPTF_StatHandler_Method_StandardDev := "StandardDev";
+const charstring c_EPTF_StatHandler_Method_Sum := "Sum";
+const charstring c_EPTF_StatHandler_Method_GlobalAverage := "GlobalAverage";
+const charstring c_EPTF_StatHandler_Method_Density := "Density";
+const charstring c_EPTF_StatHandler_Method_Percentile95 := "Percentile95";
+const charstring c_EPTF_StatHandler_Method_PercentileP := "PercentileP";
+
+/////////////////////////////////////////////////////////////////////////
+// Constant: c_EPTF_StatHandler_providerVarIdx
+//
+// Purpose:
+//    Indices of provider variables in providerVarList parameter of registerStat
+//
+// Other values:
+//    - c_EPTF_StatHandler_providerVarIdx_single
+//    - c_EPTF_StatHandler_providerVarIdx_mean
+//    - c_EPTF_StatHandler_providerVarIdx_nofSamples
+//    - c_EPTF_StatHandler_providerVarIdx_S
+//    - c_EPTF_StatHandler_providerVarIdx_sum
+//    - c_EPTF_StatHandler_providerVarIdx_elementNumber
+//    - c_EPTF_StatHandler_providerVarIdx_density
+//    - c_EPTF_StatHandler_providerVarIdx_boundaries
+//    - c_EPTF_StatHandler_providerVarIdx_max
+//    - c_EPTF_StatHandler_providerVarIdx_pValue
+/////////////////////////////////////////////////////////////////////////
+const integer c_EPTF_StatHandler_providerVarIdx_single := 0;
+const integer c_EPTF_StatHandler_providerVarIdx_mean := 0;
+const integer c_EPTF_StatHandler_providerVarIdx_nofSamples := 1;
+const integer c_EPTF_StatHandler_providerVarIdx_S := 2;
+const integer c_EPTF_StatHandler_providerVarIdx_sum := 0;
+const integer c_EPTF_StatHandler_providerVarIdx_elementNumber := 1;
+const integer c_EPTF_StatHandler_providerVarIdx_density := 0;
+const integer c_EPTF_StatHandler_providerVarIdx_boundaries := 1;
+const integer c_EPTF_StatHandler_providerVarIdx_max := 2; // for Percentile95
+const integer c_EPTF_StatHandler_providerVarIdx_pValue := 3; // for PercentileP
+
+} // end of module

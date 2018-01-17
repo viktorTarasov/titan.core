@@ -1,0 +1,1643 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_SIP_Test_Common_Functions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 522
+//  Updated:  2011-02-21
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+module EPTF_SIP_Test_Common_Functions
+{
+
+import from EPTF_SIP_Test_Common_Definitions all;
+
+import from EPTF_CLL_Base_Functions all;
+import from EPTF_CLL_Common_Definitions all;
+import from EPTF_CLL_LGenBase_Definitions all;
+import from EPTF_CLL_LGenBase_Functions all;
+import from EPTF_CLL_LGenBase_ConfigFunctions all;
+import from EPTF_CLL_LGenBase_StepFunctions all;
+import from EPTF_CLL_LGenBase_EventHandlingFunctions all;
+import from EPTF_CLL_FBQ_Functions all;
+import from EPTF_CLL_HashMapStr2Int_Functions all;
+import from EPTF_CLL_FBQ_Definitions all;
+import from EPTF_SIP_Common_Functions all;
+import from EPTF_SIP_Dialog_Definitions all;
+import from EPTF_SIP_Dialog_Functions all;
+import from EPTF_SIP_EventNotification_Definitions all;
+import from EPTF_SIP_EventNotification_Functions all;
+import from EPTF_SIP_LGen_Definitions all;
+import from EPTF_SIP_LGen_Functions all;
+import from EPTF_SIP_MessageHandler_Functions all;
+import from EPTF_SIP_Publish_Definitions all;
+import from EPTF_SIP_TestSteps all;
+import from EPTF_SIP_Transaction_Definitions all;
+import from EPTF_SIP_Transaction_Functions all;
+import from EPTF_SIP_Transport_Definitions all;
+import from EPTF_SIP_Transport_Functions all;
+import from EPTF_SIP_UserDatabase_Definitions all;
+import from EPTF_SIP_UserDatabase_Functions all;
+
+import from IPL4asp_Types all;
+
+import from SIPmsg_Types all;
+
+import from EPTF_SIP_Test_Transport_Definitions all;
+
+//=========================================
+// f_EPTF_SIP_Test_createEntityGroup
+//=========================================
+function f_EPTF_SIP_Test_createEntityGroup(
+  in charstring pl_selfname,
+  in charstring pl_entityTypeName,
+  in integer pl_nof_entities,
+  in AddrType  pl_userDataType)
+runs on EPTF_SIP_LGen_Test_CT 
+return integer
+{
+  var integer vl_grpIdx:=-1;
+  f_EPTF_LGenBase_declareEntityType(pl_entityTypeName,{c_SIP_myBName});
+  f_EPTF_LGenBase_createEntityGroup({pl_selfname,pl_entityTypeName,pl_nof_entities});
+  vl_grpIdx := f_EPTF_LGenBase_entityGrpNameIndex(pl_selfname);
+  f_EPTF_SIP_Test_UpdateUserDatabase(vl_grpIdx, pl_nof_entities,pl_userDataType);
+  return vl_grpIdx;
+}
+
+//======================================
+// f_EPTF_SIP_Test_getSipBCtxIdx
+//======================================
+function f_EPTF_SIP_Test_getSipBCtxIdx(in integer pl_entityIdx)
+runs on EPTF_SIP_LGen_Test_CT 
+return integer 
+{
+  return f_EPTF_LGenBase_getBehaviorCtxItem(pl_entityIdx, v_SIP_myBIdx, 0)
+}
+
+function f_EPTF_SIP_Test_processTransportConfig()
+runs on EPTF_SIP_LGen_Test_CT
+{
+ if (v_EPTF_SIP_Test_actorType == ORIG)
+    {
+  v_transportParams.remoteName := tsp_Transport_Orig_params.remoteName;
+  v_transportParams.remotePort := tsp_Transport_Orig_params.remotePort;
+  v_transportParams.localName := tsp_Transport_Orig_params.localName;
+  v_transportParams.localPort := tsp_Transport_Orig_params.localPort
+    } else {
+  v_transportParams.remoteName := tsp_Transport_Term_params.remoteName;
+  v_transportParams.remotePort := tsp_Transport_Term_params.remotePort;
+  v_transportParams.localName := tsp_Transport_Term_params.localName;
+  v_transportParams.localPort := tsp_Transport_Term_params.localPort
+}
+}
+
+function f_EPTF_SIP_Test_step_setverdict(in EPTF_LGenBase_TestStepArgs pl_ptr)
+runs on EPTF_SIP_LGen_Test_CT
+{
+  if (pl_ptr.refContext.fRefArgs[0]==c_EPTF_SIP_Test_FSM_pass)
+  {
+    setverdict(pass);
+  }else{
+    setverdict(fail);
+  }
+}
+
+function f_EPTF_SIP_Test_finishedListener(
+  EPTF_LGenBase_ReportedEventDescriptor pl_event,
+  EPTF_IntegerList pl_listenerArgs
+)   
+runs on EPTF_SIP_LGen_Test_CT
+{
+  v_nofFinished := v_nofFinished + 1;
+
+  if (c_EPTF_SIP_Test_eventIdx_finishedSucc == pl_event.event.iIdx)
+  {
+    log("Entity successfully finished running.");
+    setverdict(pass);
+  }else{
+    log("Entity failed.");
+    setverdict(fail);
+  }
+
+  if (tsp_nof_entities == v_nofFinished)
+  {
+    //f_EPTF_Base_stopRemote(self);
+    f_EPTF_Base_stop(none);
+  }
+}
+
+
+type enumerated AddrType { nameAddr, addrSpecUnion }
+// When TC is started, fill in user database
+
+function f_EPTF_SIP_Test_UpdateUserDatabase(in integer pl_grpIdx, in integer pl_nofEntities, in AddrType  pl_userDataType )
+runs on EPTF_SIP_LGen_Test_CT
+{
+  log("set user data");
+  var integer vl_entityIdx := f_EPTF_LGenBase_getEGrpBaseOffset(pl_grpIdx);
+
+  for (var integer i := vl_entityIdx; i < pl_nofEntities; i := i + 1)
+  {
+    var integer vl_bCtx := f_EPTF_LGenBase_getBehaviorCtxItem(i, v_SIP_myBIdx,0)
+    if(pl_userDataType==nameAddr) {
+      var charstring vl_bCtxStr := int2str(vl_bCtx);
+      if (v_EPTF_SIP_Test_actorType == ORIG)
+      {
+        f_EPTF_SIP_User_SetUserData(
+          vl_bCtx,
+          { 
+            {
+              addr := { 
+                nameAddr := { 
+                  displayName := "UserOrig_"&vl_bCtxStr, 
+                  addrSpec := {
+                    scheme := "sip", 
+                    userInfo := {
+                      userOrTelephoneSubscriber := "UserOrig_"&vl_bCtxStr, 
+                      password := omit 
+                    }, 
+                    hostPort := {
+                      host:="ericsson.com",
+                      portField:=omit
+                    }, 
+                    urlParameters := omit, 
+                    headers := omit 
+                  } } }, 
+              password := "pass"&vl_bCtxStr
+            },
+            {
+              addr := { 
+                nameAddr := { 
+                  displayName := "UserOrig_"&vl_bCtxStr, 
+                  addrSpec := {
+                    scheme := "sip", 
+                    userInfo := {
+                      userOrTelephoneSubscriber := "UserOrig_"&vl_bCtxStr, 
+                      password := omit 
+                    }, 
+                    hostPort := {
+                      host:="ericsson2.com",
+                      portField:=omit
+                    }, 
+                    urlParameters := omit, 
+                    headers := omit 
+                  } } }, 
+              password := "pass"&vl_bCtxStr
+            }
+          },
+          tsp_Transport_Orig_params.localName,
+          { tsp_Transport_Orig_params.localPort },
+          i //entity index
+        );
+
+        f_EPTF_SIP_Session_AddData(vl_bCtx,f_EPTF_SIP_getTransport(tsp_Transport_protocol),345600);
+
+        f_EPTF_SIP_Session_addCalledUser(
+          vl_bCtx,
+          { 
+            nameAddr := { 
+              displayName := "UserTerm_"&vl_bCtxStr, 
+              addrSpec := {
+                scheme := "sip", 
+                userInfo := {
+                  userOrTelephoneSubscriber := "UserTerm_"&vl_bCtxStr, 
+                  password := omit 
+                }, 
+                hostPort := {
+                  host:="ericsson.com",
+                  portField:=omit
+                }, 
+                urlParameters := omit, 
+                headers := omit 
+              } } }
+        );
+      }
+      else //TERM
+      {
+        f_EPTF_SIP_User_SetUserData
+        (
+          vl_bCtx,
+          { 
+            {
+              addr := { 
+                nameAddr := { 
+                  displayName := "UserTerm_"&vl_bCtxStr, 
+                  addrSpec := {
+                    scheme := "sip", 
+                    userInfo := {
+                      userOrTelephoneSubscriber := "UserTerm_"&vl_bCtxStr, 
+                      password := omit 
+                    }, 
+                    hostPort := {
+                      host:="ericsson.com",
+                      portField:=omit
+                    }, 
+                    urlParameters := omit, 
+                    headers := omit } } }, 
+              password := "pass"&vl_bCtxStr
+            },
+            {
+              addr := { 
+                nameAddr := { 
+                  displayName := "UserTerm_"&vl_bCtxStr, 
+                  addrSpec := {
+                    scheme := "sip", 
+                    userInfo := {
+                      userOrTelephoneSubscriber := "UserTerm_"&vl_bCtxStr, 
+                      password := omit 
+                    }, 
+                    hostPort := {
+                      host:="ericsson2.com",
+                      portField:=omit
+                    }, 
+                    urlParameters := omit, 
+                    headers := omit } } }, 
+              password := "pass"&vl_bCtxStr
+            }             
+          },
+          tsp_Transport_Term_params.localName,
+          {tsp_Transport_Term_params.localPort},
+          i //entity index
+        );
+        f_EPTF_SIP_Session_AddData(vl_bCtx,f_EPTF_SIP_getTransport(tsp_Transport_protocol),345600);
+      }
+      v_contactListDB[i] := {};
+
+    } else if( pl_userDataType==addrSpecUnion) {
+
+      f_EPTF_SIP_User_SetUserData(
+        vl_bCtx,
+        {
+          {
+            addr := 
+            { 
+              addrSpecUnion :=
+              { 
+                scheme := "sip",
+                userInfo := omit,
+                hostPort := {
+                  host:="ericsson.com",
+                  portField:=omit
+                },
+                urlParameters := omit,
+                headers := omit
+              }
+            },
+            password := ""
+          }
+        },
+        tsp_Transport_Term_params.localName,
+        {tsp_Transport_Term_params.localPort},
+        i //entity index
+      );
+    }
+
+    f_EPTF_SIP_mapUser2TransportUser(vl_bCtx, 0);
+  }
+
+}
+//======================================================
+// f_EPTF_SIP_Test_getUserData
+//======================================================
+function f_EPTF_SIP_Test_getUserData(in integer pl_eIdx) 
+runs on EPTF_SIP_LGen_Test_CT
+return SIP_User
+{
+  //var integer vl_bCtx :=f_EPTF_LGenBase_getBehaviorCtxItem(pl_eIdx,v_SIP_myBIdx,0);
+  //var SIP_User vl_sipUser := v_db_users.data[vl_bCtx];
+  return  v_db_users.data[f_EPTF_LGenBase_getBehaviorCtxItem(pl_eIdx,v_SIP_myBIdx,0)];
+}
+
+//======================================================
+// f_EPTF_SIP_Test_checkUserData
+//======================================================
+function f_EPTF_SIP_Test_checkUserData(in integer pl_eIdx)
+runs on EPTF_SIP_LGen_Test_CT
+return boolean
+{
+  var integer vl_bCtx := f_EPTF_LGenBase_getBehaviorCtxItem(pl_eIdx, v_SIP_myBIdx,0)
+  var charstring vl_bCtxStr := int2str(vl_bCtx);
+  var charstring vl_userId:="";
+  var charstring vl_hostId:="";
+  if(v_EPTF_SIP_Test_actorType == ORIG) {
+    vl_userId:="UserOrig_"&vl_bCtxStr;
+    vl_hostId:="ericsson.com";
+  } else {
+    vl_userId:="UserTerm_"&vl_bCtxStr;
+    vl_hostId:="ericsson2.com";
+  }
+
+  var template SIP_User tr_expectedSIPUser := {
+    iD := { 
+          {
+            addr := { 
+              displayName := vl_userId,
+              scheme := "sip",
+              username := vl_userId,
+              hostname := vl_hostId,
+              portField := -1,
+              urlParameters := omit
+            }, 
+            password := "pass"&vl_bCtxStr
+          } },
+    localHost := tsp_Transport_Orig_params.localName,
+    poCData :=omit,
+    eIdx := pl_eIdx,
+    regData:= ?,
+    authData:=?,
+    calledUsers:=?,
+    route := ?,
+    preferredTransport:=f_EPTF_SIP_getTransport(tsp_Transport_protocol),
+    FSMs:=?,
+    imsAKAData := omit,
+    sessions := ?,
+    currentSession := ?,
+    defaultSession := ?
+  }
+  log(match(f_EPTF_SIP_Test_getUserData(pl_eIdx), tr_expectedSIPUser))
+  return match(f_EPTF_SIP_Test_getUserData(pl_eIdx), tr_expectedSIPUser);
+}
+
+//======================================================
+// f_EPTF_SIP_Test_createSIPUser
+//======================================================
+function f_EPTF_SIP_Test_createSIPUser(in integer pl_eIdx)
+runs on EPTF_SIP_LGen_Test_CT
+return SIP_User
+{
+  var integer vl_bCtx := f_EPTF_LGenBase_getBehaviorCtxItem(pl_eIdx, v_SIP_myBIdx,0);
+  var charstring vl_bCtxStr := int2str(vl_bCtx);
+  var charstring vl_userId:="";
+  if(v_EPTF_SIP_Test_actorType == ORIG) {
+    vl_userId:="UserOrig_"&vl_bCtxStr;
+  } else {
+    vl_userId:="UserTerm_"&vl_bCtxStr;
+  }
+  
+  //c_SIP_UserData_init
+  var SIP_User vl_sipUser := c_SIP_UserData_init;
+  vl_sipUser.iD := { 
+      {
+        addr := { 
+          displayName := vl_userId,
+          scheme := "sip",
+          username := vl_userId,
+          hostname := "ericsson.com",
+          portField := -1,
+          urlParameters := omit
+        }, 
+        password := "pass"&vl_bCtxStr
+      },
+      {
+        addr := { 
+          displayName := vl_userId,
+          scheme := "sip",
+          username := vl_userId,
+          hostname := "ericsson2.com",
+          portField := -1,
+          urlParameters := omit
+        }, 
+        password := "pass"&vl_bCtxStr
+      } 
+    };
+  vl_sipUser.localHost := tsp_Transport_Orig_params.localName;
+  vl_sipUser.poCData :=omit;
+  vl_sipUser.eIdx := pl_eIdx;
+  vl_sipUser.regData:= c_SIP_userRegistrationData_init;
+  vl_sipUser.authData:=c_SIP_init_AuthData;
+  vl_sipUser.calledUsers:={};
+  vl_sipUser.route := {};
+  vl_sipUser.preferredTransport:=f_EPTF_SIP_getTransport(tsp_Transport_protocol);
+  vl_sipUser.FSMs:= c_SIP_initFSMDB;
+  vl_sipUser.imsAKAData := omit;//c_SIP_IMSAKA_Data_init
+  vl_sipUser.sessions := {
+      {
+        terminate := false,
+        nofTransactions := 0,
+        sessionId := 0,
+        port_uc := -1,
+        port_us := tsp_Transport_Orig_params.localPort,
+        port_pc := -1,
+        port_ps := -1,
+        secureSessionData := omit
+      }
+    };
+  vl_sipUser.currentSession := 0;
+  vl_sipUser.defaultSession := 0;
+  
+  vl_sipUser.authData.password := "pass"&vl_bCtxStr;
+
+  //Modifications:
+  if(v_EPTF_SIP_Test_actorType == ORIG) {
+    vl_sipUser.calledUsers:= {
+      { 
+        displayName := "UserTerm_"&vl_bCtxStr,
+        scheme := "sip",
+        username := "UserTerm_"&vl_bCtxStr,
+        hostname := "ericsson.com",
+        portField := -1,
+        urlParameters := omit
+      }
+    }
+  }else {
+    vl_sipUser.localHost := "ericsson.com";
+    vl_sipUser.sessions[0].port_us:= tsp_Transport_Term_params.localPort;
+  }
+  log("vl_sipUser: ",vl_sipUser);
+  return vl_sipUser;
+}
+
+//======================================================
+// f_EPTF_SIP_Test_step_tcFinished
+//======================================================
+function f_EPTF_SIP_Test_step_tcFinished(in EPTF_LGenBase_TestStepArgs pl_ptr)
+runs on EPTF_SIP_LGen_Test_CT
+{
+ //f_SIP_step_cleanUp(pl_ptr); MUST BE CALLED, NOT CALLED HERE BECAUSE OF TESTING
+ if (sizeof(pl_ptr.refContext.fRefArgs) == 1)
+  {
+    if(pl_ptr.refContext.fRefArgs[0]==c_EPTF_SIP_Test_FSM_pass)
+    {
+      setverdict(pass);
+      f_EPTF_LGenBase_step_trafficSuccess(pl_ptr);
+    }
+    else
+    {
+      setverdict(fail);
+      f_EPTF_LGenBase_step_trafficFailed(pl_ptr);
+    }
+  }
+}
+
+function f_EPTF_SIP_Test_step_finished(in EPTF_LGenBase_TestStepArgs pl_ptr)
+runs on EPTF_SIP_LGen_Test_CT
+{
+ //f_SIP_step_cleanUp(pl_ptr); MUST BE CALLED, NOT CALLED HERE BECAUSE OF TESTING
+ if (sizeof(pl_ptr.refContext.fRefArgs) == 1)
+  {
+    if(pl_ptr.refContext.fRefArgs[0]==c_EPTF_SIP_Test_FSM_pass)
+    {
+      f_EPTF_LGenBase_dispatchEvent({
+          event := {
+            bIdx := v_EPTF_SIP_Test_myBIdx,
+            iIdx := c_EPTF_SIP_Test_eventIdx_finishedSucc,
+            target := omit,
+	    source := omit
+          },
+          reportedArgs := {}
+        });
+    }
+    else
+    {
+      f_EPTF_LGenBase_dispatchEvent({
+          event := {
+            bIdx := v_EPTF_SIP_Test_myBIdx,
+            iIdx := c_EPTF_SIP_Test_eventIdx_finishedFail,
+            target := omit,
+	    source := omit
+          },
+          reportedArgs := {}
+        });
+    }
+  }
+}
+
+function f_EPTF_SIP_Test_isUACFinished(in EPTF_LGenBase_TestStepArgs pl_ptr)
+runs on EPTF_SIP_LGen_Test_CT
+{
+
+  var Method vl_method;
+  f_EPTF_SIP_IntToMethod(pl_ptr.refContext.fRefArgs[0], vl_method);
+
+  if (f_EPTF_SIP_checkTransaction(v_db_UAC, v_currentUAC))
+  {
+    if (vl_method != v_db_UAC.data[v_currentUAC].method)
+    {
+      goto failed;
+    }
+
+    if (INVITE_E == vl_method)
+    {
+      if (c_SIP_TrState_Terminated != v_db_UAC.data[v_currentUAC].state and
+            c_SIP_TrState_Completed != v_db_UAC.data[v_currentUAC].state)
+      {
+        goto failed;
+      }
+    }else{
+      if ("UDP" == tsp_Transport_protocol)
+      {
+        if (c_SIP_TrState_Completed != v_db_UAC.data[v_currentUAC].state)
+        {
+          goto failed;
+        }
+      }else{
+        if (c_SIP_TrState_Terminated != v_db_UAC.data[v_currentUAC].state)
+        {
+          goto failed;
+        }
+      }
+    }
+  }
+
+  setverdict(pass);
+  return;
+
+label failed;
+  log("Check ERROR. UAC is not finished. ", v_db_UAC.data[v_currentUAC]);
+  setverdict(fail);
+  return;
+}
+//==================================
+// f_EPTF_SIP_Test_isUASFinished
+//==================================
+function f_EPTF_SIP_Test_isUASFinished(in EPTF_LGenBase_TestStepArgs pl_ptr)
+runs on EPTF_SIP_LGen_Test_CT
+{
+  var integer vl_eCtx:=pl_ptr.eIdx;
+  var integer vl_fsmCtx  := pl_ptr.refContext.fCtxIdx;
+  var integer vl_FSMIdx := -1;
+
+  if (not f_EPTF_SIP_FSMInitialized(vl_eCtx, vl_fsmCtx, vl_FSMIdx))
+  {
+    return;
+  }
+
+  var integer vl_user := f_EPTF_LGenBase_getBehaviorCtxItem(vl_eCtx, v_SIP_myBIdx, 0)
+
+  var Method vl_method;
+  f_EPTF_SIP_IntToMethod(pl_ptr.refContext.fRefArgs[0], vl_method);
+  
+  var integer vl_UAS := -1;
+  
+  for (var integer i := 0; i < sizeof(v_db_users.data[vl_user].FSMs.data[vl_FSMIdx].UASs.data) and vl_UAS == -1; i := i + 1)
+  {
+    if (vl_method == v_db_UAS.data[v_db_users.data[vl_user].FSMs.data[vl_FSMIdx].UASs.data[i]].method)
+    {
+      vl_UAS := v_db_users.data[vl_user].FSMs.data[vl_FSMIdx].UASs.data[i];
+    }
+  }
+
+  if (f_EPTF_SIP_checkTransaction(v_db_UAC,vl_UAS))
+  {
+    if (INVITE_E == vl_method)
+    {
+      if (c_SIP_TrState_Terminated != v_db_UAS.data[vl_UAS].state and
+            c_SIP_TrState_Confirmed != v_db_UAS.data[vl_UAS].state)
+      {
+        goto failed;
+      }
+    }else{
+      if ("UDP" == tsp_Transport_protocol)
+      {
+        if (c_SIP_TrState_Completed != v_db_UAS.data[vl_UAS].state)
+        {
+          goto failed;
+        }
+      }else{
+        if (c_SIP_TrState_Terminated != v_db_UAS.data[vl_UAS].state)
+        {
+          goto failed;
+        }
+      }
+    }
+  }
+
+  setverdict(pass);
+  return;
+  
+label failed;
+  log("Check ERROR. UAS is not finished ", v_db_UAS.data[vl_UAS])
+  setverdict(fail);
+  return;
+
+}
+//==================================
+// f_EPTF_SIP_Test_checkDialogState
+//==================================
+function f_EPTF_SIP_Test_checkDialogState(in EPTF_LGenBase_TestStepArgs pl_ptr)
+runs on EPTF_SIP_LGen_Test_CT
+{
+  var integer vl_eCtx:=pl_ptr.eIdx;
+  var integer vl_fsmCtx  := pl_ptr.refContext.fCtxIdx;
+  var integer vl_FSMIdx := -1;
+
+  if (not f_EPTF_SIP_FSMInitialized(vl_eCtx, vl_fsmCtx, vl_FSMIdx))
+  {
+    return;
+  }
+
+  var integer vl_user := f_EPTF_LGenBase_getBehaviorCtxItem(vl_eCtx, v_SIP_myBIdx, 0)
+  
+  var integer vl_dialog := v_db_users.data[vl_user].FSMs.data[vl_FSMIdx].dialogIdx;
+
+  if (f_EPTF_SIP_checkDialog(vl_dialog))
+  {
+    if (pl_ptr.refContext.fRefArgs[0] != v_db_dialog.data[vl_dialog].state)
+    {
+      goto failed;
+    }
+  }else{
+    if (c_SIP_DlgState_Terminated != pl_ptr.refContext.fRefArgs[0])
+    {
+      goto failed;
+    }
+  }
+
+  setverdict(pass);
+  return;
+
+label failed;
+  log("Check ERROR. Dialog state does not match with ", pl_ptr.refContext.fRefArgs[0], " ", v_db_dialog.data[vl_dialog])
+  setverdict(fail);
+  return;
+
+}
+//==============================================
+//  f_EPTF_SIP_Test_checkSubscriptionState
+//==============================================
+function f_EPTF_SIP_Test_checkSubscriptionState(in EPTF_LGenBase_TestStepArgs pl_ptr)
+runs on EPTF_SIP_LGen_Test_CT
+{
+  var integer vl_eCtx:=pl_ptr.eIdx;
+  var integer vl_fsmCtx  := pl_ptr.refContext.fCtxIdx;
+  var integer vl_FSMIdx := -1;
+
+  if (not f_EPTF_SIP_FSMInitialized(vl_eCtx, vl_fsmCtx, vl_FSMIdx))
+  {
+    return;
+  }
+
+  var integer vl_user := f_EPTF_LGenBase_getBehaviorCtxItem(vl_eCtx, v_SIP_myBIdx, 0)
+
+  var integer vl_subscription := v_db_users.data[vl_user].FSMs.data[vl_FSMIdx].subscriptionIdx;
+  
+  if (f_EPTF_SIP_checkSubscription(vl_subscription))
+  {
+    if (pl_ptr.refContext.fRefArgs[0] != v_db_subscription.data[vl_subscription].state)
+    {
+      goto failed;
+    }
+  }else{
+    if (pl_ptr.refContext.fRefArgs[0] != c_SIP_Subscribe_State_terminated)
+    {
+      goto failed;
+    }
+  }
+
+  setverdict(pass);
+  return;
+
+label failed;
+  log("Check ERROR. Subsctiption state does not match with ", pl_ptr.refContext.fRefArgs[0], " ", v_db_subscription.data[vl_subscription])
+  setverdict(fail);
+  return;
+}
+//==============================================
+//  f_EPTF_SIP_Test_localTransportInit
+//==============================================
+function f_EPTF_SIP_Test_localTransportInit()
+runs on EPTF_SIP_Test_Transport_CT
+{
+  f_EPTF_SIP_LocalTransport_init(tsp_Transport_protocol);
+  
+  f_EPTF_SIP_IPL4asp_SetUserData(
+    0,
+    v_transportParams.localName,
+    {v_transportParams.localPort, v_transportParams.localPort + 1},
+    tsp_Transport_protocol,
+    v_transportParams.remoteName,
+    v_transportParams.remotePort);
+
+  f_EPTF_SIP_IPL4asp_startListening(0, true);
+
+}
+//==============================================
+//  f_EPTF_SIP_Test_init_CT
+//==============================================
+function f_EPTF_SIP_Test_init_CT(
+  in charstring pl_selfname,
+  in ActorType pl_actorType
+)
+runs on EPTF_SIP_LGen_Test_CT 
+{
+  var EPTF_IntegerList vl_tcIdx;
+
+  v_EPTF_SIP_Test_actorType := pl_actorType;
+
+  f_SIP_applibInit(pl_selfname);
+
+  f_EPTF_SIP_Test_processTransportConfig();
+
+  f_EPTF_SIP_Test_localTransportInit();
+
+  v_EPTF_SIP_Test_myBIdx := f_EPTF_LGenBase_declareBehaviorType(c_EPTF_SIP_Test_myBName, -1, null, null, null);
+
+  f_EPTF_SIP_Test_InitLocationServiceDataBase();
+
+  //used in case of traffic case management
+  f_EPTF_LGenBase_declareStep(c_EPTF_SIP_Test_myBName,{c_EPTF_SIP_Test_stepName_tcFinished,refers(f_EPTF_SIP_Test_step_tcFinished)});
+
+  //used without traffic case management
+  f_EPTF_LGenBase_declareStep(c_EPTF_SIP_Test_myBName,{c_EPTF_SIP_Test_stepName_finished,refers(f_EPTF_SIP_Test_step_finished)});
+  f_EPTF_LGenBase_declareFsmEvent(c_EPTF_SIP_Test_myBName, c_SIP_eventName_finishedSucc)
+  f_EPTF_LGenBase_declareFsmEvent(c_EPTF_SIP_Test_myBName, c_SIP_eventName_finishedFail)
+
+   // Add listener for TC start -> fill in user DB
+
+  vf_EPTF_SIP_LocalTransport_receive := refers(f_EPTF_SIP_Message_MsgHandler);    //receive callback function on LocalTransport
+  vf_EPTF_SIP_LGen_msgSender         := refers(f_EPTF_SIP_LocalTransport_sendSIPMessage);  //send callback function on LGen
+  v_removeUAS                        := refers(fcb_EPTF_SIP_LocalTransport_removeUAS);
+
+  f_EPTF_Base_registerCleanup(refers(f_EPTF_SIP_Test_cleanup_CT));
+  
+  v_SIP_Test_eventTypeIdx:=0;
+  v_SIP_Test_nofInitiated:=0;
+  v_SIP_Test_nofSentInvite:=0;
+  v_SIP_Test_nofReceivedInvite:=0;
+  v_SIP_Test_nofSentTrying:=0;
+  v_SIP_Test_nofReceivedTrying:=0;
+  v_SIP_Test_nofSentRinging:=0;
+  v_SIP_Test_nofReceivedRinging:=0;
+  v_SIP_Test_nofSent200OK:=0;
+  v_SIP_Test_nofReceived200OK:=0;
+  v_SIP_Test_nofSent487:=0;
+  v_SIP_Test_nofReceived487:=0;
+  v_SIP_Test_nofSentAck:=0;
+  v_SIP_Test_nofReceivedAck:=0;
+  v_SIP_Test_nofSentBye:=0;
+  v_SIP_Test_nofReceivedBye:=0;
+  v_SIP_Test_nofSentRegister:=0;
+  v_SIP_Test_nofReceivedRegister:=0;
+  v_SIP_Test_nofSentUpdate:=0;
+  v_SIP_Test_nofReceivedUpdate:=0;
+  v_SIP_Test_nofSentCancel:=0;
+  v_SIP_Test_nofReceivedCancel:=0;
+  v_SIP_Test_nofSentMessage:=0;
+  v_SIP_Test_nofReceivedMessage:=0;
+  v_SIP_Test_nofSentRefer:=0;
+  v_SIP_Test_nofReceivedRefer:=0;
+  v_SIP_Test_nofSentNotify:=0;
+  v_SIP_Test_nofReceivedNotify:=0;
+  v_SIP_Test_nofSentSubscribe:=0;
+  v_SIP_Test_nofReceivedSubscribe:=0;
+  v_SIP_Test_nofSentPublish:=0;
+  v_SIP_Test_nofReceivedPublish:=0;
+}
+
+function f_EPTF_SIP_Test_cleanup_CT()
+runs on EPTF_SIP_LGen_Test_CT 
+{
+  f_EPTF_SIP_Test_ResetLocationServiceDataBase();
+}
+//======================================
+// f_EPTF_SIP_Test_logStatistics
+//======================================
+function f_EPTF_SIP_Test_logStatistics()
+runs on EPTF_SIP_LGen_Test_CT 
+{
+  var charstring vl_intro:="";
+  if( v_EPTF_SIP_Test_actorType==ORIG) { 
+    vl_intro:="=====Statistics on ORIG side =====";
+  } else {
+    vl_intro:="=====Statistics on TERM side =====";
+  }
+  log(vl_intro,
+    "\nv_SIP_Test_nofInitiated: ", v_SIP_Test_nofInitiated,
+    "\nv_SIP_Test_nofSentInvite: ", v_SIP_Test_nofSentInvite,
+    "\nv_SIP_Test_nofReceivedInvite: ", v_SIP_Test_nofReceivedInvite,
+    "\nv_SIP_Test_nofSentTrying: ", v_SIP_Test_nofSentTrying,
+    "\nv_SIP_Test_nofReceivedTrying: ", v_SIP_Test_nofReceivedTrying,
+    "\nv_SIP_Test_nofSentRinging: ",v_SIP_Test_nofSentRinging,
+    "\nv_SIP_Test_nofReceivedRinging: ",v_SIP_Test_nofReceivedRinging,
+    "\nv_SIP_Test_nofSent200OK: ", v_SIP_Test_nofSent200OK,
+    "\nv_SIP_Test_nofReceived200OK: ",v_SIP_Test_nofReceived200OK,
+    "\nv_SIP_Test_nofSent487: ", v_SIP_Test_nofSent487,
+    "\nv_SIP_Test_nofReceived487: ",v_SIP_Test_nofReceived487,
+    "\nv_SIP_Test_nofSentAck: ", v_SIP_Test_nofSentAck,
+    "\nv_SIP_Test_nofReceivedAck: ", v_SIP_Test_nofReceivedAck,
+    "\nv_SIP_Test_nofSentBye: ",v_SIP_Test_nofSentBye,
+    "\nv_SIP_Test_nofReceivedBye: ", v_SIP_Test_nofReceivedBye,
+    "\nv_SIP_Test_nofSentRegister: ", v_SIP_Test_nofSentRegister,
+    "\nv_SIP_Test_nofReceivedRegister: ",v_SIP_Test_nofReceivedRegister,
+    "\nv_SIP_Test_nofSentUpdate: ", v_SIP_Test_nofSentUpdate,
+    "\nv_SIP_Test_nofReceivedUpdate: ",v_SIP_Test_nofReceivedUpdate,
+    "\nv_SIP_Test_nofSentCancel: ", v_SIP_Test_nofSentCancel,
+    "\nv_SIP_Test_nofReceivedCancel: ", v_SIP_Test_nofReceivedCancel,
+    "\nv_SIP_Test_nofSentMessage: ",v_SIP_Test_nofSentMessage,
+    "\nv_SIP_Test_nofReceivedMessage: ",v_SIP_Test_nofReceivedMessage,
+    "\nv_SIP_Test_nofSentRefer: ",v_SIP_Test_nofSentRefer,
+    "\nv_SIP_Test_nofReceivedRefer: ",v_SIP_Test_nofReceivedRefer,
+    "\nv_SIP_Test_nofSentNotify: ",v_SIP_Test_nofSentNotify,
+    "\nv_SIP_Test_nofReceivedNotify: ",v_SIP_Test_nofReceivedNotify,
+    "\nv_SIP_Test_nofSentSubscribe: ",v_SIP_Test_nofSentSubscribe,
+    "\nv_SIP_Test_nofReceivedSubscribe: ",v_SIP_Test_nofReceivedSubscribe,
+    "\nv_SIP_Test_nofSentPublish: ",v_SIP_Test_nofSentPublish,
+    "\nv_SIP_Test_nofReceivedPublish: ",v_SIP_Test_nofReceivedPublish)
+}//f_
+//====================================================
+// f_EPTF_SIP_checkInviteStatistics
+//====================================================
+//checks the results of a basic call:
+//    Orig:                     Term:
+//     |         INVITE           |
+//     |------------------------->|
+//     |         100Trying        |
+//     |<------------------------ |
+//     |         180Ringing       |
+//     |<------------------------ |
+//     |         200 OK           |
+//     |<------------------------ |
+//     |          ACK             |
+//     |------------------------->|
+//     |          BYE             |
+//     |------------------------->|
+//     |         200 OK           |
+//     |<------------------------ |
+
+function f_EPTF_SIP_Test_checkInviteStatistics(in ActorType pl_actorType,in integer pl_nof200OK:=2)
+runs on EPTF_SIP_LGen_Test_CT 
+return boolean
+{
+  var boolean vl_retval:=true;
+  if(pl_actorType==ORIG) {
+    vl_retval:=
+      (v_SIP_Test_nofSentInvite==v_SIP_Test_nofInitiated) and
+      (v_SIP_Test_nofReceivedTrying==v_SIP_Test_nofInitiated) and
+      (v_SIP_Test_nofReceivedRinging==v_SIP_Test_nofInitiated) and
+      (v_SIP_Test_nofReceived200OK==pl_nof200OK*v_SIP_Test_nofInitiated) and
+      (v_SIP_Test_nofSentAck==v_SIP_Test_nofInitiated) and
+      (v_SIP_Test_nofSentBye==v_SIP_Test_nofInitiated)
+  } else { //TERM
+    vl_retval:= 
+      (v_SIP_Test_nofReceivedInvite==v_SIP_Test_nofInitiated) and
+      (v_SIP_Test_nofSentTrying==v_SIP_Test_nofInitiated) and
+      (v_SIP_Test_nofSentRinging==v_SIP_Test_nofInitiated) and
+      (v_SIP_Test_nofSent200OK==pl_nof200OK*v_SIP_Test_nofInitiated) and
+      (v_SIP_Test_nofReceivedAck==v_SIP_Test_nofInitiated) and
+      (v_SIP_Test_nofReceivedBye==v_SIP_Test_nofInitiated)
+  }
+  return vl_retval;
+}
+//======================================
+//  f_EPTF_SIP_checkReInviteStatistics
+//======================================
+//Checks the results of a ReInvite called from Terminating side:
+function f_EPTF_SIP_Test_checkReInviteStatistics(in ActorType pl_actorType)
+runs on EPTF_SIP_LGen_Test_CT 
+return boolean
+{
+  var boolean vl_retval:=true;
+  if(pl_actorType==ORIG) {
+    vl_retval:=
+      (v_SIP_Test_nofReceivedInvite==v_SIP_Test_nofInitiated) and
+      (v_SIP_Test_nofSent200OK==v_SIP_Test_nofInitiated) and
+      (v_SIP_Test_nofReceivedAck==v_SIP_Test_nofInitiated)
+  } else { //TERM
+    vl_retval:=
+      (v_SIP_Test_nofSentInvite==v_SIP_Test_nofInitiated) and
+      (v_SIP_Test_nofReceived200OK==v_SIP_Test_nofInitiated) and
+      (v_SIP_Test_nofSentAck==v_SIP_Test_nofInitiated)
+  }
+  return vl_retval;
+}
+ 
+//======================================
+// f_EPTF_SIP_checkUpdateStatistics
+//======================================
+function f_EPTF_SIP_Test_checkUpdateStatistics(in ActorType pl_actorType)
+runs on EPTF_SIP_LGen_Test_CT 
+return boolean
+{
+  var boolean vl_retval:=true;
+  if(pl_actorType==ORIG) {
+    vl_retval:=
+      (v_SIP_Test_nofReceived200OK==3*v_SIP_Test_nofInitiated) and
+      (v_SIP_Test_nofSentUpdate==v_SIP_Test_nofInitiated) and
+      (v_SIP_Test_nofSentBye==v_SIP_Test_nofInitiated)
+  } else { //TERM
+    vl_retval:= 
+      (v_SIP_Test_nofSent200OK==3*v_SIP_Test_nofInitiated) and
+      (v_SIP_Test_nofReceivedUpdate==v_SIP_Test_nofInitiated) and
+      (v_SIP_Test_nofReceivedBye==v_SIP_Test_nofInitiated)
+  }
+  return vl_retval;
+}
+//======================================
+// f_EPTF_SIP_Test_checkCancelStatistics
+//======================================
+function f_EPTF_SIP_Test_checkCancelStatistics(in ActorType pl_actorType)
+runs on EPTF_SIP_LGen_Test_CT 
+return boolean
+{
+  var boolean vl_retval:=true;
+  if(pl_actorType==ORIG) {
+    vl_retval:=
+      (v_SIP_Test_nofReceived200OK==v_SIP_Test_nofInitiated) and
+      (v_SIP_Test_nofSentCancel==v_SIP_Test_nofInitiated) and
+      (v_SIP_Test_nofReceived487==v_SIP_Test_nofInitiated)
+  } else { //TERM
+    vl_retval:= 
+      (v_SIP_Test_nofSent200OK==v_SIP_Test_nofInitiated) and
+      (v_SIP_Test_nofReceivedCancel==v_SIP_Test_nofInitiated) and
+      (v_SIP_Test_nofSent487==v_SIP_Test_nofInitiated)
+  }
+  return vl_retval;
+}
+
+//======================================
+// f_EPTF_SIP_Test_checkReferStatistics
+//======================================
+function f_EPTF_SIP_Test_checkReferStatistics(in ActorType pl_actorType)
+runs on EPTF_SIP_LGen_Test_CT 
+return boolean
+{
+  var boolean vl_retval:=true;
+  if(pl_actorType==ORIG) {
+    vl_retval:=
+      (v_SIP_Test_nofSentRefer==v_SIP_Test_nofInitiated) and
+      (v_SIP_Test_nofReceived200OK==v_SIP_Test_nofInitiated) and
+      (v_SIP_Test_nofReceivedNotify==3*v_SIP_Test_nofInitiated) and
+      (v_SIP_Test_nofSent200OK==3*v_SIP_Test_nofInitiated)
+  } else { //TERM
+    vl_retval:= 
+      (v_SIP_Test_nofReceivedRefer==v_SIP_Test_nofInitiated) and
+      (v_SIP_Test_nofSent200OK==v_SIP_Test_nofInitiated) and
+      (v_SIP_Test_nofSentNotify==3*v_SIP_Test_nofInitiated) and
+      (v_SIP_Test_nofReceived200OK==3*v_SIP_Test_nofInitiated)
+  }
+  return vl_retval;
+}
+//=============================================
+// f_EPTF_SIP_Test_checkReferInDialogStatistics
+//=============================================
+function f_EPTF_SIP_Test_checkReferInDialogStatistics(in ActorType pl_actorType)
+runs on EPTF_SIP_LGen_Test_CT 
+return boolean
+{
+  var boolean vl_retval:=true;
+  if(pl_actorType==ORIG) {
+    vl_retval:=
+      (v_SIP_Test_nofSentInvite==v_SIP_Test_nofInitiated) and
+      (v_SIP_Test_nofSentRefer==v_SIP_Test_nofInitiated) and
+      (v_SIP_Test_nofReceived200OK==2*v_SIP_Test_nofInitiated) and
+      (v_SIP_Test_nofReceivedNotify==3*v_SIP_Test_nofInitiated) and
+      (v_SIP_Test_nofSent200OK==3*v_SIP_Test_nofInitiated)
+  } else { //TERM
+    vl_retval:= 
+      (v_SIP_Test_nofReceivedInvite==v_SIP_Test_nofInitiated) and
+      (v_SIP_Test_nofReceivedRefer==v_SIP_Test_nofInitiated) and
+      (v_SIP_Test_nofSent200OK==2*v_SIP_Test_nofInitiated) and
+      (v_SIP_Test_nofSentNotify==3*v_SIP_Test_nofInitiated) and
+      (v_SIP_Test_nofReceived200OK==3*v_SIP_Test_nofInitiated)
+  }
+  return vl_retval;
+}
+//======================================
+// f_EPTF_SIP_Test_checkSubscribeStatistics
+//======================================
+function f_EPTF_SIP_Test_checkSubscribeStatistics(in ActorType pl_actorType, in integer pl_nofNotifies)
+runs on EPTF_SIP_LGen_Test_CT 
+return boolean
+{
+  var boolean vl_retval:=true;
+  if(pl_actorType==ORIG) {
+    vl_retval:=
+      (v_SIP_Test_nofSentSubscribe==v_SIP_Test_nofInitiated) and
+      (v_SIP_Test_nofReceived200OK==v_SIP_Test_nofInitiated) and
+      (v_SIP_Test_nofReceivedNotify==pl_nofNotifies*v_SIP_Test_nofInitiated) and
+      (v_SIP_Test_nofSent200OK==pl_nofNotifies*v_SIP_Test_nofInitiated)
+  } else { //TERM
+    vl_retval:= 
+      (v_SIP_Test_nofReceivedSubscribe==v_SIP_Test_nofInitiated) and
+      (v_SIP_Test_nofSent200OK==v_SIP_Test_nofInitiated) and
+      (v_SIP_Test_nofSentNotify==pl_nofNotifies*v_SIP_Test_nofInitiated) and
+      (v_SIP_Test_nofReceived200OK==pl_nofNotifies*v_SIP_Test_nofInitiated)
+  }
+  return vl_retval;
+}
+
+//======================================
+// f_EPTF_SIP_Test_checkRefreshSubscribeStatistics
+//======================================
+function f_EPTF_SIP_Test_checkRefreshSubscribeStatistics(in ActorType pl_actorType)
+runs on EPTF_SIP_LGen_Test_CT 
+return boolean
+{
+  var boolean vl_retval:=true;
+  if(pl_actorType==ORIG) {
+    vl_retval:=
+      (v_SIP_Test_nofSentSubscribe==2*v_SIP_Test_nofInitiated) and
+      (v_SIP_Test_nofReceived200OK==2*v_SIP_Test_nofInitiated) and
+      (v_SIP_Test_nofReceivedNotify==3*v_SIP_Test_nofInitiated) and
+      (v_SIP_Test_nofSent200OK==3*v_SIP_Test_nofInitiated)
+  } else { //TERM
+    vl_retval:= 
+      (v_SIP_Test_nofReceivedSubscribe==2*v_SIP_Test_nofInitiated) and
+      (v_SIP_Test_nofSent200OK==2*v_SIP_Test_nofInitiated) and
+      (v_SIP_Test_nofSentNotify==3*v_SIP_Test_nofInitiated) and
+      (v_SIP_Test_nofReceived200OK==3*v_SIP_Test_nofInitiated)
+  }
+  return vl_retval;
+}
+
+//======================================
+// f_EPTF_SIP_Test_checkPublishStatistics
+//======================================
+function f_EPTF_SIP_Test_checkPublishStatistics(in ActorType pl_actorType)
+runs on EPTF_SIP_LGen_Test_CT 
+return boolean
+{
+  var boolean vl_retval:=true;
+  if(pl_actorType==ORIG) {
+    vl_retval:=
+      (v_SIP_Test_nofSentPublish==2*v_SIP_Test_nofInitiated) and
+      (v_SIP_Test_nofReceived200OK==2*v_SIP_Test_nofInitiated)
+      
+  } else { //TERM
+    vl_retval:= 
+      (v_SIP_Test_nofReceivedPublish==2*v_SIP_Test_nofInitiated) and
+      (v_SIP_Test_nofSent200OK==2*v_SIP_Test_nofInitiated)
+      
+  }
+  return vl_retval;
+}
+//======================================
+// f_EPTF_SIP_Test_step_checkInit
+//======================================
+function f_EPTF_SIP_Test_step_checkInit(in EPTF_LGenBase_TestStepArgs pl_ptr)
+runs on EPTF_SIP_LGen_Test_CT
+{
+  var integer vl_newIdx;
+
+  if(f_EPTF_SIP_FSMInitialized(pl_ptr.eIdx, pl_ptr.refContext.fCtxIdx, vl_newIdx))
+  {
+    v_SIP_Test_nofInitiated:=v_SIP_Test_nofInitiated+1;
+  }
+  //log("v_db_subscription: ",v_db_subscription);
+  //log("v_db_users: ",v_db_users);
+}
+//======================================
+// f_EPTF_SIP_Test_step_countSentInvite
+//======================================
+function f_EPTF_SIP_Test_step_countSentInvite(in EPTF_LGenBase_TestStepArgs pl_ptr)
+runs on EPTF_SIP_LGen_Test_CT
+{
+  v_SIP_Test_nofSentInvite:=v_SIP_Test_nofSentInvite+1;
+}
+
+//======================================
+// f_EPTF_SIP_Test_step_countReceivedInvite
+//======================================
+function f_EPTF_SIP_Test_step_countReceivedInvite(in EPTF_LGenBase_TestStepArgs pl_ptr)
+runs on EPTF_SIP_LGen_Test_CT
+{
+  v_SIP_Test_nofReceivedInvite:=v_SIP_Test_nofReceivedInvite+1;
+}
+
+//======================================
+// f_EPTF_SIP_Test_step_countSentTrying
+//======================================
+function f_EPTF_SIP_Test_step_countSent100Trying(in EPTF_LGenBase_TestStepArgs pl_ptr)
+runs on EPTF_SIP_LGen_Test_CT
+{
+  v_SIP_Test_nofSentTrying:=v_SIP_Test_nofSentTrying+1;
+}
+
+//======================================
+// f_EPTF_SIP_Test_step_countReceivedTrying
+//======================================
+function f_EPTF_SIP_Test_step_countReceived100Trying(in EPTF_LGenBase_TestStepArgs pl_ptr)
+runs on EPTF_SIP_LGen_Test_CT
+{
+  v_SIP_Test_nofReceivedTrying:=v_SIP_Test_nofReceivedTrying+1;
+}
+
+//======================================
+// f_EPTF_SIP_Test_step_countSent180Ringing
+//======================================
+function f_EPTF_SIP_Test_step_countSent180Ringing(in EPTF_LGenBase_TestStepArgs pl_ptr)
+runs on EPTF_SIP_LGen_Test_CT
+{
+  v_SIP_Test_nofSentRinging:=v_SIP_Test_nofSentRinging+1;
+}
+
+//======================================
+// f_EPTF_SIP_Test_step_countReceivedRinging
+//======================================
+function f_EPTF_SIP_Test_step_countReceived180Ringing(in EPTF_LGenBase_TestStepArgs pl_ptr)
+runs on EPTF_SIP_LGen_Test_CT
+{
+  v_SIP_Test_nofReceivedRinging:=v_SIP_Test_nofReceivedRinging+1;
+}
+
+//======================================
+// f_EPTF_SIP_Test_step_countSentRegister
+//======================================
+function f_EPTF_SIP_Test_step_countSentRegister(in EPTF_LGenBase_TestStepArgs pl_ptr)
+runs on EPTF_SIP_LGen_Test_CT
+{
+  v_SIP_Test_nofSentRegister:=v_SIP_Test_nofSentRegister+1;
+}
+//======================================
+// f_EPTF_SIP_Test_step_countReceivedRegister
+//======================================
+function f_EPTF_SIP_Test_step_countReceivedRegister(in EPTF_LGenBase_TestStepArgs pl_ptr)
+runs on EPTF_SIP_LGen_Test_CT
+{
+  v_SIP_Test_nofReceivedRegister:=v_SIP_Test_nofReceivedRegister+1;
+}
+//======================================
+// f_EPTF_SIP_Test_step_countSent200OK
+//======================================
+function f_EPTF_SIP_Test_step_countSent200OK(in EPTF_LGenBase_TestStepArgs pl_ptr)
+runs on EPTF_SIP_LGen_Test_CT
+{
+  v_SIP_Test_nofSent200OK:=v_SIP_Test_nofSent200OK+1;
+}
+//======================================
+// f_EPTF_SIP_Test_step_countReceived200OK
+//======================================
+function f_EPTF_SIP_Test_step_countReceived200OK(in EPTF_LGenBase_TestStepArgs pl_ptr)
+runs on EPTF_SIP_LGen_Test_CT
+{
+  v_SIP_Test_nofReceived200OK:=v_SIP_Test_nofReceived200OK+1;
+}
+//======================================
+// f_EPTF_SIP_Test_step_countSent487
+//======================================
+function f_EPTF_SIP_Test_step_countSent487(in EPTF_LGenBase_TestStepArgs pl_ptr)
+runs on EPTF_SIP_LGen_Test_CT
+{
+  v_SIP_Test_nofSent487:=v_SIP_Test_nofSent487+1;
+}
+//======================================
+// f_EPTF_SIP_Test_step_countReceived487
+//======================================
+function f_EPTF_SIP_Test_step_countReceived487(in EPTF_LGenBase_TestStepArgs pl_ptr)
+runs on EPTF_SIP_LGen_Test_CT
+{
+  v_SIP_Test_nofReceived487:=v_SIP_Test_nofReceived487+1;
+}
+//======================================
+// f_EPTF_SIP_Test_step_countSentAck
+//======================================
+function f_EPTF_SIP_Test_step_countSentAck(in EPTF_LGenBase_TestStepArgs pl_ptr)
+runs on EPTF_SIP_LGen_Test_CT
+{
+  v_SIP_Test_nofSentAck:=v_SIP_Test_nofSentAck+1;
+}
+//======================================
+// f_EPTF_SIP_Test_step_countReceivedAck
+//======================================
+function f_EPTF_SIP_Test_step_countReceivedAck(in EPTF_LGenBase_TestStepArgs pl_ptr)
+runs on EPTF_SIP_LGen_Test_CT
+{
+  v_SIP_Test_nofReceivedAck:=v_SIP_Test_nofReceivedAck+1;
+}
+//======================================
+// f_EPTF_SIP_Test_step_countSentBye
+//======================================
+function f_EPTF_SIP_Test_step_countSentBye(in EPTF_LGenBase_TestStepArgs pl_ptr)
+runs on EPTF_SIP_LGen_Test_CT
+{
+  v_SIP_Test_nofSentBye:=v_SIP_Test_nofSentBye+1;
+}
+//======================================
+// f_EPTF_SIP_Test_step_countReceivedBye
+//======================================
+function f_EPTF_SIP_Test_step_countReceivedBye(in EPTF_LGenBase_TestStepArgs pl_ptr)
+runs on EPTF_SIP_LGen_Test_CT
+{
+  v_SIP_Test_nofReceivedBye:=v_SIP_Test_nofReceivedBye+1;
+}
+
+//======================================
+// f_EPTF_SIP_Test_step_countSentUpdate
+//======================================
+function f_EPTF_SIP_Test_step_countSentUpdate(in EPTF_LGenBase_TestStepArgs pl_ptr)
+runs on EPTF_SIP_LGen_Test_CT
+{
+  v_SIP_Test_nofSentUpdate:=v_SIP_Test_nofSentUpdate+1;
+}
+
+//======================================
+// f_EPTF_SIP_Test_step_countReceivedUpdate
+//======================================
+function f_EPTF_SIP_Test_step_countReceivedUpdate(in EPTF_LGenBase_TestStepArgs pl_ptr)
+runs on EPTF_SIP_LGen_Test_CT
+{
+  v_SIP_Test_nofReceivedUpdate:=v_SIP_Test_nofReceivedUpdate+1;
+}
+
+//======================================
+// f_EPTF_SIP_Test_step_countSentCancel
+//======================================
+function f_EPTF_SIP_Test_step_countSentCancel(in EPTF_LGenBase_TestStepArgs pl_ptr)
+runs on EPTF_SIP_LGen_Test_CT
+{
+  v_SIP_Test_nofSentCancel:=v_SIP_Test_nofSentCancel+1;
+}
+
+//======================================
+// f_EPTF_SIP_Test_step_countReceivedCancel
+//======================================
+function f_EPTF_SIP_Test_step_countReceivedCancel(in EPTF_LGenBase_TestStepArgs pl_ptr)
+runs on EPTF_SIP_LGen_Test_CT
+{
+  v_SIP_Test_nofReceivedCancel:=v_SIP_Test_nofReceivedCancel+1;
+}
+
+//======================================
+// f_EPTF_SIP_Test_step_countSentMessage
+//======================================
+function f_EPTF_SIP_Test_step_countSentMessage(in EPTF_LGenBase_TestStepArgs pl_ptr)
+runs on EPTF_SIP_LGen_Test_CT
+{
+  v_SIP_Test_nofSentMessage:=v_SIP_Test_nofSentMessage+1;
+}
+
+//======================================
+// f_EPTF_SIP_Test_step_countReceivedMessage
+//======================================
+function f_EPTF_SIP_Test_step_countReceivedMessage(in EPTF_LGenBase_TestStepArgs pl_ptr)
+runs on EPTF_SIP_LGen_Test_CT
+{
+  v_SIP_Test_nofReceivedMessage:=v_SIP_Test_nofReceivedMessage+1;
+}
+
+//======================================
+// f_EPTF_SIP_Test_step_countSentRefer
+//======================================
+function f_EPTF_SIP_Test_step_countSentRefer(in EPTF_LGenBase_TestStepArgs pl_ptr)
+runs on EPTF_SIP_LGen_Test_CT
+{
+  v_SIP_Test_nofSentRefer:=v_SIP_Test_nofSentRefer+1;
+}
+
+//======================================
+// f_EPTF_SIP_Test_step_countReceivedRefer
+//======================================
+function f_EPTF_SIP_Test_step_countReceivedRefer(in EPTF_LGenBase_TestStepArgs pl_ptr)
+runs on EPTF_SIP_LGen_Test_CT
+{
+  v_SIP_Test_nofReceivedRefer:=v_SIP_Test_nofReceivedRefer+1;
+}
+
+//======================================
+// f_EPTF_SIP_Test_step_countSentNotify
+//======================================
+function f_EPTF_SIP_Test_step_countSentNotify(in EPTF_LGenBase_TestStepArgs pl_ptr)
+runs on EPTF_SIP_LGen_Test_CT
+{
+  v_SIP_Test_nofSentNotify:=v_SIP_Test_nofSentNotify+1;
+}
+
+//======================================
+// f_EPTF_SIP_Test_step_countReceivedNotify
+//======================================
+function f_EPTF_SIP_Test_step_countReceivedNotify(in EPTF_LGenBase_TestStepArgs pl_ptr)
+runs on EPTF_SIP_LGen_Test_CT
+{
+  v_SIP_Test_nofReceivedNotify:=v_SIP_Test_nofReceivedNotify+1;
+}
+
+//======================================
+// f_EPTF_SIP_Test_step_countSentSubscribe
+//======================================
+function f_EPTF_SIP_Test_step_countSentSubscribe(in EPTF_LGenBase_TestStepArgs pl_ptr)
+runs on EPTF_SIP_LGen_Test_CT
+{
+  v_SIP_Test_nofSentSubscribe:=v_SIP_Test_nofSentSubscribe+1;
+}
+
+//======================================
+// f_EPTF_SIP_Test_step_countReceivedSubscribe
+//======================================
+function f_EPTF_SIP_Test_step_countReceivedSubscribe(in EPTF_LGenBase_TestStepArgs pl_ptr)
+runs on EPTF_SIP_LGen_Test_CT
+{
+  v_SIP_Test_nofReceivedSubscribe:=v_SIP_Test_nofReceivedSubscribe+1;
+}
+
+//======================================
+// f_EPTF_SIP_Test_step_countSentPublish
+//======================================
+function f_EPTF_SIP_Test_step_countSentPublish(in EPTF_LGenBase_TestStepArgs pl_ptr)
+runs on EPTF_SIP_LGen_Test_CT
+{
+  v_SIP_Test_nofSentPublish:=v_SIP_Test_nofSentPublish+1;
+}
+
+//======================================
+// f_EPTF_SIP_Test_step_countReceivedPublish
+//======================================
+function f_EPTF_SIP_Test_step_countReceivedPublish(in EPTF_LGenBase_TestStepArgs pl_ptr)
+runs on EPTF_SIP_LGen_Test_CT
+{
+  v_SIP_Test_nofReceivedPublish:=v_SIP_Test_nofReceivedPublish+1;
+}
+//==============================================
+// f_EPTF_SIP_Test_InitLocationServiceDataBase
+//==============================================
+function f_EPTF_SIP_Test_InitLocationServiceDataBase()
+runs on EPTF_SIP_LGen_Test_CT
+{
+  v_locationServiceDB.hashRef := f_EPTF_str2int_HashMap_New("LocationServiceDB");
+
+  v_locationServiceDB.actualUser := -1;
+  v_locationServiceDB.nofUsers := 0;
+
+  f_EPTF_FBQ_initFreeBusyQueue(v_locationServiceDB.queue);
+
+  v_locationServiceDB.data := {};
+}
+
+function f_EPTF_SIP_Test_ResetLocationServiceDataBase()
+runs on EPTF_SIP_LGen_Test_CT
+{
+  f_EPTF_str2int_HashMap_Delete("LocationServiceDB");
+
+  v_locationServiceDB.actualUser := -1;
+  v_locationServiceDB.nofUsers := 0;
+
+  f_EPTF_FBQ_initFreeBusyQueue(v_locationServiceDB.queue);
+
+  v_locationServiceDB.data := {};
+}
+
+//======================================================================
+// General functions - some of them should be implemented in SipApplib
+//======================================================================
+//==============================================
+// f_EPTF_SIP_Test_findTransactionId
+//==============================================
+//Removed because worked on internal data
+// function f_EPTF_SIP_Test_findTransactionIdx(in SIP_TransactionDB pl_db, in integer pl_trIdx) 
+// return boolean
+// {
+//   var integer vl_size:=sizeof(pl_db.data);
+//   for(var integer i:=0;i<vl_size; i:=i+1) {
+//     if(pl_db.data[i]==pl_trIdx) { return true; }
+//   }
+//   return false;
+// }
+
+//==============================================
+//f_EPTF_SIP_Test_checkInitDataBase
+//==============================================
+function f_EPTF_SIP_Test_checkInitDataBase() 
+runs on EPTF_SIP_LGen_Test_CT 
+return boolean {
+  var integer vl_userHashMap:=-1, vl_funcHashMap:=-1;
+
+  return( (v_db_users.queue==c_EPTF_emptyFreeBusyQueue) and 
+    (v_db_users.data =={}) and 
+    f_EPTF_str2int_HashMap_GetID("EPTF_SIP_UserDB_Hash",vl_userHashMap) and 
+    (v_db_users.hashRef== vl_userHashMap) and 
+    f_EPTF_str2int_HashMap_GetID("EPTF_SIP_UserDB_FunctionsHash",vl_funcHashMap) and
+    (v_db_functions.hashRef==vl_funcHashMap) and
+    (v_db_functions.data == {})
+    );
+}
+
+//==============================================
+//f_EPTF_SIP_Test_checkInit
+//==============================================
+function f_EPTF_SIP_Test_checkInit() 
+runs on EPTF_SIP_LGen_Test_CT 
+return boolean
+{
+  return( v_SIP_LGenInitialized
+    //The scheduler and the logging must be initialized by the LGenBase
+    //If the LGenBase had not been initialized, the test will cause assertion faile 
+    //and v_LGenBase_initialized 
+    //and v_EPTF_Logging_initialized 
+    //and v_Scheduler_initialized 
+    and f_EPTF_SIP_Test_checkInitDataBase() 
+    and isvalue(vg_EPTF_SIP_IPL4asp_stats));
+}
+
+//==============================================
+//f_EPTF_SIP_Test_hashMapRemoved
+//==============================================
+function f_EPTF_SIP_Test_hashMapRemoved(in charstring pl_hmName)
+runs on EPTF_SIP_LGen_Test_CT 
+return boolean
+{
+  var integer vl_id:=-1;
+  if( f_EPTF_str2int_HashMap_GetID(pl_hmName,vl_id)==true) {
+    log(">>>WARNING: HashMap with name "&pl_hmName&" should not exist");
+    return false;
+  } else {
+    return true;
+  }
+}
+
+//==============================================
+//f_EPTF_SIP_Test_checkCleanup
+//==============================================
+function f_EPTF_SIP_Test_checkCleanup()
+runs on EPTF_SIP_LGen_Test_CT 
+return boolean
+{
+  var boolean vl_retval :=true;
+  //== 1. Every init flag must be set for false: ==
+//   log("Init values after cleanup:",v_SIP_LGenInitialized,v_LGenBase_initialized,v_EPTF_Logging_initialized, v_Scheduler_initialized);
+//   log("Return value: ",(not(v_SIP_LGenInitialized or v_LGenBase_initialized or v_EPTF_Logging_initialized or v_Scheduler_initialized)));
+  if(v_SIP_LGenInitialized) {
+    vl_retval:= false;
+    log(">>>ERROR: v_SIP_LGenInitialized should be false");
+  }
+  /* The cleanup of these features is the task of the EPTF_Base. We don't test the EPTF_Base.
+  if(v_LGenBase_initialized) {
+    vl_retval:= false;
+    log(">>>ERROR: v_LGenBase_initialized should be false");
+  }
+  if(v_EPTF_Logging_initialized) {
+    vl_retval:= false;
+    log(">>>ERROR:  v_EPTF_Logging_initialized should be false");
+  }
+  if( v_Scheduler_initialized ) {
+    vl_retval:= false;
+    log(">>>ERROR: v_Scheduler_initialized should be false");
+  }
+  */
+  //== 2. Every HashMAp shall be removed ===
+  if( not(f_EPTF_SIP_Test_hashMapRemoved("UACHash")
+      and f_EPTF_SIP_Test_hashMapRemoved("UASHash")
+      and f_EPTF_SIP_Test_hashMapRemoved("DialogHash")
+      and f_EPTF_SIP_Test_hashMapRemoved("SubscriptionHash")
+      //and f_EPTF_SIP_Test_hashMapRemoved("LocationServiceDB")
+      and f_EPTF_SIP_Test_hashMapRemoved("TrIdHash")
+      and f_EPTF_SIP_Test_hashMapRemoved("UserIdx2TransportUserIdx")
+    )) {
+    vl_retval:= false;
+  }
+
+  //== 3. All connection shall be closed ===
+  log(">>DEBUG: ", vg_EPTF_SIP_IPL4asp_stats);
+  if( isvalue(vg_EPTF_SIP_IPL4asp_stats) and vg_EPTF_SIP_IPL4asp_stats.nofOpenConnections>0) {
+    vl_retval:= false;
+    log(">>>ERROR: vg_EPTF_SIP_IPL4asp_stats.nofOpenConnections should be zero, but it is ",vg_EPTF_SIP_IPL4asp_stats.nofOpenConnections);
+  }
+
+  return vl_retval;
+  //return (not(v_SIP_LGenInitialized or v_LGenBase_initialized or v_EPTF_Logging_initialized or v_Scheduler_initialized));
+}
+//==============================================
+// f_EPTF_SIP_Test_createReceivedReqTemplate(in 
+//==============================================
+function f_EPTF_SIP_Test_createReceivedReqTemplate(
+  in Method pl_method, 
+  in template charstring pl_origUserId, 
+  in template charstring pl_origHostId,
+  in template charstring pl_termUserId,
+  in template charstring pl_termHostId,
+  in template charstring pl_contactUserId,
+  in template charstring pl_contactHostId,
+  in template charstring pl_calledUserId,
+  in template charstring pl_calledHostId,
+  inout template PDU_SIP pl_pdu)
+runs on EPTF_SIP_LGen_Test_CT {
+  pl_pdu := tr_SIP_request(
+    tr_requestLine(pl_method,tr_requestUri(pl_calledUserId,pl_calledHostId)),
+    tr_msgHeader(
+      tr_callId:=?,
+      tr_origUserId:=pl_origUserId,
+      tr_origHostId:=pl_origHostId,
+      tr_termUserId:=pl_termUserId,
+      tr_termHostId:=pl_termHostId,
+      tr_contactUserId:=pl_contactUserId,
+      tr_contactHostId:=pl_contactHostId))
+
+  if(ispresent(v_msgToProcess.request.messageBody) ){
+    pl_pdu.request.msgHeader.contentType:=?;
+    pl_pdu.request.msgHeader.contentLength.len:=lengthof(v_msgToProcess.request.messageBody);
+  }
+
+  if( pl_method==MESSAGE_E) {
+    //RFC3428
+    pl_pdu.request.msgHeader.contentLength:={CONTENT_LENGTH_E,?};
+    pl_pdu.request.msgHeader.contentType:=({CONTENT_TYPE_E,"text/plain"}, {CONTENT_TYPE_E,"message/cpim"} ); 
+  } else if(pl_method==REFER_E) { 
+    // RFC3515
+    pl_pdu.request.msgHeader.refer_to:=?
+  } else if(pl_method==NOTIFY_E) {
+    pl_pdu.request.msgHeader.event:=?;
+    pl_pdu.request.msgHeader.subscription_state:= ?;
+    pl_pdu.request.msgHeader.contentType:=?;
+
+  } else if (pl_method==SUBSCRIBE_E) { //RFC3265
+    pl_pdu.request.msgHeader.contentType:=*;
+    pl_pdu.request.msgHeader.event:=?;
+    pl_pdu.request.msgHeader.subscription_state:= ?;
+    //pl_pdu.request.msgHeader.contentType:=?;
+    pl_pdu.request.msgHeader.expires:=?;
+  }
+}
+
+//==============================================
+// f_EPTF_SIP_Test_createReceivedRespTemplate(in 
+//==============================================
+function f_EPTF_SIP_Test_createReceivedRespTemplate(
+  in template charstring pl_origUserId,
+  in template charstring pl_origHostId,
+  in template charstring pl_termUserId, 
+  in template charstring pl_termHostId,
+  in template charstring pl_contactUserId,
+  in template charstring pl_contactHostId,
+  inout template PDU_SIP pl_pdu)
+runs on EPTF_SIP_LGen_Test_CT {
+  pl_pdu := tr_SIP_response(
+    ?,
+    tr_msgHeader(
+      tr_callId:=?,
+      tr_origUserId:=pl_origUserId,
+      tr_origHostId:=pl_origHostId,
+      tr_termUserId:=pl_termUserId,
+      tr_termHostId:=pl_termHostId,
+      tr_contactUserId :=pl_contactUserId,
+      tr_contactHostId:=pl_contactHostId))
+}
+//==============================================
+// f_EPTF_SIP_Test_step_checkReceivedMsg
+//==============================================
+function f_EPTF_SIP_Test_step_checkReceivedMsg(in EPTF_LGenBase_TestStepArgs pl_ptr)
+runs on EPTF_SIP_LGen_Test_CT 
+{
+  //log( ">>>>>v_msgToProcess: ", v_msgToProcess);
+  var integer vl_eCtx := pl_ptr.eIdx;
+  var integer vl_bCtx := f_EPTF_LGenBase_getBehaviorCtxItem(vl_eCtx, v_SIP_myBIdx,0);
+  var charstring vl_bCtxStr := int2str(vl_bCtx);
+
+  var charstring tr_termUserId:="UserTerm_"&vl_bCtxStr;
+  var charstring tr_termHostId:="ericsson2.com"
+
+  var charstring tr_origUserId:="UserOrig_"&vl_bCtxStr;
+  var charstring tr_origHostId:="ericsson.com"
+
+  var charstring tr_contactUserId :="";
+  var charstring tr_contactHostId :="";
+  var charstring tr_calledUserId:="";
+  var charstring tr_calledHostId:="";
+
+  if(v_EPTF_SIP_Test_actorType==ORIG) { 
+    tr_contactUserId:=tr_termUserId;
+    tr_contactHostId:=tr_termHostId;
+    tr_calledUserId:=tr_origUserId;
+    tr_calledHostId:=tr_origHostId;
+  }else{ //TERM
+    tr_contactUserId:=tr_origUserId;
+    tr_contactHostId:=tr_origHostId;
+    tr_calledUserId:=tr_termUserId;
+    tr_calledHostId:=tr_termHostId;
+  }
+
+  var template PDU_SIP tr_pdu :=?;
+  if( ischosen( v_msgToProcess.request)) {
+    f_EPTF_SIP_Test_createReceivedReqTemplate( 
+      pl_method:= v_msgToProcess.request.requestLine.method,
+      pl_origUserId:=tr_contactUserId ,
+      pl_origHostId:=tr_contactHostId ,
+      pl_termUserId:=tr_calledUserId,
+      pl_termHostId:=tr_calledHostId,
+      pl_contactUserId :=tr_contactUserId,
+      pl_contactHostId:=tr_contactHostId,
+      pl_calledUserId:=tr_calledUserId,
+      pl_calledHostId:=tr_calledHostId,
+      pl_pdu:=tr_pdu);
+  } else if(ischosen(v_msgToProcess.response)){
+    f_EPTF_SIP_Test_createReceivedRespTemplate(
+      pl_origUserId:= tr_calledUserId,
+      pl_origHostId:= tr_calledHostId,
+      pl_termUserId:= tr_contactUserId,
+      pl_termHostId:= tr_contactHostId,
+      pl_contactUserId:=tr_contactUserId,
+      pl_contactHostId:=tr_contactHostId,
+      pl_pdu:=tr_pdu);
+  } else {
+    log(">>>>>Wrong branch");
+    setverdict(fail);
+  }
+  if( match(v_msgToProcess,tr_pdu) ) {
+    setverdict(pass);
+  } else {
+    log(match(v_msgToProcess,tr_pdu));
+  }
+}
+
+//==============================================
+//f_EPTF_SIP_Test_setVerdict
+//==============================================
+function f_EPTF_SIP_Test_setVerdict(in boolean pl_bool) 
+runs on EPTF_SIP_LGen_Test_CT {
+  if(pl_bool==true) { setverdict(pass) }
+  else { setverdict(fail); }
+}
+
+}  //module

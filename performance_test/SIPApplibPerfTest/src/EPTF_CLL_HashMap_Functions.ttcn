@@ -1,0 +1,101 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************///  File:     EPTF_CLL_HashMap_Functions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 512
+//  Updated:  2011-10-13
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////
+//  File: EPTF_CLL_HashMap_Functions.ttcn
+// 
+//  Purpose:
+//    Provide the main functions of HashMaps.
+// 
+//  File depends on:
+//    <EPTF_CLL_Base_Functions>
+//    <EPTF_CLL_HashMap_Definitions>
+// 
+//  Current Owner:
+//    Jozsef Gyurusi (ethjgi)
+// 
+//  Last Review Date:
+//    -
+//
+//  Detailed Comments:
+//    Defines public fuctions that can be used for all type of HashMap.
+//    HashMap can be used to  manage key-value pairs. The data can be retrieved
+//    having the key. HashMap uses an algorithm that is able to access the value
+//    quickly (O(log(N))).
+//    This HashMap implementation uses the unordered_map of C++.
+//    The available hashMaps (type of key-value pairs):
+//      integer     - integer
+//      charstring  - integer
+//      octetstring - integer
+//
+//    For the API for the different type of hashMaps see the following modules:
+//      <EPTF_CLL_HashMapInt2Int_Functions>
+//      <EPTF_CLL_HashMapStr2Int_Functions>
+//      <EPTF_CLL_HashMapOct2Int_Functions>
+//
+//    Public functions:
+//      <f_EPTF_HashMap_init_CT> - The init function of the HashMap. 
+//
+///////////////////////////////////////////////////////////////
+module EPTF_CLL_HashMap_Functions {
+
+import from EPTF_CLL_Base_Functions all;
+import from EPTF_CLL_HashMap_Definitions all;
+
+///////////////////////////////////////////////////////////
+// Function: f_EPTF_HashMap_init_CT
+// 
+// Purpose:
+//   Function to initialize the HashMap feature.
+// 
+// Parameters:
+//   pl_selfName - *in* *charstring* - the name of the component
+//     (this is passded to <f_EPTF_Base_init_CT>)
+// 
+// Return Value:
+//   -
+//
+//  Errors:
+//   -
+//
+//  Detailed Comments:
+//    This function has to be called to initialize the HashMap
+//    database. Without calling this function the hashMap functions
+//    will not work properly.
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_HashMap_init_CT (in charstring pl_selfName)
+runs on EPTF_HashMap_CT {
+  if(v_HashMap_initialized){
+    return; 
+  }
+  f_EPTF_Base_init_CT(pl_selfName)
+  f_EPTF_Base_registerCleanup(refers(f_EPTF_HashMap_cleanup_CT));
+  f_EPTF_HashMap_init();
+  v_HashMap_initialized := true
+}
+
+private function f_EPTF_HashMap_cleanup_CT()
+runs on EPTF_HashMap_CT {
+  if(not v_HashMap_initialized) {
+    return;
+  }
+  f_EPTF_HashMap_cleanup();
+  v_HashMap_initialized := false
+}
+
+
+private external function f_EPTF_HashMap_init();
+private external function f_EPTF_HashMap_cleanup();
+
+}  // end of module EPTF_CLL_HashMap_Functions

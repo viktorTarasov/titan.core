@@ -1,0 +1,725 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_CLL_RNA_Functions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 512
+//  Updated:  2009-11-16
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////
+// Module: EPTF_CLL_RNA_Functions
+//
+// Purpose:
+//   This module supports Random N Array functions
+//
+// Module Parameters:
+//     -
+//
+//  Module depends on:
+//    <EPTF_CLL_Common_Definitions>
+//    <EPTF_CLL_Common_Functions>
+//    <EPTF_CLL_RNA_Definitions>
+// 
+// Current Owner:
+//   Bence Molnar (EBENMOL)
+//
+// Last Review Date:
+//   2009-02-20
+//
+///////////////////////////////////////////////////////////
+module EPTF_CLL_RNA_Functions {
+
+import from EPTF_CLL_Common_Definitions all;
+import from EPTF_CLL_Common_Functions all;
+import from EPTF_CLL_RNA_Definitions all;
+
+
+///////////////////////////////////////////////////////////
+// Group: RNA
+//
+// Purpose:
+//   Functions for handling Random N array
+//
+///////////////////////////////////////////////////////////
+group RNA {
+
+  ///////////////////////////////////////////////////////////
+  // Function: f_EPTF_RNA_initRNA
+  // 
+  // Purpose:
+  //   Function to init the Random N array to starting state.
+  // 
+  // Parameters:
+  //   pl_size - *in* *integer* - number of element indices in the RNA
+  //   pl_numOfLists - *in* *integer* - number of lists
+  //   pl_queue - *inout* <EPTF_RNA_RandomNArray> - the RNA in question   
+  // 
+  // Return Value:
+  //   -
+  // 
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_RNA_initRNA(
+    in integer pl_size,
+    in integer pl_numOfLists,
+    inout EPTF_RNA_RandomNArray pl_queue) {
+
+    if(pl_size < 0)
+    {
+      f_EPTF_Common_error(log2str("Error: ", %definitionId, ": Size of a list should be at least 0!: ",pl_size));
+      return;        
+    }
+    if(pl_numOfLists < 1)
+    {
+      f_EPTF_Common_error(log2str("Error: ", %definitionId, ": Number of list should be at least 1!: ",pl_numOfLists));
+      return;        
+    }
+
+    pl_queue := c_EPTF_RNA_emptyRandomNArray;
+
+    pl_queue.numOfLists := pl_numOfLists; // number of lists
+    pl_queue.slotList[0][0] := -1; // if there is no elements
+
+    pl_queue.slotSize[0] := pl_size; // elements in list nr 0.
+
+    for ( var integer vl_i := 0; vl_i < pl_size ; vl_i := vl_i+1 )
+    {  
+      pl_queue.slotList[0][vl_i] := vl_i; // setting the first list
+      pl_queue.idxMap[vl_i].listCoord := 0; // setting idxMap
+      pl_queue.idxMap[vl_i].sizeCoord := vl_i;
+    }    
+  
+    for ( var integer vl_i := 1; vl_i < pl_numOfLists ; vl_i := vl_i+1 )
+    {  
+      pl_queue.slotSize[vl_i] := 0;
+      pl_queue.slotList[vl_i][0] := -1; // set other lists to -1
+    }  
+  }
+
+  ///////////////////////////////////////////////////////////
+  // Function: f_EPTF_RNA_getRndSlot
+  //
+  // Purpose:
+  //  Function to get an element index from a random slot in the list determined by listNum
+  //
+  // Parameters:
+  //   pl_listNum - *in* *integer* - number of the list the element index is acquired
+  //   pl_queue - *inout* <EPTF_RNA_RandomNArray> - the RNA in question  
+  //
+  // Return Value:
+  //   *integer* - the element index from the random slot
+  //
+  // Detailed Comments:
+  //  -
+  //
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_RNA_getRndSlot(
+    in integer pl_listNum,
+    inout EPTF_RNA_RandomNArray pl_queue
+  ) return integer 
+  {
+    var integer vl_idx;
+
+    if(pl_queue.numOfLists<=pl_listNum)
+    {
+      f_EPTF_Common_warning(log2str("Warning: ", %definitionId, ": Invalid number of lists!: ",pl_listNum));
+      return -1;        
+    }
+    if(pl_queue.slotSize[pl_listNum] == 0) {
+      f_EPTF_Common_user(log2str(%definitionId, ": no more free slot(s)...",pl_listNum)); // like in fbq
+      return -1;       
+    }  
+  
+    vl_idx := float2int( rnd() * int2float(pl_queue.slotSize[pl_listNum]));
+    
+    if(tsp_debug_RNA) {
+      f_EPTF_Common_user(log2str(%definitionId
+        ,": listNum:",pl_listNum
+        ,", listIdx:",vl_idx
+        ,", elementIdx:", pl_queue.slotList[pl_listNum][vl_idx]
+        ));
+    }
+     
+    return pl_queue.slotList[pl_listNum][vl_idx];
+  }
+
+  ///////////////////////////////////////////////////////////
+  // Function: f_EPTF_RNA_getRndOrCreateSlot
+  //
+  // Purpose:
+  //  Function to get an element index from a random slot in the list determined by listNum or create a new one
+  //
+  // Parameters:
+  //   pl_listNum - *in* *integer* - the number of the list the element index is acquired
+  //   pl_queue - *inout* <EPTF_RNA_RandomNArray> - the RNA in question  
+  //
+  // Return Value:
+  //   *integer* - the element index from the random slot
+  //
+  // Detailed Comments:
+  //  If there is no slot in the determined list this function automatically creates one
+  //
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_RNA_getRndOrCreateSlot(
+    in integer pl_listNum,
+    inout EPTF_RNA_RandomNArray pl_queue
+  ) return integer 
+  {
+    var integer vl_elementIdx;
+
+    if(pl_queue.numOfLists<=pl_listNum)
+    {
+      f_EPTF_Common_warning(log2str("Warning: ", %definitionId, ": Invalid number of lists!: ",pl_listNum));
+      return -1;        
+    }
+    if(pl_queue.slotSize[pl_listNum] == 0) { // creating a new slot
+    
+      vl_elementIdx := sizeof(pl_queue.idxMap); // new element  
+      pl_queue.slotList[pl_listNum][0] := vl_elementIdx; // set the list
+      pl_queue.slotSize[pl_listNum] := 1; // set length of list     
+      pl_queue.idxMap[vl_elementIdx].listCoord := pl_listNum; // setting idxMap      
+      pl_queue.idxMap[vl_elementIdx].sizeCoord := 0;
+    } else { 
+
+      vl_elementIdx := f_EPTF_RNA_getRndSlot(pl_listNum, pl_queue); // get a slot
+    }
+    
+    if(tsp_debug_RNA) {
+      f_EPTF_Common_user(log2str(%definitionId
+        ,": listNum:",pl_listNum
+        ,", elementIdx:",vl_elementIdx
+        ));
+    }
+     
+    return vl_elementIdx;
+  }
+
+  ///////////////////////////////////////////////////////////
+  // Function: f_EPTF_RNA_createSlots
+  //
+  // Purpose:
+  //  Function to create more than one new slot items in a list
+  //
+  // Parameters:
+  //   pl_number  - *in* integer - the number of new slots to be created
+  //   pl_listNum - *in* *integer* - the number of the list the new slots are created
+  //   pl_queue - *inout* <EPTF_RNA_RandomNArray> - the RNA in question 
+  //
+  // Return Value:
+  //   *boolean* - the moving was successful
+  //
+  // Detailed Comments:
+  //  -
+  //
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_RNA_createSlots(
+    in integer pl_number,
+    in integer pl_listNum,
+    inout EPTF_RNA_RandomNArray pl_queue
+  ) return boolean 
+  {
+
+    if(pl_queue.numOfLists<=pl_listNum)
+    {
+      f_EPTF_Common_warning(log2str("Warning: ", %definitionId, ": invalid list number!: ",pl_listNum));
+      return false;        
+    }
+    if(pl_number<1)
+    {
+      f_EPTF_Common_warning(log2str("Warning: ", %definitionId, ": invalid number of new slots!: ",pl_number));
+      return false;        
+    }
+    var integer vl_numOfSLots := sizeof(pl_queue.idxMap); // number of slots before modification  
+    var integer vl_j := vl_numOfSLots;
+    for ( var integer vl_i := pl_queue.slotSize[pl_listNum]; vl_i < pl_queue.slotSize[pl_listNum] + pl_number ; vl_i := vl_i+1 )
+    {
+      pl_queue.slotList[pl_listNum][vl_i] := vl_j; // set the list
+      vl_j := vl_j +1;      
+    }          
+    vl_j := 0;     
+    for ( var integer vl_k := vl_numOfSLots ; vl_k < (vl_numOfSLots + pl_number) ; vl_k := vl_k+1 )
+    {  
+      pl_queue.idxMap[vl_k].listCoord := pl_listNum; // setting idxMap      
+      pl_queue.idxMap[vl_k].sizeCoord := pl_queue.slotSize[pl_listNum] + vl_j;
+      vl_j := vl_j +1;
+    }    
+
+    pl_queue.slotSize[pl_listNum] := pl_queue.slotSize[pl_listNum] + pl_number; // set length of list
+    
+    if(tsp_debug_RNA) {
+      f_EPTF_Common_user(log2str(%definitionId
+        ,": New elements:",pl_number
+        ,", listTo:",pl_listNum
+        ,", element Nr in modified list:", pl_queue.slotSize[pl_listNum]
+        ,", Nr of all elements:", sizeof(pl_queue.idxMap)	
+      ));
+    }
+    
+    return true;  
+  }
+
+  ///////////////////////////////////////////////////////////
+  // Function: f_EPTF_RNA_moveSlot
+  //
+  // Purpose:
+  //  Function to move an element index from one list to another list
+  //
+  // Parameters:
+  //   pl_elementIdx - *in* *integer* - the element index to be moved
+  //   pl_listTo - *in* *integer* - the list where the element index needs to be moved
+  //   pl_queue - *inout* <EPTF_RNA_RandomNArray> - the RNA in question 
+  //
+  // Return Value:
+  //   *boolean* - the moving was successful
+  //
+  // Detailed Comments:
+  //  -
+  //
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_RNA_moveSlot(
+    in integer pl_elementIdx,
+    in integer pl_listTo,
+    inout EPTF_RNA_RandomNArray pl_queue
+  ) return boolean 
+  {
+    var integer vl_idx;
+
+    if(pl_queue.numOfLists<=pl_listTo)
+    {
+      f_EPTF_Common_warning(log2str("Warning: ", %definitionId, ": Invalid 'list to' number!: ",pl_listTo));
+      return false;        
+    }
+    if(sizeof(pl_queue.idxMap) <= pl_elementIdx) {
+      f_EPTF_Common_warning(log2str("Warning: ", %definitionId, ": The size of RNA is smaller than this element index!: ",pl_elementIdx));
+      return false;       
+    }  
+  
+    // getting place in the list
+    var integer vl_listFrom := pl_queue.idxMap[pl_elementIdx].listCoord;  
+    var integer vl_idxFrom := pl_queue.idxMap[pl_elementIdx].sizeCoord;
+    if(pl_listTo == vl_listFrom) {
+      f_EPTF_Common_warning(log2str("Warning: ", %definitionId, ": This element index cannot be moved to the same list! Do nothing.: ",pl_elementIdx));
+      return false;       
+    }     
+  
+    // deleting value from the old list, moving last value of the list there
+    var integer vl_lastIdx := pl_queue.slotSize[vl_listFrom] - 1;
+    var integer vl_lastElementIdx := pl_queue.slotList[vl_listFrom][vl_lastIdx];
+   
+    pl_queue.slotList[vl_listFrom][vl_idxFrom] := vl_lastElementIdx;
+    pl_queue.slotList[vl_listFrom][vl_lastIdx] := -1;
+    pl_queue.slotSize[vl_listFrom] := pl_queue.slotSize[vl_listFrom] - 1;
+
+    // updating idxMap
+    //pl_queue.idxMap[vl_lastElementIdx].listCoord := pl_listFrom;
+    pl_queue.idxMap[vl_lastElementIdx].sizeCoord := vl_idxFrom;
+
+  
+    // moving value to the end of the new list
+    var integer vl_idxTo := pl_queue.slotSize[pl_listTo];
+    pl_queue.slotList[pl_listTo][vl_idxTo] := pl_elementIdx;  
+    pl_queue.slotSize[pl_listTo] := pl_queue.slotSize[pl_listTo] + 1;
+
+    // updating idxMap
+    pl_queue.idxMap[pl_elementIdx].listCoord := pl_listTo;
+    pl_queue.idxMap[pl_elementIdx].sizeCoord := vl_idxTo;  
+
+    if(tsp_debug_RNA) {
+      f_EPTF_Common_user(log2str(%definitionId
+        ,": elementIdx:",pl_elementIdx
+        ,", list from:",vl_listFrom
+        ,", list to:", pl_listTo
+      ));
+    }
+     
+    return true;
+  }
+
+  ///////////////////////////////////////////////////////////
+  // Function: f_EPTF_RNA_getList
+  //
+  // Purpose:
+  //  Function to get the listNum containing the specified element index
+  //
+  // Parameters:
+  //   pl_elementIdx - *in* *integer* - the specified element index
+  //   pl_queue - *inout* <EPTF_RNA_RandomNArray> - the RNA in question  
+  //
+  // Return Value:
+  //   *integer* - the listNum where element index stored
+  //
+  // Detailed Comments:
+  //  In case of error it returns -1.
+  //
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_RNA_getList(
+    in integer pl_elementIdx,
+    inout EPTF_RNA_RandomNArray pl_queue
+  ) return integer 
+  {
+    var integer vl_idx;
+
+    if(sizeof(pl_queue.idxMap) <= pl_elementIdx) {
+      f_EPTF_Common_warning(log2str("Warning: ", %definitionId, ": The size of RNA is smaller than this element index!: ",pl_elementIdx));
+      return -1;       
+    }   
+    if(tsp_debug_RNA) {
+      f_EPTF_Common_user(log2str(%definitionId
+        ,": elementIdx:",pl_elementIdx
+        ,", listNr:",pl_queue.idxMap[pl_elementIdx].listCoord	
+        ));
+    }
+    
+    return pl_queue.idxMap[pl_elementIdx].listCoord;
+  }
+  
+  ///////////////////////////////////////////////////////////
+  // Function: f_EPTF_RNA_getLengthOfList
+  //
+  // Purpose:
+  //  Function to get the length of the specified list
+  //
+  // Parameters:
+  //   pl_listNum - *in* *integer* - the number of the list the value is acquired
+  //   pl_queue - *inout* <EPTF_RNA_RandomNArray> - the RNA in question
+  //
+  // Return Value:
+  //   integer - the length of the list
+  //
+  // Detailed Comments:
+  //  -
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_RNA_getLengthOfList(
+    in integer pl_listNum,
+    inout EPTF_RNA_RandomNArray pl_queue
+  ) return integer
+  {  
+    if(pl_queue.numOfLists<=pl_listNum)
+    {
+      f_EPTF_Common_warning(log2str("Warning: ", %definitionId, ": invalid list number!: ",pl_listNum));
+      return -1;        
+    }
+    if(tsp_debug_RNA) {
+      f_EPTF_Common_user(log2str(%definitionId
+        ,": listNum:",pl_listNum
+        ,", length:",pl_queue.slotSize[pl_listNum]	
+        ));
+    }
+
+    return pl_queue.slotSize[pl_listNum];
+  }
+
+}  // RNA
+
+///////////////////////////////////////////////////////////
+// Group: RFBA
+//
+// Purpose:
+//   Functions for handling Random FreeBusy array
+//   The RFBA is a specific RNA, which has only two lists a freeList and a busyList.
+//
+///////////////////////////////////////////////////////////
+group RFBA {
+
+  ///////////////////////////////////////////////////////////
+  // Function: f_EPTF_RNA_initRFBA
+  // 
+  // Purpose:
+  //   Function to init the Random FreeBusy array to starting state.
+  // 
+  // Parameters:
+  //   pl_size - *in* *integer* - number of element indices in the RFBA
+  //   pl_queue - *inout* <EPTF_RNA_RandomNArray> - the RFBA in question   
+  // 
+  // Return Value:
+  //  The RFBA is a specific RNA, which has only two lists a freeList and a busyList.
+  // 
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_RNA_initRFBA(
+    in integer pl_size,
+    inout EPTF_RNA_RandomNArray pl_queue) {
+
+    if(tsp_debug_RNA) {
+      f_EPTF_Common_user(log2str(%definitionId," called."));
+    }
+
+    f_EPTF_RNA_initRNA(pl_size, 2, pl_queue); 
+  }
+
+  ///////////////////////////////////////////////////////////
+  // Function: f_EPTF_RNA_getRndFreeSlot
+  //
+  // Purpose:
+  //  Function to get the element index from a random slot in the free list
+  //
+  // Parameters:
+  //   pl_queue - *inout* <EPTF_RNA_RandomNArray> - the RFBA in question  
+  //
+  // Return Value:
+  //   *integer* - the element index from the random slot
+  //
+  // Detailed Comments:
+  //  The RFBA is a specific RNA, which has only two lists a freeList and a busyList.
+  //
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_RNA_getRndFreeSlot(
+    inout EPTF_RNA_RandomNArray pl_queue
+  ) return integer 
+  {
+    if(tsp_debug_RNA) {
+      f_EPTF_Common_user(log2str(%definitionId," called."));
+    }  
+    var integer vl_elementIdx;
+    vl_elementIdx := f_EPTF_RNA_getRndSlot(c_EPTF_RNA_freeIndex, pl_queue);   
+    return vl_elementIdx;
+  }
+
+  ///////////////////////////////////////////////////////////
+  // Function: f_EPTF_RNA_getRndOrCreateFreeSlot
+  //
+  // Purpose:
+  //  Function to get the element index from a random slot in the free list or create a new one
+  //
+  // Parameters:
+  //   pl_queue - *inout* <EPTF_RNA_RandomNArray> - the RFBA in question  
+  //
+  // Return Value:
+  //   *integer* - the element index from the random slot
+  //
+  // Detailed Comments:
+  //  The RFBA is a specific RNA, which has only two lists a freeList and a busyList.
+  //  If there is no slot in the determined list this function automatically creates one
+  //
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_RNA_getRndOrCreateFreeSlot(
+    inout EPTF_RNA_RandomNArray pl_queue
+  ) return integer 
+  {
+    if(tsp_debug_RNA) {
+      f_EPTF_Common_user(log2str(%definitionId," called."));
+    }  
+    var integer vl_elementIdx;
+    vl_elementIdx := f_EPTF_RNA_getRndOrCreateSlot(c_EPTF_RNA_freeIndex, pl_queue);     
+    return vl_elementIdx;
+  }
+
+
+  ///////////////////////////////////////////////////////////
+  // Function: f_EPTF_RNA_createFreeSlots
+  //
+  // Purpose:
+  //  Function to create more than one new free slot items in a list
+  //
+  // Parameters:
+  //   pl_number  - *in* integer - the number of new slots to be created
+  //   pl_queue - *inout* <EPTF_RNA_RandomNArray> - the RNA in question 
+  //
+  // Return Value:
+  //   *boolean* - the moving was successful
+  //
+  // Detailed Comments:
+  //  The RFBA is a specific RNA, which has only two lists a freeList and a busyList.
+  //
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_RNA_createFreeSlots(
+    in integer pl_number,
+    inout EPTF_RNA_RandomNArray pl_queue
+  ) return boolean 
+  {
+    if(tsp_debug_RNA) {
+      f_EPTF_Common_user(log2str(%definitionId," called."));
+    }  
+    var boolean vl_result;
+    vl_result := f_EPTF_RNA_createSlots(pl_number, c_EPTF_RNA_freeIndex, pl_queue);    
+    return vl_result;  
+  }
+
+
+
+  ///////////////////////////////////////////////////////////
+  // Function: f_EPTF_RNA_moveFromFreeToBusySlot
+  //
+  // Purpose:
+  //  Function to move an element index from the free list to the busy list
+  //
+  // Parameters:
+  //   pl_elementIdx - *in* *integer* - the element index to be moved
+  //   pl_queue - *inout* <EPTF_RNA_RandomNArray> - the RNA in question 
+  //
+  // Return Value:
+  //   *boolean* - the moving was successful
+  //
+  // Detailed Comments:
+  //  The RFBA is a specific RNA, which has only two lists a freeList and a busyList.
+  //
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_RNA_moveFromFreeToBusySlot(
+    in integer pl_elementIdx,
+    inout EPTF_RNA_RandomNArray pl_queue
+  ) return boolean 
+  {
+    if(tsp_debug_RNA) {
+      f_EPTF_Common_user(log2str(%definitionId," called."));
+    }  
+    var boolean vl_result;
+    vl_result := f_EPTF_RNA_moveSlot(pl_elementIdx, c_EPTF_RNA_busyIndex, pl_queue);       
+    return vl_result;
+  }
+
+  ///////////////////////////////////////////////////////////
+  // Function: f_EPTF_RNA_moveFromBusyToFreeSlot
+  //
+  // Purpose:
+  //  Function to move an element index from the busy list to the free list
+  //
+  // Parameters:
+  //   pl_elementIdx - *in* *integer* - the element index to be moved
+  //   pl_queue - *inout* <EPTF_RNA_RandomNArray> - the RNA in question 
+  //
+  // Return Value:
+  //   *boolean* - the moving was successful
+  //
+  // Detailed Comments:
+  //  The RFBA is a specific RNA, which has only two lists a freeList and a busyList.
+  //
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_RNA_moveFromBusyToFreeSlot(
+    in integer pl_elementIdx,
+    inout EPTF_RNA_RandomNArray pl_queue
+  ) return boolean 
+  {
+    if(tsp_debug_RNA) {
+      f_EPTF_Common_user(log2str(%definitionId," called."));
+    }  
+    var boolean vl_result;
+    vl_result := f_EPTF_RNA_moveSlot(pl_elementIdx, c_EPTF_RNA_freeIndex, pl_queue);      
+    return vl_result;
+  }
+
+  ///////////////////////////////////////////////////////////
+  // Function: f_EPTF_RNA_getLengthOfFreeList
+  //
+  // Purpose:
+  //  Function to get the length of the free list
+  //
+  // Parameters:
+  //   pl_queue - *inout* <EPTF_RNA_RandomNArray> - the RNA in question
+  //
+  // Return Value:
+  //   integer - the length of the free list
+  //
+  // Detailed Comments:
+  //  -
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_RNA_getLengthOfFreeList(
+    inout EPTF_RNA_RandomNArray pl_queue
+  ) return integer
+  {
+    if(tsp_debug_RNA) {
+      f_EPTF_Common_user(log2str(%definitionId," called."));
+    }  
+    var integer vl_length;
+    vl_length := f_EPTF_RNA_getLengthOfList(c_EPTF_RNA_freeIndex, pl_queue);  
+    return vl_length;
+  }
+
+  ///////////////////////////////////////////////////////////
+  // Function: f_EPTF_RNA_getLengthOfBusyList
+  //
+  // Purpose:
+  //  Function to get the length of the busy list
+  //
+  // Parameters:
+  //   pl_queue - *inout* <EPTF_RNA_RandomNArray> - the RNA in question
+  //
+  // Return Value:
+  //   integer - the length of the busy list
+  //
+  // Detailed Comments:
+  //  -
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_RNA_getLengthOfBusyList(
+    inout EPTF_RNA_RandomNArray pl_queue
+  ) return integer
+  {
+    if(tsp_debug_RNA) {
+      f_EPTF_Common_user(log2str(%definitionId," called."));
+    }  
+    var integer vl_length;
+    vl_length := f_EPTF_RNA_getLengthOfList(c_EPTF_RNA_busyIndex, pl_queue);  
+    return vl_length;
+  }
+
+  ///////////////////////////////////////////////////////////
+  // Function: f_EPTF_RNA_itemIsBusy
+  //
+  // Purpose:
+  //  Function to check whether the element index is within the busy list, or not.
+  //
+  // Parameters:
+  //   pl_elementIdx - *in* *integer* - the element index to be checked
+  //   pl_queue - *inout* <EPTF_RNA_RandomNArray> - the RNA in question
+  //
+  // Return Value:
+  //   *boolean* - true if element index is in the busy list
+  //
+  // Detailed Comments:
+  //  -
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_RNA_itemIsBusy(
+    in integer pl_elementIdx,  
+    inout EPTF_RNA_RandomNArray pl_queue
+  ) return boolean
+  {
+    if(tsp_debug_RNA) {
+      f_EPTF_Common_user(log2str(%definitionId," called."));
+    }  
+    var integer vl_listNr;
+    vl_listNr := f_EPTF_RNA_getList(pl_elementIdx, pl_queue);
+    if(vl_listNr == c_EPTF_RNA_busyIndex) {
+      return true;
+    }
+    return false;    
+  }
+
+  ///////////////////////////////////////////////////////////
+  // Function: f_EPTF_RNA_itemIsFree
+  //
+  // Purpose:
+  //  Function to check whether the element index is within the free list, or not.
+  //
+  // Parameters:
+  //   pl_elementIdx - *in* *integer* - the element index to be checked
+  //   pl_queue - *inout* <EPTF_RNA_RandomNArray> - the RNA in question
+  //
+  // Return Value:
+  //   *boolean* - true if element index is in the free list
+  //
+  // Detailed Comments:
+  //  -
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_RNA_itemIsFree(
+    in integer pl_elementIdx,  
+    inout EPTF_RNA_RandomNArray pl_queue
+  ) return boolean
+  {
+    if(tsp_debug_RNA) {
+      f_EPTF_Common_user(log2str(%definitionId," called."));
+    }  
+    var integer vl_listNr;
+    vl_listNr := f_EPTF_RNA_getList(pl_elementIdx, pl_queue);
+    if(vl_listNr == c_EPTF_RNA_freeIndex) {
+      return true;
+    }
+    return false;    
+  }
+
+}  // RFBA
+
+
+} //module

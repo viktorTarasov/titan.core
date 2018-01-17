@@ -1,0 +1,1789 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_CLL_StatHandlerClient_Functions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 512
+//  Updated:  2010-07-01
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////
+//  Module: EPTF_CLL_StatHandlerClient_Functions
+// 
+//  Purpose:
+//    This module contains the implementation of the StatHandlerClient.
+// 
+//  Module depends on:
+//    <EPTF_CLL_Base_Functions>
+//    <EPTF_CLL_Common_Definitions>
+//    <EPTF_CLL_Semaphore_Functions>
+//    <EPTF_CLL_StatHandler_Definitions>
+//    <EPTF_CLL_StatHandlerClient_Definitions>
+//    <EPTF_CLL_StatHandlerLogging_Functions>
+//    <EPTF_CLL_StatMeasure_Definitions>
+//    <EPTF_CLL_StatMeasure_Functions>
+//    <EPTF_CLL_Variable_Definitions>
+//    <EPTF_CLL_Variable_Functions>
+//
+//  Module Parameters:
+//    tsp_debug_EPTF_StatHandlerClient - *boolean* - debug flag, default false
+//
+//  Current Owner:
+//    Gabor Tatarka (EGBOTAT)
+// 
+//  Last Review Date:
+//    2009-05-22
+//
+//  Detailed Comments:
+//    This module contains the implementation of the StatHandlerClient.
+//    Public API:
+//    - <f_EPTF_StatHandlerClient_init_CT>
+//    - <f_EPTF_StatHandlerClient_declareStat>
+//    - <f_EPTF_StatHandlerClient_registerStatOfStatMeasure>
+//    - <f_EPTF_StatHandlerClient_registerAggregatedStat>
+//    - <f_EPTF_StatHandlerClient_registerStat>
+//    - <f_EPTF_StatHandlerClient_registerStat_IntMin>
+//    - <f_EPTF_StatHandlerClient_registerStat_FloatMin>
+//    - <f_EPTF_StatHandlerClient_registerStat_IntMax>
+//    - <f_EPTF_StatHandlerClient_registerStat_FloatMax>
+//    - <f_EPTF_StatHandlerClient_registerStat_IntSum>
+//    - <f_EPTF_StatHandlerClient_registerStat_FloatSum>
+//    - <f_EPTF_StatHandlerClient_registerStat_Mean>
+//    - <f_EPTF_StatHandlerClient_registerStat_StandardDev>
+//    - <f_EPTF_StatHandlerClient_registerStat_GlobalAverage>
+//    - <f_EPTF_StatHandlerClient_registerStat_Density>
+//    - <f_EPTF_StatHandlerClient_registerStat_Percentile95>
+//    - <f_EPTF_StatHandlerClient_registerStat_PercentileP>
+//    - <f_EPTF_StatHandlerClient_deregisterStat>
+//    - <f_EPTF_StatHandlerClient_getStatVariableRef>
+//    - <f_EPTF_StatHandlerClient_registerResetFunction>
+//    - <f_EPTF_StatHandlerClient_deregisterResetFunction>
+//    - <f_EPTF_StatHandlerClient_getDefaultMasterCompRef>
+//
+///////////////////////////////////////////////////////////////
+
+module EPTF_CLL_StatHandlerClient_Functions {
+
+import from EPTF_CLL_Base_Functions all;
+import from EPTF_CLL_Common_Definitions all;
+import from EPTF_CLL_Semaphore_Functions all;
+import from EPTF_CLL_StatHandler_Definitions all;
+import from EPTF_CLL_StatHandlerClient_Definitions all;
+import from EPTF_CLL_StatHandlerLogging_Functions all;
+import from EPTF_CLL_StatMeasure_Definitions all;
+import from EPTF_CLL_StatMeasure_Functions all;
+import from EPTF_CLL_Variable_Definitions all;
+import from EPTF_CLL_Variable_Functions all;
+
+friend module EPTF_CLL_StatHandlerUI_Functions;
+
+modulepar boolean tsp_debug_EPTF_StatHandlerClient := false;
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_StatHandlerClient_init_CT
+// 
+//  Purpose:
+//    Init function for component type <EPTF_StatHandlerClient_CT>
+//
+//  Parameters:
+//    pl_selfName - *in* *charstring* - EPTF self name
+//    pl_statHandler_compRef - *in* <EPTF_StatHandler_CT> - default StatHandler master component reference, optional
+//
+//  Return Value:
+//    -
+//
+//  Errors & assertions:
+//    - 
+//
+//  Detailed Comments:
+//    pl_statHandler_compRef can be null (or unspecified), but in that case the component reference
+//    must be explicitly specified for the functions where applicable.
+//    It is recommended to use StatHandlerClient in one of the following ways:
+//      - specify a default StatHandler, and only communicate with that
+//      - don't specify a default StatHandler, and always specify the target StatHandler for the functions that need it
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_StatHandlerClient_init_CT(
+  in charstring pl_selfName,
+  in EPTF_StatHandler_CT pl_statHandler_compRef := null)
+runs on EPTF_StatHandlerClient_CT
+{
+  if(v_EPTF_StatHandlerClient_initialized) { return; }
+
+  v_EPTF_StatHandlerClient_defaultMasterCompRef := pl_statHandler_compRef;
+
+  f_EPTF_StatHandlerLogging_init_CT(
+    pl_selfName,
+    c_EPTF_StatHandlerClient_loggingComponentMask,
+    tsp_debug_EPTF_StatHandlerClient);
+
+  f_EPTF_Semaphore_init_CT(pl_selfName);
+
+  f_EPTF_Var_init_CT(pl_selfName);
+
+  f_EPTF_StatMeasure_init_CT(pl_selfName);
+
+  v_EPTF_StatHandlerClient_connectedCompRefList := {};
+  v_EPTF_StatHandlerClient_responseBuffer := {};
+  v_EPTF_StatHandlerClient_pendingMessages := 0;
+  v_EPTF_StatHandlerClient_resetFunctions := {};
+  v_EPTF_StatHandlerClient_resetVarIdx := -1;
+  vd_EPTF_StatHandlerClient_msgHandler := activate(as_EPTF_StatHandlerClient_msgHandler());
+  vd_EPTF_StatHandlerClient_autoDisconnect := null;
+
+  f_EPTF_Base_registerCleanup(refers(f_EPTF_StatHandlerClient_cleanup_CT));
+
+  if(v_EPTF_StatHandlerClient_defaultMasterCompRef != null) {
+    f_EPTF_StatHandlerClient_queryResetButtonVarName(v_EPTF_StatHandlerClient_defaultMasterCompRef);
+  }
+
+  v_EPTF_StatHandlerClient_initialized := true;
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_StatHandlerClient_declareStat
+// 
+//  Purpose:
+//    Function for declaring an aggregated statistic at the StatHandler.
+//
+//  Parameters:
+//    pl_statName - *in* *charstring* - name of the stat
+//    pl_statMethod - *in* <EPTF_StatHandler_StatMethod> - stat aggregation method
+//    pl_statResetValue  - *in* <EPTF_Var_DirectContent> - reset value of the stat
+//    pl_statHandler  - *in* <EPTF_StatHandler_CT> - target stat handler component reference (optional)
+//
+//  Return Value:
+//    *boolean* - *true* on success
+//
+//  Errors & assertions:
+//    Default master comp. ref and pl_statHandler must not be both null.
+//
+//  Detailed Comments:
+//    -
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_StatHandlerClient_declareStat(
+  in charstring pl_statName,
+  in EPTF_StatHandler_StatMethod pl_statMethod,
+  in EPTF_Var_DirectContent pl_statResetValue,
+  in EPTF_StatHandler_CT pl_statHandler := null)
+runs on EPTF_StatHandlerClient_CT
+return boolean
+{
+  var EPTF_StatHandler_CT vl_master := v_EPTF_StatHandlerClient_defaultMasterCompRef;
+  if(pl_statHandler != null) { vl_master := pl_statHandler; }
+  f_EPTF_Base_assert(%definitionId&": default master component reference is null.",
+    vl_master!=null);
+
+  if(v_EPTF_StatHandlerClient_resetVarIdx < 0) {
+    f_EPTF_StatHandlerClient_queryResetButtonVarName(vl_master);
+  }
+
+  var EPTF_StatHandler_MgmtMsg_Response vl_response;
+  var EPTF_StatHandler_MgmtMsg_Request vl_request := {
+    sIdx := -1,
+    request := {
+      declareReq := {
+        statName := pl_statName,
+        statMethod := pl_statMethod,
+        statResetValue := pl_statResetValue
+      }
+    }
+  }
+
+  f_EPTF_StatHandlerClient_sendReqRecvResp(
+    vl_master,
+    vl_request,
+    vl_response
+    );
+
+  return vl_response.response.statusResp.result;
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_StatHandlerClient_registerStatOfStatMeasure
+// 
+//  Purpose:
+//    Function to register a StatMeasure stat as data source to an aggregated stat.
+//
+//  Parameters:
+//    pl_measuredStatIdx - *in* *integer* - index/ID of the StatMeasure stat
+//    pl_statName - *in* *charstring* - name of the aggregated stat
+//    pl_subscriptionMode - *in* <EPTF_Var_SubscriptionMode> - subscription mode that the StatHandler should use (optional, default sampledAtSync)
+//    pl_wait4response - *in* *boolean* - blocks until response received if true (optional, default true)
+//    pl_statHandler  - *in* <EPTF_StatHandler_CT> - target stat handler component reference (optional)
+//
+//  Return Value:
+//    *boolean* - *true* on success
+//
+//  Errors & assertions:
+//    Default master comp. ref and pl_statHandler must not be both null.
+//
+//  Detailed Comments:
+//    Stathandler will subscribe to the variables of the measured stat via EPTF Variable.
+//    Note: this function cannot be used for third party stat registration.
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_StatHandlerClient_registerStatOfStatMeasure(
+  in integer pl_measuredStatIdx,
+  in charstring pl_statName,
+  in EPTF_Var_SubscriptionMode pl_subscriptionMode := sampledAtSync,
+  in boolean pl_wait4response := true,
+  in EPTF_StatHandler_CT pl_statHandler := null)
+runs on EPTF_StatHandlerClient_CT
+return boolean
+{
+  var EPTF_CharstringList vl_providerVarList := {};
+
+  var EPTF_StatMeasure_statType vl_statType := f_EPTF_StatMeasure_getStatType(pl_measuredStatIdx)
+  var integer vl_cvarIdx := f_EPTF_StatMeasure_getCreatedVarIdx(pl_measuredStatIdx);
+  if(vl_cvarIdx < 0) {
+    vl_cvarIdx := f_EPTF_StatMeasure_createVarFromStat(pl_measuredStatIdx);
+  }
+
+  select(vl_statType) {
+    case (content, delta, deltaSum, min, max, EPS, chrono, custom) {
+      vl_providerVarList[c_EPTF_StatHandler_providerVarIdx_single] := 
+        f_EPTF_Var_getName(vl_cvarIdx);
+    }
+    case (mean) {
+      vl_providerVarList[c_EPTF_StatHandler_providerVarIdx_mean] :=
+        f_EPTF_Var_getName(vl_cvarIdx);
+      vl_cvarIdx := f_EPTF_StatMeasure_createVarFromStat_N_mean(pl_measuredStatIdx);
+      vl_providerVarList[c_EPTF_StatHandler_providerVarIdx_nofSamples] :=
+        f_EPTF_Var_getName(vl_cvarIdx);
+    }
+    case (standardDev) {
+      vl_cvarIdx := f_EPTF_StatMeasure_createVarFromStat_Mean_standardDev(pl_measuredStatIdx);
+      vl_providerVarList[c_EPTF_StatHandler_providerVarIdx_mean] :=
+        f_EPTF_Var_getName(vl_cvarIdx);
+      vl_cvarIdx := f_EPTF_StatMeasure_createVarFromStat_N_standardDev(pl_measuredStatIdx);
+      vl_providerVarList[c_EPTF_StatHandler_providerVarIdx_nofSamples] :=
+        f_EPTF_Var_getName(vl_cvarIdx);
+      vl_cvarIdx := f_EPTF_StatMeasure_createVarFromStat_S_standardDev(pl_measuredStatIdx);
+      vl_providerVarList[c_EPTF_StatHandler_providerVarIdx_S] :=
+        f_EPTF_Var_getName(vl_cvarIdx);
+    }
+    case (density) {
+      vl_providerVarList[c_EPTF_StatHandler_providerVarIdx_density] :=
+        f_EPTF_Var_getName(vl_cvarIdx);
+      vl_cvarIdx := f_EPTF_StatMeasure_createVarFromStat_boundaries_density(pl_measuredStatIdx);
+      vl_providerVarList[c_EPTF_StatHandler_providerVarIdx_boundaries] :=
+        f_EPTF_Var_getName(vl_cvarIdx);
+    }
+    case (percentile95) {
+      vl_cvarIdx := f_EPTF_StatMeasure_createVarFromStat_density_percentile95(pl_measuredStatIdx);
+      vl_providerVarList[c_EPTF_StatHandler_providerVarIdx_density] :=
+        f_EPTF_Var_getName(vl_cvarIdx);
+      vl_cvarIdx := f_EPTF_StatMeasure_createVarFromStat_boundaries_density_percentile95(pl_measuredStatIdx);
+      vl_providerVarList[c_EPTF_StatHandler_providerVarIdx_boundaries] :=
+        f_EPTF_Var_getName(vl_cvarIdx);
+      vl_cvarIdx := f_EPTF_StatMeasure_createVarFromStat_max_percentile95(pl_measuredStatIdx);
+      vl_providerVarList[c_EPTF_StatHandler_providerVarIdx_max] :=
+        f_EPTF_Var_getName(vl_cvarIdx);
+      vl_providerVarList[c_EPTF_StatHandler_providerVarIdx_pValue] := "";
+    }
+    case (percentileP) {
+      vl_cvarIdx := f_EPTF_StatMeasure_createVarFromStat_density_percentileP(pl_measuredStatIdx);
+      vl_providerVarList[c_EPTF_StatHandler_providerVarIdx_density] :=
+        f_EPTF_Var_getName(vl_cvarIdx);
+      vl_cvarIdx := f_EPTF_StatMeasure_createVarFromStat_boundaries_density_percentileP(pl_measuredStatIdx);
+      vl_providerVarList[c_EPTF_StatHandler_providerVarIdx_boundaries] :=
+        f_EPTF_Var_getName(vl_cvarIdx);
+      vl_cvarIdx := f_EPTF_StatMeasure_createVarFromStat_max_percentileP(pl_measuredStatIdx);
+      vl_providerVarList[c_EPTF_StatHandler_providerVarIdx_max] :=
+        f_EPTF_Var_getName(vl_cvarIdx);
+      // P value	
+      vl_cvarIdx := f_EPTF_StatMeasure_createVarFromStat_valueP_percentileP(pl_measuredStatIdx);
+      vl_providerVarList[c_EPTF_StatHandler_providerVarIdx_pValue] :=
+        f_EPTF_Var_getName(vl_cvarIdx);	
+	
+    }    
+  }
+
+  return f_EPTF_StatHandlerClient_registerStat(
+    vl_providerVarList,
+    pl_statName,
+    pl_subscriptionMode,
+    pl_wait4response,
+    self,
+    pl_statHandler
+  );
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_StatHandlerClient_registerAggregatedStat
+// 
+//  Purpose:
+//    Function to register a stat already aggregated by a StatHandler as data source to another aggregated stat.
+//
+//  Parameters:
+//    pl_sourceStatHandler - *in* <EPTF_StatHandler_CT> - StatHandler having the source stat
+//    pl_sourceStatName - *in* *charstring* - name of the source stat
+//    pl_targetStatName - *in* *charstring* - name of the target stat
+//    pl_subscriptionMode - *in* <EPTF_Var_SubscriptionMode> - subscription mode that the StatHandler should use (optional, default sampledAtSync)
+//    pl_wait4response - *in* *boolean* - blocks until response received if true (optional, default true)
+//    pl_statHandler  - *in* <EPTF_StatHandler_CT> - target stat handler component reference (optional)
+//
+//  Return Value:
+//    *boolean* - *true* on success
+//
+//  Errors & assertions:
+//    Default master comp. ref and pl_statHandler must not be both null.
+//
+//  Detailed Comments:
+//    This function queries the provider variables of the source stat from the source StatHandler
+//    and waits for its response regardless of pl_wait4response.
+//    This parameter is only for the response of the registration.
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_StatHandlerClient_registerAggregatedStat(
+  in EPTF_StatHandler_CT pl_sourceStatHandler,
+  in charstring pl_sourceStatName,
+  in charstring pl_targetStatName,
+  in EPTF_Var_SubscriptionMode pl_subscriptionMode := sampledAtSync,
+  in boolean pl_wait4response := true,
+  in EPTF_StatHandler_CT pl_statHandler := null)
+runs on EPTF_StatHandlerClient_CT
+return boolean
+{
+  var EPTF_CharstringList vl_providerVarList := {};
+
+  var EPTF_StatHandler_MgmtMsg_Request vl_request := {
+    sIdx := -1,
+    request := {
+      getProviderVars := {
+        statName := pl_sourceStatName
+      }
+    }
+  }
+
+  var EPTF_StatHandler_MgmtMsg_Response vl_response;
+  f_EPTF_StatHandlerClient_sendReqRecvResp(
+    pl_sourceStatHandler,
+    vl_request,
+    vl_response
+    );
+
+  return f_EPTF_StatHandlerClient_registerStat(
+    vl_response.response.providerVarsResp.providerVars,
+    pl_targetStatName,
+    pl_subscriptionMode,
+    pl_wait4response,
+    pl_sourceStatHandler,
+    pl_statHandler
+  );
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_StatHandlerClient_registerStat
+// 
+//  Purpose:
+//    Function to register Variables as data sources to an aggregated stat.
+//
+//  Parameters:
+//    pl_providerVarList - *in* <EPTF_CharstringList> - data source variable names
+//    pl_statName - *in* *charstring* - name of the aggregated stat
+//    pl_subscriptionMode - *in* <EPTF_Var_SubscriptionMode> - subscription mode that the StatHandler should use (optional, default sampledAtSync)
+//    pl_wait4response - *in* *boolean* - blocks until response received if true (optional, default true)
+//    pl_sourceCompRef - *in* <EPTF_Var_CT> - EPTF_Var_CT component providing the data sources (optional, default:self)
+//    pl_statHandler  - *in* <EPTF_StatHandler_CT> - target stat handler component reference (optional)
+//    pl_refreshRate - *in integer* - the refresh rate of the subscription (default: 0, i.e. default syncInterval)
+//
+//  Return Value:
+//    *boolean* - *true* on success
+//
+//  Errors & assertions:
+//    Default master comp. ref and pl_statHandler must not be both null.
+//
+//  Detailed Comments:
+//    Stathandler will subscribe to the variables specified in pl_providerVarList
+//    at component pl_sourceCompRef (not necessary *self*) via EPTF Variable.
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_StatHandlerClient_registerStat(
+  in EPTF_CharstringList pl_providerVarList,
+  in charstring pl_statName,
+  in EPTF_Var_SubscriptionMode pl_subscriptionMode := sampledAtSync,
+  in boolean pl_wait4response := true,
+  in EPTF_Var_CT pl_sourceCompRef := null,
+  in EPTF_StatHandler_CT pl_statHandler := null,
+  in integer pl_refreshRate := 0)
+runs on EPTF_StatHandlerClient_CT
+return boolean
+{
+  var EPTF_StatHandler_CT vl_master := v_EPTF_StatHandlerClient_defaultMasterCompRef;
+  if(pl_statHandler != null) { vl_master := pl_statHandler; }
+  f_EPTF_Base_assert(%definitionId&": default master component reference is null.",
+    vl_master!=null);
+
+  if(v_EPTF_StatHandlerClient_resetVarIdx < 0) {
+    f_EPTF_StatHandlerClient_queryResetButtonVarName(vl_master);
+  }
+
+  var EPTF_StatHandler_MgmtMsg_Request vl_request := {
+    sIdx := -1,
+    request := {
+      registerReq := {
+        sourceCompRef := pl_sourceCompRef,
+        providerVarList := pl_providerVarList,
+        subscriptionMode := pl_subscriptionMode,
+        targetStatName := pl_statName,
+        refreshRate := pl_refreshRate
+      }
+    }
+  }
+  if(pl_sourceCompRef == null) { vl_request.request.registerReq.sourceCompRef := self; }
+
+  var boolean vl_result := true;
+
+  if(not pl_wait4response) {
+    f_EPTF_StatHandlerClient_connect(vl_master);
+    v_EPTF_StatHandlerClient_MgmtPCO.send(vl_request) to vl_master;
+  } else {
+    var EPTF_StatHandler_MgmtMsg_Response vl_response;
+    f_EPTF_StatHandlerClient_sendReqRecvResp(
+      vl_master,
+      vl_request,
+      vl_response
+      );
+    vl_result := vl_response.response.statusResp.result;
+  }
+
+  if(vl_result) {
+    // NOTE: if pl_sourceCompRef != self, the reset is still acknwledged by self,
+    //  so the reset callbacks have to handle clearing counters at pl_sourceCompRef!
+    // StatHandlers are not removed from v_EPTF_StatHandlerClient_subscribingCompRefList on deregisterStat
+    var boolean vl_found := false;
+    for(var integer i:=0; i<sizeof(v_EPTF_StatHandlerClient_subscribingCompRefList); i:=i+1) {
+      if(v_EPTF_StatHandlerClient_subscribingCompRefList[i] == vl_master) { vl_found := true; break; }
+    }
+    if(not vl_found) {
+      v_EPTF_StatHandlerClient_subscribingCompRefList[sizeof(v_EPTF_StatHandlerClient_subscribingCompRefList)] :=
+        vl_master;
+    }
+  }
+
+  return vl_result;
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_StatHandlerClient_registerStat_IntMin
+// 
+//  Purpose:
+//    Function to register a variable as data source to an aggregated integer Min stat.
+//
+//  Parameters:
+//    pl_providerVar - *in* *charstring* - data source variable names
+//    pl_statName - *in* *charstring* - name of the aggregated stat
+//    pl_subscriptionMode - *in* <EPTF_Var_SubscriptionMode> - subscription mode that the StatHandler should use (optional, default sampledAtSync)
+//    pl_wait4response - *in* *boolean* - blocks until response received if true (optional, default true)
+//    pl_sourceCompRef - *in* <EPTF_Var_CT> - EPTF_Var_CT component providing the data sources (optional, default:self)
+//    pl_statHandler  - *in* <EPTF_StatHandler_CT> - target stat handler component reference (optional)
+//
+//  Return Value:
+//    *boolean* - *true* on success
+//
+//  Errors & assertions:
+//    Default master comp. ref and pl_statHandler must not be both null.
+//    provider variable must be of integer type
+//
+//  Detailed Comments:
+//    -
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_StatHandlerClient_registerStat_IntMin(
+  in charstring pl_providerVar,
+  in charstring pl_statName,
+  in EPTF_Var_SubscriptionMode pl_subscriptionMode := sampledAtSync,
+  in boolean pl_wait4response := true,
+  in EPTF_Var_CT pl_sourceCompRef := null,
+  in EPTF_StatHandler_CT pl_statHandler := null)
+runs on EPTF_StatHandlerClient_CT
+return boolean
+{
+  f_EPTF_Base_assert(%definitionId&": provider variable is not present.",
+    f_EPTF_StatHandlerClient_checkVarPresence(pl_sourceCompRef, pl_providerVar));
+  f_EPTF_Base_assert(%definitionId&": provider variable is not integer.",
+    f_EPTF_StatHandlerClient_checkVar(pl_sourceCompRef, pl_providerVar, {intVal:=?}));
+  return f_EPTF_StatHandlerClient_registerStat(
+    {pl_providerVar}, pl_statName, pl_subscriptionMode,
+    pl_wait4response, pl_sourceCompRef, pl_statHandler);
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_StatHandlerClient_registerStat_FloatMin
+// 
+//  Purpose:
+//    Function to register a variable as data source to an aggregated float Min stat.
+//
+//  Parameters:
+//    pl_providerVar - *in* *charstring* - data source variable names
+//    pl_statName - *in* *charstring* - name of the aggregated stat
+//    pl_subscriptionMode - *in* <EPTF_Var_SubscriptionMode> - subscription mode that the StatHandler should use (optional, default sampledAtSync)
+//    pl_wait4response - *in* *boolean* - blocks until response received if true (optional, default true)
+//    pl_sourceCompRef - *in* <EPTF_Var_CT> - EPTF_Var_CT component providing the data sources (optional, default:self)
+//    pl_statHandler  - *in* <EPTF_StatHandler_CT> - target stat handler component reference (optional)
+//
+//  Return Value:
+//    *boolean* - *true* on success
+//
+//  Errors & assertions:
+//    Default master comp. ref and pl_statHandler must not be both null.
+//    provider variable must be of float type
+//
+//  Detailed Comments:
+//    -
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_StatHandlerClient_registerStat_FloatMin(
+  in charstring pl_providerVar,
+  in charstring pl_statName,
+  in EPTF_Var_SubscriptionMode pl_subscriptionMode := sampledAtSync,
+  in boolean pl_wait4response := true,
+  in EPTF_Var_CT pl_sourceCompRef := null,
+  in EPTF_StatHandler_CT pl_statHandler := null)
+runs on EPTF_StatHandlerClient_CT
+return boolean
+{
+  f_EPTF_Base_assert(%definitionId&": provider variable is not present.",
+    f_EPTF_StatHandlerClient_checkVarPresence(pl_sourceCompRef, pl_providerVar));
+  f_EPTF_Base_assert(%definitionId&": provider variable is not float.",
+    f_EPTF_StatHandlerClient_checkVar(pl_sourceCompRef, pl_providerVar, {floatVal:=?}));
+  return f_EPTF_StatHandlerClient_registerStat(
+    {pl_providerVar}, pl_statName, pl_subscriptionMode,
+    pl_wait4response, pl_sourceCompRef, pl_statHandler);
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_StatHandlerClient_registerStat_IntMax
+// 
+//  Purpose:
+//    Function to register a variable as data source to an aggregated integer Max stat.
+//
+//  Parameters:
+//    pl_providerVar - *in* *charstring* - data source variable names
+//    pl_statName - *in* *charstring* - name of the aggregated stat
+//    pl_subscriptionMode - *in* <EPTF_Var_SubscriptionMode> - subscription mode that the StatHandler should use (optional, default sampledAtSync)
+//    pl_wait4response - *in* *boolean* - blocks until response received if true (optional, default true)
+//    pl_sourceCompRef - *in* <EPTF_Var_CT> - EPTF_Var_CT component providing the data sources (optional, default:self)
+//    pl_statHandler  - *in* <EPTF_StatHandler_CT> - target stat handler component reference (optional)
+//
+//  Return Value:
+//    *boolean* - *true* on success
+//
+//  Errors & assertions:
+//    Default master comp. ref and pl_statHandler must not be both null.
+//    provider variable must be of integer type
+//
+//  Detailed Comments:
+//    -
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_StatHandlerClient_registerStat_IntMax(
+  in charstring pl_providerVar,
+  in charstring pl_statName,
+  in EPTF_Var_SubscriptionMode pl_subscriptionMode := sampledAtSync,
+  in boolean pl_wait4response := true,
+  in EPTF_Var_CT pl_sourceCompRef := null,
+  in EPTF_StatHandler_CT pl_statHandler := null)
+runs on EPTF_StatHandlerClient_CT
+return boolean
+{
+  f_EPTF_Base_assert(%definitionId&": provider variable is not present.",
+    f_EPTF_StatHandlerClient_checkVarPresence(pl_sourceCompRef, pl_providerVar));
+  f_EPTF_Base_assert(%definitionId&": provider variable is not integer.",
+    f_EPTF_StatHandlerClient_checkVar(pl_sourceCompRef, pl_providerVar, {intVal:=?}));
+  return f_EPTF_StatHandlerClient_registerStat(
+    {pl_providerVar}, pl_statName, pl_subscriptionMode,
+    pl_wait4response, pl_sourceCompRef, pl_statHandler);
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_StatHandlerClient_registerStat_FloatMax
+// 
+//  Purpose:
+//    Function to register a variable as data source to an aggregated float Max stat.
+//
+//  Parameters:
+//    pl_providerVar - *in* *charstring* - data source variable names
+//    pl_statName - *in* *charstring* - name of the aggregated stat
+//    pl_subscriptionMode - *in* <EPTF_Var_SubscriptionMode> - subscription mode that the StatHandler should use (optional, default sampledAtSync)
+//    pl_wait4response - *in* *boolean* - blocks until response received if true (optional, default true)
+//    pl_sourceCompRef - *in* <EPTF_Var_CT> - EPTF_Var_CT component providing the data sources (optional, default:self)
+//    pl_statHandler  - *in* <EPTF_StatHandler_CT> - target stat handler component reference (optional)
+//
+//  Return Value:
+//    *boolean* - *true* on success
+//
+//  Errors & assertions:
+//    Default master comp. ref and pl_statHandler must not be both null.
+//    provider variable must be of float type
+//
+//  Detailed Comments:
+//    -
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_StatHandlerClient_registerStat_FloatMax(
+  in charstring pl_providerVar,
+  in charstring pl_statName,
+  in EPTF_Var_SubscriptionMode pl_subscriptionMode := sampledAtSync,
+  in boolean pl_wait4response := true,
+  in EPTF_Var_CT pl_sourceCompRef := null,
+  in EPTF_StatHandler_CT pl_statHandler := null)
+runs on EPTF_StatHandlerClient_CT
+return boolean
+{
+  f_EPTF_Base_assert(%definitionId&": provider variable is not present.",
+    f_EPTF_StatHandlerClient_checkVarPresence(pl_sourceCompRef, pl_providerVar));
+  f_EPTF_Base_assert(%definitionId&": provider variable is not float.",
+    f_EPTF_StatHandlerClient_checkVar(pl_sourceCompRef, pl_providerVar, {floatVal:=?}));
+  return f_EPTF_StatHandlerClient_registerStat(
+    {pl_providerVar}, pl_statName, pl_subscriptionMode,
+    pl_wait4response, pl_sourceCompRef, pl_statHandler);
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_StatHandlerClient_registerStat_IntSum
+// 
+//  Purpose:
+//    Function to register a variable as data source to an aggregated integer Sum stat.
+//
+//  Parameters:
+//    pl_providerVar - *in* *charstring* - data source variable names
+//    pl_statName - *in* *charstring* - name of the aggregated stat
+//    pl_subscriptionMode - *in* <EPTF_Var_SubscriptionMode> - subscription mode that the StatHandler should use (optional, default sampledAtSync)
+//    pl_wait4response - *in* *boolean* - blocks until response received if true (optional, default true)
+//    pl_sourceCompRef - *in* <EPTF_Var_CT> - EPTF_Var_CT component providing the data sources (optional, default:self)
+//    pl_statHandler  - *in* <EPTF_StatHandler_CT> - target stat handler component reference (optional)
+//
+//  Return Value:
+//    *boolean* - *true* on success
+//
+//  Errors & assertions:
+//    Default master comp. ref and pl_statHandler must not be both null.
+//    provider variable must be of integer type
+//
+//  Detailed Comments:
+//    -
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_StatHandlerClient_registerStat_IntSum(
+  in charstring pl_providerVar,
+  in charstring pl_statName,
+  in EPTF_Var_SubscriptionMode pl_subscriptionMode := sampledAtSync,
+  in boolean pl_wait4response := true,
+  in EPTF_Var_CT pl_sourceCompRef := null,
+  in EPTF_StatHandler_CT pl_statHandler := null)
+runs on EPTF_StatHandlerClient_CT
+return boolean
+{
+  f_EPTF_Base_assert(%definitionId&": provider variable is not present.",
+    f_EPTF_StatHandlerClient_checkVarPresence(pl_sourceCompRef, pl_providerVar));
+  f_EPTF_Base_assert(%definitionId&": provider variable is not integer.",
+    f_EPTF_StatHandlerClient_checkVar(pl_sourceCompRef, pl_providerVar, {intVal:=?}));
+  return f_EPTF_StatHandlerClient_registerStat(
+    {pl_providerVar}, pl_statName, pl_subscriptionMode,
+    pl_wait4response, pl_sourceCompRef, pl_statHandler);
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_StatHandlerClient_registerStat_FloatSum
+// 
+//  Purpose:
+//    Function to register a variable as data source to an aggregated float Sum stat.
+//
+//  Parameters:
+//    pl_providerVar - *in* *charstring* - data source variable names
+//    pl_statName - *in* *charstring* - name of the aggregated stat
+//    pl_subscriptionMode - *in* <EPTF_Var_SubscriptionMode> - subscription mode that the StatHandler should use (optional, default sampledAtSync)
+//    pl_wait4response - *in* *boolean* - blocks until response received if true (optional, default true)
+//    pl_sourceCompRef - *in* <EPTF_Var_CT> - EPTF_Var_CT component providing the data sources (optional, default:self)
+//    pl_statHandler  - *in* <EPTF_StatHandler_CT> - target stat handler component reference (optional)
+//
+//  Return Value:
+//    *boolean* - *true* on success
+//
+//  Errors & assertions:
+//    Default master comp. ref and pl_statHandler must not be both null.
+//    provider variable must be of float type
+//
+//  Detailed Comments:
+//    -
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_StatHandlerClient_registerStat_FloatSum(
+  in charstring pl_providerVar,
+  in charstring pl_statName,
+  in EPTF_Var_SubscriptionMode pl_subscriptionMode := sampledAtSync,
+  in boolean pl_wait4response := true,
+  in EPTF_Var_CT pl_sourceCompRef := null,
+  in EPTF_StatHandler_CT pl_statHandler := null)
+runs on EPTF_StatHandlerClient_CT
+return boolean
+{
+  f_EPTF_Base_assert(%definitionId&": provider variable is not present.",
+    f_EPTF_StatHandlerClient_checkVarPresence(pl_sourceCompRef, pl_providerVar));
+  f_EPTF_Base_assert(%definitionId&": provider variable is not float.",
+    f_EPTF_StatHandlerClient_checkVar(pl_sourceCompRef, pl_providerVar, {floatVal:=?}));
+  return f_EPTF_StatHandlerClient_registerStat(
+    {pl_providerVar}, pl_statName, pl_subscriptionMode,
+    pl_wait4response, pl_sourceCompRef, pl_statHandler);
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_StatHandlerClient_registerStat_Mean
+// 
+//  Purpose:
+//    Function to register variables as data sources to an aggregated Mean stat.
+//
+//  Parameters:
+//    pl_providerVar_mean - *in* *charstring* - data source variable for mean
+//    pl_providerVar_nofSampes - *in* *charstring* - data source variable for number of samples
+//    pl_statName - *in* *charstring* - name of the aggregated stat
+//    pl_subscriptionMode - *in* <EPTF_Var_SubscriptionMode> - subscription mode that the StatHandler should use (optional, default sampledAtSync)
+//    pl_wait4response - *in* *boolean* - blocks until response received if true (optional, default true)
+//    pl_sourceCompRef - *in* <EPTF_Var_CT> - EPTF_Var_CT component providing the data sources (optional, default:self)
+//    pl_statHandler  - *in* <EPTF_StatHandler_CT> - target stat handler component reference (optional)
+//
+//  Return Value:
+//    *boolean* - *true* on success
+//
+//  Errors & assertions:
+//    Default master comp. ref and pl_statHandler must not be both null.
+//
+//  Detailed Comments:
+//    -
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_StatHandlerClient_registerStat_Mean(
+  in charstring pl_providerVar_mean,
+  in charstring pl_providerVar_nofSampes,
+  in charstring pl_statName,
+  in EPTF_Var_SubscriptionMode pl_subscriptionMode := sampledAtSync,
+  in boolean pl_wait4response := true,
+  in EPTF_Var_CT pl_sourceCompRef := null,
+  in EPTF_StatHandler_CT pl_statHandler := null)
+runs on EPTF_StatHandlerClient_CT
+return boolean
+{
+  f_EPTF_Base_assert(%definitionId&": provider variable refered by pl_providerVar_mean is not present.",
+    f_EPTF_StatHandlerClient_checkVarPresence(pl_sourceCompRef, pl_providerVar_mean));
+  f_EPTF_Base_assert(%definitionId&": provider variable refered by pl_providerVar_nofSampes is not present.",
+    f_EPTF_StatHandlerClient_checkVarPresence(pl_sourceCompRef, pl_providerVar_nofSampes));
+  f_EPTF_Base_assert(%definitionId&": provider variable refered by pl_providerVar_mean is not float.",
+    f_EPTF_StatHandlerClient_checkVar(pl_sourceCompRef, pl_providerVar_mean, {floatVal:=?}));
+  f_EPTF_Base_assert(%definitionId&": provider variable refered by pl_providerVar_nofSampes is not integer.",
+    f_EPTF_StatHandlerClient_checkVar(pl_sourceCompRef, pl_providerVar_nofSampes, {intVal:=?}));
+  return f_EPTF_StatHandlerClient_registerStat(
+    {pl_providerVar_mean, pl_providerVar_nofSampes}, pl_statName, pl_subscriptionMode,
+    pl_wait4response, pl_sourceCompRef, pl_statHandler);
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_StatHandlerClient_registerStat_StandardDev
+// 
+//  Purpose:
+//    Function to register variables as data sources to an aggregated Standard Deviation stat.
+//
+//  Parameters:
+//    pl_providerVar_mean - *in* *charstring* - data source variable for mean
+//    pl_providerVar_nofSampes - *in* *charstring* - data source variable for number of samples
+//    pl_providerVar_S - *in* *charstring* - data source variable for S (M2)
+//    pl_statName - *in* *charstring* - name of the aggregated stat
+//    pl_subscriptionMode - *in* <EPTF_Var_SubscriptionMode> - subscription mode that the StatHandler should use (optional, default sampledAtSync)
+//    pl_wait4response - *in* *boolean* - blocks until response received if true (optional, default true)
+//    pl_sourceCompRef - *in* <EPTF_Var_CT> - EPTF_Var_CT component providing the data sources (optional, default:self)
+//    pl_statHandler  - *in* <EPTF_StatHandler_CT> - target stat handler component reference (optional)
+//
+//  Return Value:
+//    *boolean* - *true* on success
+//
+//  Errors & assertions:
+//    Default master comp. ref and pl_statHandler must not be both null.
+//
+//  Detailed Comments:
+//    -
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_StatHandlerClient_registerStat_StandardDev(
+  in charstring pl_providerVar_mean,
+  in charstring pl_providerVar_nofSampes,
+  in charstring pl_providerVar_S,
+  in charstring pl_statName,
+  in EPTF_Var_SubscriptionMode pl_subscriptionMode := sampledAtSync,
+  in boolean pl_wait4response := true,
+  in EPTF_Var_CT pl_sourceCompRef := null,
+  in EPTF_StatHandler_CT pl_statHandler := null)
+runs on EPTF_StatHandlerClient_CT
+return boolean
+{
+  f_EPTF_Base_assert(%definitionId&": provider variable refered by pl_providerVar_mean is not present.",
+    f_EPTF_StatHandlerClient_checkVarPresence(pl_sourceCompRef, pl_providerVar_mean));
+  f_EPTF_Base_assert(%definitionId&": provider variable refered by pl_providerVar_nofSampes is not present.",
+    f_EPTF_StatHandlerClient_checkVarPresence(pl_sourceCompRef, pl_providerVar_nofSampes));
+  f_EPTF_Base_assert(%definitionId&": provider variable refered by pl_providerVar_S is not present.",
+    f_EPTF_StatHandlerClient_checkVarPresence(pl_sourceCompRef, pl_providerVar_S));
+  f_EPTF_Base_assert(%definitionId&": provider variable refered by pl_providerVar_mean is not float.",
+    f_EPTF_StatHandlerClient_checkVar(pl_sourceCompRef, pl_providerVar_mean, {floatVal:=?}));
+  f_EPTF_Base_assert(%definitionId&": provider variable refered by pl_providerVar_nofSampes is not integer.",
+    f_EPTF_StatHandlerClient_checkVar(pl_sourceCompRef, pl_providerVar_nofSampes, {intVal:=?}));
+  f_EPTF_Base_assert(%definitionId&": provider variable refered by pl_providerVar_S is not float.",
+    f_EPTF_StatHandlerClient_checkVar(pl_sourceCompRef, pl_providerVar_S, {floatVal:=?}));
+  return f_EPTF_StatHandlerClient_registerStat(
+    {pl_providerVar_mean, pl_providerVar_nofSampes, pl_providerVar_S}, pl_statName, pl_subscriptionMode,
+    pl_wait4response, pl_sourceCompRef, pl_statHandler);
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_StatHandlerClient_registerStat_GlobalAverage
+// 
+//  Purpose:
+//    Function to register variables as data sources to an aggregated Global Average stat.
+//
+//  Parameters:
+//    pl_providerVar_sum - *in* *charstring* - data source variable for sum
+//    pl_providerVar_elementNumber - *in* *charstring* - data source variable for element number
+//    pl_statName - *in* *charstring* - name of the aggregated stat
+//    pl_subscriptionMode - *in* <EPTF_Var_SubscriptionMode> - subscription mode that the StatHandler should use (optional, default sampledAtSync)
+//    pl_wait4response - *in* *boolean* - blocks until response received if true (optional, default true)
+//    pl_sourceCompRef - *in* <EPTF_Var_CT> - EPTF_Var_CT component providing the data sources (optional, default:self)
+//    pl_statHandler  - *in* <EPTF_StatHandler_CT> - target stat handler component reference (optional)
+//
+//  Return Value:
+//    *boolean* - *true* on success
+//
+//  Errors & assertions:
+//    Default master comp. ref and pl_statHandler must not be both null.
+//
+//  Detailed Comments:
+//    -
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_StatHandlerClient_registerStat_GlobalAverage(
+  in charstring pl_providerVar_sum,
+  in charstring pl_providerVar_elementNumber,
+  in charstring pl_statName,
+  in EPTF_Var_SubscriptionMode pl_subscriptionMode := sampledAtSync,
+  in boolean pl_wait4response := true,
+  in EPTF_Var_CT pl_sourceCompRef := null,
+  in EPTF_StatHandler_CT pl_statHandler := null)
+runs on EPTF_StatHandlerClient_CT
+return boolean
+{
+  f_EPTF_Base_assert(%definitionId&": provider variable refered by pl_providerVar_sum is not present.",
+    f_EPTF_StatHandlerClient_checkVarPresence(pl_sourceCompRef, pl_providerVar_sum));
+  f_EPTF_Base_assert(%definitionId&": provider variable refered by pl_providerVar_elementNumber is not present.",
+    f_EPTF_StatHandlerClient_checkVarPresence(pl_sourceCompRef, pl_providerVar_elementNumber));
+  f_EPTF_Base_assert(%definitionId&": provider variable refered by pl_providerVar_sum is not float.",
+    f_EPTF_StatHandlerClient_checkVar(pl_sourceCompRef, pl_providerVar_sum, {floatVal:=?}));
+  f_EPTF_Base_assert(%definitionId&": provider variable refered by pl_providerVar_elementNumber is not integer.",
+    f_EPTF_StatHandlerClient_checkVar(pl_sourceCompRef, pl_providerVar_elementNumber, {intVal:=?}));
+  return f_EPTF_StatHandlerClient_registerStat(
+    {pl_providerVar_sum, pl_providerVar_elementNumber}, pl_statName, pl_subscriptionMode,
+    pl_wait4response, pl_sourceCompRef, pl_statHandler);
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_StatHandlerClient_registerStat_Density
+// 
+//  Purpose:
+//    Function to register variables as data sources to an aggregated Density stat.
+//
+//  Parameters:
+//    pl_providerVar_density - *in* *charstring* - data source variable for density distribution bin
+//    pl_providerVar_boundaries - *in* *charstring* - data source variable for boundaries
+//    pl_statName - *in* *charstring* - name of the aggregated stat
+//    pl_subscriptionMode - *in* <EPTF_Var_SubscriptionMode> - subscription mode that the StatHandler should use (optional, default sampledAtSync)
+//    pl_wait4response - *in* *boolean* - blocks until response received if true (optional, default true)
+//    pl_sourceCompRef - *in* <EPTF_Var_CT> - EPTF_Var_CT component providing the data sources (optional, default:self)
+//    pl_statHandler  - *in* <EPTF_StatHandler_CT> - target stat handler component reference (optional)
+//
+//  Return Value:
+//    *boolean* - *true* on success
+//
+//  Errors & assertions:
+//    Default master comp. ref and pl_statHandler must not be both null.
+//
+//  Detailed Comments:
+//    -
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_StatHandlerClient_registerStat_Density(
+  in charstring pl_providerVar_density,
+  in charstring pl_providerVar_boundaries,
+  in charstring pl_statName,
+  in EPTF_Var_SubscriptionMode pl_subscriptionMode := sampledAtSync,
+  in boolean pl_wait4response := true,
+  in EPTF_Var_CT pl_sourceCompRef := null,
+  in EPTF_StatHandler_CT pl_statHandler := null)
+runs on EPTF_StatHandlerClient_CT
+return boolean
+{
+  f_EPTF_Base_assert(%definitionId&": provider variable refered by pl_providerVar_density is not present.",
+    f_EPTF_StatHandlerClient_checkVarPresence(pl_sourceCompRef, pl_providerVar_density));
+  f_EPTF_Base_assert(%definitionId&": provider variable refered by pl_providerVar_boundaries is not present.",
+    f_EPTF_StatHandlerClient_checkVarPresence(pl_sourceCompRef, pl_providerVar_boundaries));
+  f_EPTF_Base_assert(%definitionId&": provider variable refered by pl_providerVar_density is not integerlist.",
+    f_EPTF_StatHandlerClient_checkVar(pl_sourceCompRef, pl_providerVar_density, {integerlistVal:=?}));
+  f_EPTF_Base_assert(%definitionId&": provider variable refered by pl_providerVar_boundaries is not floatlist.",
+    f_EPTF_StatHandlerClient_checkVar(pl_sourceCompRef, pl_providerVar_boundaries, {floatlistVal:=?}));
+  return f_EPTF_StatHandlerClient_registerStat(
+    {pl_providerVar_density, pl_providerVar_boundaries}, pl_statName, pl_subscriptionMode,
+    pl_wait4response, pl_sourceCompRef, pl_statHandler);
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_StatHandlerClient_registerStat_Percentile95
+// 
+//  Purpose:
+//    Function to register variables as data sources to an aggregated Percentile95 stat.
+//
+//  Parameters:
+//    pl_providerVar_density - *in* *charstring* - data source variable for density distribution bin
+//    pl_providerVar_boundaries - *in* *charstring* - data source variable for boundaries
+//    pl_providerVar_max - *in* *charstring* - data source variable for max
+//    pl_statName - *in* *charstring* - name of the aggregated stat
+//    pl_subscriptionMode - *in* <EPTF_Var_SubscriptionMode> - subscription mode that the StatHandler should use (optional, default sampledAtSync)
+//    pl_wait4response - *in* *boolean* - blocks until response received if true (optional, default true)
+//    pl_sourceCompRef - *in* <EPTF_Var_CT> - EPTF_Var_CT component providing the data sources (optional, default:self)
+//    pl_statHandler  - *in* <EPTF_StatHandler_CT> - target stat handler component reference (optional)
+//
+//  Return Value:
+//    *boolean* - *true* on success
+//
+//  Errors & assertions:
+//    Default master comp. ref and pl_statHandler must not be both null.
+//
+//  Detailed Comments:
+//    -
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_StatHandlerClient_registerStat_Percentile95(
+  in charstring pl_providerVar_density,
+  in charstring pl_providerVar_boundaries,
+  in charstring pl_providerVar_max,
+  in charstring pl_statName,
+  in EPTF_Var_SubscriptionMode pl_subscriptionMode := sampledAtSync,
+  in boolean pl_wait4response := true,
+  in EPTF_Var_CT pl_sourceCompRef := null,
+  in EPTF_StatHandler_CT pl_statHandler := null)
+runs on EPTF_StatHandlerClient_CT
+return boolean
+{
+  f_EPTF_Base_assert(%definitionId&": provider variable refered by pl_providerVar_density is not present.",
+    f_EPTF_StatHandlerClient_checkVarPresence(pl_sourceCompRef, pl_providerVar_density));
+  f_EPTF_Base_assert(%definitionId&": provider variable refered by pl_providerVar_boundaries is not present.",
+    f_EPTF_StatHandlerClient_checkVarPresence(pl_sourceCompRef, pl_providerVar_boundaries));
+  f_EPTF_Base_assert(%definitionId&": provider variable refered by pl_providerVar_max is not present.",
+    f_EPTF_StatHandlerClient_checkVarPresence(pl_sourceCompRef, pl_providerVar_max));
+  f_EPTF_Base_assert(%definitionId&": provider variable refered by pl_providerVar_density is not integerlist.",
+    f_EPTF_StatHandlerClient_checkVar(pl_sourceCompRef, pl_providerVar_density, {integerlistVal:=?}));
+  f_EPTF_Base_assert(%definitionId&": provider variable refered by pl_providerVar_boundaries is not floatlist.",
+    f_EPTF_StatHandlerClient_checkVar(pl_sourceCompRef, pl_providerVar_boundaries, {floatlistVal:=?}));
+  f_EPTF_Base_assert(%definitionId&": provider variable refered by pl_providerVar_max is not float.",
+    f_EPTF_StatHandlerClient_checkVar(pl_sourceCompRef, pl_providerVar_max, {floatVal:=?}));
+  return f_EPTF_StatHandlerClient_registerStat(
+    {pl_providerVar_density, pl_providerVar_boundaries, pl_providerVar_max,""}, pl_statName, pl_subscriptionMode,
+    pl_wait4response, pl_sourceCompRef, pl_statHandler);
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_StatHandlerClient_registerStat_PercentileP
+// 
+//  Purpose:
+//    Function to register variables as data sources to an aggregated PercentileP stat.
+//
+//  Parameters:
+//    pl_providerVar_density - *in* *charstring* - data source variable for density distribution bin
+//    pl_providerVar_boundaries - *in* *charstring* - data source variable for boundaries
+//    pl_providerVar_max - *in* *charstring* - data source variable for max
+//    pl_providerVar_pValue - *in* *charstring* - data source variable for pValue
+//    pl_statName - *in* *charstring* - name of the aggregated stat
+//    pl_subscriptionMode - *in* <EPTF_Var_SubscriptionMode> - subscription mode that the StatHandler should use (optional, default sampledAtSync)
+//    pl_wait4response - *in* *boolean* - blocks until response received if true (optional, default true)
+//    pl_sourceCompRef - *in* <EPTF_Var_CT> - EPTF_Var_CT component providing the data sources (optional, default:self)
+//    pl_statHandler  - *in* <EPTF_StatHandler_CT> - target stat handler component reference (optional)
+//
+//  Return Value:
+//    *boolean* - *true* on success
+//
+//  Errors & assertions:
+//    Default master comp. ref and pl_statHandler must not be both null.
+//
+//  Detailed Comments:
+//    The P value can be between 0.0 and 1.0. For example the value 0.5 means 50th percentile and the median value.
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_StatHandlerClient_registerStat_PercentileP(
+  in charstring pl_providerVar_density,
+  in charstring pl_providerVar_boundaries,
+  in charstring pl_providerVar_max,
+  in charstring pl_providerVar_pValue,  
+  in charstring pl_statName,
+  in EPTF_Var_SubscriptionMode pl_subscriptionMode := sampledAtSync,
+  in boolean pl_wait4response := true,
+  in EPTF_Var_CT pl_sourceCompRef := null,
+  in EPTF_StatHandler_CT pl_statHandler := null)
+runs on EPTF_StatHandlerClient_CT
+return boolean
+{
+  f_EPTF_Base_assert(%definitionId&": provider variable refered by pl_providerVar_density is not present.",
+    f_EPTF_StatHandlerClient_checkVarPresence(pl_sourceCompRef, pl_providerVar_density));
+  f_EPTF_Base_assert(%definitionId&": provider variable refered by pl_providerVar_boundaries is not present.",
+    f_EPTF_StatHandlerClient_checkVarPresence(pl_sourceCompRef, pl_providerVar_boundaries));
+  f_EPTF_Base_assert(%definitionId&": provider variable refered by pl_providerVar_max is not present.",
+    f_EPTF_StatHandlerClient_checkVarPresence(pl_sourceCompRef, pl_providerVar_max));
+  f_EPTF_Base_assert(%definitionId&": provider variable refered by pl_providerVar_pValue is not present.",
+    f_EPTF_StatHandlerClient_checkVarPresence(pl_sourceCompRef, pl_providerVar_pValue));    
+  f_EPTF_Base_assert(%definitionId&": provider variable refered by pl_providerVar_density is not integerlist.",
+    f_EPTF_StatHandlerClient_checkVar(pl_sourceCompRef, pl_providerVar_density, {integerlistVal:=?}));
+  f_EPTF_Base_assert(%definitionId&": provider variable refered by pl_providerVar_boundaries is not floatlist.",
+    f_EPTF_StatHandlerClient_checkVar(pl_sourceCompRef, pl_providerVar_boundaries, {floatlistVal:=?}));
+  f_EPTF_Base_assert(%definitionId&": provider variable refered by pl_providerVar_max is not float.",
+    f_EPTF_StatHandlerClient_checkVar(pl_sourceCompRef, pl_providerVar_max, {floatVal:=?}));
+
+  var EPTF_Var_DirectContent vl_content;
+  if(pl_sourceCompRef == null or pl_sourceCompRef == self) {
+    f_EPTF_Var_getContent(f_EPTF_Var_getId(pl_providerVar_pValue), vl_content);
+  } else {
+    if(not f_EPTF_Var_getRemoteContent(pl_sourceCompRef, pl_providerVar_pValue, vl_content)) {
+      f_EPTF_Base_assert(%definitionId&": remote Var "&pl_providerVar_pValue&" not available", false);
+    }
+  }
+  if( (vl_content.floatVal < 0.0) or (vl_content.floatVal > 1.0)) {
+    f_EPTF_Base_assert(%definitionId&": Variable "&pl_providerVar_pValue&" should be between 0.0 and 1.0 , Content is "&float2str(vl_content.floatVal), false);
+  }
+  
+  return f_EPTF_StatHandlerClient_registerStat(
+    {pl_providerVar_density, pl_providerVar_boundaries, pl_providerVar_max, pl_providerVar_pValue}, pl_statName, pl_subscriptionMode,
+    pl_wait4response, pl_sourceCompRef, pl_statHandler);
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_StatHandlerClient_deregisterStat
+// 
+//  Purpose:
+//    Function to deregister all registered data sources from an aggregated stat.
+//
+//  Parameters:
+//    pl_statName - *in* *charstring* - name of the aggregated stat
+//    pl_sourceCompRef - *in* <EPTF_Var_CT> - EPTF_Var_CT component providing the data sources (optional, default:self)
+//    pl_statHandler  - *in* <EPTF_StatHandler_CT> - target stat handler component reference (optional)
+//    pl_providerVarList - *in* <EPTF_CharstringList> - the provider Vars of the source (optional)
+//
+//  Return Value:
+//    -
+//
+//  Errors & assertions:
+//    Default master comp. ref and pl_statHandler must not be both null.
+//
+//  Detailed Comments:
+//    This function blocks execution until the response is received.
+//    The StatHandler master component will unsubscribe from all EPTF Vars
+//    provided by the source component for the specified statistic.
+//    If pl_providerVarList is not specified (or empty), *all* sources provided by the source
+//    component for the target stat are deregistered.
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_StatHandlerClient_deregisterStat(
+  in charstring pl_statName,
+  in EPTF_Var_CT pl_sourceCompRef := null,
+  in EPTF_StatHandler_CT pl_statHandler := null,
+  in EPTF_CharstringList pl_providerVarList := {})
+runs on EPTF_StatHandlerClient_CT
+{
+  var EPTF_StatHandler_CT vl_master := v_EPTF_StatHandlerClient_defaultMasterCompRef;
+  if(pl_statHandler != null) { vl_master := pl_statHandler; }
+  f_EPTF_Base_assert(%definitionId&": default master component reference is null.",
+    vl_master!=null);
+
+  if(v_EPTF_StatHandlerClient_resetVarIdx < 0) {
+    f_EPTF_StatHandlerClient_queryResetButtonVarName(vl_master);
+  }
+
+  var EPTF_StatHandler_MgmtMsg_Request vl_request := {
+    sIdx := -1,
+    request := {
+      deregisterReq := {
+        sourceCompRef := pl_sourceCompRef,
+        providerVarList := pl_providerVarList,
+        targetStatName := pl_statName
+      }
+    }
+  }
+  if(pl_sourceCompRef == null) { vl_request.request.deregisterReq.sourceCompRef := self; }
+
+  var EPTF_StatHandler_MgmtMsg_Response vl_response;
+  f_EPTF_StatHandlerClient_sendReqRecvResp(
+    vl_master,
+    vl_request,
+    vl_response
+    );
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_StatHandlerClient_getStatVariableRef
+// 
+//  Purpose:
+//    Function to get the EPTF Variable at StatHandler of a statistic.
+//
+//  Parameters:
+//    pl_statName - *in* *charstring* - name of the stat
+//    pl_statHandler  - *in* <EPTF_StatHandler_CT> - target stat handler component reference (optional)
+//
+//  Return Value:
+//    *charstring* - name of the EPTF Variable
+//
+//  Errors & assertions:
+//    Default master comp. ref and pl_statHandler must not be both null.
+//
+//  Detailed Comments:
+//    You can subscribe to the Var returned by getStatVariableRef and keep a local copy uptodate.
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_StatHandlerClient_getStatVariableRef(
+  in charstring pl_statName,
+  in EPTF_StatHandler_CT pl_statHandler := null)
+runs on EPTF_StatHandlerClient_CT
+return charstring
+{
+  var EPTF_StatHandler_CT vl_master := v_EPTF_StatHandlerClient_defaultMasterCompRef;
+  if(pl_statHandler != null) { vl_master := pl_statHandler; }
+  f_EPTF_Base_assert(%definitionId&": default master component reference is null.",
+    vl_master!=null);
+
+  if(v_EPTF_StatHandlerClient_resetVarIdx < 0) {
+    f_EPTF_StatHandlerClient_queryResetButtonVarName(vl_master);
+  }
+
+  var EPTF_StatHandler_MgmtMsg_Response vl_response;
+  var EPTF_StatHandler_MgmtMsg_Request vl_request := {
+    sIdx := -1,
+    request := {
+      getVarReq := {
+        statName := pl_statName
+      }
+    }
+  }
+
+  f_EPTF_StatHandlerClient_sendReqRecvResp(
+    vl_master,
+    vl_request,
+    vl_response
+    );
+
+  return vl_response.response.getVarResp.statVarName;
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_StatHandlerClient_registerResetFunction
+// 
+//  Purpose:
+//    Function to register a reset callback function.
+//
+//  Parameters:
+//    pl_fn  - *in* <EPTF_StatHandlerClient_ResetCallback_FT> - reset callback function reference
+//
+//  Return Value:
+//    -
+//
+//  Errors & assertions:
+//    -
+//
+//  Detailed Comments:
+//    The registered function will be called if the reset Variable changes
+//    (i.e. if the reset button is pressed on the UI).
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_StatHandlerClient_registerResetFunction(
+  in EPTF_StatHandlerClient_ResetCallback_FT pl_fn)
+runs on EPTF_StatHandlerClient_CT
+{
+  if(pl_fn == null) {
+    f_EPTF_StatHandlerLogging_warning(%definitionId&": cannot register null function reference.");
+  } else {
+    for(var integer i := 0; i < sizeof(v_EPTF_StatHandlerClient_resetFunctions); i := i + 1) {
+      if(v_EPTF_StatHandlerClient_resetFunctions[i] == pl_fn) {
+        f_EPTF_StatHandlerLogging_warning(%definitionId&": re-registration of reset function "&
+          log2str(pl_fn));
+        return;
+      }
+    }
+    v_EPTF_StatHandlerClient_resetFunctions[sizeof(v_EPTF_StatHandlerClient_resetFunctions)] := pl_fn;
+  }
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_StatHandlerClient_deregisterResetFunction
+// 
+//  Purpose:
+//    Function to deregister a reset callback function.
+//
+//  Parameters:
+//    pl_fn  - *in* <EPTF_StatHandlerClient_ResetCallback_FT> - reset callback function reference
+//
+//  Return Value:
+//    -
+//
+//  Errors & assertions:
+//    -
+//
+//  Detailed Comments:
+//    -
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_StatHandlerClient_deregisterResetFunction(
+  in EPTF_StatHandlerClient_ResetCallback_FT pl_fn)
+runs on EPTF_StatHandlerClient_CT
+{
+  if(pl_fn == null) {
+    f_EPTF_StatHandlerLogging_warning(%definitionId&": cannot deregister null function reference.");
+  } else {
+    for(var integer i := 0; i < sizeof(v_EPTF_StatHandlerClient_resetFunctions); i := i + 1) {
+      if(v_EPTF_StatHandlerClient_resetFunctions[i] == pl_fn) {
+        v_EPTF_StatHandlerClient_resetFunctions[i] := null;
+      }
+    }
+  }
+}
+
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_StatHandlerClient_getDefaultMasterCompRef
+// 
+//  Purpose:
+//    Returns the default master StatHandler compoenent reference (null if none).
+//
+//  Parameters:
+//    -
+//
+//  Return Value:
+//    <EPTF_StatHandler_CT> - the default master component reference
+//
+//  Errors & assertions:
+//    -
+//
+//  Detailed Comments:
+//    -
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_StatHandlerClient_getDefaultMasterCompRef()
+runs on EPTF_StatHandlerClient_CT
+return EPTF_StatHandler_CT
+{
+  return v_EPTF_StatHandlerClient_defaultMasterCompRef;
+}
+
+///////////////////////////////////////////////////////////
+//  Group: Private
+//
+//  Purpose:
+//    Private functions used by StatHandlerClient.
+//
+//  Detailed Comments:
+//    Do not call the functions within this group form outside of StatHandlerClient.
+//
+///////////////////////////////////////////////////////////
+group Private {
+
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_StatHandlerClient_cleanup_CT
+  // 
+  //  Purpose:
+  //    Cleanup function for component type EPTF_StatHandlerClient_CT
+  //
+  //  Parameters:
+  //    -
+  //
+  //  Return Value:
+  //    -
+  //
+  //  Errors & assertions:
+  //    -
+  //
+  //  Detailed Comments:
+  //    -
+  ///////////////////////////////////////////////////////////
+  private function f_EPTF_StatHandlerClient_cleanup_CT()
+  runs on EPTF_StatHandlerClient_CT
+  {
+    if(not v_EPTF_StatHandlerClient_initialized) {
+      f_EPTF_StatHandlerLogging_debug(%definitionId&":not yet initialized");
+      return;
+    }
+    if(T_EPTF_StatHandlerClient_autoDisconnect.running) { T_EPTF_StatHandlerClient_autoDisconnect.stop; }
+    if(vd_EPTF_StatHandlerClient_autoDisconnect != null) {
+      deactivate(vd_EPTF_StatHandlerClient_autoDisconnect);
+      vd_EPTF_StatHandlerClient_autoDisconnect := null;
+    }
+    deactivate(vd_EPTF_StatHandlerClient_msgHandler);
+    vd_EPTF_StatHandlerClient_msgHandler := null;
+    f_EPTF_StatHandlerClient_disconnectAll();
+    v_EPTF_StatHandlerClient_responseBuffer := {};
+    v_EPTF_StatHandlerClient_pendingMessages := 0;
+    v_EPTF_StatHandlerClient_resetFunctions := {};
+    if(v_EPTF_StatHandlerClient_resetVarIdx >= 0) {
+      // NOTE: the following line does nothing if not subscribed to a remote Var
+      f_EPTF_Var_unsubscribe(v_EPTF_StatHandlerClient_resetVarIdx);
+      v_EPTF_StatHandlerClient_resetVarIdx := -1;
+    }
+    v_EPTF_StatHandlerClient_initialized := false;
+    f_EPTF_StatHandlerLogging_debug(%definitionId&": cleanup finished.");
+  }
+
+  ///////////////////////////////////////////////////////////
+  //  Group: StatHandlerClient_ResetButton
+  //
+  //  Purpose:
+  //    Reset related functions
+  //
+  //  Detailed Comments:
+  //    -
+  ///////////////////////////////////////////////////////////
+  group StatHandlerClient_ResetButton {
+
+    ///////////////////////////////////////////////////////////
+    //  Function: f_EPTF_StatHandlerClient_queryResetButtonVarName
+    // 
+    //  Purpose:
+    //    Function to query the reset button's variable name from a master component
+    //
+    //  Parameters:
+    //    pl_master  - *in* <EPTF_StatHandler_CT> - master component reference
+    //
+    //  Return Value:
+    //    -
+    //
+    //  Errors & assertions:
+    //    -
+    //
+    //  Detailed Comments:
+    //    -
+    ///////////////////////////////////////////////////////////
+    private function f_EPTF_StatHandlerClient_queryResetButtonVarName(in EPTF_StatHandler_CT pl_master)
+    runs on EPTF_StatHandlerClient_CT
+    {
+      var EPTF_StatHandler_MgmtMsg_Response vl_response;
+      var EPTF_StatHandler_MgmtMsg_Request vl_request := {
+        sIdx := -1,
+        request := {
+          getResetVarNameReq := {
+          }
+        }
+      }
+      f_EPTF_StatHandlerClient_connect(pl_master);
+      v_EPTF_StatHandlerClient_MgmtPCO.send(vl_request) to pl_master;
+      v_EPTF_StatHandlerClient_pendingMessages := v_EPTF_StatHandlerClient_pendingMessages + 1;
+    }
+
+    ///////////////////////////////////////////////////////////
+    //  Function: f_EPTF_StatHandlerClient_subscribeToResetButton
+    // 
+    //  Purpose:
+    //    Function to subscribe to the reset button's variable
+    //
+    //  Parameters:
+    //    pl_resetVarComp  - *in* <EPTF_Var_CT>
+    //    pl_resetVarName  - *in* *charstring*
+    //
+    //  Return Value:
+    //    -
+    //
+    //  Errors & assertions:
+    //    -
+    //
+    //  Detailed Comments:
+    //    -
+    ///////////////////////////////////////////////////////////
+    private function f_EPTF_StatHandlerClient_subscribeToResetButton(
+      in EPTF_Var_CT pl_resetVarComp,
+      in charstring pl_resetVarName)
+    runs on EPTF_StatHandlerClient_CT
+    {
+      if(v_EPTF_StatHandlerClient_resetVarIdx < 0) {
+        f_EPTF_StatHandlerLogging_debug(%definitionId&": reset Var name is "&
+          pl_resetVarName&" on component "&log2str(pl_resetVarComp));
+
+        if(pl_resetVarComp != self) {
+          f_EPTF_Var_subscribeRemote(
+            pl_resetVarComp,
+            pl_resetVarName,
+            realtime,
+            v_EPTF_StatHandlerClient_resetVarIdx);
+        } else {
+          v_EPTF_StatHandlerClient_resetVarIdx := f_EPTF_Var_getId(pl_resetVarName);
+        }
+
+        f_EPTF_Var_addPostProcFn(v_EPTF_StatHandlerClient_resetVarIdx,
+          {refers(f_EPTF_StatHandlerClient_callResetFunctions), {}});
+      }
+    }
+
+    ///////////////////////////////////////////////////////////
+    //  Function: f_EPTF_StatHandlerClient_callResetFunctions
+    // 
+    //  Purpose:
+    //    Function to call all reset callback functions registered by the user
+    //
+    //  Parameters:
+    //    pl_idx  - *in* *integer*
+    //    pl_argList  - *in* <EPTF_IntegerList>
+    //
+    //  Return Value:
+    //    -
+    //
+    //  Errors & assertions:
+    //    -
+    //
+    //  Detailed Comments:
+    //    -
+    ///////////////////////////////////////////////////////////
+    private function f_EPTF_StatHandlerClient_callResetFunctions(in integer pl_idx, in EPTF_IntegerList pl_argList)
+    runs on EPTF_StatHandlerClient_CT
+    {
+      f_EPTF_StatHandlerLogging_debug(%definitionId&": reset button pressed");
+      for(var integer i := 0; i < sizeof(v_EPTF_StatHandlerClient_resetFunctions); i := i + 1) {
+        if(v_EPTF_StatHandlerClient_resetFunctions[i] != null) {
+          v_EPTF_StatHandlerClient_resetFunctions[i].apply();
+        }
+      }
+      f_EPTF_StatHandlerClient_acknowledgeReset();
+    }
+
+  } // group StatHandlerClient_ResetButton
+
+  ///////////////////////////////////////////////////////////
+  //  Group: StatHandlerClient_Connection
+  //
+  //  Purpose:
+  //    Port connection related functions
+  //
+  //  Detailed Comments:
+  //    -
+  ///////////////////////////////////////////////////////////
+  group StatHandlerClient_Connection {
+
+    ///////////////////////////////////////////////////////////
+    //  Function: f_EPTF_StatHandlerClient_connect
+    // 
+    //  Purpose:
+    //    Function to connect to a master component
+    //
+    //  Parameters:
+    //    pl_compRef  - *in* <EPTF_StatHandler_CT>
+    //
+    //  Return Value:
+    //    -
+    //
+    //  Errors & assertions:
+    //    -
+    //
+    //  Detailed Comments:
+    //    -
+    ///////////////////////////////////////////////////////////
+    private function f_EPTF_StatHandlerClient_connect(in EPTF_StatHandler_CT pl_compRef)
+    runs on EPTF_StatHandlerClient_CT
+    {
+      if(T_EPTF_StatHandlerClient_autoDisconnect.running) { T_EPTF_StatHandlerClient_autoDisconnect.stop; }
+      T_EPTF_StatHandlerClient_autoDisconnect.start;
+      if(vd_EPTF_StatHandlerClient_autoDisconnect == null) {
+        vd_EPTF_StatHandlerClient_autoDisconnect := activate(as_EPTF_StatHandlerClient_autoDisconnect());
+      }
+      for(var integer i := 0; i < sizeof(v_EPTF_StatHandlerClient_connectedCompRefList); i := i + 1) {
+        if(v_EPTF_StatHandlerClient_connectedCompRefList[i] == pl_compRef) { return; }
+      }
+      v_EPTF_StatHandlerClient_connectedCompRefList[sizeof(v_EPTF_StatHandlerClient_connectedCompRefList)] := pl_compRef;
+      connect(self:v_EPTF_StatHandlerClient_MgmtPCO,
+        pl_compRef:v_EPTF_StatHandler_MgmtPCO);
+      f_EPTF_StatHandlerLogging_debug(log2str(%definitionId&": connected to ", pl_compRef));
+    }
+
+    ///////////////////////////////////////////////////////////
+    //  Function: f_EPTF_StatHandlerClient_disconnectAll
+    // 
+    //  Purpose:
+    //    Function to disconnect from all master components
+    //
+    //  Parameters:
+    //    -
+    //
+    //  Return Value:
+    //    -
+    //
+    //  Errors & assertions:
+    //    -
+    //
+    //  Detailed Comments:
+    //    -
+    ///////////////////////////////////////////////////////////
+    private function f_EPTF_StatHandlerClient_disconnectAll()
+    runs on EPTF_StatHandlerClient_CT
+    {
+      for(var integer i := 0; i < sizeof(v_EPTF_StatHandlerClient_connectedCompRefList); i := i + 1) {
+        disconnect(self:v_EPTF_StatHandlerClient_MgmtPCO,
+          v_EPTF_StatHandlerClient_connectedCompRefList[i]:v_EPTF_StatHandler_MgmtPCO);
+        f_EPTF_StatHandlerLogging_debug(log2str(%definitionId&": disconnected from ", v_EPTF_StatHandlerClient_connectedCompRefList[i]));
+      }
+      v_EPTF_StatHandlerClient_connectedCompRefList := {};
+    }
+
+    ///////////////////////////////////////////////////////////
+    //  Altstep: as_EPTF_StatHandlerClient_autoDisconnect
+    // 
+    //  Purpose:
+    //    Automatic disconnect altstep
+    //
+    //  Parameters:
+    //    -
+    //
+    //  Return Value:
+    //    -
+    //
+    //  Errors & assertions:
+    //    -
+    //
+    //  Detailed Comments:
+    //    -
+    ///////////////////////////////////////////////////////////
+    private altstep as_EPTF_StatHandlerClient_autoDisconnect()
+    runs on EPTF_StatHandlerClient_CT
+    {
+      []T_EPTF_StatHandlerClient_autoDisconnect.timeout {
+        f_EPTF_StatHandlerLogging_debug(%definitionId&": automatic disconnect timer timeout");
+        if(v_EPTF_StatHandlerClient_pendingMessages > 0) {
+          f_EPTF_StatHandlerLogging_warning(%definitionId&": restarting auto disconnect timer, pending messages: "&
+            log2str(v_EPTF_StatHandlerClient_pendingMessages));
+          T_EPTF_StatHandlerClient_autoDisconnect.start;
+        } else {
+          f_EPTF_StatHandlerClient_disconnectAll();
+          deactivate(vd_EPTF_StatHandlerClient_autoDisconnect);
+          vd_EPTF_StatHandlerClient_autoDisconnect := null;
+        }
+        repeat;
+      }
+    }
+
+  } // group StatHandlerClient_Connection
+
+  ///////////////////////////////////////////////////////////
+  //  Group: StatHandlerClient_Connection
+  //
+  //  Purpose:
+  //    Port communication related functions
+  //
+  //  Detailed Comments:
+  //    -
+  ///////////////////////////////////////////////////////////
+  group StatHandlerClient_Communication {
+
+    ///////////////////////////////////////////////////////////
+    //  Function: f_EPTF_StatHandlerClient_acknowledgeReset
+    // 
+    //  Purpose:
+    //    Function to acknowledge reset
+    //
+    //  Parameters:
+    //    -
+    //
+    //  Return Value:
+    //    -
+    //
+    //  Errors & assertions:
+    //    -
+    //
+    //  Detailed Comments:
+    //    Sends a resetAck message to all subscribing StatHandler master components.
+    ///////////////////////////////////////////////////////////
+    private function f_EPTF_StatHandlerClient_acknowledgeReset()
+    runs on EPTF_StatHandlerClient_CT
+    {
+      var EPTF_StatHandler_MgmtMsg_Request vl_request := {
+        sIdx := -1,
+        request := {
+          resetAck := {
+            resetTimestamp := f_EPTF_Base_getAbsTimeInSecs()
+          }
+        }
+      }
+      for(var integer i:=0; i<sizeof(v_EPTF_StatHandlerClient_subscribingCompRefList); i:=i+1) {
+        f_EPTF_StatHandlerClient_connect(v_EPTF_StatHandlerClient_subscribingCompRefList[i]);
+        v_EPTF_StatHandlerClient_MgmtPCO.send(vl_request) to v_EPTF_StatHandlerClient_subscribingCompRefList[i];
+      }
+    }
+
+    ///////////////////////////////////////////////////////////
+    //  Function: f_EPTF_StatHandlerClient_sendReqRecvResp
+    // 
+    //  Purpose:
+    //    Function to send a request and receive its response
+    //
+    //  Parameters:
+    //    pl_master  - *in* <EPTF_StatHandler_CT>
+    //    pl_request  - *in* <EPTF_StatHandler_MgmtMsg_Request>
+    //    pl_response  - *out* <EPTF_StatHandler_MgmtMsg_Response>
+    //
+    //  Return Value:
+    //    -
+    //
+    //  Errors & assertions:
+    //    -
+    //
+    //  Detailed Comments:
+    //    Uses semaphores to wait for the response.
+    ///////////////////////////////////////////////////////////
+    friend function f_EPTF_StatHandlerClient_sendReqRecvResp(
+      in EPTF_StatHandler_CT pl_master,
+      in EPTF_StatHandler_MgmtMsg_Request pl_request,
+      out EPTF_StatHandler_MgmtMsg_Response pl_response)
+    runs on EPTF_StatHandlerClient_CT
+    {
+      f_EPTF_StatHandlerClient_connect(pl_master);
+      pl_request.sIdx := f_EPTF_Semaphore_new(); // created in locked
+      v_EPTF_StatHandlerClient_MgmtPCO.send(pl_request) to pl_master;
+      v_EPTF_StatHandlerClient_pendingMessages := v_EPTF_StatHandlerClient_pendingMessages + 1;
+      f_EPTF_StatHandlerLogging_debug(%definitionId&": pending messages incremented: "&log2str(v_EPTF_StatHandlerClient_pendingMessages));
+      if(f_EPTF_Semaphore_waitForUnlock(pl_request.sIdx)) {/*do nothing*/}
+      pl_response := v_EPTF_StatHandlerClient_responseBuffer[pl_request.sIdx];
+      v_EPTF_StatHandlerClient_pendingMessages := v_EPTF_StatHandlerClient_pendingMessages - 1;
+      f_EPTF_StatHandlerLogging_debug(%definitionId&": pending messages decremented: "&log2str(v_EPTF_StatHandlerClient_pendingMessages));
+      if(v_EPTF_StatHandlerClient_pendingMessages < 0) {
+        f_EPTF_StatHandlerLogging_debug(%definitionId&": no pending messages ("&log2str(v_EPTF_StatHandlerClient_pendingMessages)&")");
+        v_EPTF_StatHandlerClient_pendingMessages := 0;
+        v_EPTF_StatHandlerClient_responseBuffer := {};
+      }
+    }
+
+    friend function f_EPTF_StatHandlerClient_sendRequest(
+      in EPTF_StatHandler_MgmtMsg_Request pl_request,
+      in EPTF_StatHandler_CT pl_master)
+    runs on EPTF_StatHandlerClient_CT
+    {
+      f_EPTF_StatHandlerClient_connect(pl_master);
+      v_EPTF_StatHandlerClient_MgmtPCO.send(pl_request) to pl_master;    
+    }
+
+    ///////////////////////////////////////////////////////////
+    //  Altstep: as_EPTF_StatHandlerClient_msgHandler
+    // 
+    //  Purpose:
+    //    Message handler altstep
+    //
+    //  Parameters:
+    //    -
+    //
+    //  Return Value:
+    //    -
+    //
+    //  Errors & assertions:
+    //    Unexpected message received.
+    //
+    //  Detailed Comments:
+    //    -
+    ///////////////////////////////////////////////////////////
+    private altstep as_EPTF_StatHandlerClient_msgHandler()
+    runs on EPTF_StatHandlerClient_CT
+    {
+      var EPTF_StatHandler_MgmtMsg_Response vl_response;
+      var EPTF_StatHandler_CT vl_sender;
+      []v_EPTF_StatHandlerClient_MgmtPCO.receive(EPTF_StatHandler_MgmtMsg_Response:?) -> value vl_response
+      {
+        if(ischosen(vl_response.response.resetVarNameResp)) {
+          f_EPTF_StatHandlerClient_subscribeToResetButton(
+            vl_response.response.resetVarNameResp.resetVarComp,
+            vl_response.response.resetVarNameResp.resetVarName);
+          v_EPTF_StatHandlerClient_pendingMessages := v_EPTF_StatHandlerClient_pendingMessages - 1;
+        }
+        if(vl_response.sIdx >= 0) {
+          v_EPTF_StatHandlerClient_responseBuffer[vl_response.sIdx] := vl_response;
+          f_EPTF_Semaphore_unlock(vl_response.sIdx);
+          //f_EPTF_Semaphore_delete(vl_response.sIdx); - done by waitForUnlock
+        }
+        repeat;
+      }
+      [v_EPTF_StatHandlerClient_catchInvalidMessages]v_EPTF_StatHandlerClient_MgmtPCO.receive -> sender vl_sender
+      {
+        f_EPTF_StatHandlerLogging_error(%definitionId&": unexpected message received from "&log2str(vl_sender));
+      }
+    }
+
+  } // group StatHandlerClient_Communication
+
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_StatHandlerClient_checkVar
+  //
+  //  Purpose:
+  //    Function for checking local or remote variable type
+  //
+  //  Parameters:
+  //    pl_compRef - *in* <EPTF_Var_CT> - component reference
+  //    pl_varName - *in* *charstring* - variable name
+  //    pl_template - *template* <EPTF_Var_DirectContent> - template to match to
+  //
+  //  Return Value:
+  //    *boolean* - true on match
+  //
+  //  Errors & assertions:
+  //    -
+  //
+  //  Detailed Comments:
+  //    -
+  ///////////////////////////////////////////////////////////
+  private function f_EPTF_StatHandlerClient_checkVar(
+    in EPTF_Var_CT pl_compRef,
+    in charstring pl_varName,
+    template EPTF_Var_DirectContent pl_template)
+  runs on EPTF_StatHandlerClient_CT
+  return boolean
+  {
+    var EPTF_Var_DirectContent vl_content;
+    if(pl_compRef == null or pl_compRef == self) {
+      f_EPTF_Var_getContent(f_EPTF_Var_getId(pl_varName), vl_content);
+    } else {
+      if(not f_EPTF_Var_getRemoteContent(pl_compRef, pl_varName, vl_content)) {
+        f_EPTF_Base_assert(%definitionId&": remote Var "&pl_varName&" not available", false);
+      }
+    }
+    return match(vl_content, pl_template);
+  }
+
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_StatHandlerClient_checkVarPresence
+  //
+  //  Purpose:
+  //    Function for checking if a local or remote variable is present
+  //
+  //  Parameters:
+  //    pl_compRef - *in* <EPTF_Var_CT> - component reference
+  //    pl_varName - *in* *charstring* - variable name
+  //
+  //  Return Value:
+  //    *boolean* - true if present
+  //
+  //  Errors & assertions:
+  //    -
+  //
+  //  Detailed Comments:
+  //    -
+  ///////////////////////////////////////////////////////////
+  private function f_EPTF_StatHandlerClient_checkVarPresence(
+    in EPTF_Var_CT pl_compRef,
+    in charstring pl_varName)
+  runs on EPTF_StatHandlerClient_CT
+  return boolean
+  {
+    if(pl_compRef == null or pl_compRef == self) {
+      return f_EPTF_Var_getId(pl_varName) >= 0;
+    } else {
+      return f_EPTF_Var_isPresentRemote(pl_compRef, pl_varName);
+    }
+  }
+
+} // group Private
+
+} // end of module

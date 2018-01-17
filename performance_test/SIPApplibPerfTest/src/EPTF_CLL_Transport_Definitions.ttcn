@@ -1,0 +1,88 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_CLL_Transport_Definitions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 512
+//  Updated:  2012-02-16
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////
+//  Module: EPTF_CLL_Transport_Definitions
+// 
+//  Purpose:
+//    Type and constant definitions for the commont transport layer
+// 
+//  Module Parameters:
+//    -
+// 
+//  Module depends on:
+//    <EPTF_CLL_Common_Definitions>
+//    <EPTF_CLL_FBQ_Definitions>
+//    <EPTF_CLL_Logging_Definitions>
+//    <EPTF_CLL_TransportIPL2_Definitions>
+//    <EPTF_CLL_TransportIPL4_Definitions>
+// 
+//  Current Owner:
+//    ELSZSKU
+// 
+//  Last Review Date:
+//    -
+// 
+//  Detailed Comments:
+//    -
+//
+///////////////////////////////////////////////////////////
+module EPTF_CLL_Transport_Definitions
+// [.objid{ itu_t(0) identified_organization(4) etsi(0)
+// identified_organization(127) ericsson(5) testing(0)
+// <put further nodes here if needed>}]
+{
+import from EPTF_CLL_Common_Definitions all;
+import from EPTF_CLL_FBQ_Definitions all;
+import from EPTF_CLL_Logging_Definitions all;
+
+import from EPTF_CLL_TransportIPL2_Definitions all;
+import from EPTF_CLL_TransportIPL4_Definitions all;
+
+
+type component EPTF_Transport_CT extends EPTF_FBQ_CT,
+EPTF_TransportIPL4_CT, EPTF_TransportIPL2_CT{
+  private var boolean v_Transport_Common_initialized := false
+  private var EPTF_IntegerArray2D v_Transport_Common_transportId2UniqueId := {};
+  private var EPTF_FreeBusyQueue v_Transport_Common_uniqueId2TransportId := c_EPTF_emptyFreeBusyQueue;
+  private var EPTF_Transport_LgenTypes v_lgenTypes := {};
+}
+
+type record of EPTF_CharstringList EPTF_Transport_LgenTypes;
+
+const charstring c_EPTF_Transport_loggingComponentMask := "EPTF_Transport"
+
+  ///////////////////////////////////////////////////////////////////////////////
+  //  Constant: c_EPTF_Transport_loggingEventClasses
+  // 
+  //  Purpose:
+  //    list of logging event class names used on the EPTF Transport component
+  // 
+  //  Detailed Comments:
+  //    <EPTF_Logging_EventClassPrefixList> { "Debug" }
+  ///////////////////////////////////////////////////////////////////////////////
+  const EPTF_Logging_EventClassPrefixList c_EPTF_Transport_loggingEventClasses := { "Debug" };
+  
+  ///////////////////////////////////////////////////////////////////////////////
+  //  Constant: c_EPTF_Transport_loggingClassIdx_Debug
+  // 
+  //  Purpose:
+  //    logging class index for Debug
+  // 
+  //  Detailed Comments:
+  //    *0*
+  ///////////////////////////////////////////////////////////////////////////////
+  const integer c_EPTF_Transport_loggingClassIdx_Debug := 0;
+
+}  // end of module

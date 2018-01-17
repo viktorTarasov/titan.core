@@ -1,0 +1,1196 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************///  File:     EPTF_CLL_Transport_Functions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 512
+//  Updated:  2012-02-16
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////
+//  Module: EPTF_CLL_Transport_Functions
+// 
+//  Purpose:
+//    Functions for the commont transport layer
+// 
+//  Module Parameters:
+//    -
+// 
+//  Module depends on:
+//    <EPTF_CLL_Base_Functions>
+//    <Socket_API_Definitions>
+//    <EPTF_CLL_Common_Definitions>
+//    <EPTF_CLL_Common_Functions>
+//    <EPTF_CLL_FBQ_Definitions>
+//    <EPTF_CLL_FBQ_Functions>
+//    <EPTF_CLL_Logging_Definitions>
+//    <EPTF_CLL_Logging_Functions>
+//    <EPTF_CLL_Transport_Definitions all
+//    <EPTF_CLL_Transport_CommonDefinitions all
+//    <EPTF_CLL_TransportIPL2_Definitions>
+//    <EPTF_CLL_TransportIPL2_Functions>
+//    <EPTF_CLL_TransportIPL4_Definitions>
+//    <EPTF_CLL_TransportIPL4_Functions>
+// 
+//  Current Owner:
+//    ELSZSKU
+// 
+//  Last Review Date:
+//    -
+// 
+//  Detailed Comments:
+//    -
+//
+///////////////////////////////////////////////////////////
+module EPTF_CLL_Transport_Functions
+// [.objid{ itu_t(0) identified_organization(4) etsi(0)
+// identified_organization(127) ericsson(5) testing(0)
+// <put further nodes here if needed>}]
+{
+import from EPTF_CLL_Base_Functions all;
+
+import from Socket_API_Definitions all;
+import from EPTF_CLL_Common_Definitions all;
+import from EPTF_CLL_Common_Functions all;
+import from EPTF_CLL_FBQ_Definitions all;
+import from EPTF_CLL_FBQ_Functions all;
+import from EPTF_CLL_Logging_Definitions all;
+import from EPTF_CLL_Logging_Functions all;
+import from EPTF_CLL_Transport_Definitions all
+import from EPTF_CLL_Transport_CommonDefinitions all
+import from EPTF_CLL_TransportIPL2_Definitions all
+import from EPTF_CLL_TransportIPL2_Functions all;
+import from EPTF_CLL_TransportIPL4_Definitions all;
+import from EPTF_CLL_TransportIPL4_Functions all;
+import from IPL4asp_Types all;
+
+friend module EPTF_Transport_Test_Testcases, EPTF_Transport_Test_perfTestcases;
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Transport_init
+// 
+//  Purpose:
+//    Initializes the extended components, and the logging of the Transport
+//
+//  Parameters:
+//    pl_transportType - *in* - <EPTF_Transport_TransportType> - Testport type
+//    pl_selfName - *in* - *charstring* - Component name
+//    pl_interfaceList - *in* - <EPTF_TransportIPL4_InterfaceInformationList> - The list of IPL4 interfaces
+//    pl_enableBufferManager - *in* - *boolean* - Enable the BufferManager function
+//
+//  Return Value:
+//    - 
+//
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//    See also <f_EPTF_TransportIPL2_init> and <f_EPTF_TransportIPL2_init> functions.
+//    
+/////////////////////////////////////////////////////////// 
+public function f_EPTF_Transport_init(
+  in EPTF_Transport_TransportType pl_transportType,
+  in charstring pl_selfName,
+  in EPTF_Transport_InterfaceInformationList pl_interfaceList := {},
+  in boolean pl_enableBufferManager := true)
+runs on EPTF_Transport_CT
+{
+  if(not v_Transport_Common_initialized){
+    select( pl_transportType ){
+      case ( IPL4 ){
+        EPTF_CLL_TransportIPL4_Functions.f_EPTF_Transport_init(IPL4, pl_selfName, pl_interfaceList, pl_enableBufferManager)
+      }
+      case ( IPL2 ){
+        EPTF_CLL_TransportIPL2_Functions.f_EPTF_Transport_init(IPL2, pl_selfName, pl_interfaceList, pl_enableBufferManager)
+      }
+      case ( BOTH ){
+        EPTF_CLL_TransportIPL4_Functions.f_EPTF_Transport_init(IPL4, pl_selfName, pl_interfaceList, pl_enableBufferManager)
+        EPTF_CLL_TransportIPL2_Functions.f_EPTF_Transport_init(IPL2, pl_selfName, pl_interfaceList, pl_enableBufferManager)
+      }
+      case else
+      {
+        f_EPTF_Transport_testportTypeError(%definitionId,pl_transportType)
+      }
+    }
+    f_EPTF_Logging_registerComponentMasks(
+      c_EPTF_Transport_loggingComponentMask,
+      c_EPTF_Transport_loggingEventClasses, 
+      EPTF_Logging_CLL);
+    f_EPTF_FBQ_initFreeBusyQueue(v_Transport_Common_uniqueId2TransportId);
+    v_Transport_Common_initialized := true
+    f_EPTF_Base_registerCleanup(refers(f_EPTF_Transport_cleanup));
+  }
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Transport_cleanup
+// 
+//  Purpose:
+//    Cleanup. Yet it does nothing.
+///////////////////////////////////////////////////////////
+private function f_EPTF_Transport_cleanup()
+runs on EPTF_Transport_CT{
+  if(v_Transport_Common_initialized) {
+    v_Transport_Common_transportId2UniqueId := {};
+    v_Transport_Common_uniqueId2TransportId := c_EPTF_emptyFreeBusyQueue;
+    v_Transport_Common_initialized := false;
+    var integer i;
+    const EPTF_Transport_TransportType cl_IPL4 := IPL4;
+    if(sizeof(v_lgenTypes) > enum2int(cl_IPL4)) {
+      for(i:=0;i<sizeof(v_lgenTypes[enum2int(cl_IPL4)]);i:=i+1) {
+        EPTF_CLL_TransportIPL4_Functions.f_EPTF_Transport_registerConnCallbacks(
+          IPL4,
+          v_lgenTypes[enum2int(cl_IPL4)][i],
+          null,
+          null);
+      }
+    }
+    const EPTF_Transport_TransportType cl_IPL2 := IPL2;
+    if(sizeof(v_lgenTypes) > enum2int(cl_IPL2)) {
+      for(i:=0;i<sizeof(v_lgenTypes[enum2int(cl_IPL2)]);i:=i+1) {
+        EPTF_CLL_TransportIPL2_Functions.f_EPTF_Transport_registerConnCallbacks(
+          IPL2,
+          v_lgenTypes[enum2int(cl_IPL2)][i],
+          null,
+          null);
+      }
+    }
+    v_lgenTypes := {};
+  }
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Transport_registerMsgLenCallback4LGenType
+// 
+//  Purpose:
+//    Sets the message length calclutaion function for an LGen type.
+//
+//  Parameters:
+//    pl_transportType - *in* - <EPTF_Transport_TransportType> - Testport type
+//    pl_function - *in* - <EPTF_Transport_GetMsgLen_FT> - the message length calculation function reference
+//    pl_msgLenArgs - *in* - <EPTF_IntegerList> - the function arguments
+//    pL_LGenType - *in* *charstring* - the name of the LGen type
+//
+/////////////////////////////////////////////////////////// 
+public function f_EPTF_Transport_registerMsgLenCallback4LGenType(
+  in EPTF_Transport_TransportType pl_transportType,
+  in EPTF_Transport_GetMsgLen_FT pl_function,
+  in EPTF_IntegerList pl_msgLenArgs,
+  in charstring pl_LGenType) 
+runs on EPTF_Transport_CT
+{
+
+  select( pl_transportType ){
+    case ( IPL4 ){
+      EPTF_CLL_TransportIPL4_Functions.f_EPTF_Transport_registerMsgLenCallback4LGenType(pl_transportType, pl_function, pl_msgLenArgs, pl_LGenType)
+      EPTF_CLL_TransportIPL4_Functions.f_EPTF_Transport_registerConnCallbacks(
+        IPL4,
+        pl_LGenType,
+        refers(f_EPTF_Transport_connectionOpened),
+        refers(EPTF_Transport_connectionClosed));
+      while(sizeof(v_lgenTypes) <= enum2int(pl_transportType)) { v_lgenTypes[sizeof(v_lgenTypes)] := {} }
+      var integer vl_nofLgenTypes := sizeof(v_lgenTypes[enum2int(pl_transportType)]);
+      v_lgenTypes[enum2int(pl_transportType)][vl_nofLgenTypes] := pl_LGenType;
+    }
+    case ( IPL2 ){
+      EPTF_CLL_TransportIPL2_Functions.f_EPTF_Transport_registerMsgLenCallback4LGenType(pl_transportType, pl_function, pl_msgLenArgs, pl_LGenType)
+      EPTF_CLL_TransportIPL2_Functions.f_EPTF_Transport_registerConnCallbacks(
+        IPL2,
+        pl_LGenType,
+        refers(f_EPTF_Transport_connectionOpened),
+        refers(EPTF_Transport_connectionClosed));
+      while(sizeof(v_lgenTypes) <= enum2int(pl_transportType)) { v_lgenTypes[sizeof(v_lgenTypes)] := {} }
+      var integer vl_nofLgenTypes := sizeof(v_lgenTypes[enum2int(pl_transportType)]);
+      v_lgenTypes[enum2int(pl_transportType)][vl_nofLgenTypes] := pl_LGenType;
+    }
+    case ( BOTH ){
+      EPTF_CLL_TransportIPL4_Functions.f_EPTF_Transport_registerMsgLenCallback4LGenType(IPL4, pl_function, pl_msgLenArgs, pl_LGenType)
+      EPTF_CLL_TransportIPL2_Functions.f_EPTF_Transport_registerMsgLenCallback4LGenType(IPL2, pl_function, pl_msgLenArgs, pl_LGenType)
+      EPTF_CLL_TransportIPL4_Functions.f_EPTF_Transport_registerConnCallbacks(
+        IPL4,
+        pl_LGenType,
+        refers(f_EPTF_Transport_connectionOpened),
+        refers(EPTF_Transport_connectionClosed));
+      EPTF_CLL_TransportIPL2_Functions.f_EPTF_Transport_registerConnCallbacks(
+        IPL2,
+        pl_LGenType,
+        refers(f_EPTF_Transport_connectionOpened),
+        refers(EPTF_Transport_connectionClosed));
+      const EPTF_Transport_TransportType cl_IPL4 := IPL4;
+      const EPTF_Transport_TransportType cl_IPL2 := IPL2;
+      while(sizeof(v_lgenTypes) <= enum2int(cl_IPL2)) { v_lgenTypes[sizeof(v_lgenTypes)] := {} }
+      while(sizeof(v_lgenTypes) <= enum2int(cl_IPL4)) { v_lgenTypes[sizeof(v_lgenTypes)] := {} }
+      var integer vl_nofLgenTypes := sizeof(v_lgenTypes[enum2int(cl_IPL4)]);
+      v_lgenTypes[enum2int(cl_IPL4)][vl_nofLgenTypes] := pl_LGenType;
+      vl_nofLgenTypes := sizeof(v_lgenTypes[enum2int(cl_IPL2)]);
+      v_lgenTypes[enum2int(cl_IPL2)][vl_nofLgenTypes] := pl_LGenType;
+    }
+    case else{
+      f_EPTF_Transport_testportTypeError(%definitionId,pl_transportType)
+    }
+  }
+
+}
+
+private function f_EPTF_Transport_connectionOpened(
+  in EPTF_Transport_TransportType pl_transportType,
+  in Socket_API_Definitions.ConnectionId pl_connId)
+runs on EPTF_Transport_CT
+{
+  var integer vl_uniqueId := f_EPTF_Transport_newUniqueConnId(pl_transportType, pl_connId);
+  select(pl_transportType) {
+  case(IPL4) {
+    EPTF_CLL_TransportIPL4_Functions.f_EPTF_Transport_setConnectionUniqueId(pl_connId, vl_uniqueId);
+  }
+  case(IPL2) {
+    EPTF_CLL_TransportIPL2_Functions.f_EPTF_Transport_setConnectionUniqueId(pl_connId, vl_uniqueId);
+  }
+  case else {
+    f_EPTF_Transport_testportTypeError(%definitionId,pl_transportType)
+  }
+  }
+}
+
+private function EPTF_Transport_connectionClosed(
+  in EPTF_Transport_TransportType pl_transportType,
+  in integer pl_uniqueId)
+runs on EPTF_Transport_CT
+{
+  f_EPTF_Transport_freeUniqueConnId(pl_uniqueId);
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Transport_setUserData
+// 
+//  Purpose:
+//    Function to set user data 
+//
+//  Parameters:
+//    pl_transportType - *in* - <EPTF_Transport_TransportType> - Testport type
+//    pl_connId - *in* - <ConnectionId> - The ID of the connection
+//    pl_userData - *in* - *integer* - The data information
+//    pl_result - *out* - <Result> - result
+//
+//  Return Value:
+//    Result - the result of the operation 
+//
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//    
+/////////////////////////////////////////////////////////// 
+public function f_EPTF_Transport_setUserData(
+  in EPTF_Transport_TransportType pl_transportType,
+  in Socket_API_Definitions.ConnectionId pl_connId, 
+  in integer pl_userData,
+  out Socket_API_Definitions.Result pl_result)
+runs on EPTF_Transport_CT
+{
+  //if(tsp_EPTF_Transport_uniqueIds) {
+    var EPTF_Transport_TransportType vl_transportType;
+    pl_result.errorCode := omit;
+    f_EPTF_Transport_getConnIdFromUniqueId(pl_connId, vl_transportType, pl_connId, pl_result);
+    if(ispresent(pl_result.errorCode)) { return; }
+    f_EPTF_Base_assert(%definitionId&": pl_transportType != vl_transportType", pl_transportType == vl_transportType);
+    pl_transportType := vl_transportType;
+  //}
+  select( pl_transportType ){
+    case ( IPL4 ){
+      EPTF_CLL_TransportIPL4_Functions.f_EPTF_Transport_setUserData(pl_transportType,pl_connId, pl_userData,pl_result)
+    }
+    case ( IPL2 ){
+      EPTF_CLL_TransportIPL2_Functions.f_EPTF_Transport_setUserData(pl_transportType, pl_connId, pl_userData,pl_result)
+    }
+    case else{
+      f_EPTF_Transport_testportTypeError(%definitionId,pl_transportType)
+    }
+  }
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Transport_getUserData
+// 
+//  Purpose:
+//    Function to get user data 
+//
+//  Parameters:
+//    pl_transportType - *in* - <EPTF_Transport_TransportType> - Testport type
+//    pl_connId - *in* - <ConnectionId> - The ID of the connection
+//    pl_userData - *out* - *integer* - The data information
+//    pl_result - *out* - <Result> - result
+//
+//  Return Value:
+//    Result - the result of the operation 
+//
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//    
+/////////////////////////////////////////////////////////// 
+public function f_EPTF_Transport_getUserData(
+  in EPTF_Transport_TransportType pl_transportType,
+  in Socket_API_Definitions.ConnectionId pl_connId, 
+  out integer pl_userData,
+  out Socket_API_Definitions.Result pl_result)
+runs on EPTF_Transport_CT
+{
+  //if(tsp_EPTF_Transport_uniqueIds) {
+    var EPTF_Transport_TransportType vl_transportType;
+    pl_result.errorCode := omit;
+    f_EPTF_Transport_getConnIdFromUniqueId(pl_connId, vl_transportType, pl_connId, pl_result);
+    if(ispresent(pl_result.errorCode)) { return; }
+    f_EPTF_Base_assert(%definitionId&": pl_transportType != vl_transportType", pl_transportType == vl_transportType);
+    pl_transportType := vl_transportType;
+  //}
+  select( pl_transportType ){
+    case ( IPL4 ){
+      EPTF_CLL_TransportIPL4_Functions.f_EPTF_Transport_getUserData(pl_transportType, pl_connId, pl_userData, pl_result)
+    }
+    case ( IPL2 ){
+      EPTF_CLL_TransportIPL2_Functions.f_EPTF_Transport_getUserData(pl_transportType, pl_connId, pl_userData, pl_result)
+    }
+    case else{
+      f_EPTF_Transport_testportTypeError(%definitionId,pl_transportType)
+    }
+  }
+}
+
+//public function f_EPTF_TransportIPL4_getConnectionDetails
+//The function does not exist in IPL2
+//FIXME
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Transport_registerMsgCallback
+// 
+//  Purpose:
+//    Function to set callback function for handling incoming messages
+//
+//  Parameters:
+//    pl_transportType - *in* - <EPTF_Transport_TransportType> - Testport type
+//    pl_LGenType - *in* - *charstring* - the type of the LGen component registered this function
+//    pl_msgHandler - *in* - <EPTF_Transport_MsgCallback_FT> - The handler function to the receive template
+//    pl_eventHandler - *in* - <EPTF_Transport_EventCallback_FT> - The handler function to the receive event
+//
+//  Return Value:
+//    - 
+//
+//  Errors:
+//    pl_LgenType should not be empty string.
+//
+//  Detailed Comments:
+//    
+///////////////////////////////////////////////////////////
+public function f_EPTF_Transport_registerMsgCallback(
+  in EPTF_Transport_TransportType pl_transportType,
+  in charstring pl_LGenType,
+  in EPTF_Transport_MsgCallback_FT pl_msgHandler,
+  in EPTF_Transport_EventCallback_FT pl_eventHandler := null)
+runs on EPTF_Transport_CT
+{
+  select( pl_transportType ){
+    case ( IPL4 ){
+      //TODO : wrong function types FIXME
+      EPTF_CLL_TransportIPL4_Functions.f_EPTF_Transport_registerMsgCallback(pl_transportType, pl_LGenType, pl_msgHandler, pl_eventHandler )
+      EPTF_CLL_TransportIPL4_Functions.f_EPTF_Transport_registerConnCallbacks(
+        IPL4,
+        pl_LGenType,
+        refers(f_EPTF_Transport_connectionOpened),
+        refers(EPTF_Transport_connectionClosed));
+      while(sizeof(v_lgenTypes) <= enum2int(pl_transportType)) { v_lgenTypes[sizeof(v_lgenTypes)] := {} }
+      var integer vl_nofLgenTypes := sizeof(v_lgenTypes[enum2int(pl_transportType)]);
+      v_lgenTypes[enum2int(pl_transportType)][vl_nofLgenTypes] := pl_LGenType;
+    }
+    case ( IPL2 ){
+      EPTF_CLL_TransportIPL2_Functions.f_EPTF_Transport_registerMsgCallback(pl_transportType, pl_LGenType, pl_msgHandler, pl_eventHandler )
+      EPTF_CLL_TransportIPL2_Functions.f_EPTF_Transport_registerConnCallbacks(
+        IPL2,
+        pl_LGenType,
+        refers(f_EPTF_Transport_connectionOpened),
+        refers(EPTF_Transport_connectionClosed));
+      while(sizeof(v_lgenTypes) <= enum2int(pl_transportType)) { v_lgenTypes[sizeof(v_lgenTypes)] := {} }
+      var integer vl_nofLgenTypes := sizeof(v_lgenTypes[enum2int(pl_transportType)]);
+      v_lgenTypes[enum2int(pl_transportType)][vl_nofLgenTypes] := pl_LGenType;
+    }
+    case ( BOTH ){
+      EPTF_CLL_TransportIPL4_Functions.f_EPTF_Transport_registerMsgCallback(IPL4, pl_LGenType, pl_msgHandler, pl_eventHandler )
+      EPTF_CLL_TransportIPL2_Functions.f_EPTF_Transport_registerMsgCallback(IPL2, pl_LGenType, pl_msgHandler, pl_eventHandler )
+      EPTF_CLL_TransportIPL4_Functions.f_EPTF_Transport_registerConnCallbacks(
+        IPL4,
+        pl_LGenType,
+        refers(f_EPTF_Transport_connectionOpened),
+        refers(EPTF_Transport_connectionClosed));
+      EPTF_CLL_TransportIPL2_Functions.f_EPTF_Transport_registerConnCallbacks(
+        IPL2,
+        pl_LGenType,
+        refers(f_EPTF_Transport_connectionOpened),
+        refers(EPTF_Transport_connectionClosed));
+      const EPTF_Transport_TransportType cl_IPL4 := IPL4;
+      const EPTF_Transport_TransportType cl_IPL2 := IPL2;
+      while(sizeof(v_lgenTypes) <= enum2int(cl_IPL4)) { v_lgenTypes[sizeof(v_lgenTypes)] := {} }
+      while(sizeof(v_lgenTypes) <= enum2int(cl_IPL2)) { v_lgenTypes[sizeof(v_lgenTypes)] := {} }
+      var integer vl_nofLgenTypes := sizeof(v_lgenTypes[enum2int(cl_IPL4)]);
+      v_lgenTypes[enum2int(cl_IPL4)][vl_nofLgenTypes] := pl_LGenType;
+      vl_nofLgenTypes := sizeof(v_lgenTypes[enum2int(cl_IPL2)]);
+      v_lgenTypes[enum2int(cl_IPL2)][vl_nofLgenTypes] := pl_LGenType;
+    }
+    case else{
+      f_EPTF_Transport_testportTypeError(%definitionId,pl_transportType)
+    }
+  }
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Transport_connect
+// 
+//  Purpose:
+//    Function to create a new connection
+//
+//  Parameters:
+//    pl_transportType - *in* - <EPTF_Transport_TransportType> - Testport type
+//    pl_proto - *in* <ProtoTuple> - protocol
+//    pl_localHost - *in* <HostName> - local host
+//    pl_localPort - *in* <PortNumber> - local port number
+//    pl_remoteHost - *in* <HostName> - remote host
+//    pl_remotePort - *in* <PortNumber> - remote port number
+//    pl_LGenType - *in* - *charstring* - LGen type
+//    pl_result - *out* - <Result> - result
+//    pl_automaticBuffering - *in* - *boolean* - buffering is automatic?
+//	  pl_options - *in* - *OptionList* - additional options of the connection ex.: sctpAdditionalLocalAddresses to enable SCTP multihoming 
+//
+//  Return Value:
+//    *integer* - connection/socket ID, or -1 on error
+//
+//  Errors:
+//    - invalid LGenType
+//    - already listening on localHost:localPort
+///////////////////////////////////////////////////////////
+public function f_EPTF_Transport_connect(
+  in EPTF_Transport_TransportType pl_transportType,
+  in Socket_API_Definitions.ProtoTuple pl_proto,
+  in Socket_API_Definitions.HostName pl_localHost,
+  in Socket_API_Definitions.PortNumber pl_localPort,
+  in Socket_API_Definitions.HostName pl_remoteHost,
+  in Socket_API_Definitions.PortNumber pl_remotePort,
+  in charstring pl_LGenType,
+  out Socket_API_Definitions.Result pl_result,
+  in boolean pl_automaticBuffering := false,  
+  in OptionList pl_options := {},
+  in EPTF_TransportIPL2_VLAN_TCIs pl_vlanTCIs := {})
+runs on EPTF_Transport_CT
+return integer
+{
+  var integer vl_connId := c_ConnectionId_invalidConnection;
+  select( pl_transportType ){
+    case ( IPL4 ){
+      vl_connId := EPTF_CLL_TransportIPL4_Functions.f_EPTF_Transport_connect(pl_transportType, pl_proto, pl_localHost, pl_localPort, pl_remoteHost, pl_remotePort, pl_LGenType, pl_result, pl_automaticBuffering, pl_options)
+    }
+    case ( IPL2 ){
+      vl_connId := EPTF_CLL_TransportIPL2_Functions.f_EPTF_Transport_connect(pl_transportType, pl_proto, pl_localHost, pl_localPort, pl_remoteHost, pl_remotePort, pl_LGenType, pl_result, pl_automaticBuffering, pl_vlanTCIs)
+    }
+    case else{
+      f_EPTF_Transport_testportTypeError(%definitionId,pl_transportType)
+    }
+  }
+  //if(tsp_EPTF_Transport_uniqueIds) {
+//    vl_connId := f_EPTF_Transport_newUniqueConnId(pl_transportType, vl_connId);
+// no need to call, EPTF_CLL_TransportIPL*_Functions.f_EPTF_Transport_connect will call f_EPTF_Transport_connectionOpened
+  //}
+  return vl_connId;
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Transport_listen
+// 
+//  Purpose:
+//    Function to listen on a socket
+//
+//  Parameters:
+//    pl_transportType - *in* - <EPTF_Transport_TransportType> - Testport type
+//    pl_proto - *in* <ProtoTuple> - protocol
+//    pl_hostName - *in* <HostName> - local host
+//    pl_portNumber - *in* <PortNumber> - local port number
+//    pl_LGenType - *in* - *charstring* - LGen type
+//    pl_result - *out* - <Result> - result
+//    pl_automaticBuffering - *in* - *boolean* - buffering is automatic?
+//	  pl_options - *in* - *OptionList* - additional options
+//
+//  Return Value:
+//    *integer* - connection/socket ID, or -1 on error
+//
+//  Errors:
+//    - invalid LGenType
+///////////////////////////////////////////////////////////
+public function f_EPTF_Transport_listen(
+  in EPTF_Transport_TransportType pl_transportType,
+  in Socket_API_Definitions.ProtoTuple pl_proto,
+  in Socket_API_Definitions.HostName pl_hostName,
+  in Socket_API_Definitions.PortNumber pl_portNumber,
+  in charstring pl_LGenType,
+  out Socket_API_Definitions.Result pl_result,
+  in boolean pl_automaticBuffering := false,
+  in OptionList pl_options := {},
+  in EPTF_TransportIPL2_VLAN_TCIs pl_vlanTCIs := {}
+)
+runs on EPTF_Transport_CT
+return Socket_API_Definitions.ConnectionId
+{
+  var integer vl_connId := c_ConnectionId_invalidConnection;
+  select( pl_transportType ){
+    case ( IPL4 ){
+      vl_connId := EPTF_CLL_TransportIPL4_Functions.f_EPTF_Transport_listen(pl_transportType, pl_proto, pl_hostName, pl_portNumber, pl_LGenType, pl_result, pl_automaticBuffering, pl_options)
+    }
+    case ( IPL2 ){
+      vl_connId := EPTF_CLL_TransportIPL2_Functions.f_EPTF_Transport_listen(pl_transportType, pl_proto, pl_hostName, pl_portNumber, pl_LGenType, pl_result, pl_automaticBuffering, pl_vlanTCIs)
+    }
+    case else{
+      f_EPTF_Transport_testportTypeError(%definitionId,pl_transportType)
+    }
+  }
+  //if(tsp_EPTF_Transport_uniqueIds) {
+//    vl_connId := f_EPTF_Transport_newUniqueConnId(pl_transportType, vl_connId);
+// no need to call, EPTF_CLL_TransportIPL*_Functions.f_EPTF_Transport_connect will call f_EPTF_Transport_connectionOpened
+  //}
+  return vl_connId;
+}
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Transport_close
+// 
+//  Purpose:
+//    Function to close a connection or listening socket
+//
+//  Parameters:
+//    pl_transportType - *in* - <EPTF_Transport_TransportType> - Testport type
+//    pl_connId - *in* <ConnectionId> - connection/socket ID
+//    pl_result - *out* - <Result> - result
+//
+//  Return Value:
+//    *boolean* - true on success
+//
+//  Errors:
+//    - invalid connection/socket ID
+///////////////////////////////////////////////////////////
+public function f_EPTF_Transport_close(
+  in EPTF_Transport_TransportType pl_transportType,
+  in Socket_API_Definitions.ConnectionId pl_connId,
+  out Socket_API_Definitions.Result pl_result,
+  in Socket_API_Definitions.ProtoTuple pl_proto:={unspecified:={}})
+runs on EPTF_Transport_CT
+return boolean
+{
+  if(pl_connId < 0)  { return false; }
+  //if(tsp_EPTF_Transport_uniqueIds) {
+    var EPTF_Transport_TransportType vl_transportType;
+    var integer vl_uniqueId := pl_connId;
+    pl_result.errorCode := omit;
+    f_EPTF_Transport_getConnIdFromUniqueId(vl_uniqueId, vl_transportType, pl_connId, pl_result);
+    if(ispresent(pl_result.errorCode)) { return false; }
+    f_EPTF_Base_assert(%definitionId&": pl_transportType != vl_transportType", pl_transportType == vl_transportType);
+    pl_transportType := vl_transportType;
+  //}
+  var boolean vl_retVal := false;
+  select( pl_transportType ){
+    case ( IPL4 ){
+      vl_retVal := EPTF_CLL_TransportIPL4_Functions.f_EPTF_Transport_close(pl_transportType, pl_connId, pl_result,pl_proto)
+    }
+    case ( IPL2 ){
+      vl_retVal := EPTF_CLL_TransportIPL2_Functions.f_EPTF_Transport_close(pl_transportType, pl_connId, pl_result)
+    }
+    case else{
+      f_EPTF_Transport_testportTypeError(%definitionId,pl_transportType)
+    }
+  }
+  //if(tsp_EPTF_Transport_uniqueIds and vl_retVal) {
+/*  if(vl_retVal) {
+    f_EPTF_Transport_freeUniqueConnId(vl_uniqueId);
+  }*/ // no need to call, EPTF_CLL_TransportIPL*_Functions.f_EPTF_Transport_close will call EPTF_Transport_connectionClosed
+  return vl_retVal;
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Transport_send
+// 
+//  Purpose:
+//    Function to send a message on a connection
+//
+//  Parameters:
+//    pl_transportType - *in* - <EPTF_Transport_TransportType> - Testport type
+//    pl_connId - *in* <ConnectionId> - connection ID
+//    pl_msg - *in* - *octetstring* - the message to send
+//    pl_result - *out* - <Result> - result
+//    pl_needBuffering - *in* - *boolean* - buffering is needed?
+//
+//  Return Value:
+//    *boolean* - true on success, false on error
+//
+//  Errors:
+//    - invalid connection ID
+//    - no connection (remote peer) exists for socket
+///////////////////////////////////////////////////////////
+public function f_EPTF_Transport_send(
+  in EPTF_Transport_TransportType pl_transportType,
+  in Socket_API_Definitions.ConnectionId pl_connId,
+  in octetstring pl_msg,
+  out Socket_API_Definitions.Result pl_result,
+  in boolean pl_needBuffering := false,
+  in Socket_API_Definitions.ProtoTuple pl_proto:={unspecified:={}})
+runs on EPTF_Transport_CT
+return boolean
+{
+  //if(tsp_EPTF_Transport_uniqueIds) {
+    var EPTF_Transport_TransportType vl_transportType;
+    pl_result.errorCode := omit;
+    f_EPTF_Transport_getConnIdFromUniqueId(pl_connId, vl_transportType, pl_connId, pl_result);
+    if(ispresent(pl_result.errorCode)) { return false; }
+    f_EPTF_Base_assert(%definitionId&": pl_transportType != vl_transportType", pl_transportType == vl_transportType);
+    pl_transportType := vl_transportType;
+  //}
+  select( pl_transportType ){
+    case ( IPL4 ){
+      return EPTF_CLL_TransportIPL4_Functions.f_EPTF_Transport_send(pl_transportType, pl_connId, pl_msg, pl_result, pl_needBuffering, pl_proto)
+    }
+    case ( IPL2 ){
+      return EPTF_CLL_TransportIPL2_Functions.f_EPTF_Transport_send(pl_transportType, pl_connId, pl_msg, pl_result, pl_needBuffering)
+    }
+    case else{
+      f_EPTF_Transport_testportTypeError(%definitionId,pl_transportType)
+    }
+  }
+  return false
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Transport_sendTo
+// 
+//  Purpose:
+//    Function to send a message to a remote peer
+//
+//  Parameters:
+//    pl_transportType - *in* - <EPTF_Transport_TransportType> - Testport type
+//    pl_connId - *in* <ConnectionId> - connection ID
+//    pl_remHost - *in* <HostName> - remote host
+//    pl_remotePort - *in* <PortNumber> - remote port number
+//    pl_msg - *in* - *octetstring* - the message to send
+//    pl_result - *out* - <Result> - result
+//    pl_needBuffering - *in* - *boolean* - buffering is needed?
+//
+//  Return Value:
+//    *boolean* - true on success, false on error
+//
+//  Errors:
+//    - invalid connection ID
+///////////////////////////////////////////////////////////
+public function f_EPTF_Transport_sendTo(
+  in EPTF_Transport_TransportType pl_transportType,
+  in Socket_API_Definitions.ConnectionId pl_connId,
+  in Socket_API_Definitions.HostName pl_remHost,
+  in Socket_API_Definitions.PortNumber pl_remotePort,
+  in octetstring pl_msg,
+  out Socket_API_Definitions.Result pl_result,
+  in boolean pl_needBuffering := false)
+runs on EPTF_Transport_CT
+return boolean
+{
+  //if(tsp_EPTF_Transport_uniqueIds) {
+    var EPTF_Transport_TransportType vl_transportType;
+    pl_result.errorCode := omit;
+    f_EPTF_Transport_getConnIdFromUniqueId(pl_connId, vl_transportType, pl_connId, pl_result);
+    if(ispresent(pl_result.errorCode)) { return false; }
+    f_EPTF_Base_assert(%definitionId&": pl_transportType != vl_transportType", pl_transportType == vl_transportType);
+    pl_transportType := vl_transportType;
+  //}
+  select( pl_transportType ){
+    case ( IPL4 ){
+      return EPTF_CLL_TransportIPL4_Functions.f_EPTF_Transport_sendTo(pl_transportType, pl_connId, pl_remHost, pl_remotePort, pl_msg, pl_result, pl_needBuffering)
+    }
+    case ( IPL2 ){
+      return EPTF_CLL_TransportIPL2_Functions.f_EPTF_Transport_sendTo(pl_transportType, pl_connId, pl_remHost, pl_remotePort, pl_msg, pl_result, pl_needBuffering)
+    }
+    case else{
+      f_EPTF_Transport_testportTypeError(%definitionId,pl_transportType)
+    }
+  }
+  return false
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Transport_getLocalAddress
+// 
+//  Purpose:
+//    Function to get the local address of the connection
+//
+//  Parameters:
+//    pl_transportType - *in* - <EPTF_Transport_TransportType> - Testport type
+//    pl_connId - *in* - <ConnectionId> - The ID of the connection
+//    pl_hostName - *out* - <HostName> - local host name
+//    pl_portNumber - *out* - <PortNumber> - local port number
+//    pl_result - *out* - <Result> - result
+//
+//  Return Value:
+//    -
+//
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//    
+/////////////////////////////////////////////////////////// 
+public function f_EPTF_Transport_getLocalAddress(
+  in EPTF_Transport_TransportType pl_transportType,
+  in Socket_API_Definitions.ConnectionId pl_connId,
+  out Socket_API_Definitions.HostName pl_hostName,
+  out Socket_API_Definitions.PortNumber pl_portNumber,
+  out Socket_API_Definitions.Result pl_result)
+runs on EPTF_Transport_CT
+{
+  //if(tsp_EPTF_Transport_uniqueIds) {
+    var EPTF_Transport_TransportType vl_transportType;
+    pl_result.errorCode := omit;
+    f_EPTF_Transport_getConnIdFromUniqueId(pl_connId, vl_transportType, pl_connId, pl_result);
+    if(ispresent(pl_result.errorCode)) { return; }
+    f_EPTF_Base_assert(%definitionId&": pl_transportType != vl_transportType", pl_transportType == vl_transportType);
+    pl_transportType := vl_transportType;
+  //}
+
+  select( pl_transportType ){
+    case ( IPL4 ){
+    // TODO f_EPTF_Transport_getConnectionDetails?
+      EPTF_CLL_TransportIPL4_Functions.f_EPTF_Transport_getLocalAddress(pl_transportType, pl_connId, pl_hostName, pl_portNumber, pl_result)
+    }
+    case ( IPL2 ){     
+      EPTF_CLL_TransportIPL2_Functions.f_EPTF_Transport_getLocalAddress(pl_transportType, pl_connId, pl_hostName, pl_portNumber, pl_result)
+    }
+    case else{
+      f_EPTF_Transport_testportTypeError(%definitionId,pl_transportType)
+    }
+  }
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Transport_getRemoteAddress
+// 
+//  Purpose:
+//    Function to get the remote address of a connection
+//
+//  Parameters:
+//    pl_transportType - *in* - <EPTF_Transport_TransportType> - Testport type
+//    pl_connId - *in* - <ConnectionId> - The ID of the connection
+//    pl_hostName - *out* - <HostName> - remote host name
+//    pl_portNumber - *out* - <PortNumber> - remot host port number
+//    pl_result - *out* - <Result> - result
+//
+//  Return Value:
+//    -
+//
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//    
+/////////////////////////////////////////////////////////// 
+public function f_EPTF_Transport_getRemoteAddress(
+  in EPTF_Transport_TransportType pl_transportType,
+  in Socket_API_Definitions.ConnectionId pl_connId,
+  out Socket_API_Definitions.HostName pl_hostName,
+  out Socket_API_Definitions.PortNumber pl_portNumber,
+  out Socket_API_Definitions.Result pl_result)
+runs on EPTF_Transport_CT
+{
+  //if(tsp_EPTF_Transport_uniqueIds) {
+    var EPTF_Transport_TransportType vl_transportType;
+    pl_result.errorCode := omit;
+    f_EPTF_Transport_getConnIdFromUniqueId(pl_connId, vl_transportType, pl_connId, pl_result);
+    if(ispresent(pl_result.errorCode)) { return; }
+    f_EPTF_Base_assert(%definitionId&": pl_transportType != vl_transportType", pl_transportType == vl_transportType);
+    pl_transportType := vl_transportType;
+  //}
+
+  select( pl_transportType ){
+    case ( IPL4 ){
+      EPTF_CLL_TransportIPL4_Functions.f_EPTF_Transport_getRemoteAddress(pl_transportType, pl_connId, pl_hostName, pl_portNumber, pl_result)
+    }
+    case ( IPL2 ){     
+      EPTF_CLL_TransportIPL2_Functions.f_EPTF_Transport_getRemoteAddress(pl_transportType, pl_connId, pl_hostName, pl_portNumber, pl_result)
+    }
+    case else{
+      f_EPTF_Transport_testportTypeError(%definitionId,pl_transportType)
+    }
+  }
+
+
+
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Transport_getProto
+// 
+//  Purpose:
+//    Function to get the protocol of the connection
+//
+//  Parameter:
+//    pl_transportType - *in* - <EPTF_Transport_TransportType> - Testport type
+//    pl_connId - *in* - <ConnectionId> - The ID of the connection
+//    pl_proto - *out* - <ProtoTuple> - protocol
+//    pl_result - *out* - <Result> - resultl
+//
+//  Return Value:
+//    -
+//
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//    
+/////////////////////////////////////////////////////////// 
+public function f_EPTF_Transport_getProto(
+  in EPTF_Transport_TransportType pl_transportType,
+  in Socket_API_Definitions.ConnectionId pl_connId,
+  out Socket_API_Definitions.ProtoTuple pl_proto,
+  out Socket_API_Definitions.Result pl_result)
+runs on EPTF_Transport_CT
+{
+  //if(tsp_EPTF_Transport_uniqueIds) {
+    var EPTF_Transport_TransportType vl_transportType;
+    pl_result.errorCode := omit;
+    f_EPTF_Transport_getConnIdFromUniqueId(pl_connId, vl_transportType, pl_connId, pl_result);
+    if(ispresent(pl_result.errorCode)) { return; }
+    f_EPTF_Base_assert(%definitionId&": pl_transportType != vl_transportType", pl_transportType == vl_transportType);
+    pl_transportType := vl_transportType;
+  //}
+
+  select( pl_transportType ){
+    case ( IPL4 ){
+      EPTF_CLL_TransportIPL4_Functions.f_EPTF_Transport_getProto(pl_transportType, pl_connId, pl_proto, pl_result)
+    }
+    case ( IPL2 ){     
+      EPTF_CLL_TransportIPL2_Functions.f_EPTF_Transport_getProto(pl_transportType, pl_connId, pl_proto, pl_result)
+    }
+    case else{
+      f_EPTF_Transport_testportTypeError(%definitionId,pl_transportType)
+    }
+  }
+
+
+}
+
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Transport_setUpInterfaces
+// 
+//  Purpose:
+//    Function to setup the interfaces
+//
+//  Parameters:
+//    pl_transportType - *in* - <EPTF_Transport_TransportType> - The ID of the connection
+//    pl_result - *out* - <Result> - result
+//
+//  Return Value:
+//    -
+//
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//    
+/////////////////////////////////////////////////////////// 
+public function f_EPTF_Transport_setUpInterfaces(
+  in EPTF_Transport_TransportType pl_transportType,
+  out Socket_API_Definitions.Result pl_result)
+runs on EPTF_Transport_CT
+{
+
+  select( pl_transportType ){
+    case ( IPL4 ){
+      EPTF_CLL_TransportIPL4_Functions.f_EPTF_Transport_setUpInterfaces(pl_transportType, pl_result)
+    }
+    case ( IPL2 ){     
+      EPTF_CLL_TransportIPL2_Functions.f_EPTF_Transport_setUpInterfaces(pl_transportType, pl_result)
+    }
+    case else{
+      f_EPTF_Transport_testportTypeError(%definitionId,pl_transportType)
+    }
+  }
+
+
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Transport_appendInterfaces
+// 
+//  Purpose:
+//    Function to setup additional interfaces
+//
+//  Parameters:
+//    pl_transportType - *in* <EPTF_Transport_TransportType> - The ID of the connection
+//    pl_interfaceList - *in* <EPTF_Transport_InterfaceInformationList> - the list of additional interfaces
+//    pl_result - *out* <Result> - result
+/////////////////////////////////////////////////////////// 
+public function f_EPTF_Transport_appendInterfaces(
+  in EPTF_Transport_TransportType pl_transportType,
+  in EPTF_Transport_InterfaceInformationList pl_interfaceList,
+  out Socket_API_Definitions.Result pl_result)
+runs on EPTF_Transport_CT
+{
+  select( pl_transportType ){
+    case ( IPL4 ){
+      EPTF_CLL_TransportIPL4_Functions.f_EPTF_Transport_appendInterfaces(pl_transportType, pl_interfaceList, pl_result)
+    }
+    case ( IPL2 ){     
+      EPTF_CLL_TransportIPL2_Functions.f_EPTF_Transport_appendInterfaces(pl_transportType, pl_interfaceList, pl_result)
+    }
+    case else{
+      f_EPTF_Transport_testportTypeError(%definitionId,pl_transportType)
+    }
+  }
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Transport_setDownInterfaces
+// 
+//  Purpose:
+//    Function to set down interfaces
+//
+//  Parameters:
+//    pl_transportType - *in* - <EPTF_Transport_TransportType> - Testport type
+//    pl_result - *out* - <Result> - result
+//
+//  Return Value:
+//    -
+//
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//    
+/////////////////////////////////////////////////////////// 
+public function f_EPTF_Transport_setDownInterfaces(
+  in EPTF_Transport_TransportType pl_transportType,
+  out Socket_API_Definitions.Result pl_result)
+runs on EPTF_Transport_CT
+{
+
+  select( pl_transportType ){
+    case ( IPL4 ){
+      EPTF_CLL_TransportIPL4_Functions.f_EPTF_Transport_setDownInterfaces(pl_transportType, pl_result)
+    }
+    case ( IPL2 ){     
+      EPTF_CLL_TransportIPL2_Functions.f_EPTF_Transport_setDownInterfaces(pl_transportType, pl_result)
+    }
+    case else{
+      f_EPTF_Transport_testportTypeError(%definitionId,pl_transportType)
+    }
+  }
+
+
+}
+
+friend function f_EPTF_Transport_newUniqueConnId(
+  in EPTF_Transport_TransportType pl_transportType,
+  in integer pl_connId)
+runs on EPTF_Transport_CT
+return integer
+{
+  if(c_ConnectionId_invalidConnection == pl_connId) { return pl_connId; }
+  var integer vl_uniqueId := f_EPTF_FBQ_getOrCreateFreeSlot(v_Transport_Common_uniqueId2TransportId);
+  f_EPTF_FBQ_moveFromFreeToBusyTail(vl_uniqueId, v_Transport_Common_uniqueId2TransportId);
+  f_EPTF_FBQ_setQueueDidx(
+    vl_uniqueId,
+    { enum2int(pl_transportType), pl_connId },
+    v_Transport_Common_uniqueId2TransportId);
+  for(var integer i:=sizeof(v_Transport_Common_transportId2UniqueId);
+      i<=enum2int(pl_transportType);
+      i:=i+1) {
+    v_Transport_Common_transportId2UniqueId[i] := {};
+  }
+  for(var integer i:=sizeof(v_Transport_Common_transportId2UniqueId[enum2int(pl_transportType)]);
+      i<pl_connId;
+      i:=i+1) {
+    v_Transport_Common_transportId2UniqueId[enum2int(pl_transportType)][i] := c_ConnectionId_invalidConnection;
+  }
+  v_Transport_Common_transportId2UniqueId[enum2int(pl_transportType)][pl_connId] := vl_uniqueId;
+  if(c_EPTF_Common_debugSwitch) {
+    f_EPTF_Common_user(%definitionId&": new unique ID: " & log2str(vl_uniqueId));
+  }
+  return vl_uniqueId;
+}
+
+friend function f_EPTF_Transport_freeUniqueConnId(
+  in integer pl_uniqueId)
+runs on EPTF_Transport_CT
+{
+  if(c_EPTF_Common_debugSwitch) {
+//    f_EPTF_Base_assert(%definitionId&": invalid unique ID "&int2str(pl_uniqueId),
+//      f_EPTF_Transport_isUniqueIdValid(pl_uniqueId));
+    f_EPTF_Common_user(%definitionId&": free unique ID: " & log2str(pl_uniqueId));
+  }
+  var EPTF_Transport_TransportType vl_transportType;
+  var integer vl_connId;
+  var Socket_API_Definitions.Result vl_result := c_emptyResult;
+  vl_result.errorCode := omit;
+  f_EPTF_Transport_getConnIdFromUniqueId(pl_uniqueId, vl_transportType, vl_connId, vl_result);
+  if(ispresent(vl_result.errorCode)) { return; } // invalid unique ID
+  v_Transport_Common_transportId2UniqueId[enum2int(vl_transportType)][vl_connId] := c_ConnectionId_invalidConnection;
+  f_EPTF_FBQ_moveFromBusyToFreeTail(pl_uniqueId, v_Transport_Common_uniqueId2TransportId);
+}
+
+friend function f_EPTF_Transport_logUniqueIdDB()
+runs on EPTF_Transport_CT
+{
+  if(c_EPTF_Common_debugSwitch) {
+    f_EPTF_Common_user(%definitionId&": v_Transport_Common_transportId2UniqueId = "&
+      log2str(v_Transport_Common_transportId2UniqueId));
+    f_EPTF_Common_user(%definitionId&": v_Transport_Common_uniqueId2TransportId = "&
+      log2str(v_Transport_Common_uniqueId2TransportId));
+  }
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Transport_isUniqueIdValid
+// 
+//  Purpose:
+//    Function to get whether a unique connection ID is valid/allocated
+//
+//  Parameters:
+//    pl_uniqueId - *in* *integer* - unique connection ID
+//
+//  Return Value:
+//    *boolean* - true if the unique connection ID is valid
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_Transport_isUniqueIdValid(
+  in integer pl_uniqueId)
+runs on EPTF_Transport_CT
+return boolean
+{
+  return pl_uniqueId >= 0
+         and pl_uniqueId < f_EPTF_FBQ_getLengthOfQueue(v_Transport_Common_uniqueId2TransportId)
+         and f_EPTF_FBQ_itemIsBusy(pl_uniqueId, v_Transport_Common_uniqueId2TransportId);
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Transport_getUniqueIdFromConnId
+// 
+//  Purpose:
+//    Function to get the unique ID of a connection/socket
+//
+//  Parameters:
+//    pl_transportType - *in* - <EPTF_Transport_TransportType> - Testport type
+//    pl_connId - *in* *integer* - connection/socket ID of the particular transport
+//
+//  Return Value:
+//    *integer* - unique ID or -1 if invalid
+//
+//  Detailed Comments:
+//    Gets a continuously allocated unique connection ID from the transport type and its connection ID.
+//    The range of unique IDs returned is continuous and can also be used for indexing into a database.
+///////////////////////////////////////////////////////////
+public function f_EPTF_Transport_getUniqueIdFromConnId(
+  in EPTF_Transport_TransportType pl_transportType,
+  in integer pl_connId)
+runs on EPTF_Transport_CT
+return integer
+{
+  if(c_EPTF_Common_debugSwitch) {
+    f_EPTF_Base_assert(%definitionId&": unsupported transport type", pl_transportType==IPL4 or pl_transportType==IPL2);
+  }
+  return v_Transport_Common_transportId2UniqueId[enum2int(pl_transportType)][pl_connId]; // may return c_ConnectionId_invalidConnection
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Transport_getConnIdFromUniqueId
+// 
+//  Purpose:
+//    Function to retrieve the transport type and connection/socket ID from the unique connection ID
+//
+//  Parameters:
+//    pl_uniqueId - *in* *integer* - unique connection ID
+//    pl_transportType - *out* - <EPTF_Transport_TransportType> - returned Testport type
+//    pl_connId - *out* *integer* - returned connection/socket ID of the particular transport
+//
+//  Return Value:
+//    -
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_Transport_getConnIdFromUniqueId(
+  in integer pl_uniqueId,
+  out EPTF_Transport_TransportType pl_transportType,
+  out integer pl_connId,
+  out Socket_API_Definitions.Result pl_result)
+runs on EPTF_Transport_CT
+{
+  if(not f_EPTF_Transport_isUniqueIdValid(pl_uniqueId)) {
+    pl_result := {
+      errorCode := ERROR_INVALID_INPUT_PARAMETER,
+      connId := omit,
+      os_error_code := omit,
+      os_error_text := omit
+    }
+    return;
+  }
+  var integer vl_intTransportType := f_EPTF_FBQ_getQueueData(pl_uniqueId, v_Transport_Common_uniqueId2TransportId, 0);
+  select(vl_intTransportType) {
+  case(0) { pl_transportType := IPL4; }
+  case(1) { pl_transportType := IPL2; }
+  case else {
+    f_EPTF_Base_assert(%definitionId&": stored transport type is invalid.", false);
+  }
+  }
+  pl_connId := f_EPTF_FBQ_getQueueData(pl_uniqueId, v_Transport_Common_uniqueId2TransportId, 1);
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Transport_error
+// 
+//  Purpose:
+//    Function to handle errors
+//
+//  Parameters:
+//    pl_transportType - *in* - <EPTF_Transport_TransportType> - Testport type
+//    pl_connId - *in* *integer* - connection/socket ID
+//
+//  Return Value:
+//    <ProtoTuple> - protocol
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_Transport_error(in charstring pl_message)
+runs on EPTF_Transport_CT{
+  f_EPTF_Logging_error(true, c_EPTF_Transport_loggingComponentMask&": "&pl_message);
+  f_EPTF_Base_stopAll();
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Transport_testportTypeError
+// 
+//  Purpose:
+//    Function to handle invalid testport type arguments
+//
+///////////////////////////////////////////////////////////
+private function f_EPTF_Transport_testportTypeError(
+  in charstring pl_fn,
+  in EPTF_Transport_TransportType pl_tpType)
+runs on EPTF_Transport_CT{
+  f_EPTF_Transport_error(pl_fn&": The specified "&log2str(pl_tpType)&" transport type is invalid.")
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Transport_notImplemented
+// 
+//  Purpose:
+//    Function to handle invalid testport type arguments
+//
+///////////////////////////////////////////////////////////
+private function f_EPTF_Transport_notImplemented(
+  in charstring pl_fn,
+  in EPTF_Transport_TransportType pl_tpType)
+runs on EPTF_Transport_CT{
+  f_EPTF_Transport_error("Function "&pl_fn&" is not implemented in transport type "&log2str(pl_tpType)&".")
+}
+
+
+
+}  // end of module

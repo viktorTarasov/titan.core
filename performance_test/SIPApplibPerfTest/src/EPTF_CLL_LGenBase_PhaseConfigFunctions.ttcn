@@ -1,0 +1,220 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_CLL_LGenBase_PhaseConfigFunctions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 512
+//  Updated:  2009-11-18
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+//  Module: EPTF_CLL_LGenBase_PhaseConfigFunctions
+// 
+//  Purpose:
+//    This module contains functions for EPTF_CLL_LGenBase phase 
+//      handling functions called from the configuration handling functions.
+// 
+//  Module depends on:
+//      <EPTF_CLL_Common_Definitions>
+//      <EPTF_CLL_LGenBase_Definitions>
+//      <EPTF_CLL_LGenBase_PhaseDefinitions>
+//      <EPTF_CLL_HashMapStr2Int_Functions>
+//      <EPTF_CLL_FBQ_Functions>
+//      <EPTF_CLL_LGenBase_LoggingFunctions>    
+// 
+//  Module Parameters:
+//    -
+//
+//  Current Owner:
+//    Bence Molnar (EBENMOL)
+// 
+//  Last Review Date:
+//    2009-02-16
+//
+//  Detailed Comments:
+//    This module contains functions for EPTF_CLL_LGenBase phase 
+//      handling implementation.
+//
+///////////////////////////////////////////////////////////////////////////////
+module EPTF_CLL_LGenBase_PhaseConfigFunctions
+{
+import from EPTF_CLL_Common_Definitions all;  
+import from EPTF_CLL_LGenBase_Definitions all;
+import from EPTF_CLL_LGenBase_PhaseDefinitions all;
+import from EPTF_CLL_LGenBase_LoggingFunctions all;    
+import from EPTF_CLL_HashMapStr2Int_Functions all;
+import from EPTF_CLL_FBQ_Functions all;
+///////////////////////////////////////////////////////////
+// Group: PhaseListHandling
+//
+// Purpose:
+//   Functions for handling phase list data 
+//
+///////////////////////////////////////////////////////////
+group PhaseListHandling {
+  
+  ///////////////////////////////////////////////////////////////////////////////
+  //  Function: f_EPTF_LGenBase_PhaseList_Declarators_store
+  // 
+  //  Purpose:
+  //    Stores a list of phase list declarator in the internal database
+  //    (v_LGenBase_PhaseListDeclaratorDB)
+  //
+  //  Parameters:
+  //    - p_declarator - in <EPTF_LGenBase_PhaseList_Declarators> - the list of phase list
+  //      declarators to be stored
+  //
+  //  Return Value:
+  //    -
+  //
+  //  Errors & assertions:
+  //    -
+  //
+  //  Detailed Comments:
+  //    -
+  //
+  ///////////////////////////////////////////////////////////////////////////////  
+  public function f_EPTF_LGenBase_PhaseList_Declarators_store(
+    in EPTF_LGenBase_PhaseList_Declarators pl_PhaseList)
+  runs on EPTF_LGenBase_Private_CT{
+    // Storing phase lists
+    for (var integer i:=0; i<sizeof(pl_PhaseList); i:=i+1)
+    {
+      if(f_EPTF_LGenBase_PhaseList_store(pl_PhaseList[i]) == -1)
+      {
+        f_EPTF_LGenBase_loggingError(%definitionId&": Couldn't store phase list: "& log2str(pl_PhaseList[i])& " at declarator index: "& int2str(i)& 
+          "Possible name collision in phase list: "&log2str(pl_PhaseList));
+      }
+    }     
+  }
+  
+  ///////////////////////////////////////////////////////////////////////////////
+  //  Function: f_EPTF_LGenBase_PhaseList_store
+  // 
+  //  Purpose:
+  //    Stores a phase list declarator in the internal database
+  //    (v_LGenBase_PhaseListDeclaratorDB)
+  //
+  //  Parameters:
+  //    - p_declarator - in <EPTF_LGenBase_PhaseList_Declarator> - phase list
+  //      declarator to be stored
+  //
+  //  Return Value:
+  //    - *integer* - index of the stored declarator in the database, or -1 in case of
+  //      error
+  //
+  //  Errors & assertions:
+  //    -
+  //
+  //  Detailed Comments:
+  //    -
+  //
+  ///////////////////////////////////////////////////////////////////////////////  
+  public function f_EPTF_LGenBase_PhaseList_store
+  (
+    in EPTF_LGenBase_PhaseList_Declarator p_declarator
+  )
+  runs on EPTF_LGenBase_Private_CT
+  return integer
+  {
+    var integer vl_plIdx := -1;
+    var integer vl_key   := -1;
+    
+    if (not f_EPTF_str2int_HashMap_Find(v_LGenBase_PhaseListDeclaratorDB.hashRef, p_declarator.name, vl_key))
+    {
+      vl_plIdx := f_EPTF_FBQ_getOrCreateFreeSlot(v_LGenBase_PhaseListDeclaratorDB.queue);
+      v_LGenBase_PhaseListDeclaratorDB.data[vl_plIdx] := p_declarator;
+      f_EPTF_FBQ_moveFromFreeHeadToBusyTail(v_LGenBase_PhaseListDeclaratorDB.queue);
+      
+      f_EPTF_str2int_HashMap_Insert(v_LGenBase_PhaseListDeclaratorDB.hashRef, p_declarator.name, vl_plIdx);
+    }
+    
+    return vl_plIdx;
+  }
+  ///////////////////////////////////////////////////////////////////////////////
+  //  Function: f_EPTF_LGenBase_PhaseList_get_byName
+  // 
+  //  Purpose:
+  //    Returns a phase list declarator from the internal database by using its name
+  //
+  //  Parameters:
+  //    - p_name - in *charstring* - name of the phase list in the DB
+  //    - p_declarator - inout <EPTF_LGenBase_PhaseList_Declarator> - the returned declarator
+  //
+  //  Return Value:
+  //    - *boolean*: false in case of error, otherwise true
+  //
+  //  Errors & assertions:
+  //    -
+  //
+  //  Detailed Comments:
+  //    -
+  //
+  ///////////////////////////////////////////////////////////////////////////////
+  public function f_EPTF_LGenBase_PhaseList_get_byName
+  (
+    in charstring p_name,
+    inout EPTF_LGenBase_PhaseList_Declarator p_declarator
+  )
+  runs on EPTF_LGenBase_Private_CT
+  return boolean
+  {
+    var integer vl_key := -1;
+    
+    if (f_EPTF_str2int_HashMap_Find(v_LGenBase_PhaseListDeclaratorDB.hashRef, p_name, vl_key))
+    {
+      if (f_EPTF_LGenBase_PhaseList_get_byIndex(vl_key, p_declarator))
+      {
+        return true;
+      }
+    }
+    return false;
+  }
+  
+  ///////////////////////////////////////////////////////////////////////////////
+  //  Function: f_EPTF_LGenBase_PhaseList_get_byIndex
+  // 
+  //  Purpose:
+  //    Returns a phase list declarator from the internal database by using its index
+  //
+  //  Parameters:
+  //    - p_idx - in *integer* - index of the phase list in the DB
+  //    - p_declarator - inout <EPTF_LGenBase_PhaseList_Declarator> - the returned
+  //      declarator
+  //
+  //  Return Value:
+  //    - *boolean*: false in case of error, otherwise true
+  //
+  //  Errors & assertions:
+  //    -
+  //
+  //  Detailed Comments:
+  //    -
+  //
+  ///////////////////////////////////////////////////////////////////////////////
+  public function f_EPTF_LGenBase_PhaseList_get_byIndex
+  (
+    in integer p_idx, 
+    inout EPTF_LGenBase_PhaseList_Declarator p_declarator
+  )
+  runs on EPTF_LGenBase_Private_CT
+  return boolean
+  {
+    if (p_idx > -1 and p_idx < sizeof(v_LGenBase_PhaseListDeclaratorDB.data))
+    {
+      p_declarator := v_LGenBase_PhaseListDeclaratorDB.data[p_idx];
+      return true;
+    }
+    return false;
+  }
+  
+  
+} //PhaseListHandling group
+
+
+}  // end of module

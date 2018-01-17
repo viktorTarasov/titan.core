@@ -1,0 +1,726 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************///  File:     EPTF_CLL_TransportIPL4_Definitions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 512
+//  Updated:  2012-02-17
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////
+//  Module: EPTF_CLL_TransportIPL4_Definitions
+// 
+//  Purpose:
+//    -
+// 
+//  Module Parameters:
+//    tsp_EPTF_TransportIPL4_sctpReestablishmentTime - *float* - time gap between two reestablishment try. 0.0 means disabled
+// 
+//  Module depends on:
+//    <EPTF_CLL_Transport_CommonDefinitions>
+//    <IPL4asp_Types>
+//    <IPL4asp_PortType>
+//    <EPTF_CLL_Common_Definitions>
+//    <EPTF_CLL_TransportMessageBufferManager_Definitions>
+//    <EPTF_CLL_FBQ_Definitions>
+//    <EPTF_CLL_Base_Definitions>
+//    <EPTF_CLL_Logging_Definitions>
+//    <EPTF_CLL_Variable_Definitions>
+//    <EPTF_CLL_RBTScheduler_Definitions>
+//    <EPTF_CLL_HashMap_Definitions>
+// 
+//  Current Owner:
+//    ENORPIN 
+// 
+//  Last Review Date:
+//    2009-02-20 
+// 
+//  Detailed Comments:
+// 
+///////////////////////////////////////////////////////////
+module EPTF_CLL_TransportIPL4_Definitions
+{
+import from EPTF_CLL_Transport_CommonDefinitions all;
+
+import from IPL4asp_Types all;
+import from IPL4asp_PortType all;
+import from EPTF_CLL_Common_Definitions all;
+import from EPTF_CLL_TransportMessageBufferManager_Definitions all;
+import from EPTF_CLL_FBQ_Definitions all;
+import from EPTF_CLL_Base_Definitions all;
+import from EPTF_CLL_Logging_Definitions all;
+import from EPTF_CLL_Variable_Definitions all;
+import from EPTF_CLL_RBTScheduler_Definitions all;
+import from EPTF_CLL_HashMap_Definitions all;
+
+
+modulepar float tsp_EPTF_TransportIPL4_sctpReestablishmentTime := 0.0;
+
+//=========================================================================
+// Data Types
+//=========================================================================
+///////////////////////////////////////////////////////////
+//  Group: EPTF_TransportIPL4_Definitions
+// 
+//  Purpose:
+//    The definitions of the IPL4 communication port component
+//
+///////////////////////////////////////////////////////////
+group EPTF_TransportIPL4_Definitions {
+  
+  ///////////////////////////////////////////////////////////
+  //  const: c_EPTF_TransportIPL4_LGenTypesHashMapName
+  // 
+  //  Purpose:
+  //    constant for the name of hashmap storing LGen types
+  // 
+  //  Detailed Comments:
+  //   -
+  // 
+  ///////////////////////////////////////////////////////////
+  const charstring c_EPTF_TransportIPL4_LGenTypesHashMapName := "EPTF_TransportIPL4:LGenTypes hashmap";
+  
+  ///////////////////////////////////////////////////////////
+  //  const: c_EPTF_TransportIPL4_connInfoHashMapName
+  // 
+  //  Purpose:
+  //    constant for the name of hashmap storing connection information
+  // 
+  //  Detailed Comments:
+  //   -
+  // 
+  ///////////////////////////////////////////////////////////
+  const charstring c_EPTF_TransportIPL4_connInfoHashMapName := "EPTF_TransportIPL4:connections hashmap";
+  
+  //////////////////////////////////////////////////////////
+  // Type: f_EPTF_TransportIPL4_messageProcess_FT
+  //
+  // Purpose:
+  //   Function type to register callback functions 
+  //
+  // Elements:
+  //   -
+  ///////////////////////////////////////////////////////////
+  type function f_EPTF_TransportIPL4_messageProcess_FT () runs on self;
+  
+  ///////////////////////////////////////////////////////////
+  //  Type: EPTF_TransportIPL4_LGenInfo 
+  // 
+  //  Purpose:
+  //   Record for storing LGen Informations
+  // 
+  //  Elements:
+  //    msgHandler - <f_EPTF_TransportIPL4_messageProcess_FT> - message handler function
+  //    eventHandler - <f_EPTF_TransportIPL4_messageProcess_FT> - event handler function
+  //    msgLenCalc - <EPTF_TransportIPL4_getMsgLen> - message length calculating function
+  //    defaultBufferingHandlerActivated - *boolean* - whether the default buffering handler was activated for this LGenType
+  //
+  //  Detailed Comments:
+  //
+  //////////////////////////////////////////////////////////
+  
+  type record EPTF_TransportIPL4_LGenInfo
+  {
+    f_EPTF_TransportIPL4_messageProcess_FT  msgHandlerOldFn,   
+    f_EPTF_TransportIPL4_messageProcess_FT  eventHandlerOldFn,
+    EPTF_Transport_MsgCallback_FT           msgHandlerNewFn,   
+    EPTF_Transport_EventCallback_FT         eventHandlerNewFn,
+    EPTF_TransportIPL4_getMsgLen            msgLenCalc,
+    boolean                                 defaultBufferingHandlerActivated,
+    EPTF_Transport_ConnectionOpened_FT      connOpenedFn,
+    EPTF_Transport_ConnectionClosed_FT      connClosedFn
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  const: c_EPTF_TransportIPL4_LGenInfo_init
+  // 
+  //  Purpose:
+  //    constant for initialize the LGen Info 
+  // 
+  //  Detailed Comments:
+  //   -
+  // 
+  ///////////////////////////////////////////////////////////
+  const EPTF_TransportIPL4_LGenInfo c_EPTF_TransportIPL4_LGenInfo_init :=
+  {
+    msgHandlerOldFn := null,
+    eventHandlerOldFn := null,
+    msgHandlerNewFn := null,
+    eventHandlerNewFn := null,
+    msgLenCalc := c_EPTF_TransportIPL4_emptyGetMsgLen,
+    defaultBufferingHandlerActivated := false,
+    connOpenedFn := null,
+    connClosedFn := null
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Type: EPTF_TransportIPL4_getMsgLen 
+  // 
+  //  Purpose:
+  //   Stores the message length calculation function and its parameters.
+  // 
+  //  Elements:
+  //    getMsgLen - <f_IPL4_getMsgLen> - the function reference
+  //    getMsgLenArgs - <ro_integer> - the function arguments
+  // 
+  //  Detailed Comments:
+  //    - Using the old API functions, the getMsgLenFn will be set to null, 
+  //    the getMsgLenOldAPI will contain the callback function
+  //    - Using the new API functions, the getMsgLenFn will be set to a
+  //    wrapper function, which calls the appropriate getMsgLenFn
+  //////////////////////////////////////////////////////////
+  type record EPTF_TransportIPL4_getMsgLen
+  {
+    EPTF_Transport_GetMsgLen_FT getMsgLenNewFn,
+    f_IPL4_getMsgLen  getMsgLenOldAPIFn,
+    ro_integer        getMsgLenOldArgs,
+    EPTF_IntegerList  getMsgLenNewArgs
+  }
+  const EPTF_TransportIPL4_getMsgLen c_EPTF_TransportIPL4_emptyGetMsgLen :={null, null, {}, {}}
+  
+  ///////////////////////////////////////////////////////////
+  //  Type: EPTF_XCAP_Transport_LGenInfoList 
+  // 
+  //  Purpose:
+  //   List for storing LGen Information records
+  //
+  //////////////////////////////////////////////////////////
+  
+  type record of EPTF_TransportIPL4_LGenInfo EPTF_TransportIPL4_LGenInfoList 
+  
+  ///////////////////////////////////////////////////////////
+  //  Type: EPTF_TransportIPL4_connInfo 
+  // 
+  //  Purpose:
+  //   Record for storing connection Informations
+  // 
+  //  Elements:
+  //    LGenTypeId - *integer* - the ID of the LGen type using this connection  
+  //    automaticBuffering - *boolean* - automatic buffering on/off
+  //    connectionState - <EPTF_TransportIPL4_connectionStates> - the state of the connection
+  //    sctpInformation - <SctpTuple> - contains the sctp informations if required
+  // 
+  //  Detailed Comments:
+  //
+  //////////////////////////////////////////////////////////
+  
+  type record EPTF_TransportIPL4_connInfo
+  {
+    integer                                     uniqueId,
+    integer                                     LGenTypeId,
+    boolean                                     automaticBuffering,
+    EPTF_TransportIPL4_connectionStates         connectionState,
+    SctpTuple                                   sctpInformation optional,
+    EPTF_TransportIPL4_sctpReestablishmentInfo  sctpReestablishmentInfo optional,
+    OptionList		    						options optional
+  }
+
+  const EPTF_TransportIPL4_connInfo c_EPTF_TransportIPL4_connInfo_init := {
+    uniqueId := -1,
+    LGenTypeId := -1,
+    automaticBuffering := false,
+    connectionState := NULL_VALUE,
+    sctpInformation := omit,
+    sctpReestablishmentInfo := omit,
+    options := omit
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Type: EPTF_XCAP_Transport_connInfoList 
+  // 
+  //  Purpose:
+  //   List for storing connection Information records
+  //
+  //////////////////////////////////////////////////////////
+  
+  type record of EPTF_TransportIPL4_connInfo EPTF_TransportIPL4_connInfoList 
+  
+  ///////////////////////////////////////////////////////////
+  //  Type: EPTF_TransportIPL4_connectionStates
+  // 
+  //  Purpose:
+  //     XCAP states
+  // 
+  //  Elements:
+  //   OPENED(0),
+  //   TEMPORARILY_UNAVAILABLE(1)
+  //   ERROR(2)
+  //
+  //  Detailed Comments:
+  //   -
+  // 
+  /////////////////////////////////////////////////////////// 
+  type enumerated EPTF_TransportIPL4_connectionStates
+  {
+    NULL_VALUE(-1),  
+    OPENED(0),
+    TEMPORARILY_UNAVAILABLE(1),
+    ERROR(2)
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Type: EPTF_TransportIPL4_sctpReestablishmentInfo 
+  // 
+  //  Purpose:
+  //   Record for storing informations for automatic SCTP reestablishment 
+  // 
+  //  Elements:
+  //    timerIdx - *integer* - the ID of the scheduled event  
+  //    localHost - <HostName> - host name of the connection's local side
+  //    localPort - <PortNumber> - port number of the connection's local side
+  //    remoteHost - <HostName> - host name of the connection's remote side
+  //    remotePort - <PortNumber> - port number of the connection's remote side
+  // 
+  //  Detailed Comments:
+  //
+  //////////////////////////////////////////////////////////
+  type record EPTF_TransportIPL4_sctpReestablishmentInfo
+  {
+    integer    timerIdx,
+    HostName   localHost,
+    PortNumber localPort,
+    HostName   remoteHost,
+    PortNumber remotePort,
+    charstring lGenType,
+    boolean    automaticBuffering
+  }
+
+  const EPTF_TransportIPL4_sctpReestablishmentInfo c_EPTF_TransportIPL4_sctpReestablishmentInfo_init :=
+  {
+    timerIdx := -1,
+    localHost := "",
+    localPort := -1,
+    remoteHost := "",
+    remotePort := -1,
+    lGenType := "",
+    automaticBuffering := false
+  }
+  
+  //////////////////////////////////////////////////////////
+  // Type: EPTF_TransportIPL4_InterfaceInformation
+  //
+  // Purpose:
+  //   Record Type to set Interface Information
+  //
+  // Elements:
+  //   HostName - *charstring* - The IP adress of the interface
+  //   HostPort - *integer* - The port number of the interface
+  //   netmask - *charstring* - The netmask of the interface
+  //   broadcast - *charstring* - The broadcast address of the interface
+  //   ifname - *charstring* - The name of the interface
+  //   count - *integer* - number of the interface
+  //   virtualIfaceStart - *integer* - the number of the first interface
+  ///////////////////////////////////////////////////////////
+  type record EPTF_TransportIPL4_InterfaceInformation {
+    charstring  HostName,
+    integer  HostPort,
+    charstring netmask,
+    charstring broadcast,
+    charstring  ifname,
+    integer  count,
+    integer  virtualIfaceStart
+  }
+  //FIXME implement in common transport
+  //////////////////////////////////////////////////////////
+  // Type: EPTF_TransportIPL4_InterfaceInformationList
+  //
+  // Purpose:
+  //   Record of InterfaceInformation 
+  //
+  // Elements:
+  //   -
+  ///////////////////////////////////////////////////////////
+  type record of EPTF_TransportIPL4_InterfaceInformation EPTF_TransportIPL4_InterfaceInformationList;
+  
+  //////////////////////////////////////////////////////////
+  // Type: EPTF_TransportIPL4_ASP_Connect
+  //
+  // Purpose:
+  //   Record Type to connect message
+  //
+  // Elements:
+  //   remName - <HostName> - The IP adress of the remote host
+  //   remPort - <PortNumber> - The port number of the remote host
+  //   locName - <HostName> - The IP adress of the local host
+  //   locPort - <PortNumber> - The port number of the local host
+  //   proto - <ProtoTuple> - The type of the connection
+  ///////////////////////////////////////////////////////////
+  type record EPTF_TransportIPL4_ASP_Connect {
+    HostName   remName,
+    PortNumber  remPort,
+    HostName   locName,
+    PortNumber  locPort,
+    ProtoTuple  proto
+  }
+  
+  //////////////////////////////////////////////////////////
+  // Type: EPTF_TransportIPL4_ASP_Listen
+  //
+  // Purpose:
+  //   Record Type to listen message
+  //
+  // Elements:
+  //   locName - <HostName> - The IP adress of the local host
+  //   locPort - <PortNumber> - The port number of the local host
+  //   proto - <ProtoTuple> - The type of the connection
+  ///////////////////////////////////////////////////////////
+  type record EPTF_TransportIPL4_ASP_Listen {
+    HostName   locName,
+    PortNumber  locPort,
+    ProtoTuple  proto
+  }
+  
+  //////////////////////////////////////////////////////////
+  // Type: EPTF_TransportIPL4_ASP_Close
+  //
+  // Purpose:
+  //   Record Type to close message
+  //
+  // Elements:
+  //   id - <ConnectionId> - The Id of the connection
+  //   proto - <ProtoTuple> - The type of the connection
+  ///////////////////////////////////////////////////////////
+  type record EPTF_TransportIPL4_ASP_Close {
+    ConnectionId  id,
+    ProtoTuple  proto
+  }
+  
+  //////////////////////////////////////////////////////////
+  // Type: EPTF_TransportIPL4_IncomingMessage
+  //
+  // Purpose:
+  //   Union Type to incoming message
+  //
+  // Elements:
+  //   asp_RecvFrom- <ASP_RecvFrom> - The received message
+  //   asp_Event - <ASP_Event> - The Event message
+  ///////////////////////////////////////////////////////////
+  type union EPTF_TransportIPL4_IncomingMessage {
+    ASP_RecvFrom  asp_RecvFrom,
+    ASP_Event     asp_Event
+  }
+  
+  ///////////////////////////////////////////////////////////////////////////////
+  //  Constant: c_EPTF_TransportIPL4_loggingEventClasses
+  // 
+  //  Purpose:
+  //    list of logging event class names used on the EPTF CommPort IPL4 component
+  // 
+  //  Detailed Comments:
+  //    <EPTF_Logging_EventClassPrefixList> { "Warning", "Debug" }
+  ///////////////////////////////////////////////////////////////////////////////
+  const EPTF_Logging_EventClassPrefixList c_EPTF_TransportIPL4_loggingEventClasses := { "Warning", "Debug" };
+  
+  ///////////////////////////////////////////////////////////////////////////////
+  //  Constant: c_EPTF_TransportIPL4_loggingClassIdx_Warning
+  // 
+  //  Purpose:
+  //    logging class index for Warning
+  // 
+  //  Detailed Comments:
+  //    *0*
+  ///////////////////////////////////////////////////////////////////////////////
+  const integer c_EPTF_TransportIPL4_loggingClassIdx_Warning := 0;
+  
+  ///////////////////////////////////////////////////////////////////////////////
+  //  Constant: c_EPTF_TransportIPL4_loggingClassIdx_Debug
+  // 
+  //  Purpose:
+  //    logging class index for Debug
+  // 
+  //  Detailed Comments:
+  //    *1*
+  ///////////////////////////////////////////////////////////////////////////////
+  const integer c_EPTF_TransportIPL4_loggingClassIdx_Debug := 1;
+  
+  ///////////////////////////////////////////////////////////////////////////////
+  //  Constant: c_EPTF_TransportIPL4_incMessage
+  // 
+  //  Purpose:
+  //    Incoming message index
+  // 
+  //  Detailed Comments:
+  //    -
+  ///////////////////////////////////////////////////////////////////////////////
+  const integer c_EPTF_TransportIPL4_incMessage := 0;
+  
+  ///////////////////////////////////////////////////////////////////////////////
+  //  Constant: c_EPTF_TransportIPL4_incMessageName
+  // 
+  //  Purpose:
+  //    Name of the incoming message statistics
+  // 
+  //  Detailed Comments:
+  //    -
+  ///////////////////////////////////////////////////////////////////////////////
+  const charstring c_EPTF_TransportIPL4_incMessageName := "Number of the incoming mssages";
+  
+  ///////////////////////////////////////////////////////////////////////////////
+  //  Constant: c_EPTF_TransportIPL4_incConnOpened
+  // 
+  //  Purpose:
+  //    Incoming connection opened index
+  // 
+  //  Detailed Comments:
+  //    -
+  ///////////////////////////////////////////////////////////////////////////////
+  const integer c_EPTF_TransportIPL4_incConnOpened := 1;
+  
+  ///////////////////////////////////////////////////////////////////////////////
+  //  Constant: c_EPTF_TransportIPL4_incConnOpenedName
+  // 
+  //  Purpose:
+  //    Name of the incoming connection opened statistics
+  // 
+  //  Detailed Comments:
+  //    -
+  ///////////////////////////////////////////////////////////////////////////////
+  const charstring c_EPTF_TransportIPL4_incConnOpenedName := "Number of the incoming connection opened events";
+  
+  ///////////////////////////////////////////////////////////////////////////////
+  //  Constant: c_EPTF_TransportIPL4_incConnClosed
+  // 
+  //  Purpose:
+  //    Incoming connection closed index
+  // 
+  //  Detailed Comments:
+  //    -
+  ///////////////////////////////////////////////////////////////////////////////
+  const integer c_EPTF_TransportIPL4_incConnClosed := 2;
+  
+  ///////////////////////////////////////////////////////////////////////////////
+  //  Constant: c_EPTF_TransportIPL4_incConnClosedName
+  // 
+  //  Purpose:
+  //    Name of the incoming connection closed statistics
+  // 
+  //  Detailed Comments:
+  //    -
+  ///////////////////////////////////////////////////////////////////////////////
+  const charstring c_EPTF_TransportIPL4_incConnClosedName := "Number of the incoming conection closed events";
+  
+  ///////////////////////////////////////////////////////////////////////////////
+  //  Constant: c_EPTF_TransportIPL4_incResult
+  // 
+  //  Purpose:
+  //    Incoming message index
+  // 
+  //  Detailed Comments:
+  //    -
+  ///////////////////////////////////////////////////////////////////////////////
+  const integer c_EPTF_TransportIPL4_incResult := 3;
+  
+  ///////////////////////////////////////////////////////////////////////////////
+  //  Constant: c_EPTF_TransportIPL4_incResultName
+  // 
+  //  Purpose:
+  //    Name of the incoming result statistics
+  // 
+  //  Detailed Comments:
+  //    -
+  /////////////////////////////////////////////////////////////////////////////// 
+  const charstring c_EPTF_TransportIPL4_incResultName := "Number of the incoming reults";
+  
+  ///////////////////////////////////////////////////////////////////////////////
+  //  Constant: c_EPTF_TransportIPL4_incSCTPEvent
+  // 
+  //  Purpose:
+  //    Incoming sctp event index
+  // 
+  //  Detailed Comments:
+  //    -
+  ///////////////////////////////////////////////////////////////////////////////
+  const integer c_EPTF_TransportIPL4_incSCTPEvent := 4;
+  
+  ///////////////////////////////////////////////////////////////////////////////
+  //  Constant: c_EPTF_TransportIPL4_incSCTPEventName
+  // 
+  //  Purpose:
+  //    Name of the incoming SCTP Event statistics
+  // 
+  //  Detailed Comments:
+  //    -
+  /////////////////////////////////////////////////////////////////////////////// 
+  const charstring c_EPTF_TransportIPL4_incSCTPEventName := "Number of the incoming SCTP Event";
+  
+  ///////////////////////////////////////////////////////////////////////////////
+  //  Constant: c_EPTF_TransportIPL4_outMessage
+  // 
+  //  Purpose:
+  //    Outgoing message index
+  // 
+  //  Detailed Comments:
+  //    -
+  ///////////////////////////////////////////////////////////////////////////////
+  const integer c_EPTF_TransportIPL4_outMessage := 0;
+  
+  ///////////////////////////////////////////////////////////////////////////////
+  //  Constant: c_EPTF_TransportIPL4_outMessageName
+  // 
+  //  Purpose:
+  //    Name of the outgoing message statistics
+  // 
+  //  Detailed Comments:
+  //    -
+  /////////////////////////////////////////////////////////////////////////////// 
+  const charstring c_EPTF_TransportIPL4_outMessageName := "Number of the outoing messages";
+  
+  ///////////////////////////////////////////////////////////////////////////////
+  //  Constant: c_EPTF_TransportIPL4_outConnect
+  // 
+  //  Purpose:
+  //    Outgoing connect index
+  // 
+  //  Detailed Comments:
+  //    -
+  ///////////////////////////////////////////////////////////////////////////////
+  const integer c_EPTF_TransportIPL4_outConnect := 1;
+  
+  ///////////////////////////////////////////////////////////////////////////////
+  //  Constant: c_EPTF_TransportIPL4_outConnectName
+  // 
+  //  Purpose:
+  //    Name of the outgoing connect statistics
+  // 
+  //  Detailed Comments:
+  //    -
+  /////////////////////////////////////////////////////////////////////////////// 
+  const charstring c_EPTF_TransportIPL4_outConnectName := "Number of the outoing connects";
+  
+  ///////////////////////////////////////////////////////////////////////////////
+  //  Constant: c_EPTF_TransportIPL4_outClose
+  // 
+  //  Purpose:
+  //    Outgoing close index
+  // 
+  //  Detailed Comments:
+  //    -
+  ///////////////////////////////////////////////////////////////////////////////
+  const integer c_EPTF_TransportIPL4_outClose := 2;
+  
+  ///////////////////////////////////////////////////////////////////////////////
+  //  Constant: c_EPTF_TransportIPL4_outCloseName
+  // 
+  //  Purpose:
+  //    Name of the outgoing close statistics
+  // 
+  //  Detailed Comments:
+  //    -
+  /////////////////////////////////////////////////////////////////////////////// 
+  const charstring c_EPTF_TransportIPL4_outCloseName := "Number of the outoing closes";
+  
+  ///////////////////////////////////////////////////////////////////////////////
+  //  Constant: c_EPTF_TransportIPL4_outListen
+  // 
+  //  Purpose:
+  //    Outgoing listen index
+  // 
+  //  Detailed Comments:
+  //    -
+  ///////////////////////////////////////////////////////////////////////////////
+  const integer c_EPTF_TransportIPL4_outListen := 3;
+  
+  ///////////////////////////////////////////////////////////////////////////////
+  //  Constant: c_EPTF_TransportIPL4_outListenName
+  // 
+  //  Purpose:
+  //    Name of the outgoing listen statistics
+  // 
+  //  Detailed Comments:
+  //    -
+  /////////////////////////////////////////////////////////////////////////////// 
+  const charstring c_EPTF_TransportIPL4_outListenName := "Number of the outoing listens";
+  
+  ///////////////////////////////////////////////////////////////////////////////
+  //  Constant: c_EPTF_TransportIPL4_nofErrorsName
+  // 
+  //  Purpose:
+  //    Name of the errors
+  // 
+  //  Detailed Comments:
+  //    -
+  /////////////////////////////////////////////////////////////////////////////// 
+  const charstring c_EPTF_TransportIPL4_nofErrorsName := "Number of the errors";
+  
+  ///////////////////////////////////////////////////////////////////////////////
+  //  Constant: c_EPTF_TransportIPL4_lastErrorStringName
+  // 
+  //  Purpose:
+  //    Name of the errors
+  // 
+  //  Detailed Comments:
+  //    -
+  /////////////////////////////////////////////////////////////////////////////// 
+  const charstring c_EPTF_TransportIPL4_lastErrorStringName := "Last error string";
+  
+  
+  //////////////////////////////////////////////////////////
+  // Type: EPTF_TransportIPL4_CT
+  //
+  // Purpose:
+  //   The IPL4 communication port component type declaration
+  //
+  // Elements:
+  //   IPL4_PCO - <IPL4asp_PT> - The IPL4 port
+  //   v_EPTF_TransportIPL4_initialized - boolean - If the component is initialized, prevents multiple initialization
+  //   v_EPTF_TransportIPL4_defaultList - <EPTF_DefaultList> - The defaultlist variable
+  //   v_EPTF_CommPort_IPL4_incomingMessage - <EPTF_TransportIPL4_IncomingMessage> - Variable to store the incoming message
+  //   v_EPTF_CommPort_IPL4_result - <Result> - variable to store the result
+  //   v_EPTF_TransportIPL4_interfaceInformationList - <EPTF_TransportIPL4_InterfaceInformationList> - Variable to store the defined interfaces
+  //   v_EPTF_CommPort_IPL4_aspRecvFrom - <ASP_RecvFrom> - variable to store the incoming messages
+  //   v_EPTF_CommPort_IPL4_aspEvent - <ASP_Event> - variable to store the incoming events
+  //   v_EPTF_TransportIPL4_LGenTypesHashMapId - *integer* - the ID of hashmap storing LGen types
+  //   v_EPTF_TransportIPL4_connInfoHashMapId - *integer* - the ID of hashmap storing connection IDs  
+  //   v_EPTF_TransportIPL4_LGenInfoFreeBusyQueue - <EPTF_FreeBusyQueue> - freebusyqueue storing LGen type informations 
+  //   v_EPTF_TransportIPL4_LGenInfoList - <EPTF_TransportIPL4_LGenInfoList> - list for storing LGen type informations 
+  //   v_EPTF_TransportIPL4_connInfoFreeBusyQueue - <EPTF_FreeBusyQueue> - freebusyqueue storing connection informations 
+  //   v_EPTF_TransportIPL4_connInfoList - <EPTF_TransportIPL4_connInfoList> - list for storing connection informations   
+  //   v_EPTF_TransportIPL4_incStats - <EPTF_IntegerList> - contains the keys to the incoming statistics
+  //   v_EPTF_TransportIPL4_outStats - <EPTF_IntegerList> - contains the keys to the outgoing statistics
+  //   v_EPTF_TransportIPL4_incStatCounters - <EPTF_IntegerList> - contains the counters of the incoming statistics
+  //   v_EPTF_TransportIPL4_outStatCounters - <EPTF_IntegerList> - contains the counters of the outgoing statistics
+  //   v_EPTF_TransportIPL4_nofErrors - *integer* - contains the index of the variable, which stores the number of errors
+  //   v_EPTF_TransportIPL4_lastErrorString - *integer* - contains the index of the variable, which stores the last error message
+  //   v_EPTF_TransportIPL4_loggingMaskId - *integer* - contains the logging mask ID
+  //   vd_EPTF_TransportIPL4_defaultReceive - *default* - reference of activated default receiver altstep
+  //   vd_EPTF_TransportIPL4_defaultEvent - *default* - reference of activated default event handler altstep
+  ///////////////////////////////////////////////////////////
+  type component EPTF_TransportIPL4_CT 
+  extends EPTF_MessageBufferManager_CT, EPTF_Base_CT, EPTF_Logging_CT, EPTF_Var_CT, EPTF_Scheduler_CT, EPTF_HashMap_CT, EPTF_FBQ_CT {
+    private port IPL4asp_PT                                     IPL4_PCO;
+    private var boolean                                         v_EPTF_TransportIPL4_initialized := false;
+    private var EPTF_DefaultList                                v_EPTF_TransportIPL4_defaultList := {};
+    public  var EPTF_TransportIPL4_IncomingMessage              v_EPTF_CommPort_IPL4_incomingMessage;
+    public  var Result                                          v_EPTF_CommPort_IPL4_result;
+    private var EPTF_Transport_InterfaceInformationList         v_EPTF_TransportIPL4_interfaceInformationList := {};
+    private var boolean                                         v_EPTF_TransportIPL4_isBufferManagerEnabled := false;
+    public  var ASP_RecvFrom                                    v_EPTF_CommPort_IPL4_aspRecvFrom;
+    public  var ASP_Event                                       v_EPTF_CommPort_IPL4_aspEvent;
+    private var integer                                         v_EPTF_TransportIPL4_LGenTypesHashMapId;
+    private var integer                                         v_EPTF_TransportIPL4_connInfoHashMapId;
+    private var EPTF_FreeBusyQueue                              v_EPTF_TransportIPL4_LGenInfoFreeBusyQueue;
+    private var EPTF_TransportIPL4_LGenInfoList                 v_EPTF_TransportIPL4_LGenInfoList := {};
+    private var EPTF_FreeBusyQueue                              v_EPTF_TransportIPL4_connInfoFreeBusyQueue;
+    private var EPTF_TransportIPL4_connInfoList                 v_EPTF_TransportIPL4_connInfoList := {};    
+    private var EPTF_IntegerList                                v_EPTF_TransportIPL4_incStats := {-1,-1,-1,-1,-1};
+    private var EPTF_IntegerList                                v_EPTF_TransportIPL4_outStats := {-1,-1,-1,-1};
+    private var EPTF_IntegerList                                v_EPTF_TransportIPL4_incStatCounters := {0,0,0,0,0};
+    private var EPTF_IntegerList                                v_EPTF_TransportIPL4_outStatCounters := {0,0,0,0};
+    private var integer                                         v_EPTF_TransportIPL4_nofErrors := -1;
+    private var integer                                         v_EPTF_TransportIPL4_lastErrorString := -1;
+    private var integer                                         v_EPTF_TransportIPL4_loggingMaskId := -1;
+    private var default                                         vd_EPTF_TransportIPL4_defaultReceive := null;
+    private var default                                         vd_EPTF_TransportIPL4_defaultEvent := null;
+    
+    private var Result                                          v_TransportIPL4_dummyResult;
+    private var integer                                         v_TransportIPL4_dummyInt;
+    
+    private var float                                           v_EPTF_TransportIPL4_sctpReestablishmentTime := tsp_EPTF_TransportIPL4_sctpReestablishmentTime; 
+  }
+}
+
+}  // end of module

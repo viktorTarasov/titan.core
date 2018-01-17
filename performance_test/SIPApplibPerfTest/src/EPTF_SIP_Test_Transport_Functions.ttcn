@@ -1,0 +1,58 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_SIP_Test_Transport_Functions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 522
+//  Updated:  2010-05-25
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+module EPTF_SIP_Test_Transport_Functions
+{
+  import from EPTF_CLL_HashMapInt2Int_Functions all;
+  
+  import from EPTF_SIP_Transport_Definitions all;
+  import from EPTF_SIP_Transport_Functions all;
+  
+  testcase tc_EPTF_SIP_Test_SIPUserIdxList() runs on EPTF_SIP_LocalTransport_CT
+  {
+    f_EPTF_SIP_initTransportDB();
+    
+    f_EPTF_SIP_IPL4asp_SetUserData(0, "127.0.0.1", {0}, "UDP", "127.0.0.1", 0, -, false);
+    f_EPTF_SIP_IPL4asp_SetUserData(1, "127.0.0.1", {0}, "UDP", "127.0.0.1", 0, -, false);
+    
+    for(var integer i := 0; i < 100; i := i + 1)
+    {
+      f_EPTF_SIP_mapUser2TransportUser(i, i mod 2);
+    }
+
+    for(var integer i := 0; i < 100; i := i + 1)
+    {
+      f_EPTF_SIP_mapUser2TransportUser(i, 1 - (i mod 2));
+    }
+    
+    //check database consistency
+    for (var integer i := 0; i < sizeof(vg_SIP_userDB[0].sipUserIdxList); i := i + 1)
+    {
+      var integer vl_sipUser := vg_SIP_userDB[0].sipUserIdxList[i];
+      var integer vl_storedIdx := -1;
+      
+      f_EPTF_int2int_HashMap_Find(v_userIdx2IdxInTransportUserData, vl_sipUser, vl_storedIdx)
+      
+      if (vl_storedIdx != i)
+      {
+        setverdict(fail);
+        stop;
+      }
+    }
+    
+    f_EPTF_SIP_resetTransportDB();
+    
+    setverdict(pass);
+  }
+}

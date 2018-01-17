@@ -1,0 +1,629 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_CLL_ILog_Functions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 512
+//  Updated:  2012-05-18
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////
+//  Module: EPTF_CLL_ILog_Functions
+// 
+//  Purpose:
+//  This module contains the function definitions of the EPTF ILog feature.
+// 
+//  Module Parameters:
+//    -
+//
+//  Module depends on:
+//    <EPTF_CLL_ILog_Definitions>
+//    <EPTF_CLL_Base_Functions>
+//    <EPTF_CLL_Common_Definitions>
+//    <EPTF_CLL_Common_Functions>
+//    <EPTF_CLL_NQueue_Functions>
+//    <EPTF_CLL_FBQ_Functions>
+// 
+//  Current Owner:
+//    Ildiko Vancsa (EILDVNC)
+// 
+//  Last Review Date:
+//    2012-06-05
+//
+//  Detailed Comments:
+//    Public functions:
+//      <f_EPTF_ILog_init_CT>
+//      <f_EPTF_ILog_register_DB>
+//      <f_EPTF_ILog_newChain>
+//      <f_EPTF_ILog_addToChains>
+//      <f_EPTF_ILog_getName>
+//      <f_EPTF_ILog_deleteChain>
+//      <f_EPTF_ILog_logChain>
+//      <f_EPTF_ILog_logAll>
+//      <f_EPTF_ILog_deleteAll>
+//      <f_EPTF_ILog_dumpToPng>
+// 
+///////////////////////////////////////////////////////////////
+
+module EPTF_CLL_ILog_Functions {
+
+import from EPTF_CLL_ILog_Definitions all;
+import from EPTF_CLL_Base_Functions all;
+import from EPTF_CLL_Common_Definitions all;
+import from EPTF_CLL_Common_Functions all;
+import from EPTF_CLL_NQueue_Functions all;
+import from EPTF_CLL_FBQ_Functions all;
+import from TCCFileIO_Functions all;
+import from TCCDateTime_Functions all;
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_ILog_init_CT
+// 
+//  Purpose:
+//    This function initializes the component variables, queues and chains.
+//
+//  Parameters:
+//    pl_selfName - *in* *charstring* - EPTF self name
+//  
+///////////////////////////////////////////////////////////
+public function f_EPTF_ILog_init_CT(in charstring pl_selfName)
+runs on EPTF_ILog_CT{
+
+  if(v_EPTF_ILog_initialized){
+    return;
+  }
+
+  f_EPTF_Base_init_CT(pl_selfName);
+  f_EPTF_NQueue_init_CT(pl_selfName);
+  f_EPTF_FBQ_init_CT(pl_selfName);
+
+  v_EPTF_ILog_databaseList := {};
+  v_EPTF_ILog_chainList := {};
+  v_EPTF_ILog_chainItemList := {};
+  v_EPTF_ILog_queueId := f_EPTF_NQueue_createQueue("LogItemQueue");
+  v_EPTF_ILog_chainQueueId := f_EPTF_NQueue_createQueue("ChainListQueue");
+
+  v_EPTF_ILog_freeChainItemsChainId := f_EPTF_NQueue_createChain(v_EPTF_ILog_queueId);
+  v_EPTF_ILog_freeChainId := f_EPTF_NQueue_createChain(v_EPTF_ILog_chainQueueId);
+  v_EPTF_ILog_busyDetailedChainId := f_EPTF_NQueue_createChain(v_EPTF_ILog_chainQueueId);
+  v_EPTF_ILog_busyShortChainId := f_EPTF_NQueue_createChain(v_EPTF_ILog_chainQueueId);
+  v_EPTF_ILog_administrativeChainId := f_EPTF_NQueue_createChain(v_EPTF_ILog_chainQueueId);
+  f_EPTF_NQueue_createItemAtChainTail(v_EPTF_ILog_chainQueueId, v_EPTF_ILog_administrativeChainId);
+
+  v_EPTF_ILog_initialized := true;
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_ILog_register_DB
+// 
+//  Purpose:
+//    This function registers the new user databases that store the log items. Each database record is stored in a common database.
+//    The user gets the id of the registered db record in order to use the other functions of this layer.
+//
+//  Parameters:
+//    pl_logItemFn   - *in* <EPTF_ILog_LogItem_FT> - callback function reference for saving log items
+//    pl_paramList   - *in* <EPTF_IntegerList> - list of optional parameters
+//
+//  Return Value:
+//    *integer* - the index of the new database record in the database list
+///////////////////////////////////////////////////////////
+public function f_EPTF_ILog_register_DB(
+  in EPTF_ILog_LogItem_FT pl_logItemFn,
+  in EPTF_IntegerList pl_paramList := {} )
+runs on EPTF_ILog_CT
+return integer {
+
+  var integer vl_dbId := sizeof(v_EPTF_ILog_databaseList);
+
+  v_EPTF_ILog_databaseList[vl_dbId].logItemFn := pl_logItemFn;
+  v_EPTF_ILog_databaseList[vl_dbId].dbParams := pl_paramList;
+  f_EPTF_FBQ_initFreeBusyQueue(v_EPTF_ILog_databaseList[vl_dbId].fbq);
+  v_EPTF_ILog_databaseList[vl_dbId].listOfDbItemUsage := {};
+
+  return vl_dbId;
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_ILog_newChain
+// 
+//  Purpose:
+//    This function creates a new chain or reuses an existing free chain. The chains are registered as free or busy in a dedicated queue. 
+//    This function moves the id of the used chain from the free to the busy chain or puts the id of a new chain into the busy chain.
+//    The chain contains the log items of an event flow in the order of the registration of the elements.
+//
+//  Parameters:
+//    pl_name        - *in* *charstring* - the name of the chain
+//    pl_logHeaderFn - *in* <EPTF_ILog_LogHeader_FT> - callback function reference for generating the log header
+//    pl_paramList   - *in* *in* <EPTF_IntegerList> - list of optional parameters
+//
+//  Return Value:
+//   *integer* - the id of the new chain
+///////////////////////////////////////////////////////////
+public function f_EPTF_ILog_newChain(
+  in charstring pl_name,
+  in EPTF_ILog_chainType pl_type:= detailed,
+  in EPTF_ILog_LogHeader_FT pl_logHeaderFn := null,
+  in EPTF_IntegerList pl_paramList := {})
+runs on EPTF_ILog_CT
+return integer {
+
+  var integer vl_chainId := f_EPTF_NQueue_getHeadOfChain(v_EPTF_ILog_chainQueueId, v_EPTF_ILog_freeChainId);
+
+  if( vl_chainId == -1 ){
+
+    vl_chainId := f_EPTF_NQueue_createChain(v_EPTF_ILog_queueId);
+    v_EPTF_ILog_chainList[vl_chainId].chainName := pl_name;
+    v_EPTF_ILog_chainList[vl_chainId].logHeaderFn := pl_logHeaderFn;  
+    v_EPTF_ILog_chainList[vl_chainId].chainParams := pl_paramList;
+    v_EPTF_ILog_chainList[vl_chainId].chainType := pl_type;
+
+    var integer vl_newChainId;
+    if(pl_type == detailed){
+      vl_newChainId := f_EPTF_NQueue_createItemAtChainTail(v_EPTF_ILog_chainQueueId, v_EPTF_ILog_busyDetailedChainId);
+    } else {
+      vl_newChainId := f_EPTF_NQueue_createItemAtChainTail(v_EPTF_ILog_chainQueueId, v_EPTF_ILog_busyShortChainId);
+    }
+
+    if(not(vl_newChainId == vl_chainId)){
+      f_EPTF_Common_warning(%definitionId&" Chain id inconsistency!");
+    }
+
+    return vl_chainId;
+
+  } else {
+    v_EPTF_ILog_chainList[vl_chainId].chainName := pl_name;
+    v_EPTF_ILog_chainList[vl_chainId].logHeaderFn := pl_logHeaderFn;  
+    v_EPTF_ILog_chainList[vl_chainId].chainParams := pl_paramList;
+    v_EPTF_ILog_chainList[vl_chainId].chainType := pl_type;
+
+    if(pl_type == detailed){
+      f_EPTF_NQueue_moveToTail(v_EPTF_ILog_chainQueueId, v_EPTF_ILog_busyDetailedChainId, vl_chainId);
+    } else {
+      f_EPTF_NQueue_moveToTail(v_EPTF_ILog_chainQueueId, v_EPTF_ILog_busyShortChainId, vl_chainId);
+    }
+    return vl_chainId;
+
+  }
+
+}
+
+//  Purpose:
+//    This function creates a new item in the chain with the id given in the input parameter pl_chainId. The function checks if there are
+//    free items in the queue. If there is, then it moves the item from the free chain to the tail of the specified log item chain. If 
+//    there isn't any free items in the queue the function creates a new item in the specified chain, the item is placed to the tail of the chain.
+//    When the chain has its new item, it is filled with the item properties (database id and database index).
+private function f_EPTF_ILog_addElementToChain(
+  in integer pl_dbId,
+  in integer pl_dbIdx,
+  in EPTF_ILog_ChainId pl_chainId
+)
+runs on EPTF_ILog_CT {
+
+  var integer vl_chainItemIdx := f_EPTF_NQueue_getHeadOfChain(v_EPTF_ILog_queueId, v_EPTF_ILog_freeChainItemsChainId);
+
+  if(vl_chainItemIdx == -1){
+    vl_chainItemIdx := f_EPTF_NQueue_createItemAtChainTail(v_EPTF_ILog_queueId, pl_chainId);
+  } else {
+    f_EPTF_NQueue_moveToTail(v_EPTF_ILog_queueId, pl_chainId, vl_chainItemIdx);
+  }
+  v_EPTF_ILog_chainItemList[vl_chainItemIdx].databaseId := pl_dbId;
+  v_EPTF_ILog_chainItemList[vl_chainItemIdx].databaseIdx := pl_dbIdx;
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_ILog_addToChains
+// 
+//  Purpose:
+//    This function registers a new elemnt in the chains that are given in the input integer list. The function returns an index, which is an index
+//    in the user side database, where the elements are stored. The function generates the db index based on the FreeBusyQueue
+//    that is created for each registered db.
+//
+//    After creating the dbIdx, the function registers the dbId and dbIdx in the chains (in a new chain item or in a reused
+//    chain item(free items are stored in a chain)). The chain related information is stored in the chainList database.
+//
+//  Parameters:
+//    pl_dbId    - *in* *integer* - The database id that stores the log elements of the chain.
+//    pl_chainIdList - *in* <EPTF_IntegerList> - The list of chains that store the log element flow. If the list is empty, the functon adds the log item to all existing chains.
+//
+//  Return Value:
+//    *integer* - the index of the created item in the user side database, or -1 if the pl_dbId or the chain list does not contain valid chain id or the chain list
+//                is empty and there is no chain in use
+///////////////////////////////////////////////////////////
+public function f_EPTF_ILog_addToChains(
+  in integer pl_dbId,
+  in EPTF_IntegerList pl_chainIdList)
+runs on EPTF_ILog_CT 
+return integer {
+
+  if( pl_dbId < 0 or pl_dbId >= sizeof(v_EPTF_ILog_databaseList) ) {
+    f_EPTF_Common_warning(%definitionId&" Invalid database id: "&int2str(pl_dbId));
+    return c_EPTF_ILog_warning;
+  }
+
+  var integer vl_sizeOfChainList := sizeof(pl_chainIdList);
+  var integer vl_numberOfRegisteredChains := sizeof(v_EPTF_ILog_chainList);
+  var integer vl_sizeOfValidChainList := 0;
+  var EPTF_IntegerList vl_validChainList := {};
+
+  if(vl_sizeOfChainList != 0){
+    for(var integer vl_j :=0; vl_j < vl_sizeOfChainList; vl_j := vl_j + 1){
+      if(pl_chainIdList[vl_j]>0 and pl_chainIdList[vl_j]<vl_numberOfRegisteredChains){
+        var integer vl_chainState := f_EPTF_NQueue_getChainOfItem(v_EPTF_ILog_chainQueueId, pl_chainIdList[vl_j]);
+
+        if(vl_chainState == v_EPTF_ILog_busyDetailedChainId or vl_chainState == v_EPTF_ILog_busyShortChainId){
+          vl_validChainList[vl_sizeOfValidChainList] := pl_chainIdList[vl_j];
+          vl_sizeOfValidChainList := vl_sizeOfValidChainList + 1;
+        }
+      }
+    }
+    if(vl_sizeOfValidChainList == 0){
+      f_EPTF_Common_warning(%definitionId&" No valid chain was given in the list, which is currently in use!");
+      return c_EPTF_ILog_warning;
+    }
+  } else {
+    var integer vl_stateOfBusyChains := f_EPTF_NQueue_getHeadOfChain(v_EPTF_ILog_chainQueueId, v_EPTF_ILog_busyDetailedChainId);
+
+    if(vl_stateOfBusyChains == -1){
+      f_EPTF_Common_warning(%definitionId&" There is no detailed chain in use!");
+      return c_EPTF_ILog_warning;
+    }
+  }
+
+
+  var integer vl_databaseIdx := f_EPTF_FBQ_getOrCreateFreeSlot(v_EPTF_ILog_databaseList[pl_dbId].fbq);
+
+  f_EPTF_FBQ_moveFromFreeToBusyTail(vl_databaseIdx, v_EPTF_ILog_databaseList[pl_dbId].fbq);
+
+  if(vl_sizeOfChainList == 0){
+
+    vl_sizeOfChainList := f_EPTF_NQueue_getLengthOfChain(v_EPTF_ILog_chainQueueId, v_EPTF_ILog_busyDetailedChainId);
+
+    var integer vl_chainId := f_EPTF_NQueue_getHeadOfChain(v_EPTF_ILog_chainQueueId, v_EPTF_ILog_busyDetailedChainId);
+    var boolean vl_hasNext := vl_chainId != -1;
+
+    while(vl_hasNext){
+      f_EPTF_ILog_addElementToChain(pl_dbId, vl_databaseIdx, vl_chainId );
+
+      vl_hasNext := f_EPTF_NQueue_getNextItemIdx(v_EPTF_ILog_chainQueueId, vl_chainId);
+    }
+  } else {
+    vl_sizeOfChainList := vl_sizeOfValidChainList;
+
+    for(var integer vl_chain := 0; vl_chain < vl_sizeOfChainList; vl_chain := vl_chain + 1 ){
+      f_EPTF_ILog_addElementToChain(pl_dbId, vl_databaseIdx, vl_validChainList[vl_chain] );
+    }
+  }
+
+  v_EPTF_ILog_databaseList[pl_dbId].listOfDbItemUsage[vl_databaseIdx] := vl_sizeOfChainList;
+
+  return vl_databaseIdx;
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_ILog_getName
+// 
+//  Purpose:
+//    The function returns the name of the chain which has the id given in the input parameter.
+//
+//  Parameters:
+//    pl_chainId - *in* *integer* - The id of a chain.
+//
+//  Return Value:
+//    *charstring* - the name of the chain with the given chainId, "" if the the pl_chainId is invalid
+///////////////////////////////////////////////////////////
+public function f_EPTF_ILog_getName(
+  in integer pl_chainId)
+runs on EPTF_ILog_CT
+return charstring {
+
+  var integer vl_numberOfRegisteredChains := sizeof(v_EPTF_ILog_chainList);
+
+  if(pl_chainId<0 or vl_numberOfRegisteredChains<=pl_chainId){
+    f_EPTF_Common_warning(%definitionId&" Invalid chain, id: "&int2str(pl_chainId));
+
+    return c_EPTF_ILog_Invalid_warning;
+  }
+  var charstring vl_chainName := v_EPTF_ILog_chainList[pl_chainId].chainName;
+
+  return vl_chainName;
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_ILog_deleteChain
+// 
+//  Purpose:
+//    The function deletes the chain with the id given in the input parameter. When deleting a chain, the proper items in the fbq of the user db have 
+//    to be moved to the free chain. The items of the deleted chain and the chain itself also have to be put into the free chains that belong to them.
+//
+//  Parameters:
+//    pl_chainId - *in* *integer* - id of the chain that has to be deleted
+//
+//  Return Value:
+//   *integer* - 0, if the operation was successful, -1 in case of any error occured
+///////////////////////////////////////////////////////////
+public function f_EPTF_ILog_deleteChain(
+  in integer pl_chainId)
+runs on EPTF_ILog_CT
+return integer {
+
+  var integer vl_numberOfRegisteredChains := sizeof(v_EPTF_ILog_chainList);
+
+  if(pl_chainId<0 or vl_numberOfRegisteredChains<=pl_chainId){
+    f_EPTF_Common_warning(%definitionId&" Invalid chain, id: "&int2str(pl_chainId));
+
+    return c_EPTF_ILog_warning;
+  }
+
+  var integer vl_chainState := f_EPTF_NQueue_getChainOfItem(v_EPTF_ILog_chainQueueId, pl_chainId);
+  var boolean vl_hasNext := true;
+  var integer vl_chainIdx := f_EPTF_NQueue_getHeadOfChain(v_EPTF_ILog_queueId, pl_chainId);
+
+  if(vl_chainState == v_EPTF_ILog_freeChainId){
+    //Nothing to do
+  } else {
+    if(vl_chainIdx != -1){
+      while(vl_hasNext){
+        var integer vl_dbId := v_EPTF_ILog_chainItemList[vl_chainIdx].databaseId;
+        var integer vl_dbIdx := v_EPTF_ILog_chainItemList[vl_chainIdx].databaseIdx;
+
+        if(v_EPTF_ILog_databaseList[vl_dbId].listOfDbItemUsage[vl_dbIdx] > 1){
+          v_EPTF_ILog_databaseList[vl_dbId].listOfDbItemUsage[vl_dbIdx] := v_EPTF_ILog_databaseList[vl_dbId].listOfDbItemUsage[vl_dbIdx] - 1;
+        } else if (v_EPTF_ILog_databaseList[vl_dbId].listOfDbItemUsage[vl_dbIdx] == 1 ){
+          v_EPTF_ILog_databaseList[vl_dbId].listOfDbItemUsage[vl_dbIdx] := 0;
+          f_EPTF_FBQ_moveFromBusyToFreeTail(vl_dbIdx, v_EPTF_ILog_databaseList[vl_dbId].fbq);
+        }
+        vl_hasNext := f_EPTF_NQueue_getNextItemIdx(v_EPTF_ILog_queueId, vl_chainIdx);
+        f_EPTF_NQueue_moveToTail(v_EPTF_ILog_queueId, v_EPTF_ILog_freeChainItemsChainId, f_EPTF_NQueue_getHeadOfChain(v_EPTF_ILog_queueId, pl_chainId));
+      }
+    }
+    f_EPTF_NQueue_moveToTail(v_EPTF_ILog_chainQueueId, v_EPTF_ILog_freeChainId, pl_chainId);
+  }
+  return c_EPTF_ILog_success;
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_ILog_logChain
+// 
+//  Purpose:
+//    The function creates the log from the items of the input chain. This function calls the header callback function and
+//    if the chain is not empty, it invokes the callback function to log out the log items that were registered to the chain. 
+//    After creating the log of the chain the function deletes it by default, if the user did not choose to not to delete it.
+//
+//  Parameters:
+//    pl_chainId     - *in* *integer* - chain id
+//    pl_deleteChain - *in* *boolean* - true if the chain has to be deleted, default value is true
+//  
+//  Return Value:
+//   *integer* - 0, if the operation was successful, -1 in case of any error occured
+///////////////////////////////////////////////////////////
+public function f_EPTF_ILog_logChain(
+  in integer pl_chainId,
+  in boolean pl_deleteChain := true)
+runs on EPTF_ILog_CT
+return integer {
+
+  var integer vl_numberOfRegisteredChains := sizeof(v_EPTF_ILog_chainList);
+
+  if(pl_chainId<0 or vl_numberOfRegisteredChains<=pl_chainId){
+    f_EPTF_Common_warning(%definitionId&" Invalid chain, id: "&int2str(pl_chainId));
+
+    return c_EPTF_ILog_warning;
+  }
+
+  var boolean vl_hasNext := true;
+  var integer vl_chainState := f_EPTF_NQueue_getChainOfItem(v_EPTF_ILog_chainQueueId, pl_chainId);
+  var integer vl_chainIdx := f_EPTF_NQueue_getHeadOfChain(v_EPTF_ILog_queueId, pl_chainId);
+
+  if(not (v_EPTF_ILog_chainList[pl_chainId].logHeaderFn == null)){
+    v_EPTF_ILog_chainList[pl_chainId].logHeaderFn.apply( pl_chainId, v_EPTF_ILog_chainList[pl_chainId].chainParams );
+  }
+
+  if(not(vl_chainState == v_EPTF_ILog_freeChainId or vl_chainIdx == -1 )){
+    while(vl_hasNext){
+      var integer vl_dbId := v_EPTF_ILog_chainItemList[vl_chainIdx].databaseId;
+      v_EPTF_ILog_databaseList[vl_dbId].logItemFn.apply( v_EPTF_ILog_chainItemList[vl_chainIdx].databaseIdx, vl_dbId, pl_chainId, v_EPTF_ILog_databaseList[vl_dbId].dbParams );
+
+      vl_hasNext := f_EPTF_NQueue_getNextItemIdx(v_EPTF_ILog_queueId, vl_chainIdx);
+    }
+  }
+
+  if(pl_deleteChain){
+    if(f_EPTF_ILog_deleteChain( pl_chainId ) != 0){
+      return c_EPTF_ILog_warning;
+    }    
+  }
+  return c_EPTF_ILog_success;
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_ILog_logAll
+// 
+//  Purpose:
+//    The function creates the log for all chains. The function iterates through the list of the busy chains (the chains, which contain valid log items) 
+//    and logs the content of each chain based on the order of registration. The user can choose, whether the chains that were logged have to be deleted or not.
+//  
+//  Parameters:
+//    pl_deleteChains - *in* *boolean* - true if the chains have to be deleted, default value is true
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_ILog_logAll(
+  in boolean pl_deleteChains := true) 
+runs on EPTF_ILog_CT {
+
+  var integer vl_detailedChainId := f_EPTF_NQueue_getHeadOfChain(v_EPTF_ILog_chainQueueId, v_EPTF_ILog_busyDetailedChainId);
+  var boolean vl_detailedHasNext := vl_detailedChainId != -1;
+  var integer vl_shortChainId := f_EPTF_NQueue_getHeadOfChain(v_EPTF_ILog_chainQueueId, v_EPTF_ILog_busyShortChainId);
+  var boolean vl_shortHasNext := vl_shortChainId != -1;
+
+  if(vl_detailedChainId == -1 and vl_shortChainId == -1){
+    f_EPTF_Common_warning(%definitionId&" No chain to log!");
+  } else {
+    if(pl_deleteChains){
+      while(vl_detailedHasNext){
+        vl_detailedHasNext := f_EPTF_NQueue_getNextItemIdx(v_EPTF_ILog_chainQueueId, vl_detailedChainId);
+        f_EPTF_ILog_logChain( f_EPTF_NQueue_getHeadOfChain(v_EPTF_ILog_chainQueueId, v_EPTF_ILog_busyDetailedChainId), pl_deleteChains );
+      }
+      while(vl_shortHasNext){
+        vl_shortHasNext := f_EPTF_NQueue_getNextItemIdx(v_EPTF_ILog_chainQueueId, vl_shortChainId);
+        f_EPTF_ILog_logChain( f_EPTF_NQueue_getHeadOfChain(v_EPTF_ILog_chainQueueId, v_EPTF_ILog_busyShortChainId), pl_deleteChains );
+      }
+    } else {
+      while(vl_detailedHasNext){
+        f_EPTF_ILog_logChain( vl_detailedChainId, pl_deleteChains );
+        vl_detailedHasNext := f_EPTF_NQueue_getNextItemIdx(v_EPTF_ILog_chainQueueId, vl_detailedChainId);
+      }
+      
+      while(vl_shortHasNext){
+        f_EPTF_ILog_logChain( vl_shortChainId, pl_deleteChains );
+        vl_shortHasNext := f_EPTF_NQueue_getNextItemIdx(v_EPTF_ILog_chainQueueId, vl_shortChainId);
+      }
+    }
+  }
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_ILog_deleteAll
+// 
+//  Purpose:
+//    This function deletes all chains.
+//
+//  Parameters:
+//    -
+//  
+///////////////////////////////////////////////////////////
+public function f_EPTF_ILog_deleteAll()
+runs on EPTF_ILog_CT {
+
+  var integer vl_detailedChainId := f_EPTF_NQueue_getHeadOfChain(v_EPTF_ILog_chainQueueId, v_EPTF_ILog_busyDetailedChainId);
+  var boolean vl_detailedHasNext := vl_detailedChainId != -1;
+  var integer vl_shortChainId := f_EPTF_NQueue_getHeadOfChain(v_EPTF_ILog_chainQueueId, v_EPTF_ILog_busyShortChainId);
+  var boolean vl_shortHasNext := vl_shortChainId != -1;
+
+  while(vl_detailedHasNext){
+    vl_detailedHasNext := f_EPTF_NQueue_getNextItemIdx(v_EPTF_ILog_chainQueueId, vl_detailedChainId);
+    f_EPTF_ILog_deleteChain( f_EPTF_NQueue_getHeadOfChain(v_EPTF_ILog_chainQueueId, v_EPTF_ILog_busyDetailedChainId) );
+  }
+
+  while(vl_shortHasNext){
+    vl_shortHasNext := f_EPTF_NQueue_getNextItemIdx(v_EPTF_ILog_chainQueueId, vl_shortChainId);
+    f_EPTF_ILog_deleteChain( f_EPTF_NQueue_getHeadOfChain(v_EPTF_ILog_chainQueueId, v_EPTF_ILog_busyShortChainId) );
+  }
+}
+
+//  Purpose:
+//    This function cleans the component.
+private function f_EPTF_ILog_cleanup_CT()
+runs on EPTF_ILog_CT {
+
+  if(not v_EPTF_ILog_initialized){
+    return;
+  }
+
+  f_EPTF_ILog_deleteAll();
+  v_EPTF_ILog_initialized := false;
+
+  f_EPTF_NQueue_deleteQueue(v_EPTF_ILog_queueId);
+  f_EPTF_NQueue_deleteQueue(v_EPTF_ILog_chainQueueId);
+
+  for(var integer vl_i :=0, vl_size := sizeof(v_EPTF_ILog_databaseList); vl_i < vl_size; vl_i := vl_i + 1){
+    f_EPTF_FBQ_deleteFreeBusyQueue(v_EPTF_ILog_databaseList[vl_i].fbq);
+  }
+
+  v_EPTF_ILog_chainList := {};
+  v_EPTF_ILog_chainItemList := {};
+  v_EPTF_ILog_databaseList := {};
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_ILog_dumpToPng
+// 
+//  Purpose:
+//    A debug function. It draws the fbqs that belong to the user databases and the queue that stores the log items into png files. The funtction also logs
+//    the content of the log queue and the list of created chains (both free and busy).
+//
+//  Parameters:
+//    pl_name  - *in* *charstring* - name of the png files
+//  
+///////////////////////////////////////////////////////////
+public function f_EPTF_ILog_dumpToPng(in charstring pl_name)
+runs on EPTF_ILog_CT {
+
+  for(var integer vl_i := 0, vl_size := sizeof(v_EPTF_ILog_databaseList); vl_i < vl_size; vl_i := vl_i + 1) {
+
+    f_EPTF_NQueue_dumpToPng(v_EPTF_ILog_databaseList[vl_i].fbq, pl_name&int2str(vl_i));
+
+  }
+  f_EPTF_NQueue_dumpToPng(v_EPTF_ILog_queueId, pl_name);
+
+  f_EPTF_Common_user("List of log items:");
+  for(var integer vl_j := 0, vl_size := sizeof(v_EPTF_ILog_chainItemList); vl_j < vl_size; vl_j := vl_j + 1) {
+
+    f_EPTF_Common_user("Queue index: "&int2str(vl_j)&", queue items: dbId: "&int2str(v_EPTF_ILog_chainItemList[vl_j].databaseId)&", dbIdx: "&int2str(v_EPTF_ILog_chainItemList[vl_j].databaseIdx))
+
+  }
+
+
+  f_EPTF_Common_user("List of log chains:");
+  for(var integer vl_l := 1, vl_size := sizeof(v_EPTF_ILog_chainList); vl_l < vl_size; vl_l := vl_l + 1) {
+
+    f_EPTF_Common_user("Chain index: "&int2str(vl_l)&", chain name: "&v_EPTF_ILog_chainList[vl_l].chainName);
+
+  }
+
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_ILog_logToFile
+// 
+//  Purpose:
+//    Function to write the ilog logitems to file. 
+//
+//  Parameters:
+//    pl_fileName         - *in* *charstring*           - name of the log file
+//    pl_logItem          - *in* *harstring*           - charstring to write to file
+//  
+///////////////////////////////////////////////////////////
+public function f_EPTF_ILog_logToFile( in charstring pl_logItem, in charstring pl_fileName := tsp_EPTF_ILog_logFileName)
+runs on EPTF_ILog_CT {
+   
+    var integer vl_file := f_FIO_open_append_rdwr(pl_fileName);
+    var integer vl_retval:=-1;
+    if(vl_file==-1){ 
+      f_EPTF_Common_warning(%definitionId&": Couldn't open the file "&pl_fileName&".");
+    }
+    vl_retval:=f_FIO_write_text(vl_file, pl_logItem & "\n");
+    if(-1 == vl_retval){
+      f_EPTF_Common_warning(%definitionId&": Couldn't write the file "&pl_fileName&".");
+    }
+    if( f_FIO_close(vl_file)==-1) {
+      f_EPTF_Common_warning(%definitionId&": Could not close the file "&pl_fileName&".");
+    }
+   
+   }
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_ILog_Time
+// 
+//  Purpose:
+//    Create timestamp.
+//
+//  Parameters:
+//   --
+//  
+///////////////////////////////////////////////////////////
+public function f_EPTF_ILog_Time() runs on EPTF_ILog_CT return charstring{
+  var float vl_timeFloat := f_EPTF_Base_getAbsTimeInSecs();
+  var integer vl_timeSecs := float2int(vl_timeFloat);
+  var integer vl_timeMilliSecs := float2int((vl_timeFloat - int2float(vl_timeSecs)) * 1000.0);
+  var charstring vl_time := f_getTimeFormatted(vl_timeSecs, "%a %Y %b %d: %X") & ":" & int2str(vl_timeMilliSecs);
+ 
+  return vl_time;
+ 
+}
+
+}

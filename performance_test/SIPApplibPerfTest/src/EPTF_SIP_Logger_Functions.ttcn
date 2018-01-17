@@ -1,0 +1,168 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_SIP_Logger_Functions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 522
+//  Updated:  2012-11-28
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////
+//  Module: EPTF_SIP_Logger_Functions
+//
+//  Purpose:
+//     Contains functions used by the logger component.
+//
+//  Module paramters:
+//    - tsp_EPTF_SIP_Logging_decode - *boolean* - if true the Logger will decode the incoming SIP PDUs.
+//
+//  Module depends on:  
+//    <EPTF_SIP_Logger_Definitions>
+//
+//    <SIPmsg_Types>
+//
+//  Last review date:
+//    2008-03-27  
+////////////////////////////////////////////////////
+module EPTF_SIP_Logger_Functions
+{
+
+import from SIPmsg_Types all;
+import from EPTF_SIP_Logger_Definitions all;
+
+
+modulepar boolean tsp_EPTF_SIP_Logging_decode := false;
+modulepar boolean tsp_EPTF_SIP_Logging_enabled := false;
+
+///////////////////////////////////////////////////////////
+//  Group: Logger
+// 
+//  Purpose:
+//    Functions of the Logger component
+//
+///////////////////////////////////////////////////////////
+group Logger
+{
+////////////////////////////////////////////////////
+//Function: f_EPTF_SIP_Logger_Behavior
+//
+//Purpose:
+//  Defines logging behavior of EPTF_SIP_Logger_CT.
+//
+//Errors:
+//
+//Detailed comments:  
+//
+////////////////////////////////////////////////////
+function f_EPTF_SIP_Logger_Behavior()
+runs on EPTF_SIP_Logger_CT
+{
+  alt
+  {
+    [] SIP_Logger_PCO.receive(EPTF_SIP_Logger_Msg:?) -> value v_EPTF_SIP_Logger_msg
+    {
+      var charstring vl_message := oct2char(v_EPTF_SIP_Logger_msg.msg);
+      if(tsp_EPTF_SIP_Logging_decode) {
+        v_EPTF_SIP_Logger_pduSIP := f_SIP_decode(vl_message);
+        log(v_EPTF_SIP_Logger_msg.description,v_EPTF_SIP_Logger_pduSIP);
+      } else {
+        log(v_EPTF_SIP_Logger_msg.description,vl_message);
+      }
+      repeat;
+    }
+  }
+}
+}//end goup Logger
+
+
+///////////////////////////////////////////////////////////
+//  Group: LoggerClient
+// 
+//  Purpose:
+//    Functions of the LoggerClient component.
+//
+///////////////////////////////////////////////////////////
+group LoggerClient
+{
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_SIP_LoggerClient_init_CT
+// 
+//  Purpose:
+//    Initializes the LoggerClient component.
+//
+//  Parameters:
+//    pl_functionRef - *in* <f_EPTF_SIP_LoggerClient_FT> - The send function of logging
+//
+///////////////////////////////////////////////////////////
+function f_EPTF_SIP_LoggerClient_init_CT(in f_EPTF_SIP_LoggerClient_FT pl_functionRef) 
+runs on EPTF_SIP_LoggerClient_CT
+{
+  if (not tsp_EPTF_SIP_Logging_enabled) {return; }
+  if (v_EPTF_SIP_LoggerClient_initialized) { return; }
+
+  vf_EPTF_SIP_LoggerClient_sendFunction := pl_functionRef;
+  vc_EPTF_SIP_LoggerClient_loggerComponent := EPTF_SIP_Logger_CT.create;
+  connect(vc_EPTF_SIP_LoggerClient_loggerComponent:SIP_Logger_PCO,self:SIP_LoggerClient_PCO);
+  vc_EPTF_SIP_LoggerClient_loggerComponent.start(f_EPTF_SIP_Logger_Behavior());
+  v_EPTF_SIP_LoggerClient_initialized := true;
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_SIP_LoggerClient_cleanup_CT
+// 
+//  Purpose:
+//    Cleans up the LoggerClient component.
+//
+///////////////////////////////////////////////////////////
+function f_EPTF_SIP_LoggerClient_cleanup_CT() 
+runs on EPTF_SIP_LoggerClient_CT
+{
+  if (v_EPTF_SIP_LoggerClient_initialized)
+  {
+    vc_EPTF_SIP_LoggerClient_loggerComponent.stop;
+    disconnect(vc_EPTF_SIP_LoggerClient_loggerComponent:SIP_Logger_PCO,self:SIP_LoggerClient_PCO);
+    v_EPTF_SIP_LoggerClient_initialized := false;
+  }
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_SIP_LoggerClient_Logger
+// 
+//  Purpose:
+//    Calls the registered call-back function.
+//
+///////////////////////////////////////////////////////////
+function f_EPTF_SIP_LoggerClient_Logger(in EPTF_SIP_Logger_Msg pl_message)
+runs on EPTF_SIP_LoggerClient_CT
+{
+  if (null != vf_EPTF_SIP_LoggerClient_sendFunction)
+  {    
+    vf_EPTF_SIP_LoggerClient_sendFunction.apply(pl_message);
+  }
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_SIP_LoggerClient_sendMessageToLogger
+// 
+//  Purpose:
+//    Sends the message to the logger component.
+//
+///////////////////////////////////////////////////////////
+function f_EPTF_SIP_LoggerClient_sendMessageToLogger(in EPTF_SIP_Logger_Msg pl_message)
+runs on EPTF_SIP_LoggerClient_CT
+{
+  SIP_LoggerClient_PCO.send(pl_message);
+}
+
+}//end group LoggerClient
+
+}//end of module
+with {
+extension "version <RnXnn>"
+}
+

@@ -1,0 +1,432 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_CLL_Buffer_Functions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 512
+//  Updated:  2010-06-22
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////
+//  Module: EPTF_CLL_Buffer_Functions
+// 
+//  Purpose:
+//    This module contains function definitions for TTCN-3 EPTF_Buffer implementation.
+// 
+//  Module Parameters:
+//    -
+//
+//  Module depends on:
+//    <EPTF_CLL_Buffer_Definitions>
+// 
+//  Current Owner:
+//    Jozsef Gyurusi (ethjgi)
+// 
+//  Last Review Date:
+//    2010-06-2x
+//
+//  Detailed Comments:
+//    This module contains function definitions for TTCN-3 EPTF_Buffer implementation.
+//    EPTF_Buffer makes it possible to use Titan's TTCN_Buffer from TTCN-3.
+//    Public functions:
+//      <f_EPTF_Buffer_init>
+//      <f_EPTF_Buffer_new>
+//      <f_EPTF_Buffer_clear>
+//      <f_EPTF_Buffer_rewind>
+//      <f_EPTF_Buffer_get_pos>
+//      <f_EPTF_Buffer_set_pos>
+//      <f_EPTF_Buffer_get_len>
+//      <f_EPTF_Buffer_get_data>
+//      <f_EPTF_Buffer_get_read_len>
+//      <f_EPTF_Buffer_get_read_data>
+//      <f_EPTF_Buffer_put_os>
+//      <f_EPTF_Buffer_increase_length>
+//      <f_EPTF_Buffer_cut>
+//      <f_EPTF_Buffer_cut_end>
+//      <f_EPTF_Buffer_contains_complete_TLV>
+//      <f_EPTF_Buffer_getReadDataFromOffset>
+//      <f_EPTF_Buffer_getDataFromOffset>
+// 
+///////////////////////////////////////////////////////////////
+module EPTF_CLL_Buffer_Functions {
+
+import from EPTF_CLL_Buffer_Definitions all;
+import from EPTF_CLL_Base_Functions all;
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Buffer_init_CT
+// 
+//  Purpose:
+//    Initialises the Buffer component
+//
+//  Parameters:
+//    -
+//
+//  Return Value:
+//    -
+//
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//    This function should be called before using the Buffer
+//
+///////////////////////////////////////////////////////////
+public function f_EPTF_Buffer_init_CT(in charstring pl_selfName)
+runs on EPTF_Buffer_CT
+{
+  if (v_EPTF_Buffer_initialized) {
+    return;
+  }
+    
+  f_EPTF_Base_init_CT(pl_selfName);
+  f_EPTF_Buffer_init();
+  f_EPTF_Base_registerCleanup(refers(f_EPTF_Buffer_cleanup_CT));
+  
+  v_EPTF_Buffer_initialized := true; 
+}
+
+private external function f_EPTF_Buffer_init();
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Buffer_cleanup_CT
+// 
+//  Purpose:
+//    Function to cleanup the Buffer component
+//
+//  Parameters:
+//    - 
+//
+//  Return Value:
+//    - 
+//
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//    
+///////////////////////////////////////////////////////////  
+private function f_EPTF_Buffer_cleanup_CT() 
+runs on EPTF_Buffer_CT {
+  if(not v_EPTF_Buffer_initialized) { return; }
+  
+  f_EPTF_Buffer_cleanup();
+  v_EPTF_Buffer_initialized := false;
+}
+
+private external function f_EPTF_Buffer_cleanup();
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Buffer_new
+// 
+//  Purpose:
+//    This function creates a new buffer
+//
+//  Parameters:
+//    -
+//
+//  Return Value:
+//   *integer* -  buffer's id
+//
+//  Errors:
+//    -
+//  
+///////////////////////////////////////////////////////////
+public external function f_EPTF_Buffer_new() return integer;
+
+// functions are same as in TTCN_Buffer
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Buffer_clear
+// 
+//  Purpose:
+//    This function clears the buffer with id pl_bufferId
+//
+//  Parameters:
+//    pl_bufferId - *in* *integer* -  buffer's id
+//
+//  Return Value:
+//    -
+//
+//  Errors:
+//    -
+//  
+///////////////////////////////////////////////////////////
+public external function f_EPTF_Buffer_clear(in integer pl_bufferId);
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Buffer_rewind
+// 
+//  Purpose:
+//    This function rewinds the buffer with id pl_bufferId, the position will be 0
+//
+//  Parameters:
+//    pl_bufferId - *in* *integer* -  buffer's id
+//
+//  Return Value:
+//    -
+//
+//  Errors:
+//    -
+//  
+///////////////////////////////////////////////////////////
+public external function f_EPTF_Buffer_rewind(in integer pl_bufferId);
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Buffer_get_pos
+// 
+//  Purpose:
+//    This function returns the position of the buffer with id pl_bufferId
+//
+//  Parameters:
+//    pl_bufferId - *in* *integer* -  buffer's id
+//
+//  Return Value:
+//    *integer* - the position in the buffer
+//
+//  Errors:
+//    -
+//  
+///////////////////////////////////////////////////////////
+public external function f_EPTF_Buffer_get_pos(in integer pl_bufferId) return integer;
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Buffer_set_pos
+// 
+//  Purpose:
+//    This function sets the position of the buffer with id pl_bufferId to pl_pos
+//
+//  Parameters:
+//    pl_bufferId - *in* *integer* - buffer's id
+//    pl_pos 	  - *in* *integer* - new position
+//
+//  Return Value:
+//    -
+//
+//  Errors:
+//    -
+//  
+///////////////////////////////////////////////////////////
+public external function f_EPTF_Buffer_set_pos(in integer pl_bufferId, in integer pl_pos);
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Buffer_get_len
+// 
+//  Purpose:
+//    This function returns the length of the buffer with id pl_bufferId
+//
+//  Parameters:
+//    pl_bufferId - *in* *integer* -  buffer's id
+//
+//  Return Value:
+//    *integer* - the length of the buffer
+//
+//  Errors:
+//    -
+//  
+///////////////////////////////////////////////////////////
+public external function f_EPTF_Buffer_get_len(in integer pl_bufferId) return integer;
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Buffer_get_data
+// 
+//  Purpose:
+//    This function returns the data of the buffer with id pl_bufferId
+//
+//  Parameters:
+//    pl_bufferId - *in* *integer* 		-  buffer's id
+//    pl_data 	  - *out* *octetstring* -  data
+//
+//  Return Value:
+//    -
+//
+//  Errors:
+//    -
+//  
+///////////////////////////////////////////////////////////
+public external function f_EPTF_Buffer_get_data(in integer pl_bufferId, out octetstring pl_data);
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Buffer_get_read_len
+// 
+//  Purpose:
+//    This function returns the length of the data in the buffer with id pl_bufferId
+//    which is readable, continous, etc...
+//
+//  Parameters:
+//    pl_bufferId - *in* *integer* 		-  buffer's id
+//
+//  Return Value:
+//    *integer* - the length of the data in the buffer
+//
+//  Errors:
+//    -
+//  
+///////////////////////////////////////////////////////////
+public external function f_EPTF_Buffer_get_read_len(in integer pl_bufferId) return integer;
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Buffer_get_read_data
+// 
+//  Purpose:
+//    This function returns the readable data in the buffer with id pl_bufferId
+//
+//  Parameters:
+//    pl_bufferId - *in* *integer* 		-  buffer's id
+//
+//  Return Value:
+//    *integer* - the length of the buffer
+//
+//  Errors:
+//    -
+//  
+///////////////////////////////////////////////////////////
+public external function f_EPTF_Buffer_get_read_data(in integer pl_bufferId, out octetstring pl_data);
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Buffer_put_os
+// 
+//  Purpose:
+//    This function puts the octetstring pl_data into the buffer with id pl_bufferId
+//
+//  Parameters:
+//    pl_bufferId - *in* *integer* 		-  buffer's id
+//    pl_data 	  - *in* *octetstring*  -  data to put into the buffer
+//
+//  Return Value:
+//    -
+//
+//  Errors:
+//    -
+//  
+///////////////////////////////////////////////////////////
+public external function f_EPTF_Buffer_put_os(in integer pl_bufferId, in octetstring pl_data);
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Buffer_increase_length
+// 
+//  Purpose:
+//    This function increases the lentgh of the buffer identified with id pl_bufferId with pl_count bytes
+//
+//  Parameters:
+//    pl_bufferId - *in* *integer*  -  buffer's id
+//    pl_count 	  - *in* *integer*  -  bytes with
+//
+//  Return Value:
+//    -
+//
+//  Errors:
+//    -
+//  
+///////////////////////////////////////////////////////////
+public external function f_EPTF_Buffer_increase_length(in integer pl_bufferId, in integer pl_count);
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Buffer_cut
+// 
+//  Purpose:
+//    This function cuts the buffer identified with id pl_bufferId - it erases the data
+//	  from the beginning of the buffer to the position of buffer. The position will be the
+//	  on the beginning of the buffer.
+//
+//  Parameters:
+//    pl_bufferId - *in* *integer*  -  buffer's id
+//
+//  Return Value:
+//    -
+//
+//  Errors:
+//    -
+//  
+///////////////////////////////////////////////////////////
+public external function f_EPTF_Buffer_cut(in integer pl_bufferId);
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Buffer_cut_end
+// 
+//  Purpose:
+//    This function cuts the buffer identified with id pl_bufferId - it erases the data
+//	  from the position of buffer to the end of the buffer. The position will not be changed.
+//
+//  Parameters:
+//    pl_bufferId - *in* *integer*  -  buffer's id
+//
+//  Return Value:
+//    -
+//
+//  Errors:
+//    -
+//  
+///////////////////////////////////////////////////////////
+public external function f_EPTF_Buffer_cut_end(in integer pl_bufferId);
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Buffer_contains_complete_TLV
+// 
+//  Purpose:
+//    This function returns whether the buffer contains complete TLV or not. 
+//
+//  Parameters:
+//    pl_bufferId - *in* *integer*  -  buffer's id
+//
+//  Return Value:
+//    *boolean* - true, if buffer contains complete TLV
+//
+//  Errors:
+//    -
+//  
+///////////////////////////////////////////////////////////
+public external function f_EPTF_Buffer_contains_complete_TLV(in integer pl_bufferId) return boolean;
+
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Buffer_getReadDataFromOffset
+// 
+//  Purpose:
+//    This function returns the data from pos to the end of read buffer. The read position is not changed 
+//
+//  Parameters:
+//    pl_bufferId - *in* *integer*  -  buffer's id
+//	  pl_pos	  - *in* *integer*  -  position to read from
+//    pl_data	  - *out* *octetstring* - data that has been read out
+//
+//  Return Value:
+//	  -
+//
+//  Errors:
+//    -
+//  
+///////////////////////////////////////////////////////////
+public function f_EPTF_Buffer_getReadDataFromOffset(in integer pl_bufferId, in integer pl_pos, out octetstring pl_data) {
+  var integer vl_origReadPos := f_EPTF_Buffer_get_pos(pl_bufferId);
+  f_EPTF_Buffer_set_pos(pl_bufferId,pl_pos);
+  f_EPTF_Buffer_get_read_data(pl_bufferId,pl_data);
+  f_EPTF_Buffer_set_pos(pl_bufferId,vl_origReadPos);
+}
+
+///////////////////////////////////////////////////////////
+//  Function: f_EPTF_Buffer_getReadDataFromOffset
+// 
+//  Purpose:
+//    This function returns pl_count bytes of data from position at pl_pos to at most the end of read buffer. The read position is not changed 
+//
+//  Parameters:
+//    pl_bufferId - *in* *integer*  -  buffer's id
+//	  pl_pos	  - *in* *integer*  -  position to read from
+//	  pl_count	  - *in* *integer*  -  how many bytes to read out
+//    pl_data	  - *out* *octetstring* - data that has been read out
+//
+//  Return Value:
+//	  -
+//
+//  Errors:
+//    -
+//  
+///////////////////////////////////////////////////////////
+public external function f_EPTF_Buffer_getDataFromOffset(in integer pl_bufferId, in integer pl_pos, in integer pl_count, out octetstring pl_data);
+
+} // module EPTF_CLL_Buffer_Functions

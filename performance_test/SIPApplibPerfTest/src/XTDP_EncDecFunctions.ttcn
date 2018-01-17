@@ -1,0 +1,60 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************///
+//  File:          XTDP_EncDecFunctions.ttcn
+//  Description:   Encode-decode functions for the protocol module
+//  References:
+//  Rev:           <RnXnn>
+//  Prodnr:        CNL 113 663
+//  Updated:       Tue Jan 11 10:53:39 2011
+//  Contact:       http://ttcn.ericsson.se
+//
+////////////////////////////////////////////////////////////////////////////////
+module XTDP_EncDecFunctions {
+
+//import from ttcn_ericsson_se_xtdp_xul_1_0 all;
+import from ttcn_ericsson_se_protocolModules_xtdp_xtdp all;
+import from ttcn_ericsson_se_protocolModules_xtdp_xtdl all
+//import from IPL4asp_Types all;
+
+external function enc_XTDP_Message (in XTDP_Message p_message) return octetstring
+with {extension "prototype(convert) encode (XER:XER_EXTENDED)"}
+
+external function dec_XTDP_Message (in octetstring p_oct, out XTDP_Message p_message) return integer
+with {extension "prototype(backtrack) decode (XER:XER_EXTENDED) errorbehavior(ALL:WARNING)"}
+
+external function dec_XTDL_Window (in octetstring p_oct, out Window p_window) return integer
+with {extension "prototype(backtrack) decode (XER:XER_EXTENDED) errorbehavior(ALL:WARNING)"}
+
+external function enc_XTDL_Window (in Window p_window) return octetstring
+with {extension "prototype(convert) encode (XER:XER_EXTENDED)"}
+
+//external function f_XTDP_getMsgLen2(
+//  in octetstring stream,
+//  inout ro_integer args
+//) return integer 
+
+function f_XTDP_getMsgLen(
+  in octetstring stream //,
+  //inout ro_integer args
+) return integer {
+  if (lengthof(stream)<4) {
+    return -1
+  } else {
+    return oct2int(substr(stream,0, 4))
+  }
+}
+function f_XTDP_getRawMsg(in octetstring stream) return octetstring
+{
+  if (lengthof(stream) <4)  {
+    return ''O
+  }  else {
+    return substr(stream,4, lengthof(stream)-4)
+  }
+} 
+
+}  // end of module

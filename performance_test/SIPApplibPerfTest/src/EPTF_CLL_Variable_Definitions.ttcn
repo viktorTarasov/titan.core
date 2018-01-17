@@ -1,0 +1,1721 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_CLL_Variable_Definitions.ttcnpp
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 512
+//  Updated:  2012-11-07
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////
+//  Module: EPTF_CLL_Variable_Definitions
+// 
+//  Purpose:
+//    This module contains type definitions for TTCN-3 EPTF_Variable implementation.
+// 
+//  Module Parameters:
+//    tsp_debugVerbose_PoolMgmt - *boolean* - enable debugging of the semaphore pool, default: false
+//    tsp_EPTF_Var_SyncInterval - *float* - the period of the sync timer. This is used to syncronize the contents of buffered subscribers, default:10.0 secs
+//    tsp_EPTF_Var_snapshotFilename - *charstring* - the default name of the snapshot file without the timestamp used by <f_EPTF_Var_save>
+//    tsp_EPTF_Var_snapshotTimestamp - *charstring* - the default timestamp format of the snapshot file used by <f_EPTF_Var_save>
+//    tsp_EPTF_Var_loggingComponentMask - *charstring* - component-type mask for logging, default value: "EPTF_Var"
+//
+//  Module depends on:
+//    <EPTF_CLL_Base_Definitions>
+//    <EPTF_CLL_Common_Definitions>
+//    <EPTF_CLL_QueueMgmt_Definitions>
+//    <EPTF_CLL_QueueMgmt_Functions>
+//    <EPTF_CLL_Logging_Definitions>
+//    <EPTF_CLL_Scheduler_Definitions>
+//    <EPTF_CLL_RBTScheduler_Definitions>
+//    <EPTF_CLL_HashMap_Definitions>
+// 
+//  Current Owner:
+//    Jozsef Gyurusi (ethjgi)
+// 
+//  Last Review Date:
+//    2010-06-24
+//
+//  Detailed Comments:
+//    This module contains type definitions for TTCN-3 EPTF_Variable implementation.
+// 
+///////////////////////////////////////////////////////////////
+
+module EPTF_CLL_Variable_Definitions {
+
+import from EPTF_CLL_Base_Definitions all;
+import from EPTF_CLL_Common_Definitions all; // EPTF_IntegerList
+import from EPTF_CLL_Logging_Definitions all;
+import from EPTF_CLL_Scheduler_Definitions all;
+import from EPTF_CLL_RBTScheduler_Definitions all;
+import from EPTF_CLL_HashMap_Definitions all;
+
+/*
+// THIS CODE GENERATES THE CODE BELOW:
+// define POOL for EPTF_Var_adjustContentResp_handler
+//#define EPTF_POOLTYPE EPTF_Var_adjustContentResp_handler
+//#include "EPTF_CLL_PoolMgmt_Functions.ttcnin"
+//#undef EPTF_POOLTYPE
+//*/
+//*
+// GENERATED CODE, DO NOT EDIT THIS PART!!!!
+//# 1 "EPTF_CLL_PoolMgmt_Functions.ttcnin" 1
+//# 58 "EPTF_CLL_PoolMgmt_Functions.ttcnin"
+import from EPTF_CLL_FBQ_Definitions all;
+import from EPTF_CLL_FBQ_Functions all;
+//# 1 "EPTF_CLL_PoolMgmt_Definitions.ttcnin" 1
+//# 91 "EPTF_CLL_PoolMgmt_Definitions.ttcnin"
+type record EPTF_Var_adjustContentResp_handlerPool {EPTF_FreeBusyQueue order, EPTF_Var_adjustContentResp_handlerList userData}
+//# 106 "EPTF_CLL_PoolMgmt_Definitions.ttcnin"
+type record of EPTF_Var_adjustContentResp_handler EPTF_Var_adjustContentResp_handlerList;
+//# 121 "EPTF_CLL_PoolMgmt_Definitions.ttcnin"
+const EPTF_Var_adjustContentResp_handlerList c_EPTF_emptyEPTF_Var_adjustContentResp_handlerList := {};
+//# 61 "EPTF_CLL_PoolMgmt_Functions.ttcnin" 2
+//# 82 "EPTF_CLL_PoolMgmt_Functions.ttcnin"
+const EPTF_Var_adjustContentResp_handlerPool c_EPTF_emptyEPTF_Var_adjustContentResp_handlerPool := {order := c_EPTF_emptyFreeBusyQueue, userData := c_EPTF_emptyEPTF_Var_adjustContentResp_handlerList}
+//# 104 "EPTF_CLL_PoolMgmt_Functions.ttcnin"
+function f_EPTF_initEPTF_Var_adjustContentResp_handlerPool(inout EPTF_Var_adjustContentResp_handlerPool pl_pool) { f_EPTF_FBQ_initFreeBusyQueue(pl_pool.order); pl_pool.userData := c_EPTF_emptyEPTF_Var_adjustContentResp_handlerList; }
+//# 145 "EPTF_CLL_PoolMgmt_Functions.ttcnin"
+function f_EPTF_getNewEPTF_Var_adjustContentResp_handler(inout EPTF_Var_adjustContentResp_handlerPool pl_pool) return integer { if (tsp_debugVerbose_PoolMgmt){ log("f_EPTF_getNew##EPTF_POOLTYPE has been called"); } var integer idx := f_EPTF_FBQ_getOrCreateFreeSlot(pl_pool.order); if (idx >= sizeof(pl_pool.userData)){ pl_pool.userData[idx]:=c_emptyEPTF_Var_adjustContentResp_handler; if (tsp_debugVerbose_PoolMgmt) { log("f_EPTF_getNew##EPTF_POOLTYPE needed to allocate new ##EPTF_POOLTYPE", " at idx:",idx, ", initialized to:",pl_pool.userData[idx]); } } return idx; }
+//# 184 "EPTF_CLL_PoolMgmt_Functions.ttcnin"
+function f_EPTF_putBackEPTF_Var_adjustContentResp_handler(inout EPTF_Var_adjustContentResp_handlerPool pl_pool, in integer pl_qidx) return boolean { if (tsp_debugVerbose_PoolMgmt) { log("f_putBack##EPTF_POOLTYPE:", pl_qidx); } if (not f_EPTF_EPTF_Var_adjustContentResp_handlerIsBusy(pl_pool, pl_qidx)){ log("Error: f_EPTF_putBack##EPTF_POOLTYPE: clearing invalid pool item at pl_qidx:", pl_qidx); return false; } f_EPTF_FBQ_moveFromBusyToFreeHead(pl_qidx,pl_pool.order); return true; }
+//# 219 "EPTF_CLL_PoolMgmt_Functions.ttcnin"
+function f_EPTF_getFirstEPTF_Var_adjustContentResp_handlerIndex(in EPTF_Var_adjustContentResp_handlerPool pl_pool) return integer { if (tsp_debugVerbose_PoolMgmt) { log("f_EPTF_getFirst##EPTF_POOLTYPE##Index has been called"); } if (f_EPTF_EPTF_Var_adjustContentResp_handlerPoolIsEmpty(pl_pool)){ log("Error: f_EPTF_getFirst##EPTF_POOLTYPE##Index: busy chain is empty:"); return -1; } var integer vl_head; f_EPTF_FBQ_getBusyHeadIdx(vl_head,pl_pool.order);return vl_head; }
+//# 250 "EPTF_CLL_PoolMgmt_Functions.ttcnin"
+function f_EPTF_getNextEPTF_Var_adjustContentResp_handlerIndex(in EPTF_Var_adjustContentResp_handlerPool pl_pool,inout integer pl_idx) return boolean { if (f_EPTF_EPTF_Var_adjustContentResp_handlerIsBusy(pl_pool,pl_idx)) { return f_EPTF_FBQ_getFwdBusyItemIdx(pl_idx,pl_pool.order); } else { return false; } }
+//# 286 "EPTF_CLL_PoolMgmt_Functions.ttcnin"
+function f_EPTF_EPTF_Var_adjustContentResp_handlerPoolIsEmpty(in EPTF_Var_adjustContentResp_handlerPool pl_pool) return boolean { if(f_EPTF_FBQ_getLengthOfBusyChain(pl_pool.order) <=0) { return true } else { return false }; }
+//# 314 "EPTF_CLL_PoolMgmt_Functions.ttcnin"
+function f_EPTF_EPTF_Var_adjustContentResp_handlerIsBusy(in EPTF_Var_adjustContentResp_handlerPool pl_pool,in integer pl_idx) return boolean { return f_EPTF_FBQ_itemIsBusy(pl_idx,pl_pool.order); }
+//# 350 "EPTF_CLL_PoolMgmt_Functions.ttcnin"
+function f_EPTF_getEPTF_Var_adjustContentResp_handler(in EPTF_Var_adjustContentResp_handlerPool pl_pool,in integer pl_idx,out EPTF_Var_adjustContentResp_handler pl_poolItem) return boolean { if (not f_EPTF_EPTF_Var_adjustContentResp_handlerIsBusy(pl_pool, pl_idx)) { return false } else { pl_poolItem := pl_pool.userData[pl_idx]; return true; } }
+//# 387 "EPTF_CLL_PoolMgmt_Functions.ttcnin"
+function f_EPTF_setEPTF_Var_adjustContentResp_handler(inout EPTF_Var_adjustContentResp_handlerPool pl_pool,in integer pl_idx,in EPTF_Var_adjustContentResp_handler pl_poolItem) return boolean { if (not f_EPTF_EPTF_Var_adjustContentResp_handlerIsBusy(pl_pool, pl_idx)) { pl_pool.userData[pl_idx] := pl_poolItem; f_EPTF_FBQ_moveFromFreeToBusyTail(pl_idx,pl_pool.order); return true; } else {return false } }
+//# 427 "EPTF_CLL_PoolMgmt_Functions.ttcnin"
+function f_EPTF_setNewEPTF_Var_adjustContentResp_handler(inout EPTF_Var_adjustContentResp_handlerPool pl_pool,in EPTF_Var_adjustContentResp_handler pl_poolItem) return integer { var integer idx := f_EPTF_FBQ_getOrCreateFreeSlot(pl_pool.order); if (idx >= sizeof(pl_pool.userData)){ if (tsp_debugVerbose_PoolMgmt) { log("f_EPTF_setNew##EPTF_POOLTYPE needed to allocate new ##EPTF_POOLTYPE", " at idx:",idx, ", initialized to:",pl_poolItem); } } pl_pool.userData[idx] := pl_poolItem; f_EPTF_FBQ_moveFromFreeToBusyTail(idx,pl_pool.order); return idx; }
+//# 466 "EPTF_CLL_PoolMgmt_Functions.ttcnin"
+function f_EPTF_deleteEPTF_Var_adjustContentResp_handler(inout EPTF_Var_adjustContentResp_handlerPool pl_pool, in integer pl_qidx) { if (tsp_debugVerbose_PoolMgmt) { log("f_delete##EPTF_POOLTYPE:", pl_qidx); } if (not f_EPTF_EPTF_Var_adjustContentResp_handlerIsBusy(pl_pool, pl_qidx)){ log("Warning: f_EPTF_delete##EPTF_POOLTYPE: clearing free/invalid pool item at pl_qidx:", pl_qidx); return; } f_EPTF_FBQ_moveFromBusyToFreeTail(pl_qidx,pl_pool.order); pl_pool.userData[pl_qidx] := c_emptyEPTF_Var_adjustContentResp_handler; return; }
+//# 51 "EPTF_CLL_Variable_Definitions.ttcnpp" 2
+//*/
+const EPTF_Var_adjustContentResp_handler c_emptyEPTF_Var_adjustContentResp_handler := {null, {}};
+modulepar boolean tsp_debugVerbose_PoolMgmt := false;
+
+
+
+/*
+// THE GENERATED CODE BELOW IS EQUIVALENT WITH THE FOLLOWING MACRO:
+// define POOL for boolean
+//#define EPTF_POOLTYPE boolean
+//#include "EPTF_CLL_PoolMgmt_Functions.ttcnin"
+//#undef EPTF_POOLTYPE
+*/
+
+//////////////////////// BEGINING OF CODE /////////////////////////
+// GENERATED CODE, DO NOT EDIT BELOW!
+
+//# 2 "tmp.ttcnpp"
+
+
+
+//# 1 "EPTF_CLL_PoolMgmt_Functions.ttcnin" 1
+//# 58 "EPTF_CLL_PoolMgmt_Functions.ttcnin"
+//import from EPTF_CLL_QueueMgmt_Definitions all;
+//import from EPTF_CLL_QueueMgmt_Functions all;
+//# 1 "EPTF_CLL_PoolMgmt_Definitions.ttcnin" 1
+//# 91 "EPTF_CLL_PoolMgmt_Definitions.ttcnin"
+type record booleanPool {EPTF_FreeBusyQueue order, booleanList userData}
+//# 106 "EPTF_CLL_PoolMgmt_Definitions.ttcnin"
+type record of boolean booleanList;
+//# 121 "EPTF_CLL_PoolMgmt_Definitions.ttcnin"
+const booleanList c_EPTF_emptybooleanList := {};
+//# 61 "EPTF_CLL_PoolMgmt_Functions.ttcnin" 2
+//# 82 "EPTF_CLL_PoolMgmt_Functions.ttcnin"
+const booleanPool c_EPTF_emptybooleanPool := {order := c_EPTF_emptyFreeBusyQueue, userData := c_EPTF_emptybooleanList}
+//# 104 "EPTF_CLL_PoolMgmt_Functions.ttcnin"
+function f_EPTF_initbooleanPool(inout booleanPool pl_pool) { f_EPTF_FBQ_initFreeBusyQueue(pl_pool.order); pl_pool.userData := c_EPTF_emptybooleanList; }
+//# 145 "EPTF_CLL_PoolMgmt_Functions.ttcnin"
+function f_EPTF_getNewboolean(inout booleanPool pl_pool) return integer { if (tsp_debugVerbose_PoolMgmt){ log("f_EPTF_getNew##EPTF_POOLTYPE has been called"); } var integer idx := f_EPTF_FBQ_getOrCreateFreeSlot(pl_pool.order); if (idx >= sizeof(pl_pool.userData)){ pl_pool.userData[idx]:=c_emptyboolean; if (tsp_debugVerbose_PoolMgmt) { log("f_EPTF_getNew##EPTF_POOLTYPE needed to allocate new ##EPTF_POOLTYPE", " at idx:",idx, ", initialized to:",pl_pool.userData[idx]); } } return idx; }
+//# 184 "EPTF_CLL_PoolMgmt_Functions.ttcnin"
+function f_EPTF_putBackboolean(inout booleanPool pl_pool, in integer pl_qidx) return boolean { if (tsp_debugVerbose_PoolMgmt) { log("f_putBack##EPTF_POOLTYPE:", pl_qidx); } if (not f_EPTF_booleanIsBusy(pl_pool, pl_qidx)){ log("Error: f_EPTF_putBack##EPTF_POOLTYPE: clearing invalid pool item at pl_qidx:", pl_qidx); return false; } f_EPTF_FBQ_moveFromBusyToFreeHead(pl_qidx,pl_pool.order); return true; }
+//# 219 "EPTF_CLL_PoolMgmt_Functions.ttcnin"
+function f_EPTF_getFirstbooleanIndex(in booleanPool pl_pool) return integer { if (tsp_debugVerbose_PoolMgmt) { log("f_EPTF_getFirst##EPTF_POOLTYPE##Index has been called"); } if (f_EPTF_booleanPoolIsEmpty(pl_pool)){ log("Error: f_EPTF_getFirst##EPTF_POOLTYPE##Index: busy chain is empty:"); return -1; } var integer vl_head; f_EPTF_FBQ_getBusyHeadIdx(vl_head,pl_pool.order);return vl_head; }
+//# 250 "EPTF_CLL_PoolMgmt_Functions.ttcnin"
+function f_EPTF_getNextbooleanIndex(in booleanPool pl_pool,inout integer pl_idx) return boolean { if (f_EPTF_booleanIsBusy(pl_pool,pl_idx)) { return f_EPTF_FBQ_getFwdBusyItemIdx(pl_idx,pl_pool.order); } else { return false; } }
+//# 286 "EPTF_CLL_PoolMgmt_Functions.ttcnin"
+function f_EPTF_booleanPoolIsEmpty(in booleanPool pl_pool) return boolean { if(f_EPTF_FBQ_getLengthOfBusyChain(pl_pool.order) <=0) { return true } else { return false }; }
+//# 314 "EPTF_CLL_PoolMgmt_Functions.ttcnin"
+function f_EPTF_booleanIsBusy(in booleanPool pl_pool,in integer pl_idx) return boolean { return f_EPTF_FBQ_itemIsBusy(pl_idx,pl_pool.order); }
+//# 350 "EPTF_CLL_PoolMgmt_Functions.ttcnin"
+function f_EPTF_getboolean(in booleanPool pl_pool,in integer pl_idx,out boolean pl_poolItem) return boolean { if (not f_EPTF_booleanIsBusy(pl_pool, pl_idx)) { return false } else { pl_poolItem := pl_pool.userData[pl_idx]; return true; } }
+//# 387 "EPTF_CLL_PoolMgmt_Functions.ttcnin"
+function f_EPTF_setboolean(inout booleanPool pl_pool,in integer pl_idx,in boolean pl_poolItem) return boolean { if (not f_EPTF_booleanIsBusy(pl_pool, pl_idx)) { pl_pool.userData[pl_idx] := pl_poolItem; f_EPTF_FBQ_moveFromFreeToBusyTail(pl_idx,pl_pool.order); return true; } else {return false } }
+//# 427 "EPTF_CLL_PoolMgmt_Functions.ttcnin"
+function f_EPTF_setNewboolean(inout booleanPool pl_pool,in boolean pl_poolItem) return integer { var integer idx := f_EPTF_FBQ_getOrCreateFreeSlot(pl_pool.order); if (idx >= sizeof(pl_pool.userData)){ if (tsp_debugVerbose_PoolMgmt) { log("f_EPTF_setNew##EPTF_POOLTYPE needed to allocate new ##EPTF_POOLTYPE", " at idx:",idx, ", initialized to:",pl_poolItem); } } pl_pool.userData[idx] := pl_poolItem; f_EPTF_FBQ_moveFromFreeToBusyTail(idx,pl_pool.order); return idx; }
+//# 454 "EPTF_CLL_PoolMgmt_Functions.ttcnin"
+function f_EPTF_setValueboolean(inout booleanPool pl_pool,in integer pl_idx,in boolean pl_poolItem) { pl_pool.userData[pl_idx] := pl_poolItem; }
+//# 479 "EPTF_CLL_PoolMgmt_Functions.ttcnin"
+function f_EPTF_getValueboolean(inout booleanPool pl_pool,in integer pl_idx) return boolean { return pl_pool.userData[pl_idx]; }
+//# 519 "EPTF_CLL_PoolMgmt_Functions.ttcnin"
+function f_EPTF_deleteboolean(inout booleanPool pl_pool, in integer pl_qidx) { if (tsp_debugVerbose_PoolMgmt) { log("f_delete##EPTF_POOLTYPE:", pl_qidx); } if (not f_EPTF_booleanIsBusy(pl_pool, pl_qidx)){ log("Warning: f_EPTF_delete##EPTF_POOLTYPE: clearing free/invalid pool item at pl_qidx:", pl_qidx,", pl_##EPTF_POOLTYPE##Pool.order.itemList[pl_qidx]:"); return; } f_EPTF_FBQ_moveFromBusyToFreeTail(pl_qidx,pl_pool.order); pl_pool.userData[pl_qidx] := c_emptyboolean; return; }
+//# 6 "tmp.ttcnpp" 2
+
+
+
+
+// DO NOT EDIT ABOVE THIS LINE!
+//////////////////////////////////////////////////////////////
+const boolean c_emptyboolean := false;
+
+
+modulepar float tsp_EPTF_Var_SyncInterval := 10.0; // initial value of the syncIntervar
+modulepar charstring tsp_EPTF_Var_snapshotFilename := "EPTF_Var_SnapshotFile";
+modulepar charstring tsp_EPTF_Var_snapshotTimestamp := "_%Y-%m-%d_%H.%M.%S.cfg";
+
+modulepar charstring tsp_EPTF_Var_loggingComponentMask := "EPTF_Var";
+
+modulepar float tsp_EPTF_Var_refreshSubscribersPeriod := 1.0; // period of local subscriber refresh (0.0: shortest period, <0.0: no period, instant update)
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Var
+// 
+//  Purpose:
+//   The basic datatype for EPTF_Variables
+// 
+//  Elements:
+//    provider - <EPTF_Var_Provider> - the provider
+//    subscribers - <EPTF_Var_Subscribers> - subscriber list, who should be notified if the value of this var changes
+//    name - *charstring* - name of the variable
+//    content - <EPTF_Var_Content> - content (value or reference to a value) of the variable
+//    postProcFns - <EPTF_Var_GenericFns> - called by the library after the value of the EPTF Variable was changed
+//    guardFns - <EPTF_Var_GuardFns> - function pointers to the guard functions (they return true if the value is accepted, false if not)
+//    unsubscribeNotifyFns - <EPTF_Var_GenericFns> - functions called after the variable is unsubscribed from its provider (or when bye is received). Notifies the user about the unsubscribe
+//    timeLineBuffer - <EPTF_Var_TimeLineBuffer> - buffered timeLine for subscribers
+// 
+//  Detailed Comments:
+//    This record contains all information for an EPTF Variable
+//
+///////////////////////////////////////////////////////////
+type record EPTF_Var {
+  EPTF_Var_Provider provider, // the provider
+  EPTF_Var_Subscribers subscribers, // subscriber list, who should be notified if the value of this var changes
+  charstring name, // name of the variable
+  boolean subsCanAdjust, // if false: subscribers cannot adjust the content
+  EPTF_Var_Content content, // content (value or reference to a value) of the variable
+  EPTF_Var_GenericFns postProcFns, // called by the library after the value of the EPTF Variable was changed
+  EPTF_Var_GuardFns guardFns,    // function pointers to the guard functions (they return true if the value is accepted, false if not)
+  EPTF_Var_GenericFns unsubscribeNotifyFns, // functions called after the variable is unsubscribed from its provider (or when bye is received). Notifies the user about the unsubscribe
+  EPTF_Var_GenericFns subsCanAdjustNotifyFns, // called by the library after the value of subsCanAdjust of the EPTF Variable was changed
+  EPTF_Var_TimeLineBufferList timeLineBuffer   // buffered timeLine for subscribers for each refresh rate
+}
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Var_InitialValue
+// 
+//  Purpose:
+//   Initial value definition
+// 
+//  Elements:
+//    name - *charstring* - name of the EPTF Variable
+//    initValue - <EPTF_Var_DirectContent> - initial value
+// 
+//  Detailed Comments:
+//
+///////////////////////////////////////////////////////////
+type record EPTF_Var_InitialValue {
+    charstring name,
+    EPTF_Var_DirectContent initValue
+}
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Var_InitialValueList
+// 
+//  Purpose:
+//   List of initial values
+// 
+//  Elements:
+// 
+//  Detailed Comments:
+//   Used to define config data
+//
+///////////////////////////////////////////////////////////
+type record of EPTF_Var_InitialValue EPTF_Var_InitialValueList;
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Var_Provider
+// 
+//  Purpose:
+//   This union defines the EPTF_Var_Provider
+// 
+//  Elements:
+//    empty - <ETPF_Var_NullContent> - if the provider is not set
+//    local - <EPTF_Var_ProviderLocal> - local provider: whose values are used to calculate mine
+//    remote - <EPTF_Var_ProviderRemote> - remote provider: who delivers the value
+// 
+//  Detailed Comments:
+//
+///////////////////////////////////////////////////////////
+type union EPTF_Var_Provider {
+  ETPF_Var_NullContent    empty,
+  EPTF_Var_ProviderLocal  local,
+  EPTF_Var_ProviderRemote remote
+}
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Var_ProviderLocal
+// 
+//  Purpose:
+//   This record defines the Local Provider
+// 
+//  Elements:
+//    calcFn - <EPTF_Var_CalcFn> - function pointer to calculate the new value of the variable
+// 
+//  Detailed Comments:
+//
+///////////////////////////////////////////////////////////
+type record EPTF_Var_ProviderLocal
+{
+  EPTF_Var_CalcFn calcFn // function pointer to calculate the new value of the variable
+}
+//type EPTF_Var_CalcFn EPTF_Var_ProviderLocal;
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Var_Ref
+// 
+//  Purpose:
+//   This record defines the generic reference type for a remote variables
+// 
+//  Elements:
+//    compRef - <EPTF_Var_CT> - reference to the remote component (null means self)
+//    idx - *integer* - index of the EPTF_Var on the remote component
+// 
+//  Detailed Comments:
+//
+///////////////////////////////////////////////////////////
+type record EPTF_Var_Ref {
+ EPTF_Var_CT compRef, // reference to the remote component (null means self)
+ integer idx          // idx of the EPTF_Var on the remote component
+}
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Var_SubscriptionMode
+// 
+//  Purpose:
+//   This enumerated defines the possible subscription modes
+// 
+//  Elements:
+//    realtime - real time subscription: subscriber is notified instantly
+//    sampled - the value of the EPTF variable is sampled periodically at the sync event, the buffer.timeLine contains only the last refreshed value (no refresh at sync)
+//    sampledAtSync - the value of the EPTF variable is sampled periodically at the sync event, but calcFn and postProc are called also,
+//                    the buffer.timeLine contains only the value at the sync event
+//                   (=sampled but the calcFn and postProc functions are also called at the sync event (refresh without notifying the subscribers))
+//    timeLine - all value changes are stored in the buffer.timeLine, at the sync event all values in the timeLine are sent (=realtime but buffered)
+// 
+//  Detailed Comments:
+//    These modes define how and when the remote subscribers are notified about the refresh of the provider.
+//    In the realtime mode when the provider is refreshed the subscriber is notified instantly. For the other
+//    subscription modes the subscriber is only notified at the sync event. In timeline mode all refreshed values are buffered
+//    during the sync-interval and all of them are sent as a timeline to the subscriber. For sampled and sampledAtSync the timeline
+//    contains only one element. For sampled it is the last refreshed value (the last element of the timeline).
+//    However, for sampledAtSync the Variable is forced to refresh (but subscribers are not notified) at the sync event,
+//    This means that only the calcFn and postProc functions are called. The timeline will contain the value of the
+//    variable after the postProc functions are called. (The original value of the variable is restored at the end.)
+//    This is because the value of the Variable should not depend on the subscription mode of its subscribers.
+//
+///////////////////////////////////////////////////////////
+type enumerated EPTF_Var_SubscriptionMode {
+  realtime,
+  sampled,
+  sampledAtSync,
+  timeLine
+}
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Var_ProviderRemote
+// 
+//  Purpose:
+//   This record defines the remote provider of an EPTF Variable
+// 
+//  Elements:
+//    name - *charstring* - name of the provider variable (on the remote component)
+//    varRef - <EPTF_Var_Ref> - remote reference to the variable
+//    subscriptionMode - <EPTF_Var_SubscriptionMode> - the subscription mode: if sampled or timeLine: values are also updated in the buffer.timeLine
+//    refreshRate - *integer* - rate of the refresh  (refresh period is: refreshRate * minSyncInterval)
+//    topProviderType - <EPTF_TopProvider_Type> - //    topProviderType - <EPTF_TopProvider_Type> - type of the top-provider (owner). Can only be: local/empty
+// 
+//  Detailed Comments:
+//
+///////////////////////////////////////////////////////////
+type record EPTF_Var_ProviderRemote {
+  charstring name,      // name of the provider variable (on the remote component)
+  EPTF_Var_Ref varRef,  // remote reference to the variable
+  EPTF_Var_SubscriptionMode subscriptionMode,  // the subscription mode: if sampled or timeLine: values are also updated in the buffer.timeLine
+  integer refreshRate,  // rate of the refresh  (refresh period is: refreshRate * minSyncInterval)
+  EPTF_TopProviderType topProviderType  // type of the top-provider (owner). Can only be: local/empty 
+}
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Var_Subscribers
+// 
+//  Purpose:
+//   List of <EPTF_Var_Subscriber>-s
+// 
+//  Elements:
+//   -
+// 
+//  Detailed Comments:
+//
+///////////////////////////////////////////////////////////
+type record of EPTF_Var_Subscriber EPTF_Var_Subscribers;
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Var_Subscriber
+// 
+//  Purpose:
+//   This union defines the subscriber of an EPTF Variable
+// 
+//  Elements:
+//    local - *integer* - local subscriber: gives the idx of the EPTF_Var
+//    remote - <EPTF_Var_ProviderRemote> - remote subscriber: same type as the EPTF_Var_ProviderRemote
+// 
+//  Detailed Comments:
+//
+///////////////////////////////////////////////////////////
+type union EPTF_Var_Subscriber {
+  integer                 local,    // gives the idx of the EPTF_Var
+  EPTF_Var_SubscriberRemote remote  // remote subscriber
+}
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Var_SubscriberRemote
+// 
+//  Purpose:
+//   This record defines the remote subscriber of an EPTF Variable
+// 
+//  Elements:
+//    name - *charstring* - name of the subscriber variable (on the remote component)
+//    varRef - <EPTF_Var_Ref> - remote reference to the variable
+//    subscriptionMode - <EPTF_Var_SubscriptionMode> - sets the subscription mode
+//    refreshRateId - *integer - Id of the refresh rate of the subscription in v_syncBuffer
+// 
+//  Detailed Comments:
+//
+///////////////////////////////////////////////////////////
+type record EPTF_Var_SubscriberRemote {
+  charstring name,      //  name of the subscriber variable (on the remote component)
+  EPTF_Var_Ref varRef,
+  EPTF_Var_SubscriptionMode subscriptionMode,  // sets the subscription mode,
+  integer refreshRateId  // Id of the refresh rate of the subscription in v_syncBuffer
+}
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Var_TimeLineDataItem
+// 
+//  Purpose:
+//   This record defines the item of the TimeLine Data
+// 
+//  Elements:
+//    timestamp - *float* - timestamp: when the value is calculated
+//    content - <EPTF_Var_DirectContent> - the value
+// 
+//  Detailed Comments:
+//
+///////////////////////////////////////////////////////////
+type record EPTF_Var_TimeLineDataItem {
+  float timestamp,
+  EPTF_Var_DirectContent content
+}
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Var_TimeLineData
+// 
+//  Purpose:
+//   This record defines the item of the TimeLine Data
+// 
+//  Elements:
+//    timestamp - *float* - timestamp: when the value is calculated
+//    content - <EPTF_Var_DirectContent> - the value
+// 
+//  Detailed Comments:
+//
+///////////////////////////////////////////////////////////
+type record of EPTF_Var_TimeLineDataItem  EPTF_Var_TimeLineData
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Var_TimeLine
+// 
+//  Purpose:
+//   This record defines the TimeLine for each EPTF Variable
+// 
+//  Elements:
+//    size - *integer* - size of timeLineData
+//    timeLineData - <EPTF_Var_TimeLineData> - the timeLine data
+// 
+//  Detailed Comments:
+//
+///////////////////////////////////////////////////////////
+type record EPTF_Var_TimeLine {
+  integer  size, //length 
+  EPTF_Var_TimeLineData timeLineData //the time serie
+}
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Var_TimeLineBuffer
+// 
+//  Purpose:
+//   This record defines the TimeLine Buffer for each EPTF Variable
+// 
+//  Elements:
+//    refreshRateId - *integer* - id of the refreshRate in v_syncBuffer
+//    bufferNum - *integer* - number of buffers that contain references to this timeLine
+//          if == 0: variable not buffered, timeLine is not updated
+//    timeLine - <EPTF_Var_TimeLine> - the timeLine
+// 
+//  Detailed Comments:
+//
+///////////////////////////////////////////////////////////
+type record EPTF_Var_TimeLineBuffer {
+  integer refreshRateId,     // id of the refreshRate in v_syncBuffer
+  integer bufferNum,         // number of buffers that contain references to this timeLine(variable) = number of different subscribed components
+                             // if == 0: variable not buffered, timeLine is not updated
+  EPTF_Var_TimeLine timeLine // buffered timeLine for this variable
+}
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Var_CompBufferDataItem
+// 
+//  Purpose:
+//   This record defines the data item in the CompBuffer
+// 
+//  Elements:
+//    localIdx - *integer* - which variable: index on the local component
+//    remoteIdx - *integer* - index of the variable on the remote component
+//    subscriptionMode - <EPTF_Var_SubscriptionMode> - subscription mode (sampled or timeLine)
+//    prevContent - <EPTF_DirectContent>  *optional* - the previous content of the variable at localIdx (used in sampledAtSync mode)
+// 
+//  Detailed Comments:
+//
+///////////////////////////////////////////////////////////
+type record  EPTF_Var_CompBufferDataItem {
+   integer localIdx,   // which variable: index on the local component
+   integer remoteIdx,  // index of the variable on the remote component
+   EPTF_Var_SubscriptionMode subscriptionMode,   // subscription mode (sampled or timeLine)
+   EPTF_Var_DirectContent prevContent optional   // the previous content of the variable at localIdx (used in sampledAtSync mode)
+//   integer timeIdx //which timeLine item of that variable 
+}
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Var_CompBufferData
+// 
+//  Purpose:
+//   This record defines the EPTF_Var_CompBufferData
+// 
+//  Elements:
+//    -
+// 
+//  Detailed Comments:
+//    list of <EPTF_Var_CompBufferDataItem>
+//
+///////////////////////////////////////////////////////////
+type record of EPTF_Var_CompBufferDataItem EPTF_Var_CompBufferData;
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Var_CompBuffer
+// 
+//  Purpose:
+//   This record defines the CompBuffer
+// 
+//  Elements:
+//    remoteCompRef - <EPTF_Var_CT> - component ref. The buffer will be sent to this component
+//    flushCounter - *integer* - number of buffer flushes so far (will be sent in the <EPTF_Var_Msg_RefreshTimeLines> message)
+//    compBufferData - <EPTF_Var_CompBufferData> - buffer for synch. update
+// 
+//  Detailed Comments:
+//    The content of the buffer is sent to the remoteCompRef component periodically
+//    In each period the buffer content is reset
+//
+///////////////////////////////////////////////////////////
+type record EPTF_Var_CompBuffer {
+  EPTF_Var_CT remoteCompRef, // component ref. The buffer will be sent to this component
+  integer flushCounter,      // number of buffer flushes so far
+  EPTF_Var_CompBufferData compBufferData //buffer for synch. update
+}
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Var_SyncBuffer
+// 
+//  Purpose:
+//   This record defines the EPTF_Var_SyncBuffer
+// 
+//  Elements:
+//    -
+// 
+//  Detailed Comments:
+//    List of <EPTF_Var_CompBuffer>: CompBuffer for all connected components
+//
+///////////////////////////////////////////////////////////
+type record of EPTF_Var_CompBuffer EPTF_Var_SyncBuffer;
+
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Var_TimeLineBufferList
+// 
+//  Purpose:
+//   This record defines the type of timeLineBuffer
+// 
+//  Elements:
+//    -
+// 
+//  Detailed Comments:
+//    List of <EPTF_Var_TimeLineBuffer>: TimeLineBuffer for different refresh rates
+//
+///////////////////////////////////////////////////////////
+type record of EPTF_Var_TimeLineBuffer EPTF_Var_TimeLineBufferList;
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Var_SyncGroupItem
+// 
+//  Purpose:
+//   This record defines the item type of the syncBuffer
+// 
+//  Elements:
+//    refreshRate - *integer* - refresh rate of the subscription (refresh period is: refreshRate * minSyncInterval)
+//    eventIdx - *integer* - the index of the event scheduled to refresh with the given rate
+//    syncBuffer - <EPTF_Var_SyncBuffer> - the database for sending timeLines in buffered mode for this refresh rate
+// 
+//  Detailed Comments:
+//    The content of the buffer is sent to the remoteCompRef component periodically
+//    In each period the buffer content is reset
+//
+///////////////////////////////////////////////////////////
+type record EPTF_Var_SyncGroupItem {
+  integer refreshRate,
+  integer eventIdx,
+  EPTF_Var_SyncBuffer syncBuffer
+}
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Var_SyncGroupList
+// 
+//  Purpose:
+//   This record defines the type of syncBuffer database for all refresh rates
+// 
+//  Elements:
+//    -
+// 
+//  Detailed Comments:
+//    List of <EPTF_Var_SyncGroupItem>: syncBuffer for different refresh rates
+//
+///////////////////////////////////////////////////////////
+type record of EPTF_Var_SyncGroupItem EPTF_Var_SyncGroupList;
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Var_Content
+// 
+//  Purpose:
+//   This union defines the Content type of the EPTF Variables
+// 
+//  Elements:
+//    invalid - <ETPF_Var_NullContent> - if the content is not set
+//    direct - <EPTF_Var_DirectContent> - direct value
+//    reference - <EPTF_Var_ReferencedContent> - reference to a value
+// 
+//  Detailed Comments:
+//
+///////////////////////////////////////////////////////////
+type union EPTF_Var_Content  {
+  ETPF_Var_NullContent        invalid,
+  EPTF_Var_DirectContent      direct,
+  EPTF_Var_ReferencedContent  reference
+}
+
+///////////////////////////////////////////////////////////
+//  Type: ETPF_Var_NullContent
+// 
+//  Purpose:
+//   This is just a dummy record
+// 
+//  Elements:
+//    -
+// 
+//  Detailed Comments:
+//
+///////////////////////////////////////////////////////////
+type record ETPF_Var_NullContent {};
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Var_DirectContent
+// 
+//  Purpose:
+//   This union defines the Direct Content
+// 
+//  Elements:
+//    intVal - *integer* - integer value
+//    floatVal - *float* - float value
+//    boolVal - *boolean* - boolean value
+//    charstringVal - *charstring* - charstring value
+//    octetstringVal - *octetstring* - octetstring value
+//    hexstringVal - *hexstring* - hexstring value
+//    bitstringVal - *bitstring* - bitstring value
+//    integerlistVal - <EPTF_IntegerList> - EPTF_IntegerList value
+//    floatlistVal - <EPTF_FloatList> - EPTF_FloatList value
+//    charstringlistVal - <EPTF_CharstringList> - EPTF_CharstringList value
+//    statusLEDVal - <EPTF_StatusLED> - EPTF_StatusLED value
+//
+//    ...
+//
+//    unknownVal - <EPTF_Var_UnknownVal> - unknown value
+//
+// 
+//  Detailed Comments:
+//    Only the types defined in this union can be used
+//    to create an EPTF Variable
+//
+//    EPTF_Variable with unknownVal value cannot be created! This is
+//    used only in functions that pass arguments as EPTF_Var_DirectContent,
+//    but the value is unknown. This is a workaround for calling
+//    a function with omit value argument: f(omit), where f(in EPTF_Var_DirectContent).
+//    The unknownVal value is not used by EPTF_Var at all!
+//
+///////////////////////////////////////////////////////////
+type union EPTF_Var_DirectContent {
+  // direct value:
+  integer intVal,
+  float floatVal,
+  boolean boolVal,
+  charstring charstringVal,
+  octetstring octetstringVal,
+  hexstring hexstringVal,
+  bitstring bitstringVal,
+  EPTF_IntegerList integerlistVal,
+  EPTF_FloatList floatlistVal,
+  EPTF_CharstringList charstringlistVal,
+  EPTF_StatusLED statusLEDVal,
+  //...
+  EPTF_Var_UnknownVal unknownVal
+  //anytype?
+}
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Var_ReferencedContent
+// 
+//  Purpose:
+//   This record defines the Referenced Content
+// 
+//  Elements:
+//    refType - <EPTF_Var_RefType> - type of the value the reference points to
+//    valueRef - *octetstring* - the reference (i.e. the pointer) to the value
+// 
+//  Detailed Comments:
+//
+///////////////////////////////////////////////////////////
+type record EPTF_Var_ReferencedContent {
+  // reference:
+  EPTF_Var_RefType refType, //legyen ez egy enum...
+  octetstring valueRef
+}
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Var_UnknownVal
+// 
+//  Purpose:
+//   This record defines the type for unknown DirectContent value
+// 
+//  Elements:
+//    dataType - <EPTF_Var_RefType> - optional, type of the value that is unknown.
+//      If the type is unknown too, omit should be used.
+// 
+//  Detailed Comments:
+//
+///////////////////////////////////////////////////////////
+type record EPTF_Var_UnknownVal 
+{
+  EPTF_Var_RefType dataType optional 
+}
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Var_RefType
+// 
+//  Purpose:
+//   This enumerated defines the Reference type of a Referenced Content variable
+// 
+//  Elements:
+//    intType - integer type
+//    floatType - float type
+//    boolType - boolean type
+//    charstringType - charstring type
+//    octetstringType - octetstring type
+//    hexstringType - hexstring type
+//    bitstringType - bitstring type
+//    integerlistType - EPTF_IntegerList type
+//    floatlistType - EPTF_FloatList type
+//    charstringlistType - EPTF_CharstringList type
+//    statusLEDType - EPTF_StatusLED type
+//
+//    ...
+// 
+//  Detailed Comments:
+//    Only the types defined in this enum can be used
+//    to create a referenced-type EPTF Variable
+//
+///////////////////////////////////////////////////////////
+type enumerated EPTF_Var_RefType {
+  intType,
+  floatType,
+  boolType,
+  charstringType,
+  octetstringType,
+  hexstringType,
+  bitstringType,
+  integerlistType,
+  floatlistType,
+  charstringlistType,
+  statusLEDType
+  //...
+}
+
+// other enum for anyType?
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Var_CalcFn
+// 
+//  Purpose:
+//   This record defines the CalcFn function with its arguments
+// 
+//  Elements:
+//    funcRef - <EPTF_Var_fcb_CalcFn> - reference to the CalcFn function
+//    argList - <EPTF_IntegerList> - list of local EPTF Variable indexes used by the CalcFn function
+//       This list defines also the local providers of the EPTF Variable: if they are refreshed, the current Variable will also be refreshed (i.e. its calcFn will be called)
+//    nonVarArgList - <EPTF_IntegerList> - list of any other indexes used by the CalcFn function. They do not have to be EPTF Variable indexes.
+// 
+//  Detailed Comments:
+//    This function is used to calculate the value of an EPTF Variable (if it has a local provider)
+//
+///////////////////////////////////////////////////////////
+type record EPTF_Var_CalcFn {
+  EPTF_Var_fcb_CalcFn funcRef,
+  EPTF_IntegerList argList,
+  EPTF_IntegerList nonVarArgList
+}
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Var_GenericFn
+// 
+//  Purpose:
+//   This record defines a generic function with its argList
+// 
+//  Elements:
+//    funcRef - <EPTF_Var_fcb_GenericFn> - reference to the function
+//    argList - <EPTF_IntegerList> - list of indexes used by the function. This arglist will be passed to funcRef as its arguments
+// 
+//  Detailed Comments:
+//
+///////////////////////////////////////////////////////////
+type record EPTF_Var_GenericFn {
+  EPTF_Var_fcb_GenericFn funcRef,
+  EPTF_IntegerList argList
+}
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Var_GuardFn
+// 
+//  Purpose:
+//   This record defines the Guard function with its argList
+// 
+//  Elements:
+//    funcRef - <EPTF_Var_fcb_GuardFn> - reference to the Guard function
+//    argList - <EPTF_IntegerList> - list of local EPTF Variable indexes used by the Guard function
+// 
+//  Detailed Comments:
+//    Called by the library before the value of the EPTF Variable is changed, to check the new value
+//    before it is written into the content
+//
+///////////////////////////////////////////////////////////
+type record EPTF_Var_GuardFn {
+  EPTF_Var_fcb_GuardFn funcRef,
+  EPTF_IntegerList argList
+}
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Var_SyncState
+// 
+//  Purpose:
+//   The possible syncStates
+// 
+//  Elements:
+//    c_EPTF_Var_syncBegin - before the timelines are sent
+//    c_EPTF_Var_syncEnd - after the timelines are sent
+//
+//  Detailed Comments:
+//
+///////////////////////////////////////////////////////////
+type enumerated EPTF_Var_SyncState {
+  c_EPTF_Var_syncBegin,
+  c_EPTF_Var_syncEnd
+}
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Var_SyncCallbackFn
+// 
+//  Purpose:
+//   This record defines a syncCallback function with its argList
+// 
+//  Elements:
+//    funcRef - <EPTF_Var_fcb_SyncCallbackFn> - reference to the function
+//    argList - <EPTF_IntegerList> - list of indexes used by the function. This arglist will be passed to funcRef as its arguments
+//    syncState - <EPTF_Var_SyncState> - the function is called only at this syncState. Can be only c_EPTF_Var_syncBegin, or c_EPTF_Var_syncEnd
+// 
+//  Detailed Comments:
+//    These functions are called at the beginning of the sync event used to send timelines. 
+//
+///////////////////////////////////////////////////////////
+type record EPTF_Var_SyncCallbackFn {
+  EPTF_Var_fcb_SyncCallbackFn funcRef,
+  EPTF_IntegerList argList,
+  EPTF_Var_SyncState syncState
+}
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Var_SyncCallbackFnList
+// 
+//  Purpose:
+//   List of SyncCallback functions <EPTF_Var_SyncCallbackFn>
+// 
+//  Elements:
+//    -
+// 
+//  Detailed Comments:
+//
+///////////////////////////////////////////////////////////
+type record of EPTF_Var_SyncCallbackFn EPTF_Var_SyncCallbackFnList;
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Var_SyncCallbackFns
+// 
+//  Purpose:
+//   List of SyncCallback functions <EPTF_Var_SyncCallbackFnList>
+//   for each refresh rate
+// 
+//  Elements:
+//    -
+// 
+//  Detailed Comments:
+//
+///////////////////////////////////////////////////////////
+type record of EPTF_Var_SyncCallbackFnList EPTF_Var_SyncCallbackFns;
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Var_GenericFns
+// 
+//  Purpose:
+//   List of functions <EPTF_Var_GenericFn>
+// 
+//  Elements:
+//    -
+// 
+//  Detailed Comments:
+//
+///////////////////////////////////////////////////////////
+type record of EPTF_Var_GenericFn EPTF_Var_GenericFns;
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Var_GuardFns
+// 
+//  Purpose:
+//   List of Guard functions <EPTF_Var_GuardFn>
+// 
+//  Elements:
+//    -
+// 
+//  Detailed Comments:
+//
+///////////////////////////////////////////////////////////
+type record of EPTF_Var_GuardFn EPTF_Var_GuardFns;
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Var_fcb_CalcFn
+// 
+//  Purpose:
+//   Function type for the CalcFn function
+// 
+//  Elements:
+//    -
+// 
+//  Detailed Comments:
+//    parameters: 
+//      pl_idx - *integer* -  index of the EPTF Variable, 
+//      pl_argList - *in* <EPTF_IntegerList> - the arguments: list of integers that should be EPTF Variable indexes (these Variables are set to the local providers)
+//      pl_nonVarArgList - *in* <EPTF_IntegerList> - list of any other indexes used by the CalcFn function. They do not have to be EPTF Variable indexes.
+//      pl_retVal - *inout* <EPTF_Var_DirectContent> - the return value
+//    When called pl_retVal will contain the current value of the ETPF_Var
+//    Before the function exits it should set the new value into pl_retVal
+//
+///////////////////////////////////////////////////////////
+type function EPTF_Var_fcb_CalcFn(in integer pl_idx, in EPTF_IntegerList pl_argList, in EPTF_IntegerList pl_nonVarArgList, inout EPTF_Var_DirectContent pl_retVal) runs on self;
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Var_fcb_GenericFn
+// 
+//  Purpose:
+//   Function type for generic function
+// 
+//  Elements:
+//    -
+// 
+//  Detailed Comments:
+//    parameters: 
+//      pl_idx - *integer* -  index of the EPTF Variable, 
+//      pl_argList - <EPTF_IntegerList> - the arguments 
+//
+///////////////////////////////////////////////////////////
+type function EPTF_Var_fcb_GenericFn(in integer pl_idx, in EPTF_IntegerList pl_argList) runs on self;
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Var_fcb_GuardFn
+// 
+//  Purpose:
+//   Function type for the Guard function
+// 
+//  Elements:
+//    -
+// 
+//  Detailed Comments:
+//    parameters: 
+//      pl_idx - *integer* -  index of the EPTF Variable, 
+//      pl_argList - <EPTF_IntegerList> - the arguments 
+//      pl_newContent - <EPTF_Var_DirectContent> - the new value to be checked
+//    It returns true if new value is allowed, false if not.
+//
+///////////////////////////////////////////////////////////
+type function EPTF_Var_fcb_GuardFn(in integer pl_idx, in EPTF_IntegerList pl_argList, in EPTF_Var_DirectContent pl_newContent) runs on self return boolean;
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Var_fcb_SyncCallbackFn
+// 
+//  Purpose:
+//   Function type for syncCallback function
+// 
+//  Elements:
+//    -
+// 
+//  Detailed Comments:
+//    parameters: 
+//      pl_argList - <EPTF_IntegerList> - the arguments 
+//
+///////////////////////////////////////////////////////////
+type function EPTF_Var_fcb_SyncCallbackFn(in EPTF_IntegerList pl_argList) runs on self;
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Vars
+// 
+//  Purpose:
+//   List of all EPTF Variables <EPTF_Var>
+// 
+//  Elements:
+//    -
+// 
+//  Detailed Comments:
+//
+///////////////////////////////////////////////////////////
+type record of EPTF_Var EPTF_Vars;
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Var_MgmtMsg
+// 
+//  Purpose:
+//   This union defines the management message type sent/received by the <EPTF_Var_Mgmt_PT>
+// 
+//  Elements:
+//    isPresentRemote - <EPTF_Var_Msg_IsPresentRemote> - isPresentRemote message: sent to a remote component to check if a variable exits there
+//    isPresentRemoteResp - <EPTF_Var_Msg_IsPresentRemoteResp> - isPresentRemoteResp message: response to the isPresentRemote from the remote component
+//    subscribe - <EPTF_Var_Msg_Subscribe> - subscribe message: sent by the subscriber to the provider
+//    subscribeResp - <EPTF_Var_Msg_SubscribeResp> - subscribeResp message: response to the subscribe from the provider for the subscriber
+//    unsubscribe - <EPTF_Var_Msg_Unsubscribe> - unsubscribe message: sent by the subscriber to the provider
+//    setSubsCanAdjust - <EPTF_Var_Msg_SetSubsCanAdjust> - notify message sent for the subscribers with the new content of the setSubsCanAdjust flag
+//    refreshContent - <EPTF_Var_Msg_RefreshContent> - refreshContent message: notify message sent for the subscribers with the new content
+//    adjustContent - <EPTF_Var_Msg_AdjustContent> - adjustContent message: notify message sent for the remote provider with the new content
+//    adjustContentResp - <EPTF_Var_Msg_AdjustContentResp> - adjustContentNack message: notify message sent for the subscriber with the original content if adjust is rejected or not by the guards
+//    getRemoteContent - <EPTF_Var_Msg_GetRemoteContent> - getRemoteContent message: request the content of a remote EPTF Variable (without subscription)
+//    getRemoteContentResp - <EPTF_Var_Msg_GetRemoteContentResp> - getRemoteContentResp message: response for the getRemoteContent containing the content
+//    adjustRemoteContent - <EPTF_Var_Msg_AdjustRemoteContent> - adjustRemoteContent message: adjust the value of an EPTF Variable on a remote component (without subscription)
+//    adjustRemoteContentResp - <EPTF_Var_Msg_AdjustRemoteContentResp> - adjustRemoteContentResp message: negative response to the adjustRemoteContent message containing the original content
+//    hello - <EPTF_Var_Msg_Hello> - hello message: notification sent to a component to initiate a connection
+//    helloAck - <EPTF_Var_Msg_HelloAck> - helloAck message: acknowledge the hello message
+//    bye - <EPTF_Var_Msg_Bye> - bye message: notification sent to a connected component before termination
+//    byeAck - <EPTF_Var_Msg_ByeAck> - byeAck message: acknowledge the bye message
+//    refreshTimeLines - <EPTF_Var_Msg_RefreshTimeLines> - refreshTimeLines message: timeLines sent to the connected components when t_syncTimer expires
+// 
+//  Detailed Comments:
+//
+///////////////////////////////////////////////////////////
+type union EPTF_Var_MgmtMsg {
+  EPTF_Var_Msg_IsPresentRemote isPresentRemote,           // sent to a remote component to check if a variable exits there
+  EPTF_Var_Msg_IsPresentRemoteResp isPresentRemoteResp,   // response to the isPresentRemote from the remote component
+  EPTF_Var_Msg_Subscribe subscribe,           // sent by the subscriber to the provider
+  EPTF_Var_Msg_SubscribeResp subscribeResp,   // response to the subscribe from the provider for the subscriber
+  EPTF_Var_Msg_Unsubscribe unsubscribe,       // sent by the subscriber to the provider
+  EPTF_Var_Msg_SetSubsCanAdjust setSubsCanAdjust,   // notify message sent for the subscribers with the new content of the setSubsCanAdjust flag
+  EPTF_Var_Msg_RefreshContent refreshContent, // notify message sent for the subscribers with the new content
+  EPTF_Var_Msg_AdjustContent adjustContent,   // notify message sent for the remote provider with the new content
+  EPTF_Var_Msg_AdjustContentResp adjustContentResp,  // notify message sent for the subscriber with the original content if adjust is rejected or not by the guards
+  EPTF_Var_Msg_GetRemoteContent  getRemoteContent,         // request the content of a remote EPTF Variable (without subscription)
+  EPTF_Var_Msg_GetRemoteContentResp getRemoteContentResp,  // response for the getRemoteContent containing the content
+  EPTF_Var_Msg_AdjustRemoteContent adjustRemoteContent,         // adjust the value of an EPTF Variable on a remote component (without subscription)
+  EPTF_Var_Msg_AdjustRemoteContentResp adjustRemoteContentResp, // negative response to the adjustRemoteContent message containing the original content
+  EPTF_Var_Msg_Hello hello,                       // notification sent to a component to initiate a connection
+  EPTF_Var_Msg_HelloAck helloAck,                 // acknowledge the hello message
+  EPTF_Var_Msg_Bye bye,                       // notification sent to a connected component before termination
+  EPTF_Var_Msg_ByeAck byeAck,                 // acknowledge the bye message
+  EPTF_Var_Msg_RefreshTimeLines refreshTimeLines     // timeLines sent to the connected components when t_syncTimer expires
+}
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Var_Msg_IsPresentRemote
+// 
+//  Purpose:
+//   This record defines the management message EPTF_Var_Msg_IsPresentRemote sent/received by the <EPTF_Var_Mgmt_PT>
+// 
+//  Elements:
+//    remoteVarName - *charstring* - name of the variable to check on the remote component
+//    blockingFlagIdx - *integer* - the index of the blocking flag 
+//    responseIdx - *integer* - the index of the response data in the boolean pool
+// 
+//  Detailed Comments:
+//
+///////////////////////////////////////////////////////////
+type record EPTF_Var_Msg_IsPresentRemote {
+  charstring remoteVarName, // name of the remote variable
+  integer blockingFlagIdx,  // the index of the blocking flag
+  integer responseIdx        // the index of the response data in the boolean pool
+}
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Var_Msg_Subscribe
+// 
+//  Purpose:
+//   This record defines the management message EPTF_Var_Msg_IsPresentRemoteResp sent/received by the <EPTF_Var_Mgmt_PT>
+// 
+//  Elements:
+//    remoteVarName - *charstring* - name of the variable to check on the remote component
+//    blockingFlagIdx - *integer* - the index of the blocking flag 
+//    responseIdx - *integer* - the index of the response data in the boolean pool
+//    isPresent - *boolean* - the return value
+// 
+//  Detailed Comments:
+//
+///////////////////////////////////////////////////////////
+type record EPTF_Var_Msg_IsPresentRemoteResp {
+  charstring remoteVarName, // name of the remote variable
+  integer blockingFlagIdx,  // the index of the blocking flag
+  integer responseIdx,       // the index of the response data in the boolean pool
+  boolean isPresent         // true if present, false if not
+}
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Var_Msg_Subscribe
+// 
+//  Purpose:
+//   This record defines the management message EPTF_Var_Msg_Subscribe sent/received by the <EPTF_Var_Mgmt_PT>
+// 
+//  Elements:
+//    subscriberVarName - *charstring* - name of the subscriber variable ("" can be used to request the provider to assign the name automatically)
+//    subscriber - <EPTF_Var_Ref> - the subscriber variable (sender)
+//    providerVarName - *charstring* - name of the the provider variable (on the provider component)
+//    subscriptionMode - <EPTF_Var_SubscriptionMode> - sets the subscription mode: if sampled or timeLine, values are also updated in the buffer.timeLine
+//    refreshRate - *integer* - rate of the refresh (0 for default syncInterval, >0 for multiple times of minSyncInterval)
+//    blockingFlagIdx - *integer* - the index of the blocking flag (-1 for no block)
+// 
+//  Detailed Comments:
+//
+///////////////////////////////////////////////////////////
+type record EPTF_Var_Msg_Subscribe {
+  charstring subscriberVarName, // name of the subscriber variable ("" can be used to request the provider to assign the name automatically)
+  EPTF_Var_Ref subscriber,      // the subscriber variable (sender)
+  charstring providerVarName,   // name of the the provider variable (on the provider component)
+  EPTF_Var_SubscriptionMode subscriptionMode,  // sets the subscription mode: if sampled or timeLine, values are also updated in the buffer.timeLine
+  integer refreshRate, // rate of the refresh (0 for default, >0 for multiple times of minSyncInterval)
+  integer blockingFlagIdx // the index of the blocking flag (-1 for no block)
+}
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Var_Msg_Unsubscribe
+// 
+//  Purpose:
+//   This record defines the management message EPTF_Var_Msg_Unsubscribe sent/received by the <EPTF_Var_Mgmt_PT>
+// 
+//  Elements:
+//    subscriber - <EPTF_Var_Ref> - the subscriber variable (sender)
+//    provider - <EPTF_Var_Ref> - the provider variable (receiver)
+//    subscriptionMode - <EPTF_Var_SubscriptionMode> - subscription mode
+//    refreshRate - *integer* - rate of the refresh (0 for default syncInterval, >0 for multiple times of minSyncInterval)
+// 
+//  Detailed Comments:
+//    -
+//
+///////////////////////////////////////////////////////////
+type record EPTF_Var_Msg_Unsubscribe {
+  EPTF_Var_Ref subscriber,
+  EPTF_Var_Ref provider,
+  EPTF_Var_SubscriptionMode subscriptionMode,  // subscription mode
+  integer refreshRate
+}
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Var_Msg_SetSubsCanAdjust
+// 
+//  Purpose:
+//   This record defines the management message EPTF_Var_Msg_SetSubsCanAdjust sent/received by the <EPTF_Var_Mgmt_PT>
+// 
+//  Elements:
+//    subscriber - <EPTF_Var_Ref> - the subscriber variable (sender)
+//    subsCanAdjust - *boolean* - false: disables adjustContent in the subscriber
+// 
+//  Detailed Comments:
+//    -
+//
+///////////////////////////////////////////////////////////
+type record EPTF_Var_Msg_SetSubsCanAdjust {
+  EPTF_Var_Ref subscriber,
+  boolean subsCanAdjust
+}
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Var_Msg_SubscribeResp
+// 
+//  Purpose:
+//   This record defines the management message EPTF_Var_Msg_SubscribeResp sent/received by the <EPTF_Var_Mgmt_PT>
+// 
+//  Elements:
+//    subscriberVarName - *charstring* - name of the subscriber variable (if a "" was sent to the provider this is where the automatically generated name is returned)
+//    subscriber - <EPTF_Var_Ref> - the subscriber variable (receiver)
+//    provider - <EPTF_Var_Ref> - the provider variable (sender), (the provider.idx<0 if subscribe failed)
+//    timestamp - *float* - the time of the content (for non-realtime subscriptions)
+//    content - <EPTF_Var_DirectContent> - value of the provider variable (sender) (omit if subscribe failed)
+//    topProviderType - <EPTF_TopProviderType> - type of the top-provider (owner). Can only be: local/empty (omit if subscribe failed)
+//    blockingFlagIdx - *integer* - the index of the blocking flag (-1 for no block)
+//    subsCanAdjust - *boolean* - if false: subscribers cannot adjust the content
+// 
+//  Detailed Comments:
+//    This message is the response for the <EPTF_Var_Msg_Subscribe>
+//
+///////////////////////////////////////////////////////////
+type record EPTF_Var_Msg_SubscribeResp {
+  charstring subscriberVarName,   // name of the subscriber variable (if a "" was sent to the provider this is where the automatically generated name is returned)
+  EPTF_Var_Ref subscriber,        // the subscriber variable (receiver)
+  EPTF_Var_Ref provider,                        // the provider variable (sender), (the provider.idx<0 if subscribe failed)
+  float timestamp,                // the time of the content (for non-realtime subscriptions)
+  EPTF_Var_DirectContent content optional,      // value of the provider variable (sender) (omit if subscribe failed)
+  EPTF_TopProviderType topProviderType, // type of the top-provider (owner). Can only be: local/empty (empty if subscribe failed)
+  integer blockingFlagIdx, // the index of the blocking flag (-1 for no block)
+  boolean subsCanAdjust // if false: subscribers cannot adjust the content
+}
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_TopProviderType
+// 
+//  Purpose:
+//   This enum defines the possible types of the top-provider
+// 
+//  Elements:
+//    empty
+//    local
+// 
+//  Detailed Comments:
+//    Type of the top-provider (owner). Can only be: local/empty
+//
+///////////////////////////////////////////////////////////
+type enumerated EPTF_TopProviderType {
+  local,
+  empty
+}
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Var_Msg_RefreshContent
+// 
+//  Purpose:
+//   This record defines the management message EPTF_Var_Msg_RefreshContent sent/received by the <EPTF_Var_Mgmt_PT>
+// 
+//  Elements:
+//    subscriber - <EPTF_Var_Ref> - the subscriber variable (receiver)
+//    content - <EPTF_Var_DirectContent> - value of the provider variable (sender)
+// 
+//  Detailed Comments:
+//    -
+//
+///////////////////////////////////////////////////////////
+type record EPTF_Var_Msg_RefreshContent {
+  EPTF_Var_Ref subscriber,
+  EPTF_Var_DirectContent content
+}
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Var_Ref_List
+// 
+//  Purpose:
+//   List of <EPTF_Var_Ref>
+// 
+//  Elements:
+// 
+//  Detailed Comments:
+//
+///////////////////////////////////////////////////////////
+type record of EPTF_Var_Ref EPTF_Var_Ref_List;
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Var_MessageRoute
+// 
+//  Purpose:
+//   This record defines the route to the remote owner as an EPTF Variable list 
+// 
+//  Elements:
+//    varList - <EPTF_Var_Ref_List> - route to the owner
+//    lastIdx - *integer* - points to the last route element
+// 
+//  Detailed Comments:
+//    Used by the Adjust content mechanism
+//
+///////////////////////////////////////////////////////////
+type record EPTF_Var_MessageRoute {
+  EPTF_Var_Ref_List varList,
+  integer lastIdx
+}
+
+///////////////////////////////////////////////////////////
+//  Type: fcb_EPTF_Var_adjustContentNack_handler
+// 
+//  Purpose:
+//   This callback function type defines the type of the function to handle the adjustContentNack
+// 
+//  Parameters:
+//    pl_idx - *integer* - the idx of the EPTF Variable for which the handler is called
+//    pl_content - <EPTF_Var_DirectContent> - the content that was requested to adjust
+//    pl_result - *boolean* - result of adjust: true if success, false if failed
+//    pl_argList - <EPTF_IntegerList> - arguments for the callback function
+// 
+//  Detailed Comments:
+//    This function is called if the adjust for the EPTF Variable with the given content failed
+//
+///////////////////////////////////////////////////////////
+type function fcb_EPTF_Var_adjustContentNack_handler(in integer pl_idx, in EPTF_Var_DirectContent pl_content,in boolean pl_result, in EPTF_IntegerList pl_argList) runs on self;
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Var_adjustContentNack_handler
+// 
+//  Purpose:
+//   This callback function type defines the type of the function to handle the adjustContentNack
+// 
+//  Elements:
+//    handlerFn - <fcb_EPTF_Var_adjustContentNack_handler> - reference to the handler function
+//    pl_argList - <EPTF_IntegerList> - arguments for the callback function
+// 
+//  Detailed Comments:
+// 
+//
+///////////////////////////////////////////////////////////
+type record EPTF_Var_adjustContentResp_handler {
+  fcb_EPTF_Var_adjustContentNack_handler handlerFn,
+  EPTF_IntegerList argList
+}
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Var_Msg_AdjustContent
+// 
+//  Purpose:
+//   This record defines the management message EPTF_Var_Msg_AdjustContent sent/received by the <EPTF_Var_Mgmt_PT>
+// 
+//  Elements:
+//    subscribers - <EPTF_Var_MessageRoute> - the list of subscribers from the sender to the owner
+//    provider - <EPTF_Var_Ref> - the provider variable (receiver)
+//    content - <EPTF_Var_DirectContent> - the new value to be set
+//    respHandlerId - *integer* - the Idx in the handler pool of the user handler to call if adjustResp arrives (-1 if no handler should be called)
+// 
+//  Detailed Comments:
+//    This message is a request to adjust the value of an EPTF Variable,
+//    but which is a remote subscriber
+//
+///////////////////////////////////////////////////////////
+type record EPTF_Var_Msg_AdjustContent {
+  EPTF_Var_MessageRoute subscribers,   // route to sender
+  EPTF_Var_Ref provider,               // receiver
+  EPTF_Var_DirectContent content,
+  integer respHandlerId // the Idx in the handler pool of the user handler to call if adjustResp arrives (-1 if no handler should be called)
+}
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Var_Msg_AdjustContentResp
+// 
+//  Purpose:
+//   This record defines the management message EPTF_Var_Msg_AdjustContentResp sent/received by the <EPTF_Var_Mgmt_PT>
+// 
+//  Elements:
+//    result - *boolean* - result of adjust: true if adjust succeeded, false if failed
+//    subscribers - <EPTF_Var_MessageRoute> - the list of subscribers from the sender of the adjust to the owner
+//    content - <EPTF_Var_DirectContent> - the new value to be set
+//    respHandlerId - *integer* - the Idx in the handler pool of the user handler to call if adjustResp arrives (-1 if no handler should be called)
+// 
+//  Detailed Comments:
+//    This message is the response to the <EPTF_Var_Msg_AdjustContent> message.
+//    The original value of an EPTF Variable is returned to the remote subscriber together with the respHandler
+//
+///////////////////////////////////////////////////////////
+type record EPTF_Var_Msg_AdjustContentResp {
+  boolean result,                      // result of adjust: true if adjust succeeded, false if failed
+  EPTF_Var_MessageRoute subscribers,   // route to sender
+  EPTF_Var_DirectContent content,
+  integer respHandlerId // the Idx in the handler pool of the user handler to call if adjustResp arrives (-1 if no handler should be called)
+}
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Var_Msg_GetRemoteContent
+// 
+//  Purpose:
+//   This record defines the management message EPTF_Var_Msg_GetRemoteContent sent/received by the <EPTF_Var_Mgmt_PT>
+// 
+//  Elements:
+//    name - *charstring* - name of the variable on the remote component to the get the value from
+//    blockingFlagIdx - *integer* - the index of the blocking flag 
+//    responseIdx - *integer* - the index of the response data in the boolean pool
+// 
+//  Detailed Comments:
+//    This message is a request to query the content of an.
+//    EPTF Variable on a remote component
+//
+///////////////////////////////////////////////////////////
+type record EPTF_Var_Msg_GetRemoteContent {
+  charstring name,  // name of the variable on the remote component to the get the value from
+  integer blockingFlagIdx,  // the index of the blocking flag
+  integer responseIdx        // the index of the response data in the boolean pool
+}
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Var_Msg_GetRemoteContentResp
+// 
+//  Purpose:
+//   This record defines the management message EPTF_Var_Msg_GetRemoteContentResp sent/received by the <EPTF_Var_Mgmt_PT>
+// 
+//  Elements:
+//    content - <EPTF_Var_DirectContent> - the requested content of the EPTF Variable on the remote component (if not available: omit)
+//    blockingFlagIdx - *integer* - the index of the blocking flag 
+//    responseIdx - *integer* - the index of the response data in the boolean pool
+// 
+//  Detailed Comments:
+//    This message is a response to the <EPTF_Var_Msg_GetRemoteContent> message
+//
+///////////////////////////////////////////////////////////
+type record EPTF_Var_Msg_GetRemoteContentResp {
+  EPTF_Var_DirectContent content optional,  // the requested content of the EPTF Variable on the remote component (if not available: omit)
+  integer blockingFlagIdx,  // the index of the blocking flag
+  integer responseIdx        // the index of the response data in the boolean pool
+}
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Var_Msg_AdjustRemoteContent
+// 
+//  Purpose:
+//   This record defines the management message EPTF_Var_Msg_AdjustRemoteContent sent/received by the <EPTF_Var_Mgmt_PT>
+// 
+//  Elements:
+//    name - *charstring* - name of the variable on the remote component to the adjust the value of
+//    content - <EPTF_Var_DirectContent> - the new value to be set
+//    respHandlerId - *integer* - the Idx in the handler pool of the user handler to call if adjustResp arrives (-1 if no handler should be called)
+//    blockingFlagIdx - *integer* - the index of the blocking flag 
+//    responseIdx - *integer* - the index of the response data in the boolean pool
+// 
+//  Detailed Comments:
+//    This message is a request to adjust the value of an EPTF Variable
+//    on a remote component without subscription
+//
+///////////////////////////////////////////////////////////
+type record EPTF_Var_Msg_AdjustRemoteContent {
+  charstring name,  // name of the variable on the remote component to the adjust the value of
+  EPTF_Var_DirectContent content,  // the new value to be set
+  integer respHandlerId, // the Idx in the handler pool of the user handler to call if adjustResp arrives (-1 if no handler should be called)
+  integer blockingFlagIdx,  // the index of the blocking flag
+  integer responseIdx        // the index of the response data in the boolean pool
+}
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Var_Msg_AdjustRemoteContentResp
+// 
+//  Purpose:
+//   This record defines the management message EPTF_Var_Msg_AdjustRemoteContentResp sent/received by the <EPTF_Var_Mgmt_PT>
+// 
+//  Elements:
+//    adjust - <EPTF_Var_Msg_AdjustRemoteContent> - the original adjust message
+//    result - *boolean* - true if success, false if adjust failed
+// 
+//  Detailed Comments:
+//    This message is a response to the <EPTF_Var_Msg_AdjustRemoteContent> message.
+//    The adjusted value of an EPTF Variable is returned to the sender
+//    If remote content not available content set to omit.
+//
+///////////////////////////////////////////////////////////
+type record EPTF_Var_Msg_AdjustRemoteContentResp {
+  EPTF_Var_Msg_AdjustRemoteContent adjust,  // the original adjust message
+  boolean result               // true if success, false if adjust failed
+}
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Var_Msg_Hello
+// 
+//  Purpose:
+//   This record defines the management message EPTF_Var_Msg_Hello sent/received by the <EPTF_Var_Mgmt_PT>
+// 
+//  Elements:
+//    trId - *integer* - transaction ID
+// 
+//  Detailed Comments:
+//    This message is sent to an EPTF_Var_CT component
+//    to establish new connection towards another EPTF_Var_CT component
+//
+///////////////////////////////////////////////////////////
+type record EPTF_Var_Msg_Hello {
+  integer trId
+}
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Var_Msg_HelloAck
+// 
+//  Purpose:
+//   This record defines the management message EPTF_Var_Msg_HelloAck sent/received by the <EPTF_Var_Mgmt_PT>
+// 
+//  Elements:
+//    -
+// 
+//  Detailed Comments:
+//    This message is a response to the <EPTF_Var_Msg_HelloAck> message
+//
+///////////////////////////////////////////////////////////
+type EPTF_Var_Msg_Hello EPTF_Var_Msg_HelloAck;
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Var_Msg_Bye
+// 
+//  Purpose:
+//   This record defines the management message EPTF_Var_Msg_Bye sent/received by the <EPTF_Var_Mgmt_PT>
+// 
+//  Elements:
+//    -
+// 
+//  Detailed Comments:
+//    This message is sent to all connected EPTF_Var_CT components
+//    before the EPTF_Var_CT component terminates
+//
+///////////////////////////////////////////////////////////
+type record EPTF_Var_Msg_Bye {
+}
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Var_Msg_ByeAck
+// 
+//  Purpose:
+//   This record defines the management message EPTF_Var_Msg_ByeAck sent/received by the <EPTF_Var_Mgmt_PT>
+// 
+//  Elements:
+//    -
+// 
+//  Detailed Comments:
+//    This message is a response to the <EPTF_Var_Msg_ByeAck> message
+//
+///////////////////////////////////////////////////////////
+type EPTF_Var_Msg_Bye EPTF_Var_Msg_ByeAck;
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Var_TimeLineItem
+// 
+//  Purpose:
+//   This record defines one item in the <EPTF_Var_Msg_RefreshTimeLines>
+// 
+//  Elements:
+//    idx - *integer* - index of the variable at the remote component
+//    timeLine - <EPTF_Var_TimeLine> - timeLine of the variable
+// 
+//  Detailed Comments:
+//
+///////////////////////////////////////////////////////////
+type record EPTF_Var_TimeLineItem {
+  integer idx,                       // index of the variable at the remote component
+  EPTF_Var_TimeLine timeLine         // timeLine of the variable
+}
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Var_TimeLineList
+// 
+//  Purpose:
+//   List of <EPTF_Var_TimeLineItem>
+// 
+//  Elements:
+//   -
+// 
+//  Detailed Comments:
+//
+///////////////////////////////////////////////////////////
+type record of EPTF_Var_TimeLineItem  EPTF_Var_TimeLineList;
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Var_Msg_RefreshTimeLines
+// 
+//  Purpose:
+//   The message type for sending buffered timeLines to component periodically
+// 
+//  Elements:
+//    refreshRate - *integer* - refresh rate
+//    flushCounter - *integer* - number of refreshes
+//    timeLineList - <EPTF_Var_TimeLineList> - timeLine of variables
+// 
+//  Detailed Comments:
+//
+///////////////////////////////////////////////////////////
+type record EPTF_Var_Msg_RefreshTimeLines
+{
+  integer refreshRate,
+  integer flushCounter,
+  EPTF_Var_TimeLineList timeLineList
+}
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Var_DirectContentList
+// 
+//  Purpose:
+//   List of <EPTF_Var_DirectContent>
+// 
+///////////////////////////////////////////////////////////
+type record of EPTF_Var_DirectContent EPTF_Var_DirectContentList;
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Var_Mgmt_PT
+// 
+//  Purpose:
+//   The management port of EPTF Variable component
+// 
+//  Elements:
+//   -
+// 
+//  Detailed Comments:
+//
+///////////////////////////////////////////////////////////
+type port EPTF_Var_Mgmt_PT message {
+  inout EPTF_Var_MgmtMsg;
+} with {extension "internal"}
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Var_CT
+// 
+//  Purpose:
+//   The component that implements the EPTF Variable feature
+// 
+//  Elements:
+//    EPTF_Var_MgmtIf - <EPTF_Var_Mgmt_PT> - the management port
+//    v_initialized - *boolean* - prevents multiple init by calling <f_EPTF_Var_init_CT> several times
+//
+//    v_EPTF_Var_enableName2Id - *boolean* -    if true hashmap database is maintained to get the id from a variable name
+//    v_EPTF_Var_enableCompRef2Id - *boolean* - if true hashmap database is maintained to get the id from a component variable
+//    v_EPTF_Var_Hashmap_Name2Id - *integer* - the id of the Name2Id hashmap
+//    v_EPTF_Var_Hashmap_CompRef2Id - *integer* - the id of the CompRef2Id hashmap
+//    v_EPTF_Var_Hashmap_Provider2Id - *integer* - the id of the Provider2Id hashmap
+//
+//    v_EPTF_Vars - <EPTF_Vars> - the database of EPTF Variables
+//    v_syncBuffer - <EPTF_Var_SyncGroupList> - the database for sending timeLines in buffered mode for each refreshRate
+//    v_syncInterval - *float* - the period of sending the timeLines
+//    v_minSyncInterval - *float* - the minimal period of sending the timeLines
+//    v_Var_maxWaitTime - *float* - maximal waiting time for responses
+//    v_EPTF_Var_syncCallbackFns - <EPTF_Var_SyncCallbackFns> - list of syncCallback functions that are called at the sync event
+//    v_EPTF_Var_varsToSave - <EPTF_CharstringList> - list of variable names that will be saved
+//    v_Var_loggingMaskId - *integer* - logging component mask ID
+//    v_EPTF_Var_pendingByeNum - *integer* -  number of pending bye messages
+//    v_EPTF_Var_getRemoteContentResultList - <EPTF_Var_DirectContentList> - stores the response of the getRemoteContent (indexed by responseIdx)
+//
+//    v_EPTF_Var_varsToUpdate - <EPTF_IntegerList> - ordered list of variables that should be updated during refresh
+//    v_EPTF_Var_refreshSubscribersPeriod - *float* - component var to store the tsp_EPTF_Var_refreshSubscribersPeriod
+//    t_EPTF_Var_refreshSubscribers - *timer* - the event timer for updating variables in the varsToUpdate list
+//
+//    v_EPTF_Var_numPendingHellos - *integer* - number of pending hello messages
+//    v_EPTF_Var_maxWaitTimeForByeAck - *float* - the maximum waiting time for ByeAck messages during cleanup (default: 10.5)
+//
+//  Detailed Comments:
+//   To use the EPTF Varibles, extend your component with <EPTF_Var_CT>
+//
+///////////////////////////////////////////////////////////
+type component EPTF_Var_CT extends EPTF_Base_CT, EPTF_Logging_CT, EPTF_Scheduler_CT, EPTF_HashMap_CT, EPTF_FBQ_CT {
+  private port EPTF_Var_Mgmt_PT EPTF_Var_MgmtIf; // management interface of EPTF_Var_CT
+  private var boolean v_EPTF_Var_initialized := false;    // prevents multiple init by calling <f_EPTF_Var_init_CT> several times
+
+  private var boolean v_EPTF_Var_enableName2Id := false;    // if true hashmap database is maintained to get the id from a variable name
+  private var boolean v_EPTF_Var_enableCompRef2Id := false; // if true hashmap database is maintained to get the id from a component variable
+  private var integer v_EPTF_Var_Hashmap_Name2Id := -1;     // the id of the Name2Id hashmap
+  private var integer v_EPTF_Var_Hashmap_CompRef2Id := -1;  // the id of the CompRef2Id hashmap
+  private var integer v_EPTF_Var_Hashmap_Provider2Id := -1;  // the id of the Provider2Id hashmap
+
+
+  private var EPTF_Vars v_EPTF_Vars := {};       // list of all EPTF variables
+  private var EPTF_Var_SyncGroupList v_syncBuffer := {}; // contains the remote component data for each comp (timeLine references) for each refreshRate
+  private var float v_syncInterval := tsp_EPTF_Var_SyncInterval;
+  private var float v_minSyncInterval := tsp_EPTF_ELEMENTARY_TIMESTEP_PARAM;
+  private var float v_Var_maxWaitTime := 120.0;
+  private var default v_EPTF_Var_def;  // the default altstep
+  private var EPTF_Var_adjustContentResp_handlerPool adjustContentResp_handler_ParamStack;// pool for EPTF_Var_adjustContentResp_handler param stack
+  private var booleanPool v_booleanPool; // pool for type boolean (contains the blocking semaphores)
+  private var EPTF_Var_SyncCallbackFns v_EPTF_Var_syncCallbackFns := {}; // list of syncCallback functions that are called at the sync event
+  private var EPTF_CharstringList v_EPTF_Var_varsToSave := {}; // list of variable names that will be saved
+  private var integer v_EPTF_Var_pendingByeNum := 0; // number of pending bye messages
+  private var EPTF_Var_DirectContentList v_EPTF_Var_getRemoteContentResultList := {}; // stores the response of the getRemoteContent (indexed by responseIdx)
+  
+  //refreshOptimization:
+  private var EPTF_IntegerList v_EPTF_Var_varsToUpdate := {}; // ordered list of variables that should be updated during refresh
+  private var float v_EPTF_Var_refreshSubscribersPeriod := tsp_EPTF_Var_refreshSubscribersPeriod; // component var to store the tsp_EPTF_Var_refreshSubscribersPeriod
+  private timer t_EPTF_Var_refreshSubscribers := 1.00; // the event timer for updating variables in the varsToUpdate list
+  
+  private var integer v_EPTF_Var_numPendingHellos := 0; // number of pending hello messages
+  private var float v_EPTF_Var_maxWaitTimeForByeAck := 10.5; // the maximum waiting time for ByeAck messages during cleanup
+
+  // logging
+  private var integer v_Var_loggingMaskId := c_EPTF_Logging_invalidMaskId;
+}
+
+
+const charstring c_EPTF_Var_whitespace := "[ \t]#(,)" // whitespace
+const charstring c_EPTF_Var_anyWord := c_EPTF_Var_whitespace&"([^ \t]#(1,))"&c_EPTF_Var_whitespace; // pattern: "  any_word "
+const charstring c_EPTF_Var_everything := "(*)" // everything
+const charstring c_EPTF_Var_integerNumber := "([+-]#(0,1)[0-9]#(1,))"; // integer number: "01230102", "+1122", "-0121"
+const charstring c_EPTF_Var_floatNumber := "([+-]#(0,1)[0-9]#(1,)[.]#(0,1)[0-9]#(0,)([eE][-+]#(0,1)[0-9]#(1,))#(0,1))"; // float number: "12.354", "-1.23", "+1.254", "-1e-2", 2.32e+4 Contains 2 groups!!! The first is the float number itself, the second is the exponent
+const charstring c_EPTF_Var_charstringValue := """"&"([^""]#(0,))"""; // charstring number: "\"abcd  123-+\""
+const charstring c_EPTF_Var_bitstringNumber := "([01]#(,))"; // bitstring number: 0101
+const charstring c_EPTF_Var_hexstringNumber := "([0-9a-fA-F]#(,))"; // hexstring number: 0123456789ABCDEF
+const charstring c_EPTF_Var_octetstringNumber := "(([0-9a-fA-F]#(2,2))#(,))"; // octetstring number: 0123456789ABCDEF
+
+///////////////////////////////////////////////////////////
+//  Constant: c_EPTF_Var_loggingEventClasses
+// 
+//  Purpose:
+//    list of logging event class names used on the Variable
+// 
+//  Detailed Comments:
+//    <EPTF_Logging_EventClassPrefixList> { "Warning", "Debug" }
+///////////////////////////////////////////////////////////
+const EPTF_Logging_EventClassPrefixList c_EPTF_Var_loggingEventClasses := { "Warning", "Debug" };
+
+///////////////////////////////////////////////////////////
+//  Constant: c_EPTF_Var_loggingClassIdx_Warning
+// 
+//  Purpose:
+//    logging class index for Error
+// 
+//  Detailed Comments:
+//    *0*
+///////////////////////////////////////////////////////////
+const integer c_EPTF_Var_loggingClassIdx_Warning := 0;
+
+///////////////////////////////////////////////////////////
+//  Constant: c_EPTF_Var_loggingClassIdx_Debug
+// 
+//  Purpose:
+//    logging class index for Error
+// 
+//  Detailed Comments:
+//    *1*
+///////////////////////////////////////////////////////////
+const integer c_EPTF_Var_loggingClassIdx_Debug := 1;
+
+} // end of module

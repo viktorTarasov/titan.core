@@ -1,0 +1,490 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_CLL_Base_Definitions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 512
+//  Updated:  2012-08-16
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////
+//  Module: EPTF_CLL_Base_Definitions
+// 
+//  Purpose:
+//    This module contains common type definitions that should be used in all EPTF Components.
+//
+//    The Base feature provides functions to:
+//      - stores the name of the component
+//      - gracefully terminate the application via the init-cleanup mechanism
+//      - convert the component types extending EPTF_Base_CT to/from integer
+//      - access the system and component time
+//      - error and assert management with negative test mode support
+//      - provide process information on every PTC running on components extending the EPTF_Base_CT
+// 
+//  Module Parameters:
+//    tsp_EPTF_Base_serialStopAllComponents - *boolean* - if true: components are stopped one after another, otherwise: in parallel (faster, but might lead to errors). Default: true
+//	tsp_EPTF_Base_debug - *boolean* - if true: the debug style messages appear in the logs. Default: false
+//
+//  Module depends on:
+//    <EPTF_CLL_Common_Definitions>
+// 
+//  Current Owner:
+//    Jozsef Gyurusi (ETHJGI)
+// 
+//  Last Review Date:
+//    2007-12-06
+//
+//  Detailed Comments:
+//    This module contains common type definitions that should be used in all EPTF Components.
+//    All EPTF Components should extend the EPTF_Base_CT.
+//
+//    In all components that extend EPTF_Base_CT the following rules has to be followed:
+//     - in your init function call all the init functions of all those components that your component extends explicitly,
+//       e.g. the <f_EPTF_Base_init_CT> in case your component extends the <EPTF_Base_CT> component.
+//     - after that, initialize your component variables
+//     - activate your default altsteps
+//     - register your cleanup function by <f_EPTF_Base_registerCleanup> at the end of your init function
+//     - call <f_EPTF_Base_cleanup_CT> before your component terminates
+//       or call <f_EPTF_Base_stop> if the execution should be stopped (e.g. because of an error the execution is forced to stop immediately)
+//     - do not call any cleanup function anywhere, especially inside your cleanup function.
+//       Only the cleanup function of the Base component should be called
+//     - make sure that any event that comes after the cleanup function was called, is discarded (does not cause problems)
+//       e.g. by deactivating your default altsteps in your cleanup function.
+//     - make sure, that if any of your functions is called if your feature is not initialized,
+//       it does not cause an error, similarly port operations (send function) does not cause error if the port is not connected
+//     - make sure, that your init and cleanup functions can be called several times (with doing nothing during the additional calls)!
+//
+//    The role of the init and cleanup functions is similar to the constructors and destructors in C++.
+//
+//   A typical example of an init function if EPTF_USER_CT extends MyParent1_CT, MyParent2_CT:
+//function f_EPTF_USER_init_CT(in charstring pl_selfName /* your additional input parameters */) runs on USER_CT {
+//  if (v_USER_initialized) {
+//    return;
+//  }
+//
+//  // call all the init functions of the components that your component extends _explicitly_:
+//  f_MyParent1_init_CT(pl_selfName /*additional parameters*/); 
+//  f_MyParent2_init_CT(pl_selfName /*additional parameters*/); 
+//
+//  // initialize your component variables here...
+//
+//  // activate your default altsteps here...
+//
+//  v_USER_initialized := true;
+//
+//  // register your cleanup function:
+//  f_EPTF_Base_registerCleanup(refers(f_USER_cleanup_CT));
+//
+//  log("----USER INIT DONE----");
+//}
+//
+//
+//   A typical example of a USER cleanup function:
+//function f_USER_cleanup_CT() runs on USER_CT {
+//  if (v_USER_initialized == false) {
+//    return;
+//  }
+//  v_USER_initialized := false;
+//
+//  // reset your variables here if needed...
+//
+//  // Do not call any cleanup function inside this function!
+//
+//  // if you have a connected port disconnect it using a 'bye' messages like this:
+//  // (the handlers of the bye should be added into the main alt loop.
+//  // The bye handlers should remove the remote party from the database, send byeAck and call repeat)
+//  // (the handlers of the byeAck should be added into the main alt loop.
+//  // The byeAck handlers should remove the remote party from the database, and call repeat)
+//  // send bye only if remote party did not send bye to me and I responded to it:
+//  f_USER_Send_ByeToAllInDatabase();
+//  timer t_maxWait := 30.0;
+//  t_maxWait.start;
+//  // to block execution until all byeAck arrives use: t_byeAck and f_USER_allByeAck_received()
+//  timer t_byeAck := 0.0; t_byeAck.start;
+//  alt {
+//    [] t_maxWait.timeout {
+//      log("WARNING:","--USER CLEANUP TIMEOUT-- Not all responses received for bye messages. Exiting anyway...");
+//      // exit from alt
+//    }
+//    [f_USER_allByeAck_received()] t_byeAck.timeout {
+//       // all bye ack arrived, can go on now
+//    }
+//  }
+//
+//  // deactivate your default altsteps here if needed...
+//
+//  log("----USER CLEANUP DONE----");
+//}
+//
+///////////////////////////////////////////////////////////////
+
+module EPTF_CLL_Base_Definitions {
+
+import from EPTF_CLL_Common_Definitions all; // tsp_EPTF_maxRunningTime
+
+modulepar boolean tsp_EPTF_Base_serialStopAllComponents := true; // if true: components are stopped one after another, otherwise: in parallel (faster, but might lead to errors). Default: true
+modulepar boolean tsp_EPTF_Base_debug := false; //if true: the debug style messages appear in the logs. Default: false
+
+///////////////////////////////////////////////////////////
+//  Type: f_EPTF_Feature_cleanup_CT
+// 
+//  Purpose:
+//   General function type of the cleanup functions
+// 
+//  Elements:
+//    -
+// 
+//  Detailed Comments:
+//
+///////////////////////////////////////////////////////////
+type function f_EPTF_Feature_cleanup_CT() runs on self;
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Base_CleanupFunctions
+// 
+//  Purpose:
+//   List of <f_EPTF_Feature_cleanup_CT>
+// 
+//  Elements:
+//    -
+// 
+//  Detailed Comments:
+//
+///////////////////////////////////////////////////////////
+type record of f_EPTF_Feature_cleanup_CT EPTF_Base_CleanupFunctions;
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Base_ComponentList
+// 
+//  Purpose:
+//   List of <EPTF_Base_CT>
+// 
+//  Elements:
+//    -
+// 
+//  Detailed Comments:
+//
+///////////////////////////////////////////////////////////
+type record of EPTF_Base_CT EPTF_Base_ComponentList;
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Base_ComponentInfo
+// 
+//  Purpose:
+//   List of <EPTF_Base_CT>
+// 
+//  Elements:
+//    selfName - *charstring* - the name of the component (returned by <f_EPTF_Base_selfName>)
+//    compRef - <EPTF_Base_CT_private> - the reference to the component
+//    hostName - *charstring* - the name of the component (returned by <f_EPTF_Base_getHostName>)
+//    pid - *integer* - process ID of PTC where the component is running
+// 
+//  Detailed Comments:
+//
+///////////////////////////////////////////////////////////
+type record EPTF_Base_ComponentInfo {
+  charstring selfName,
+  EPTF_Base_CT compRef,
+  charstring hostName,
+  integer pid
+}
+
+const EPTF_Base_ComponentInfo c_EPTF_Base_ComponentInfo_init := {
+  "",null,"",-1
+}
+
+type record of EPTF_Base_ComponentInfo EPTF_Base_ComponentInfoList;
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Base_MgmtMsg
+// 
+//  Purpose:
+//   This union defines the management message type sent/received by the <EPTF_Base_Mgmt_PT>
+// 
+//  Elements:
+//    hello - <EPTF_Base_Msg_Hello> - hello message sent to the mtc to register component creation
+//    bye - <EPTF_Base_Msg_Bye> - bye message sent to the mtc to notify it about the termination of the sender component
+//    byeAck - <EPTF_Base_Msg_ByeAck> - byeAck message sent by the mtc to the client to notify it has received the bye message, the client can terminate now
+//    stopRemote - <EPTF_Base_Msg_StopRemote> - the component which receives this message should stop gracefully
+// 
+//  Detailed Comments:
+//
+///////////////////////////////////////////////////////////
+type union EPTF_Base_MgmtMsg {
+  EPTF_Base_Msg_Hello hello,     // hello message sent to the mtc to register component creation
+  EPTF_Base_Msg_GetCompInfo getCompInfo,             // getCompInfo message sent to the mtc to get info about a component
+  EPTF_Base_Msg_GetCompInfoResult getCompInfoResult, // getCompInfoResult message sent from mtc to as a response to the getCompInfo msg
+  EPTF_Base_Msg_GetCompInfoAll getCompInfoAll,             // getCompInfoAll message sent to the mtc to get info about a component
+  EPTF_Base_Msg_GetCompInfoAllResult getCompInfoAllResult, // getCompInfoAllResult message sent from mtc to as a response to the getCompInfoAll msg
+  EPTF_Base_Msg_Bye bye,         // bye message sent to the mtc to notify it about the termination of the sender component
+  EPTF_Base_Msg_ByeAck byeAck,         // byeAck message sent by the mtc to the client to notify it has received the bye message, the client can terminate now
+  EPTF_Base_Msg_StopRemote stopRemote           // the component which receives this message should stop gracefully
+}
+
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Base_Msg_Hello
+// 
+//  Purpose:
+//   This record defines the management message type
+// 
+//  Elements:
+//
+//  Detailed Comments:
+//   It is sent to notify the mtc about the creation of the sender component
+//
+///////////////////////////////////////////////////////////
+type record EPTF_Base_Msg_Hello {
+  integer myPid,
+  charstring myName,
+  charstring myHostName
+}
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Base_Msg_GetCompInfo
+// 
+//  Purpose:
+//   This record defines the management message type GetCompInfo
+// 
+//  Elements:
+//
+//  Detailed Comments:
+//   It is sent to the mtc to get info about the component
+//   with the given selfName
+//
+///////////////////////////////////////////////////////////
+type record EPTF_Base_Msg_GetCompInfo {
+  integer msgId,
+  charstring selfName
+}
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Base_Msg_GetCompInfoResult
+// 
+//  Purpose:
+//   This record defines the management message type GetCompInfoResult
+// 
+//  Elements:
+//
+//  Detailed Comments:
+//   It is the result coming from mtc that contains the result
+//   for <EPTF_Base_Msg_GetCompInfo>
+//
+///////////////////////////////////////////////////////////
+type record EPTF_Base_Msg_GetCompInfoResult {
+  integer msgId,
+  EPTF_Base_ComponentInfo compInfo,
+  integer errorCode
+}
+
+const EPTF_Base_Msg_GetCompInfoResult c_EPTF_Base_Msg_GetCompInfoResult_init := {
+  -1,c_EPTF_Base_ComponentInfo_init,-1
+}
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Base_Msg_GetCompInfoAll
+// 
+//  Purpose:
+//   This record defines the management message type GetCompInfoAll
+// 
+//  Elements:
+//
+//  Detailed Comments:
+//   It is sent to the mtc to get info about the component
+//   with the given selfName
+//
+///////////////////////////////////////////////////////////
+type record EPTF_Base_Msg_GetCompInfoAll {
+  integer msgId
+}
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Base_Msg_GetCompInfoAllResult
+// 
+//  Purpose:
+//   This record defines the management message type GetCompInfoAllResult
+// 
+//  Elements:
+//
+//  Detailed Comments:
+//   It is the result coming from mtc that contains the result
+//   for <EPTF_Base_Msg_GetCompInfoAll>
+//
+///////////////////////////////////////////////////////////
+type record EPTF_Base_Msg_GetCompInfoAllResult {
+  integer msgId,
+  EPTF_Base_ComponentInfoList compInfoAll
+}
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Base_Msg_GetCompInfoResults
+// 
+//  Purpose:
+//   This record of defines the management message buffer type
+// 
+//  Elements:
+//
+//  Detailed Comments:
+//
+///////////////////////////////////////////////////////////
+type record of EPTF_Base_Msg_GetCompInfoResult EPTF_Base_Msg_GetCompInfoResults;
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Base_Msg_Bye
+// 
+//  Purpose:
+//   This record defines the management message type
+// 
+//  Elements:
+// 
+//  Detailed Comments:
+//   It is sent to notify the mtc about the termination of the sender component
+//
+///////////////////////////////////////////////////////////
+type record EPTF_Base_Msg_Bye {
+};
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Base_Msg_ByeAck
+// 
+//  Purpose:
+//   This record defines the management message type
+// 
+//  Elements:
+// 
+//  Detailed Comments:
+//   It is sent by the mtc to notify the client that it recceived the bye message and the client can terminate
+//
+///////////////////////////////////////////////////////////
+type EPTF_Base_Msg_Bye EPTF_Base_Msg_ByeAck;
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Base_Msg_StopRemote
+// 
+//  Purpose:
+//   This record defines the management message type
+// 
+//  Elements:
+//    stopRemote - <EPTF_Base_Msg_StopRemote> - the component which receives this message should stop gracefully
+//    noCleanup - *boolean* - true of no cleanup needed
+// 
+//  Detailed Comments:
+//
+///////////////////////////////////////////////////////////
+type record EPTF_Base_Msg_StopRemote {
+  boolean noCleanup
+}
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Base_Mgmt_PT
+// 
+//  Purpose:
+//   The management port of <EPTF_Base_CT> component
+// 
+//  Elements:
+//   -
+// 
+//  Detailed Comments:
+//
+///////////////////////////////////////////////////////////
+type port EPTF_Base_Mgmt_PT message {
+  inout EPTF_Base_MgmtMsg;
+} with {extension "internal"}
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Base_CheckCondition_FT
+// 
+//  Purpose:
+//    General function to check a condition
+//
+//  Parameters:
+//    -
+//
+//  Return Value:
+//    boolean - True if condition is fulfilled, false otherwise
+//
+//  Errors & assertions:
+//    - 
+//
+//  Detailed Comments:
+//    Can be used in alt statements to wake up when the condition becomes true
+//    Used by <f_EPTF_Base_waitForCondition>
+//    
+//
+///////////////////////////////////////////////////////////
+type function EPTF_Base_CheckCondition_FT() runs on self return boolean;
+
+///////////////////////////////////////////////////////////
+//  Component: EPTF_Base_CT
+// 
+//  Purpose:
+//   The component hides the internal members of the EPTF Base feature
+//  
+//  Elements:
+//
+//  Detailed Comments:
+//   To use the any EPTF Feature, extend your component with <EPTF_Base_CT>
+//
+///////////////////////////////////////////////////////////
+type component EPTF_Base_CT extends EPTF_Base_CT_private {
+}
+
+friend module EPTF_CLL_Base_Functions;
+///////////////////////////////////////////////////////////
+//  Component: EPTF_Base_CT_private
+// 
+//  Purpose:
+//    The component that implements the EPTF Base feature, that are common in all EPTF components
+// 
+//  Elements:
+//    v_selfName - *charstring* - user given name of the component
+//    v_initialized - *boolean* - prevents multiple init by calling <f_EPTF_Base_init_CT> several times
+//    v_EPTF_Base_cleanupFunctions - <EPTF_Base_CleanupFunctions> - the database of the cleanup functions
+//    EPTF_Base_MgmtIf - <EPTF_Base_Mgmt_PT> - the management port
+//    v_EPTF_Base_def - *default* - reference to the default altstep
+//    v_EPTF_Base_componentsToStop - <EPTF_Base_ComponentList> - list of components that should be stopped
+//    v_EPTF_Base_componentInfoList - <EPTF_Base_ComponentInfoList> - list of all EPTF_Base components
+//    v_EPTF_Base_getCompInfoResult - <EPTF_Base_Msg_GetCompInfoResults> - to store the result msg for GetCompInfo
+//    v_EPTF_Base_serialStopAllComponents - *boolean* - if true: components are stopped one after another, otherwise: in parallel. Default: tsp_EPTF_Base_slowStopAllComponents
+//    v_EPTF_Base_disableBye - *boolean* - true if bye message should not be sent
+//    v_EPTF_Base_byeAckReceived - *boolean* - true if byeAck has arrived
+//    v_EPTF_Base_stopRemoteSentTo - <EPTF_Base_CT> - component reference to the component that is being stopped by stopRemote
+//    T_EPTF_componentClock  - *timer* - is the "wall clock" of the component
+//              it is to be started upon execution starts and it is supposed to never expire
+//    v_EPTF_Base_negativeTestMode - *boolean* - if false: verdict is set by <f_EPTF_Base_assert>, otherwise not
+//    v_EPTF_Base_assertMsgs - <EPTF_CharstringList> - the list of assert messages
+//    v_EPTF_Base_expectedAssert - *charstring* - the expected assert message at cleanup
+//
+//  Detailed Comments:
+//   To use the any EPTF Feature, extend your component with <EPTF_Base_CT>
+//
+///////////////////////////////////////////////////////////
+friend type component EPTF_Base_CT_private {
+  private var charstring v_selfName;
+  private var boolean v_EPTF_Base_initialized := false;
+  private var EPTF_Base_CleanupFunctions v_EPTF_Base_cleanupFunctions := {};
+  private port EPTF_Base_Mgmt_PT EPTF_Base_MgmtIf; // management interface
+  private var default v_EPTF_Base_def;  // reference to the default altstep
+  private var EPTF_Base_ComponentList v_EPTF_Base_componentsToStop := {}; // list of components that should be stopped
+  private var EPTF_Base_ComponentInfoList v_EPTF_Base_componentInfoList := {}; // list of all EPTF_Base components
+  private var EPTF_Base_Msg_GetCompInfoResults v_EPTF_Base_getCompInfoResult := {}; // to store the result msg for GetCompInfo
+  private var boolean v_EPTF_Base_serialStopAllComponents := tsp_EPTF_Base_serialStopAllComponents;  // if true: components are stopped one after another, otherwise: in parallel. Default: tsp_EPTF_Base_serialStopAllComponents
+  private var boolean v_EPTF_Base_disableBye := false; // true if bye message should not be sent
+  private var boolean v_EPTF_Base_byeAckReceived := false; // true if byeAck has arrived
+  private var EPTF_Base_CT v_EPTF_Base_stopRemoteSentTo := null; // component reference to the component that is being stopped by stopRemote
+  // This timer has been assumed to never expire, but can be read as clock reference
+  /* private*/ timer T_EPTF_componentClock := tsp_EPTF_maxRunningTime;
+  private var float v_EPTF_Base_abstimeOfZeroComponentClock := 0.0; // abstime in secs, as in gettimeofday()
+  
+  private var boolean v_EPTF_Base_negativeTestMode := false; // if false: verdict is set by <f_EPTF_Base_assert>, otherwise not
+  private var EPTF_CharstringList v_EPTF_Base_assertMsgs := {}; // the list of assert messages
+  private var charstring v_EPTF_Base_expectedAssert := ""; // the expected assert message at cleanup
+  private var charstring v_EPTF_Base_expectedError := ""; // the expected error message at cleanup
+}
+
+} // end of module

@@ -1,0 +1,154 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_CLL_Semaphore_Definitions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 512
+//  Updated:  2012-02-16
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////
+//  Module: EPTF_CLL_Semaphore_Definitions
+// 
+//  Purpose:
+//    This module contains the type definitions for EPTF Semaphore.
+// 
+//  Module Parameters:
+//    tsp_EPTF_Semaphore_loggingComponentMask - *charstring* - component-type mask for logging, default value: "EPTF_Semaphore"
+//
+//  Module depends on:
+//    <EPTF_CLL_Base_Definitions>
+//    <EPTF_CLL_Logging_Definitions>
+//    <EPTF_CLL_FBQ_Definitions>
+// 
+//  Current Owner:
+//    Jozsef Gyurusi (ETHJGI)
+// 
+//  Last Review Date:
+//    2007-12-06
+//
+//  Detailed Comments:
+//    The EPTF Semaphore is a solution for blocking functions, especially when the blocking function
+//    calls a receive statement.
+//    The solution with semaphore is the following:
+//      - Create a semaphore and store its id (or send with the message, and put it into the response)
+//      - send the message of which response should be received
+//      - in the default altstep write the handle function of the response so that it unlocks the semaphore
+//      - In the place where you want to be sure, that the response is received call the waitForUnlock function.
+//
+///////////////////////////////////////////////////////////////
+
+module EPTF_CLL_Semaphore_Definitions {
+
+modulepar boolean tsp_debugVerbose_PoolMgmt := false;
+
+import from EPTF_CLL_Base_Definitions all;
+import from EPTF_CLL_Logging_Definitions all;
+
+modulepar charstring tsp_EPTF_Semaphore_loggingComponentMask := "EPTF_Semaphore";
+
+/*
+// THE GENERATED CODE BELOW IS EQUIVALENT WITH THE FOLLOWING MACRO:
+// define POOL for integer
+//#define EPTF_POOLTYPE integer
+//#include "EPTF_CLL_PoolMgmt_Functions.ttcnin"
+//#undef EPTF_POOLTYPE
+*/
+
+//////////////////////// BEGINING OF CODE /////////////////////////
+// GENERATED CODE, DO NOT EDIT BELOW!
+
+//# 2 "tmp.ttcnpp"
+
+
+
+//# 1 "EPTF_CLL_PoolMgmt_Functions.ttcnin" 1
+//# 58 "EPTF_CLL_PoolMgmt_Functions.ttcnin"
+import from EPTF_CLL_FBQ_Definitions all;
+//# 1 "EPTF_CLL_PoolMgmt_Definitions.ttcnin" 1
+//# 91 "EPTF_CLL_PoolMgmt_Definitions.ttcnin"
+type record integerPool {EPTF_FreeBusyQueue order, integerList userData}
+//# 106 "EPTF_CLL_PoolMgmt_Definitions.ttcnin"
+type record of integer integerList;
+//# 121 "EPTF_CLL_PoolMgmt_Definitions.ttcnin"
+const integerList c_EPTF_emptyintegerList := {};
+//# 61 "EPTF_CLL_PoolMgmt_Functions.ttcnin" 2
+//# 82 "EPTF_CLL_PoolMgmt_Functions.ttcnin"
+const integerPool c_EPTF_emptyintegerPool := {order := c_EPTF_emptyFreeBusyQueue, userData := c_EPTF_emptyintegerList}
+// FUNCIONS are MOVED TO Function module!
+
+
+
+// DO NOT EDIT ABOVE THIS LINE!
+//////////////////////////////////////////////////////////////
+const integer c_emptyinteger := 0;
+
+const integer c_EPTF_Semaphore_locked := 1;
+const integer c_EPTF_Semaphore_unlocked := 0;
+
+
+///////////////////////////////////////////////////////////
+//  Type: EPTF_Semaphore_CT
+// 
+//  Purpose:
+//   The component that implements the EPTF Semaphore feature
+// 
+//  Elements:
+//    v_EPTF_Semaphore_initialized - *boolean* - prevents multiple init
+//    v_EPTF_Semaphore_integerPool - <integerPool> - the database of the semaphores
+//    t_EPTF_Semaphore_timer - *timer* - the semaphore timer (always in timeout state)
+//    v_Semaphore_loggingMaskId - *integer* - logging component mask ID
+//
+//  Detailed Comments:
+//   This component extends <EPTF_Base_CT>
+//
+///////////////////////////////////////////////////////////
+type component EPTF_Semaphore_CT extends EPTF_Base_CT, EPTF_Logging_CT, EPTF_FBQ_CT {
+  private var boolean v_EPTF_Semaphore_initialized := false;    // prevents multiple init by calling <f_EPTF_Var_init_CT> several times
+  private var integerPool v_EPTF_Semaphore_integerPool; // pool for type integer (contains the blocking semaphores)
+  private timer t_EPTF_Semaphore_timer := 0.0;
+
+  // logging
+  private var integer v_Semaphore_loggingMaskId := c_EPTF_Logging_invalidMaskId;
+}
+
+
+///////////////////////////////////////////////////////////
+//  Constant: c_EPTF_Semaphore_loggingEventClasses
+// 
+//  Purpose:
+//    list of logging event class names used on the Semaphore
+// 
+//  Detailed Comments:
+//    <EPTF_Logging_EventClassPrefixList> { "Warning", "Debug" }
+///////////////////////////////////////////////////////////
+const EPTF_Logging_EventClassPrefixList c_EPTF_Semaphore_loggingEventClasses := { "Warning", "Debug" };
+
+///////////////////////////////////////////////////////////
+//  Constant: c_EPTF_Semaphore_loggingClassIdx_Warning
+// 
+//  Purpose:
+//    logging class index for Error
+// 
+//  Detailed Comments:
+//    *0*
+///////////////////////////////////////////////////////////
+const integer c_EPTF_Semaphore_loggingClassIdx_Warning := 0;
+///////////////////////////////////////////////////////////
+//  Constant: c_EPTF_Semaphore_loggingClassIdx_Debug
+// 
+//  Purpose:
+//    logging class index for Error
+// 
+//  Detailed Comments:
+//    *1*
+///////////////////////////////////////////////////////////
+const integer c_EPTF_Semaphore_loggingClassIdx_Debug := 1;
+
+
+} // module

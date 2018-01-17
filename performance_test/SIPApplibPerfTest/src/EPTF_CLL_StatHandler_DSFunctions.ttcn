@@ -1,0 +1,192 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_CLL_StatHandler_DSFunctions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 512
+//  Updated:  2011-06-17
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////
+//  Module: EPTF_CLL_StatHandler_DSFunctions
+// 
+//  Purpose:
+//    This module contains the implementation of EPTF_CLL_StatHandler_DSFunctions functions.
+// 
+//  Module depends on:
+//    <EPTF_CLL_Common_Definitions>
+//    <EPTF_CLL_DataSource_Definitions>
+//    <EPTF_CLL_DataSourceClient_Functions>
+//    <EPTF_CLL_Variable_Functions>
+//
+//  Module Parameters:
+//
+//  Current Owner:
+//    Janos Zoltan Svaner (ejnosvn)
+// 
+//  Last Review Date:
+//    2011-06-17
+//
+//  Detailed Comments:
+//
+//    Public functions:
+//       -
+//
+//    All other functions in this module are private! 
+//
+///////////////////////////////////////////////////////////////
+
+module EPTF_CLL_StatHandler_DSFunctions {
+
+//=========================================================================
+// Import Part
+//=========================================================================
+import from EPTF_CLL_Common_Definitions all;
+import from EPTF_CLL_StatHandler_Definitions all;
+import from EPTF_CLL_DataSource_Definitions all;
+import from EPTF_CLL_Variable_Functions all;
+import from EPTF_CLL_StatHandlerLogging_Functions all;
+import from EPTF_CLL_StatHandler_Functions all;
+
+friend module EPTF_CLL_StatHandler_Functions;
+//=========================================================================
+// Functions
+//========================================================================
+
+///////////////////////////////////////////////////////////
+//  Group: DataSourceClient
+// 
+//  Purpose:
+//    Functions related to DataSourceClient feature of the StatHandler
+//
+///////////////////////////////////////////////////////////
+group DataSourceClient {
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_StatHandler_DSProcessData
+  // 
+  //  Purpose:
+  //    Processes the incoming Data requests - iterators and external data elements - and gives back a variable name.
+  //    It should be registered in the StatHandler_init_CT. Type function fcb_EPTF_DataSourceClient_dataHandler
+  //
+  //  Parameters:
+  //    *out charstring pl_dataVarName* - this variable contains the value of the data or the iterator result
+  //    *in charstring pl_source* - the name of the data source 'feature'
+  //    *in charstring pl_ptcName* - the name of the ptc (ID of the PTC)  
+  //    *in charstring pl_element* - the name of the data element
+  //    *in* <EPTF_DataSource_Params> *pl_params* - the parameters
+  //      of the data for the dataElement
+  //
+  //  Return Value:
+  //    integer - error code (0 of OK, non zero if unsuccessful: e.g. invalid parameters given in pl_params)
+  //
+  //  Detailed Comments: 
+  //    -
+  //
+  ///////////////////////////////////////////////////////////
+  friend function f_EPTF_StatHandler_DSProcessData(out charstring pl_dataVarName,
+                                                in charstring pl_source,
+                                                in charstring pl_ptcName,
+                                                in charstring pl_element,
+                                                in EPTF_DataSource_Params pl_params)
+  runs on EPTF_StatHandler_CT return integer{
+ 
+    var EPTF_CharstringList vl_cList := {}
+    var EPTF_CharstringList pl_result := {}
+    
+    var integer vl_idx := 0;
+    pl_dataVarName := "";
+
+    select(pl_element){
+     case(c_StatHandler_dataElementResetComponent){
+		var charstring vl_componentName := "";
+        if(0 == f_EPTF_StatHandler_getParams(pl_params, {}, pl_result)){
+          pl_dataVarName := f_EPTF_StatHandler_genUniqueName(c_EPTF_StatHandler_ResetVarName);
+        }
+     } 
+     
+     case(c_StatHandler_dataElementResetAll){
+		var charstring vl_componentName := "";
+        if(0 == f_EPTF_StatHandler_getParams(pl_params, {}, pl_result)){
+          pl_dataVarName := f_EPTF_StatHandler_genUniqueName(c_EPTF_StatHandler_ResetVarNameGlobal)
+        }
+     }    
+     
+     case else {  //error, no rule for that
+        pl_dataVarName := "";
+        f_EPTF_StatHandlerLogging_warning(%definitionId& ": unhandled element: "& pl_element);
+        return -1;
+     }
+    }
+      
+    var integer vl_iteratorVarIdx := f_EPTF_Var_getId(pl_dataVarName);
+    if(vl_iteratorVarIdx == -1){
+      f_EPTF_StatHandlerLogging_warning(%definitionId&": Invalid iterator or externalData or parameter: "&
+        "\nSource: "&pl_source&
+        "\nPTC : "&pl_ptcName &
+        "\nElement Name : " &pl_element&
+        "\nParams: " & log2str(pl_params));  
+      return -1;
+    }
+    return 0;
+  }
+
+
+  
+private function f_EPTF_StatHandler_getParams(in EPTF_DataSource_Params pl_params,
+                                           in EPTF_CharstringList pl_needed,
+                                           out EPTF_CharstringList pl_result,
+                                           in boolean pl_noWarning := false)
+runs on EPTF_StatHandler_CT return integer {
+  pl_result := {};
+  if(sizeof(pl_params) == sizeof(pl_needed)){
+     for(var integer j := 0; j < sizeof(pl_needed); j := j + 1){
+       for(var integer i := 0; i < sizeof(pl_params); i:= i + 1){
+         if(pl_params[i].paramName == pl_needed[j]){
+           pl_result[sizeof(pl_result)] := pl_params[i].paramValue;
+         }
+       }
+     }
+     if(sizeof(pl_result) != sizeof(pl_needed)){
+       if(not pl_noWarning){
+         var EPTF_CharstringList vl_error := {};
+         for(var integer i := 0; i < sizeof(pl_params); i:= i + 1){
+           vl_error[i] := pl_params[i].paramName;
+         }
+         f_EPTF_StatHandlerLogging_warning(%definitionId& ": Parameters are not correct: "&
+         "\nReceived: "& log2str(vl_error)&
+         "\nNeeded  : "& log2str(pl_needed) );
+       }
+       return -1;
+     }
+     return 0;
+  } else{
+    if(not pl_noWarning){
+        var EPTF_CharstringList vl_error := {};
+        for(var integer i := 0; i < sizeof(pl_params); i:= i + 1){
+          vl_error[i] := pl_params[i].paramName;
+        }
+        if(sizeof(pl_params) < sizeof(pl_needed)){
+           f_EPTF_StatHandlerLogging_warning(%definitionId& ": Too few parameter is given: "&
+           "\nReceived: "& log2str(vl_error)&
+           "\nNeeded  : "& log2str(pl_needed));
+        } else { 
+           f_EPTF_StatHandlerLogging_warning(%definitionId& ": Too many parameters are given: "&
+           "\nReceived: "& log2str(vl_error)&
+           "\nNeeded  : "& log2str(pl_needed));
+        }
+    }
+    return -1;
+  }
+}
+
+
+
+} // group
+
+} // module

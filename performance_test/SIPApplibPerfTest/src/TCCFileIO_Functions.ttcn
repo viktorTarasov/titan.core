@@ -1,0 +1,523 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//
+//  File:               TCCFileIO_Functions.ttcn
+//  Description:        TCC Useful Functions: FileIO Functions
+//  Rev:                <RnXnn>
+//  Prodnr:             CNL 113 472
+//  Updated:            2009-04-09
+//  Contact:            http://ttcn.ericsson.se
+//
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+//  Module: TCCFileIO_Functions
+// 
+//  Purpose:
+//    This module supports file I/O handling
+// 
+//  Module Parameters:
+//      - 
+// 
+//  Module depends on:
+//    -
+//
+///////////////////////////////////////////////////////////////////////////////
+module TCCFileIO_Functions {
+
+/* Function: f_FIO_open_rdonly
+
+   A wrapper function for f_FIO_open.  It opens the file with the given name
+   for reading only.
+
+   Parameters:
+     NAME - The name of the file.
+
+   Returns:
+   A valid file descriptor or -1 on error.  */
+external function f_FIO_open_rdonly (in charstring pl_name) return integer;
+
+/* Function: f_FIO_open_append_wronly
+
+   A wrapper function for f_FIO_open.  It opens the file with the given name
+   for writing only.  If the file already exists it is opened in appending
+   mode.
+
+   Parameters:
+     NAME - The name of the file.
+
+   Returns:
+   A valid file descriptor or -1 on error.  */
+external function f_FIO_open_append_wronly (in charstring pl_name)
+  return integer;
+
+/* Function: f_FIO_open_append_rdwr
+
+   A wrapper function for f_FIO_open.  It opens the file with the given name
+   for reading and writing.  If the file already exists it is opened in
+   appending mode.
+
+   Parameters:
+     NAME - The name of the file.
+
+   Returns:
+   A valid file descriptor or -1 on error.  */
+external function f_FIO_open_append_rdwr (in charstring pl_name)
+  return integer;
+
+/* Function: f_FIO_open_trunc_wronly
+
+   A wrapper function for f_FIO_open.  It opens the file with the given name
+   for writing only.  If the file was not empty it is truncated.
+
+   Parameters:
+     NAME - The name of the file.
+
+   Returns:
+   A valid file descriptor or -1 on error.  */
+external function f_FIO_open_trunc_wronly (in charstring pl_name)
+  return integer;
+
+/* Function: f_FIO_open_trunc_rdwr
+
+   A wrapper function for f_FIO_open.  It opens the file with the given name
+   for reading and writing.  If the file was not empty it is truncated.
+
+   Parameters:
+     NAME - The name of the file.
+
+   Returns:
+   A valid file descriptor or -1 on error.  */
+external function f_FIO_open_trunc_rdwr (in charstring pl_name)
+  return integer;
+
+/* Function: f_FIO_open_append_wronly_excl
+
+   A wrapper function for f_FIO_open.  It opens the file with the given name
+   for writing only in exclusive mode.  If the file already exists it is
+   opened in appending mode.
+
+   Parameters:
+     NAME - The name of the file.
+
+   Returns:
+   A valid file descriptor or -1 on error.  */
+external function f_FIO_open_append_wronly_excl (in charstring pl_name)
+  return integer;
+
+/* Function: f_FIO_open_append_rdwr_excl
+
+   A wrapper function for f_FIO_open.  It opens the file with the given name
+   for reading and writing in exclusive mode.  If the file already exists it
+   is opened in appending mode.
+
+   Parameters:
+     NAME - The name of the file.
+
+   Returns:
+   A valid file descriptor or -1 on error.  */
+external function f_FIO_open_append_rdwr_excl (in charstring pl_name)
+  return integer;
+
+/* Function: f_FIO_open_trunc_wronly_excl
+
+   A wrapper function for f_FIO_open.  It opens the file with the given name
+   for writing only in exclusive mode.  If the file was not empty it is
+   truncated.
+
+   Parameters:
+     NAME - The name of the file.
+
+   Returns:
+   A valid file descriptor or -1 on error.  */
+external function f_FIO_open_trunc_wronly_excl (in charstring pl_name)
+  return integer;
+
+/* Function: f_FIO_open_trunc_rdwr_excl
+
+   A wrapper function for f_FIO_open.  It opens the file with the given name
+   for reading and writing in exclusive mode.  If the file was not empty it is
+   truncated.
+
+   Parameters:
+     NAME - The name of the file.
+
+   Returns:
+   A valid file descriptor or -1 on error.  */
+external function f_FIO_open_trunc_rdwr_excl (in charstring pl_name)
+  return integer;
+
+/* Function: f_FIO_close
+
+   Closes a file associated with the given file descriptor.
+
+   Parameters:
+     FD - The file descriptor to close.
+
+   Returns:
+   What the POSIX function close returns.  */
+external function f_FIO_close (in integer pl_fd) return integer;
+
+/* Function:  f_FIO_seek_home
+
+   Moves the file pointer to the beginning of the file.
+
+   Parameters:
+     FD - A file descriptor.
+
+   Returns:
+   What the POSIX function lseek returns.  */
+external function f_FIO_seek_home (in integer pl_fd) return integer;
+
+/* Function: f_FIO_seek_end
+
+   Moves the file pointer to the end of the file.
+
+   Parameters:
+     FD - A file descriptor.
+
+   Returns:
+   What the POSIX function lseek returns.  */
+external function f_FIO_seek_end (in integer pl_fd) return integer;
+
+/* Function: f_FIO_seek_forward
+
+   Moves the file pointer forward with a given number of bytes from the
+   current position.
+
+   Parameters:
+     FD - A file descriptor.
+     BYTES - The number of bytes.
+
+   Returns:
+   What the POSIX function lseek returns.  */
+external function f_FIO_seek_forward (in integer pl_fd,
+  in integer pl_bytes) return integer;
+
+/* Function: f_FIO_seek_backward
+
+   Moves the file pointer backward with a given number of bytes from the
+   current position.
+
+   Parameters:
+     FD - A file descriptor.
+     BYTES - The number of bytes.
+
+   Returns:
+   What the POSIX function lseek returns.  */
+external function f_FIO_seek_backward (in integer pl_fd,
+  in integer pl_bytes) return integer;
+
+/* Function: f_FIO_write_data
+
+   A wrapper function for f_FIO_write.  It writes binary data.
+
+   Parameters:
+     FD - A file descriptor.
+     DATA - The data to write to the file.
+
+   Returns:
+   Number of bytes written or -1 on error.  */
+external function f_FIO_write_data (in integer pl_fd,
+  in octetstring pl_data) return integer;
+
+/* Function: f_FIO_write_text
+
+   A wrapper function for f_FIO_write.  It writes textual data.
+
+   Parameters:
+     FD - A file descriptor.
+     TEXT - The text to write to the file.
+
+   Returns:
+   Number of bytes written or -1 on error.  */
+external function f_FIO_write_text (in integer pl_fd,
+  in charstring pl_text) return integer;
+
+/* Function: f_FIO_write_data_flush
+
+   A wrapper function for f_FIO_write.  It writes binary data and calls
+   f_FIO_flush.
+
+   Parameters:
+     FD - A file descriptor.
+     DATA - The data to write to the file.
+
+   Returns:
+   Number of bytes written or -1 on error.  */
+external function f_FIO_write_data_flush (in integer pl_fd,
+  in octetstring pl_data) return integer;
+
+/* Function: f_FIO_write_text_flush
+
+   A wrapper function for f_FIO_write.  It writes textual data and calls
+   f_FIO_flush.
+
+   Parameters:
+     FD - A file descriptor.
+     TEXT - The text to write to the file.
+
+   Returns:
+   Number of bytes written or -1 on error.  */
+external function f_FIO_write_text_flush (in integer pl_fd,
+  in charstring pl_text) return integer;
+
+/* Function: f_FIO_flush
+
+   Transfers ("flushes") all modified in-core data of the file referred to by
+   the file descriptor to the disk device.
+
+   Parameters:
+     FD - A file descriptor.
+
+   Returns:
+   What the POSIX function fsync returns.  */
+external function f_FIO_flush (in integer pl_fd) return integer;
+
+/* Function: f_FIO_read_data
+
+   A wrapper function for f_FIO_read.  It reads binary data.
+
+   Parameters:
+     FD - A file descriptor.
+     DATA - The buffer for storing the data.
+     BYTES - The number of bytes to read.
+
+   Returns:
+   Number of bytes read or -1 on error.  */
+external function f_FIO_read_data (in integer pl_fd, inout octetstring pl_data,
+  in integer pl_bytes) return integer;
+
+/* Function: f_FIO_read_text
+
+   A wrapper function for f_FIO_read.  It reads textual data.
+
+   Parameters:
+     FD - A file descriptor.
+     TEXT - The buffer for storing the text.
+     BYTES - The number of bytes to read.
+
+   Returns:
+   Number of bytes read or -1 on error.  */
+external function f_FIO_read_text (in integer pl_fd, inout charstring pl_text,
+  in integer pl_bytes) return integer;
+
+/* Function: f_FIO_read_text_until
+
+   A wrapper function for f_FIO_read_until.  It reads textual data.
+
+   Parameters:
+     FD - A file descriptor.
+     TEXT - The buffer for storing the text.
+     SEPARATOR - The separator pattern.
+
+   Returns:
+   Number of bytes read or -1 on error.  */
+external function f_FIO_read_text_until (in integer pl_fd,
+  inout charstring pl_text, in charstring pl_separator) return integer;
+
+/* Function: f_FIO_read_data_until
+
+   A wrapper function for f_FIO_read_until.  It reads binary data.
+
+   Parameters:
+     FD - A file descriptor.
+     TEXT - The buffer for storing the data.
+     SEPARATOR - The separator pattern.
+
+   Returns:
+   Number of bytes read or -1 on error.  */
+external function f_FIO_read_data_until (in integer pl_fd,
+  inout octetstring pl_data, in octetstring pl_separator) return integer;
+
+/* Function: f_FIO_read_data_TLV
+
+   A wrapper function for f_FIO_read.  It reads a full ASN.1 TLV
+   structure in binary data format.
+
+   Parameters:
+     FD - A file descriptor.
+     TEXT - The buffer for storing the data.
+     SEPARATOR - The separator pattern.
+
+   Returns:
+   Number of bytes read or -1 on error.  */
+external function f_FIO_read_data_TLV (in integer pl_fd,
+  inout octetstring pl_data) return integer;
+
+/* Function: f_FIO_get_error_string
+
+   Returns the actual error message.
+
+   Returns:
+   The actual error message as a string.  */
+external function f_FIO_get_error_string () return charstring;
+
+/* Function: f_FIO_get_error_code
+
+   Returns the actual error code.
+
+   Returns:
+   The actual error code.  */
+external function f_FIO_get_error_code () return integer;
+
+/* Function: f_FIO_set_filedescriptor_previousline
+
+   Returns:
+     If there was no problem, then the return value will be 1.
+
+*/
+external function f_FIO_set_filedescriptor_previousline (in integer pl_fd) return integer;
+
+/* Function: f_FIO_chdir
+
+   A wrapper function for f_FIO_chdir.  It changes the current directory.
+
+   Parameters:
+     NAME - The name of the new directory.
+
+   Returns:
+   Boolean value for successful or unsuccessful directory change  */
+external function f_FIO_chdir (in charstring pl_name) return boolean;
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_FIO_mkdir
+// 
+//  Purpose:
+//    Create a new directory
+//
+//  Parameters:
+//    p_dir_name - *in* *charstring* - name of the directory to create
+// 
+//  Return Value:
+//    boolean - indicate the successful or unsuccessful directory creation
+//
+//  Errors:
+//    In the case of unsuccessful operation the cause of the error can be 
+//    queried  by the f_FIO_get_error_code, f_FIO_get_error_string functions
+// 
+//  Detailed description:
+//    The path to the directory must exist, so the existence of the path
+//    should be checked, and the missing directories should be created
+//    recursively.
+// 
+///////////////////////////////////////////////////////////////////////////////
+external function f_FIO_mkdir (in charstring p_dir_name) return boolean;
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_FIO_rmdir
+// 
+//  Purpose:
+//    Removes a directory
+//
+//  Parameters:
+//    p_dir_name - *in* *charstring* - name of the directory to remove
+// 
+//  Return Value:
+//    boolean - indicate the successful or unsuccessful directory creation
+//
+//  Errors:
+//    In the case of unsuccessful operation the cause of the error can be 
+//    queried  by the f_FIO_get_error_code, f_FIO_get_error_string functions
+// 
+//  Detailed description:
+//    The directories must be empty, so the child directories should be 
+//    cleaned and deleted recursively.
+// 
+///////////////////////////////////////////////////////////////////////////////
+external function f_FIO_rmdir (in charstring p_dir_name) return boolean;
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_FIO_fileOrDirExists
+// 
+//  Purpose:
+//    Checks the existence of files and directories.
+//
+//  Parameters:
+//    p_name - *in* *charstring* - name of the file or directory to check
+// 
+//  Return Value:
+//    boolean - indicate the exictense of the file or diectory
+//
+//  Errors:
+//    -
+// 
+//  Detailed description:
+//    -
+// 
+///////////////////////////////////////////////////////////////////////////////
+external function f_FIO_fileOrDirExists (in charstring p_name) return boolean;
+
+
+type record FIO_permissions{
+  boolean   set_uid       optional, // Set user ID on execution.
+  boolean   set_gid       optional, // Set group ID on execution.
+  boolean   sticky_bit    optional, // Save text image  after execution.
+  boolean   owner_read    optional, // Read by owner.
+  boolean   owner_write   optional, // Write by owner.
+  boolean   owner_execute optional, // Execute by owner.
+  boolean   group_read    optional, // Read by group.
+  boolean   group_write   optional, // Write by group.
+  boolean   group_execute optional, // Execute by group.
+  boolean   other_read    optional, // Read by others.
+  boolean   other_write   optional, // Write by others.
+  boolean   other_execute optional  // Execute by others.
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_FIO_stat
+// 
+//  Purpose:
+//    Query the permissions of the file or directory.
+//
+//  Parameters:
+//    p_name - *in* *charstring* - name of the file or directory to check
+//    p_permissions - *out* *FIO_permissions* - the permissions of the object
+// 
+//  Return Value:
+//    boolean - indicate sucessfull execution
+//
+//  Errors:
+//    -
+// 
+//  Detailed description:
+//    -
+// 
+///////////////////////////////////////////////////////////////////////////////
+external function f_FIO_stat (in charstring p_name,
+                              out FIO_permissions p_permissions) return boolean;
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_FIO_chmod
+// 
+//  Purpose:
+//    Change the permissions of the file or directory.
+//
+//  Parameters:
+//    p_name - *in* *charstring* - name of the file or directory to check
+//    p_permissions - *in* *FIO_permissions* - the permissions of the object
+// 
+//  Return Value:
+//    boolean - indicate sucessfull execution
+//
+//  Errors:
+//    -
+// 
+//  Detailed description:
+//    Change the permissions of the file or directory according to the 
+//    p_permissions. If the value of the field is:
+//       - true: set the permission
+//       - false: clear the permission
+//       - omit: doesn't change the permission
+// 
+///////////////////////////////////////////////////////////////////////////////
+external function f_FIO_chmod (in charstring p_name,
+                               in FIO_permissions p_permissions) return boolean;
+
+}

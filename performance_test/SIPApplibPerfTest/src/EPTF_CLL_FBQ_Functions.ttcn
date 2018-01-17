@@ -1,0 +1,1160 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_CLL_FBQ_Functions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 512
+//  Updated:  2012-02-16
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////
+// Module: EPTF_CLL_FBQ_Functions
+//
+// Purpose:
+//   This module supports Free-Busy queue management functions
+//
+// Module Parameters:
+//     -
+//
+//  Module depends on:
+//    <EPTF_CLL_Base_Functions>
+//    <EPTF_CLL_Common_Definitions>
+//    <EPTF_CLL_Common_Functions>
+//    <EPTF_CLL_NQueue_Definitions>
+//    <EPTF_CLL_NQueue_Functions>
+//    <EPTF_CLL_FBQ_Definitions>
+// 
+// Current Owner:
+//   Jozsef Gyurusi (ETHJGI)
+//
+// Last Review Date:
+//   2012-02-16
+//
+//  Detailed Comments:
+//     FBQ is now based on the NQueue feature. The FBQ consists of two main chains
+//     (free and busy) plus an invalid chain. These chains are chains of an NQueue.
+//     The Free-Busy queue API is just an interface over NQueue to manage only the
+//     free-busy queue. It is compatible with the previous implementation but
+//     the following should be taken care of when adapting to this new implementation:
+//
+//     To adapt the previous code to this new implementation the
+//     following changes has to be made:
+//       1) The user component should be extended by <EPTF_FBQ_CT>
+//       2) The <f_EPTF_FBQ_init_CT> function has to be called in the user init function
+//          before other FBQ functions are called
+//       3) Initialize the Free-Busy queue data stucture (of type <EPTF_FreeBusyQueue>)
+//          with the function <f_EPTF_FBQ_initFreeBusyQueue>.
+//          Do not use the constant <c_EPTF_emptyFreeBusyQueue> only to initialize the queue!
+//
+//     Other typical mistakes that should be corrected:
+//       API functions has to be used instead of accessing the data elements directly.
+//       For example:
+//         pl_queue.status.busyStatus.number -> f_EPTF_FBQ_getLengthOfBusyChain(pl_queue)
+//         sizeof(pl_queue.itemList) -> f_EPTF_FBQ_getLengthOfQueue(pl_queue)
+//
+//    Public functions:
+//      <f_EPTF_FBQ_init_CT>
+//      <f_EPTF_FBQ_initFreeBusyQueue>
+//      <f_EPTF_FBQ_deleteFreeBusyQueue>
+//      <f_EPTF_FBQ_setQueueDidx>
+//      <f_EPTF_FBQ_getQueueDidx>
+//      <f_EPTF_FBQ_setQueueData>
+//      <f_EPTF_FBQ_getQueueData>
+//      <f_EPTF_FBQ_getOrCreateFreeSlot>
+//      <f_EPTF_FBQ_createFreeSlots>
+//      <f_EPTF_FBQ_moveFromFreeHeadToBusy>
+//      <f_EPTF_FBQ_moveFromFreeHeadToBusyTail>
+//      <f_EPTF_FBQ_moveFromFreeToBusyTail>
+//      <f_EPTF_FBQ_moveFromBusyToFreeHead>
+//      <f_EPTF_FBQ_moveFromBusyToFreeTail>
+//      <f_EPTF_FBQ_moveFromBusyToInvalid>
+//      <f_EPTF_FBQ_moveFromInvalidToFreeHead>
+//      <f_EPTF_FBQ_moveFromInvalidToFreeTail>
+//      <f_EPTF_FBQ_moveFromInvalidToBusyHead>
+//      <f_EPTF_FBQ_moveFromInvalidToBusyTail>
+//      <f_EPTF_FBQ_logChain>
+//      <f_EPTF_FBQ_itemIsBusy>
+//      <f_EPTF_FBQ_itemIsInvalid>
+//      <f_EPTF_FBQ_itemIsFree>
+//      <f_EPTF_FBQ_getBusyHeadIdx>
+//      <f_EPTF_FBQ_getBusyTailIdx>
+//      <f_EPTF_FBQ_getFwdBusyItemIdx>
+//      <f_EPTF_FBQ_getBwdBusyItemIdx>
+//      <f_EPTF_FBQ_getFreeHeadIdx>
+//      <f_EPTF_FBQ_getFreeTailIdx>
+//      <f_EPTF_FBQ_getFwdFreeItemIdx>
+//      <f_EPTF_FBQ_getBwdFreeItemIdx>
+//      <f_EPTF_FBQ_getLengthOfBusyChain>
+//      <f_EPTF_FBQ_getLengthOfFreeChain>
+//      <f_EPTF_FBQ_getFreeSlot>
+//      <f_EPTF_FBQ_getLengthOfQueue>
+//
+///////////////////////////////////////////////////////////
+module EPTF_CLL_FBQ_Functions {
+
+import from EPTF_CLL_Base_Functions all;
+import from EPTF_CLL_Common_Definitions all;
+import from EPTF_CLL_Common_Functions all;
+import from EPTF_CLL_NQueue_Definitions all;
+import from EPTF_CLL_NQueue_Functions all;
+import from EPTF_CLL_FBQ_Definitions all;
+
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_FBQ_init_CT
+  // 
+  //  Purpose:
+  //    Initializes the FBQ feature
+  //
+  //  Parameters:
+  //    pl_selfName - *in* *charstring* - the name of the component
+  //
+  //  Return Value:
+  //    -
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_FBQ_init_CT(in charstring pl_selfName) runs on EPTF_FBQ_CT
+  {
+    if (v_FBQ_initialized) {
+      return;
+    }
+    f_EPTF_NQueue_init_CT(pl_selfName);
+    f_EPTF_Base_registerCleanup(refers(f_EPTF_FBQ_cleanup_CT));
+    v_FBQ_dataList := {};
+    v_FBQ_initialized := true;
+  }
+  
+  private function f_EPTF_FBQ_cleanup_CT() runs on EPTF_FBQ_CT {
+    if (not v_FBQ_initialized) {
+      return;
+    }
+    v_FBQ_dataList := {};
+    v_FBQ_initialized := false;
+  }
+
+  ///////////////////////////////////////////////////////////
+  // Function: f_EPTF_FBQ_initFreeBusyQueue
+  // 
+  // Purpose:
+  //   Function to init the EPTF_FreeBusyQueue to empty.
+  // 
+  // Parameters:
+  //   pl_queue - *inout* <EPTF_FreeBusyQueue> - the queue to be initialized
+  // 
+  // Return Value:
+  //   -
+  // 
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_FBQ_initFreeBusyQueue(inout EPTF_FreeBusyQueue pl_queue)
+  {
+    pl_queue := f_EPTF_NQueue_createQueue();
+    f_EPTF_NQueue_createChain(pl_queue); // free chain
+    f_EPTF_NQueue_createChain(pl_queue); // busy chain
+    f_EPTF_NQueue_createChain(pl_queue); // invalid chain
+    // v_FBQ_dataList[pl_queue] := {} // will be initialized on demand
+  }
+
+  ///////////////////////////////////////////////////////////
+  // Function: f_EPTF_FBQ_initFreeBusyQueue
+  // 
+  // Purpose:
+  //   Function to delete the EPTF_FreeBusyQueue.
+  // 
+  // Parameters:
+  //   pl_queue - *inout* <EPTF_FreeBusyQueue> - the queue to be deleted
+  // 
+  // Return Value:
+  //   -
+  // 
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_FBQ_deleteFreeBusyQueue(inout EPTF_FreeBusyQueue pl_queue) runs on EPTF_FBQ_CT
+  {
+    f_EPTF_NQueue_deleteQueue(pl_queue);
+    v_FBQ_dataList[pl_queue] := {}; // clear the associated data
+  }
+
+  ///////////////////////////////////////////////////////////
+  // Function: f_EPTF_FBQ_setQueueDidx
+  //
+  // Purpose:
+  //  Function to set the data indices of the <EPTF_FreeBusyQueue>
+  //
+  // Parameters:
+  //   pl_i - *in* *integer* - the index of queue item
+  //
+  //   pl_j - *in* <EPTF_IndexList> - the indices to the event data
+  //
+  //   pl_queue - *inout* <EPTF_FreeBusyQueue>
+  //
+  // Return Value:
+  //   -
+  //
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_FBQ_setQueueDidx(
+    in integer pl_i,
+    in EPTF_IndexList pl_j,
+    inout EPTF_FreeBusyQueue pl_queue) runs on EPTF_FBQ_CT
+  {
+    v_FBQ_dataList[pl_queue][pl_i] := pl_j;
+  }
+
+  ///////////////////////////////////////////////////////////
+  // Function: f_EPTF_FBQ_getQueueDidx
+  //
+  // Purpose:
+  //  Function to get user data indices associated with a given slot 
+  //  of a <EPTF_FreeBusyQueue> 
+  //
+  // Parameters:
+  //   pl_idx - *in* *integer* - the index of queue item
+  //
+  //   pl_queue - *inout* <EPTF_FreeBusyQueue> - the queue in question
+  //
+  //   pl_didx - *out* <EPTF_IndexList> - the indices at position [idx] to be returned
+  //
+  // Return Value:
+  //   (none)
+  //
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_FBQ_getQueueDidx(
+    in integer pl_idx,
+    in EPTF_FreeBusyQueue pl_queue,
+    out EPTF_IndexList pl_didx) runs on EPTF_FBQ_CT
+  {
+    if( not isbound(v_FBQ_dataList[pl_queue])
+        or sizeof(v_FBQ_dataList[pl_queue]) <= pl_idx
+        or not isbound(v_FBQ_dataList[pl_queue][pl_idx])) {
+      pl_didx := {}
+    } else {
+      pl_didx := v_FBQ_dataList[pl_queue][pl_idx];
+    }
+  }
+
+  ///////////////////////////////////////////////////////////
+  // Function: f_EPTF_FBQ_setQueueData
+  //
+  // Purpose:
+  //  Function to set the a single data elem for an item in a queue.
+  //
+  // Parameters:
+  //   pl_itemIdx - *in* *integer* - the index of queue item
+  //   pl_queue - *inout* <EPTF_FreeBusyQueue>
+  //   pl_dataIdx - *in* *integer* - the index of data within the item's data list
+  //   pl_data - *in* *integer* - the new data value
+  //
+  // Return Value:
+  //   -
+  //
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_FBQ_setQueueData(
+    in integer pl_itemIdx,
+    inout EPTF_FreeBusyQueue pl_queue,
+    in integer pl_dataIdx,
+    in integer pl_data) runs on EPTF_FBQ_CT
+  {
+    v_FBQ_dataList[pl_queue][pl_itemIdx][pl_dataIdx] := pl_data;
+  }
+
+  ///////////////////////////////////////////////////////////
+  // Function: f_EPTF_FBQ_getQueueData
+  //
+  // Purpose:
+  //  Function to get the a single data elem from an item in a queue.
+  //
+  // Parameters:
+  //   pl_itemIdx - *in* *integer* - the index of queue item
+  //   pl_queue - *inout* <EPTF_FreeBusyQueue>
+  //   pl_dataIdx - *in* *integer* - the index of data within the item's data list
+  //
+  // Return Value:
+  //   *integer* - the data value
+  //
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_FBQ_getQueueData(
+    in integer pl_itemIdx,
+    in EPTF_FreeBusyQueue pl_queue,
+    in integer pl_dataIdx) runs on EPTF_FBQ_CT
+  return integer
+  {
+    if(c_EPTF_Common_debugSwitch) {
+      if( not isbound(v_FBQ_dataList[pl_queue])
+          or sizeof(v_FBQ_dataList[pl_queue]) <= pl_itemIdx
+          or not isbound(v_FBQ_dataList[pl_queue][pl_itemIdx])
+          or sizeof(v_FBQ_dataList[pl_queue][pl_itemIdx]) <= pl_dataIdx
+          or not isbound(v_FBQ_dataList[pl_queue][pl_itemIdx][pl_dataIdx])) {
+        
+        var integer vl_numElements := 0;
+        if (isbound(v_FBQ_dataList[pl_queue])) {
+          vl_numElements := sizeof(v_FBQ_dataList[pl_queue]);
+        }
+        f_EPTF_Common_warning(%definitionId&": invalid item ("&
+          int2str(pl_itemIdx)&") or data("&int2str(pl_dataIdx)&
+          ") index. Items: "&int2str(vl_numElements));
+      }
+    }
+    return v_FBQ_dataList[pl_queue][pl_itemIdx][pl_dataIdx];
+  }
+
+  ///////////////////////////////////////////////////////////
+  // Function: f_EPTF_FBQ_getOrCreateFreeSlot
+  //
+  // Purpose:
+  //  Function to get the head of the free_chain of  the <EPTF_FreeBusyQueue>,
+  //  it allocates a new slot for the the head, if necessary.
+  //
+  // Parameters:
+  //   pl_queue - *inout* <EPTF_FreeBusyQueue> - the queue in question
+  //
+  // Return Value:
+  //   *integer* - the index of the head of the unused (free_chain) slot
+  //
+  // Detailed Comments:
+  //  If there is no such item then it allocates on-the-fly, then
+  //  returns the index of the item. It allways return the *head of the
+  //  free chain*.
+  //
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_FBQ_getOrCreateFreeSlot(
+    inout EPTF_FreeBusyQueue pl_queue)
+  return integer
+  {
+    if(f_EPTF_NQueue_getLengthOfChain(pl_queue, c_EPTF_FBQ_free_chain) == 0) {
+      return f_EPTF_NQueue_createItemAtChainTail(pl_queue, c_EPTF_FBQ_free_chain);
+    } else {
+      return f_EPTF_NQueue_getHeadOfChain(pl_queue, c_EPTF_FBQ_free_chain);
+    }
+  }
+
+  ///////////////////////////////////////////////////////////
+  // Function: f_EPTF_FBQ_createFreeSlots
+  //
+  // Purpose:
+  //  Function to create more than one new slot items in the free_chain
+  //  of a <EPTF_FreeBusyQueue>
+  //
+  // Parameters:
+  //   pl_number  - *in* integer - the number of new slots to be created
+  //
+  //   pl_queue - *inout* <EPTF_FreeBusyQueue> - the queue, where the slots to be allocated
+  //
+  // Return Value:
+  //   (none)
+  //
+  // Detailed Comments:
+  //  The functions allocates  "number" number of unused (free_chain) slots in the queue. 
+  //
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_FBQ_createFreeSlots(
+    in integer pl_number,
+    inout EPTF_FreeBusyQueue pl_queue)
+  {
+    f_EPTF_NQueue_createItemsAtChainTail(pl_queue, c_EPTF_FBQ_free_chain, pl_number);
+  }
+
+  ///////////////////////////////////////////////////////////
+  // Function: f_EPTF_FBQ_moveFromFreeHeadToBusy
+  //
+  // Purpose:
+  //  Function to move the slot at the head of free_chain to somewhere into busy_chain
+  //
+  // Parameters:
+  //   pl_idx - *in* *integer* - what to move
+  //
+  //   pl_location - *in* <EPTF_insertionType> - type of insertion
+  //
+  //   pl_afteridx - *in* *integer* - the index of the slot that the slot at position
+  //              pl_idx is to be inserted after (vl_i.e., this slot will be before the 
+  //              inserted item when the inserion is finished)
+  //
+  //   pl_beforeidx - *in* *integer* - the index of the slot that the slot at position
+  //              pl_idx is to be inserted before (vl_i.e., this slot will be after the 
+  //              inserted item when the inserion is finished)
+  //
+  //   pl_queue - *inout* <EPTF_FreeBusyQueue> - the queue in question
+  //
+  // Return Value:
+  //   -
+  //
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_FBQ_moveFromFreeHeadToBusy(
+    in integer pl_idx, // comes from the old API, has no sense
+    in EPTF_insertionType pl_location,
+    in integer pl_afteridx,
+    in integer pl_beforeidx,
+    inout EPTF_FreeBusyQueue pl_queue)
+  {
+    if(c_EPTF_Common_debugSwitch) {
+      if(pl_idx != f_EPTF_NQueue_getHeadOfChain(pl_queue, c_EPTF_FBQ_free_chain)) {
+        f_EPTF_Common_warning(%definitionId&": pl_idx is not the head of chain!");
+      }
+    }
+    // set the pl_idx to the head:
+    if (not f_EPTF_FBQ_getFreeHeadIdx(pl_idx, pl_queue)) {
+      // free chain is empty: nothing to do
+      return;
+    }
+    
+    if (pl_location==empty) {
+      f_EPTF_NQueue_moveToHead(pl_queue, c_EPTF_FBQ_busy_chain, pl_idx);
+    } else if (pl_location==tail) {
+      if(c_EPTF_Common_debugSwitch) {
+        if(pl_afteridx != f_EPTF_NQueue_getTailOfChain(pl_queue, c_EPTF_FBQ_busy_chain)) {
+          f_EPTF_Common_warning(%definitionId&": the pl_afteridx does not points to the tail!");
+        }
+      }
+      f_EPTF_NQueue_moveToTail(pl_queue, c_EPTF_FBQ_busy_chain, pl_idx)
+      //f_EPTF_NQueue_moveAfter(pl_queue, vl_tailIdx, pl_idx);
+    } else if (pl_location == head) {
+      if(c_EPTF_Common_debugSwitch) {
+        if(pl_beforeidx != f_EPTF_NQueue_getHeadOfChain(pl_queue, c_EPTF_FBQ_busy_chain)) {
+          f_EPTF_Common_warning(%definitionId&": the pl_beforeidx does not points to the head!");
+        }
+      }
+      f_EPTF_NQueue_moveToHead(pl_queue, c_EPTF_FBQ_busy_chain, pl_idx);
+    } else if (pl_location == middle) {
+      if(c_EPTF_Common_debugSwitch) {
+        var integer vl_tmp := pl_afteridx;
+        if(f_EPTF_NQueue_getNextItemIdx(pl_queue, vl_tmp)) {
+          if(vl_tmp != pl_beforeidx) {
+            f_EPTF_Common_warning(%definitionId&": the item after pl_afteridx is not pl_beforeidx!");
+          }
+        }
+      }
+      f_EPTF_NQueue_moveAfter(pl_queue, pl_afteridx, pl_idx);
+    }
+  }
+
+//   this does not use the pl_location parameter, and because of this it behaves slightly differently than the original function:
+//   public function f_EPTF_FBQ_moveFromFreeHeadToBusy(
+//     in integer pl_idx, // comes from the old API, has no sense
+//     in EPTF_insertionType pl_location,
+//     in integer pl_afteridx,
+//     in integer pl_beforeidx,
+//     inout EPTF_FreeBusyQueue pl_queue)
+//   {
+//     if(c_EPTF_Common_debugSwitch) {
+//       if(pl_idx != f_EPTF_NQueue_getHeadOfChain(pl_queue, c_EPTF_FBQ_free_chain)) {
+//         f_EPTF_Common_warning(%definitionId&": pl_idx is not the head of chain!");
+//       }
+//     }
+//     if (not f_EPTF_FBQ_getFreeHeadIdx(pl_idx, pl_queue)) {
+//       // free chain is empty: nothing to do
+//       return;
+//     }
+//     if(pl_beforeidx == f_EPTF_NQueue_getHeadOfChain(pl_queue, c_EPTF_FBQ_busy_chain)) {
+//       f_EPTF_NQueue_moveToHead(pl_queue, c_EPTF_FBQ_busy_chain, pl_idx);
+//     } else {
+//       if(c_EPTF_Common_debugSwitch) {
+//         var integer vl_tmp := pl_afteridx;
+//         if(f_EPTF_NQueue_getNextItemIdx(pl_queue, vl_tmp)) {
+//           if(vl_tmp != pl_beforeidx and pl_afteridx != f_EPTF_NQueue_getTailOfChain(pl_queue, c_EPTF_FBQ_busy_chain)) {
+//             f_EPTF_Common_warning(%definitionId&": the item after pl_afteridx is not pl_beforeidx!");
+//           }
+//         }
+//       }
+//       f_EPTF_NQueue_moveAfter(pl_queue, pl_afteridx, pl_idx);
+//     }
+//   }
+
+  ///////////////////////////////////////////////////////////
+  // Function: f_EPTF_FBQ_moveFromFreeHeadToBusyTail
+  //
+  // Purpose:
+  //  Function to simply move an a slot from the head of the free_chain to 
+  //  the tail of the busy_chain
+  //
+  // Parameters:
+  //   pl_queue - *inout* <EPTF_FreeBusyQueue>  - the queue in question
+  //
+  // Return Value:
+  //   -
+  //
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_FBQ_moveFromFreeHeadToBusyTail(
+    inout EPTF_FreeBusyQueue pl_queue)
+  {
+    f_EPTF_NQueue_moveToTail(
+      pl_queue,
+      c_EPTF_FBQ_busy_chain,
+      f_EPTF_NQueue_getHeadOfChain(pl_queue, c_EPTF_FBQ_free_chain));
+  }
+
+  ///////////////////////////////////////////////////////////
+  // Function: f_EPTF_FBQ_moveFromFreeToBusyTail
+  //
+  // Purpose:
+  //  Function to move a slot from the free_chain to the tail of busy_chain
+  //
+  // Parameters:
+  //   pl_idx - *in* *integer* - the index of the slot to be  moved
+  //
+  //   pl_queue - *inout* <EPTF_FreeBusyQueue> - the queue in question
+  //
+  // Return Value:
+  //   -
+  //
+  // Detailed Description:
+  //  This function  can be used for a
+  //  FIFO reuse policy of the slots. (The least recently used busy_chain slot
+  //  will be reused first, which makes a round-robin reuse scheme).
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_FBQ_moveFromFreeToBusyTail(
+    in integer pl_idx,
+    inout EPTF_FreeBusyQueue pl_queue)
+  {
+    f_EPTF_NQueue_moveToTail(
+      pl_queue,
+      c_EPTF_FBQ_busy_chain,
+      pl_idx);
+  }
+
+  ///////////////////////////////////////////////////////////
+  // Function: f_EPTF_FBQ_moveFromBusyToFreeHead
+  //
+  // Purpose:
+  //  Function to move an item from the busy_chain to the head of the free_chain
+  //
+  // Parameters:
+  //   pl_idx - *in* *integer* - the index of the slot to be  moved
+  //
+  //   pl_queue - *inout* <EPTF_FreeBusyQueue> - the queue in question
+  //
+  // Return Value:
+  //   -
+  // 
+  // Deatiled Description:
+  //  This function (and the function <f_EPTF_FBQ_moveFromInvalidToFreeHead>) can be used for a 
+  //  LIFO reuse policy of the slots. (The most recently used free_chain slot will be
+  //  reused first.)
+  //
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_FBQ_moveFromBusyToFreeHead(
+    in integer pl_idx,
+    inout EPTF_FreeBusyQueue pl_queue)
+  {
+    f_EPTF_NQueue_moveToHead(
+      pl_queue,
+      c_EPTF_FBQ_free_chain,
+      pl_idx);
+  }
+
+  ///////////////////////////////////////////////////////////
+  // Function: f_EPTF_FBQ_moveFromBusyToFreeTail
+  //
+  // Purpose:
+  //  Function to move a slot from the busy_chain to the tail of free_chain
+  //
+  // Parameters:
+  //   pl_idx - *in* *integer* - the index of the slot to be  moved
+  //
+  //   pl_queue - *inout* <EPTF_FreeBusyQueue> - the queue in question
+  //
+  // Return Value:
+  //   -
+  //
+  // Detailed Description:
+  //  This function  can be used for a
+  //  FIFO reuse policy of the slots. (The least recently used free_chain slot
+  //  will be reused first, which makes a round-robin reuse scheme).
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_FBQ_moveFromBusyToFreeTail(
+    in integer pl_idx,
+    inout EPTF_FreeBusyQueue pl_queue)
+  {
+    f_EPTF_NQueue_moveToTail(
+      pl_queue,
+      c_EPTF_FBQ_free_chain,
+      pl_idx);
+  }
+
+  ///////////////////////////////////////////////////////////
+  // Function: f_EPTF_FBQ_moveFromBusyToInvalid
+  //
+  // Purpose:
+  //  Function to move a slot from busy_chain to invalid_chain.
+  //  Might be useful if the item shall be "unchained" for whatever
+  //  reason, such as during the event handling
+  //
+  // Parameters:
+  //   pl_idx - *in* *integer* - the index of the slot to be  moved
+  //
+  //   pl_queue - *inout* <EPTF_FreeBusyQueue> - the queue in question
+  //
+  // Return Value:
+  //   -
+  //
+  // Detailed Comments:
+  //  It effectively renders the item "invisible" 
+  //  for functions moving items between free/busy_chains
+  //  in atomic steps,
+  //  this is useful during the processing of an event, see 
+  //  <f_EPTF_FBQ_moveFromInvalidToFreeHead>
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_FBQ_moveFromBusyToInvalid(
+    in integer pl_idx,
+    inout EPTF_FreeBusyQueue pl_queue)
+  {
+    f_EPTF_NQueue_moveToTail(
+      pl_queue,
+      c_EPTF_FBQ_invalid_chain,
+      pl_idx);
+  }
+
+  ///////////////////////////////////////////////////////////
+  // Function: f_EPTF_FBQ_moveFromInvalidToFreeHead
+  //
+  // Purpose:
+  // Function to move a slot from invalid to free_chain head
+  //
+  // Parameters:
+  //   pl_idx - *in* *integer* - the index of the slot to be  moved
+  //
+  //   pl_queue - *inout* <EPTF_FreeBusyQueue> - the queue in question
+  //
+  // Return Value:
+  //   -
+  //
+  // Detailed Comments: 
+  //  This function (and the function <f_moveBusyToFreeHead>) can be used for a 
+  //  LIFO reuse policy of the slots. (The most recently used free_chain slot will be
+  //  reused first.)
+  //
+  //
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_FBQ_moveFromInvalidToFreeHead(
+    in integer pl_idx,
+    inout EPTF_FreeBusyQueue pl_queue)
+  {
+    f_EPTF_NQueue_moveToHead(
+      pl_queue,
+      c_EPTF_FBQ_free_chain,
+      pl_idx);
+  }
+
+  ///////////////////////////////////////////////////////////
+  // Function: f_EPTF_FBQ_moveFromInvalidToFreeTail
+  //
+  // Purpose:
+  // Function to move a slot from invalid to free_chain tail
+  //
+  // Parameters:
+  //   pl_idx - *in* *integer* - the index of the slot to be  moved
+  //
+  //   pl_queue - *inout* <EPTF_FreeBusyQueue> - the queue in question
+  //
+  // Return Value:
+  //   -
+  //
+  // Detailed Comments: 
+  //  This function  can be used for a
+  //  FIFO reuse policy of the slots. (The least recently used free_chain slot
+  //  will be reused first, which makes a round-robin reuse scheme).
+  //
+  //
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_FBQ_moveFromInvalidToFreeTail(
+    in integer pl_idx,
+    inout EPTF_FreeBusyQueue pl_queue)
+  {
+    f_EPTF_NQueue_moveToTail(
+      pl_queue,
+      c_EPTF_FBQ_free_chain,
+      pl_idx);
+  }
+
+  ///////////////////////////////////////////////////////////
+  // Function: f_EPTF_FBQ_moveFromInvalidToBusyHead
+  //
+  // Purpose:
+  // Function to move a slot from invalid to busy_chain head
+  //
+  // Parameters:
+  //   pl_idx - *in* *integer* - the index of the slot to be  moved
+  //
+  //   pl_queue - *inout* <EPTF_FreeBusyQueue> - the queue in question
+  //
+  // Return Value:
+  //   -
+  //
+  // Detailed Comments: 
+  //  This function can be used for a 
+  //  LIFO reuse policy of the slots. (The most recently used busy_chain slot will be
+  //  reused first.)
+  //
+  //
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_FBQ_moveFromInvalidToBusyHead(
+    in integer pl_idx,
+    inout EPTF_FreeBusyQueue pl_queue)
+  {
+    f_EPTF_NQueue_moveToHead(
+      pl_queue,
+      c_EPTF_FBQ_busy_chain,
+      pl_idx);
+  }
+
+  ///////////////////////////////////////////////////////////
+  // Function: f_EPTF_FBQ_moveFromInvalidToBusyTail
+  //
+  // Purpose:
+  // Function to move a slot from invalid to busy_chain tail
+  //
+  // Parameters:
+  //   pl_idx - *in* *integer* - the index of the slot to be  moved
+  //
+  //   pl_queue - *inout* <EPTF_FreeBusyQueue> - the queue in question
+  //
+  // Return Value:
+  //   -
+  //
+  // Detailed Comments: 
+  //  This function  can be used for a
+  //  FIFO reuse policy of the slots. (The least recently used busy_chain slot
+  //  will be reused first, which makes a round-robin reuse scheme).
+  //
+  //
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_FBQ_moveFromInvalidToBusyTail(
+    in integer pl_idx,
+    inout EPTF_FreeBusyQueue pl_queue)
+  {
+    f_EPTF_NQueue_moveToTail(
+      pl_queue,
+      c_EPTF_FBQ_busy_chain,
+      pl_idx);
+  }
+
+  ///////////////////////////////////////////////////////////
+  // Function: f_EPTF_FBQ_logChain
+  //
+  // Purpose:
+  //  Function to log a chain (for example, during debugging).
+  //
+  // Parameters:
+  //   pl_chain - *in* <EPTF_chainType_enum_t> - the type of the chain to be logged
+  //
+  //   pl_queue - *inout* <EPTF_FreeBusyQueue> - the queue in question
+  //
+  // Return Value:
+  //   -
+  //
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_FBQ_logChain(
+    in EPTF_chainType_enum_t pl_chain,
+    in EPTF_FreeBusyQueue pl_queue)
+  {
+    select(pl_chain) {
+      case(free_chain) {
+        f_EPTF_NQueue_logChain(pl_queue, c_EPTF_FBQ_free_chain);
+      }
+      case(busy_chain) {
+        f_EPTF_NQueue_logChain(pl_queue, c_EPTF_FBQ_busy_chain);
+      }
+      case else {
+        f_EPTF_NQueue_logChain(pl_queue, c_EPTF_FBQ_invalid_chain);
+      }
+    }
+  }
+
+  ///////////////////////////////////////////////////////////
+  // Function: f_EPTF_FBQ_itemIsBusy
+  //
+  // Purpose:
+  //  Function to check whether the item is within the busy_chain, or not.
+  //
+  // Parameters:
+  //   pl_idx - *in* *integer* - the index of the slot to be checked
+  //
+  //   pl_queue - *in* <EPTF_FreeBusyQueue> - the queue in question
+  //
+  // Return Value:
+  //   boolean - true if it is in the busy_chain, false otherwise
+  //
+  // Detailed Comments:
+  //  This is trivial convenience function in order to hide 
+  //  the internal data structure from the users
+  //
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_FBQ_itemIsBusy(
+    in integer pl_idx,
+    in EPTF_FreeBusyQueue pl_queue)
+  return boolean
+  {
+    return c_EPTF_FBQ_busy_chain == f_EPTF_NQueue_getChainOfItem(pl_queue, pl_idx);
+  }
+
+  ///////////////////////////////////////////////////////////
+  // Function: f_EPTF_FBQ_itemIsInvalid
+  //
+  // Purpose:
+  //  Function to check whether a given slot is within the invalid_chain, or not.
+  //
+  // Parameters:
+  //   pl_idx - *in* *integer* - the index of the slot to be checked
+  //
+  //   pl_queue - *inout* <EPTF_FreeBusyQueue> - the queue in question
+  //
+  // Return Value:
+  //   boolean - true if it is in the invalid_chain, false otherwise
+  //
+  // Detailed Comments:
+  //  This is trivial convenience function in order to hide 
+  //  the internal data structure from the users
+  //
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_FBQ_itemIsInvalid(
+    in integer pl_idx,
+    in EPTF_FreeBusyQueue pl_queue)
+  return boolean
+  {
+    return c_EPTF_FBQ_invalid_chain == f_EPTF_NQueue_getChainOfItem(pl_queue, pl_idx);
+  }
+
+  ///////////////////////////////////////////////////////////
+  // Function: f_EPTF_FBQ_itemIsFree
+  //
+  // Purpose:
+  //  Function to check whether the item is within the free_chain, or not.
+  //
+  // Parameters:
+  //   pl_idx - *in* *integer* - the index of the slot to be checked
+  //
+  //   pl_queue - *inout* <EPTF_FreeBusyQueue> - the queue in question
+  //
+  // Return Value:
+  //   boolean - true if the slot is in the free_chain, false otherwise
+  //
+  // Detailed Comments:
+  //  This is trivial convenience function in order to hide 
+  //  the internal data structure from the users
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_FBQ_itemIsFree(
+    in integer pl_idx,
+    in EPTF_FreeBusyQueue pl_queue)
+  return boolean
+  {
+    return c_EPTF_FBQ_free_chain == f_EPTF_NQueue_getChainOfItem(pl_queue, pl_idx);
+  }
+
+  ///////////////////////////////////////////////////////////
+  // Function: f_EPTF_FBQ_getBusyHeadIdx
+  //
+  // Purpose:
+  //  Function to get the head index of the  busy_chain slot
+  //
+  // Parameters:
+  //   pl_idx - *inout* *integer* - the variable to set to the head idx. 
+  //
+  //   pl_queue - *in* <EPTF_FreeBusyQueue> - the queue in question
+  //
+  // Return Value: 
+  //   boolean - true if idx has been set, false if it has not been // set, i.e.,
+  //   it returns true if the busy chain is *not* empty. If the chain // *is*
+  //   empty, then it returns false and pl_idx will retain its previous value
+  //
+  // Detailed Comments:
+  //   
+  //
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_FBQ_getBusyHeadIdx(
+    inout integer pl_idx,
+    in EPTF_FreeBusyQueue pl_queue)
+  return boolean
+  {
+    if(f_EPTF_NQueue_getLengthOfChain(pl_queue, c_EPTF_FBQ_busy_chain) < 1) { return false; }
+    pl_idx := f_EPTF_NQueue_getHeadOfChain(pl_queue, c_EPTF_FBQ_busy_chain);
+    return true;
+  }
+
+  ///////////////////////////////////////////////////////////
+  // Function: f_EPTF_FBQ_getBusyTailIdx
+  //
+  // Purpose:
+  //  Function to get the tail index of the  busy_chain slot
+  //
+  // Parameters:
+  //   pl_idx - *inout* *integer* - the variable to set to the tail idx. 
+  //
+  //   pl_queue - *in* <EPTF_FreeBusyQueue> - the queue in question
+  //
+  // Return Value: 
+  //   boolean - true if idx has been set, false if it has not been // set, i.e.,
+  //   it returns true if the busy chain is *not* empty. If the chain // *is*
+  //   empty, then it returns false and pl_idx will retain its previous value
+  //
+  // Detailed Comments:
+  //   
+  //
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_FBQ_getBusyTailIdx(
+    inout integer pl_idx,
+    in EPTF_FreeBusyQueue pl_queue)
+  return boolean
+  {
+    if(f_EPTF_NQueue_getLengthOfChain(pl_queue, c_EPTF_FBQ_busy_chain) < 1) { return false; }
+    pl_idx := f_EPTF_NQueue_getTailOfChain(pl_queue, c_EPTF_FBQ_busy_chain);
+    return true;
+  }
+
+  ///////////////////////////////////////////////////////////
+  // Function: f_EPTF_FBQ_getFwdBusyItemIdx
+  //
+  // Purpose:
+  //  Function to get the index of the next forward busy_chain slot
+  //
+  // Parameters:
+  //   pl_idx - *inout* *integer* - the variable to set to the forward idx
+  //
+  //   pl_queue - *in* <EPTF_FreeBusyQueue> - the queue in question
+  //
+  // Return Value:
+  //   boolean - true if idx has been moved forward within the busy_chain,
+  //   false if it has not been moved, or the item was not busy
+  //
+  // Detailed Comments:
+  //  This function can be used to iterate forward through the members of the 
+  //  busy_chains
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_FBQ_getFwdBusyItemIdx(
+    inout integer pl_idx,
+    in EPTF_FreeBusyQueue pl_queue)
+  return boolean
+  {
+    return f_EPTF_NQueue_getNextItemIdx(pl_queue, pl_idx);
+  }
+
+  ///////////////////////////////////////////////////////////
+  // Function: f_EPTF_FBQ_getBwdBusyItemIdx
+  //
+  // Purpose:
+  //  Function to get the index of the next backward busy_chain slot 
+  //
+  // Parameters:
+  //   pl_idx - *inout* *integer* - the variable to set to the backward idx
+  //
+  //   pl_queue - *inout* <EPTF_FreeBusyQueue> - the queue in question
+  //
+  // Return Value:
+  //   boolean - true if pl_idx has been moved backward within the busy_chain,
+  //   false if it has not been moved, or the item was not busy
+  //
+  // Detailed Comments:
+  //  This function can be used to iterate backward through the members of the 
+  //  busy_chains.
+  //
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_FBQ_getBwdBusyItemIdx(
+    inout integer pl_idx,
+    in EPTF_FreeBusyQueue pl_queue)
+  return boolean
+  {
+    return f_EPTF_NQueue_getPrevItemIdx(pl_queue, pl_idx);
+  }
+
+  ///////////////////////////////////////////////////////////
+  // Function: f_EPTF_FBQ_getFreeHeadIdx
+  //
+  // Purpose:
+  //  Function to get the head index of the  free_chain slot
+  //
+  // Parameters:
+  //   pl_idx - *inout* *integer* - the variable to set to the head idx. 
+  //
+  //   pl_queue - *in* <EPTF_FreeBusyQueue> - the queue in question
+  //
+  // Return Value: 
+  //   boolean - true if idx has been set, false if it has not been // set, i.e.,
+  //   it returns true if the free chain is *not* empty. If the chain // *is*
+  //   empty, then it returns false and pl_idx will retain its previous value
+  //
+  // Detailed Comments:
+  //   
+  //
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_FBQ_getFreeHeadIdx(
+    inout integer pl_idx,
+    in EPTF_FreeBusyQueue pl_queue)
+  return boolean
+  {
+    if(f_EPTF_NQueue_getLengthOfChain(pl_queue, c_EPTF_FBQ_free_chain) < 1) { return false; }
+    pl_idx := f_EPTF_NQueue_getHeadOfChain(pl_queue, c_EPTF_FBQ_free_chain);
+    return true;
+  }
+
+  ///////////////////////////////////////////////////////////
+  // Function: f_EPTF_FBQ_getFreeTailIdx
+  //
+  // Purpose:
+  //  Function to get the tail index of the  free_chain slot
+  //
+  // Parameters:
+  //   pl_idx - *inout* *integer* - the variable to set to the tail idx. 
+  //
+  //   pl_queue - *in* <EPTF_FreeBusyQueue> - the queue in question
+  //
+  // Return Value: 
+  //   boolean - true if idx has been set, false if it has not been // set, i.e.,
+  //   it returns true if the free chain is *not* empty. If the chain // *is*
+  //   empty, then it returns false and pl_idx will retain its previous value
+  //
+  // Detailed Comments:
+  //   
+  //
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_FBQ_getFreeTailIdx(
+    inout integer pl_idx,
+    in EPTF_FreeBusyQueue pl_queue)
+  return boolean
+  {
+    if(f_EPTF_NQueue_getLengthOfChain(pl_queue, c_EPTF_FBQ_free_chain) < 1) { return false; }
+    pl_idx := f_EPTF_NQueue_getTailOfChain(pl_queue, c_EPTF_FBQ_free_chain);
+    return true;
+  }
+
+  ///////////////////////////////////////////////////////////
+  // Function: f_EPTF_FBQ_getFwdFreeItemIdx
+  //
+  // Purpose:
+  //  Function to get the index of the next forward free_chain slot
+  //
+  // Parameters:
+  //   pl_idx - *inout* *integer* - the variable to set to the forward idx
+  //
+  //   pl_queue - *in* <EPTF_FreeBusyQueue> - the queue in question
+  //
+  // Return Value:
+  //   boolean - true if idx has been moved forward within the free_chain,
+  //   false if it has not been moved, or the item was not free
+  //
+  // Detailed Comments:
+  //  This function can be used to iterate forward through the members of the 
+  //  free_chains
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_FBQ_getFwdFreeItemIdx(
+    inout integer pl_idx,
+    in EPTF_FreeBusyQueue pl_queue)
+  return boolean
+  {
+    return f_EPTF_NQueue_getNextItemIdx(pl_queue, pl_idx);
+  }
+
+  ///////////////////////////////////////////////////////////
+  // Function: f_EPTF_FBQ_getBwdFreeItemIdx
+  //
+  // Purpose:
+  //  Function to get the index of the next backward free_chain slot 
+  //
+  // Parameters:
+  //   pl_idx - *inout* *integer* - the variable to set to the backward idx
+  //
+  //   pl_queue - *inout* <EPTF_FreeBusyQueue> - the queue in question
+  //
+  // Return Value:
+  //   boolean - true if pl_idx has been moved backward within the free_chain,
+  //   false if it has not been moved, or the item was not free
+  //
+  // Detailed Comments:
+  //  This function can be used to iterate backward through the members of the 
+  //  free_chains.
+  //
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_FBQ_getBwdFreeItemIdx(
+    inout integer pl_idx,
+    in EPTF_FreeBusyQueue pl_queue)
+  return boolean
+  {
+    return f_EPTF_NQueue_getPrevItemIdx(pl_queue, pl_idx);
+  }
+
+  ///////////////////////////////////////////////////////////
+  // Function: f_EPTF_FBQ_getLengthOfBusyChain
+  //
+  // Purpose:
+  // Function to get the length  of the  busy_chain 
+  //
+  // Parameters:
+  //   pl_queue - *inout* <EPTF_FreeBusyQueue> - the queue in question
+  //
+  // Return Value:
+  //   integer - the length of the busy_chain
+  //
+  // Detailed Comments:
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_FBQ_getLengthOfBusyChain(
+    in EPTF_FreeBusyQueue pl_queue)
+  return integer
+  {
+    return f_EPTF_NQueue_getLengthOfChain(pl_queue, c_EPTF_FBQ_busy_chain);
+  }
+
+  ///////////////////////////////////////////////////////////
+  // Function: f_EPTF_FBQ_getLengthOfFreeChain
+  //
+  // Purpose:
+  //  Function to get the length  of the  free_chain 
+  //
+  // Parameters:
+  //   pl_queue - *inout* <FreeFreeQueue> - the queue in question
+  //
+  // Return Value:
+  //   integer - the length of the free_chain
+  //
+  // Detailed Comments:
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_FBQ_getLengthOfFreeChain(
+    in EPTF_FreeBusyQueue pl_queue)
+  return integer
+  {
+    return f_EPTF_NQueue_getLengthOfChain(pl_queue, c_EPTF_FBQ_free_chain);
+  }
+
+  ///////////////////////////////////////////////////////////
+  // Function: f_EPTF_FBQ_getFreeSlot
+  //
+  // Purpose:
+  //  Function to get the head of the free_chain of  the <EPTF_FreeBusyQueue>,
+  //  returns with negative index, if there is no more free slot.
+  //
+  // Parameters:
+  //   pl_queue - *inout* <EPTF_FreeBusyQueue> - the queue in question
+  //
+  // Return Value:
+  //   *integer* - the index of the head of the unused (free_chain) slot
+  //
+  // Detailed Comments:
+  //  -
+  //
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_FBQ_getFreeSlot(
+    in EPTF_FreeBusyQueue pl_queue)
+  return integer
+  {
+    if(f_EPTF_NQueue_getLengthOfChain(pl_queue, c_EPTF_FBQ_free_chain) == 0) {
+      f_EPTF_Common_user(%definitionId&"(): no more free slot(s)...");
+      return -1;
+    } else {
+      return f_EPTF_NQueue_getHeadOfChain(pl_queue, c_EPTF_FBQ_free_chain);
+    }
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Function: f_EPTF_FBQ_getLengthOfQueue
+  // 
+  //  Purpose:
+  //    Returns the length (total number of items) of the queue
+  //
+  //  Parameters:
+  //    pl_queue - *in* <EPTF_FreeBusyQueue> - the queue
+  //
+  //  Return Value:
+  //    *integer* - the length of the queue
+  ///////////////////////////////////////////////////////////
+  public function f_EPTF_FBQ_getLengthOfQueue(in EPTF_FreeBusyQueue pl_queue)
+  return integer {
+    return f_EPTF_NQueue_getLengthOfQueue(pl_queue);
+  }
+
+} // module EPTF_CLL_FBQ_Functions

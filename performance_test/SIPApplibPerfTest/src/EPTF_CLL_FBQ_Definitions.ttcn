@@ -1,0 +1,221 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+//  File:     EPTF_CLL_FBQ_Definitions.ttcn
+//  Rev:      <RnXnn>
+//  Prodnr:   CNL 113 512
+//  Updated:  2012-02-16
+//  Contact:  http://ttcn.ericsson.se
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////
+// Module: EPTF_CLL_FBQ_Definitions
+//
+// Purpose:
+//   This module contains the types of Free-Busy queue management
+//
+// Module Parameters:
+//     tsp_debug_QueueMgmt - boolean := false; 
+//              set it to true for Queue Management debugging
+//              NOT USED ANY MORE by FBQ!
+//
+//     tsp_debugVerbose_QueueMgmt - boolean:= false 
+//              set it to true for verbose Queue Management debugging
+//              NOT USED ANY MORE by FBQ!
+//
+// Current Owner:
+//   Jozsef Gyurusi (ETHJGI)
+//
+// Last Review Date:
+//   2012-02-16
+//
+// Detailed Comments:
+//   A free-busy queue contains two chains: free_chain slots and busy_chain slots. It
+//   is suitable to implement a dynamic list, that can accomodate arbitrary
+//   number of list elements, where inserting, or removing an element takes
+//   constant time, irrespective of the size of the list. Event-queues for timer
+//   management are certainly candidates for FreeBusyQueues. There are utility
+//   and convenience functions to maintain the EPTF_FreeBusyQueue within this
+//   module.
+//
+///////////////////////////////////////////////////////////
+module EPTF_CLL_FBQ_Definitions {
+
+import from EPTF_CLL_NQueue_Definitions all;
+import from EPTF_CLL_Base_Definitions all;
+import from EPTF_CLL_Common_Definitions all;
+
+modulepar {
+  boolean tsp_debug_QueueMgmt := false;
+  boolean tsp_debugVerbose_QueueMgmt := false
+}
+
+  ///////////////////////////////////////////////////////////
+  // Type: EPTF_IndexList
+  //
+  // Purpose:
+  //   Type alias for the <EPTF_IntegerList>
+  //   This is the data type of the data elements associated to
+  //   queue items.
+  //
+  // Elements:
+  //  integers
+  //
+  ///////////////////////////////////////////////////////////
+  type EPTF_IntegerList EPTF_IndexList;
+
+  ///////////////////////////////////////////////////////////
+  // Type: EPTF_IndexArray
+  //
+  // Purpose:
+  //   To store the data elements associated to the queue
+  //
+  // Elements:
+  //  List of <EPTF_IndexList> - the associated data to queue items
+  //
+  // Detailed Comments:
+  //   -
+  ///////////////////////////////////////////////////////////
+  type record of EPTF_IndexList EPTF_IndexArray;
+
+  ///////////////////////////////////////////////////////////
+  // Type: EPTF_insertionType
+  //
+  // Purpose:
+  //   enumerated type to denote different cases of insertion depending
+  //   on the status of the target chain and the insertion point
+  //
+  // Elements:
+  //  empty - denotes that the insertion shall be done into an empty chain
+  //
+  //  head - denotes that the insertion shall be done at the head of a non-empty 
+  //         chain
+  //
+  //  middle - denotes that the insertion shall be done at the middle of a non-empty 
+  //         chain, i.e., then length of the chain is at least two, or in other words
+  //         (head!=tail) and (number>0) for the chain
+  //
+  //  tail - denotes that the insertion shall be done at the tail of a non-empty 
+  //         chain
+  //
+  ///////////////////////////////////////////////////////////
+  type enumerated EPTF_insertionType { empty, head, middle, tail }
+
+  ///////////////////////////////////////////////////////////
+  // Type: EPTF_chainType_enum_t
+  //
+  // Purpose:
+  //   enumerated type for denoting types of chains
+  //
+  // Elements:
+  //   free_chain - is used to denote slots that are linked into the chain 'free'
+  //
+  //   busy_chain - is used to denote slots that are linked into the chain 'busy'
+  //
+  //   invalid_chain - is used to denote slots that are not linked into any chain
+  //
+  // Detailed Comments:
+  //   -
+  //
+  ///////////////////////////////////////////////////////////
+  type enumerated EPTF_chainType_enum_t { free_chain (0), busy_chain (1) , invalid_chain (2) }
+    
+  ///////////////////////////////////////////////////////////
+  // Constant: c_EPTF_FBQ_free_chain
+  // 
+  // Purpose:
+  //  Constant that identifies the free chain in FBQ
+  // 
+  // Detailed Comments:
+  //  *0*
+  ///////////////////////////////////////////////////////////
+  const EPTF_NQueue_ChainId c_EPTF_FBQ_free_chain := 0;
+
+  ///////////////////////////////////////////////////////////
+  // Constant: c_EPTF_FBQ_busy_chain
+  // 
+  // Purpose:
+  //  Constant that identifies the busy chain in FBQ
+  // 
+  // Detailed Comments:
+  //  *1*
+  ///////////////////////////////////////////////////////////
+  const EPTF_NQueue_ChainId c_EPTF_FBQ_busy_chain := 1;
+
+  ///////////////////////////////////////////////////////////
+  // Constant: c_EPTF_FBQ_invalid_chain
+  // 
+  // Purpose:
+  //  Constant that identifies the invalid chain in FBQ
+  // 
+  // Detailed Comments:
+  //  *2*
+  ///////////////////////////////////////////////////////////
+  const EPTF_NQueue_ChainId c_EPTF_FBQ_invalid_chain := 2;
+
+  ///////////////////////////////////////////////////////////
+  // Type: EPTF_FreeBusyQueue
+  //
+  // Purpose:
+  //   This is the definition of EPTF_FreeBusyQueue data structure.
+  //   It stores the ID of the queue itself.
+  //   The Free-Busy queue API functions operate on this structure.
+  //
+  // Elements:
+  //   -
+  //
+  ///////////////////////////////////////////////////////////
+  type EPTF_NQueue_ChainId EPTF_FreeBusyQueue;
+
+  ///////////////////////////////////////////////////////////
+  // Type: EPTF_FBQ_DataList
+  //
+  // Purpose:
+  //   This is the definition of the Database of data assiciated
+  //   to an EPTF_FreeBusyQueue.
+  //
+  // Elements:
+  //   <EPTF_IndexArray> - The data associated to a given the FBQ
+  //
+  ///////////////////////////////////////////////////////////
+  type record of EPTF_IndexArray EPTF_FBQ_DataList;
+
+  ///////////////////////////////////////////////////////////
+  //  Constant: c_EPTF_emptyFreeBusyQueue
+  // 
+  //  Purpose:
+  //    Constant to initialize the Free-Busy queue structure
+  // 
+  //  Detailed Comments:
+  //    Important note:
+  //    The Free-Busy queue structure <EPTF_FreeBusyQueue> should be 
+  //    initialized with the function <f_EPTF_FBQ_initFreeBusyQueue>.
+  //    If the queue is initialized with this constant, ALWAYS call the function
+  //    <f_EPTF_FBQ_initFreeBusyQueue> after that, otherwise the FBQ will not work properly!
+  //
+  ///////////////////////////////////////////////////////////
+  const EPTF_FreeBusyQueue c_EPTF_emptyFreeBusyQueue := c_EPTF_NQueue_QueueId_init;
+  
+  ///////////////////////////////////////////////////////////
+  //  Type: EPTF_FBQ_CT
+  // 
+  //  Purpose:
+  //   The component that implements the Free-Busy queue feature
+  // 
+  //  Elements:
+  //    v_FBQ_initialized - *boolean* - prevents multiple init by calling <f_EPTF_FBQ_init_CT> several times
+  //    v_FBQ_dataList - <EPTF_FBQ_DataList> - database of the data associated to the queues
+  //
+  //  Detailed Comments:
+  //   To use the EPTF Varibles, extend your component with <EPTF_FBQ_CT>
+  //
+  ///////////////////////////////////////////////////////////
+  type component EPTF_FBQ_CT extends EPTF_NQueue_CT {
+    var boolean v_FBQ_initialized := false;
+    var EPTF_FBQ_DataList v_FBQ_dataList := {};
+  }
+}
