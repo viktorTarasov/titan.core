@@ -38,6 +38,18 @@ type set Set {
   record of integer roi
 }
 
+type union Uni {
+  integer i
+}
+with {
+  encode "custom"
+}
+
+
+// Custom encoding function for type Uni (equivalent to an 'int2bit' on the integer field)
+external function ef_enc_uni(in Uni x) return bitstring
+  with { extension "prototype(convert) encode(custom)" }
+
 type component CT {}
 
 /******************** Templates *********************/
@@ -85,5 +97,7 @@ template Set t_set_template_lists(
   template Set.soi2 p2 := { [1] := 1, [0] := ef_next_number(), [2] := 300 },
   template Set.roi p3 := { [0] := 0, [ef_next_number()] := 3 })
 := { soi1 := p1, soi2 := p2, roi := p3 };
+
+template Uni t_uni(template integer p := ef_next_number()) := { i := p };
 
 }

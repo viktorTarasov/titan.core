@@ -13917,10 +13917,14 @@ void Value::chk_expr_operand_execute_refd(Value *v1,
         expr->expr = mputprintf(expr->expr, "oct2bit(%s)", tmp_id.c_str());
         if (expr2.postamble)
           expr->postamble = mputstr(expr->postamble, expr2.postamble);
-      } else
+      } else {
+        if (expr2.preamble != NULL) {
+          expr->preamble = mputstr(expr->preamble, expr2.preamble);
+        }
         expr->expr = mputprintf(expr->expr, "%s(%s%s)",
           gov_last->get_legacy_coding_function(true)->get_genname_from_scope(scope).c_str(),
           expr2.expr, is_templ ? ".valueof()" : "");
+      }
     }
     else { // new codec handling
       Type* gov = templ->get_my_governor();
@@ -14168,6 +14172,9 @@ void Value::chk_expr_operand_execute_refd(Value *v1,
         if (expr2.postamble)
           expr->postamble = mputstr(expr->postamble, expr2.postamble);
       } else {
+        if (expr2.preamble != NULL) {
+          expr->preamble = mputstr(expr->preamble, expr2.preamble);
+        }
         expr->expr = mputprintf(expr->expr, "oct2unichar(bit2oct(%s(%s%s)), %s)",
           gov_last->get_legacy_coding_function(true)->get_genname_from_scope(scope).c_str(),
           expr2.expr, is_templ ? ".valueof()" : "", v2_code);

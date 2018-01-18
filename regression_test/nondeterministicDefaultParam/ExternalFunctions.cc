@@ -26,4 +26,8 @@ void ef__reset()
   current_number = 0;
 }
 
+BITSTRING ef__enc__uni(const Uni& x) {
+  return int2bit(x.i(), 8);
+}
+
 }

@@ -170,6 +170,34 @@ testcase tc_pard_def_template_lists() runs on CT
   }
 }
 
+testcase tc_pard_def_encvalue_w_custom_encoding() runs on CT
+{
+  ef_reset();
+  var bitstring results[4] := { encvalue(t_uni), encvalue(t_uni()), encvalue(t_uni(-)), encvalue(t_uni(p := -)) };
+  var bitstring exp_results[4] := { '00000001'B, '00000010'B, '00000011'B, '00000100'B };
+  if (results == exp_results) {
+    setverdict(pass);
+  }
+  else {
+    setverdict(fail, "Got: ", results, ", expected: ", exp_results);
+  }
+}
+
+testcase tc_pard_def_encvalue_unichar_w_custom_encoding() runs on CT
+{
+  ef_reset();
+  var universal charstring results[4] := { encvalue_unichar(t_uni), encvalue_unichar(t_uni()),
+    encvalue_unichar(t_uni(-)), encvalue_unichar(t_uni(p := -)) };
+  var universal charstring exp_results[4] := { char(0, 0, 0, 1), char(0, 0, 0, 2),
+    char(0, 0, 0, 3), char(0, 0, 0, 4) };
+  if (results == exp_results) {
+    setverdict(pass);
+  }
+  else {
+    setverdict(fail, "Got: ", results, ", expected: ", exp_results);
+  }
+}
+
 control {
   execute(tc_pard_def_int());
   execute(tc_pard_def_int_expr());
@@ -181,6 +209,8 @@ control {
   execute(tc_pard_def_set());
   execute(tc_pard_def_rec_named_template_list());
   execute(tc_pard_def_template_lists());
+  execute(tc_pard_def_encvalue_w_custom_encoding());
+  execute(tc_pard_def_encvalue_unichar_w_custom_encoding());
 }
 
 }
