@@ -521,6 +521,14 @@ namespace Ttcn {
   {
     return new Reference(*this);
   }
+  
+  void Reference::set_my_scope(Scope *p_scope)
+  {
+    Ref_base::set_my_scope(p_scope);
+    if (parlist != NULL) {
+      parlist->set_my_scope(p_scope);
+    }
+  }
 
   string Reference::get_dispname()
   {

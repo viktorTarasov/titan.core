@@ -327,6 +327,7 @@ namespace Ttcn {
       : Ref_base(p_modid, p_id), parlist(0) { }
     ~Reference();
     virtual Reference *clone() const;
+    virtual void set_my_scope(Scope* p_scope);
     virtual string get_dispname();
     virtual Common::Assignment *get_refd_assignment(bool check_parlist = true);
     virtual const Identifier* get_modid();

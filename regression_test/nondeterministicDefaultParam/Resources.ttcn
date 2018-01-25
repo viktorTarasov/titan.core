@@ -100,4 +100,10 @@ template Set t_set_template_lists(
 
 template Uni t_uni(template integer p := ef_next_number()) := { i := p };
 
+template Set.roi t_roi(integer p_val := 1, template integer p_temp := ef_next_number())
+:= { p_val, p_temp };
+
+template Set t_set_multi_layered(template Set.roi p := t_roi)
+:= { soi1 := ?, soi2 := ?, roi := p };
+
 }
