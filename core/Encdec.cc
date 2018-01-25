@@ -1343,8 +1343,8 @@ unsigned char TTCN_Buffer::get_byte_rev(const unsigned char* data,
 {
   unsigned char ch='\0';
   size_t hossz=(len+7)/8-1;
-  int bit_limit=len%8;
   if(idx>hossz) return ch;
+  const int bit_limit=len%8;
   if(bit_limit==0)return data[hossz-idx];
   ch=data[hossz-idx]<<(8-bit_limit);
   if((hossz-idx)>0) ch|=(data[hossz-idx-1]>>bit_limit)
