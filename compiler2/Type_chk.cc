@@ -49,6 +49,7 @@
 
 #include "asn1/Tag.hh"
 #include "XerAttributes.hh"
+#include "ttcn3/RawAST.hh"
 
 #include <ctype.h>
 #include <stdlib.h> // for qsort
@@ -1043,7 +1044,7 @@ void Type::chk_this_variant(const Ttcn::SingleWithAttrib* swa, bool global)
       }
       int ret = parse_rawAST(rawattrib, textattrib, xerattrib, berattrib, jsonattrib,
         swa->get_attribSpec(), get_length_multiplier(), my_scope->get_scope_mod(), 
-        raw_found, text_found, xer_found, ber_found, json_found);
+        raw_found, text_found, xer_found, ber_found, json_found, coding);
       bool mismatch = false;
       if (ber_found || raw_found || text_found || xer_found || json_found) {
         switch (coding) {

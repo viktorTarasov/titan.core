@@ -34,7 +34,6 @@
 #include "Int.hh"
 #include "subtype.hh"
 #include "ttcn3/rawASTspec.h"
-#include "ttcn3/RawAST.hh"
 #include "ttcn3/TextAST.hh"
 #include "ttcn3/BerAST.hh"
 #include "ttcn3/JsonAST.hh"
@@ -42,6 +41,7 @@
 #include <float.h>
 
 class XerAttributes;
+class RawAST;
 enum namedbool { INCOMPLETE_NOT_ALLOWED = 0, INCOMPLETE_ALLOWED = 1, WARNING_FOR_INCOMPLETE = 2,
   NO_SUB_CHK = 0, SUB_CHK = 3,
   OMIT_NOT_ALLOWED = 0, OMIT_ALLOWED = 4,

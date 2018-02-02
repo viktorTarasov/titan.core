@@ -36,6 +36,7 @@
 #include "ttcn3/Attributes.hh"
 #include "ttcn3/signature.h"
 #include "XerAttributes.hh"
+#include "ttcn3/RawAST.hh"
 
 #include "asn1/TableConstraint.hh"
 #include "asn1/Object.hh"

@@ -51,6 +51,7 @@
 #include "ttcn3/Ttcnstuff.hh"
 #include "ttcn3/TtcnTemplate.hh"
 #include "ttcn3/Templatestuff.hh"
+#include "ttcn3/RawAST.hh"
 
 #include "../common/static_check.h"
 #include "PredefFunc.hh"

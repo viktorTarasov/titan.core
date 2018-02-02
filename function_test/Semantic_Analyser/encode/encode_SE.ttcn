@@ -32,7 +32,8 @@ type record Rec3 { //^In type definition//
 }
 with {
   encode "JSON";
-  variant "name as uncapitalized"; //Variant attribute is not related to JSON encoding//
+  variant "attribute"; //Variant attribute is not related to JSON encoding//
+  variant "name as uncapitalized"; //Variant attribute is not related to JSON encoding// //This format is not supported for the JSON codec//
 }
 
 type record Rec4 { //^In type definition//

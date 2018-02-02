@@ -14,6 +14,7 @@
 #include "Type.hh"
 #include "Value.hh"
 #include "CompilerError.hh"
+#include "ttcn3/RawAST.hh"
 
 namespace Common {
 

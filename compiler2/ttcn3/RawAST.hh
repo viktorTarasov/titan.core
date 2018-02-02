@@ -22,6 +22,7 @@
 #include "../Setting.hh"
 #include "../Identifier.hh"
 #include "../../common/CharCoding.hh"
+#include "../Type.hh"
 
 class XerAttributes;
 class TextAST;
@@ -154,13 +155,16 @@ public:
  * @param[out] text_found set to \c true if a TEXT attribute was found
  * @param[out] xer_found set to \c true if a XER attribute was found
  * @param[out] json_found set to \c true if a JSON attribute was found
+ * @param[in] sel_codec indicates which codec to use for attributes that
+ * belong to multiple codecs
  * @return the return value of rawAST_parse: 0 for success, 1 for error,
  * 2 for out of memory.
  */
 extern int parse_rawAST(RawAST *par, TextAST *textpar, XerAttributes *xerpar,
     BerAST *berpar, JsonAST* jsonpar, const Ttcn::AttributeSpec& attrib, 
     int l_multip, const Common::Module* mod, bool &raw_found, bool &text_found,
-    bool &xer_found, bool &ber_found, bool &json_found);
+    bool &xer_found, bool &ber_found, bool &json_found,
+    Common::Type::MessageEncodingType_t par_codec = Common::Type::CT_UNDEF);
 extern void copy_rawAST_to_struct(RawAST *from, raw_attrib_struct *to);
 extern void free_raw_attrib_struct(raw_attrib_struct *raw);
 extern int compare_raw_attrib(RawAST *a, RawAST *b);

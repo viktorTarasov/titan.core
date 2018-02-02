@@ -59,6 +59,7 @@ bool xer_f;
 bool ber_f;
 bool json_f;
 int length_multiplier;
+Common::Type::MessageEncodingType_t selected_codec;
 
 extern void rawAST_error(const char *str); /* defined in this file */
 extern int rawAST_parse(); /* in rawAST.tab.cc, generated from rawAST.y */
@@ -450,8 +451,10 @@ anyType			RETURN(XSDanyType);
 }       /* end XER keywords in INITIAL */
 
   
+  /* prefix for legacy JSON attributes */
 JSON	{ BEGIN(jsoncodec); RETURN(XKWjson); }
 
+  /* legacy JSON attributes */
 <jsoncodec>{
 [: \t]        RETURN(*yytext);
 omit          RETURN(XKWomit);
@@ -483,6 +486,17 @@ number        RETURN(XKWnumber);
 [)]           { BEGIN(jsoncodec); RETURN(XJsonValueEnd); }
 [\"][\"]      { yylval.str = mcopystr("\\\""); RETURN(XJsonValueSegment); }
 [^\"\\)]+     { yylval.str = mcopystr(yytext); RETURN(XJsonValueSegment); }
+}
+
+  /* tokens for new JSON attributes (standard-compliant) */
+<INITIAL>{
+asValue         RETURN(XAsValueKeyword);
+default       { BEGIN(jsoncodec); RETURN(XKWdefault); }
+number        RETURN(XKWnumber);
+extend        { BEGIN(jsoncodec); RETURN(XKWextend); }
+metainfo      RETURN(XKWmetainfo);
+for           RETURN(XKWfor);
+unbound       RETURN(XKWunbound);
 }
 
 <INITIAL>{
@@ -656,7 +670,8 @@ void free_rawAST_tag_list(rawAST_tag_list* spec){
 int parse_rawAST(RawAST *par, TextAST *textpar, XerAttributes *xerpar,
     BerAST* berpar, JsonAST* jsonpar, const Ttcn::AttributeSpec& attrib, 
     int l_multip, const Common::Module* mod, bool &raw_found, bool &text_found,
-    bool &xer_found, bool &ber_found, bool &json_found)
+    bool &xer_found, bool &ber_found, bool &json_found,
+    Common::Type::MessageEncodingType_t par_codec /* = Common::Type::CT_UNDEF */)
 {
     rawstruct=par;
     textstruct=textpar;
@@ -665,6 +680,7 @@ int parse_rawAST(RawAST *par, TextAST *textpar, XerAttributes *xerpar,
     jsonstruct = jsonpar;
 
     length_multiplier=l_multip;
+    selected_codec = par_codec;
     infile = attrib.get_filename();
     current_line = attrib.get_first_line();
     /* skip the leading " of the attribute value */

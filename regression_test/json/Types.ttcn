@@ -160,7 +160,7 @@ type union Thing {
   } prod2val
 } with {
   variant "JSON:as value";
-  variant (prod2val.productID) "JSON:name as code";
+  variant (prod2val.productID) "name as 'code'";
   variant(unival) "JSON:as value";
 }
 
@@ -213,8 +213,8 @@ type record OptionalUnions {
   Thing uniTtcn optional,
   AsnThing uniAsn optional
 } with {
-  variant(uniTtcn) "JSON: omit as null";
-  variant(uniAsn) " JSON: omit as null ";
+  variant(uniTtcn) "omit as null";
+  variant(uniAsn) " omit as null ";
 }
 
 type record MetainfoRecord {
@@ -262,7 +262,7 @@ type set of MetainfoRecord MetainfoSetOf
 with { variant "JSON: metainfo for unbound"; }
 
 type float MetainfoArray[3]
-with { variant "JSON: metainfo for unbound"; }
+with { variant "metainfo for unbound"; }
 
 type record RecAsValue {
   integer field
@@ -288,7 +288,7 @@ type set SetWithAsValueFields {
 with {
   variant (uni) "JSON: as value";
   variant (rec) "JSON: as value";
-  variant (list[-]) "JSON: as value";
+  variant (list[-]) "asValue";
 }
 
 type record RecWithAsNumber {
@@ -297,7 +297,7 @@ type record RecWithAsNumber {
 }
 with {
   variant (lengths[-]) "JSON: as number";
-  variant (days[-]) "JSON: as number";
+  variant (days[-]) "as number";
 }
 
 type union Uni522660 {
@@ -313,8 +313,8 @@ type record DefaultEmptyStructs {
 }
 with {
   variant (r) "JSON: default({})";
-  variant (s) "JSON: default({})";
-  variant (ro) "JSON: default({})";
+  variant (s) "default({})";
+  variant (ro) "default({})";
   variant (so) "JSON: default({})";
 }
 

@@ -31,6 +31,7 @@
 #include "../XerAttributes.hh"
 #include "BerAST.hh"
 #include "JsonAST.hh"
+#include "../main.hh"
 
 extern void rawAST_error(const char *str);
 extern int rawAST_lex();
@@ -38,6 +39,7 @@ extern int rawAST_lex();
 extern RawAST* rawstruct;
 extern Common::Module *mymod;
 extern int length_multiplier;
+extern Common::Type::MessageEncodingType_t selected_codec;
 extern TextAST *textstruct;
 extern bool raw_f;
 extern bool text_f;
@@ -291,6 +293,7 @@ static void yyprint(FILE *file, int type, const YYSTYPE& value);
 %token XJsonValueStart    "("
 %token XJsonValueEnd      ")"
 %token XJsonValueSegment  "JSON value"
+%token XAsValueKeyword    "asValue"
 
 
 %type <enumval>
@@ -427,6 +430,8 @@ XAttribSpec : /* Empty */
     	{ }
     | XBERattributes
         { }
+    | JSONattributes
+      { }
     ;
 
 XBERattributes :
@@ -1355,18 +1360,54 @@ XERattribute:
     | fractionDigits { xerstruct->fractionDigits_ = $1; xerstruct->has_fractionDigits_ = true; }
     | XKWlist { xerstruct->list_ = true; }
     | name
-      { /* overwrites any previous name */
-        switch (xerstruct->name_.kw_) {
-        case NamespaceSpecification::NO_MANGLING:
-        case NamespaceSpecification::CAPITALIZED:
-        case NamespaceSpecification::UNCAPITALIZED:
-        case NamespaceSpecification::UPPERCASED:
-        case NamespaceSpecification::LOWERCASED:
-          break; // nothing to do
-        default: // real string, must be freed
-          Free(xerstruct->name_.nn_);
+      { 
+        // this handles the "name as '...' " attributes for both the XER and
+        // JSON codecs
+        // (overwrites any previously set name)
+        if (selected_codec == Common::Type::CT_XER) {
+          switch (xerstruct->name_.kw_) {
+          case NamespaceSpecification::NO_MANGLING:
+          case NamespaceSpecification::CAPITALIZED:
+          case NamespaceSpecification::UNCAPITALIZED:
+          case NamespaceSpecification::UPPERCASED:
+          case NamespaceSpecification::LOWERCASED:
+            break; // nothing to do
+          default: // real string, must be freed
+            Free(xerstruct->name_.nn_);
+          }
+          xerstruct->name_.nn_ = $1;
         }
-        xerstruct->name_.nn_ = $1;
+        else {
+          // treat XML special values and real strings separately
+          XerAttributes::NameChange special;
+          special.nn_ = $1;
+          switch (special.kw_) {
+          case NamespaceSpecification::NO_MANGLING:
+          case NamespaceSpecification::CAPITALIZED:
+          case NamespaceSpecification::UNCAPITALIZED:
+          case NamespaceSpecification::UPPERCASED:
+          case NamespaceSpecification::LOWERCASED:
+            // it's a special value
+            // JSON: display an error (if using the new codec handling)
+            // otherwise ignore
+            if (!legacy_codec_handling &&
+                selected_codec == Common::Type::CT_JSON) {
+              Common::Location loc(infile, @$);
+              loc.error("This format is not supported for the JSON codec");
+            }
+            break;
+          default: // it's a real string
+            if (selected_codec == Common::Type::CT_JSON) {
+              Free(jsonstruct->alias);
+              jsonstruct->alias = $1;
+              json_f = true;
+            }
+            else {
+              Free($1);
+            }
+            break;
+          }
+        }
       }
     | namespace
       { /* overwrites any previous namespace */
@@ -1612,7 +1653,7 @@ xsddata: /* XSD:something */
 
 ;
 
-// JSON encoder
+// JSON attributes, with 'JSON:' prefix (legacy attributes)
 XJsonDef:
   XOptSpaces XKWjson XOptSpaces ':' XOptSpaces XJsonAttribute XOptSpaces
 ;
@@ -1632,7 +1673,10 @@ XOmitAsNull:
 ;
 
 XNameAs:
-  XKWname XSpaces XKWas XSpaces XJsonAlias { jsonstruct->alias = $5; }
+  XKWname XSpaces XKWas XSpaces XJsonAlias {
+    Free(jsonstruct->alias);
+    jsonstruct->alias = $5;
+  }
 ;
 
 XJsonAlias: // include all keywords, so they can be used as aliases for fields, too
@@ -1692,6 +1736,47 @@ XSpaces:
 XSpace:
   ' '
 | '\t'
+;
+
+
+// JSON attributes with no prefix (standard-compliant attributes)
+JSONattributes:
+  JSONattribute { json_f = true; }
+;
+
+JSONattribute:
+  JOmitAsNull
+/* the name as '...' is handled in the XER attributes section */
+| JAsValue
+| JDefault
+| JExtend
+| JMetainfoForUnbound
+| JAsNumber
+;
+
+JOmitAsNull:
+  XOmitKeyword XKWas XNullKeyword { jsonstruct->omit_as_null = true; }
+;
+
+JAsValue:
+  XAsValueKeyword { jsonstruct->as_value = true; }
+;
+
+JDefault:
+  XKWdefault XOptSpaces XJsonValue XOptSpaces { jsonstruct->default_value = $3; } 
+;
+
+JExtend:
+  XKWextend XOptSpaces XJsonValue XOptSpaces ':' XOptSpaces XJsonValue XOptSpaces
+  { jsonstruct->schema_extensions.add(new JsonSchemaExtension($3, $7)); }
+;
+
+JMetainfoForUnbound:
+  XKWmetainfo XKWfor XKWunbound { jsonstruct->metainfo_unbound = true; }
+;
+
+JAsNumber:
+  XKWas XKWnumber { jsonstruct->as_number = true; }
 ;
 
 %%

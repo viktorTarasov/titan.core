@@ -29,7 +29,7 @@ type set Set {
 } with {
   variant(numbr) " JSON : default (-infinity) ";
   variant(buul) " JSON:omit as null ";
-  variant(os)  "JSON:extend(MSB):(first) ";
+  variant(os)  "extend(MSB):(first) ";
 }
 
 type union Uni {
