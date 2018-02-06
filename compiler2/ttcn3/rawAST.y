@@ -1364,7 +1364,7 @@ XERattribute:
         // this handles the "name as '...' " attributes for both the XER and
         // JSON codecs
         // (overwrites any previously set name)
-        if (selected_codec == Common::Type::CT_XER) {
+        if (selected_codec == Common::Type::CT_XER || legacy_codec_handling) {
           switch (xerstruct->name_.kw_) {
           case NamespaceSpecification::NO_MANGLING:
           case NamespaceSpecification::CAPITALIZED:
@@ -1377,7 +1377,7 @@ XERattribute:
           }
           xerstruct->name_.nn_ = $1;
         }
-        else {
+        if (selected_codec != Common::Type::CT_XER) {
           // treat XML special values and real strings separately
           XerAttributes::NameChange special;
           special.nn_ = $1;
@@ -1397,9 +1397,17 @@ XERattribute:
             }
             break;
           default: // it's a real string
-            if (selected_codec == Common::Type::CT_JSON) {
+            if (selected_codec == Common::Type::CT_JSON ||
+                legacy_codec_handling) {
               Free(jsonstruct->alias);
-              jsonstruct->alias = $1;
+              if (legacy_codec_handling) {
+                // in this case the string is saved in both the XML and JSON
+                // structs, so we can't use the same string
+                jsonstruct->alias = mcopystr($1);
+              }
+              else {
+                jsonstruct->alias = $1;
+              }
               json_f = true;
             }
             else {

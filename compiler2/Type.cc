@@ -2849,8 +2849,12 @@ namespace Common {
 
       if (NULL != jsonattrib->alias) {
         Type* parent = get_parent_type();
-        if (NULL == parent || (T_SEQ_T != parent->typetype && 
-            T_SET_T != parent->typetype && T_CHOICE_T != parent->typetype)) {
+        if (!legacy_codec_handling &&
+            (NULL == parent || (T_SEQ_T != parent->typetype && 
+            T_SET_T != parent->typetype && T_CHOICE_T != parent->typetype))) {
+          // only report this error when using the new codec handling, otherwise
+          // ignore the attribute (since it can also be set by the XML 'name as ...'
+          // attribute)
           error("Invalid attribute, 'name as ...' requires field of a "
             "record, set or union.");
         }

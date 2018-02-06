@@ -56,6 +56,16 @@ with {
   encode "JSON";
 }
 
+type set S {
+  integer num,
+  charstring str
+}
+with {
+  encode "JSON";
+  encode "XML";
+  variant (num) {"JSON", "XML"}."name as 'int'";
+}
+
 type record Msg {
   bitstring data
 }

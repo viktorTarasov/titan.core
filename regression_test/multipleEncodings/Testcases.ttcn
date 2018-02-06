@@ -476,6 +476,38 @@ testcase tc_ttcn_codec_switch() runs on CT {
   setverdict(pass);
 }
 
+// Testing the 'name as ...' attribute applied to multiple codecs using only one variant attribute
+testcase tc_ttcn_multi_attrib() runs on CT {
+  var S x := { num := 12, str := "abc" };
+  
+  // JSON encoding & decoding
+  var universal charstring exp := "{\"int\":12,\"str\":\"abc\"}";
+  var universal charstring enc1 := encvalue_unichar(x, "UTF-8", "", "JSON");
+  if (exp != enc1) {
+    setverdict(fail, "JSON encoding failed. Expected: ", exp, ", got: ", enc1);
+  }
+  
+  var S dec1;
+  var integer res := decvalue_unichar(enc1, dec1, "UTF-8", "", "JSON");
+  if (x != dec1) {
+    setverdict(fail, "JSON decoding failed. Expected: ", x, ", got: ", dec1);
+  }
+  
+  // XML encoding & decoding
+  exp := "<S>\n\t<int>12</int>\n\t<str>abc</str>\n</S>\n\n";
+  var universal charstring enc2 := encvalue_unichar(x, "UTF-8", "", "XML");
+  if (exp != enc2) {
+    setverdict(fail, "XML encoding test failed. Expected: ", exp, ", got: ", enc2);
+  }
+  
+  var S dec2;
+  res := decvalue_unichar(enc2, dec2, "UTF-8", "", "XML");
+  if (x != dec2) {
+    setverdict(fail, "XML decoding test failed. Expected: ", x, ", got: ", dec2);
+  }
+  setverdict(pass);
+}
+
 control {
   execute(tc_ttcn_encvalue());
   execute(tc_ttcn_encvalue_negtest());
@@ -495,6 +527,7 @@ control {
   execute(tc_asn_setencode_per());
   execute(tc_asn_setencode_negtest());
   execute(tc_ttcn_codec_switch());
+  execute(tc_ttcn_multi_attrib());
 }
 
 }

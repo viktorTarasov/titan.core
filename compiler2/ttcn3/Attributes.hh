@@ -221,7 +221,7 @@ namespace Ttcn {
     void chk();
     ErroneousDescriptor* get_err_descr() const { return err_descr_tree; }    
   };
-
+  
   /**
    * Stores the attribute specification and its location
    */
@@ -230,20 +230,20 @@ namespace Ttcn {
     AttributeSpec& operator=(const AttributeSpec& p);
   private:
     string spec; ///< The attribute specification (free text)
-    string encoding; ///< Encoding specification for variant attributes (free text)
-    // TODO: check that the variant indeed belongs to the specified encoding
+    vector<string>* encodings; ///< Encoding specifications for variant attributes (free text)
     /// Copy constructor, for clone() only
     AttributeSpec(const AttributeSpec& p)
-      : Node(p), Location(p), spec(p.spec), encoding(p.encoding) { }
+      : Node(p), Location(p), spec(p.spec), encodings(p.encodings) { }
   public:
     AttributeSpec(const string& p_spec)
-      : Node(), Location(), spec(p_spec), encoding() { }
-    AttributeSpec(const string& p_spec, const string& p_encoding)
-      : Node(), Location(), spec(p_spec), encoding(p_encoding) { }
+      : Node(), Location(), spec(p_spec), encodings(NULL) { }
+    AttributeSpec(const string& p_spec, vector<string>* p_encodings)
+      : Node(), Location(), spec(p_spec), encodings(p_encodings) { }
+    ~AttributeSpec();
     virtual AttributeSpec* clone() const;
     virtual void set_fullname(const string& p_fullname);
     const string& get_spec() const { return spec; }
-    const string& get_encoding() const { return encoding; }
+    const vector<string>* get_encodings() const { return encodings; }
     virtual void dump(unsigned level) const;
   };
 

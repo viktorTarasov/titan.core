@@ -965,10 +965,11 @@ void Type::chk_this_variant(const Ttcn::SingleWithAttrib* swa, bool global)
     }
   }
   else {
-    const string& enc_str = swa->get_attribSpec().get_encoding();
-    MessageEncodingType_t coding = get_enc_type(enc_str);
+    const vector<string>* coding_strings = swa->get_attribSpec().get_encodings();
+    // gather the built-in codecs referred to by the variant's encoding strings
+    vector<MessageEncodingType_t> codings;
     bool erroneous = false;
-    if (enc_str.empty()) {
+    if (coding_strings == NULL) {
       if (t->coding_table.size() > 1) {
         if (!global) {
           swa->error("The encoding reference is mandatory for variant attributes "
@@ -977,129 +978,148 @@ void Type::chk_this_variant(const Ttcn::SingleWithAttrib* swa, bool global)
         erroneous = true;
       }
       else if (t->coding_table[0]->built_in) {
-        coding = t->coding_table[0]->built_in_coding;
+        codings.add(new MessageEncodingType_t(t->coding_table[0]->built_in_coding));
       }
-      else if (strcmp(t->coding_table[0]->custom_coding.name, "PER") == 0) {
-        coding = CT_PER;
+      else { // PER or custom encoding
+        MessageEncodingType_t coding =
+          strcmp(t->coding_table[0]->custom_coding.name, "PER") == 0 ?
+          CT_PER : CT_CUSTOM;
+        swa->warning("Variant attributes related to %s encoding are ignored",
+          get_encoding_name(coding));
       }
-      // else leave it as CT_CUSTOM
     }
     else {
-      if (!has_encoding(coding, &enc_str)) {
-        erroneous = true;
-        if (!global) {
-          if (coding != CT_CUSTOM) {
-            swa->error("Type `%s' does not support %s encoding",
-              get_typename().c_str(), get_encoding_name(coding));
+      for (size_t i = 0; i < coding_strings->size(); ++i) {
+        const string& enc_str = *(*coding_strings)[i];
+        MessageEncodingType_t coding = get_enc_type(enc_str);
+        if (!has_encoding(coding, &enc_str)) {
+          erroneous = true;
+          if (!global) {
+            if (coding != CT_CUSTOM) {
+              swa->error("Type `%s' does not support %s encoding",
+                get_typename().c_str(), get_encoding_name(coding));
+            }
+            else {
+              swa->error("Type `%s' does not support custom encoding `%s'",
+                get_typename().c_str(), enc_str.c_str());
+            }
           }
-          else {
-            swa->error("Type `%s' does not support custom encoding `%s'",
-              get_typename().c_str(), enc_str.c_str());
-          }
         }
-      }
-    }
-    if (!erroneous && coding != CT_PER && coding != CT_CUSTOM) {
-      bool new_ber = false;    // a BerAST object was allocated here
-      bool new_raw = false;    // a RawAST object was allocated here
-      bool new_text = false;   // a TextAST object was allocated here
-      bool new_xer = false;    // a XerAttribute object was allocated here
-      bool new_json = false;   // a JsonAST object was allocated here
-      bool ber_found = false;  // a BER attribute was found by the parser
-      bool raw_found = false;  // a RAW attribute was found by the parser
-      bool text_found = false; // a TEXT attribute was found by the parser
-      bool xer_found = false;  // a XER attribute was found by the parser
-      bool json_found = false; // a JSON attribute was found by the parser
-      if (berattrib == NULL) {
-        berattrib = new BerAST;
-        new_ber = true;
-      }
-      if (rawattrib == NULL) {
-        Type* t_refd = this;
-        while (t_refd->rawattrib == NULL && t_refd->is_ref()) {
-          t_refd = t_refd->get_type_refd();
+        else if (coding != CT_PER && coding != CT_CUSTOM) {
+          codings.add(new MessageEncodingType_t(coding));
         }
-        rawattrib = new RawAST(t_refd->rawattrib, get_default_raw_fieldlength());
-        new_raw = true;
-      }
-      if (textattrib == NULL) {
-        Type* t_refd = this;
-        while (t_refd->textattrib == NULL && t_refd->is_ref()) {
-          t_refd = t_refd->get_type_refd();
-        }
-        textattrib = new TextAST(t_refd->textattrib);
-        new_text = true;
-      }
-      if (xerattrib == NULL) {
-        xerattrib = new XerAttributes;
-        new_xer = true;
-      }
-      if (jsonattrib == NULL) {
-        Type* t_refd = this;
-        while (t_refd->jsonattrib == NULL && t_refd->is_ref()) {
-          t_refd = t_refd->get_type_refd();
-        }
-        jsonattrib = new JsonAST(t_refd->jsonattrib);
-        new_json = true;
-      }
-      int ret = parse_rawAST(rawattrib, textattrib, xerattrib, berattrib, jsonattrib,
-        swa->get_attribSpec(), get_length_multiplier(), my_scope->get_scope_mod(), 
-        raw_found, text_found, xer_found, ber_found, json_found, coding);
-      bool mismatch = false;
-      if (ber_found || raw_found || text_found || xer_found || json_found) {
-        switch (coding) {
-        case CT_BER:
-          mismatch = !ber_found;
-          break;
-        case CT_RAW:
-          mismatch = !raw_found;
-          break;
-        case CT_TEXT:
-          mismatch = !text_found;
-          break;
-        case CT_XER:
-          mismatch = !xer_found;
-          break;
-        case CT_JSON:
-          mismatch = !json_found;
-          break;
-        default:
-          FATAL_ERROR("Type::chk_this_variant");
-          break;
-        }
-      }
-      if (mismatch && ret == 0) {
-        if (!global || !enc_str.empty()) {
-          // don't display this if there were parsing errors in the variant 
-          // attribute, or if it was empty
-          swa->error("Variant attribute is not related to %s encoding",
+        else { // PER or custom encoding
+          swa->warning("Variant attributes related to %s encoding are ignored",
             get_encoding_name(coding));
         }
       }
-      if (new_ber && !ber_found) {
-        delete berattrib;
-        berattrib = NULL;
-      }
-      if (new_raw && !raw_found) {
-        delete rawattrib;
-        rawattrib = NULL;
-      }
-      if (new_text && !text_found) {
-        delete textattrib;
-        textattrib = NULL;
-      }
-      if (new_xer && !xer_found) {
-        delete xerattrib;
-        xerattrib = NULL;
-      }
-      if (new_json && !json_found) {
-        delete jsonattrib;
-        jsonattrib = NULL;
+    }
+    if (!erroneous && codings.size() != 0) {
+      for (size_t i = 0; i < codings.size(); ++i) {
+        MessageEncodingType_t coding = *codings[i];
+        bool new_ber = false;    // a BerAST object was allocated here
+        bool new_raw = false;    // a RawAST object was allocated here
+        bool new_text = false;   // a TextAST object was allocated here
+        bool new_xer = false;    // a XerAttribute object was allocated here
+        bool new_json = false;   // a JsonAST object was allocated here
+        bool ber_found = false;  // a BER attribute was found by the parser
+        bool raw_found = false;  // a RAW attribute was found by the parser
+        bool text_found = false; // a TEXT attribute was found by the parser
+        bool xer_found = false;  // a XER attribute was found by the parser
+        bool json_found = false; // a JSON attribute was found by the parser
+        if (berattrib == NULL) {
+          berattrib = new BerAST;
+          new_ber = true;
+        }
+        if (rawattrib == NULL) {
+          Type* t_refd = this;
+          while (t_refd->rawattrib == NULL && t_refd->is_ref()) {
+            t_refd = t_refd->get_type_refd();
+          }
+          rawattrib = new RawAST(t_refd->rawattrib, get_default_raw_fieldlength());
+          new_raw = true;
+        }
+        if (textattrib == NULL) {
+          Type* t_refd = this;
+          while (t_refd->textattrib == NULL && t_refd->is_ref()) {
+            t_refd = t_refd->get_type_refd();
+          }
+          textattrib = new TextAST(t_refd->textattrib);
+          new_text = true;
+        }
+        if (xerattrib == NULL) {
+          xerattrib = new XerAttributes;
+          new_xer = true;
+        }
+        if (jsonattrib == NULL) {
+          Type* t_refd = this;
+          while (t_refd->jsonattrib == NULL && t_refd->is_ref()) {
+            t_refd = t_refd->get_type_refd();
+          }
+          jsonattrib = new JsonAST(t_refd->jsonattrib);
+          new_json = true;
+        }
+        int ret = parse_rawAST(rawattrib, textattrib, xerattrib, berattrib, jsonattrib,
+          swa->get_attribSpec(), get_length_multiplier(), my_scope->get_scope_mod(), 
+          raw_found, text_found, xer_found, ber_found, json_found, coding);
+        bool mismatch = false;
+        if (ber_found || raw_found || text_found || xer_found || json_found) {
+          switch (coding) {
+          case CT_BER:
+            mismatch = !ber_found;
+            break;
+          case CT_RAW:
+            mismatch = !raw_found;
+            break;
+          case CT_TEXT:
+            mismatch = !text_found;
+            break;
+          case CT_XER:
+            mismatch = !xer_found;
+            break;
+          case CT_JSON:
+            mismatch = !json_found;
+            break;
+          default:
+            FATAL_ERROR("Type::chk_this_variant");
+            break;
+          }
+        }
+        if (mismatch && ret == 0) {
+          if (!global || coding_strings != NULL) {
+            // don't display this if there were parsing errors in the variant 
+            // attribute, or if it didn't have encoding strings
+            swa->error("Variant attribute is not related to %s encoding",
+              get_encoding_name(coding));
+          }
+        }
+        if (new_ber && !ber_found) {
+          delete berattrib;
+          berattrib = NULL;
+        }
+        if (new_raw && !raw_found) {
+          delete rawattrib;
+          rawattrib = NULL;
+        }
+        if (new_text && !text_found) {
+          delete textattrib;
+          textattrib = NULL;
+        }
+        if (new_xer && !xer_found) {
+          delete xerattrib;
+          xerattrib = NULL;
+        }
+        if (new_json && !json_found) {
+          delete jsonattrib;
+          jsonattrib = NULL;
+        }
       }
     }
-    else if (!erroneous && !global) { // PER or custom encoding
-      swa->warning("Variant attributes related to %s encoding are ignored",
-        get_encoding_name(coding));
+    if (codings.size() != 0) {
+      for (size_t i = 0; i < codings.size(); ++i) {
+        delete codings[i];
+      }
+      codings.clear();
     }
   } // if t != NULL
   if (global) {

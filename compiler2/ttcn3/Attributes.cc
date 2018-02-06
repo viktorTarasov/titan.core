@@ -883,6 +883,17 @@ namespace Ttcn {
   }
 
   // ==== AttributeSpec ====
+  
+  AttributeSpec::~AttributeSpec()
+  {
+    if (encodings != NULL) {
+      for (size_t i = 0; i < encodings->size(); ++i) {
+        delete (*encodings)[i];
+      }
+      encodings->clear();
+      delete encodings;
+    }
+  }
 
   AttributeSpec* AttributeSpec::clone() const
   {
@@ -897,8 +908,15 @@ namespace Ttcn {
   void AttributeSpec::dump(unsigned level) const
   {
     DEBUG(level,"spec: %s", spec.c_str());
-    if (!encoding.empty()) {
-      DEBUG(level, "encoding: %s", encoding.c_str());
+    if (encodings != NULL) {
+      string res;
+      for (size_t i = 0; i < encodings->size(); ++i) {
+        if (i != 0) {
+          res += ", ";
+        }
+        res += *(*encodings)[i];
+      }
+      DEBUG(level, "encoding(s): %s", res.c_str());
     }
   }
 
@@ -1203,7 +1221,7 @@ namespace Ttcn {
             "attributes. Modifier ignored.");
         }
       }
-      if (!temp_attrib->get_attribSpec().get_encoding().empty() &&
+      if (temp_attrib->get_attribSpec().get_encodings() != NULL &&
           (legacy_codec_handling ||
            temp_attrib->get_attribKeyword() != SingleWithAttrib::AT_VARIANT)) {
         temp_attrib->error("Invalid attribute format. Dot notation is only "

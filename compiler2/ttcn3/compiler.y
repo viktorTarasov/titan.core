@@ -217,6 +217,7 @@ static const string anyname("anytype");
   param_eval_t eval;
   TypeMappingTargets *typemappingtargets;
   attribute_modifier_t attrib_mod;
+  vector<string>* string_vector;
 
   struct {
     bool is_raw;
@@ -1130,6 +1131,7 @@ AllOrTypeListWithTo TypeListWithFrom TypeListWithTo
 %type <single_value_redirect_list> SingleValueSpecList
 %type <typemappingtargets> WithList
 %type <reference_list> PortTypeList
+%type <string_vector> AttribSpecEncodings
 
 /*********************************************************************
  * Destructors
@@ -1490,6 +1492,7 @@ Quadruple
 AllowedValues
 optSubTypeSpec
 seqValueOrRange
+AttribSpecEncodings
 
 %destructor {
   for(size_t i=0; i<$$.nElements; i++) delete $$.elements[i];
@@ -8331,9 +8334,32 @@ AttribSpec: // 542
   }
 | FreeText '.' FreeText
   {
-    $$ = new AttributeSpec(string($3), string($1));
+    vector<string>* v = new vector<string>;
+    v->add(new string($1));
+    $$ = new AttributeSpec(string($3), v);
     $$->set_location(infile, @$);
     Free($1);
+    Free($3);
+  }
+| '{' AttribSpecEncodings '}' '.' FreeText
+  {
+    $$ = new AttributeSpec(string($5), $2);
+    $$->set_location(infile, @$);
+    Free($5);
+  }
+;
+
+AttribSpecEncodings:
+  FreeText
+  {
+    $$ = new vector<string>;
+    $$->add(new string($1));
+    Free($1);
+  }
+| AttribSpecEncodings ',' FreeText
+  {
+    $$ = $1;
+    $$->add(new string($3));
     Free($3);
   }
 ;
