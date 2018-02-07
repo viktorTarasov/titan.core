@@ -1825,7 +1825,9 @@ void SubType::chk_this_value(Value *value)
   case Value::V_CSTR:
   case Value::V_ISO2022STR:
     if (subtype!=ST_CHARSTRING) FATAL_ERROR("SubType::chk_this_value()");
-    is_invalid = (charstring_st!=NULL) && !charstring_st->is_element(val->get_val_str());
+    is_invalid = (charstring_st!=NULL) && (val->get_valuetype() == Value::V_CSTR ?
+      !charstring_st->is_element(val->get_val_str()) :
+      !charstring_st->is_element(val->get_val_iso2022str()));
     break;
   case Value::V_USTR:
   case Value::V_CHARSYMS:
