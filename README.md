@@ -181,7 +181,16 @@ Compressed update site and SHA512 checksum:
 
 * https://github.com/eclipse/titan.Libraries.TCCUsefulFunctions
 * git://git.eclipse.org/gitroot/titan/titan.Libraries.CLL.git
-* git://git.eclipse.org/gitroot/titan/titan.Libraries.TLS.git 
+* git://git.eclipse.org/gitroot/titan/titan.Libraries.ServiceFramework.git 
+* git://git.eclipse.org/gitroot/titan/titan.Libraries.TLS.git
+* git://git.eclipse.org/gitroot/titan/titan.Libraries.Web_GUI.git 
+
+## Application Libraries:
+
+* git://git.eclipse.org/gitroot/titan/titan.ApplicationLibraries.CoAP.git
+* git://git.eclipse.org/gitroot/titan/titan.ApplicationLibraries.LWM2M.git 
+* git://git.eclipse.org/gitroot/titan/titan.ApplicationLibraries.MQTT.git
+ 
 
 ## Miscellaneous projects: 
 
