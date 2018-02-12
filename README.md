@@ -50,7 +50,7 @@ https://www.eclipse.org/downloads/download.php?file=/titan/TITAN_User_P.pdf
 ## Simplified Titan contributor workflow ( to be applied when agreed previously)
 Committing directly to github.com/eclipse/titan.* using Gerrithub:
 
-* hhttps://docs.google.com/presentation/d/1j5RxJC13gFCCGcLB7ZwyDVCzBWroapUR9AVdqB5fdig/edit#slide=id.p
+* https://docs.google.com/presentation/d/1j5RxJC13gFCCGcLB7ZwyDVCzBWroapUR9AVdqB5fdig/edit#slide=id.p
 
 ## Titan contributor workflow to github.com/eclipse/titan.*
 covering Gerrit code review
