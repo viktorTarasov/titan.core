@@ -40,7 +40,7 @@
 #include "Error.hh"
 #include "Encdec.hh"
 #include "TCov.hh"
-#ifdef LINUX
+#if defined(LINUX) && !defined(ALPINE_LINUX)
 #include <execinfo.h>
 #endif  
 
@@ -67,7 +67,7 @@ void signal_handler(int signum)
     fprintf(stderr,"%s %s: %s\n",ts,stored_argv,signum==SIGABRT?"Abort was called":"Segmentation fault occurred");
   }
   fflush(stderr);
-#ifdef LINUX
+#if defined(LINUX) && !defined(ALPINE_LINUX)
   int nptrs;
   void *buffer[100];
   nptrs = backtrace(buffer, 100);

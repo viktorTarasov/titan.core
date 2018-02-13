@@ -47,6 +47,10 @@
 #include "Error.hh"
 #include "Event_Handler.hh"
 
+#if defined(USE_EPOLL) && !defined(__uint32_t)
+typedef unsigned int __uint32_t;
+#endif
+
 
 class FdMap {
 public:

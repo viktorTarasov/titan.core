@@ -38,7 +38,7 @@
 #include "Encdec.hh"
 #include "TitanLoggerApi.hh"
 #include "TCov.hh"
-#ifdef LINUX
+#if defined(LINUX) && !defined(ALPINE_LINUX)
 #include <execinfo.h>
 #endif  
 
@@ -62,7 +62,7 @@ void signal_handler(int signum)
   } else {
   retval = write(STDERR_FILENO, abortcall , sizeof(abortcall)-1); // sizeof includes \0
   }
-#ifdef LINUX
+#if defined(LINUX) && !defined(ALPINE_LINUX)
   int nptrs;
   void *buffer[100];
   nptrs = backtrace(buffer, 100);

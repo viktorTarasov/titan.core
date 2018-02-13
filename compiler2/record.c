@@ -6841,7 +6841,7 @@ static void defEmptyRecordTemplate(const char *name, const char *dispname,
     src = mputprintf(src, "boolean %s_template::match(const %s& other_value, "
       "boolean) const\n"
 	"{\n"
-    "if (!other_value.is_bound()) return FALSE;"
+    "if (!other_value.is_bound()) return FALSE;\n"
 	"return match(NULL_VALUE);\n"
 	"}\n\n", name, name);
 

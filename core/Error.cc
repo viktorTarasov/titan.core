@@ -29,7 +29,7 @@
 #include "Runtime.hh"
 #include "Charstring.hh"
 
-#ifdef LINUX
+#if defined(LINUX) && !defined(ALPINE_LINUX)
 #include <ucontext.h>
 #include <dlfcn.h>
 #include <execinfo.h>
@@ -41,7 +41,7 @@ using namespace __cxxabiv1;
 
 #endif
 
-#ifdef LINUX
+#if defined(LINUX) && !defined(ALPINE_LINUX)
 
 const size_t MAX_DEPTH=100;
 
