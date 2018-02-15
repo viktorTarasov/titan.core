@@ -2376,7 +2376,7 @@ namespace Ttcn {
               mapped_type->targets[ind].mapping_type = M_FUNCTION;
               mapped_type->targets[ind].mapping.function.prototype = PT_FAST;
               mapped_type->targets[ind].mapping.function.name =
-                mapping_target->get_function()->get_genname_from_scope(my_scope).c_str();
+                pool.add(mapping_target->get_function()->get_genname_from_scope(my_scope));
               mapped_type->targets[ind].mapping.function.dispname =
                 pool.add(mapping_target->get_function()->get_fullname());
 
