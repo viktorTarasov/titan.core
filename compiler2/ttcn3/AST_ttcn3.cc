@@ -4311,6 +4311,7 @@ namespace Ttcn {
   void Def_Template::chk()
   {
     if (checked) return;
+    checked = true;
     Error_Context cntxt(this, "In template definition `%s'",
       id->get_dispname().c_str());
     const string& t_genname = get_genname();
@@ -4350,7 +4351,6 @@ namespace Ttcn {
     }
 
     type->chk_this_template_ref(body);
-    checked = true;
     Type *t = type->get_type_refd_last();
     if (t->get_typetype() == Type::T_PORT) {
       error("Template cannot be defined for port type `%s'",
