@@ -3509,6 +3509,14 @@ namespace Common {
       return false;
     }
     
+    // optimization: if it already has the encoding set, then the answer is true
+    for (size_t i = 0; i < coding_table.size(); ++i) {
+      if (coding_table[i]->built_in &&
+          coding_table[i]->built_in_coding == coding) {
+        return true;
+      }
+    }
+    
     switch (typetype) {
     case T_SEQ_T:
     case T_SEQ_A:
