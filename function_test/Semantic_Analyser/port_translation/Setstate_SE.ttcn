@@ -14,14 +14,14 @@
 
 module Setstate_SE { //^In TTCN-3 module//
 
-	const integer i1 := 4;
+	const integer i1 := 5;
 	const integer i2 := 9999999999999999999999999999999999999999999999999999;
 
 	function f() { //^In function definition \`f\'\://
-		port.setstate(-1); //^In setstate statement\:// //^In first parameter\:// //^error\: The value of the first parameter must be 0\, 1\, 2 or 3\.//
-		port.setstate(9999999999999999999999999999999999999999999999999999); //^In setstate statement\:// //^In first parameter\:// //^error\: The value of the first parameter must be 0\, 1\, 2 or 3\.//
-		port.setstate(i1); //^In setstate statement\:// //^In first parameter\:// //^error\: The value of the first parameter must be 0\, 1\, 2 or 3\.//
-		port.setstate(i2); //^In setstate statement\:// //^In first parameter\:// //^error\: The value of the first parameter must be 0\, 1\, 2 or 3\.//
+		port.setstate(-1); //^In setstate statement\:// //^In first parameter\:// //^error\: The value of the first parameter must be 0\, 1\, 2\, 3 or 4\.//
+		port.setstate(9999999999999999999999999999999999999999999999999999); //^In setstate statement\:// //^In first parameter\:// //^error\: The value of the first parameter must be 0\, 1\, 2\, 3 or 4\.//
+		port.setstate(i1); //^In setstate statement\:// //^In first parameter\:// //^error\: The value of the first parameter must be 0\, 1\, 2\, 3 or 4\.//
+		port.setstate(i2); //^In setstate statement\:// //^In first parameter\:// //^error\: The value of the first parameter must be 0\, 1\, 2\, 3 or 4\.//
 	}
 
 }
