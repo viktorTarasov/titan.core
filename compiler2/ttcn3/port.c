@@ -212,7 +212,7 @@ static char *generate_send_mapping(char *src, const port_def *pdef,
     }
     if (!pdef->legacy && pdef->port_type == USER) {
       src = mputprintf(src,
-        "} else if (port_state == FRAGMENTED) {\n"
+        "} else if (port_state == FRAGMENTED || port_state == DISCARDED) {\n"
         "return;\n"
         "} else if (port_state == UNSET) {\n"
         "TTCN_error(\"The state of the port %%s remained unset after the mapping function %s finished.\", port_name);\n"
@@ -418,7 +418,7 @@ static char *generate_incoming_mapping(char *src, const port_def *pdef,
           "}");
         if (pdef->port_type == USER && !pdef->legacy) {
           src = mputprintf(src,
-            " else if (port_state == FRAGMENTED) {\n"
+            " else if (port_state == FRAGMENTED || port_state == DISCARDED) {\n"
             "delete mapped_par;\n"
             "return;\n"
             "}"

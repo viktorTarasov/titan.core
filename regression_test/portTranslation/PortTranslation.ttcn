@@ -201,6 +201,25 @@ module PortTranslation {
 	} with {
 		extension "prototype(fast)";
 	}
+	
+	function int_to_float_discard(in integer i, out float j) {
+		port.setstate(4); // discarded
+	} with {
+		extension "prototype(fast)";
+	}
+	
+	function char_to_hex3(in charstring i, out hexstring j) {
+	  j := oct2hex(char2oct(i));
+	  port.setstate(0); // translated
+	} with {
+		extension "prototype(fast)";
+	}
+	
+	function bool_to_bool_discard(in boolean i, out boolean j) {
+		port.setstate(4); // discarded
+	} with {
+		extension "prototype(fast)";
+	}
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -235,6 +254,13 @@ module PortTranslation {
 		out bitstring, hexstring, integer
 		inout octetstring
 	}
+	
+	type port P4 message {
+	  inout integer, charstring
+	  out boolean
+	} with {
+	  extension "provider"
+	}
 
 	type port PT2 message map to P1, P2 {
 		in charstring from charstring with char_to_char()
@@ -250,10 +276,18 @@ module PortTranslation {
 		var hexstring buffer := ''H;
 		var bitstring bit_buffer := ''B;
 	}
+	
+	type port PT3 message map to P4 {
+	  in hexstring from charstring with char_to_hex3()
+	  in float from integer with int_to_float_discard()
+	  out integer, charstring
+	  out boolean to boolean with bool_to_bool_discard()
+	}
 
 
 	type component MyComp {
 		port PT2 p;
+		port PT3 p3;
 
 		// Extra port types to check if multiple map/unmaps does not make things go bad
 		port PT2 p11;
@@ -265,6 +299,7 @@ module PortTranslation {
 		port P1 p1
 		port P2 p2
 		port P3 p3
+		port P4 p4
 
 		// Extra port types to check if multiple map/unmaps does not make things go bad
 		port P1 p11
@@ -693,6 +728,16 @@ module PortTranslation {
 		}
 		t.stop;
 	}
+	
+	// This tests the 'discard' option in the 'setstate' operation when sending
+	testcase tc_send_discarded() runs on MyComp system System {
+	  map(self:p3, system:p4);
+	  
+	  p3.send(true);
+		// a boolean (true) is sent on the main port, but the translation function discards it,
+		// so nothing is sent to the provider port (this is tested in the provider port implementation).
+		setverdict(pass);
+  }
 
 	testcase tc_receive_fragmented() runs on MyComp system System {
 		map(self:p, system:p1);
@@ -741,6 +786,38 @@ module PortTranslation {
 		}
 		t.stop;
 	}
+	
+	// This tests the 'discard' option in the 'setstate' operation when receiving
+	testcase tc_receive_discarded() runs on MyComp system System {
+	  map(self:p3, system:p4);
+	  
+	  p3.send(123);
+		timer t := 0.5;
+		t.start;
+		// an integer (123) is received on the provider port, but the translation function discards it,
+		// so it does not reach the main port
+		alt {
+			[] p3.receive(float: ?) { setverdict(fail, "Test #1 failed. Received float value."); }
+			[] p3.receive(hexstring: ?) { setverdict(fail, "Test #1 failed. Received hexstring value."); }
+			[] t.timeout { setverdict(pass); }
+		}
+		t.stop;
+		
+		p3.send(-10);
+		p3.send("abc");
+		var hexstring bad;
+		t.start;
+		// an integer (-10) and a charstring ("abc") are received on the provider port,
+		// the translation functions discard the integer and convert the charstring into a hexstring,
+		// so only the hexstring is received on the main port
+		alt {
+		  [] p3.receive(hexstring: '616263'H) { setverdict(pass); }
+		  [] p3.receive(hexstring: ?) -> value bad { setverdict(fail, "Test #2 failed. Received invalid hexstring: ", bad); }
+		  [] p3.receive(float: ?) { setverdict(fail, "Test #2 failed. Received float value."); }
+		  [] t.timeout { setverdict(fail, "Test #2 timed out."); }
+		}
+		t.stop;
+	}
 
 	control {
 		execute(tc_send())
@@ -753,9 +830,13 @@ module PortTranslation {
 
 		execute(tc_send_partially_translated());
 		execute(tc_send_fragmented());
+		
+		execute(tc_send_discarded());
 
 		execute(tc_receive_partially_translated());
 		execute(tc_receive_fragmented());
+		
+		execute(tc_receive_discarded());
 	}
 
 }

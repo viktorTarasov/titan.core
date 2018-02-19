@@ -5791,6 +5791,7 @@ error:
             case 1:
             case 2:
             case 3:
+            case 4:
               break;
             default:
               error = true;
@@ -5799,7 +5800,7 @@ error:
           error = true;
         }
         if (error) {
-          setstate_op.val->error("The value of the first parameter must be 0, 1, 2 or 3.");
+          setstate_op.val->error("The value of the first parameter must be 0, 1, 2, 3 or 4.");
         }
       }
     }

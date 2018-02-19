@@ -1534,6 +1534,9 @@ void LoggerPluginManager::log_setstate(const char *port_name, translation_port_s
     case PARTIALLY_TRANSLATED:
       setstate.state() = "partially translated";
       break;
+    case DISCARDED:
+      setstate.state() = "discarded";
+      break;
     default:
       TTCN_Logger::fatal_error("LoggerPluginManager::log_setstate(): unexpected port state");
   }

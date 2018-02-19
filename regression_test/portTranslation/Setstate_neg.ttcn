@@ -22,7 +22,7 @@ module Setstate_neg {
 	}
 
 	function int_to_char_bad2(in integer i, out charstring j) {
-		if (i == 4) {
+		if (i == 5) {
 			port.setstate(i);
 		} else {
 			port.setstate(1); // Not translated
@@ -32,7 +32,7 @@ module Setstate_neg {
 	}
 
 	function int_to_char_bad3(in integer i, out charstring j) {
-		if (i != 5) {
+		if (i != 6) {
 			port.setstate(1); // Not translated
 		}
 		// otherwise the state will remain unset which will cause an error.
@@ -75,18 +75,7 @@ module Setstate_neg {
 			p.send(-1);
 			setverdict(fail);
 		} @catch(e) {
-			if (match(e, "Dynamic test case error: The value of the first parameter in the setstate operation must be 0, 1, 2 or 3.")) {
-				setverdict(pass);
-			} else {
-				setverdict(fail);
-			}
-		}
-
-		@try {
-			p.send(4);
-			setverdict(fail);
-		} @catch(e) {
-			if (match(e, "Dynamic test case error: The value of the first parameter in the setstate operation must be 0, 1, 2 or 3.")) {
+			if (match(e, "Dynamic test case error: The value of the first parameter in the setstate operation must be 0, 1, 2, 3 or 4.")) {
 				setverdict(pass);
 			} else {
 				setverdict(fail);
@@ -95,6 +84,17 @@ module Setstate_neg {
 
 		@try {
 			p.send(5);
+			setverdict(fail);
+		} @catch(e) {
+			if (match(e, "Dynamic test case error: The value of the first parameter in the setstate operation must be 0, 1, 2, 3 or 4.")) {
+				setverdict(pass);
+			} else {
+				setverdict(fail);
+			}
+		}
+
+		@try {
+			p.send(6);
 			setverdict(fail);
 		} @catch(e) {
 			if (match(e, "Dynamic test case error: The state of the port p remained unset after the mapping function @Setstate_neg.int_to_char_bad3 finished.")) {
@@ -116,7 +116,7 @@ module Setstate_neg {
 		}
 
 		// Will be successful
-		p.send(6);
+		p.send(7);
 	}
 
 	control {

@@ -135,7 +135,8 @@ enum translation_port_state {
   TRANSLATED = 0,
   NOT_TRANSLATED = 1,
   FRAGMENTED = 2,
-  PARTIALLY_TRANSLATED = 3
+  PARTIALLY_TRANSLATED = 3,
+  DISCARDED = 4
 };
 
 #endif

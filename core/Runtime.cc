@@ -126,9 +126,9 @@ void TTCN_Runtime::set_port_state(const INTEGER& state, const CHARSTRING& info, 
   if (translation_count > 0) {
     if (p != NULL) {
       int lowed_end = by_system ? -1 : 0;
-      if (state < lowed_end || state > 3) {
+      if (state < lowed_end || state > 4) {
         translation_count--;
-        TTCN_error("The value of the first parameter in the setstate operation must be 0, 1, 2 or 3.");
+        TTCN_error("The value of the first parameter in the setstate operation must be 0, 1, 2, 3 or 4.");
       }
       p->change_port_state((translation_port_state)((int)state));
       TTCN_Logger::log_setstate(p->get_name(), (translation_port_state)((int)state), info);
