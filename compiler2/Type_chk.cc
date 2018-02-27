@@ -5459,6 +5459,8 @@ void Type::chk_this_value_Verdict(Value *value)
 void Type::chk_this_value_Default(Value *value)
 {
   switch (value->get_valuetype()) {
+  case Value::V_DEFAULT_NULL:
+    break;
   case Value::V_TTCN3_NULL:
     value->set_valuetype(Value::V_DEFAULT_NULL);
     break;
