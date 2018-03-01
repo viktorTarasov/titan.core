@@ -426,6 +426,9 @@ external function f_dec_obj(in octetstring x) return Object
 
 external function f_dec_null(in octetstring x) return HasNull
   with { extension "prototype(convert) decode(JSON)" }
+
+external function f_dec_pduwithid(in octetstring x) return PduWithId
+  with { extension "prototype(convert) decode(JSON)" }
   
 //============== Internal Functions ====================
   

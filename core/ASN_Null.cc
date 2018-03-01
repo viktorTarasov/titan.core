@@ -318,7 +318,7 @@ int ASN_NULL::JSON_encode(const TTCN_Typedescriptor_t&, JSON_Tokenizer& p_tok) c
   return p_tok.put_next_token(JSON_TOKEN_LITERAL_NULL);
 }
 
-int ASN_NULL::JSON_decode(const TTCN_Typedescriptor_t&, JSON_Tokenizer& p_tok, boolean p_silent)
+int ASN_NULL::JSON_decode(const TTCN_Typedescriptor_t&, JSON_Tokenizer& p_tok, boolean p_silent, int)
 {
   json_token_t token = JSON_TOKEN_NONE;
   size_t dec_len = p_tok.get_next_token(&token, NULL, NULL);

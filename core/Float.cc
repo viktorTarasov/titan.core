@@ -1103,7 +1103,7 @@ int FLOAT::JSON_encode(const TTCN_Typedescriptor_t&, JSON_Tokenizer& p_tok) cons
   return enc_len;
 }
 
-int FLOAT::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& p_tok, boolean p_silent)
+int FLOAT::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& p_tok, boolean p_silent, int)
 {
   bound_flag = FALSE;
   json_token_t token = JSON_TOKEN_NONE;

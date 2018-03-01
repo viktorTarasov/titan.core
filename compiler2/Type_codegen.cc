@@ -37,6 +37,7 @@
 #include "ttcn3/signature.h"
 #include "XerAttributes.hh"
 #include "ttcn3/RawAST.hh"
+#include "ttcn3/JsonAST.hh"
 
 #include "asn1/TableConstraint.hh"
 #include "asn1/Object.hh"
@@ -1071,7 +1072,7 @@ void Type::generate_code_jsondescriptor(output_struct *target)
       , get_genname_own().c_str() 
       , jsonattrib->omit_as_null ? "TRUE" : "FALSE"
       , alias ? alias : "NULL"
-      , jsonattrib->as_value ? "TRUE" : "FALSE"
+      , (jsonattrib->as_value || jsonattrib->tag_list != NULL) ? "TRUE" : "FALSE"
       , def_val ? def_val : "NULL"
       , jsonattrib->metainfo_unbound ? "TRUE" : "FALSE"
       , jsonattrib->as_number ? "TRUE" : "FALSE");
@@ -1797,6 +1798,67 @@ void Type::generate_code_Se(output_struct *target)
       cur.jsonAlias = type->jsonattrib->alias;
       cur.jsonDefaultValue = type->jsonattrib->default_value;
       cur.jsonMetainfoUnbound = type->jsonattrib->metainfo_unbound;
+      if (type->jsonattrib->tag_list != NULL) {
+        rawAST_tag_list* tag_list = type->jsonattrib->tag_list;
+        sdef.elements[i].jsonChosen = (rawAST_coding_taglist_list*)
+          Malloc(sizeof(rawAST_coding_taglist_list));
+        sdef.elements[i].jsonChosen->nElements = tag_list->nElements;
+        sdef.elements[i].jsonChosen->list = (rawAST_coding_taglist*)
+          Malloc(tag_list->nElements * sizeof(rawAST_coding_taglist));
+        for (int c = 0; c < tag_list->nElements; ++c) {
+          if (tag_list->tag[c].nElements != 0) {
+            sdef.elements[i].jsonChosen->list[c].fields =
+              (rawAST_coding_field_list*)Malloc(tag_list->tag[c].nElements *
+              sizeof(rawAST_coding_field_list));
+          }
+          else {
+            sdef.elements[i].jsonChosen->list[c].fields = NULL;
+          }
+          sdef.elements[i].jsonChosen->list[c].nElements =
+            tag_list->tag[c].nElements;
+          Identifier* union_field_id = tag_list->tag[c].fieldName;
+          sdef.elements[i].jsonChosen->list[c].fieldName = union_field_id != NULL ?
+            union_field_id->get_name().c_str() : NULL; // TODO: currently unused
+          sdef.elements[i].jsonChosen->list[c].fieldnum = union_field_id != NULL ?
+            type->get_type_refd_last()->get_comp_index_byName(
+            *tag_list->tag[c].fieldName) : -2;
+          for (int a = 0; a <tag_list->tag[c].nElements; ++a) {
+            rawAST_coding_field_list* key =
+              sdef.elements[i].jsonChosen->list[c].fields + a;
+            key->nElements = tag_list->tag[c].keyList[a].keyField->nElements;
+            key->value = tag_list->tag[c].keyList[a].value;
+            key->fields = (rawAST_coding_fields*)
+              Malloc(key->nElements * sizeof(rawAST_coding_fields));
+            Type *t = this;
+            for (int b = 0; b < key->nElements; ++b) {
+              Identifier* current_field_id =
+                tag_list->tag[c].keyList[a].keyField->names[b];
+              size_t current_field_index = t->get_comp_index_byName(*current_field_id);
+              CompField* current_field = t->get_comp_byIndex(current_field_index);
+              key->fields[b].nthfield = current_field_index;
+              key->fields[b].nthfieldname = current_field_id->get_name().c_str();
+              if (t->typetype == T_CHOICE_T) {
+                key->fields[b].fieldtype = UNION_FIELD;
+              }
+              else if (current_field->get_is_optional()) {
+                key->fields[b].fieldtype = OPTIONAL_FIELD;
+              }
+              else {
+                key->fields[b].fieldtype = MANDATORY_FIELD;
+              }
+              Type *field_type = current_field->get_type();
+              key->fields[b].type =
+                pool.add(field_type->get_genname_value(my_scope));
+              key->fields[b].typedescr =
+                pool.add(field_type->get_genname_typedescriptor(my_scope));
+              t = field_type->get_type_refd_last();
+            }
+          }
+        }
+      }
+      else {
+        sdef.elements[i].jsonChosen = NULL;
+      }
     } // if jsonattrib
   } // next element
 
@@ -2085,6 +2147,17 @@ void Type::generate_code_Se(output_struct *target)
   for(size_t i = 0; i < sdef.totalElements; i++) {
     // free the array but not the strings
     if (sdef.elements[i].xerAnyNum > 0) Free(sdef.elements[i].xerAnyUris);
+    
+    if (sdef.elements[i].jsonChosen != NULL) {
+      for (int j = 0; j < sdef.elements[i].jsonChosen->nElements; ++j) {
+        for (int k = 0; k < sdef.elements[i].jsonChosen->list[j].nElements; ++k) {
+          Free(sdef.elements[i].jsonChosen->list[j].fields[k].fields);
+        }
+        Free(sdef.elements[i].jsonChosen->list[j].fields);
+      }
+      Free(sdef.elements[i].jsonChosen->list);
+      Free(sdef.elements[i].jsonChosen);
+    }
   } // next i
 
   if (sdef.hasRaw) {

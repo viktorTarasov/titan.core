@@ -318,6 +318,39 @@ with {
   variant (so) "JSON: default({})";
 }
 
+type record PduWithId {
+  integer protocolId,
+  Choices field1 optional,
+  Choices field2 optional
+}
+with {
+  variant (field1) "chosen (type1, { protocolId = 1, protocolId = 11 }; type2, protocolId = 2; omit, protocolId = 3; type3, otherwise)";
+  variant (field2) "chosen (type1, protocolId = 2; type2, { protocolId = 10, protocolId = 11 }; type3, protocolId = 3)"; // no otherwise
+}
+
+type union Choices {
+  StructType1 type1,
+  StructType2 type2,
+  StructType3 type3
+}
+
+type record StructType1 {
+  integer num,
+  charstring str
+}
+
+type record StructType2 {
+  integer num,
+  universal charstring str
+}
+
+type record StructType3 {
+  float num,
+  charstring str
+}
+
+type record of PduWithId PduWithIdList;
+
 } with {
   encode "JSON";
   extension "anytype integer, charstring, R, RoI, Thing";

@@ -15,6 +15,7 @@
 
 #include "../datatypes.h"
 #include "../vector.hh"
+#include "RawAST.hh"
 
 class JsonSchemaExtension {
 private:
@@ -41,6 +42,7 @@ class JsonAST {
     vector<JsonSchemaExtension> schema_extensions;
     boolean metainfo_unbound;
     boolean as_number;
+    rawAST_tag_list* tag_list;
   
     JsonAST() { init_JsonAST(); }
     JsonAST(const JsonAST *other_val);

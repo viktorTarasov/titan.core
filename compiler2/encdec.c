@@ -81,7 +81,8 @@ void def_encdec(const char *p_classname,
   if(json) {
     def = mputprintf(def,
       "int JSON_encode(const TTCN_Typedescriptor_t&, JSON_Tokenizer&) const;\n"
-      "int JSON_decode(const TTCN_Typedescriptor_t&, JSON_Tokenizer&, boolean);\n");
+      "int JSON_decode(const TTCN_Typedescriptor_t&, JSON_Tokenizer&, boolean, "
+      "int p_chosen_field = CHOSEN_FIELD_UNSET);\n");
   }
   if(oer) {
     def = mputprintf(def,

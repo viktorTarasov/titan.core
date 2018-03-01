@@ -967,7 +967,7 @@ public:
   
   /** Decodes accordingly to the JSON encoding rules.
     * Returns the length of the decoded data. */
-  int JSON_decode(const TTCN_Typedescriptor_t&, JSON_Tokenizer&, boolean);
+  int JSON_decode(const TTCN_Typedescriptor_t&, JSON_Tokenizer&, boolean, int p_chosen_field = CHOSEN_FIELD_UNSET);
   
   // alt-status priority: ALT_YES (return immediately) > ALT_REPEAT > ALT_MAYBE > ALT_NO
   alt_status done(VERDICTTYPE* value_redirect, Index_Redirect* index_redirect) const
@@ -1355,7 +1355,7 @@ int VALUE_ARRAY<T_type,array_size,index_offset>::JSON_encode(
 
 template <typename T_type, unsigned int array_size, int index_offset>
 int VALUE_ARRAY<T_type,array_size,index_offset>::JSON_decode(
-  const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& p_tok, boolean p_silent)
+  const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& p_tok, boolean p_silent, int)
 {
   json_token_t token = JSON_TOKEN_NONE;
   size_t dec_len = p_tok.get_next_token(&token, NULL, NULL);

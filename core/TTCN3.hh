@@ -41,6 +41,7 @@
 #include "version.h"
 #include <cversion.h>
 
+#include "JSON.hh"
 #include "Vector.hh"
 #include "Basetype.hh"
 #include "Template.hh"
@@ -87,7 +88,6 @@
 #include "RAW.hh"
 #include "TEXT.hh"
 #include "XER.hh"
-#include "JSON.hh"
 #include "OER.hh"
 #include "Error.hh"
 #include "XmlReader.hh"

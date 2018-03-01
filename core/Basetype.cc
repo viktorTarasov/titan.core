@@ -1026,7 +1026,7 @@ int Base_Type::JSON_encode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer&) c
   return 0;
 }
 
-int Base_Type::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer&, boolean) 
+int Base_Type::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer&, boolean, int) 
 {
   TTCN_error("JSON decoding requested for type '%s' which has no"
              " JSON decoding method.", p_td.name);

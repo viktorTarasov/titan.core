@@ -758,7 +758,7 @@ int BOOLEAN::JSON_encode(const TTCN_Typedescriptor_t&, JSON_Tokenizer& p_tok) co
   return p_tok.put_next_token((boolean_value) ? JSON_TOKEN_LITERAL_TRUE : JSON_TOKEN_LITERAL_FALSE, NULL);
 }
 
-int BOOLEAN::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& p_tok, boolean p_silent)
+int BOOLEAN::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& p_tok, boolean p_silent, int)
 {
   json_token_t token = JSON_TOKEN_NONE;
   size_t dec_len = 0;

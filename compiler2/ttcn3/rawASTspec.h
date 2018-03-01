@@ -58,7 +58,7 @@ typedef struct{
 
 typedef struct{
     const char* fieldName;
-    int fieldnum;
+    int fieldnum; /* -2 == omit (for JSON only) */
     int nElements;
     rawAST_coding_field_list* fields;
 }rawAST_coding_taglist;

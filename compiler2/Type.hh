@@ -36,12 +36,12 @@
 #include "ttcn3/rawASTspec.h"
 #include "ttcn3/TextAST.hh"
 #include "ttcn3/BerAST.hh"
-#include "ttcn3/JsonAST.hh"
 #include "ttcn3/OerAST.hh"
 #include <float.h>
 
 class XerAttributes;
 class RawAST;
+class JsonAST;
 enum namedbool { INCOMPLETE_NOT_ALLOWED = 0, INCOMPLETE_ALLOWED = 1, WARNING_FOR_INCOMPLETE = 2,
   NO_SUB_CHK = 0, SUB_CHK = 3,
   OMIT_NOT_ALLOWED = 0, OMIT_ALLOWED = 4,
@@ -897,6 +897,7 @@ namespace Common {
     
     void chk_json();
     void chk_json_default();
+    void chk_json_tag_list();
     /** If the type does not have a jsonattrib, create one. */
     void force_json();
 
