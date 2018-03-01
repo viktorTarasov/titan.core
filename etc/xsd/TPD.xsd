@@ -68,7 +68,7 @@
                       </xs:simpleType>
                     </xs:element>
                     <xs:element name="targetExecutable" minOccurs="0" maxOccurs="1" type="xs:normalizedString" />
-					<xs:element name="TTCN3preprocessor" minOccurs="0" maxOccurs="1" type="xs:normalizedString" />
+                    <xs:element name="TTCN3preprocessor" minOccurs="0" maxOccurs="1" type="xs:normalizedString" />
                     <xs:element name="TTCN3preprocessorDefines" minOccurs="0" maxOccurs="1">
                       <xs:complexType>
                         <xs:sequence>
@@ -76,7 +76,7 @@
                         </xs:sequence>
                       </xs:complexType>
                     </xs:element>
-					<xs:element name="TTCN3preprocessorUndefines" minOccurs="0" maxOccurs="1">
+                    <xs:element name="TTCN3preprocessorUndefines" minOccurs="0" maxOccurs="1">
                       <xs:complexType>
                         <xs:sequence>
                           <xs:element name="listItem" minOccurs="1" maxOccurs="unbounded" type="xs:normalizedString" />
@@ -90,7 +90,7 @@
                         </xs:sequence>
                       </xs:complexType>
                     </xs:element>
-					<xs:element name="preprocessorUndefines" minOccurs="0" maxOccurs="1">
+                    <xs:element name="preprocessorUndefines" minOccurs="0" maxOccurs="1">
                       <xs:complexType>
                         <xs:sequence>
                           <xs:element name="listItem" minOccurs="1" maxOccurs="unbounded" type="xs:normalizedString" />
