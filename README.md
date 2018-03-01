@@ -168,7 +168,8 @@ Compressed update site and SHA512 checksum:
 * git://git.eclipse.org/gitroot/titan/titan.ProtocolModules.STUN_RFC5389.git 
 * git://git.eclipse.org/gitroot/titan/titan.ProtocolModules.SUA.git 
 * git://git.eclipse.org/gitroot/titan/titan.ProtocolModules.TLS.git 
-* git://git.eclipse.org/gitroot/titan/titan.ProtocolModules.WTP.git 
+* git://git.eclipse.org/gitroot/titan/titan.ProtocolModules.WTP.git
+* git://git.eclipse.org/gitroot/titan/titan.ProtocolModules.XTDP.git 
 
 
 ## Protocol Emulations
@@ -191,6 +192,11 @@ Compressed update site and SHA512 checksum:
 * git://git.eclipse.org/gitroot/titan/titan.ApplicationLibraries.LWM2M.git 
 * git://git.eclipse.org/gitroot/titan/titan.ApplicationLibraries.MQTT.git
  
+## Applications:
+
+* git://git.eclipse.org/gitroot/titan/titan.Applications.IoT_Functiontest_Framework.git
+* git://git.eclipse.org/gitroot/titan/titan.Applications.IoT_Loadtest_Framework.git
+* git://git.eclipse.org/gitroot/titan/titan.Applications.RIoT.git
 
 ## Miscellaneous projects: 
 
