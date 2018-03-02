@@ -25,6 +25,7 @@
 #define BASETYPE_HH
 
 #include "Types.h"
+#include "JSON.hh"
 #include "Encdec.hh"
 #include "RInt.hh"
 #include "JSON_Tokenizer.hh"
@@ -613,7 +614,7 @@ public:
   /** Decode JSON.
    * @return decoded length
    * @note Basetype::JSON_decode throws an error. */
-  VIRTUAL_IF_RUNTIME_2 int JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer&, boolean);
+  VIRTUAL_IF_RUNTIME_2 int JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer&, boolean, int p_chosen_field = CHOSEN_FIELD_UNSET);
   
   /** Encode OER.
    * @return encoded length
@@ -865,7 +866,7 @@ public:
   
   /** Decodes accordingly to the JSON encoding rules.
     * Returns the length of the decoded data. */
-  int JSON_decode(const TTCN_Typedescriptor_t&, JSON_Tokenizer&, boolean);
+  int JSON_decode(const TTCN_Typedescriptor_t&, JSON_Tokenizer&, boolean, int p_chosen_field = CHOSEN_FIELD_UNSET);
   
   /** Encodes accordingly to the OER encoding rules.
     * Returns the length of the encoded data. */
@@ -1028,7 +1029,7 @@ public:
   
   /** Decodes accordingly to the JSON encoding rules.
     * Returns the length of the decoded data. */
-  int JSON_decode(const TTCN_Typedescriptor_t&, JSON_Tokenizer&, boolean);
+  int JSON_decode(const TTCN_Typedescriptor_t&, JSON_Tokenizer&, boolean, int p_chosen_field = CHOSEN_FIELD_UNSET);
   
   /** Encodes accordingly to the JSON encoding rules.
     * Returns the length of the encoded data. */
@@ -1107,7 +1108,7 @@ public:
   
   /** Decodes accordingly to the JSON encoding rules.
     * Returns the length of the decoded data. */
-  virtual int JSON_decode(const TTCN_Typedescriptor_t&, JSON_Tokenizer&, boolean);
+  virtual int JSON_decode(const TTCN_Typedescriptor_t&, JSON_Tokenizer&, boolean, int p_chosen_field = CHOSEN_FIELD_UNSET);
   
   /** Encodes accordingly to the OER encoding rules.
     * Returns the length of the encoded data. */

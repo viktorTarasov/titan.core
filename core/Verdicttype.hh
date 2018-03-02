@@ -108,7 +108,7 @@ public:
   
   /** Decodes accordingly to the JSON encoding rules.
     * Returns the length of the decoded data. */
-  int JSON_decode(const TTCN_Typedescriptor_t&, JSON_Tokenizer&, boolean);
+  int JSON_decode(const TTCN_Typedescriptor_t&, JSON_Tokenizer&, boolean, int p_chosen_field = CHOSEN_FIELD_UNSET);
 };
 
 inline boolean operator==(verdicttype par_value, verdicttype other_value)

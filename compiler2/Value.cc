@@ -53,6 +53,7 @@
 #include "ttcn3/Statement.hh"
 
 #include "ttcn3/Attributes.hh"
+#include "ttcn3/JsonAST.hh"
 #include "../common/JSON_Tokenizer.hh"
 #include "ttcn3/Ttcn2Json.hh"
 

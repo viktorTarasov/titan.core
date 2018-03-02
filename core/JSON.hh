@@ -125,6 +125,11 @@ enum json_metainfo_t {
   JSON_METAINFO_UNBOUND
 };
 
+enum json_chosen_field_t {
+  CHOSEN_FIELD_UNSET = -1,
+  CHOSEN_FIELD_OMITTED = -2
+};
+
 // JSON decoding error messages
 #define JSON_DEC_BAD_TOKEN_ERROR "Failed to extract valid token, invalid JSON format%s"
 #define JSON_DEC_FORMAT_ERROR "Invalid JSON %s format, expecting %s value"
@@ -141,6 +146,9 @@ enum json_metainfo_t {
 #define JSON_DEC_METAINFO_NAME_ERROR "Meta info provided for non-existent field '%.*s'"
 #define JSON_DEC_METAINFO_VALUE_ERROR "Invalid meta info for field '%s'"
 #define JSON_DEC_METAINFO_NOT_APPLICABLE "Meta info not applicable to field '%s'"
+#define JSON_DEC_CHOSEN_FIELD_NOT_NULL "Invalid JSON token, expecting 'null' (as indicated by a condition in attribute 'chosen')%s"
+#define JSON_DEC_CHOSEN_FIELD_OMITTED "Field '%s' cannot be omitted (as indicated by a condition in attribute 'chosen')"
+#define JSON_DEC_CHOSEN_FIELD_OMITTED_NULL "Field cannot be omitted (as indicated by a condition in attribute 'chosen')%s"
 
 
 // Functions for conversion between json and cbor and vice versa

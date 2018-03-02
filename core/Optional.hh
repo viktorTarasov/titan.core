@@ -340,7 +340,7 @@ public:
   
   /** Decodes accordingly to the JSON encoding rules.
     * Returns the length of the decoded data. */
-  int JSON_decode(const TTCN_Typedescriptor_t&, JSON_Tokenizer&, boolean);
+  int JSON_decode(const TTCN_Typedescriptor_t&, JSON_Tokenizer&, boolean, int p_chosen_field = CHOSEN_FIELD_UNSET);
   
   /** Encodes accordingly to the OER encoding rules.
     * Returns the length of the encoded data. */
@@ -871,12 +871,28 @@ int OPTIONAL<T_type>::JSON_encode_negtest(const Erroneous_descriptor_t* p_err_de
 #endif
 
 template<typename T_type>
-int OPTIONAL<T_type>::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& p_tok, boolean p_silent)
+int OPTIONAL<T_type>::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& p_tok, boolean p_silent, int p_chosen_field)
 {
   // try the optional value first
   set_to_present();
   size_t buf_pos = p_tok.get_buf_pos();
-  int dec_len = optional_value->JSON_decode(p_td, p_tok, p_silent);
+  int dec_len = 0;
+  if (CHOSEN_FIELD_OMITTED == p_chosen_field) {
+    // the attribute 'chosen' says that this field has to be omitted
+    json_token_t token = JSON_TOKEN_NONE;
+    dec_len = p_tok.get_next_token(&token, NULL, NULL);
+    if (JSON_TOKEN_LITERAL_NULL == token) {
+      set_to_omit();
+      return dec_len;
+    }
+    else {
+      JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_CHOSEN_FIELD_NOT_NULL, "");
+      // if this is set to warning, return to the beginning of the value and
+      // decode it as normal
+      p_tok.set_buf_pos(buf_pos);
+    }
+  }
+  dec_len = optional_value->JSON_decode(p_td, p_tok, p_silent, p_chosen_field);
   if (JSON_ERROR_FATAL == dec_len) {
     if (p_silent) {
       clean_up();
@@ -892,6 +908,9 @@ int OPTIONAL<T_type>::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokeni
     json_token_t token = JSON_TOKEN_NONE;
     dec_len = p_tok.get_next_token(&token, NULL, NULL);
     if (JSON_TOKEN_LITERAL_NULL == token) {
+      if (0 <= p_chosen_field) {
+        JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_CHOSEN_FIELD_OMITTED_NULL, "");
+      }
       set_to_omit();
     }
     else {

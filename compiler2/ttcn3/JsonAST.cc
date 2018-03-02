@@ -35,6 +35,7 @@ void JsonAST::init_JsonAST()
   default_value = NULL;
   metainfo_unbound = false;
   as_number = false;
+  tag_list = NULL;
 }
 
 JsonAST::JsonAST(const JsonAST *other_val)
@@ -61,6 +62,10 @@ JsonAST::~JsonAST()
     delete schema_extensions[i];
   }
   schema_extensions.clear();
+  if (tag_list != NULL) {
+    free_rawAST_tag_list(tag_list);
+    delete tag_list;
+  }
 }
 
 void JsonAST::print_JsonAST() const
@@ -91,5 +96,27 @@ void JsonAST::print_JsonAST() const
   }
   if (metainfo_unbound) {
     printf("Metainfo for unbound field(s)\n\r");
+  }
+  if (tag_list != NULL) {
+    printf("Chosen union fields:\n\r");
+    printf("  Number of rules: %d\n\r", tag_list->nElements);
+    for (int i = 0; i < tag_list->nElements; ++i) {
+      printf("  Rule #%d:\n\r", i);
+      printf("    Chosen field: %s\n\r", tag_list->tag[i].fieldName != NULL ?
+        tag_list->tag[i].fieldName->get_name().c_str() : "omit");
+      printf("    Number of conditions: %d\n\r", tag_list->tag[i].nElements);
+      for (int j = 0; j < tag_list->tag[i].nElements; ++j) {
+        printf("    Condition #%d:\n\r", j);
+        printf("      Value: %s\n\r", tag_list->tag[i].keyList[j].value);
+        printf("      Field: ");
+        for (int k = 0; k < tag_list->tag[i].keyList[j].keyField->nElements; ++k) {
+          if (k != 0) {
+            printf(".");
+          }
+          printf("%s", tag_list->tag[i].keyList[j].keyField->names[k]->get_name().c_str());
+        }
+        printf("\n\r");
+      }
+    }
   }
 }

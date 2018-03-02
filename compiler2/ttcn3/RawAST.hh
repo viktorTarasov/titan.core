@@ -51,9 +51,9 @@ typedef struct {
 } rawAST_tag_field_value;
 
 typedef struct {
-    Common::Identifier* fieldName;
+    Common::Identifier* fieldName; // NULL == omit
     int nElements;
-    rawAST_tag_field_value* keyList;
+    rawAST_tag_field_value* keyList; // NULL == otherwise/OTHERWISE
 } rawAST_single_tag;
 
 typedef struct {

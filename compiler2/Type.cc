@@ -52,6 +52,7 @@
 #include "ttcn3/TtcnTemplate.hh"
 #include "ttcn3/Templatestuff.hh"
 #include "ttcn3/RawAST.hh"
+#include "ttcn3/JsonAST.hh"
 
 #include "../common/static_check.h"
 #include "PredefFunc.hh"
@@ -2155,6 +2156,10 @@ namespace Common {
         size_t fieldnum;
         for(int c=0;c<rawattrib->taglist.nElements;c++) { // check TAG
           Identifier *idf=rawattrib->taglist.tag[c].fieldName;
+          if (idf == NULL) {
+            error("Field member in RAW parameter TAG cannot be 'omit'");
+            continue;
+          }
           if(!has_comp_withName(*idf)){
             error("Invalid field name `%s' in RAW parameter TAG "
               "for type `%s'", idf->get_dispname().c_str(),
@@ -2486,6 +2491,10 @@ namespace Common {
               error("Invalid fieldmember type in RAW parameter CROSSTAG"
                     " for field %s."
                     ,field_id.get_dispname().c_str());
+              break;
+            }
+            if (idf == NULL) {
+              error("Field member in RAW parameter CROSSTAG cannot be 'omit'");
               break;
             }
             if(!field_type_last->has_comp_withName(*idf)){
@@ -2971,6 +2980,10 @@ namespace Common {
         error("Invalid attribute, 'as number' is only allowed for enumerated "
           "types");
       }
+      
+      if (NULL != jsonattrib->tag_list) {
+        chk_json_tag_list();
+      }
     }
   }
   
@@ -3174,6 +3187,77 @@ namespace Common {
           last->get_typename().c_str());
       } else {
         error("Invalid %s JSON default value", get_typename_builtin(last->typetype));
+      }
+    }
+  }
+  
+  void Type::chk_json_tag_list()
+  {
+    Type* last = get_type_refd_last();
+    Type* parent = get_parent_type();
+    if (parent == NULL || last->get_typetype_ttcn3() != T_CHOICE_T ||
+        (parent->typetype != T_SEQ_T && parent->typetype != T_SET_T)) {
+      error("Invalid attribute, 'chosen' is only allowed for fields of records "
+        "and sets of union type");
+      return;
+    }
+    
+    rawAST_tag_list* tag_list = jsonattrib->tag_list;
+    for (int i = 0; i < tag_list->nElements; ++i) {
+      Identifier* union_field_id = tag_list->tag[i].fieldName;
+      if (union_field_id == NULL) {
+        if (!is_optional_field()) {
+          error("Target of JSON attribute 'chosen' is a mandatory field and "
+            "cannot be set to 'omit'");
+          continue;
+        }
+      }
+      else if (!has_comp_withName(*union_field_id)) {
+        error("Reference to invalid union field name `%s' for type `%s', in JSON "
+          "attribute 'chosen'",
+          union_field_id->get_dispname().c_str(), get_typename().c_str());
+        continue;
+      }
+      
+      for (int j = 0; j < tag_list->tag[i].nElements; ++j) {
+        bool erroneous = false;
+        Type* current_type = parent; // the first field name refers to the parent type
+        for (int k = 0; k < tag_list->tag[i].keyList[j].keyField->nElements; ++k) {
+          if (!current_type->is_secho()) {
+            error("Too many field references in JSON attribute 'chosen'. "
+              "Type `%s' doesn't have fields.",
+              current_type->get_typename().c_str());
+            erroneous = true;
+            break;
+          }
+          Identifier* current_field_id = tag_list->tag[i].keyList[j].keyField->names[k];
+          if (!current_type->has_comp_withName(*current_field_id)) {
+            error("Reference to invalid field name `%s' for type `%s', "
+              "in JSON attribute 'chosen'",
+              current_field_id->get_dispname().c_str(),
+              current_type->get_typename().c_str());
+            erroneous = true;
+            break;
+          }
+          CompField* current_field = current_type->get_comp_byName(*current_field_id);
+          current_type = current_field->get_type()->get_type_refd_last();
+        }
+        if (!erroneous) {
+          Error_Context cntx(this, "In JSON attribute 'choice'");
+          Value* value = tag_list->tag[i].keyList[j].v_value;
+          value->set_my_scope(get_my_scope());
+          value->set_my_governor(current_type);
+          current_type->chk_this_value_ref(value);
+          current_type->chk_this_value(value, 0, EXPECTED_CONSTANT,
+            INCOMPLETE_NOT_ALLOWED, OMIT_NOT_ALLOWED, SUB_CHK);
+          
+          Value::valuetype_t value_type = value->get_valuetype();
+          if (value_type == Value::V_ENUM || value_type == Value::V_REFD) {
+            Free(tag_list->tag[i].keyList[j].value);
+            tag_list->tag[i].keyList[j].value =
+              mcopystr(value->get_single_expr().c_str());
+          }
+        }
       }
     }
   }

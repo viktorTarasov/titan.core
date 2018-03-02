@@ -3188,6 +3188,294 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
   *psrc = src;
 }
 
+char* generate_json_decoder(char* src, const struct_def* sdef)
+{
+  src = mputprintf(src,
+    "int %s::JSON_decode(const TTCN_Typedescriptor_t&%s, JSON_Tokenizer& p_tok, "
+    "boolean p_silent, int)\n"
+    "{\n", sdef->name, (sdef->nElements == 1 && !sdef->jsonAsValue) ? " p_td" : "");
+
+  if (sdef->nElements == 1) {
+    if (!sdef->jsonAsValue) {
+      src = mputstr(src, "  if (NULL != p_td.json && p_td.json->as_value) {\n");
+    }
+    src = mputprintf(src, "  %sreturn field_%s.JSON_decode(%s_descr_, p_tok, p_silent);\n",
+      sdef->jsonAsValue ? "" : "  ", sdef->elements[0].name, sdef->elements[0].typedescrname);
+    if (!sdef->jsonAsValue) {
+      src = mputstr(src, "  }\n");
+    }
+  }
+  if (!sdef->jsonAsValue) {
+    src = mputstr(src,
+      "  json_token_t j_token = JSON_TOKEN_NONE;\n"
+      "  size_t dec_len = p_tok.get_next_token(&j_token, NULL, NULL);\n"
+      "  if (JSON_TOKEN_ERROR == j_token) {\n"
+      "    JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_BAD_TOKEN_ERROR, \"\");\n"
+      "    return JSON_ERROR_FATAL;\n"
+      "  }\n"
+      "  else if (JSON_TOKEN_OBJECT_START != j_token) {\n"
+      "    return JSON_ERROR_INVALID_TOKEN;\n"
+      "  }\n");
+
+    boolean has_metainfo_enabled = FALSE;
+    for (int i = 0; i < sdef->nElements; ++i) {
+      src = mputprintf(src, "  boolean %s_found = FALSE;\n", sdef->elements[i].name);
+      if (sdef->elements[i].jsonMetainfoUnbound) {
+        // initialize meta info states
+        src = mputprintf(src, 
+          "  int metainfo_%s = JSON_METAINFO_NONE;\n"
+          , sdef->elements[i].name);
+        has_metainfo_enabled = TRUE;
+      }
+    }
+    src = mputstr(src,
+      // Read name - value token pairs until we reach some other token
+      "\n  while (TRUE) {\n"
+      "    char* fld_name = 0;\n"
+      "    size_t name_len = 0;\n"
+      "    size_t buf_pos = p_tok.get_buf_pos();\n"
+      "    dec_len += p_tok.get_next_token(&j_token, &fld_name, &name_len);\n"
+      "    if (JSON_TOKEN_ERROR == j_token) {\n"
+      "      JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_NAME_TOKEN_ERROR);\n"
+      "      return JSON_ERROR_FATAL;\n"
+      "    }\n"
+           // undo the last action on the buffer
+      "    else if (JSON_TOKEN_NAME != j_token) {\n"
+      "      p_tok.set_buf_pos(buf_pos);\n"
+      "      break;\n"
+      "    }\n"
+      "    else {\n      ");
+    if (has_metainfo_enabled) {
+      // check for meta info
+      src = mputstr(src,
+        "boolean is_metainfo = FALSE;\n"
+        "      if (name_len > 9 && 0 == strncmp(fld_name, \"metainfo \", 9)) {\n"
+        "        fld_name += 9;\n"
+        "        name_len -= 9;\n"
+        "        is_metainfo = TRUE;\n"
+        "      }\n      ");
+    }
+    for (int i = 0; i < sdef->nElements; ++i) {
+      src = mputprintf(src,
+        // check field name
+        "if (%d == name_len && 0 == strncmp(fld_name, \"%s\", name_len)) {\n"
+        "        %s_found = TRUE;\n"
+        , (int)strlen(sdef->elements[i].jsonAlias ? sdef->elements[i].jsonAlias : sdef->elements[i].dispname)
+        , sdef->elements[i].jsonAlias ? sdef->elements[i].jsonAlias : sdef->elements[i].dispname
+        , sdef->elements[i].name);
+      if (has_metainfo_enabled) {
+        src = mputstr(src, "        if (is_metainfo) {\n");
+        if (sdef->elements[i].jsonMetainfoUnbound) {
+          src = mputprintf(src,
+            // check meta info
+            "          char* info_value = 0;\n"
+            "          size_t info_len = 0;\n"
+            "          dec_len += p_tok.get_next_token(&j_token, &info_value, &info_len);\n"
+            "          if (JSON_TOKEN_STRING == j_token && 9 == info_len &&\n"
+            "              0 == strncmp(info_value, \"\\\"unbound\\\"\", 9)) {\n"
+            "            metainfo_%s = JSON_METAINFO_UNBOUND;\n"
+            "          }\n"
+            "          else {\n"
+            "            JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_METAINFO_VALUE_ERROR, \"%s\");\n"
+            "            return JSON_ERROR_FATAL;\n"
+            "          }\n"
+            , sdef->elements[i].name, sdef->elements[i].dispname);
+        }
+        else {
+          src = mputprintf(src,
+            "          JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_METAINFO_NOT_APPLICABLE, \"%s\");\n"
+            "          return JSON_ERROR_FATAL;\n"
+            , sdef->elements[i].dispname);
+        }
+        src = mputstr(src,
+          "        }\n"
+          "        else {\n");
+        if (sdef->elements[i].jsonMetainfoUnbound) {
+          src = mputstr(src, "         buf_pos = p_tok.get_buf_pos();\n");
+        }
+      }
+      if (sdef->elements[i].jsonChosen != NULL) {
+        /* field index of the otherwise rule */
+        char* otherwise_str = NULL;
+        boolean first_value = TRUE;
+        src = mputstr(src, "         int chosen_field = CHOSEN_FIELD_UNSET;\n");
+        int j;
+        for (j = 0; j < sdef->elements[i].jsonChosen->nElements; j++) {
+          rawAST_coding_taglist* cur_choice =
+            sdef->elements[i].jsonChosen->list + j;
+          if (cur_choice->nElements > 0) {
+            /* this is a normal rule */
+            if (first_value) {
+              src = mputstr(src, "         if (");
+              first_value = FALSE;
+            }
+            else {
+              src = mputstr(src, "         else if (");
+            }
+            src = genRawFieldChecker(src, cur_choice, TRUE);
+            /* set chosen_field in the if's body */
+            src = mputstr(src, ") {\n"
+              "           chosen_field = ");
+            if (cur_choice->fieldnum != -2) {
+              src = mputprintf(src, "%d", cur_choice->fieldnum);
+            }
+            else {
+              src = mputstr(src, "CHOSEN_FIELD_OMITTED");
+            }
+            src = mputstr(src, ";\n"
+              "         }\n");
+          }
+          else {
+            /* this is an otherwise rule */
+            otherwise_str = cur_choice->fieldnum != -2 ?
+              mprintf("%d", cur_choice->fieldnum) : mcopystr("CHOSEN_FIELD_OMITTED");
+          }
+        }
+        if (otherwise_str != NULL) {
+          /* set chosen_field to the field index of the otherwise rule or -1 */
+          src = mputprintf(src,
+            "         else {\n"
+            "           chosen_field = %s;\n"
+            "         }\n", otherwise_str);
+          Free(otherwise_str);
+        }
+      }
+      src = mputprintf(src,
+        "         int ret_val = field_%s.JSON_decode(%s_descr_, p_tok, p_silent%s);\n"
+        "         if (0 > ret_val) {\n"
+        "           if (JSON_ERROR_INVALID_TOKEN == ret_val) {\n"
+        , sdef->elements[i].name, sdef->elements[i].typedescrname
+        , sdef->elements[i].jsonChosen != NULL ? ", chosen_field" : "");
+      if (sdef->elements[i].jsonMetainfoUnbound) {
+        src = mputprintf(src,
+          // undo the last action on the buffer, check if the invalid token was a null token 
+          "             p_tok.set_buf_pos(buf_pos);\n"
+          "             p_tok.get_next_token(&j_token, NULL, NULL);\n"
+          "             if (JSON_TOKEN_LITERAL_NULL == j_token) {\n"
+          "               if (JSON_METAINFO_NONE == metainfo_%s) {\n"
+          // delay reporting an error for now, there might be meta info later
+          "                 metainfo_%s = JSON_METAINFO_NEEDED;\n"
+          "                 continue;\n"
+          "               }\n"
+          "               else if (JSON_METAINFO_UNBOUND == metainfo_%s) {\n"
+          // meta info already found
+          "                 continue;\n"
+          "               }\n"
+          "             }\n"
+          , sdef->elements[i].name, sdef->elements[i].name, sdef->elements[i].name);
+      }
+      src = mputprintf(src,
+        "             JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_FIELD_TOKEN_ERROR, %lu, \"%s\");\n"
+        "           }\n"
+        "           return JSON_ERROR_FATAL;\n"
+        "         }\n"
+        "         dec_len += (size_t)ret_val;\n"
+        , (unsigned long) strlen(sdef->elements[i].dispname), sdef->elements[i].dispname);
+      if (has_metainfo_enabled) {
+        src = mputstr(src, "        }\n");
+      }
+      src = mputstr(src,
+        "      }\n"
+        "      else ");
+    }
+    src = mputprintf(src,
+      "{\n"
+               // invalid field name
+      "        JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, %sJSON_DEC_INVALID_NAME_ERROR, (int)name_len, fld_name);\n"
+               // if this is set to a warning, skip the value of the field
+      "        dec_len += p_tok.get_next_token(&j_token, NULL, NULL);\n"
+      "        if (JSON_TOKEN_NUMBER != j_token && JSON_TOKEN_STRING != j_token &&\n"
+      "            JSON_TOKEN_LITERAL_TRUE != j_token && JSON_TOKEN_LITERAL_FALSE != j_token &&\n"
+      "            JSON_TOKEN_LITERAL_NULL != j_token) {\n"
+      "          JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_FIELD_TOKEN_ERROR, (int)name_len, fld_name);\n"
+      "          return JSON_ERROR_FATAL;\n"
+      "        }\n"
+      "      }\n"
+      "    }\n"
+      "  }\n\n"
+      "  dec_len += p_tok.get_next_token(&j_token, NULL, NULL);\n"
+      "  if (JSON_TOKEN_OBJECT_END != j_token) {\n"
+      "    JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_OBJECT_END_TOKEN_ERROR, \"\");\n"
+      "    return JSON_ERROR_FATAL;\n"
+      "  }\n\n  "
+      , has_metainfo_enabled ? "is_metainfo ?\n          JSON_DEC_METAINFO_NAME_ERROR : " : "");
+    // Check if every field has been set and handle meta info
+    for (int i = 0; i < sdef->nElements; ++i) {
+      if (sdef->elements[i].jsonMetainfoUnbound) {
+        src = mputprintf(src,
+          "if (JSON_METAINFO_UNBOUND == metainfo_%s) {\n"
+          "    field_%s.clean_up();\n"
+          "  }\n"
+          "  else if (JSON_METAINFO_NEEDED == metainfo_%s) {\n"
+          // no meta info was found for this field, report the delayed error
+          "    JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_FIELD_TOKEN_ERROR, %lu, \"%s\");\n"
+          "  }\n"
+          "  else "
+          , sdef->elements[i].name, sdef->elements[i].name
+          , sdef->elements[i].name
+          , (unsigned long) strlen(sdef->elements[i].dispname)
+          , sdef->elements[i].dispname);
+      }
+      src = mputprintf(src,
+        "if (!%s_found) {\n"
+        , sdef->elements[i].name);
+      if (sdef->elements[i].jsonDefaultValue) {
+        src = mputprintf(src,
+          "    field_%s.JSON_decode(%s_descr_, DUMMY_BUFFER, p_silent);\n"
+          , sdef->elements[i].name, sdef->elements[i].typedescrname);
+      }
+      else if (sdef->elements[i].isOptional) {
+        // if the conditions in attribute 'choice' indicate that this field is
+        // mandatory, then display an error
+        if (sdef->elements[i].jsonChosen != NULL) {
+          int j;
+          boolean has_otherwise = FALSE;
+          for (j = 0; j < sdef->elements[i].jsonChosen->nElements; j++) {
+            if (sdef->elements[i].jsonChosen->list[j].nElements == 0) {
+              has_otherwise = TRUE;
+              break;
+            }
+          }
+          boolean first_found = FALSE;
+          for (j = 0; j < sdef->elements[i].jsonChosen->nElements; j++) {
+            if ((!has_otherwise && sdef->elements[i].jsonChosen->list[j].fieldnum != -2) ||
+                 (has_otherwise && sdef->elements[i].jsonChosen->list[j].fieldnum == -2)) {
+              if (!first_found) {
+                src = mputstr(src, "    if (");
+                first_found = TRUE;
+              }
+              else {
+                src = mputstr(src, "\n        || ");
+              }
+              src = genRawFieldChecker(src, sdef->elements[i].jsonChosen->list + j, !has_otherwise);
+            }
+          }
+          if (first_found) {
+            src = mputprintf(src,
+              ") {\n"
+              "      JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_CHOSEN_FIELD_OMITTED, \"%s\");\n"
+              "      return JSON_ERROR_FATAL;\n"
+              "    }\n", sdef->elements[i].dispname);
+          }
+        }
+        src = mputprintf(src,
+          "    field_%s = OMIT_VALUE;\n"
+          , sdef->elements[i].name);
+      } else {
+        src = mputprintf(src,
+          "    JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_MISSING_FIELD_ERROR, \"%s\");\n"
+          "    return JSON_ERROR_FATAL;\n"
+          , sdef->elements[i].dispname);
+      }
+      src = mputstr(src,
+        "  }\n  ");
+    }
+    src = mputstr(src,
+      "\n  return (int)dec_len;\n");
+  }
+  return mputstr(src, "}\n\n");
+}
+
 void defRecordClass1(const struct_def *sdef, output_struct *output)
 {
   size_t i;
@@ -4447,209 +4735,7 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
     src = mputstr(src, "}\n\n");
     
     // JSON decode, RT1
-    src = mputprintf(src,
-      "int %s::JSON_decode(const TTCN_Typedescriptor_t&%s, JSON_Tokenizer& p_tok, boolean p_silent)\n"
-      "{\n", name, (sdef->nElements == 1 && !sdef->jsonAsValue) ? " p_td" : "");
-    
-    if (sdef->nElements == 1) {
-      if (!sdef->jsonAsValue) {
-        src = mputstr(src, "  if (NULL != p_td.json && p_td.json->as_value) {\n");
-      }
-      src = mputprintf(src, "  %sreturn field_%s.JSON_decode(%s_descr_, p_tok, p_silent);\n",
-        sdef->jsonAsValue ? "" : "  ", sdef->elements[0].name, sdef->elements[0].typedescrname);
-      if (!sdef->jsonAsValue) {
-        src = mputstr(src, "  }\n");
-      }
-    }
-    if (!sdef->jsonAsValue) {
-      src = mputstr(src,
-        "  json_token_t j_token = JSON_TOKEN_NONE;\n"
-        "  size_t dec_len = p_tok.get_next_token(&j_token, NULL, NULL);\n"
-        "  if (JSON_TOKEN_ERROR == j_token) {\n"
-        "    JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_BAD_TOKEN_ERROR, \"\");\n"
-        "    return JSON_ERROR_FATAL;\n"
-        "  }\n"
-        "  else if (JSON_TOKEN_OBJECT_START != j_token) {\n"
-        "    return JSON_ERROR_INVALID_TOKEN;\n"
-        "  }\n");
-
-      boolean has_metainfo_enabled = FALSE;
-      for (i = 0; i < sdef->nElements; ++i) {
-        src = mputprintf(src, "  boolean %s_found = FALSE;\n", sdef->elements[i].name);
-        if (sdef->elements[i].jsonMetainfoUnbound) {
-          // initialize meta info states
-          src = mputprintf(src, 
-            "  int metainfo_%s = JSON_METAINFO_NONE;\n"
-            , sdef->elements[i].name);
-          has_metainfo_enabled = TRUE;
-        }
-      }
-      src = mputstr(src,
-        // Read name - value token pairs until we reach some other token
-        "\n  while (TRUE) {\n"
-        "    char* fld_name = 0;\n"
-        "    size_t name_len = 0;\n"
-        "    size_t buf_pos = p_tok.get_buf_pos();\n"
-        "    dec_len += p_tok.get_next_token(&j_token, &fld_name, &name_len);\n"
-        "    if (JSON_TOKEN_ERROR == j_token) {\n"
-        "      JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_NAME_TOKEN_ERROR);\n"
-        "      return JSON_ERROR_FATAL;\n"
-        "    }\n"
-             // undo the last action on the buffer
-        "    else if (JSON_TOKEN_NAME != j_token) {\n"
-        "      p_tok.set_buf_pos(buf_pos);\n"
-        "      break;\n"
-        "    }\n"
-        "    else {\n      ");
-      if (has_metainfo_enabled) {
-        // check for meta info
-        src = mputstr(src,
-          "boolean is_metainfo = FALSE;\n"
-          "      if (name_len > 9 && 0 == strncmp(fld_name, \"metainfo \", 9)) {\n"
-          "        fld_name += 9;\n"
-          "        name_len -= 9;\n"
-          "        is_metainfo = TRUE;\n"
-          "      }\n      ");
-      }
-      for (i = 0; i < sdef->nElements; ++i) {
-        src = mputprintf(src,
-          // check field name
-          "if (%d == name_len && 0 == strncmp(fld_name, \"%s\", name_len)) {\n"
-          "        %s_found = TRUE;\n"
-          , (int)strlen(sdef->elements[i].jsonAlias ? sdef->elements[i].jsonAlias : sdef->elements[i].dispname)
-          , sdef->elements[i].jsonAlias ? sdef->elements[i].jsonAlias : sdef->elements[i].dispname
-          , sdef->elements[i].name);
-        if (has_metainfo_enabled) {
-          src = mputstr(src, "        if (is_metainfo) {\n");
-          if (sdef->elements[i].jsonMetainfoUnbound) {
-            src = mputprintf(src,
-              // check meta info
-              "          char* info_value = 0;\n"
-              "          size_t info_len = 0;\n"
-              "          dec_len += p_tok.get_next_token(&j_token, &info_value, &info_len);\n"
-              "          if (JSON_TOKEN_STRING == j_token && 9 == info_len &&\n"
-              "              0 == strncmp(info_value, \"\\\"unbound\\\"\", 9)) {\n"
-              "            metainfo_%s = JSON_METAINFO_UNBOUND;\n"
-              "          }\n"
-              "          else {\n"
-              "            JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_METAINFO_VALUE_ERROR, \"%s\");\n"
-              "            return JSON_ERROR_FATAL;\n"
-              "          }\n"
-              , sdef->elements[i].name, sdef->elements[i].dispname);
-          }
-          else {
-            src = mputprintf(src,
-              "          JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_METAINFO_NOT_APPLICABLE, \"%s\");\n"
-              "          return JSON_ERROR_FATAL;\n"
-              , sdef->elements[i].dispname);
-          }
-          src = mputstr(src,
-            "        }\n"
-            "        else {\n");
-          if (sdef->elements[i].jsonMetainfoUnbound) {
-            src = mputstr(src, "         buf_pos = p_tok.get_buf_pos();\n");
-          }
-        }
-        src = mputprintf(src,
-          "         int ret_val = field_%s.JSON_decode(%s_descr_, p_tok, p_silent);\n"
-          "         if (0 > ret_val) {\n"
-          "           if (JSON_ERROR_INVALID_TOKEN == ret_val) {\n"
-          , sdef->elements[i].name, sdef->elements[i].typedescrname);
-        if (sdef->elements[i].jsonMetainfoUnbound) {
-          src = mputprintf(src,
-            // undo the last action on the buffer, check if the invalid token was a null token 
-            "             p_tok.set_buf_pos(buf_pos);\n"
-            "             p_tok.get_next_token(&j_token, NULL, NULL);\n"
-            "             if (JSON_TOKEN_LITERAL_NULL == j_token) {\n"
-            "               if (JSON_METAINFO_NONE == metainfo_%s) {\n"
-            // delay reporting an error for now, there might be meta info later
-            "                 metainfo_%s = JSON_METAINFO_NEEDED;\n"
-            "                 continue;\n"
-            "               }\n"
-            "               else if (JSON_METAINFO_UNBOUND == metainfo_%s) {\n"
-            // meta info already found
-            "                 continue;\n"
-            "               }\n"
-            "             }\n"
-            , sdef->elements[i].name, sdef->elements[i].name, sdef->elements[i].name);
-        }
-        src = mputprintf(src,
-          "             JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_FIELD_TOKEN_ERROR, %lu, \"%s\");\n"
-          "           }\n"
-          "           return JSON_ERROR_FATAL;\n"
-          "         }\n"
-          "         dec_len += (size_t)ret_val;\n"
-          , (unsigned long) strlen(sdef->elements[i].dispname), sdef->elements[i].dispname);
-        if (has_metainfo_enabled) {
-          src = mputstr(src, "        }\n");
-        }
-        src = mputstr(src,
-          "      }\n"
-          "      else ");
-      }
-      src = mputprintf(src,
-        "{\n"
-                 // invalid field name
-        "        JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, %sJSON_DEC_INVALID_NAME_ERROR, (int)name_len, fld_name);\n"
-                 // if this is set to a warning, skip the value of the field
-        "        dec_len += p_tok.get_next_token(&j_token, NULL, NULL);\n"
-        "        if (JSON_TOKEN_NUMBER != j_token && JSON_TOKEN_STRING != j_token &&\n"
-        "            JSON_TOKEN_LITERAL_TRUE != j_token && JSON_TOKEN_LITERAL_FALSE != j_token &&\n"
-        "            JSON_TOKEN_LITERAL_NULL != j_token) {\n"
-        "          JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_FIELD_TOKEN_ERROR, (int)name_len, fld_name);\n"
-        "          return JSON_ERROR_FATAL;\n"
-        "        }\n"
-        "      }\n"
-        "    }\n"
-        "  }\n\n"
-        "  dec_len += p_tok.get_next_token(&j_token, NULL, NULL);\n"
-        "  if (JSON_TOKEN_OBJECT_END != j_token) {\n"
-        "    JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_OBJECT_END_TOKEN_ERROR, \"\");\n"
-        "    return JSON_ERROR_FATAL;\n"
-        "  }\n\n  "
-        , has_metainfo_enabled ? "is_metainfo ?\n          JSON_DEC_METAINFO_NAME_ERROR : " : "");
-      // Check if every field has been set and handle meta info
-      for (i = 0; i < sdef->nElements; ++i) {
-        if (sdef->elements[i].jsonMetainfoUnbound) {
-          src = mputprintf(src,
-            "if (JSON_METAINFO_UNBOUND == metainfo_%s) {\n"
-            "    field_%s.clean_up();\n"
-            "  }\n"
-            "  else if (JSON_METAINFO_NEEDED == metainfo_%s) {\n"
-            // no meta info was found for this field, report the delayed error
-            "    JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_FIELD_TOKEN_ERROR, %lu, \"%s\");\n"
-            "  }\n"
-            "  else "
-            , sdef->elements[i].name, sdef->elements[i].name
-            , sdef->elements[i].name
-            , (unsigned long) strlen(sdef->elements[i].dispname)
-            , sdef->elements[i].dispname);
-        }
-        src = mputprintf(src,
-          "  if (!%s_found) {\n"
-          , sdef->elements[i].name);
-        if (sdef->elements[i].jsonDefaultValue) {
-          src = mputprintf(src,
-            "    field_%s.JSON_decode(%s_descr_, DUMMY_BUFFER, p_silent);\n"
-            , sdef->elements[i].name, sdef->elements[i].typedescrname);
-        }
-        else if (sdef->elements[i].isOptional) {
-          src = mputprintf(src,
-            "    field_%s = OMIT_VALUE;\n"
-            , sdef->elements[i].name);
-        } else {
-          src = mputprintf(src,
-            "    JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_MISSING_FIELD_ERROR, \"%s\");\n"
-            "    return JSON_ERROR_FATAL;\n"
-            , sdef->elements[i].dispname);
-        }
-        src = mputstr(src,
-          "  }\n");
-      }
-      src = mputstr(src,
-        "\n  return (int)dec_len;\n");
-    }
-    src = mputstr(src, "}\n\n");
+    src = generate_json_decoder(src, sdef);
   }
   
   if (oer_needed) {
@@ -6541,7 +6627,7 @@ static void defEmptyRecordClass(const struct_def *sdef,
     
     // JSON decode, RT1
     src = mputprintf(src,
-      "int %s::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& p_tok, boolean p_silent)\n"
+      "int %s::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& p_tok, boolean p_silent, int)\n"
       "{\n"
       "  if (NULL != p_td.json->default_value && 0 == p_tok.get_buffer_length()) {\n"
       // use the default value
@@ -7099,6 +7185,7 @@ void defRecordClass2(const struct_def *sdef, output_struct *output)
 
   boolean xer_needed = sdef->hasXer && enable_xer();
   boolean raw_needed = sdef->hasRaw && enable_raw();
+  boolean json_needed = sdef->hasJson && enable_json();
   boolean has_optional = FALSE;
   boolean has_default  = FALSE;
 
@@ -7485,6 +7572,21 @@ check_generate_end:
         "{ return FALSE; }\n"
         );
     } /* if (xer_needed) */
+    
+    if (json_needed) {
+      for (i = 0; i < sdef->nElements; ++i) {
+        if (sdef->elements[i].jsonChosen != NULL) {
+          /* if any of the fields has the 'chosen' attribute,
+             then the JSON decoder needs to be generated,
+             otherwise Record_Type::JSON_decode is enough */
+          def = mputprintf(def,
+            "int JSON_decode(const TTCN_Typedescriptor_t&, JSON_Tokenizer&, "
+            "boolean, int p_chosen_field = CHOSEN_FIELD_UNSET);\n");
+          src = generate_json_decoder(src, sdef);
+          break;
+        }
+      }
+    }
   } /* if (sdef->nElements > 0) */
 
   /* end of class definition */

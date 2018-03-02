@@ -497,6 +497,8 @@ extend        { BEGIN(jsoncodec); RETURN(XKWextend); }
 metainfo      RETURN(XKWmetainfo);
 for           RETURN(XKWfor);
 unbound       RETURN(XKWunbound);
+chosen        RETURN(XChosenKeyword);
+otherwise     RETURN(XJsonOtherwise);
 }
 
 <INITIAL>{

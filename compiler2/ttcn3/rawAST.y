@@ -294,6 +294,8 @@ static void yyprint(FILE *file, int type, const YYSTYPE& value);
 %token XJsonValueEnd      ")"
 %token XJsonValueSegment  "JSON value"
 %token XAsValueKeyword    "asValue"
+%token XChosenKeyword     "chosen"
+%token XJsonOtherwise     "otherwise"
 
 
 %type <enumval>
@@ -618,7 +620,9 @@ XAssocList:
     if ($3.nElements > 0) {
       /* the otherwise element is never merged */
       for (int i = 0; i < $1.nElements; i++)
-	if (*$1.tag[i].fieldName == *$3.fieldName) {
+	if (($1.tag[i].fieldName == NULL && $3.fieldName == NULL) ||
+	    ($1.tag[i].fieldName != NULL && $3.fieldName != NULL &&
+	     *$1.tag[i].fieldName == *$3.fieldName)) {
 	  dupl_id_index = i;
 	  break;
 	}
@@ -664,6 +668,30 @@ XAssocElement:
 | XIdentifier ',' XOtherwise
   {
     $$.fieldName = $1;
+    $$.nElements = 0;
+    $$.keyList = NULL;
+  }
+| XIdentifier ',' XJsonOtherwise // JSON version
+  {
+    $$.fieldName = $1;
+    $$.nElements = 0;
+    $$.keyList = NULL;
+  }
+| XOmitKeyword ',' XKeyIdOrIdList
+  {
+    $$.fieldName = NULL;
+    $$.nElements = $3.nElements;
+    $$.keyList = $3.keyList;
+  }
+| XOmitKeyword ',' XOtherwise
+  {
+    $$.fieldName = NULL;
+    $$.nElements = 0;
+    $$.keyList = NULL;
+  }
+| XOmitKeyword ',' XJsonOtherwise // JSON version
+  {
+    $$.fieldName = NULL;
     $$.nElements = 0;
     $$.keyList = NULL;
   }
@@ -1760,6 +1788,7 @@ JSONattribute:
 | JExtend
 | JMetainfoForUnbound
 | JAsNumber
+| JChosen
 ;
 
 JOmitAsNull:
@@ -1785,6 +1814,19 @@ JMetainfoForUnbound:
 
 JAsNumber:
   XKWas XKWnumber { jsonstruct->as_number = true; }
+;
+
+JChosen:
+  XChosenKeyword '(' XAssocList XoptSemiColon ')'
+  {
+    if (jsonstruct->tag_list == NULL) {
+      jsonstruct->tag_list = new rawAST_tag_list;
+    }
+    else {
+      free_rawAST_tag_list(jsonstruct->tag_list);
+    }
+    link_rawAST_tag_list(jsonstruct->tag_list, &$3);
+  }
 ;
 
 %%

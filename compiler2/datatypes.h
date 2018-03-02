@@ -87,6 +87,7 @@ typedef struct {
   boolean jsonMetainfoUnbound;
   const char* jsonAlias;
   const char* jsonDefaultValue;
+  rawAST_coding_taglist_list* jsonChosen;
   /** true if the field is a record-of or set-of with optimized memory allocation */
   boolean optimizedMemAlloc;
   XSD_types xsd_type;

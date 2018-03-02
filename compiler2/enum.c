@@ -809,7 +809,7 @@ void defEnumClass(const enum_def *edef, output_struct *output)
     
     // JSON decode
     src = mputprintf(src,
-      "int %s::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& p_tok, boolean p_silent)\n"
+      "int %s::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& p_tok, boolean p_silent, int)\n"
       "{\n"
       "  json_token_t token = JSON_TOKEN_NONE;\n"
       "  char* value = 0;\n"

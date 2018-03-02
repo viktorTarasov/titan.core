@@ -1,0 +1,38 @@
+/******************************************************************************
+ * Copyright (c) 2000-2017 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Baranyi, Botond
+ *
+ ******************************************************************************/
+module JsonChosen_SE { //^In TTCN-3 module//
+
+type union Uni {
+  integer f1,
+  charstring f2,
+  octetstring f3
+}
+
+type record Rec { //^In type definition//
+  integer num,
+  charstring str,
+  octetstring field1, //Invalid attribute, 'chosen' is only allowed for fields of records and sets of union type//
+  Uni field2, //Reference to invalid union field name `nonexistent' for type `@JsonChosen_SE.Uni', in JSON attribute 'chosen'// //^In JSON attribute 'choice'// 
+  Uni field3, //Target of JSON attribute 'chosen' is a mandatory field and cannot be set to 'omit'//
+  Uni field4 optional //Too many field references in JSON attribute 'chosen'. Type `integer' doesn't have fields// //Reference to invalid field name `nonexistent' for type `@JsonChosen_SE.Uni', in JSON attribute 'chosen'//
+}
+with {
+  variant (field1) "chosen (nonexistent, num = 1)";
+  variant (field2) "chosen (nonexistent, num = 1; f1, num = 100; f2, { str = 1, str = \"a\" })"; //character string value was expected//
+  variant (field3) "chosen (omit, num = 1)";
+  variant (field4) "chosen (f1, num = 4; f2, field2.f1.toomany = 22; f3, field3.nonexistent = 1111)";
+}
+  
+}
+with {
+  encode "JSON";
+}

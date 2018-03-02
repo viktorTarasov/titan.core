@@ -50,6 +50,7 @@
 #include "asn1/Tag.hh"
 #include "XerAttributes.hh"
 #include "ttcn3/RawAST.hh"
+#include "ttcn3/JsonAST.hh"
 
 #include <ctype.h>
 #include <stdlib.h> // for qsort

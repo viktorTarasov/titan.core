@@ -1209,7 +1209,7 @@ int BITSTRING::JSON_encode(const TTCN_Typedescriptor_t&, JSON_Tokenizer& p_tok) 
   return enc_len;
 }
 
-int BITSTRING::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& p_tok, boolean p_silent)
+int BITSTRING::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& p_tok, boolean p_silent, int)
 {
   json_token_t token = JSON_TOKEN_NONE;
   char* value = 0;

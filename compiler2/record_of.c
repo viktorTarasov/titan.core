@@ -1567,7 +1567,7 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
     
     // JSON decode, RT1
     src = mputprintf(src,
-      "int %s::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& p_tok, boolean p_silent)\n"
+      "int %s::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& p_tok, boolean p_silent, int)\n"
       "{\n"
       "  if (NULL != p_td.json->default_value && 0 == p_tok.get_buffer_length()) {\n"
       // use the default value (currently only the empty array can be set as
@@ -3083,7 +3083,7 @@ void defRecordOfClassMemAllocOptimized(const struct_of_def *sdef, output_struct 
     
     // JSON decode, RT1, mem. alloc. optimised
     src = mputprintf(src,
-      "int %s::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& p_tok, boolean p_silent)\n"
+      "int %s::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& p_tok, boolean p_silent, int)\n"
       "{\n"
       "  json_token_t token = JSON_TOKEN_NONE;\n"
       "  size_t dec_len = p_tok.get_next_token(&token, NULL, NULL);\n"

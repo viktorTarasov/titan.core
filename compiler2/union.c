@@ -2178,11 +2178,26 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
     
     // JSON decode
     src = mputprintf(src,
-      "int %s::JSON_decode(const TTCN_Typedescriptor_t&%s, JSON_Tokenizer& p_tok, boolean p_silent)\n"
+      "int %s::JSON_decode(const TTCN_Typedescriptor_t&%s, JSON_Tokenizer& p_tok, "
+      "boolean p_silent, int p_chosen_field)\n"
       "{\n"
       , name, sdef->nElements > 0 && !sdef->jsonAsValue ? " p_td" : "");
     if (sdef->nElements > 0) {
-      src = mputstr(src, "  json_token_t j_token = JSON_TOKEN_NONE;\n");
+      src = mputprintf(src,
+        "  if (0 <= p_chosen_field && %d > p_chosen_field) {\n"
+        "    switch (p_chosen_field) {\n"
+        ,(int)sdef->nElements);
+      for (i = 0; i < sdef->nElements; ++i) {
+        src = mputprintf(src,
+          "    case %d:\n"
+          "      return %s%s().JSON_decode(%s_descr_, p_tok, TRUE);\n"
+          , (int)i, at_field, sdef->elements[i].name
+          , sdef->elements[i].typedescrname);
+      }
+      src = mputstr(src, 
+        "    }\n"
+        "  }\n"
+        "  json_token_t j_token = JSON_TOKEN_NONE;\n");
       if (!sdef->jsonAsValue) {
         src = mputstr(src,
           " if (NULL != p_td.json && p_td.json->as_value) {\n");

@@ -1587,7 +1587,7 @@ int Record_Of_Type::JSON_encode_negtest(const Erroneous_descriptor_t* p_err_desc
   return enc_len;
 }
 
-int Record_Of_Type::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& p_tok, boolean p_silent)
+int Record_Of_Type::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& p_tok, boolean p_silent, int)
 {
   if (NULL != p_td.json->default_value && 0 == p_tok.get_buffer_length()) {
     // use the default value (currently only the empty array can be set as
@@ -6081,7 +6081,7 @@ int Record_Type::JSON_encode_negtest(const Erroneous_descriptor_t* p_err_descr,
   return enc_len;
 }
 
-int Record_Type::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& p_tok, boolean p_silent)
+int Record_Type::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& p_tok, boolean p_silent, int)
 {
   if (NULL != p_td.json && p_td.json->as_value) {
     // if 'as value' is set, then the record/set has only one field,
@@ -7312,7 +7312,7 @@ int Empty_Record_Type::JSON_encode(const TTCN_Typedescriptor_t&, JSON_Tokenizer&
     p_tok.put_next_token(JSON_TOKEN_OBJECT_END, NULL);
 }
 
-int Empty_Record_Type::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& p_tok, boolean p_silent)
+int Empty_Record_Type::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& p_tok, boolean p_silent, int)
 {
   if (NULL != p_td.json->default_value && 0 == p_tok.get_buffer_length()) {
     // use the default value

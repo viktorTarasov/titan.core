@@ -521,6 +521,112 @@ testcase tc_attribute_default_struct() runs on MTC {
   }
 }
 
+// Testing the attribute 'chosen'
+testcase tc_attribute_chosen() runs on MTC {
+  // one test for each chosen field
+  var PduWithIdList val := {
+    { protocolId := 11, field1 := { type1 := { num := 1, str := "abc" } }, field2 := { type2 := { num := 2, str := "xyz" } } },
+    { protocolId := 2, field1 := { type2 := { num := 1, str := "abc" } }, field2 := { type1 := { num := 2, str := "xyz" } } },
+    { protocolId := 3, field1 := omit, field2 := { type3 := { num := 2.0, str := "xyz" } } },
+    { protocolId := 65536, field1 := { type3 := { num := 1.0, str := "abc" } }, field2 := omit }
+  };
+  var universal charstring enc_exp := "[" &
+    "{\"protocolId\":11,\"field1\":{\"num\":1,\"str\":\"abc\"},\"field2\":{\"num\":2,\"str\":\"xyz\"}}," &
+    "{\"protocolId\":2,\"field1\":{\"num\":1,\"str\":\"abc\"},\"field2\":{\"num\":2,\"str\":\"xyz\"}}," &
+    "{\"protocolId\":3,\"field2\":{\"num\":2.000000,\"str\":\"xyz\"}}," &
+    "{\"protocolId\":65536,\"field1\":{\"num\":1.000000,\"str\":\"abc\"}}" &
+  "]";
+  var universal charstring enc := encvalue_unichar(val);
+  if (enc != enc_exp) {
+    setverdict(fail, "Encoding failed. Expected: ", enc_exp, ", got: ", enc);
+  }
+  var PduWithIdList dec;
+  var integer res := decvalue_unichar(enc_exp, dec);
+  if (res != 0) {
+    setverdict(fail, "Decoding #1 failed. Result: ", res);
+  }
+  else if (dec != val) {
+    setverdict(fail, "Decoding #1 failed. Decoded value: ", dec, ", expected: ", val);
+  }
+  
+  // these should also be correctly decoded to the initial values
+  var universal charstring buff := "[" &
+    "{\"protocolId\":65536,\"field1\":{\"num\":1,\"str\":\"abc\"},\"field2\":null}," &
+    "{\"protocolId\":3,\"field1\":null,\"field2\":{\"num\":2,\"str\":\"xyz\"}}" &
+  "]";
+  var PduWithIdList dec2;
+  var PduWithIdList dec2_exp := { val[3], val[2] };
+  res := decvalue_unichar(buff, dec2);
+  if (res != 0) {
+    setverdict(fail, "Decoding #2 failed. Result: ", res);
+  }
+  else if (dec2 != dec2_exp) {
+    setverdict(fail, "Decoding #2 failed. Decoded value: ", dec2, ", expected: ", dec2_exp);
+  }
+  setverdict(pass);
+}
+
+// Testing JSON decoding when field selections of optional fields conflict with
+// the settings in attribute 'chosen'
+testcase tc_attribute_chosen_negtest() runs on MTC {
+  // Test #1: protocolId indicates 'omit' (for field1), but the field is not omitted
+  @try {
+    var octetstring buff := char2oct("{\"protocolId\":3,\"field1\":{\"num\":1,\"str\":\"abc\"},\"field2\":{\"num\":2,\"str\":\"xyz\"}}");
+    var PduWithId dec := f_dec_pduwithid(buff);
+    setverdict(fail, "Test #1. Expected decoding failure.");
+  }
+  @catch (msg) {
+    var template charstring tmp :=
+      pattern "*Invalid JSON token, expecting 'null' \(as indicated by a condition in attribute 'chosen'\)";
+    if (not match(msg, tmp)) {
+      setverdict(fail, "Test #1. Invalid error message received: ", msg);
+    }
+  }
+  
+  // Test #2: protocolId indicates a union field (type1, for field1), but the field is omitted (with the JSON value 'null')
+  @try {
+    var octetstring buff := char2oct("{\"protocolId\":1,\"field1\":null}");
+    var PduWithId dec := f_dec_pduwithid(buff);
+    setverdict(fail, "Test #2. Expected decoding failure.");
+  }
+  @catch (msg) {
+    var template charstring tmp :=
+      pattern "*Field cannot be omitted \(as indicated by a condition in attribute 'chosen'\)";
+    if (not match(msg, tmp)) {
+      setverdict(fail, "Test #2. Invalid error message received: ", msg);
+    }
+  }
+  
+  // Test #3: protocolId indicates a union field (type1, for field1), but the field is omitted (with no JSON name-value pair)
+  @try {
+    var octetstring buff := char2oct("{\"protocolId\":1}");
+    var PduWithId dec := f_dec_pduwithid(buff);
+    setverdict(fail, "Test #3. Expected decoding failure.");
+  }
+  @catch (msg) {
+    var template charstring tmp :=
+      pattern "*Field 'field1' cannot be omitted \(as indicated by a condition in attribute 'chosen'\)";
+    if (not match(msg, tmp)) {
+      setverdict(fail, "Test #3. Invalid error message received: ", msg);
+    }
+  }
+  
+  // Test #4: protocolId indicates a union field (type3, for field2), but the field is omitted (with no JSON name-value pair)
+  @try {
+    var octetstring buff := char2oct("{\"protocolId\":3}");
+    var PduWithId dec := f_dec_pduwithid(buff);
+    setverdict(fail, "Test #3. Expected decoding failure.");
+  }
+  @catch (msg) {
+    var template charstring tmp :=
+      pattern "*Field 'field2' cannot be omitted \(as indicated by a condition in attribute 'chosen'\)";
+    if (not match(msg, tmp)) {
+      setverdict(fail, "Test #3. Invalid error message received: ", msg);
+    }
+  }
+  setverdict(pass);
+}
+
 
 control {
   execute(tc_NoAttributeOnUpperLevel())
@@ -547,5 +653,7 @@ control {
   execute(tc_attribute_as_number());
   execute(tc_attribute_as_number_negtest());
   execute(tc_attribute_default_struct());
+  execute(tc_attribute_chosen());
+  execute(tc_attribute_chosen_negtest());
 }
 }
