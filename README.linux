@@ -108,6 +108,12 @@ XMLDIR := /usr
 JNI := yes
 GEN_PDF := no
 
+d) For Alpine Linux, an appropriate flag has to be set:
+
+:
+ALPINE_LINUX := yes
+:
+
 
 4. Run make
 
