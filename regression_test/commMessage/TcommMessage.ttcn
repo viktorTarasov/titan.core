@@ -1568,6 +1568,24 @@ testcase commMessageBehaviorFunctionParams() runs on commMessage_comp1 {
   setverdict(pass);
 }
 
+function f_behavior_empty() runs on C {
+  // does nothing
+}
+
+function f_behavior_done() runs on C {
+  var C comp := C.create;
+  comp.start(f_behavior_empty());
+  comp.done;
+}
+
+// tests the 'done' operation on a PTC
+testcase tc_bug_532060() runs on C {
+  var C comp := C.create;
+  comp.start(f_behavior_done());
+  comp.done;
+  setverdict(pass);
+}
+
 control {
  execute(commMessageIntegerEncode());
  execute(commMessageValue());
@@ -1609,5 +1627,6 @@ control {
  execute(commMessageDualFacedPorts2());
  execute(commMessageReceiveAnyOrOmit());
  execute(commMessageBehaviorFunctionParams());
+ execute(tc_bug_532060());
 }
 }

@@ -552,8 +552,8 @@ private:
     component component_reference);
   static void send_component_status_ptc(component_struct *tc,
     component component_reference,
-    boolean is_done, boolean is_killed, const char *return_type,
-    int return_value_len, const void *return_value);
+    boolean is_done, boolean is_killed, verdicttype local_verdict,
+    const char *return_type, int return_value_len, const void *return_value);
   static void send_start(component_struct *tc,
     const qualified_name& function_name, int arg_len, const void *arg_ptr);
   static void send_kill(component_struct *tc);

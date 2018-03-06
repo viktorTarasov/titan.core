@@ -1499,11 +1499,11 @@ void MainController::send_component_status_to_requestor(component_struct *tc,
   case PTC_STARTING:
     if (done_status) {
       send_component_status_ptc(requestor, tc->comp_ref, TRUE,
-        killed_status, tc->return_type, tc->return_value_len,
+        killed_status, tc->local_verdict, tc->return_type, tc->return_value_len,
         tc->return_value);
     } else {
       send_component_status_ptc(requestor, tc->comp_ref, FALSE,
-        killed_status, NULL, 0, NULL);
+        killed_status, tc->local_verdict, NULL, 0, NULL);
     }
     break;
   case PTC_STOPPING_KILLING:
@@ -3595,13 +3595,15 @@ void MainController::send_cancel_done_ptc(component_struct *tc,
 
 void MainController::send_component_status_ptc(component_struct *tc,
   component component_reference, boolean is_done, boolean is_killed,
-  const char *return_type, int return_value_len, const void *return_value)
+  verdicttype local_verdict, const char *return_type, int return_value_len,
+  const void *return_value)
 {
   Text_Buf text_buf;
   text_buf.push_int(MSG_COMPONENT_STATUS);
   text_buf.push_int(component_reference);
   text_buf.push_int(is_done ? 1 : 0);
   text_buf.push_int(is_killed ? 1 : 0);
+  text_buf.push_int(local_verdict);
   text_buf.push_string(return_type);
   text_buf.push_raw(return_value_len, return_value);
   send_message(tc->tc_fd, text_buf);
