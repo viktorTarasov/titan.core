@@ -224,6 +224,6 @@ module PortTranslate_SE { //^In TTCN-3 module//
 
 	testcase tc_test() runs on MyComp { //In testcase definition//
 		map(mtc:pt2, system:p2);
-		map(mtc:pt2, system:p1); //In map statement// //In first endpoint// //warning\: Port type \`\@PortTranslate_SE\.PTInternal\' was marked as \`internal\'//
+		map(mtc:pt2, system:p1); //In map statement// //In first endpoint// //warning\: Port type \`\@PortTranslate_SE\.PTInternal\' was marked as \`internal\'// //This mapping is not done in translation mode//
 	}
 }
