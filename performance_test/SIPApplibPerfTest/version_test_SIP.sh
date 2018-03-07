@@ -32,7 +32,7 @@
 MINPARAMS=0
 
 LOG_FILE="exec_times_`date +%y_%m_%d_%H-%M`.txt"
-versions="daily 3.1.pl0 4.2.pl0 5.5.pl0 6.2.pl0"
+versions="daily 3.1.pl0 4.2.pl0 5.5.pl0 6.3.pl0"
 #TTCN3_DIRS="/app/TITAN/R8H/LMWP3.1"
 echo "Compilation and execution times:" >  ${LOG_FILE}
 LOG_FILE="../${LOG_FILE}"
