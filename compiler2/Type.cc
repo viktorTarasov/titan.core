@@ -64,6 +64,7 @@ extern Ttcn::ExtensionAttributes * parse_extattributes(
 namespace Common {
   
   map<Type*, void> Type::RecursionTracker::types;
+  dynamic_array<Type*> Type::coding_attrib_check_stack;
 
   using Ttcn::MultiWithAttrib;
   using Ttcn::SingleWithAttrib;
@@ -593,6 +594,7 @@ namespace Common {
     raw_checked = false;
     xer_checked = false;
     variants_checked = false;
+    coding_attribs_checked = false;
     raw_length_calculated = false;
     has_opentypes = false;
     opentype_outermost = false;

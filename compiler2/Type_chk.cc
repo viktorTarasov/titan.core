@@ -229,9 +229,11 @@ void Type::chk()
 
 void Type::chk_coding_attribs()
 {
-  if (!legacy_codec_handling && !variants_checked) {
+  if (coding_attribs_checked || (!legacy_codec_handling && !variants_checked)) {
     return;
   }
+  coding_attribs_checked = true;
+  coding_attrib_check_stack.add(this);
   if (typetype == T_SEQ_T || typetype == T_SET_T || typetype == T_CHOICE_T) {
     // If this record/set/union type has no attributes but one of its fields does,
     // create an empty attribute structure.
@@ -268,6 +270,7 @@ void Type::chk_coding_attribs()
   
   if (!legacy_codec_handling) {
     if (RecursionTracker::is_happening(this)) {
+      coding_attrib_check_stack.remove(coding_attrib_check_stack.size() - 1);
       return;
     }
     
@@ -302,6 +305,7 @@ void Type::chk_coding_attribs()
       }
     }
   }
+  coding_attrib_check_stack.remove(coding_attrib_check_stack.size() - 1);
 }
 
 void Type::parse_attributes()
@@ -2622,6 +2626,11 @@ void Type::chk_xer() { // XERSTUFF semantic check
       t1->chk();
       if (!legacy_codec_handling && !t1->xer_checked) {
         xer_checked = false;
+        // the attribute-checking flags for the types currently running this
+        // check must all be reset, so this type can be checked again
+        for (size_t i = 0; i < coding_attrib_check_stack.size(); ++i) {
+          coding_attrib_check_stack[i]->coding_attribs_checked = false;
+        }
         return;
       }
       // Merge XER attributes from the referenced type.

@@ -344,6 +344,8 @@ namespace Common {
     bool raw_checked;
     bool xer_checked;
     bool variants_checked;
+    bool coding_attribs_checked;
+    static dynamic_array<Type*> coding_attrib_check_stack;
     bool raw_length_calculated;
     bool has_opentypes;
     bool opentype_outermost;
