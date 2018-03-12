@@ -783,7 +783,7 @@ void TTCN_Runtime::start_function(const char *module_name,
         "Function %s was stopped. PTC remains alive and is waiting for next start.",
         function_name);
       // send a STOPPED message without return value
-      TTCN_Communication::send_stopped();
+      TTCN_Communication::send_stopped(local_verdict, verdict_reason);
       // return and do nothing else
       return;
     case PTC_EXIT:
@@ -825,8 +825,10 @@ void TTCN_Runtime::prepare_function_finished(const char *return_type,
     TTCN_error("Internal error: PTC behaviour function finished in invalid "
                "state.");
   if (is_alive) {
-    // Prepare a STOPPED message with the possible return value.
-    TTCN_Communication::prepare_stopped(text_buf, return_type);
+    // Prepare a STOPPED message with the current verdict and
+    // possible return value.
+    TTCN_Communication::prepare_stopped(text_buf, local_verdict, return_type,
+      verdict_reason);
   } else {
     // First the ports and timers must be stopped and deactivated.  The
     // user_unmap and user_stop functions of Test Ports may detect errors

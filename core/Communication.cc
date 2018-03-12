@@ -1115,16 +1115,21 @@ void TTCN_Communication::send_ptc_created(component component_reference)
 }
 
 void TTCN_Communication::prepare_stopped(Text_Buf& text_buf,
-  const char *return_type)
+  verdicttype final_verdict, const char *return_type, const char* reason)
 {
   text_buf.push_int(MSG_STOPPED);
+  text_buf.push_int(final_verdict);
+  text_buf.push_string(reason);
   text_buf.push_string(return_type);
 }
 
-void TTCN_Communication::send_stopped()
+void TTCN_Communication::send_stopped(verdicttype final_verdict,
+  const char* reason)
 {
   Text_Buf text_buf;
   text_buf.push_int(MSG_STOPPED);
+  text_buf.push_int(final_verdict);
+  text_buf.push_string(reason);
   // add an empty return type
   text_buf.push_string(NULL);
   send_message(text_buf);

@@ -35,6 +35,27 @@ function f_behavior_pass() runs on CT {
   setverdict(pass);
 }
 
+// Testing 'done' statement on an 'alive' component
+function f_behavior_test_alive() runs on CT {
+  var CT ct := CT.create alive;
+  var verdicttype vt1;
+  ct.start(f_behavior_pass());
+  ct.done -> value vt1;
+  if (vt1 != pass) {
+    setverdict(fail, "Test #1 failed. Verdict: ", vt1);
+  }
+  else {
+    // do the test again, without setting the verdict to 'pass';
+    // the verdict on the component should still be the one set by the previous behavior function
+    var verdicttype vt2;
+    ct.start(f_behavior_none());
+    ct.done -> value vt2;
+    if (vt2 != pass) {
+      setverdict(fail, "Test #2 failed. Verdict: ", vt2);
+    }
+  }
+}
+
 /*************** Test cases ***************/
 
 // Testing 'done' statement on single component with no value redirect
@@ -125,6 +146,20 @@ testcase tc_any_from_done_verdict_redirect() runs on CT {
   setverdict(pass);
 }
 
+// Testing 'done' statement on an 'alive' component
+testcase tc_done_verdict_redirect_alive_mtc() runs on CT {
+  // calling the function normally runs the test on the MTC
+  f_behavior_test_alive();
+}
+
+// Testing 'done' statement on an 'alive' component
+testcase tc_done_verdict_redirect_alive_ptc() runs on CT {
+  // create a component variable to run the test on a PTC
+  var CT ct := CT.create;
+  ct.start(f_behavior_test_alive());
+  ct.done;
+}
+
 /************** Control part **************/
 control {
   execute(tc_done_single());
@@ -133,6 +168,8 @@ control {
   execute(tc_done_retval_redirect());
   execute(tc_done_verdict_redirect());
   execute(tc_any_from_done_verdict_redirect());
+  execute(tc_done_verdict_redirect_alive_mtc());
+  execute(tc_done_verdict_redirect_alive_ptc());
 }
 
 }

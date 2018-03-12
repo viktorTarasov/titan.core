@@ -138,9 +138,9 @@ public:
   static void send_mtc_ready();
 
   static void send_ptc_created(component component_reference);
-  static void prepare_stopped(Text_Buf& text_buf,
-    const char *return_type);
-  static void send_stopped();
+  static void prepare_stopped(Text_Buf& text_buf, verdicttype final_verdict,
+    const char *return_type, const char* reason = "");
+  static void send_stopped(verdicttype final_verdict, const char* reason = "");
   static void prepare_stopped_killed(Text_Buf& text_buf,
     verdicttype final_verdict, const char *return_type,
     const char* reason = "");

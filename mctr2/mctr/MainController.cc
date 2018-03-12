@@ -5863,6 +5863,9 @@ void MainController::process_stopped(component_struct *tc, int message_end)
     return;
   }
   Text_Buf& text_buf = *tc->text_buf;
+  tc->local_verdict = (verdicttype)text_buf.pull_int().get_val();
+  delete [] tc->verdict_reason;
+  tc->verdict_reason = text_buf.pull_string();
   delete [] tc->return_type;
   tc->return_type = text_buf.pull_string();
   tc->return_value_len = message_end - text_buf.get_pos();
