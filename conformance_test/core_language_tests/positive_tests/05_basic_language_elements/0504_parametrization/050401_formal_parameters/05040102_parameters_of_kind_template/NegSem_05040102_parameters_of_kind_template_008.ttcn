@@ -23,7 +23,7 @@
 // Restriction e)
 // The template instance shall not refer to elements of the component type in a runs on clause.
 
-module NegSem_05040102_parameters_of_kind_template_008 { 
+module NegSem_05040102_parameters_of_kind_template_008 language "TTCN-3:2016" { 
 	type component GeneralComp {
         var template integer vc_int := ?;
 	}	

@@ -1,0 +1,51 @@
+/******************************************************************************
+ * Copyright (c) ETSI 2017.
+ *
+ * This file is subject to copyrights owned by ETSI. Non-exclusive permission
+ * is hereby granted, free of charge, to copy, reproduce and amend this file
+ * under the following conditions: It is provided "as is", without warranty of any
+ * kind, expressed or implied.
+ * 
+ * ETSI shall never be liable for any claim, damages, or other liability arising
+ * from its use or inability of use.This permission does not apply to any documentation
+ * associated with this file for which ETSI keeps all rights reserved. The present
+ * copyright notice shall be included in all copies of whole or part of this
+ * file and shall not imply any sub-license right.
+ *
+ * Modified by: Adrien Kirjak
+ *
+ ** @version  0.0.1
+ ** @purpose  1:5.4.2, verify that value inout parameters cannot be used as out formal template parameters of functions
+ ** @verdict  pass reject
+ ***************************************************/
+
+// The following requirement is tested:
+// Actual parameters that are passed to out formal template parameters shall be template variables, 
+// formal template parameters or references to elements of template variables or formal template 
+// parameters of structured types.
+
+module NegSem_050402_actual_parameters_168 { 
+
+    type component GeneralComp {
+    }
+    
+    function f_test(out template integer p_val) {
+        p_val := 0;
+    }
+
+    function f_caller(inout integer p_val) {
+        f_test(p_val); // tested parameter passing
+        if (match(0, p_val)) { setverdict(pass); }
+        else { setverdict(fail); }
+    }
+
+    
+    testcase TC_NegSem_050402_actual_parameters_168() runs on GeneralComp {
+        var integer v_val := 5;
+        f_caller(v_val); // this parameter passing is not a subject of the test
+	}
+
+	control {
+		execute(TC_NegSem_050402_actual_parameters_168());
+	}
+}

@@ -1,0 +1,45 @@
+/******************************************************************************
+ * Copyright (c) ETSI 2017.
+ *
+ * This file is subject to copyrights owned by ETSI. Non-exclusive permission
+ * is hereby granted, free of charge, to copy, reproduce and amend this file
+ * under the following conditions: It is provided "as is", without warranty of any
+ * kind, expressed or implied.
+ * 
+ * ETSI shall never be liable for any claim, damages, or other liability arising
+ * from its use or inability of use.This permission does not apply to any documentation
+ * associated with this file for which ETSI keeps all rights reserved. The present
+ * copyright notice shall be included in all copies of whole or part of this
+ * file and shall not imply any sub-license right.
+ *
+ * Modified by: Adrien Kirjak
+ *
+ ** @version  0.0.1
+ ** @purpose  1:15.9, Ensure that the match operation works correctly with enums.
+ ** @verdict  pass reject
+ *****************************************************************/
+
+module NegSem_1509_MatchOperation_003 {
+
+	type component GeneralComp { }
+
+	type enumerated A_enum { A, B, C, D, E };
+	type enumerated B_enum { A, F, G };
+
+	testcase TC_NegSem_1509_MatchOperation_003() runs on GeneralComp {
+		
+		var A_enum v_value := A;
+
+		
+		if (match(v_value, B_enum:G)) { // error: different enum type
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+	}
+
+	control{
+		execute(TC_NegSem_1509_MatchOperation_003());
+	}
+
+}

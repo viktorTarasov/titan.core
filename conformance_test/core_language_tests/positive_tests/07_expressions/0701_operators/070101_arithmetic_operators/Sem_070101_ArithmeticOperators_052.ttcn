@@ -19,14 +19,14 @@
  ** @verdict  pass accept, ttcn3verdict:pass
  *****************************************************************/
 
-module Sem_070101_ArithmeticOperators_051 {
+module Sem_070101_ArithmeticOperators_052 {
 
 type component GeneralComp {	    	    
 }
 
 type integer address;
     
-testcase TC_Sem_070101_ArithmeticOperators_051() runs on GeneralComp {
+testcase TC_Sem_070101_ArithmeticOperators_052() runs on GeneralComp {
     
     var address My_address := null;   
     

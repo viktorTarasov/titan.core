@@ -1,0 +1,76 @@
+/******************************************************************************
+ * Copyright (c) ETSI 2017.
+ *
+ * This file is subject to copyrights owned by ETSI. Non-exclusive permission
+ * is hereby granted, free of charge, to copy, reproduce and amend this file
+ * under the following conditions: It is provided "as is", without warranty of any
+ * kind, expressed or implied.
+ * 
+ * ETSI shall never be liable for any claim, damages, or other liability arising
+ * from its use or inability of use.This permission does not apply to any documentation
+ * associated with this file for which ETSI keeps all rights reserved. The present
+ * copyright notice shall be included in all copies of whole or part of this
+ * file and shall not imply any sub-license right.
+ *
+ * Modified by: Adrien Kirjak
+ *
+ ** @version  0.0.1
+ ** @purpose  1:B.1.4.1, Ensure that the IUT correctly handles template matching of value length definitions
+ ** @verdict  pass reject
+ ***************************************************/
+
+module Sem_B010401_length_restrictions_004 { 
+
+
+	type record MessageType {
+  	 	record of integer  		field1, 
+  	 	record of integer 		field2,
+  	 	record of integer 		field3,
+  	 	record of integer   	field4 
+	}
+
+    type port loopbackPort message {
+	  	inout MessageType
+	} with {extension "internal"}
+	
+	type component GeneralComp {	    	    
+	  	port loopbackPort messagePort
+	}	
+
+	testcase TC_Sem_B010401_length_restrictions_004() runs on GeneralComp {
+
+    	var MessageType v_testMessage;
+
+ 		template MessageType mw_matchingTemplate:= {  	
+		  	field1 := { permutation ( 1, 2, 3 ), * } length (4),	// message length is too short
+		  	field2 := { (1,2),* }  length (2 .. 5), 
+		  	field3 := { permutation ( 1, 2, 3 ), ? } length (4),	
+		  	field4 := { (1,2),? }  length (2 .. 5)
+ 		} 
+
+ 		v_testMessage:=  {  
+		  	field1 := {2,1,3},
+		  	field2 := {2,1,3,5}, 
+		  	field3 := {2,1,3,5},
+		  	field4 := {1,1}
+ 		} 
+ 
+ 		connect(self:messagePort, self:messagePort);
+		messagePort.send(v_testMessage);
+
+   		alt {
+     		[] messagePort.receive(mw_matchingTemplate) {
+        		setverdict(fail);
+     		}
+     		[] messagePort.receive {
+        		setverdict(pass);
+     		}
+    	}
+	}
+
+	control{
+		execute(TC_Sem_B010401_length_restrictions_004());
+	}
+
+}
+ 

@@ -1,0 +1,58 @@
+/******************************************************************************
+ * Copyright (c) ETSI 2017.
+ *
+ * This file is subject to copyrights owned by ETSI. Non-exclusive permission
+ * is hereby granted, free of charge, to copy, reproduce and amend this file
+ * under the following conditions: It is provided "as is", without warranty of any
+ * kind, expressed or implied.
+ * 
+ * ETSI shall never be liable for any claim, damages, or other liability arising
+ * from its use or inability of use.This permission does not apply to any documentation
+ * associated with this file for which ETSI keeps all rights reserved. The present
+ * copyright notice shall be included in all copies of whole or part of this
+ * file and shall not imply any sub-license right.
+ *
+ * Modified by: Adrien Kirjak
+ *
+ ** @version  0.0.1
+ ** @purpose  1:22.3.1, non-blocking unicast call
+ ** @verdict  pass accept, ttcn3verdict:pass
+ *****************************************************************/
+
+// The following requirements are tested:
+// In case of non-blocking procedure-based communication the handling of exceptions to call operations 
+// is done by using catch (see clause 22.3.6) operations as alternatives in alt statements.
+
+module Sem_220301_CallOperation_017 {
+
+	signature S() noblock exception (integer);
+	
+	type port P procedure {
+		inout S;
+	} with {extension "internal"}
+	
+    type component GeneralComp {
+		port P p;
+	}
+	
+	function f_called() runs on GeneralComp {
+		p.getcall(S:{});
+		p.raise(S, 1);
+	}
+
+    testcase TC_Sem_220301_CallOperation_017() runs on GeneralComp system GeneralComp {
+        var GeneralComp v_ptc := GeneralComp.create;
+		connect(self:p, v_ptc:p);
+		v_ptc.start(f_called());
+		p.call(S:{});
+		alt {
+			[] p.catch { 
+				setverdict(pass, "Exception received"); // success: exception received
+			}
+		}
+    }
+
+    control {
+        execute(TC_Sem_220301_CallOperation_017(), 5.0);
+    }
+}

@@ -1,0 +1,53 @@
+/******************************************************************************
+ * Copyright (c) ETSI 2017.
+ *
+ * This file is subject to copyrights owned by ETSI. Non-exclusive permission
+ * is hereby granted, free of charge, to copy, reproduce and amend this file
+ * under the following conditions: It is provided "as is", without warranty of any
+ * kind, expressed or implied.
+ * 
+ * ETSI shall never be liable for any claim, damages, or other liability arising
+ * from its use or inability of use.This permission does not apply to any documentation
+ * associated with this file for which ETSI keeps all rights reserved. The present
+ * copyright notice shall be included in all copies of whole or part of this
+ * file and shall not imply any sub-license right.
+ *
+ * Modified by: Adrien Kirjak
+ *
+ ** @version  0.0.1
+ ** @purpose  1:5.4.1.4, Verify that altsteps with port parameters cannot be used in component.start operation
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirement is tested:
+// Only function and altstep definitions may have formal port parameters, - with the exception of functions or 
+// altsteps started as test component behaviour (see clause 21.3.2).
+
+module NegSem_05040104_parameters_of_kind_port_002 {    
+    
+    type port P message {
+        inout integer
+    } with {extension "internal"}
+
+    type component C {
+        port P p;
+    }
+    
+    altstep a_test(P p_port) runs on C {
+        [] p_port.receive(integer:?) {
+            setverdict(pass);
+        }
+    }
+    
+    testcase TC_NegSem_05040104_parameters_of_kind_port_002() runs on C system C {
+        var C v_ptc := C.create;
+        connect(mtc:p, mtc:p);
+        p.send(1);
+        v_ptc.start(a_test(p));
+        v_ptc.done;
+    }
+    
+    control {
+        execute(TC_NegSem_05040104_parameters_of_kind_port_002());
+    }
+}

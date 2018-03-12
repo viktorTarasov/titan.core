@@ -24,7 +24,6 @@ module Sem_220301_CallOperation_007 {
     type charstring address;
     const address c_server1Addr := "server1Addr";
     const address c_server2Addr := "server2Addr";
-    const address c_clientAddr := "clientAddr";
 
     /**
     * @desc testing of inline return template for remote procedure call
@@ -59,15 +58,12 @@ module Sem_220301_CallOperation_007 {
 
     type component GeneralComp {
         port remotePort PCO;
-        var address v_myAddress;
     }
 
-    function f_ClientQuery(address p_myAddress) runs on GeneralComp {
+    function f_ClientQuery() runs on GeneralComp {
         var integer v_zero:=0;
         var integer v_one:=1;
         timer t_timer:=5.0;
-
-        v_myAddress := p_myAddress;
 	
         //  validate multicast calling
         PCO.call(p_Sem_220301_CallOperation_007:s_callTemplate, nowait) to (c_server1Addr,c_server2Addr);
@@ -103,11 +99,9 @@ module Sem_220301_CallOperation_007 {
         var integer v_par1;
         var integer v_par3;
         timer t_timeout:=30.0;
-        v_myAddress := p_myAddress;
-		
-		
+
         t_timeout.start;
-	
+
         alt {
             [] PCO.getcall(p_Sem_220301_CallOperation_007:s_acceptTemplate) -> param(v_par1, v_par3) sender v_clientAddress {
                 PCO.reply(p_Sem_220301_CallOperation_007:{p_par1 := 0, p_par2 := v_par1+v_par3, p_par3 := v_par1+v_par3+1} value v_par1) to v_clientAddress; // p_par1 := -, core dump
@@ -120,11 +114,6 @@ module Sem_220301_CallOperation_007 {
 	 
     }
 
-	
-    function f_setAddress(address p_myAddress) runs on GeneralComp {
-        v_myAddress := p_myAddress;
-    }
-	
     testcase TC_Sem_220301_CallOperation_007() runs on GeneralComp system GeneralComp {
         var GeneralComp server := GeneralComp.create("RemoteProcedure Service") alive;
         var GeneralComp server2 := GeneralComp.create("RemoteProcedure Service2") alive;

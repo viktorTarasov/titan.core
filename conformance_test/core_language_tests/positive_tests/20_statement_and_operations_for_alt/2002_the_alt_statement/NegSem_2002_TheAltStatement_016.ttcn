@@ -15,13 +15,14 @@
  * Modified by: Adrien Kirjak
  *
  ** @version  0.0.1
- ** @purpose  1:20.2, create in altstep branch
+ ** @purpose  1:20.2, verify that the activate operation cannot be used in parameters of alt branch events
  ** @verdict  pass reject
  *****************************************************************/
 
 // The following requirement is tested:
-// Also, the altstep invocation parameters shall not use the operations create,
-// running, alive and activate.
+// d) The evaluation of an altstep invoked from an alt branch, if none of the alternatives in the altstep is chosen, shall 
+// not have side effects. To avoid side effects the restrictions imposed on the contents of functions called from special 
+// places (clause 16.1.4) shall apply to the actual parameters of the invoked altstep. 
 
 module NegSem_2002_TheAltStatement_016 {
 

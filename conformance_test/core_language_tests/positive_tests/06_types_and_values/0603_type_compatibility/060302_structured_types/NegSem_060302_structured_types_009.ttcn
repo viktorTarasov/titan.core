@@ -19,7 +19,7 @@
  ** @verdict  pass reject
  ***************************************************/
 
-module NegSem_060302_structured_types_009 { 
+module NegSem_060302_structured_types_009 language "TTCN-3:2016"{ 
 
 	type enumerated EnumeratedType {e_black, e_white};
 	type enumerated EnumeratedRedefinition {e_black, e_white};

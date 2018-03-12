@@ -21,10 +21,10 @@
 
 // The following requirements are tested:
 // Exceptions are specified as types. Therefore the exception value may either be derived 
-// from a template or be the value resulting from an expression (which of course can be 
-// an explicit value). The optional type field in the value specification to the raise 
-// operation shall be used in cases where it is necessary to avoid any ambiguity of the type
-// of the value being sent.
+// from a template conforming to the template(value) restriction or be the value resulting 
+// from an expression (which of course can be an explicit value). The optional type field in 
+// the value specification to the raise operation shall be used in cases where it is necessary
+//  to avoid any ambiguity of the type of the value being sent.
 
 module NegSem_220305_raise_operation_002 {
 	signature S();

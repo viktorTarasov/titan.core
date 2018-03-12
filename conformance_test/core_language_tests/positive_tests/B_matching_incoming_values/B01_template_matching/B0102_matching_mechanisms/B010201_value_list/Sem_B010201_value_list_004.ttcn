@@ -1,0 +1,71 @@
+/******************************************************************************
+ * Copyright (c) ETSI 2017.
+ *
+ * This file is subject to copyrights owned by ETSI. Non-exclusive permission
+ * is hereby granted, free of charge, to copy, reproduce and amend this file
+ * under the following conditions: It is provided "as is", without warranty of any
+ * kind, expressed or implied.
+ * 
+ * ETSI shall never be liable for any claim, damages, or other liability arising
+ * from its use or inability of use.This permission does not apply to any documentation
+ * associated with this file for which ETSI keeps all rights reserved. The present
+ * copyright notice shall be included in all copies of whole or part of this
+ * file and shall not imply any sub-license right.
+ *
+ * Modified by: Adrien Kirjak
+ *
+ ** @version  0.0.1
+ ** @purpose  1:B.1.2.1, Ensure that the IUT correctly handles template list corretly
+ ** @verdict  pass accept, ttcn3verdict:pass
+ ***************************************************/
+
+// The following requirements are tested:
+// Restriction C: Templates in the template list shall obey the template(present) restriction
+
+module Sem_B010201_value_list_004 { 
+
+	type record MessageType {
+		integer		field1, 
+		charstring	field2 optional
+	}
+
+	template integer t_present := ?; 
+
+	template MessageType t_mes := {
+		field1 := (1, 2, t_present), // present restriction allows AnyValue
+		field2 := ("abc", "bc")
+	}
+
+    type port loopbackPort message {
+		inout MessageType
+	} with {extension "internal"}
+
+	type component GeneralComp {	    	    
+		port loopbackPort messagePort
+	}	
+
+	testcase TC_Sem_B010201_value_list_004() runs on GeneralComp {
+
+		var MessageType v_testMessage := {
+		    field1:= 1,
+		    field2:= "abc"
+		}
+
+		connect(self:messagePort, self:messagePort);
+		messagePort.send(v_testMessage);
+
+		alt {
+			[] messagePort.receive(t_mes) {
+		    	setverdict(pass);
+		 }
+		 	[] messagePort.receive {
+		    	setverdict(fail);
+		 }
+		}
+	}
+
+	control{
+		execute(TC_Sem_B010201_value_list_004());
+	}
+
+}

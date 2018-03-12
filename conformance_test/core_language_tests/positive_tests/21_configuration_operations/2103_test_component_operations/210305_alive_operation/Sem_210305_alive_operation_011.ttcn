@@ -34,8 +34,6 @@ module Sem_210305_alive_operation_011 {
 		t.timeout;
 	}
 
-	function f_done() runs on GeneralComp {}
-	
     testcase TC_Sem_210305_alive_operation_011() runs on GeneralComp system GeneralComp {
 		var boolean v_isAlive;
 		const integer c_size := 3;
@@ -45,7 +43,7 @@ module Sem_210305_alive_operation_011 {
 		for (var integer i := 0; i < c_size; i := i + 1) {
 			for (var integer j := 0; j < c_size; j := j + 1) {				
 				v_ptc[i][j] := GeneralComp.create; // created components are inactive
-				if (i mod 2 == 0 or j mod 2 == 1) { v_ptc[i][j].start(f_done()); } //quick done components on even i or odd j
+				if (i mod 2 == 0 or j mod 2 == 1) { v_ptc[i][j].kill; } //kill components on even i or odd j
 				else { v_ptc[i][j].start(f());} // activate v_ptc
 			}
 		}

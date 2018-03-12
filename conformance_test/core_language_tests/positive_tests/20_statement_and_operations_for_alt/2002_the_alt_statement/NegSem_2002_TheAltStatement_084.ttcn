@@ -1,0 +1,59 @@
+/******************************************************************************
+ * Copyright (c) ETSI 2017.
+ *
+ * This file is subject to copyrights owned by ETSI. Non-exclusive permission
+ * is hereby granted, free of charge, to copy, reproduce and amend this file
+ * under the following conditions: It is provided "as is", without warranty of any
+ * kind, expressed or implied.
+ * 
+ * ETSI shall never be liable for any claim, damages, or other liability arising
+ * from its use or inability of use.This permission does not apply to any documentation
+ * associated with this file for which ETSI keeps all rights reserved. The present
+ * copyright notice shall be included in all copies of whole or part of this
+ * file and shall not imply any sub-license right.
+ *
+ * Modified by: Adrien Kirjak
+ *
+ ** @version  0.0.1
+ ** @purpose  1:20.2, verify that the timer.running operation cannot be used in altstep declarations
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirement is tested:
+// d) The evaluation of an altstep invoked from an alt branch, if none of the alternatives in the altstep is chosen, shall 
+// not have side effects. To avoid side effects the restrictions imposed on the contents of functions called from special 
+// places (clause 16.1.4) shall apply to the actual parameters of the invoked altstep. 
+
+module NegSem_2002_TheAltStatement_084 {
+
+    type port MyPort message {
+        inout boolean
+    } with {extension "internal"}
+    
+    type component GeneralComp { 
+	    port MyPort p;
+        timer t_tmr := 1.0;
+	}
+    
+    altstep a_rcv() runs on GeneralComp {	
+        var boolean v_bool := t_tmr.running;
+        [v_bool] p.receive(boolean:?){
+		}
+    }
+
+    testcase TC_NegSem_2002_TheAltStatement_084() runs on GeneralComp system GeneralComp {
+        connect(self:p, self:p);
+        t_tmr.start;
+	    p.send(true);
+	    alt {
+		    [] a_rcv();
+            [] any timer.timeout {
+            }
+        }
+        setverdict(pass);
+    }
+    
+    control {
+	    execute(TC_NegSem_2002_TheAltStatement_084());
+    }
+}

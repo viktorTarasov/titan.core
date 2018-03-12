@@ -1,0 +1,53 @@
+/******************************************************************************
+ * Copyright (c) ETSI 2017.
+ *
+ * This file is subject to copyrights owned by ETSI. Non-exclusive permission
+ * is hereby granted, free of charge, to copy, reproduce and amend this file
+ * under the following conditions: It is provided "as is", without warranty of any
+ * kind, expressed or implied.
+ * 
+ * ETSI shall never be liable for any claim, damages, or other liability arising
+ * from its use or inability of use.This permission does not apply to any documentation
+ * associated with this file for which ETSI keeps all rights reserved. The present
+ * copyright notice shall be included in all copies of whole or part of this
+ * file and shall not imply any sub-license right.
+ *
+ * Modified by: Adrien Kirjak
+ *
+ ** @version  0.0.1
+ ** @purpose  1:26.1, verify that test cases can be executed from altsteps called from the control block
+ ** @verdict  pass accept, ttcn3verdict:pass
+ *****************************************************************/
+ 
+// The following requirements are tested:
+// c) The execute statement shall not be called from within an existing executing test behaviour 
+// chain called from a test case, i.e. test cases can only be executed from the control part or 
+// from functions or altsteps called directly or indirectly from the control part.
+
+module Sem_2601_ExecuteStatement_010 {
+
+    type component GeneralComp { }
+
+    testcase TC_Sem_2601_ExecuteStatement_010() runs on GeneralComp {
+        setverdict(pass);
+    }
+	
+	altstep a() {
+		[] any timer.timeout {
+			execute(TC_Sem_2601_ExecuteStatement_010());
+		}
+	}
+
+    control {
+        var verdicttype v_result;
+		timer t_tmr1 := 0.5, t_tmr2 := 2.0;
+		t_tmr1.start;
+		t_tmr2.start;
+		activate(a());
+		alt { // t_tmr1 shall time out first triggering the default and thus executing the test case
+			[] t_tmr2.timeout {
+			}
+		}
+    }
+
+}

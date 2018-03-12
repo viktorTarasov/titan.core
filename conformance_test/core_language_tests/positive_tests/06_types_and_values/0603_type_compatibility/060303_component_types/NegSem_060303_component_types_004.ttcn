@@ -12,7 +12,7 @@
  * copyright notice shall be included in all copies of whole or part of this
  * file and shall not imply any sub-license right.
  *
- * Modified by: Adrien Kirjak
+ * Created by: Adrien Kirjak
  *
  ** @version  0.0.1
  ** @purpose  1:6.3.3, Ensure that the IUT correctly handles component compatibility of mtc and runs on clause

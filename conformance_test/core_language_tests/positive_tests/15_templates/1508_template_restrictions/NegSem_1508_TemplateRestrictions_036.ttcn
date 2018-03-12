@@ -39,7 +39,7 @@ module NegSem_1508_TemplateRestrictions_036 {
 		if (valueof(m_baseTemplate.b) == true) {
       		setverdict(pass);
 		} else {
-            setverdict(fail);
+            setverdict(fail, valueof(m_baseTemplate.b));
        }
  	}
 

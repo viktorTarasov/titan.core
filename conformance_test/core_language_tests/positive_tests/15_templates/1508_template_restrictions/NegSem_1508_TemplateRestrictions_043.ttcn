@@ -15,7 +15,7 @@
  * Modified by: Adrien Kirjak
  *
  ** @version  0.0.1
- ** @purpose  1:15.8, Ensure that template(present) can be parameter to template(omit)
+ ** @purpose  1:15.8, Ensure that template cannot be parameter to template(omit)
  ** @verdict  pass reject
  *****************************************************************/
 

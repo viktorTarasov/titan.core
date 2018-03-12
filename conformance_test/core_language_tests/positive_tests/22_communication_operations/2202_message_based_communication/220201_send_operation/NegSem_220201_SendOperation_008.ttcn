@@ -20,8 +20,9 @@
  *****************************************************************/
 
 // The following requirements are tested:
-// AddressRef shall be of type address, component or of the type provided in the address 
-// declaration of the port type of the port instance referenced in the send operation.
+// All AddressRef items in the to clause shall be of type address, component or of the 
+// address type bound to the port type (see clause 6.2.9) of the port instance referenced 
+// in the send operation.
 
 module NegSem_220201_SendOperation_008 {
 	

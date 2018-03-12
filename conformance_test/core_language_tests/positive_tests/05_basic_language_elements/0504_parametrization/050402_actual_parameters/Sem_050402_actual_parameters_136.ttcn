@@ -34,13 +34,12 @@ module Sem_050402_actual_parameters_136 {
         integer field1
     }
     
-	//function f_test(inout template(present) integer p_val) <-- something not working with present
-    function f_test(inout template integer p_val) {
+    function f_test(inout template(present) integer p_val) {
         if (match(11, p_val)) { setverdict(pass); }
         else { setverdict(fail); }
     }
     
-    function f_caller(in template R p_param) {
+    function f_caller(in template(present) R p_param) {
         f_test(p_param.field1); // tested parameter passing
     }
 

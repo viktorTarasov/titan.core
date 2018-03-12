@@ -747,6 +747,287 @@ error: Right operand of operation `&' should be a string, `record of' or `set of
 .*---------------------------------------------------------------------*
 
 *---------------------------------------------------------------------*
+:h3. NegSem_080201_ModuleParameters_001 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 080201_001 Ensure that a port, default or component types cannot be module parameters. >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_080201_ModuleParameters_001 NegSem_080201_ModuleParameters_001.ttcn >
+/*****************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:8.2.1, Ensure that a port, default or component types cannot be module parameters.
+ ** @verdict  pass reject
+ *****************************************************************/
+// The following requirements are tested:
+/* Restriction B: Module parameters shall not be of port type,
+ * default type or component type and shall not be of a structured type that contains a sub-element of 
+ * port type at any level of nesting.*/
+
+module NegSem_080201_ModuleParameters_001 {
+
+   type port MyMessagePortType message {
+		inout	integer
+	} with {extension "internal"}
+
+	modulepar MyMessagePortType MY_PORT;    // not allowed
+	
+	type component GeneralComp {
+	}
+
+	testcase TC_NegSem_080201_ModuleParameters_001() runs on GeneralComp {
+		if (MY_PORT.checkstate("Started")) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+	}
+	
+	control{
+		execute(TC_NegSem_080201_ModuleParameters_001());
+	}
+	
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Type of module parameter cannot be or embed port type `@NegSem_080201_ModuleParameters_001.MyMessagePortType'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_080201_ModuleParameters_004 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 080201_004 Ensure that module parameters remain constant. >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_080201_ModuleParameters_004 NegSem_080201_ModuleParameters_004.ttcn >
+/*****************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:8.2.1, Ensure that module parameters remain constant.
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+/* Restriction B: Module parameters shall not be of port type,
+ * default type or component type and shall not be of a structured type that contains a sub-element of 
+ * port type at any level of nesting.*/
+
+module NegSem_080201_ModuleParameters_004 {
+
+	modulepar integer MY_INT := 2; 
+	
+	type component GeneralComp {	    	    
+	}
+
+	testcase TC_NegSem_080201_ModuleParameters_004() runs on GeneralComp {
+		MY_INT := 3;    // not allowed to change module parameter
+		if (MY_INT == 2) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+	}
+	
+	control{
+		execute(TC_NegSem_080201_ModuleParameters_004());
+	}
+	
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Reference to a variable or template variable was expected instead of module parameter `@NegSem_080201_ModuleParameters_004.MY_INT'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_080201_ModuleParameters_005 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 080201_005 Ensure that a reference to plain module parameter with a default value delivers the default value unless it is overwritten. >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_080201_ModuleParameters_005 NegSem_080201_ModuleParameters_005.ttcn >
+/*****************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:8.2.1, Ensure that a reference to plain module parameter with a default value delivers the default value unless it is overwritten.
+ ** @verdict  pass reject
+ *****************************************************************/
+// A module parameter shall only be of type address if the address type is explicitly defined within the associated module
+
+module NegSem_080201_ModuleParameters_005 {
+
+	modulepar address MY_ADDRESS_MODULE_PARAMETER := 2;    // error: address type not defined
+	
+	type component GeneralComp {
+	}
+
+	testcase TC_NegSem_080201_ModuleParameters_005() runs on GeneralComp {
+		if (MY_ADDRESS_MODULE_PARAMETER == 2) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+	}
+	
+	control{
+		execute(TC_NegSem_080201_ModuleParameters_005());
+	}
+	
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Type `address' is not defined in this module
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_080201_ModuleParameters_006 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 080201_006 Ensure that a module parameter is not allowed to be used in arrays >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_080201_ModuleParameters_006 NegSem_080201_ModuleParameters_006.ttcn >
+/*****************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:8.2.1, Ensure that a module parameter is not allowed to be used in arrays
+ ** @verdict  pass reject
+ *****************************************************************/
+//Module parameters shall not be used in type or array definitions.
+
+module NegSem_080201_ModuleParameters_006 {
+
+	modulepar integer MY_INT_MODULE_PARAMETER := 2;  
+		
+	type component GeneralComp {	    	    
+	}
+
+	type integer MyArrayType[MY_INT_MODULE_PARAMETER];
+	// error: Module parameters shall not be used in type or array definitions.
+
+	testcase TC_NegSem_080201_ModuleParameters_006() runs on GeneralComp {
+	
+		var MyArrayType v_arr := {2,3};
+
+		if (v_arr[0] == 2) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+	}
+	
+	control{
+		execute(TC_NegSem_080201_ModuleParameters_006());
+	}
+	
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Reference to an \(evaluable\) constant value was expected instead of module parameter `@NegSem_080201_ModuleParameters_006.MY_INT_MODULE_PARAMETER'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSyn_080201_ModuleParameters_001 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 080201_001 Ensure that module parameter can be declared within the module definition part only. >
+
+<COMPILE>
+
+<MODULE TTCN NegSyn_080201_ModuleParameters_001 NegSyn_080201_ModuleParameters_001.ttcn >
+/*****************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:8.2.1, Ensure that module parameter can be declared within the module definition part only.
+ ** @verdict  pass reject, noexecution
+ *****************************************************************/
+module NegSyn_080201_ModuleParameters_001 {
+
+	type component GeneralComp {	    	    
+	}
+
+	testcase TC_NegSyn_080201_ModuleParameters_001() runs on GeneralComp {
+		modulepar integer MY_MODULE_PAR := 1;    // not allowed to declared here
+		setverdict(fail);
+	}
+	
+	control {
+		execute(TC_NegSyn_080201_ModuleParameters_001());
+	}
+
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: at or before token `modulepar': syntax error, unexpected ModuleParKeyword
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSyn_080201_ModuleParameters_002 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 080201_002 Ensure that module parameter can be declared within the module definition part only. >
+
+<COMPILE>
+
+<MODULE TTCN NegSyn_080201_ModuleParameters_002 NegSyn_080201_ModuleParameters_002.ttcn >
+/*****************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:8.2.1, Ensure that module parameter can be declared within the module definition part only.
+ ** @verdict  pass reject, noexecution
+ *****************************************************************/
+module NegSyn_080201_ModuleParameters_002 {
+	modulepar integer MY_MODULE_PAR := 1; 
+	modulepar integer MY_MODULE_PAR := 2;    //error: not allowed to redeclare
+
+	type component GeneralComp {	    	    
+	}
+
+	testcase TC_NegSyn_080201_ModuleParameters_002() runs on GeneralComp {
+		setverdict(fail);
+	}
+	
+	control {
+		execute(TC_NegSyn_080201_ModuleParameters_002());
+	}
+    
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Duplicate definition with name `MY_MODULE_PAR'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
 :h3. NegSem_08020301_GeneralFormatOfImport_002 negative test
 .*---------------------------------------------------------------------*
 :xmp tab=0.
@@ -2275,6 +2556,49 @@ error: any value is not allowed in this context
 :exmp
 
 *---------------------------------------------------------------------*
+:h3. NegSem_1101_ValueVars_005 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 1101_005 Variables should be assigned only by initialized variables >
+
+<COMPILE>
+<EXECUTE_PARALLEL>
+
+<MODULE TTCN NegSem_1101_ValueVars_005 NegSem_1101_ValueVars_005.ttcn >
+/***************************************************
+ ** @version  0.0.1
+ ** @purpose  1:11.1, Variables should be assigned only by initialized variables
+ ** @verdict  pass reject
+ ***************************************************/
+
+// The expression shall evaluate to a value, which is at least partially initialized.
+
+module NegSem_1101_ValueVars_005 {
+    type component GeneralComp {}
+    
+	testcase TC_NegSem_1101_ValueVars_005() runs on GeneralComp {
+  		var integer v_i;
+        var integer v_j := v_i + 2;    // error: v_i is uninitialized            
+
+        setverdict(pass);
+	}
+    
+    control {
+        execute(TC_NegSem_1101_ValueVars_005());
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+Dynamic test case error: Unbound left operand of integer addition.
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+
+*---------------------------------------------------------------------*
 :h3. NegSyn_1101_ValueVars_001 negative test
 .*---------------------------------------------------------------------*
 :xmp tab=0.
@@ -2362,6 +2686,49 @@ module NegSyn_1102_TemplateVars_001 {
 
 <RESULT COUNT 1>
 error: at or before token `var': syntax error, unexpected VarKeyword
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSyn_1102_TemplateVars_002 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 1102_002 Template variables should be assigned with unitialized variables >
+
+<COMPILE>
+
+<MODULE TTCN NegSyn_1102_TemplateVars_002 NegSyn_1102_TemplateVars_002.ttcn >
+/***************************************************
+ ** @version  0.0.1
+ ** @purpose  1:11.2, Template variables should be assigned with unitialized variables
+ ** @verdict  pass reject
+ ***************************************************/
+
+/* The following requirements are tested:
+Restriction l) The template body at the right-hand side of the  assignment symbol shall evaluate to a value or template, which is type compatible with the variable being declared.
+*/
+
+module NegSyn_1102_TemplateVars_002 {
+    type component GeneralComp {}
+    
+	testcase TC_NegSyn_1102_TemplateVars_002() runs on GeneralComp {
+  		var integer v_i1 := 1;
+        var template float v_i2 := v_i1; // error: v_i1 is integer, meanwhile template type is float
+  		
+        setverdict(pass);
+	}
+    
+    control {
+        execute(TC_NegSyn_1102_TemplateVars_002());
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Type mismatch: a value or template of type `float' was expected instead of `integer'
 <END_RESULT>
 
 <END_TC>

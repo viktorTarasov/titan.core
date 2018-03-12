@@ -14,7 +14,7 @@
  *
  * Modified by: Adrien Kirjak
  *
- ** @version  0.0.1
+ ** @version  0.0.2
  ** @purpose  1:5.5, Verify that cyclic altsteps are allowed
  ** @verdict  pass accept, ttcn3verdict:pass
  ***************************************************/
@@ -31,6 +31,7 @@ module Sem_0505_cyclic_definitions_004 {
 
 	type component GeneralComp {	
 		var integer vc_receiveCounter := 0;
+		timer t_tmr := 1.0;
 		port P p1;
 	}	
 	
@@ -56,6 +57,7 @@ module Sem_0505_cyclic_definitions_004 {
 		for (var integer i := 0; i < 5; i := i + 1) {
 			p1.send(i);
 		}
+		t_tmr.start;
 	    a_test();		
 	}
 	

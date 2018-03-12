@@ -28,7 +28,12 @@ testcase TC_Sem_070101_ArithmeticOperators_051() runs on GeneralComp {
 	var float v_i := -infinity;
 	var float v_k :=2.0E0;
 	
-	var float v_result := v_i * v_k;	// arithmetic operator with -infinity is not allowed
+	var float v_result := v_i * v_k;	// arithmetic operator with -infinity is allowed by IEEE 754 
+
+   if (v_result == -infinity)
+		{ setverdict(pass); }
+   else 
+		{ setverdict(fail); }
 	
 	setverdict(pass);
 

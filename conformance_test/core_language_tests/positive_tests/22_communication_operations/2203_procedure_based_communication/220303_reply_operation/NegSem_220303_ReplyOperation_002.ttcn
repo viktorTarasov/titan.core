@@ -20,7 +20,8 @@
  ***************************************************/
 
 // The following requirements are tested:
-// No AddressRef shall contain the special value null at the time of the operation.
+// No AddressRef in the to clause shall contain the special value null at the time 
+// of the operation.
 
 module NegSem_220303_ReplyOperation_002 { 
 

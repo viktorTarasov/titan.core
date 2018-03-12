@@ -1,0 +1,41 @@
+/******************************************************************************
+ * Copyright (c) ETSI 2017.
+ *
+ * This file is subject to copyrights owned by ETSI. Non-exclusive permission
+ * is hereby granted, free of charge, to copy, reproduce and amend this file
+ * under the following conditions: It is provided "as is", without warranty of any
+ * kind, expressed or implied.
+ * 
+ * ETSI shall never be liable for any claim, damages, or other liability arising
+ * from its use or inability of use.This permission does not apply to any documentation
+ * associated with this file for which ETSI keeps all rights reserved. The present
+ * copyright notice shall be included in all copies of whole or part of this
+ * file and shall not imply any sub-license right.
+ *
+ * Modified by: Adrien Kirjak
+ *
+ ** @version  0.0.1
+ ** @purpose  1:6.1.1, Ensure that whitespaces, control characters and backslash will be included for the universal charstring length calculation
+ ** @verdict  pass accept, ttcn3verdict:pass
+ ***************************************************/
+
+module Sem_060101_TopLevel_015 {
+  
+ type component GeneralComp {}
+    
+    testcase TC_Sem_060101_TopLevel_015() runs on GeneralComp {
+        var universal charstring v_a := "ABC\    DEF";    //lengthof(v_a) is 11
+               
+    	if (match(lengthof(v_a), 11))
+        {
+    		setverdict(pass,"Size of v_a is:",lengthof(v_a));
+    	}
+    	else {
+    		setverdict(fail,"Size of v_a is:",lengthof(v_a));
+    	}
+    }
+    
+    control{
+        execute(TC_Sem_060101_TopLevel_015());
+    }
+}
