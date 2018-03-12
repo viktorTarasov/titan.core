@@ -20,11 +20,10 @@
  *****************************************************************/
 
 // The following requirements are tested:
-// The matching criteria as defined in clause 22.2.2 apply also to the trigger 
-// operation.
-// In the case of one-to-many connections the [trigger] operation may be restricted 
+// In the case of one-to-many connections the trigger operation may be restricted 
 // to a certain communication partner. This restriction shall be denoted using the 
-// from keyword.
+// from keyword followed by a specification of an address or component reference, 
+// a list of address or component references or any component.
 
 module Sem_220203_TriggerOperation_007 {
 	

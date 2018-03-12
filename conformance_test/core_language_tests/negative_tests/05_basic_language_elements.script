@@ -2862,6 +2862,532 @@ error: at or before token `@fuzzy': syntax error, unexpected FuzzyKeyword
 :exmp
 
 *---------------------------------------------------------------------*
+:h3. NegSem_05040103_parameters_of_kind_timer_001 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 05040103_001 Verify that functions with timer parameters cannot be used in component.start operation >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_05040103_parameters_of_kind_timer_001 05040103_parameters_of_kind_timer_001.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:5.4.1.3, Verify that functions with timer parameters cannot be used in component.start operation
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirement is tested:
+// Only function and altstep definitions may have formal timer parameters, with the exception of functions or 
+// altsteps started as test component behaviour (see clause 21.3.2).
+
+module NegSem_05040103_parameters_of_kind_timer_001 {    
+    
+    type component C {
+    }
+    
+    function f_test(inout timer p_tmr) runs on C {
+        p_tmr.timeout;
+        setverdict(pass);
+    }
+    
+    testcase TC_NegSem_05040103_parameters_of_kind_timer_001() runs on C system C {
+    	timer t_tmr := 0.1; 
+        var C v_ptc := C.create;
+        t_tmr.start;
+        v_ptc.start(f_test(t_tmr));
+        v_ptc.done;
+    }
+    
+    control {
+        execute(TC_NegSem_05040103_parameters_of_kind_timer_001());
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Function `@NegSem_05040103_parameters_of_kind_timer_001.f_test' cannot be started on a parallel test component because it has timer parameter `p_tmr'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_05040103_parameters_of_kind_timer_003 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 05040103_003 Verify that test cases cannot have timer parameters >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_05040103_parameters_of_kind_timer_003 05040103_parameters_of_kind_timer_003.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:5.4.1.3, Verify that test cases cannot have timer parameters
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirement is tested:
+// Only function and altstep definitions may have formal timer parameters, with the exception of functions or 
+// altsteps started as test component behaviour (see clause 21.3.2).
+
+module NegSem_05040103_parameters_of_kind_timer_003 {    
+    
+    type component C {
+    }
+    
+    testcase TC_NegSem_05040103_parameters_of_kind_timer_003(timer p_tmr) runs on C {
+        p_tmr.timeout;
+        setverdict(pass);
+    }
+    
+    control {
+		timer t_tmr := 0.1; 
+        t_tmr.start;
+        execute(TC_NegSem_05040103_parameters_of_kind_timer_003(t_tmr));
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: at or before token `timer': syntax error, unexpected TimerKeyword
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_05040103_parameters_of_kind_timer_004 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 05040103_004 Verify that templates cannot have timer parameters >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_05040103_parameters_of_kind_timer_004 05040103_parameters_of_kind_timer_004.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:5.4.1.3, Verify that templates cannot have timer parameters
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirement is tested:
+// Only function and altstep definitions may have formal timer parameters, with the exception of functions or 
+// altsteps started as test component behaviour (see clause 21.3.2).
+
+module NegSem_05040103_parameters_of_kind_timer_004 {    
+    
+    type component C {
+    }
+    
+	template boolean m_msg (timer p_tmr) := p_tmr.running;
+	   
+    testcase TC_NegSem_05040103_parameters_of_kind_timer_004() runs on C system C {
+    	timer t_tmr := 0.1; 
+        t_tmr.start;
+		log(m_msg(t_tmr));
+        setverdict(pass);
+    }
+    
+    control {
+        execute(TC_NegSem_05040103_parameters_of_kind_timer_004());
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: at or before token `timer': syntax error, unexpected TimerKeyword
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSyn_05040103_parameters_of_kind_timer_001 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 05040103_001 Verify that in timer parameters are not allowed >
+
+<COMPILE>
+
+<MODULE TTCN NegSyn_05040103_parameters_of_kind_timer_001 NegSyn_05040103_parameters_of_kind_timer_001.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:5.4.1.3, Verify that in timer parameters are not allowed
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirement is tested:
+// Formal timer parameters shall be inout parameters, which can optionally be indicated by the keyword inout.
+
+module NegSyn_05040103_parameters_of_kind_timer_001 {    
+    
+    type component C {
+    }
+    
+    function f_test(in timer p_tmr) {
+        p_tmr.timeout;
+    }
+    
+    testcase TC_NegSyn_05040103_parameters_of_kind_timer_001() runs on C {
+        timer t_tmr := 1.0;
+        t_tmr.start;
+        f_test(t_tmr);    
+        setverdict(pass);    
+    }
+    
+    control {
+        execute(TC_NegSyn_05040103_parameters_of_kind_timer_001());
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: at or before token `timer': syntax error, unexpected TimerKeyword
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSyn_05040103_parameters_of_kind_timer_002 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 05040103_002 Verify that out timer parameters are not allowed >
+
+<COMPILE>
+
+<MODULE TTCN NegSyn_05040103_parameters_of_kind_timer_002 NegSyn_05040103_parameters_of_kind_timer_002.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:5.4.1.3, Verify that out timer parameters are not allowed
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirement is tested:
+// Formal timer parameters shall be inout parameters, which can optionally be indicated by the keyword inout.
+
+module NegSyn_05040103_parameters_of_kind_timer_002 {    
+    
+    type component C {
+
+    }
+
+    function f_test(out timer p_tmr) {
+
+        p_tmr.start(1.0);
+
+    }
+   
+    testcase TC_NegSyn_05040103_parameters_of_kind_timer_002() runs on C{
+
+    	timer t_tmr;    
+
+        f_test(t_tmr);        
+
+        t_tmr.timeout;
+        setverdict(pass);
+
+    }
+
+   
+    control {
+
+        execute(TC_NegSyn_05040103_parameters_of_kind_timer_002());
+
+    }
+
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: at or before token `timer': syntax error, unexpected TimerKeyword
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_05040104_parameters_of_kind_port_001 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 05040104_001 Verify that functions with port parameters cannot be used in component.start operation >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_05040104_parameters_of_kind_port_001 NegSem_05040104_parameters_of_kind_port_001.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:5.4.1.4, Verify that functions with port parameters cannot be used in component.start operation
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirement is tested:
+// Only function and altstep definitions may have formal port parameters, - with the exception of functions or 
+// altsteps started as test component behaviour (see clause 21.3.2).
+
+module NegSem_05040104_parameters_of_kind_port_001 {    
+    
+    type port P message {
+        inout integer
+    } with {extension "internal"}
+
+    type component C {
+        port P p;
+    }
+    
+    function f_test(P p_port) runs on C {
+        p_port.send(1);
+        setverdict(pass);
+    }
+    
+    testcase TC_NegSem_05040104_parameters_of_kind_port_001() runs on C system C {
+        var C v_ptc := C.create;
+		connect(mtc:p,v_ptc:p);
+        v_ptc.start(f_test(p));
+        v_ptc.done;
+    }
+    
+    control {
+        execute(TC_NegSem_05040104_parameters_of_kind_port_001());
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Function `@NegSem_05040104_parameters_of_kind_port_001.f_test' cannot be started on a parallel test component because it has port parameter `p_port'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_05040104_parameters_of_kind_port_003 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 05040104_003 Verify that in port parameters are not allowed >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_05040104_parameters_of_kind_port_003 NegSem_05040104_parameters_of_kind_port_003.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:5.4.1.4, Verify that in port parameters are not allowed
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirement is tested:
+// Formal port parameters shall be inout parameters, which can optionally be indicated by the keyword inout.
+ 
+module NegSem_05040104_parameters_of_kind_port_003 {    
+    
+    type port P message {
+        inout integer
+    } with {extension "internal"}
+    
+    type component C {
+        port P p;
+    }
+    
+    function f_test(in P p_port) {
+        p_port.send(1);
+    }
+    
+    testcase TC_NegSem_05040104_parameters_of_kind_port_003() runs on C {
+		connect(self:p,self:p);
+        f_test(p);    
+        setverdict(pass);    
+    }
+    
+    control {
+        execute(TC_NegSem_05040104_parameters_of_kind_port_003());
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Port type `@NegSem_05040104_parameters_of_kind_port_003.P' cannot be used as value parameter
+<END_RESULT>
+<RESULT COUNT 1>
+error: Reference to a port or port parameter was expected instead of value parameter `p_port'
+<END_RESULT>
+<RESULT COUNT 1>
+error: Reference to a value was expected instead of port `@NegSem_05040104_parameters_of_kind_port_003.C.p'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_05040104_parameters_of_kind_port_004 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 05040104_004 Verify that out port parameters are not allowed >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_05040104_parameters_of_kind_port_004 NegSem_05040104_parameters_of_kind_port_004.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:5.4.1.4, Verify that out port parameters are not allowed
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirement is tested:
+// Formal port parameters shall be inout parameters, which can optionally be indicated by the keyword inout.
+
+module NegSem_05040104_parameters_of_kind_port_004 {    
+    
+    type port P message {
+        inout integer
+    } with {extension "internal"}
+    
+    type component C {
+        port P p;
+    }
+    
+    function f_test(out P p_port) {
+        setverdict(pass);
+    }
+    
+    testcase TC_NegSem_05040104_parameters_of_kind_port_004() runs on C {
+		connect(self:p,self:p);
+        f_test(p);
+    }
+    
+    control {
+        execute(TC_NegSem_05040104_parameters_of_kind_port_004());
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Port type `@NegSem_05040104_parameters_of_kind_port_004.P' cannot be used as `out' value parameter
+<END_RESULT>
+<RESULT COUNT 1>
+error: Reference to a variable or value parameter was expected for an `out' value parameter instead of port `@NegSem_05040104_parameters_of_kind_port_004.C.p'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_05040104_parameters_of_kind_port_005 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 05040104_005 Verify that test cases cannot have port parameters >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_05040104_parameters_of_kind_port_005 NegSem_05040104_parameters_of_kind_port_005.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:5.4.1.4, Verify that test cases cannot have port parameters
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirement is tested:
+// Only function and altstep definitions may have formal port parameters, - with the exception of functions or 
+// altsteps started as test component behaviour (see clause 21.3.2).
+
+module NegSem_05040104_parameters_of_kind_port_005 {    
+    
+    type port P message {
+        inout integer
+    } with {extension "internal"}
+
+    type component C {
+        port P p;
+    }
+        
+	testcase TC_Test(P p_port) runs on C { // should cause a compilation error
+		p_port.send(1);
+        setverdict(pass);
+    }
+	
+    testcase TC_NegSem_05040104_parameters_of_kind_port_005(P p_port) runs on C {
+		connect(self:p,self:p);
+        setverdict(pass);
+    }
+    
+    control {
+        execute(TC_NegSem_05040104_parameters_of_kind_port_005());
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 2>
+error: A testcase cannot have port parameter
+<END_RESULT>
+<RESULT COUNT 1>
+error: Too few parameters: 1 was expected instead of 0
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_05040104_parameters_of_kind_port_006 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 05040104_006 Verify that templates cannot contain port parameters >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_05040104_parameters_of_kind_port_006 NegSem_05040104_parameters_of_kind_port_006.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:5.4.1.4, Verify that templates cannot contain port parameters
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirement is tested:
+// Only function and altstep definitions may have formal port parameters, - with the exception of functions or 
+// altsteps started as test component behaviour (see clause 21.3.2).
+
+module NegSem_05040104_parameters_of_kind_port_006 {    
+    
+    type port P message {
+        inout integer
+    } with {extension "internal"}
+
+    type component C {
+        port P p;
+    }
+    
+    template boolean m_msg(P p_par) := p_par.checkstate("Started");
+    
+    testcase TC_NegSem_05040104_parameters_of_kind_port_006() runs on C system C {
+		log(m_msg(p));
+        setverdict(pass);
+    }
+    
+    control {
+        execute(TC_NegSem_05040104_parameters_of_kind_port_006());
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: A template cannot have port parameter
+<END_RESULT>
+<RESULT COUNT 1>
+error: Operation `port.checkstate\(\)' is allowed only within statements
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
 :h3. NegSem_050402_actual_parameters_001 negative test
 .*---------------------------------------------------------------------*
 :xmp tab=0.
@@ -5751,9 +6277,8 @@ module NegSem_050402_actual_parameters_056 {
  ***************************************************/
 
 // The following requirement is tested:
-// Actual parameters that are passed to out formal template parameters shall be variables, 
-// template variables, formal value parameters, formal template parameters or references 
-// to elements of variables, template variables, formal value parameters or formal template 
+// Actual parameters that are passed to out formal template parameters shall be template variables, 
+// formal template parameters or references to elements of template variables or formal template 
 // parameters of structured types.
 
 module NegSem_050402_actual_parameters_057 { 
@@ -5800,9 +6325,8 @@ module NegSem_050402_actual_parameters_057 {
  ***************************************************/
 
 // The following requirement is tested:
-// Actual parameters that are passed to out formal template parameters shall be variables, 
-// template variables, formal value parameters, formal template parameters or references 
-// to elements of variables, template variables, formal value parameters or formal template 
+// Actual parameters that are passed to out formal template parameters shall be template variables, 
+// formal template parameters or references to elements of template variables or formal template 
 // parameters of structured types.
 
 module NegSem_050402_actual_parameters_058 { 
@@ -5851,9 +6375,8 @@ module NegSem_050402_actual_parameters_058 {
  ***************************************************/
 
 // The following requirement is tested:
-// Actual parameters that are passed to out formal template parameters shall be variables, 
-// template variables, formal value parameters, formal template parameters or references 
-// to elements of variables, template variables, formal value parameters or formal template 
+// Actual parameters that are passed to out formal template parameters shall be template variables, 
+// formal template parameters or references to elements of template variables or formal template 
 // parameters of structured types.
 
 module NegSem_050402_actual_parameters_059 { 
@@ -5902,9 +6425,8 @@ module NegSem_050402_actual_parameters_059 {
  ***************************************************/
 
 // The following requirement is tested:
-// Actual parameters that are passed to out formal template parameters shall be variables, 
-// template variables, formal value parameters, formal template parameters or references 
-// to elements of variables, template variables, formal value parameters or formal template 
+// Actual parameters that are passed to out formal template parameters shall be template variables, 
+// formal template parameters or references to elements of template variables or formal template 
 // parameters of structured types.
 
 module NegSem_050402_actual_parameters_060 { 
@@ -5955,9 +6477,8 @@ module NegSem_050402_actual_parameters_060 {
  ***************************************************/
 
 // The following requirement is tested:
-// Actual parameters that are passed to out formal template parameters shall be variables, 
-// template variables, formal value parameters, formal template parameters or references 
-// to elements of variables, template variables, formal value parameters or formal template 
+// Actual parameters that are passed to out formal template parameters shall be template variables, 
+// formal template parameters or references to elements of template variables or formal template 
 // parameters of structured types.
 
 module NegSem_050402_actual_parameters_061 { 
@@ -6009,9 +6530,8 @@ module NegSem_050402_actual_parameters_061 {
  ***************************************************/
 
 // The following requirement is tested:
-// Actual parameters that are passed to out formal template parameters shall be variables, 
-// template variables, formal value parameters, formal template parameters or references 
-// to elements of variables, template variables, formal value parameters or formal template 
+// Actual parameters that are passed to out formal template parameters shall be template variables, 
+// formal template parameters or references to elements of template variables or formal template 
 // parameters of structured types.
 
 module NegSem_050402_actual_parameters_062 { 
@@ -6060,9 +6580,8 @@ module NegSem_050402_actual_parameters_062 {
  ***************************************************/
 
 // The following requirement is tested:
-// Actual parameters that are passed to out formal template parameters shall be variables, 
-// template variables, formal value parameters, formal template parameters or references 
-// to elements of variables, template variables, formal value parameters or formal template 
+// Actual parameters that are passed to out formal template parameters shall be template variables, 
+// formal template parameters or references to elements of template variables or formal template 
 // parameters of structured types.
 
 module NegSem_050402_actual_parameters_063 { 
@@ -6113,9 +6632,8 @@ module NegSem_050402_actual_parameters_063 {
  ***************************************************/
 
 // The following requirement is tested:
-// Actual parameters that are passed to out formal template parameters shall be variables, 
-// template variables, formal value parameters, formal template parameters or references 
-// to elements of variables, template variables, formal value parameters or formal template 
+// Actual parameters that are passed to out formal template parameters shall be template variables, 
+// formal template parameters or references to elements of template variables or formal template 
 // parameters of structured types.
 
 module NegSem_050402_actual_parameters_064 { 
@@ -6168,9 +6686,8 @@ module NegSem_050402_actual_parameters_064 {
  ***************************************************/
 
 // The following requirement is tested:
-// Actual parameters that are passed to out formal template parameters shall be variables, 
-// template variables, formal value parameters, formal template parameters or references 
-// to elements of variables, template variables, formal value parameters or formal template 
+// Actual parameters that are passed to out formal template parameters shall be template variables, 
+// formal template parameters or references to elements of template variables or formal template 
 // parameters of structured types.
 
 module NegSem_050402_actual_parameters_065 { 
@@ -6223,9 +6740,8 @@ module NegSem_050402_actual_parameters_065 {
  ***************************************************/
 
 // The following requirement is tested:
-// Actual parameters that are passed to out formal template parameters shall be variables, 
-// template variables, formal value parameters, formal template parameters or references 
-// to elements of variables, template variables, formal value parameters or formal template 
+// Actual parameters that are passed to out formal template parameters shall be template variables, 
+// formal template parameters or references to elements of template variables or formal template 
 // parameters of structured types.
 
 module NegSem_050402_actual_parameters_066 { 
@@ -6280,9 +6796,8 @@ module NegSem_050402_actual_parameters_066 {
  ***************************************************/
 
 // The following requirement is tested:
-// Actual parameters that are passed to out formal template parameters shall be variables, 
-// template variables, formal value parameters, formal template parameters or references 
-// to elements of variables, template variables, formal value parameters or formal template 
+// Actual parameters that are passed to out formal template parameters shall be template variables, 
+// formal template parameters or references to elements of template variables or formal template 
 // parameters of structured types.
 
 module NegSem_050402_actual_parameters_067 { 
@@ -6338,9 +6853,8 @@ module NegSem_050402_actual_parameters_067 {
  ***************************************************/
 
 // The following requirement is tested:
-// Actual parameters that are passed to out formal template parameters shall be variables, 
-// template variables, formal value parameters, formal template parameters or references 
-// to elements of variables, template variables, formal value parameters or formal template 
+// Actual parameters that are passed to out formal template parameters shall be template variables, 
+// formal template parameters or references to elements of template variables or formal template 
 // parameters of structured types.
 
 module NegSem_050402_actual_parameters_068 { 
@@ -6393,9 +6907,8 @@ module NegSem_050402_actual_parameters_068 {
  ***************************************************/
 
 // The following requirement is tested:
-// Actual parameters that are passed to out formal template parameters shall be variables, 
-// template variables, formal value parameters, formal template parameters or references 
-// to elements of variables, template variables, formal value parameters or formal template 
+// Actual parameters that are passed to out formal template parameters shall be template variables, 
+// formal template parameters or references to elements of template variables or formal template 
 // parameters of structured types.
 
 module NegSem_050402_actual_parameters_069 { 
@@ -6438,9 +6951,8 @@ module NegSem_050402_actual_parameters_069 {
  ***************************************************/
 
 // The following requirement is tested:
-// Actual parameters that are passed to out formal template parameters shall be variables, 
-// template variables, formal value parameters, formal template parameters or references 
-// to elements of variables, template variables, formal value parameters or formal template 
+// Actual parameters that are passed to out formal template parameters shall be template variables, 
+// formal template parameters or references to elements of template variables or formal template 
 // parameters of structured types.
 
 module NegSem_050402_actual_parameters_070 { 
@@ -6485,9 +6997,8 @@ module NegSem_050402_actual_parameters_070 {
  ***************************************************/
 
 // The following requirement is tested:
-// Actual parameters that are passed to out formal template parameters shall be variables, 
-// template variables, formal value parameters, formal template parameters or references 
-// to elements of variables, template variables, formal value parameters or formal template 
+// Actual parameters that are passed to out formal template parameters shall be template variables, 
+// formal template parameters or references to elements of template variables or formal template 
 // parameters of structured types.
 
 module NegSem_050402_actual_parameters_071 { 
@@ -6532,9 +7043,8 @@ module NegSem_050402_actual_parameters_071 {
  ***************************************************/
 
 // The following requirement is tested:
-// Actual parameters that are passed to out formal template parameters shall be variables, 
-// template variables, formal value parameters, formal template parameters or references 
-// to elements of variables, template variables, formal value parameters or formal template 
+// Actual parameters that are passed to out formal template parameters shall be template variables, 
+// formal template parameters or references to elements of template variables or formal template 
 // parameters of structured types.
 
 module NegSem_050402_actual_parameters_072 { 
@@ -6581,9 +7091,8 @@ module NegSem_050402_actual_parameters_072 {
  ***************************************************/
 
 // The following requirement is tested:
-// Actual parameters that are passed to out formal template parameters shall be variables, 
-// template variables, formal value parameters, formal template parameters or references 
-// to elements of variables, template variables, formal value parameters or formal template 
+// Actual parameters that are passed to out formal template parameters shall be template variables, 
+// formal template parameters or references to elements of template variables or formal template 
 // parameters of structured types.
 
 module NegSem_050402_actual_parameters_073 { 
@@ -6631,9 +7140,8 @@ module NegSem_050402_actual_parameters_073 {
  ***************************************************/
 
 // The following requirement is tested:
-// Actual parameters that are passed to out formal template parameters shall be variables, 
-// template variables, formal value parameters, formal template parameters or references 
-// to elements of variables, template variables, formal value parameters or formal template 
+// Actual parameters that are passed to out formal template parameters shall be template variables, 
+// formal template parameters or references to elements of template variables or formal template 
 // parameters of structured types.
 
 module NegSem_050402_actual_parameters_074 { 
@@ -8883,6 +9391,1819 @@ module NegSem_050402_actual_parameters_118 {
 
 <RESULT COUNT 1>
 error: The referenced template `@NegSem_050402_actual_parameters_118.mw_allInt' cannot have actual parameters
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_050402_actual_parameters_146 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 050402_146 verify that literal cannot be used as actual out value parameters of functions >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_050402_actual_parameters_146 NegSem_050402_actual_parameters_146.ttcn >
+/***************************************************
+ ** @version  0.0.1
+ ** @purpose  1:5.4.2, verify that literal cannot be used as actual out value parameters of functions
+ ** @verdict  pass reject
+ ***************************************************/
+
+// The following requirement is tested:
+// Actual parameters that are passed to out formal value parameters shall be (template) variables, 
+// formal (template) parameters (of in, inout or out parameterization) or references to elements 
+// of (template) variables or formal (template) parameters of structured types. Furthermore it is 
+// allowed to use the dash symbol "-" as an actual out parameter, signifying that a possible result 
+// for that parameter will not be passed back.
+
+module NegSem_050402_actual_parameters_146 { 
+
+    type component GeneralComp {
+    }
+       
+    function f_test(out integer p_val) {
+        p_val := 9
+    }
+    
+    testcase TC_NegSem_050402_actual_parameters_146() runs on GeneralComp {
+        f_test(1);
+        setverdict(pass);
+	}
+
+	control {
+		execute(TC_NegSem_050402_actual_parameters_146());
+	}
+}
+<END_MODULE>
+
+
+<RESULT COUNT 1>
+error: Reference to a variable or value parameter was expected for an `out' value parameter
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_050402_actual_parameters_147 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 050402_147 verify that expression cannot be used as actual out value parameters of functions >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_050402_actual_parameters_147 NegSem_050402_actual_parameters_147.ttcn >
+/***************************************************
+ ** @version  0.0.1
+ ** @purpose  1:5.4.2, verify that expression cannot be used as actual out value parameters of functions
+ ** @verdict  pass reject
+ ***************************************************/
+
+// The following requirement is tested:
+// Actual parameters that are passed to out formal value parameters shall be (template) variables, 
+// formal (template) parameters (of in, inout or out parameterization) or references to elements 
+// of (template) variables or formal (template) parameters of structured types. Furthermore it is 
+// allowed to use the dash symbol "-" as an actual out parameter, signifying that a possible result 
+// for that parameter will not be passed back.
+
+module NegSem_050402_actual_parameters_147 {
+
+    type component GeneralComp {
+    }
+       
+    function f_ret() return integer {
+        return 4;
+    }
+
+    function f_test(out integer p_val) {
+        p_val := 9
+    }
+    
+    testcase TC_NegSem_050402_actual_parameters_147() runs on GeneralComp {
+        var integer v_val := 5;
+        f_test(10 + f_ret() - v_val);
+        setverdict(pass);
+	}
+
+	control {
+		execute(TC_NegSem_050402_actual_parameters_147());
+	}
+}
+<END_MODULE>
+
+
+<RESULT COUNT 1>
+error: Reference to a variable or value parameter was expected for an `out' value parameter
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_050402_actual_parameters_148 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 050402_148 verify that function calls cannot be used as actual out value parameters of functions >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_050402_actual_parameters_148 NegSem_050402_actual_parameters_148.ttcn >
+/***************************************************
+ ** @version  0.0.1
+ ** @purpose  1:5.4.2, verify that function calls cannot be used as actual out value parameters of functions
+ ** @verdict  pass reject
+ ***************************************************/
+
+// The following requirement is tested:
+// Actual parameters that are passed to out formal value parameters shall be (template) variables, 
+// formal (template) parameters (of in, inout or out parameterization) or references to elements 
+// of (template) variables or formal (template) parameters of structured types. Furthermore it is 
+// allowed to use the dash symbol "-" as an actual out parameter, signifying that a possible result 
+// for that parameter will not be passed back.
+
+module NegSem_050402_actual_parameters_148 { 
+
+    type component GeneralComp {
+    }
+       
+    function f_ret() return integer {
+        return 4;
+    }
+
+    function f_test(out integer p_val) {
+        p_val := 9
+    }
+    
+    testcase TC_NegSem_050402_actual_parameters_148() runs on GeneralComp {
+        f_test(f_ret());
+        setverdict(pass);
+	}
+
+	control {
+		execute(TC_NegSem_050402_actual_parameters_148());
+	}
+}
+<END_MODULE>
+
+
+<RESULT COUNT 1>
+error: Reference to a variable or value parameter was expected for an `out' value parameter instead of function `@NegSem_050402_actual_parameters_148.f_ret'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_050402_actual_parameters_149 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 050402_149 verify that module parameters cannot be used as actual out value parameters of functions >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_050402_actual_parameters_149 NegSem_050402_actual_parameters_149.ttcn >
+/***************************************************
+ ** @version  0.0.1
+ ** @purpose  1:5.4.2, verify that module parameters cannot be used as actual out value parameters of functions
+ ** @verdict  pass reject
+ ***************************************************/
+
+// The following requirement is tested:
+// Actual parameters that are passed to out formal value parameters shall be (template) variables, 
+// formal (template) parameters (of in, inout or out parameterization) or references to elements 
+// of (template) variables or formal (template) parameters of structured types. Furthermore it is 
+// allowed to use the dash symbol "-" as an actual out parameter, signifying that a possible result 
+// for that parameter will not be passed back.
+
+module NegSem_050402_actual_parameters_149 { 
+
+    type component GeneralComp {
+    }
+       
+    modulepar integer PX_VAL := 2;
+
+    function f_test(out integer p_val) {
+        p_val := 9
+    }
+    
+    testcase TC_NegSem_050402_actual_parameters_149() runs on GeneralComp {
+        f_test(PX_VAL);
+        setverdict(pass);
+	}
+
+	control {
+		execute(TC_NegSem_050402_actual_parameters_149());
+	}
+}
+<END_MODULE>
+
+
+<RESULT COUNT 1>
+error: Reference to a variable or value parameter was expected for an `out' value parameter instead of module parameter `@NegSem_050402_actual_parameters_149.PX_VAL'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_050402_actual_parameters_150 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 050402_150 verify that templates cannot be used as actual out value parameters of functions >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_050402_actual_parameters_150 NegSem_050402_actual_parameters_150.ttcn >
+/***************************************************
+ ** @version  0.0.1
+ ** @purpose  1:5.4.2, verify that templates cannot be used as actual out value parameters of functions
+ ** @verdict  pass reject
+ ***************************************************/
+
+// The following requirement is tested:
+// Actual parameters that are passed to out formal value parameters shall be (template) variables, 
+// formal (template) parameters (of in, inout or out parameterization) or references to elements 
+// of (template) variables or formal (template) parameters of structured types. Furthermore it is 
+// allowed to use the dash symbol "-" as an actual out parameter, signifying that a possible result 
+// for that parameter will not be passed back.
+
+module NegSem_050402_actual_parameters_150 { 
+
+    type component GeneralComp {
+    }
+       
+    template integer mw_msg := ?;
+
+    function f_test(out integer p_val) {
+        p_val := 9
+    }
+    
+    testcase TC_NegSem_050402_actual_parameters_150() runs on GeneralComp {
+        f_test(mw_msg);
+        setverdict(pass);
+	}
+
+	control {
+		execute(TC_NegSem_050402_actual_parameters_150());
+	}
+}
+<END_MODULE>
+
+
+<RESULT COUNT 1>
+ error: Reference to a variable or value parameter was expected for an `out' value parameter instead of template `@NegSem_050402_actual_parameters_150.mw_msg'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_050402_actual_parameters_151 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 050402_151 verify that constants cannot be used as actual out value parameters of functions >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_050402_actual_parameters_151 NegSem_050402_actual_parameters_151.ttcn >
+/***************************************************
+ ** @version  0.0.1
+ ** @purpose  1:5.4.2, verify that constants cannot be used as actual out value parameters of functions
+ ** @verdict  pass reject
+ ***************************************************/
+
+// The following requirement is tested:
+// Actual parameters that are passed to out formal value parameters shall be (template) variables, 
+// formal (template) parameters (of in, inout or out parameterization) or references to elements 
+// of (template) variables or formal (template) parameters of structured types. Furthermore it is 
+// allowed to use the dash symbol "-" as an actual out parameter, signifying that a possible result 
+// for that parameter will not be passed back.
+
+module NegSem_050402_actual_parameters_151 { 
+
+    type component GeneralComp {
+    }
+
+    function f_test(out integer p_val) {
+        p_val := 9
+    }
+    
+    testcase TC_NegSem_050402_actual_parameters_151() runs on GeneralComp {
+        const integer c_val := 3;
+        f_test(c_val);
+        setverdict(pass);
+	}
+
+	control {
+		execute(TC_NegSem_050402_actual_parameters_151());
+	}
+}
+<END_MODULE>
+
+
+<RESULT COUNT 1>
+ error: Reference to a variable or value parameter was expected for an `out' value parameter instead of constant `c_val'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_050402_actual_parameters_152 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 050402_152 verify that literal cannot be used as actual out value parameters of altsteps >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_050402_actual_parameters_152 NegSem_050402_actual_parameters_152.ttcn >
+/***************************************************
+ ** @version  0.0.1
+ ** @purpose  1:5.4.2, verify that literal cannot be used as actual out value parameters of altsteps
+ ** @verdict  pass reject
+ ***************************************************/
+
+// The following requirement is tested:
+// Actual parameters that are passed to out formal value parameters shall be (template) variables, 
+// formal (template) parameters (of in, inout or out parameterization) or references to elements 
+// of (template) variables or formal (template) parameters of structured types. Furthermore it is 
+// allowed to use the dash symbol "-" as an actual out parameter, signifying that a possible result 
+// for that parameter will not be passed back.
+
+module NegSem_050402_actual_parameters_152 { 
+
+    type component GeneralComp {
+    }
+       
+    altstep a_test(out integer p_val) {
+        [] any timer.timeout {
+            p_val := 9
+        }
+    }
+    
+    testcase TC_NegSem_050402_actual_parameters_152() runs on GeneralComp {
+        timer t_tmr := 0.1;
+        t_tmr.start;
+        a_test(1);
+        setverdict(pass);
+	}
+
+	control {
+		execute(TC_NegSem_050402_actual_parameters_152());
+	}
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Reference to a variable or value parameter was expected for an `out' value parameter
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_050402_actual_parameters_153 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 050402_153 verify that expression cannot be used as actual out value parameters of altsteps >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_050402_actual_parameters_153 NegSem_050402_actual_parameters_153.ttcn >
+/***************************************************
+ ** @version  0.0.1
+ ** @purpose  1:5.4.2, verify that expression cannot be used as actual out value parameters of altsteps
+ ** @verdict  pass reject
+ ***************************************************/
+
+// The following requirement is tested:
+// Actual parameters that are passed to out formal value parameters shall be (template) variables, 
+// formal (template) parameters (of in, inout or out parameterization) or references to elements 
+// of (template) variables or formal (template) parameters of structured types. Furthermore it is 
+// allowed to use the dash symbol "-" as an actual out parameter, signifying that a possible result 
+// for that parameter will not be passed back.
+
+module NegSem_050402_actual_parameters_153 { 
+
+    type component GeneralComp {
+    }
+       
+    altstep a_test(out integer p_val) {
+        [] any timer.timeout {
+            p_val := 9
+        }
+    }
+
+    function f_test(out integer p_val) {
+        p_val := 9
+    }
+    
+    testcase TC_NegSem_050402_actual_parameters_153() runs on GeneralComp {
+        var integer v_val := 5;
+        timer t_tmr := 0.1;
+        t_tmr.start;
+        a_test(10 + f_ret() - v_val);
+        setverdict(pass);
+	}
+
+	control {
+		execute(TC_NegSem_050402_actual_parameters_153());
+	}
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Reference to a variable or value parameter was expected for an `out' value parameter
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_050402_actual_parameters_154 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 050402_154 verify that function calls cannot be used as actual out value parameters of altsteps >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_050402_actual_parameters_154 NegSem_050402_actual_parameters_154.ttcn >
+/***************************************************
+ ** @version  0.0.1
+ ** @purpose  1:5.4.2, verify that function calls cannot be used as actual out value parameters of altsteps
+ ** @verdict  pass reject
+ ***************************************************/
+
+// The following requirement is tested:
+// Actual parameters that are passed to out formal value parameters shall be (template) variables, 
+// formal (template) parameters (of in, inout or out parameterization) or references to elements 
+// of (template) variables or formal (template) parameters of structured types. Furthermore it is 
+// allowed to use the dash symbol "-" as an actual out parameter, signifying that a possible result 
+// for that parameter will not be passed back.
+
+module NegSem_050402_actual_parameters_154 { 
+
+    type component GeneralComp {
+    }
+       
+    altstep a_test(out integer p_val) {
+        [] any timer.timeout {
+            p_val := 9
+        }
+    }
+
+    function f_ret() return integer {
+        return 4;
+    }
+    
+    testcase TC_NegSem_050402_actual_parameters_154() runs on GeneralComp {
+        timer t_tmr := 0.1;
+        t_tmr.start;
+        a_test(f_ret());
+        setverdict(pass);
+	}
+
+	control {
+		execute(TC_NegSem_050402_actual_parameters_154());
+	}
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Reference to a variable or value parameter was expected for an `out' value parameter instead of function `@NegSem_050402_actual_parameters_154.f_ret'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_050402_actual_parameters_155 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 050402_155 verify that module parameters cannot be used as actual out value parameters of altsteps >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_050402_actual_parameters_155 NegSem_050402_actual_parameters_155.ttcn >
+/***************************************************
+ ** @version  0.0.1
+ ** @purpose  1:5.4.2, verify that module parameters cannot be used as actual out value parameters of altsteps
+ ** @verdict  pass reject
+ ***************************************************/
+
+// The following requirement is tested:
+// Actual parameters that are passed to out formal value parameters shall be (template) variables, 
+// formal (template) parameters (of in, inout or out parameterization) or references to elements 
+// of (template) variables or formal (template) parameters of structured types. Furthermore it is 
+// allowed to use the dash symbol "-" as an actual out parameter, signifying that a possible result 
+// for that parameter will not be passed back.
+
+module NegSem_050402_actual_parameters_155 { 
+
+    type component GeneralComp {
+    }
+       
+    modulepar integer PX_VAL := 2;
+
+    altstep a_test(out integer p_val) {
+        [] any timer.timeout {
+            p_val := 9
+        }
+    }
+    
+    testcase TC_NegSem_050402_actual_parameters_155() runs on GeneralComp {
+        timer t_tmr := 0.1;
+        t_tmr.start;
+        a_test(PX_VAL);
+        setverdict(pass);
+	}
+
+	control {
+		execute(TC_NegSem_050402_actual_parameters_155());
+	}
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Reference to a variable or value parameter was expected for an `out' value parameter instead of module parameter `@NegSem_050402_actual_parameters_155.PX_VAL'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_050402_actual_parameters_156 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 050402_156 verify that templates cannot be used as actual out value parameters of altsteps >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_050402_actual_parameters_156 NegSem_050402_actual_parameters_156.ttcn >
+/***************************************************
+ ** @version  0.0.1
+ ** @purpose  1:5.4.2, verify that templates cannot be used as actual out value parameters of altsteps
+ ** @verdict  pass reject
+ ***************************************************/
+
+// The following requirement is tested:
+// Actual parameters that are passed to out formal value parameters shall be (template) variables, 
+// formal (template) parameters (of in, inout or out parameterization) or references to elements 
+// of (template) variables or formal (template) parameters of structured types. Furthermore it is 
+// allowed to use the dash symbol "-" as an actual out parameter, signifying that a possible result 
+// for that parameter will not be passed back.
+
+module NegSem_050402_actual_parameters_156 { 
+
+    type component GeneralComp {
+    }
+       
+    template integer mw_msg := ?;
+
+    altstep a_test(out integer p_val) {
+        [] any timer.timeout {
+            p_val := 9
+        }
+    }
+    
+    testcase TC_NegSem_050402_actual_parameters_156() runs on GeneralComp {
+        timer t_tmr := 0.1;
+        t_tmr.start;
+        a_test(mw_msg);
+        setverdict(pass);
+	}
+
+	control {
+		execute(TC_NegSem_050402_actual_parameters_156());
+	}
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Reference to a variable or value parameter was expected for an `out' value parameter instead of template `@NegSem_050402_actual_parameters_156.mw_msg'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_050402_actual_parameters_157 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 050402_157 verify that templates cannot be used as actual out value parameters of altsteps >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_050402_actual_parameters_157 NegSem_050402_actual_parameters_157.ttcn >
+/***************************************************
+ ** @version  0.0.1
+ ** @purpose  1:5.4.2, verify that constants cannot be used as actual out value parameters of altsteps
+ ** @verdict  pass reject
+ ***************************************************/
+
+// The following requirement is tested:
+// Actual parameters that are passed to out formal value parameters shall be (template) variables, 
+// formal (template) parameters (of in, inout or out parameterization) or references to elements 
+// of (template) variables or formal (template) parameters of structured types. Furthermore it is 
+// allowed to use the dash symbol "-" as an actual out parameter, signifying that a possible result 
+// for that parameter will not be passed back.
+
+module NegSem_050402_actual_parameters_157 { 
+
+    type component GeneralComp {
+    }
+
+    altstep a_test(out integer p_val) {
+        [] any timer.timeout {
+            p_val := 9
+        }
+    }
+    
+    testcase TC_NegSem_050402_actual_parameters_157() runs on GeneralComp {
+        const integer c_val := 3;
+        timer t_tmr := 0.1;
+        t_tmr.start;
+        a_test(c_val);
+        setverdict(pass);
+	}
+
+	control {
+		execute(TC_NegSem_050402_actual_parameters_157());
+	}
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Reference to a variable or value parameter was expected for an `out' value parameter instead of constant `c_val'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_050402_actual_parameters_158 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 050402_158 verify that function cannot have more actual than formal parameters >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_050402_actual_parameters_158 NegSem_050402_actual_parameters_158.ttcn >
+/***************************************************
+ ** @version  0.0.1
+ ** @purpose  1:5.4.2, verify that function cannot have more actual than formal parameters
+ ** @verdict  pass reject
+ ***************************************************/
+
+// The following requirement is tested:
+// The number of actual parameters in the list notation shall not exceed the number of parameters 
+// in the formal parameter list.
+
+module NegSem_050402_actual_parameters_158 { 
+
+    type component GeneralComp {
+	}	
+
+    function f_test(in integer p_val) {
+        if (p_val == 1) { setverdict(pass); }
+        else { setverdict(fail); }
+    }
+
+    testcase TC_NegSem_050402_actual_parameters_158() runs on GeneralComp {
+        f_test(1, 2); // tested parameter passing
+	}
+
+	control {
+		execute(TC_NegSem_050402_actual_parameters_158());
+	}
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Too many parameters: 1 was expected instead of 2
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_050402_actual_parameters_159 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 050402_159 verify that templates cannot have more actual than formal parameters >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_050402_actual_parameters_159 NegSem_050402_actual_parameters_159.ttcn >
+/***************************************************
+ ** @version  0.0.1
+ ** @purpose  1:5.4.2, verify that templates cannot have more actual than formal parameters
+ ** @verdict  pass reject
+ ***************************************************/
+
+// The following requirement is tested:
+// The number of actual parameters in the list notation shall not exceed the number of parameters 
+// in the formal parameter list.
+
+module NegSem_050402_actual_parameters_159 { 
+
+    type component GeneralComp {
+	}	
+
+    template integer mw_range (integer p_par) := (0..p_par);
+
+    testcase TC_NegSem_050402_actual_parameters_159() runs on GeneralComp {
+        log(mw_range(1, 2)); // tested parameter passing
+		setverdict(pass);
+	}
+
+	control {
+		execute(TC_NegSem_050402_actual_parameters_159());
+	}
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Too many parameters: 1 was expected instead of 2
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_050402_actual_parameters_160 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 050402_160 verify that altstep cannot have more actual than formal parameters >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_050402_actual_parameters_160 NegSem_050402_actual_parameters_160.ttcn >
+/***************************************************
+ ** @version  0.0.1
+ ** @purpose  1:5.4.2, verify that altstep cannot have more actual than formal parameters
+ ** @verdict  pass reject
+ ***************************************************/
+
+// The following requirement is tested:
+// The number of actual parameters in the list notation shall not exceed the number of parameters 
+// in the formal parameter list.
+
+module NegSem_050402_actual_parameters_160 { 
+
+    type component GeneralComp {
+	}	
+
+    altstep a_test(in integer p_val) {
+		[] any timer.timeout {
+			if (p_val == 1) { setverdict(pass); }
+			else { setverdict(fail); }
+		}
+    }
+
+    testcase TC_NegSem_050402_actual_parameters_160() runs on GeneralComp {
+		timer t_tmr := 0.1;
+		t_tmr.start;
+        a_test(1, 2); // tested parameter passing
+	}
+
+	control {
+		execute(TC_NegSem_050402_actual_parameters_160());
+	}
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Too many parameters: 1 was expected instead of 2
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_050402_actual_parameters_161 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 050402_161 verify that testcase cannot have more actual than formal parameters >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_050402_actual_parameters_161 NegSem_050402_actual_parameters_161.ttcn >
+/***************************************************
+ ** @version  0.0.1
+ ** @purpose  1:5.4.2, verify that testcase cannot have more actual than formal parameters
+ ** @verdict  pass reject
+ ***************************************************/
+
+// The following requirement is tested:
+// The number of actual parameters in the list notation shall not exceed the number of parameters 
+// in the formal parameter list.
+
+module NegSem_050402_actual_parameters_161 { 
+
+    type component GeneralComp {
+	}
+
+    testcase TC_NegSem_050402_actual_parameters_161(in integer p_val) runs on GeneralComp {
+        if (p_val == 1) { setverdict(pass); }
+        else { setverdict(fail); }
+	}
+
+	control {
+		execute(TC_NegSem_050402_actual_parameters_161(1, 2));
+	}
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Too many parameters: 1 was expected instead of 2
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_050402_actual_parameters_165 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 050402_165 verify that value variables cannot be used as out formal template parameters of functions >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_050402_actual_parameters_165 NegSem_050402_actual_parameters_165.ttcn >
+/***************************************************
+ ** @version  0.0.1
+ ** @purpose  1:5.4.2, verify that value variables cannot be used as out formal template parameters of functions
+ ** @verdict  pass reject
+ ***************************************************/
+
+// The following requirement is tested:
+// Actual parameters that are passed to out formal template parameters shall be template variables, 
+// formal template parameters or references to elements of template variables or formal template 
+// parameters of structured types.
+
+module NegSem_050402_actual_parameters_165 { 
+
+    type component GeneralComp {
+	}
+    
+    function f_test(out template integer p_val) {
+        p_val := 2;
+    }
+
+    testcase TC_NegSem_050402_actual_parameters_165() runs on GeneralComp {
+        var integer vm_msg;
+        f_test(vm_msg); // tested parameter passing
+        if (match(2, vm_msg)) { setverdict(pass); }
+        else { setverdict(fail); }
+	}
+
+	control {
+		execute(TC_NegSem_050402_actual_parameters_165());
+	}
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Reference to a template variable or template parameter was expected for an `out' template parameter instead of variable `vm_msg'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_050402_actual_parameters_166 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 050402_166 verify that value in parameters cannot be used as out formal template parameters of functions >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_050402_actual_parameters_166 NegSem_050402_actual_parameters_166.ttcn >
+/***************************************************
+ ** @version  0.0.1
+ ** @purpose  1:5.4.2, verify that value in parameters cannot be used as out formal template parameters of functions
+ ** @verdict  pass reject
+ ***************************************************/
+
+// The following requirement is tested:
+// Actual parameters that are passed to out formal template parameters shall be template variables, 
+// formal template parameters or references to elements of template variables or formal template 
+// parameters of structured types.
+
+module NegSem_050402_actual_parameters_166 { 
+
+    type component GeneralComp {
+    }
+    
+    function f_test(out template integer p_val) {
+        p_val := 0;
+    }
+
+    function f_caller(in integer p_val) {
+        f_test(p_val); // tested parameter passing
+        if (match(0, p_val)) { setverdict(pass); }
+        else { setverdict(fail); }
+    }
+
+    
+    testcase TC_NegSem_050402_actual_parameters_166() runs on GeneralComp {
+        f_caller(3); // this parameter passing is not a subject of the test
+	}
+
+	control {
+		execute(TC_NegSem_050402_actual_parameters_166());
+	}
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Reference to a template variable or template parameter was expected for an `out' template parameter instead of value parameter `p_val'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_050402_actual_parameters_167 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 050402_167 verify that value in parameters cannot be used as out formal template parameters of functions >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_050402_actual_parameters_167 NegSem_050402_actual_parameters_167.ttcn >
+/***************************************************
+ ** @version  0.0.1
+ ** @purpose  1:5.4.2, verify that value out parameters cannot be used as out formal template parameters of functions
+ ** @verdict  pass reject
+ ***************************************************/
+
+// The following requirement is tested:
+// Actual parameters that are passed to out formal template parameters shall be template variables, 
+// formal template parameters or references to elements of template variables or formal template 
+// parameters of structured types.
+
+module NegSem_050402_actual_parameters_167 { 
+
+    type component GeneralComp {
+    }
+    
+    function f_test(out template integer p_val) {
+        p_val := 0;
+    }
+
+    function f_caller(out integer p_val) {
+        p_val := 4; // out parameter shall have a value before we can pass it to a function
+        f_test(p_val); // tested parameter passing
+        if (match(0, p_val)) { setverdict(pass); }
+        else { setverdict(fail); }
+    }
+
+    
+    testcase TC_NegSem_050402_actual_parameters_167() runs on GeneralComp {
+        var integer v_val;
+        f_caller(v_val); // this parameter passing is not a subject of the test
+	}
+
+	control {
+		execute(TC_NegSem_050402_actual_parameters_167());
+	}
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Reference to a template variable or template parameter was expected for an `out' template parameter instead of `out' value parameter `p_val'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_050402_actual_parameters_168 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 050402_168 verify that value inout parameters cannot be used as out formal template parameters of functions >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_050402_actual_parameters_168 NegSem_050402_actual_parameters_168.ttcn >
+/***************************************************
+ ** @version  0.0.1
+ ** @purpose  1:5.4.2, verify that value inout parameters cannot be used as out formal template parameters of functions
+ ** @verdict  pass reject
+ ***************************************************/
+
+// The following requirement is tested:
+// Actual parameters that are passed to out formal template parameters shall be template variables, 
+// formal template parameters or references to elements of template variables or formal template 
+// parameters of structured types.
+
+module NegSem_050402_actual_parameters_168 { 
+
+    type component GeneralComp {
+    }
+    
+    function f_test(out template integer p_val) {
+        p_val := 0;
+    }
+
+    function f_caller(inout integer p_val) {
+        f_test(p_val); // tested parameter passing
+        if (match(0, p_val)) { setverdict(pass); }
+        else { setverdict(fail); }
+    }
+
+    
+    testcase TC_NegSem_050402_actual_parameters_168() runs on GeneralComp {
+        var integer v_val := 5;
+        f_caller(v_val); // this parameter passing is not a subject of the test
+	}
+
+	control {
+		execute(TC_NegSem_050402_actual_parameters_168());
+	}
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Reference to a template variable or template parameter was expected for an `out' template parameter instead of `inout' value parameter `p_val'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_050402_actual_parameters_169 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 050402_169 verify that value variable element reference cannot be used as out formal template parameters of functions >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_050402_actual_parameters_169 NegSem_050402_actual_parameters_169.ttcn >
+/***************************************************
+ ** @version  0.0.1
+ ** @purpose  1:5.4.2, verify that value variable element reference cannot be used as out formal template parameters of functions
+ ** @verdict  pass reject
+ ***************************************************/
+
+// The following requirement is tested:
+// Actual parameters that are passed to out formal template parameters shall be template variables, 
+// formal template parameters or references to elements of template variables or formal template 
+// parameters of structured types.
+
+module NegSem_050402_actual_parameters_169 { 
+
+    type component GeneralComp {
+    }
+    
+    type record R {
+        integer field1
+    }
+    
+    function f_test(out template integer p_val) {
+        p_val := ?;
+    }
+
+    testcase TC_NegSem_050402_actual_parameters_169() runs on GeneralComp {
+        var R v_val := { field1 := 10 };
+        f_test(v_val.field1); // tested parameter passing
+        if (match( { field1 := 0 }, v_val)) { setverdict(pass); }
+        else { setverdict(fail); }
+	}
+
+	control {
+		execute(TC_NegSem_050402_actual_parameters_169());
+	}
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Reference to a template variable or template parameter was expected for an `out' template parameter instead of variable `v_val'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_050402_actual_parameters_170 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 050402_170 verify that reference to elements of formal value parameters cannot be used as out formal template parameters of functions >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_050402_actual_parameters_170 NegSem_050402_actual_parameters_170.ttcn >
+/***************************************************
+ ** @version  0.0.1
+ ** @purpose  1:5.4.2, verify that reference to elements of formal value parameters cannot be used as out formal template parameters of functions
+ ** @verdict  pass reject
+ ***************************************************/
+
+// The following requirement is tested:
+// Actual parameters that are passed to out formal template parameters shall be template variables, 
+// formal template parameters or references to elements of template variables or formal template 
+// parameters of structured types.
+
+module NegSem_050402_actual_parameters_170 { 
+
+    type component GeneralComp {
+    }
+    
+    type record R {
+        integer field1
+    }
+    
+    function f_test(out template integer p_val) {
+        p_val := ?;
+    }
+    
+    function f_caller(in R p_param) {
+        f_test(p_param.field1); // tested parameter passing
+        if (match( { field1 := 0 }, p_param)) { setverdict(pass); }
+        else { setverdict(fail); }
+    }
+
+    testcase TC_NegSem_050402_actual_parameters_170() runs on GeneralComp {
+        f_caller({field1 := 11 });        
+	}
+
+	control {
+		execute(TC_NegSem_050402_actual_parameters_170());
+	}
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Reference to a template variable or template parameter was expected for an `out' template parameter instead of value parameter `p_param'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_050402_actual_parameters_171 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 050402_171 verify that value variables cannot be used as out formal template parameters of altsteps >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_050402_actual_parameters_171 NegSem_050402_actual_parameters_171.ttcn >
+/***************************************************
+ ** @version  0.0.1
+ ** @purpose  1:5.4.2, verify that value variables cannot be used as out formal template parameters of altsteps
+ ** @verdict  pass reject
+ ***************************************************/
+
+// The following requirement is tested:
+// Actual parameters that are passed to out formal template parameters shall be template variables, 
+// formal template parameters or references to elements of template variables or formal template 
+// parameters of structured types.
+
+module NegSem_050402_actual_parameters_171 { 
+
+    type component GeneralComp {
+        timer t := 0.0;
+	}
+    
+    altstep a_test(out template integer p_val) runs on GeneralComp {
+        []t.timeout {
+            p_val := 0;
+        }
+    }
+
+    testcase TC_NegSem_050402_actual_parameters_171() runs on GeneralComp {
+        var integer vm_msg := 2;
+        t.start;
+        a_test(vm_msg); // tested parameter passing
+        if (match(0, vm_msg)) { setverdict(pass); }
+        else { setverdict(fail); }
+	}
+
+	control {
+		execute(TC_NegSem_050402_actual_parameters_171());
+	}
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Reference to a template variable or template parameter was expected for an `out' template parameter instead of variable `vm_msg'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_050402_actual_parameters_172 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 050402_172 verify that value in parameters cannot be used as out formal template parameters of altsteps >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_050402_actual_parameters_172 NegSem_050402_actual_parameters_172.ttcn >
+/***************************************************
+ ** @version  0.0.1
+ ** @purpose  1:5.4.2, verify that value in parameters cannot be used as out formal template parameters of altsteps
+ ** @verdict  pass reject
+ ***************************************************/
+
+// The following requirement is tested:
+// Actual parameters that are passed to out formal template parameters shall be template variables, 
+// formal template parameters or references to elements of template variables or formal template 
+// parameters of structured types.
+
+module NegSem_050402_actual_parameters_172 { 
+
+    type component GeneralComp {
+        timer t := 0.0;
+    }
+    
+    altstep a_test(out template integer p_val) runs on GeneralComp {
+        []t.timeout {
+            p_val := 0;
+        }
+    }
+
+    function f_caller(in integer p_val) runs on GeneralComp {
+        a_test(p_val); // tested parameter passing
+        if (match(0, p_val)) { setverdict(pass); }
+        else { setverdict(fail); }
+    }
+
+    
+    testcase TC_NegSem_050402_actual_parameters_172() runs on GeneralComp {
+        t.start;
+        f_caller(3); // this parameter passing is not a subject of the test
+	}
+
+	control {
+		execute(TC_NegSem_050402_actual_parameters_172());
+	}
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Reference to a template variable or template parameter was expected for an `out' template parameter instead of value parameter `p_val'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_050402_actual_parameters_173 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 050402_173 verify that value out parameters cannot be used as out formal template parameters of altsteps >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_050402_actual_parameters_173 NegSem_050402_actual_parameters_173.ttcn >
+/***************************************************
+ ** @version  0.0.1
+ ** @purpose  1:5.4.2, verify that value out parameters cannot be used as out formal template parameters of altsteps
+ ** @verdict  pass reject
+ ***************************************************/
+
+// The following requirement is tested:
+// Actual parameters that are passed to out formal template parameters shall be template variables, 
+// formal template parameters or references to elements of template variables or formal template 
+// parameters of structured types.
+
+module NegSem_050402_actual_parameters_173 { 
+
+    type component GeneralComp {
+        timer t := 0.0;
+    }
+    
+    altstep a_test(out template integer p_val) runs on GeneralComp {
+        []t.timeout {
+            p_val := 0;
+        }
+    }
+
+    function f_caller(out integer p_val) runs on GeneralComp {
+        p_val := 4; // out parameter shall have a value before we can pass it to a function
+        a_test(p_val); // tested parameter passing
+        if (match(0 , p_val)) { setverdict(pass); }
+        else { setverdict(fail); }
+    }
+
+    
+    testcase TC_NegSem_050402_actual_parameters_173() runs on GeneralComp {
+        var integer v_val;
+        t.start;
+        f_caller(v_val); // this parameter passing is not a subject of the test
+	}
+
+	control {
+		execute(TC_NegSem_050402_actual_parameters_173());
+	}
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Reference to a template variable or template parameter was expected for an `out' template parameter instead of `out' value parameter `p_val'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_050402_actual_parameters_174 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 050402_174 verify that value inout parameters cannot be used as out formal template parameters of altsteps >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_050402_actual_parameters_174 NegSem_050402_actual_parameters_174.ttcn >
+/***************************************************
+ ** @version  0.0.1
+ ** @purpose  1:5.4.2, verify that value inout parameters cannot be used as out formal template parameters of altsteps
+ ** @verdict  pass reject
+ ***************************************************/
+
+// The following requirement is tested:
+// Actual parameters that are passed to out formal template parameters shall be template variables, 
+// formal template parameters or references to elements of template variables or formal template 
+// parameters of structured types.
+
+module NegSem_050402_actual_parameters_174 { 
+
+    type component GeneralComp {
+        timer t := 0.0;
+    }
+    
+    altstep a_test(out template integer p_val) runs on GeneralComp {
+        []t.timeout {
+            p_val := 0;
+        }
+    }
+
+    function f_caller(inout integer p_val) runs on GeneralComp {
+        a_test(p_val); // tested parameter passing
+        if (match(0, p_val)) { setverdict(pass); }
+        else { setverdict(fail); }
+    }
+
+    
+    testcase TC_NegSem_050402_actual_parameters_174() runs on GeneralComp {
+        var integer v_val := 5;
+        t.start;
+        f_caller(v_val); // this parameter passing is not a subject of the test
+	}
+
+	control {
+		execute(TC_NegSem_050402_actual_parameters_174());
+	}
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Reference to a template variable or template parameter was expected for an `out' template parameter instead of `inout' value parameter `p_val'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_050402_actual_parameters_175 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 050402_175 verify that value variable element reference cannot be used as out formal template parameters of altsteps >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_050402_actual_parameters_175 NegSem_050402_actual_parameters_175.ttcn >
+/***************************************************
+ ** @version  0.0.1
+ ** @purpose  1:5.4.2, verify that value variable element reference cannot be used as out formal template parameters of altsteps
+ ** @verdict  pass reject
+ ***************************************************/
+
+// The following requirement is tested:
+// Actual parameters that are passed to out formal template parameters shall be template variables, 
+// formal template parameters or references to elements of template variables or formal template 
+// parameters of structured types.
+
+module NegSem_050402_actual_parameters_175 { 
+
+    type component GeneralComp {
+        timer t := 0.0;
+    }
+    
+    type record R {
+        integer field1
+    }
+    
+    altstep a_test(out template integer p_val) runs on GeneralComp {
+        []t.timeout {
+            p_val := 5; 
+        }
+    }
+
+    testcase TC_NegSem_050402_actual_parameters_175() runs on GeneralComp {
+        var R v_val := { field1 := 10 };
+        t.start;
+        a_test(v_val.field1); // tested parameter passing
+        if (match({ field1 := 5 }, v_val)) { setverdict(pass); }
+        else { setverdict(fail); }
+	}
+
+	control {
+		execute(TC_NegSem_050402_actual_parameters_175());
+	}
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Reference to a template variable or template parameter was expected for an `out' template parameter instead of variable `v_val'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_050402_actual_parameters_176 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 050402_176 verify that reference to elements of formal value parameters cannot be used as out formal template parameters of altsteps >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_050402_actual_parameters_176 NegSem_050402_actual_parameters_176.ttcn >
+/***************************************************
+ ** @version  0.0.1
+ ** @purpose  1:5.4.2, verify that reference to elements of formal value parameters cannot be used as out formal template parameters of altsteps
+ ** @verdict  pass reject
+ ***************************************************/
+
+// The following requirement is tested:
+// Actual parameters that are passed to out formal template parameters shall be template variables, 
+// formal template parameters or references to elements of template variables or formal template 
+// parameters of structured types.
+
+module NegSem_050402_actual_parameters_176 { 
+
+    type component GeneralComp {
+        timer t := 0.0;
+    }
+    
+    type record R {
+        integer field1
+    }
+    
+    altstep a_test(out template integer p_val) runs on GeneralComp {
+        []t.timeout {
+           p_val := 5; 
+        }
+    }
+    
+    function f_caller(in R p_param) runs on GeneralComp {
+        a_test(p_param.field1); // tested parameter passing
+        if (match({ field1 := 5 }, p_param)) { setverdict(pass); }
+        else { setverdict(fail); }
+    }
+
+    testcase TC_NegSem_050402_actual_parameters_176() runs on GeneralComp {
+        t.start;
+        f_caller({field1 := 11 });        
+	}
+
+	control {
+		execute(TC_NegSem_050402_actual_parameters_176());
+	}
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Reference to a template variable or template parameter was expected for an `out' template parameter instead of value parameter `p_param'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_050402_actual_parameters_177 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 050402_177 verify that value variables cannot be used as out formal template parameters of test cases >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_050402_actual_parameters_177 NegSem_050402_actual_parameters_177.ttcn >
+/***************************************************
+ ** @version  0.0.1
+ ** @purpose  1:5.4.2, verify that value variables cannot be used as out formal template parameters of test cases
+ ** @verdict  pass reject
+ ***************************************************/
+
+// The following requirement is tested:
+// Actual parameters that are passed to out formal template parameters shall be template variables, 
+// formal template parameters or references to elements of template variables or formal template 
+// parameters of structured types.
+
+module NegSem_050402_actual_parameters_177 { 
+
+    type component GeneralComp {
+	}
+    
+    testcase TC_NegSem_050402_actual_parameters_177(out template integer p_val) runs on GeneralComp {
+        p_val := ?;
+        setverdict(pass);
+	}
+
+	control {
+        var integer vm_msg := 2;
+		execute(TC_NegSem_050402_actual_parameters_177(vm_msg)); // tested parameter passing
+	}
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Reference to a template variable or template parameter was expected for an `out' template parameter instead of variable `vm_msg'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_050402_actual_parameters_178 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 050402_178 verify that value in parameters cannot be used as out formal template parameters of test cases >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_050402_actual_parameters_178 NegSem_050402_actual_parameters_178.ttcn >
+/***************************************************
+ ** @version  0.0.1
+ ** @purpose  1:5.4.2, verify that value in parameters cannot be used as out formal template parameters of test cases
+ ** @verdict  pass reject
+ ***************************************************/
+
+// The following requirement is tested:
+// Actual parameters that are passed to out formal template parameters shall be template variables, 
+// formal template parameters or references to elements of template variables or formal template 
+// parameters of structured types.
+
+module NegSem_050402_actual_parameters_178 { 
+
+    type component GeneralComp {
+    }
+    
+    testcase TC_NegSem_050402_actual_parameters_178(out template integer p_val) runs on GeneralComp {
+        p_val := ?;
+        setverdict(pass);
+	}
+    
+    function f_caller(in integer p_val) {
+        execute(TC_NegSem_050402_actual_parameters_178(p_val)); // tested parameter passing
+    }
+
+	control {
+		f_caller(3); // this parameter passing is not a subject of the test
+	}
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Reference to a template variable or template parameter was expected for an `out' template parameter instead of value parameter `p_val'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_050402_actual_parameters_179 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 050402_179 verify that value out parameters cannot be used as out formal template parameters of test cases >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_050402_actual_parameters_179 NegSem_050402_actual_parameters_179.ttcn >
+/***************************************************
+ ** @version  0.0.1
+ ** @purpose  1:5.4.2, verify that value out parameters cannot be used as out formal template parameters of test cases
+ ** @verdict  pass reject
+ ***************************************************/
+
+// The following requirement is tested:
+// Actual parameters that are passed to out formal template parameters shall be template variables, 
+// formal template parameters or references to elements of template variables or formal template 
+// parameters of structured types.
+
+module NegSem_050402_actual_parameters_179 { 
+
+    type component GeneralComp {
+    }
+    
+    testcase TC_NegSem_050402_actual_parameters_179(out template integer p_val) runs on GeneralComp {
+        p_val := ?;
+        setverdict(pass);
+	}
+    
+    function f_caller(out integer p_val) {
+        execute(TC_NegSem_050402_actual_parameters_179(p_val)); // tested parameter passing
+    }
+
+	control {
+        var integer vm_val;
+        f_caller(vm_val);
+	}
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Reference to a template variable or template parameter was expected for an `out' template parameter instead of `out' value parameter `p_val'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_050402_actual_parameters_180 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 050402_180 verify that value inout parameters cannot be used as out formal template parameters of test cases >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_050402_actual_parameters_180 NegSem_050402_actual_parameters_180.ttcn >
+/***************************************************
+ ** @version  0.0.1
+ ** @purpose  1:5.4.2, verify that value inout parameters cannot be used as out formal template parameters of test cases
+ ** @verdict  pass reject
+ ***************************************************/
+
+// The following requirement is tested:
+// Actual parameters that are passed to out formal template parameters shall be template variables, 
+// formal template parameters or references to elements of template variables or formal template 
+// parameters of structured types.
+
+module NegSem_050402_actual_parameters_180 { 
+
+    type component GeneralComp {
+    }
+    
+    testcase TC_NegSem_050402_actual_parameters_180(out template integer p_val) runs on GeneralComp {
+        p_val := ?;
+        setverdict(pass);
+	}
+
+    function f_caller(inout integer p_val) {
+        execute(TC_NegSem_050402_actual_parameters_180(p_val)); // tested parameter passing
+    }
+
+	control {
+        var integer vm_val := 5;
+		f_caller(vm_val);
+	}
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Reference to a template variable or template parameter was expected for an `out' template parameter instead of `inout' value parameter `p_val'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_050402_actual_parameters_181 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 050402_181 verify that variable element reference cannot be used as out formal template parameters of test cases >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_050402_actual_parameters_181 NegSem_050402_actual_parameters_181.ttcn >
+/***************************************************
+ ** @version  0.0.1
+ ** @purpose  1:5.4.2, verify that variable element reference cannot be used as out formal template parameters of test cases
+ ** @verdict  pass reject
+ ***************************************************/
+
+// The following requirement is tested:
+// Actual parameters that are passed to out formal template parameters shall be template variables, 
+// formal template parameters or references to elements of template variables or formal template 
+// parameters of structured types.
+
+module NegSem_050402_actual_parameters_181 { 
+
+    type component GeneralComp {
+    }
+    
+    type record R {
+        integer field1
+    }
+
+    testcase TC_NegSem_050402_actual_parameters_181(out template integer p_val) runs on GeneralComp {
+        p_val := ?;
+        setverdict(pass);
+	}
+
+	control {
+        var R v_val := { field1 := 10 };
+		execute(TC_NegSem_050402_actual_parameters_181(v_val.field1)); // tested parameter passing
+	}
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Reference to a template variable or template parameter was expected for an `out' template parameter instead of variable `v_val'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_050402_actual_parameters_182 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 050402_182 verify that reference to elements of formal value parameters cannot be used as out formal template parameters of test cases >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_050402_actual_parameters_182 NegSem_050402_actual_parameters_182.ttcn >
+/***************************************************
+ ** @version  0.0.1
+ ** @purpose  1:5.4.2, verify that reference to elements of formal value parameters cannot be used as out formal template parameters of test cases
+ ** @verdict  pass reject
+ ***************************************************/
+
+// The following requirement is tested:
+// Actual parameters that are passed to out formal template parameters shall be template variables, 
+// formal template parameters or references to elements of template variables or formal template 
+// parameters of structured types.
+
+module NegSem_050402_actual_parameters_182 { 
+
+    type component GeneralComp {
+    }
+    
+    type record R {
+        integer field1
+    } 
+
+    testcase TC_NegSem_050402_actual_parameters_182(out template integer p_val) runs on GeneralComp {
+        p_val := ?;
+        setverdict(pass);            
+	}
+    
+    function f_caller(in R p_param) {
+        execute(TC_NegSem_050402_actual_parameters_182(p_param.field1)); // tested parameter passing
+    }
+
+	control {
+        var R mw_t := { field1 := 1 };
+		f_caller(mw_t);
+	}
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Reference to a template variable or template parameter was expected for an `out' template parameter instead of value parameter `p_param'
 <END_RESULT>
 
 <END_TC>

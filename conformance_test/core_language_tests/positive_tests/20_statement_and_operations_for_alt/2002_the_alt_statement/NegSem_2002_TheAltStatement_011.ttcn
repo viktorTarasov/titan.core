@@ -15,13 +15,16 @@
  * Modified by: Adrien Kirjak
  *
  ** @version  0.0.1
- ** @purpose  1:20.2, create in alt branch event
+ ** @purpose  1:20.2, verify that the activate operation cannot be used  in alt branch events (in inline templates)
  ** @verdict  pass reject
  *****************************************************************/
 
 // The following requirement is tested:
-// Also, the event operation shall not use the operations create, running, alive
-// and activate.
+// c) The evaluation of the event of an alt branch shall not have side effects. To avoid side effects that cause 
+// an inconsistency between the actual snapshot and the state of the component or introduce indeterminism 
+// in the evaluation of the following alt branches or the re-evaluation of the same alt branch, the restrictions 
+// imposed on the contents of functions called from special places (clause 16.1.4) shall apply to expressions 
+// occurring in the matching part of an alternative.
 
 module NegSem_2002_TheAltStatement_011 {
 

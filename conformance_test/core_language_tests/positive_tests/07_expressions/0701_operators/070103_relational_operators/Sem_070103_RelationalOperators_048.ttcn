@@ -1,0 +1,57 @@
+/******************************************************************************
+ * Copyright (c) ETSI 2017.
+ *
+ * This file is subject to copyrights owned by ETSI. Non-exclusive permission
+ * is hereby granted, free of charge, to copy, reproduce and amend this file
+ * under the following conditions: It is provided "as is", without warranty of any
+ * kind, expressed or implied.
+ * 
+ * ETSI shall never be liable for any claim, damages, or other liability arising
+ * from its use or inability of use.This permission does not apply to any documentation
+ * associated with this file for which ETSI keeps all rights reserved. The present
+ * copyright notice shall be included in all copies of whole or part of this
+ * file and shall not imply any sub-license right.
+ *
+ * Modified by: Adrien Kirjak
+ *
+ ** @version  0.0.1
+ ** @purpose  1:7.1.3, Ensure that anytypes can be compared
+ ** @verdict  pass accept, ttcn3verdict:pass
+ *****************************************************************/
+
+// The following requirement is tested:
+// Values of the same or any two anytype types can be compared. 
+// For anytype values the same rule apply as to union values, with the addition that names of user-defined types defined with the same name in different modules do not denote the same type name of the selected alternatives.
+
+module Sem_070103_RelationalOperators_048 {
+
+type component GeneralComp {	    	    
+}
+    
+type anytype Atype_1;
+
+type anytype Atype_2;
+    
+testcase TC_Sem_070103_RelationalOperators_048() runs on GeneralComp {
+    
+    var Atype_1 v_any1;
+    var Atype_2 v_any2;
+    
+    v_any1.integer := 2;
+    v_any2.integer := 4;
+    
+	if (v_any1.integer < v_any2.integer) {
+		setverdict(pass);
+	} else {
+		setverdict(fail);
+	}
+}
+
+control{
+    execute(TC_Sem_070103_RelationalOperators_048());
+}
+
+}
+with {
+	extension "anytype integer"
+}

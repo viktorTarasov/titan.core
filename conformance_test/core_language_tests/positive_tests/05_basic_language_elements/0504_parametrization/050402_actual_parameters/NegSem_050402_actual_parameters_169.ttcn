@@ -1,0 +1,50 @@
+/******************************************************************************
+ * Copyright (c) ETSI 2017.
+ *
+ * This file is subject to copyrights owned by ETSI. Non-exclusive permission
+ * is hereby granted, free of charge, to copy, reproduce and amend this file
+ * under the following conditions: It is provided "as is", without warranty of any
+ * kind, expressed or implied.
+ * 
+ * ETSI shall never be liable for any claim, damages, or other liability arising
+ * from its use or inability of use.This permission does not apply to any documentation
+ * associated with this file for which ETSI keeps all rights reserved. The present
+ * copyright notice shall be included in all copies of whole or part of this
+ * file and shall not imply any sub-license right.
+ *
+ * Modified by: Adrien Kirjak
+ *
+ ** @version  0.0.1
+ ** @purpose  1:5.4.2, verify that value variable element reference cannot be used as out formal template parameters of functions
+ ** @verdict  pass reject
+ ***************************************************/
+
+// The following requirement is tested:
+// Actual parameters that are passed to out formal template parameters shall be template variables, 
+// formal template parameters or references to elements of template variables or formal template 
+// parameters of structured types.
+
+module NegSem_050402_actual_parameters_169 { 
+
+    type component GeneralComp {
+    }
+    
+    type record R {
+        integer field1
+    }
+    
+    function f_test(out template integer p_val) {
+        p_val := ?;
+    }
+
+    testcase TC_NegSem_050402_actual_parameters_169() runs on GeneralComp {
+        var R v_val := { field1 := 10 };
+        f_test(v_val.field1); // tested parameter passing
+        if (match( { field1 := 0 }, v_val)) { setverdict(pass); }
+        else { setverdict(fail); }
+	}
+
+	control {
+		execute(TC_NegSem_050402_actual_parameters_169());
+	}
+}

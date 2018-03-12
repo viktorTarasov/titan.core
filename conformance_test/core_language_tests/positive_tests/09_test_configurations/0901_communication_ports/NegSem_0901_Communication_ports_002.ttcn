@@ -19,7 +19,7 @@
  ** @verdict  pass reject
  ***************************************************/
 
-/*NOTE: see Figure 7(f): connection of two TSI ports is not allowed
+/*NOTE: see Figure 7(g): connection of an already mapped port is not allowed
  * */
 
 module NegSem_0901_Communication_ports_002{ 

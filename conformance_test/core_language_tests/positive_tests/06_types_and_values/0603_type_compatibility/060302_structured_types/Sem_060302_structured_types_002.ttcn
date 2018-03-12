@@ -14,12 +14,12 @@
  *
  * Modified by: Adrien Kirjak
  *
- ** @version  0.0.1
+ ** @version  0.0.2
  ** @purpose  1:6.3.2, Ensure that the IUT correctly handles assignments from structures having compatible types and lengths 
  ** @verdict  pass accept, ttcn3verdict:pass
  ***************************************************/
 
-module Sem_060302_structured_types_002 language "TTCN-3:2010" {
+module Sem_060302_structured_types_002 {
 
     type record RecordType {
         integer  a,

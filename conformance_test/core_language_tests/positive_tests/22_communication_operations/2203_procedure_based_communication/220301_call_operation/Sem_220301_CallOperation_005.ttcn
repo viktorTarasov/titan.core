@@ -21,9 +21,7 @@
 
 module Sem_220301_CallOperation_005 {
 
-    type charstring address;
-    const address c_client1Addr := "client1Addr";
-    const address c_client2Addr := "client2Addr";
+	type charstring address;
 
     /**
     * @desc testing of inline return template for remote procedure call
@@ -59,14 +57,12 @@ module Sem_220301_CallOperation_005 {
 
     type component GeneralComp {
         port remotePort PCO;
-        var address v_myAddress;
     }
 
-    function f_ClientQuery(address p_myAddress) runs on GeneralComp {
+    function f_ClientQuery() runs on GeneralComp {
         var integer v_zero:=0;
         var integer v_one:=1;
         var boolean first:=true;
-        v_myAddress := p_myAddress;
 	
         PCO.call(p_Sem_220301_CallOperation_005:s_callTemplate, 5.0) {
 	
@@ -75,7 +71,7 @@ module Sem_220301_CallOperation_005 {
                 setverdict(pass);
             }
             [] PCO.catch (timeout) {
-                setverdict(fail, v_myAddress&" did not receive a response");
+                setverdict(fail, "Component did not receive a response");
             }
         }
     }
@@ -107,11 +103,7 @@ module Sem_220301_CallOperation_005 {
         }
 	 
     }
-	
-    function f_setAddress(address p_myAddress) runs on GeneralComp {
-        v_myAddress := p_myAddress;
-    }
-	
+
     testcase TC_Sem_220301_CallOperation_005() runs on GeneralComp system GeneralComp {
         var GeneralComp server := GeneralComp.create("RemoteProcedure Service");
         var GeneralComp client := GeneralComp.create("RemoteProcedure Client");
@@ -122,8 +114,8 @@ module Sem_220301_CallOperation_005 {
 
         server.start(f_ServerResponses());
        
-        client.start(f_ClientQuery(c_client1Addr));
-        client2.start(f_ClientQuery(c_client2Addr));
+        client.start(f_ClientQuery());
+        client2.start(f_ClientQuery());
 
         interleave {
             [] client.done {}

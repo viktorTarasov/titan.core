@@ -18,9 +18,11 @@
  ** @purpose  1:22.3.5, value of incorrect type in the to clause of the raise operation
  ** @verdict  pass reject
  *****************************************************************/
+
 // The following requirements are tested:
-// AddressRef shall be of type address, component or of the type provided in the address 
-// declaration of the port type of the port instance referenced in the raise operation.
+// All AddressRef items in the to clause shall be of type address, component or of the 
+// address type bound to the port type (see clause 6.2.9) of the port instance referenced
+// in the raise operation.
 
 module NegSem_220305_raise_operation_007 {
 	signature S() exception(integer);

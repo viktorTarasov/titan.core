@@ -16,7 +16,7 @@
  *
  ** @version  0.0.1
  ** @purpose  1:23, Ensure timer can be restarted
- ** @verdict  pass accept, ttnc3verdict:pass
+ ** @verdict  pass accept, ttcn3verdict:pass
  ***************************************************/
 // #reqname  /Requirements/23 Timer operations/23.2 The start timer operation/timer can be restarted by repeated start operation
 

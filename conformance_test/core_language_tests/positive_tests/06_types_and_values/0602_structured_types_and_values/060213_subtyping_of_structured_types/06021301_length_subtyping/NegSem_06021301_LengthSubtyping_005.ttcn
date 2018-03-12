@@ -1,0 +1,30 @@
+/******************************************************************************
+ * Copyright (c) ETSI 2017.
+ *
+ * This file is subject to copyrights owned by ETSI. Non-exclusive permission
+ * is hereby granted, free of charge, to copy, reproduce and amend this file
+ * under the following conditions: It is provided "as is", without warranty of any
+ * kind, expressed or implied.
+ * 
+ * ETSI shall never be liable for any claim, damages, or other liability arising
+ * from its use or inability of use.This permission does not apply to any documentation
+ * associated with this file for which ETSI keeps all rights reserved. The present
+ * copyright notice shall be included in all copies of whole or part of this
+ * file and shall not imply any sub-license right.
+ *
+ * Modified by: Adrien Kirjak
+ *
+ ** @version  0.0.1
+ ** @purpose  1:6.2.13.1, The length subtyping check for 'record of' or 'set of' types
+ ** @verdict  pass reject
+ ***************************************************/
+/*The following requirement is tested:
+ * In case of the range syntax the upper bound shall not be lesser than the lower bound value.
+ */
+module NegSem_06021301_LengthSubtyping_005 {
+   type set length(0..10) of integer SetOfLengthLessThan10;
+
+   type SetOfLengthLessThan10 SetOfLength5 length(5..2);	
+   //Error: In case of the range syntax the upper bound shall not be lesser than the lower bound value.
+
+}

@@ -1,0 +1,48 @@
+/******************************************************************************
+ * Copyright (c) ETSI 2017.
+ *
+ * This file is subject to copyrights owned by ETSI. Non-exclusive permission
+ * is hereby granted, free of charge, to copy, reproduce and amend this file
+ * under the following conditions: It is provided "as is", without warranty of any
+ * kind, expressed or implied.
+ * 
+ * ETSI shall never be liable for any claim, damages, or other liability arising
+ * from its use or inability of use.This permission does not apply to any documentation
+ * associated with this file for which ETSI keeps all rights reserved. The present
+ * copyright notice shall be included in all copies of whole or part of this
+ * file and shall not imply any sub-license right.
+ *
+ * Modified by: Adrien Kirjak
+ *
+ ** @version  0.0.1
+ ** @purpose  1:5.4.1.3, Verify that altsteps with timer parameters cannot be used in component.start operation
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirement is tested:
+// Only function and altstep definitions may have formal timer parameters, with the exception of functions or 
+// altsteps started as test component behaviour (see clause 21.3.2).
+
+module NegSem_05040103_parameters_of_kind_timer_002 {
+    
+    type component C {
+    }
+    
+    altstep f_test(inout timer p_tmr) runs on C {
+        [] p_tmr.timeout {
+			setverdict(pass);
+		}
+    }
+    
+    testcase TC_NegSem_05040103_parameters_of_kind_timer_002() runs on C system C {
+    	timer t_tmr := 0.1; 
+        var C v_ptc := C.create;
+        t_tmr.start;
+        v_ptc.start(f_test(t_tmr));
+        v_ptc.done;
+    }
+    
+    control {
+        execute(TC_NegSem_05040103_parameters_of_kind_timer_002());
+    }
+}

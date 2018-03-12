@@ -16,7 +16,7 @@
  *
  ** @version  0.0.1
  ** @purpose  1:22.3.2, incompatible decmatch and @decoded value redirect
- ** @verdict  pass accept, ttcn3verdict:pass
+ ** @verdict  pass reject
  *****************************************************************/
 
 // The following requirements are tested:

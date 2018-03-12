@@ -36,14 +36,14 @@ module Sem_050402_actual_parameters_142 {
     }
     
 	//altstep a_test(inout template(present) integer p_val) runs on GeneralComp <-- something not working with present
-    altstep a_test(inout template integer p_val) runs on GeneralComp {
+    altstep a_test(inout template(present) integer p_val) runs on GeneralComp {
         []t.timeout {
            if (match(11, p_val)) { setverdict(pass); }
            else { setverdict(fail); }
         }
     }
     
-    function f_caller(in template R p_param) runs on GeneralComp {
+    function f_caller(in template(present) R p_param) runs on GeneralComp {
         a_test(p_param.field1); // tested parameter passing
     }
 

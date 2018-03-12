@@ -1,0 +1,64 @@
+/******************************************************************************
+ * Copyright (c) ETSI 2017.
+ *
+ * This file is subject to copyrights owned by ETSI. Non-exclusive permission
+ * is hereby granted, free of charge, to copy, reproduce and amend this file
+ * under the following conditions: It is provided "as is", without warranty of any
+ * kind, expressed or implied.
+ * 
+ * ETSI shall never be liable for any claim, damages, or other liability arising
+ * from its use or inability of use.This permission does not apply to any documentation
+ * associated with this file for which ETSI keeps all rights reserved. The present
+ * copyright notice shall be included in all copies of whole or part of this
+ * file and shall not imply any sub-license right.
+ *
+ * Modified by: Adrien Kirjak
+ *
+ ** @version  0.0.1
+ ** @purpose  1:22.3.6, trying to store an incompatible component value in the sender clause of a catch operation
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// l) If the operation contains a sender clause but no from clause, the sender shall be type 
+// compatible with the type of the variable or parameter referenced in the sender clause.
+
+module NegSem_220306_catch_operation_016 {
+
+	signature S() exception (charstring);
+	
+	type port P procedure {
+		inout S;
+	} with {extension "internal"}
+	
+    type component GeneralComp {
+        var integer vc_int;
+		port P p;
+	}
+    
+    type component AltComp {
+		var charstring vc_str;
+        port P px;
+	}
+	
+	function f() runs on GeneralComp {
+        p.getcall(S:{});
+        p.raise(S, "exc");
+	}
+	
+    testcase TC_NegSem_220306_catch_operation_016() runs on GeneralComp system GeneralComp {
+        var AltComp v_compRef := null;
+        var GeneralComp v_ptc := GeneralComp.create;
+		connect(self:p, v_ptc:p);
+        v_ptc.start(f());
+		p.call(S:{}) {
+	        [] p.catch(S, charstring:?) -> sender v_compRef { } // error expected
+            [] p.catch { }
+        }
+        setverdict(pass);
+    }
+
+    control {
+        execute(TC_NegSem_220306_catch_operation_016(), 5.0);
+    }
+}

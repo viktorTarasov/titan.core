@@ -45,16 +45,16 @@ module NegSem_B010401_length_restrictions_001 {
     	var MessageType v_testMessage;
 
  		template MessageType mw_matchingTemplate:= {  	
-		  	field1 := pattern "test mess*ge" length (6 .. 8),//pattern is longer than length restriction 
+		  	field1 := pattern "test s*g" length (6 .. 15),		
 		  	field2 := '10*'B  length (3 .. 5), 
-		  	field3 := '89*ABC'H  length (5),
+		  	field3 := '89?AB'H  length (6),		//pattern is shorter than length restriction
 		  	field4 := pattern "tes?" length (4 .. 13),
 		  	field5 := '10?'B  length (3 .. 5), 
 		  	field6 := '89?ABC'H  length (6)
  		} 
 
  		v_testMessage:=  {  
-		  	field1 := "test message",
+		  	field1 := "test string",
 		  	field2 := '10101'B, 
 		  	field3 := '89ABC'H,
 		  	field4 := "test",
@@ -62,19 +62,19 @@ module NegSem_B010401_length_restrictions_001 {
 		  	field6 := '899ABC'H
  		} 
  
-		connect(self:messagePort, self:messagePort);
- 		messagePort.send(v_testMessage);
+ 		connect(self:messagePort, self:messagePort);
+		messagePort.send(v_testMessage);
 
     	alt {
      		[] messagePort.receive(mw_matchingTemplate) {
         		setverdict(fail);
      		}
      		[] messagePort.receive {
-       		 	setverdict(pass);
+        		setverdict(pass);
      		}
     	}
 	}
-
+	
 	control{
 		execute(TC_NegSem_B010401_length_restrictions_001());
 	}

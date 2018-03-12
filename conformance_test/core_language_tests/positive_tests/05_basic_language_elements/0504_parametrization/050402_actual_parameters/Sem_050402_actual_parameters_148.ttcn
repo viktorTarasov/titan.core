@@ -34,14 +34,12 @@ module Sem_050402_actual_parameters_148 {
         integer field1
     } 
 
-	//testcase TC_Sem_050402_actual_parameters_148(inout template(present) integer p_val) runs on GeneralComp
-	//						 something not working with present --^ 
-    testcase TC_Sem_050402_actual_parameters_148(inout template integer p_val) runs on GeneralComp {
+    testcase TC_Sem_050402_actual_parameters_148(inout template(present) integer p_val) runs on GeneralComp {
         if (match(11, p_val)) { setverdict(pass); }
         else { setverdict(fail); }
 	}
     
-    function f_caller(in template R p_param) {
+    function f_caller(in template(present) R p_param) {
         execute(TC_Sem_050402_actual_parameters_148(p_param.field1)); // tested parameter passing
     }
 

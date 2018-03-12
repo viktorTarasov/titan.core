@@ -20,8 +20,8 @@
  ***************************************************/
 
 // The following requirement is tested:
-// Compound expressions are used for expressions of array, record, record of and 
-// set of types.
+// Assignment or list notations are used for expressions of record, set, record of, set of, 
+// array, union and anytype types. 
 
 module Sem_07_toplevel_003
 {

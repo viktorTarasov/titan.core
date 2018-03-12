@@ -32,8 +32,6 @@ module NegSem_210305_alive_operation_003 {
 		t.timeout;
 	}
 
-	function f_done() runs on GeneralComp {}
-	
     testcase TC_NegSem_210305_alive_operation_003() runs on GeneralComp system GeneralComp {
 		var boolean v_isAlive;
 		const integer c_size := 4;
@@ -41,7 +39,7 @@ module NegSem_210305_alive_operation_003 {
 		var float v_index;
 		for (var integer i := 0; i < c_size; i := i + 1) {
 			v_ptc[i] := GeneralComp.create; // created components are inactive
-			if (i mod 2 == 0) { v_ptc[i].start(f_done()); } //quick done components on even indices
+			if (i mod 2 == 0) { v_ptc[i].kill; } //kill components on even indices
 			else { v_ptc[i].start(f());} // activate v_ptc
 		}
         v_isAlive := any from v_ptc.alive -> @index value v_index;

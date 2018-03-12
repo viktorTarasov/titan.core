@@ -1,0 +1,59 @@
+/******************************************************************************
+ * Copyright (c) ETSI 2017.
+ *
+ * This file is subject to copyrights owned by ETSI. Non-exclusive permission
+ * is hereby granted, free of charge, to copy, reproduce and amend this file
+ * under the following conditions: It is provided "as is", without warranty of any
+ * kind, expressed or implied.
+ * 
+ * ETSI shall never be liable for any claim, damages, or other liability arising
+ * from its use or inability of use.This permission does not apply to any documentation
+ * associated with this file for which ETSI keeps all rights reserved. The present
+ * copyright notice shall be included in all copies of whole or part of this
+ * file and shall not imply any sub-license right.
+ *
+ * Modified by: Adrien Kirjak
+ *
+ ** @version  0.0.1
+ ** @purpose  1:20.2, verify that the timer.start operation cannot be used in parameters of altsteps invoked from an alt branch
+ ** @verdict  pass reject
+ ***************************************************/
+
+// The following requirement is tested:
+// d) The evaluation of an altstep invoked from an alt branch, if none of the alternatives in the altstep is chosen, shall 
+// not have side effects. To avoid side effects the restrictions imposed on the contents of functions called from special 
+// places (clause 16.1.4) shall apply to the actual parameters of the invoked altstep. 
+
+module NegSem_2002_TheAltStatement_045 { 
+    type port P message {
+        inout integer;
+    } with {extension "internal"}
+
+    type component GeneralComp {
+        port P p;
+		timer tc_tmr := 0.1;
+	}
+    
+	function f_test() runs on GeneralComp return boolean {
+		tc_tmr.start;
+        return true;
+	}
+
+    altstep a_rcv(boolean p_par) runs on GeneralComp {
+        [] p.receive(integer:?) {} 
+    }
+
+    testcase TC_NegSem_2002_TheAltStatement_045() runs on GeneralComp system GeneralComp {        
+        connect(mtc:p, mtc:p);
+        p.send(1);
+        alt {
+	        [] a_rcv(f_test());
+            [] any timer.timeout {} 
+        }
+		setverdict(pass);
+	}
+
+	control {
+		execute(TC_NegSem_2002_TheAltStatement_045());
+	}
+}

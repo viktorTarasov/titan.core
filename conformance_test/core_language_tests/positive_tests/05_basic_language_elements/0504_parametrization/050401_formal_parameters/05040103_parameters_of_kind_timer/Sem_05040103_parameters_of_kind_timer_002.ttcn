@@ -1,0 +1,44 @@
+/******************************************************************************
+ * Copyright (c) ETSI 2017.
+ *
+ * This file is subject to copyrights owned by ETSI. Non-exclusive permission
+ * is hereby granted, free of charge, to copy, reproduce and amend this file
+ * under the following conditions: It is provided "as is", without warranty of any
+ * kind, expressed or implied.
+ * 
+ * ETSI shall never be liable for any claim, damages, or other liability arising
+ * from its use or inability of use.This permission does not apply to any documentation
+ * associated with this file for which ETSI keeps all rights reserved. The present
+ * copyright notice shall be included in all copies of whole or part of this
+ * file and shall not imply any sub-license right.
+ *
+ * Modified by: Adrien Kirjak
+ *
+ ** @version  0.0.1
+ ** @purpose  1:5.4.1.3, Verify that inout prefix can be used for timer parameters
+ ** @verdict  pass accept, ttcn3verdict:pass
+ *****************************************************************/
+
+// The following requirement is tested:
+// Formal timer parameters shall be inout parameters, which can optionally be indicated by the keyword inout.
+
+module Sem_05040103_parameters_of_kind_timer_002 {    
+    
+    type component C {
+    }
+    
+    function f_test(inout timer p_tmr) {
+        p_tmr.timeout;
+        setverdict(pass);
+    }
+    
+    testcase TC_Sem_05040103_parameters_of_kind_timer_002() runs on C {
+    	timer t_tmr := 0.1; 
+        t_tmr.start;
+        f_test(t_tmr);
+    }
+    
+    control {
+        execute(TC_Sem_05040103_parameters_of_kind_timer_002());
+    }
+}

@@ -1,0 +1,52 @@
+/******************************************************************************
+ * Copyright (c) ETSI 2017.
+ *
+ * This file is subject to copyrights owned by ETSI. Non-exclusive permission
+ * is hereby granted, free of charge, to copy, reproduce and amend this file
+ * under the following conditions: It is provided "as is", without warranty of any
+ * kind, expressed or implied.
+ * 
+ * ETSI shall never be liable for any claim, damages, or other liability arising
+ * from its use or inability of use.This permission does not apply to any documentation
+ * associated with this file for which ETSI keeps all rights reserved. The present
+ * copyright notice shall be included in all copies of whole or part of this
+ * file and shall not imply any sub-license right.
+ *
+ * Modified by: Adrien Kirjak
+ *
+ ** @version  0.0.1
+ ** @purpose  1:B.1.2.4, Ensure that AnyValueOrNone cannot be used for matching compulsory fields
+ ** @verdict  pass reject
+ ***************************************************/
+
+// The following requirement is tested:
+// At the time of matching, it shall be applied to optional fields of record and set 
+// templates only.
+
+module Sem_B010204_any_value_or_none_005 { 
+
+	type set Set1 {
+		integer field1,
+		integer field2 optional
+	}
+
+	template integer t_anyOrNone := *; // top-level static template	
+
+	type component GeneralComp {
+	}	
+	
+	testcase TC_Sem_B010204_any_value_or_none_005() runs on GeneralComp {
+		var Set1 v_val := { field1 := 5, field2 := 23 };
+	    if (match(v_val.field1, t_anyOrNone)) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+	}
+	
+	control{
+	    execute(TC_Sem_B010204_any_value_or_none_005());
+	}
+
+}
+ 

@@ -1,0 +1,55 @@
+/******************************************************************************
+ * Copyright (c) ETSI 2017.
+ *
+ * This file is subject to copyrights owned by ETSI. Non-exclusive permission
+ * is hereby granted, free of charge, to copy, reproduce and amend this file
+ * under the following conditions: It is provided "as is", without warranty of any
+ * kind, expressed or implied.
+ * 
+ * ETSI shall never be liable for any claim, damages, or other liability arising
+ * from its use or inability of use.This permission does not apply to any documentation
+ * associated with this file for which ETSI keeps all rights reserved. The present
+ * copyright notice shall be included in all copies of whole or part of this
+ * file and shall not imply any sub-license right.
+ *
+ * Modified by: Adrien Kirjak
+ *
+ ** @version  0.0.1
+ ** @purpose  1:16.1.2, Ensure that the IUT recognizes predefined functions and correctly evaluates them (as specified by Annex C)
+ ** @verdict  pass accept, ttcn3verdict:pass
+ ***************************************************/
+// The following requirements are tested: Using ischosen for anytype
+
+module Sem_160102_predefined_functions_096 {
+
+	type component GeneralComp {	
+	}
+
+	type union U { integer f1, charstring f2 };
+
+	testcase TC_Sem_160102_predefined_functions_096 () runs on GeneralComp {
+
+		var U chosen := { f1 := 1 };
+		template anytype mw_anytype := { U := chosen };
+		var boolean v_i, v_j;
+
+		v_i := ischosen(mw_anytype.integer);	//function returns false 
+
+			if(match(v_i,false)) {
+				setverdict(pass);
+			} else {
+				setverdict(fail, "Unexpected result for ischosen()");
+			}
+	}
+
+	control{
+
+		execute(TC_Sem_160102_predefined_functions_096());
+
+	}
+
+}
+with {
+	extension "anytype U, integer"
+}
+

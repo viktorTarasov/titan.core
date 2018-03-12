@@ -1,0 +1,48 @@
+/******************************************************************************
+ * Copyright (c) ETSI 2017.
+ *
+ * This file is subject to copyrights owned by ETSI. Non-exclusive permission
+ * is hereby granted, free of charge, to copy, reproduce and amend this file
+ * under the following conditions: It is provided "as is", without warranty of any
+ * kind, expressed or implied.
+ * 
+ * ETSI shall never be liable for any claim, damages, or other liability arising
+ * from its use or inability of use.This permission does not apply to any documentation
+ * associated with this file for which ETSI keeps all rights reserved. The present
+ * copyright notice shall be included in all copies of whole or part of this
+ * file and shall not imply any sub-license right.
+ *
+ * Modified by: Adrien Kirjak
+ *
+ ** @version  0.0.1
+ ** @purpose  1:6.1.1, Assign and read octetstring with newline character
+ ** @verdict  pass accept, ttcn3verdict:pass
+ ***************************************************/
+
+/* The following requirements are tested:
+ * Within the quotes any number of whitespaces or any sequence of the following C0 control characters: 
+ * LF(10), VT(11), FF(12), CR(13) which constitutes a newline  may be included. The newline shall be preceded by a backslash ("\").
+ * Such whitespaces, control characters and backslash will be ignored for the value and length calculation.
+*/
+
+module Sem_060101_TopLevel_012 {
+    
+    type component GeneralComp {}
+    
+    testcase TC_Sem_060101_TopLevel_012() runs on GeneralComp {
+        var octetstring v_a  := '1234\
+				56'O;
+               
+    	if (match(v_a,'123456'O))
+        {
+    		setverdict(pass,"v_a:",v_a);
+    	}
+    	else {
+    		setverdict(fail,"v_a:",v_a);
+    	}
+    }
+    
+    control{
+        execute(TC_Sem_060101_TopLevel_012());
+    }
+}

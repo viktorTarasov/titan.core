@@ -661,7 +661,8 @@ error: Cannot determine the type of the outgoing message
  *****************************************************************/
 
 // The following requirements are tested:
-// No AddressRef shall contain the special value null at the time of the operation.
+// No AddressRef in the to clause shall contain the special value null at the time 
+// of the operation.
 
 module NegSem_220201_SendOperation_010 {
 	
@@ -3262,7 +3263,8 @@ error: Catching of `timeout' exception is not allowed because the previous `call
  *****************************************************************/
 
 // The following requirements are tested:
-// No AddressRef shall contain the special value null at the time of the operation.
+// No AddressRef in the to clause shall contain the special value null at the time 
+// of the operation.
 
 module NegSem_220301_CallOperation_003 {
 
@@ -3292,6 +3294,975 @@ module NegSem_220301_CallOperation_003 {
 
 <RESULT COUNT 1>
 Dynamic test case error: The second argument of connect operation contains the null component reference.
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220301_CallOperation_005 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 220301_005 incompatible template in the to clause of the call operation >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220301_CallOperation_005 NegSem_220301_CallOperation_005.ttcn >
+/*****************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.1, incompatible template in the to clause of the call operation
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// f) All AddressRef items in the to clause and all VariableRef items in the sender clause
+// shall be of type address, component or of the address type bound to the port type (see 
+// section 6.2.9) of the port instance referenced in the call operation.
+
+module NegSem_220301_CallOperation_005 {
+
+	signature S() return integer;
+	
+	type port P procedure {
+		inout S;
+	} with {extension "internal"}
+	
+    type component GeneralComp {
+		port P p;
+	}
+	
+    testcase TC_NegSem_220301_CallOperation_005() runs on GeneralComp system GeneralComp {
+        var charstring v_addr := "addr";
+        var GeneralComp v_ptc := GeneralComp.create;
+		connect(self:p, v_ptc:p);
+		p.call(S:{}, nowait) to v_addr;
+        setverdict(pass);
+    }
+
+    control {
+        execute(TC_NegSem_220301_CallOperation_005(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Type mismatch: The type of the operand should be a component type instead of `charstring'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220301_CallOperation_006 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 220301_006 verify that non-blocking calls cannot have a response and exception handling part >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220301_CallOperation_006 NegSem_220301_CallOperation_006.ttcn >
+/*****************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.1, verify that non-blocking calls cannot have a response and exception handling part
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// In case of non-blocking procedure-based communication the handling of exceptions 
+// to call operations is done by using catch (see clause 22.3.6) operations as 
+// alternatives in alt statements.
+// A non-blocking procedure has no out and inout parameters, no return value and the 
+// non-blocking property is indicated in the corresponding signature definition by means 
+// of a noblock keyword. Possible exceptions raised by non-blocking procedures have to be 
+// removed from the port queue by using catch operations in subsequent alt or interleave 
+// statements.
+
+module NegSem_220301_CallOperation_006 {
+
+    signature S() noblock;
+
+    type port P procedure {
+        inout S;
+    } with {extension "internal"}
+
+    type component GeneralComp {
+        port P p;
+    }
+	
+	function f_called() runs on GeneralComp {
+		p.getcall(S:?);
+		p.reply(S:{});
+	}
+	
+    testcase TC_NegSem_220301_CallOperation_006() runs on GeneralComp system GeneralComp {
+        var GeneralComp v_ptc := GeneralComp.create("PTC");
+        connect(self:p, v_ptc:p);
+		v_ptc.start(f_called);
+        p.call(S:{}) {
+			[] p.getreply(S:{}) {}
+		}
+        setverdict(pass);
+    }
+
+    control{
+        execute(TC_NegSem_220301_CallOperation_006(), 5.0);
+    }
+
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: A call of non-blocking signature `@NegSem_220301_CallOperation_006.S' cannot have response and exception handling part
+<END_RESULT>
+<RESULT COUNT 1>
+error: Operation `getreply' is not applicable to non-blocking signature `@NegSem_220301_CallOperation_006.S'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220301_CallOperation_007 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 220301_007 verify that signature that are not listed in the port inout and out list cannot be used in call operations >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220301_CallOperation_007 NegSem_220301_CallOperation_007.ttcn >
+/*****************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.1, verify that signature that are not listed in the port inout and out list cannot be used in call operations
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// a) The call operation shall only be used on procedure-based ports. The type definition 
+// of the port at which the call operation takes place shall include the procedure name 
+// in its out or inout list i.e. it shall be allowed to call this procedure at this port.
+
+module NegSem_220301_CallOperation_007 {
+
+    signature S1() noblock;
+	signature S2() noblock;
+
+    type port P procedure {
+        inout S1;
+    } with {extension "internal"}
+
+    type component GeneralComp {
+        port P p;
+    }
+		
+    testcase TC_NegSem_220301_CallOperation_007() runs on GeneralComp system GeneralComp {
+        var GeneralComp v_ptc := GeneralComp.create("PTC");
+        connect(self:p, v_ptc:p);
+        p.call(S2:{}); // error expected
+        setverdict(pass);
+    }
+
+    control{
+        execute(TC_NegSem_220301_CallOperation_007(), 5.0);
+    }
+
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Incompatible explicit type specification: `@NegSem_220301_CallOperation_007.S1' was expected instead of `@NegSem_220301_CallOperation_007.S2'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220301_CallOperation_008 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 220301_008 verify that in parameters of a signature used in a call operation cannot contain matching symbols >
+
+<COMPILE>
+<EXECUTE_PARALLEL>
+
+
+<MODULE TTCN NegSem_220301_CallOperation_008 NegSem_220301_CallOperation_008.ttcn >
+/*****************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.1, verify that in parameters of a signature used in a call operation cannot contain matching symbols
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// b) All in and inout parameters of the signature shall have a specific value i.e. the use 
+// of matching mechanisms such as AnyValue is not allowed.
+
+module NegSem_220301_CallOperation_008 {
+
+    signature S(in integer p_par) noblock;
+
+    type port P procedure {
+        inout S;
+    } with {extension "internal"}
+
+    type component GeneralComp {
+        port P p;
+    }
+	
+	template S s_signature1 := { p_par := ? };
+	
+    testcase TC_NegSem_220301_CallOperation_008() runs on GeneralComp system GeneralComp {
+        var GeneralComp v_ptc := GeneralComp.create("PTC");
+        connect(self:p, v_ptc:p);
+        p.call(s_signature1);
+        setverdict(pass);
+    }
+
+    control{
+        execute(TC_NegSem_220301_CallOperation_008(), 5.0);
+    }
+
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+Dynamic test case error: Performing a valueof or send operation on a non-specific integer template.
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220301_CallOperation_009 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 220301_009 verify that in parameters of a signature used in a call operation cannot be omitted >
+
+<COMPILE>
+<EXECUTE_PARALLEL>
+
+
+<MODULE TTCN NegSem_220301_CallOperation_009 NegSem_220301_CallOperation_009.ttcn >
+/*****************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.1, verify that in parameters of a signature used in a call operation cannot be omitted
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// b) All in and inout parameters of the signature shall have a specific value i.e. the use 
+// of matching mechanisms such as AnyValue is not allowed.
+
+module NegSem_220301_CallOperation_009 {
+
+    signature S(in integer p_par) noblock;
+
+    type port P procedure {
+        inout S;
+    } with {extension "internal"}
+
+    type component GeneralComp {
+        port P p;
+    }
+	
+	template S s_signature1 := { p_par := - };
+	
+    testcase TC_NegSem_220301_CallOperation_009() runs on GeneralComp system GeneralComp {
+        var GeneralComp v_ptc := GeneralComp.create("PTC");
+        connect(self:p, v_ptc:p);
+        p.call(s_signature1);
+        setverdict(pass);
+    }
+
+    control{
+        execute(TC_NegSem_220301_CallOperation_009(), 5.0);
+    }
+
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+Dynamic test case error: Performing a valueof or send operation on a non-specific integer template.
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220301_CallOperation_010 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 220301_010 verify that inout parameters of a signature used in a call operation cannot contain matching symbols >
+
+<COMPILE>
+<EXECUTE_PARALLEL>
+
+
+<MODULE TTCN NegSem_220301_CallOperation_010 NegSem_220301_CallOperation_010.ttcn >
+/*****************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.1, verify that inout parameters of a signature used in a call operation cannot contain matching symbols
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// b) All in and inout parameters of the signature shall have a specific value i.e. the use 
+// of matching mechanisms such as AnyValue is not allowed.
+
+module NegSem_220301_CallOperation_010 {
+
+    signature S(inout integer p_par);
+
+    type port P procedure {
+        inout S;
+    } with {extension "internal"}
+
+    type component GeneralComp {
+        port P p;
+    }
+	
+	template S s_signature1 := { p_par := ? };
+	
+    testcase TC_NegSem_220301_CallOperation_010() runs on GeneralComp system GeneralComp {
+        var GeneralComp v_ptc := GeneralComp.create("PTC");
+        connect(self:p, v_ptc:p);
+        p.call(s_signature1, nowait);
+        setverdict(pass);
+    }
+
+    control{
+        execute(TC_NegSem_220301_CallOperation_010(), 5.0);
+    }
+
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+Dynamic test case error: Performing a valueof or send operation on a non-specific integer template.
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220301_CallOperation_011 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 220301_011 verify that inout parameters of a signature used in a call operation cannot be omitted >
+
+<COMPILE>
+<EXECUTE_PARALLEL>
+
+
+<MODULE TTCN NegSem_220301_CallOperation_011 NegSem_220301_CallOperation_011.ttcn >
+/*****************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.1, verify that inout parameters of a signature used in a call operation cannot be omitted
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// b) All in and inout parameters of the signature shall have a specific value i.e. the use 
+// of matching mechanisms such as AnyValue is not allowed.
+
+module NegSem_220301_CallOperation_011 {
+
+    signature S(inout integer p_par);
+
+    type port P procedure {
+        inout S;
+    } with {extension "internal"}
+
+    type component GeneralComp {
+        port P p;
+    }
+	
+	template S s_signature1 := { p_par := - };
+	
+    testcase TC_NegSem_220301_CallOperation_011() runs on GeneralComp system GeneralComp {
+        var GeneralComp v_ptc := GeneralComp.create("PTC");
+        connect(self:p, v_ptc:p);
+        p.call(s_signature1, nowait);
+        setverdict(pass);
+    }
+
+    control{
+        execute(TC_NegSem_220301_CallOperation_011(), 5.0);
+    }
+
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+Dynamic test case error: Performing a valueof or send operation on a non-specific integer template.
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220301_CallOperation_012 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 220301_012 missing to clause in case of one-to-many connections >
+
+<COMPILE>
+<EXECUTE_PARALLEL>
+
+
+<MODULE TTCN NegSem_220301_CallOperation_012 NegSem_220301_CallOperation_012.ttcn >
+/*****************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.1, missing to clause in case of one-to-many connections
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// e) A to clause shall be present in case of one-to-many connections.
+
+module NegSem_220301_CallOperation_012 {
+
+	signature S();
+	
+	type port P procedure {
+		inout S;
+	} with {extension "internal"}
+	
+    type component GeneralComp {
+		port P p;
+	}
+	
+	function f_called() runs on GeneralComp {
+		p.getcall(S:{});
+		p.reply(S:{});
+	}
+	
+    testcase TC_NegSem_220301_CallOperation_012() runs on GeneralComp system GeneralComp {
+        var GeneralComp v_ptc1 := GeneralComp.create,
+						v_ptc2 := GeneralComp.create;
+
+		var integer v_counter := 0;
+		connect(self:p, v_ptc1:p);
+		connect(self:p, v_ptc2:p);
+		v_ptc1.start(f_called());
+		v_ptc2.start(f_called());
+
+		p.call(S:{}) { // error expected as the to clause is missing
+			[] p.getreply(S:{}) { 
+				v_counter := v_counter + 1;
+				if (v_counter < 2) {
+					repeat;
+				} else {
+					setverdict(pass, "Both replies received"); }
+				}
+		}
+    }
+
+    control {
+        execute(TC_NegSem_220301_CallOperation_012(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+Dynamic test case error: Port p has more than one active connections. Message can be sent on it only with explicit addressing.
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220301_CallOperation_013 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 220301_013 verify that type mismatch error is issued for incorrect call timer values >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220301_CallOperation_013 NegSem_220301_CallOperation_013.ttcn >
+/*****************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.1, verify that type mismatch error is issued for incorrect call timer values
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// g) CallTimerValue shall be of type float. 
+
+module NegSem_220301_CallOperation_013 {
+
+	signature S();
+	
+	type port P procedure {
+		inout S;
+	} with {extension "internal"}
+	
+    type component GeneralComp {
+		port P p;
+	}
+	
+	function f_called() runs on GeneralComp {
+		p.getcall(S:{});
+		p.reply(S:{});
+	}
+	
+    testcase TC_NegSem_220301_CallOperation_013() runs on GeneralComp system GeneralComp {
+        var GeneralComp v_ptc := GeneralComp.create;
+		connect(self:p, v_ptc:p);
+		v_ptc.start(f_called());
+		p.call(S:{}, 2) {  // error expected as 2 is an integer literal
+			[] p.getreply(S:{}) {}
+			[] p.catch(timeout) {}				
+		}
+		setverdict(pass);
+    }
+
+    control {
+        execute(TC_NegSem_220301_CallOperation_013(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: A value or expression of type float was expected
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220301_CallOperation_014 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 220301_014 verify that getreply signature mismatch in the response and exception handling causes an error >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220301_CallOperation_014 NegSem_220301_CallOperation_014.ttcn >
+/*****************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.1, verify that getreply signature mismatch in the response and exception handling causes an error
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// h) The selection of the alternatives to a call shall only be based on getreply and catch operations
+// for the called procedure. Unqualified getreply and catch operations shall only treat replies from 
+// and exceptions raised by the called procedure.
+
+module NegSem_220301_CallOperation_014 {
+
+	signature S1();
+	signature S2();
+	
+	type port P procedure {
+		inout S1, S2;
+	} with {extension "internal"}
+	
+    type component GeneralComp {
+		port P p;
+	}
+	
+	function f_called() runs on GeneralComp {
+		p.getcall(S1:{});
+		p.reply(S1:{});
+	}
+	
+    testcase TC_NegSem_220301_CallOperation_014() runs on GeneralComp system GeneralComp {
+        var GeneralComp v_ptc := GeneralComp.create;
+		connect(self:p, v_ptc:p);
+		v_ptc.start(f_called());
+		p.call(S1:{}) {
+			[] p.getreply(S1:{}) { setverdict(pass, "Reply accepted"); }
+			[] p.getreply(S2:{}) {} // error expected
+		}
+    }
+
+    control {
+        execute(TC_NegSem_220301_CallOperation_014(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: The `getreply' operation refers to a different signature than the previous `call' statement: `@NegSem_220301_CallOperation_014.S1' was expected instead of `@NegSem_220301_CallOperation_014.S2'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220301_CallOperation_015 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 220301_015 verify that exception signature mismatch in the response and exception handling causes an error >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220301_CallOperation_015 NegSem_220301_CallOperation_015.ttcn >
+/*****************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.1, verify that exception signature mismatch in the response and exception handling causes an error
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// h) The selection of the alternatives to a call shall only be based on getreply and catch operations
+// for the called procedure. Unqualified getreply and catch operations shall only treat replies from 
+// and exceptions raised by the called procedure.
+
+module NegSem_220301_CallOperation_015 {
+
+	signature S1() exception(integer);
+	signature S2() exception(charstring);
+	
+	type port P procedure {
+		inout S1, S2;
+	} with {extension "internal"}
+	
+    type component GeneralComp {
+		port P p;
+	}
+	
+	function f_called() runs on GeneralComp {
+		p.getcall(S1:{});
+		p.raise(S1, 1);
+	}
+	
+    testcase TC_NegSem_220301_CallOperation_015() runs on GeneralComp system GeneralComp {
+        var GeneralComp v_ptc := GeneralComp.create;
+		connect(self:p, v_ptc:p);
+		v_ptc.start(f_called());
+		p.call(S1:{}) {
+			[] p.catch(S1, integer:?) { setverdict(pass, "Exception caught!"); }
+			[] p.catch(S2, charstring:?) {} // expected error
+		}
+    }
+
+    control {
+        execute(TC_NegSem_220301_CallOperation_015(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: The `catch' operation refers to a different signature than the previous `call' statement: `@NegSem_220301_CallOperation_015.S1' was expected instead of `@NegSem_220301_CallOperation_015.S2'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220301_CallOperation_018 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 220301_018 verify that exception signature mismatch in the response and exception handling causes an error >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220301_CallOperation_018 NegSem_220301_CallOperation_018.ttcn >
+/*****************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.1, verify that non-blocking procedure calls cannot contain timeout values
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// l) The call operation for a non-blocking procedure shall have no response and exception 
+// handling part, shall raise no timeout exception and shall not use the nowait keyword.
+
+module NegSem_220301_CallOperation_018 {
+
+	signature S() noblock;
+	
+	type port P procedure {
+		inout S;
+	}
+	
+    type component GeneralComp {
+		port P p;
+	}
+	
+	function f_called() runs on GeneralComp {
+		p.getcall(S:{});
+		p.reply(S:{});
+	}
+	
+    testcase TC_NegSem_220301_CallOperation_018() runs on GeneralComp system GeneralComp {
+        var GeneralComp v_ptc := GeneralComp.create;
+		connect(self:p, v_ptc:p);
+		v_ptc.start(f_called());
+		p.call(S:{}, 1.0);
+		alt {
+			[] p.getreply(S:{})
+				{ setverdict(pass, "Reply accepted"); } // guard error expected
+		}
+    }
+
+    control {
+        execute(TC_NegSem_220301_CallOperation_018(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Operation `reply' is not applicable to non-blocking signature `@NegSem_220301_CallOperation_018.S'
+<END_RESULT>
+<RESULT COUNT 1>
+error: A call of non-blocking signature `@NegSem_220301_CallOperation_018.S' cannot have call timer
+<END_RESULT>
+<RESULT COUNT 1>
+error: Operation `getreply' is not applicable to non-blocking signature `@NegSem_220301_CallOperation_018.S'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220301_CallOperation_019 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 220301_019 verify that non-blocking procedure calls cannot contain nowait parameter >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220301_CallOperation_019 NegSem_220301_CallOperation_019.ttcn >
+/*****************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.1, verify that non-blocking procedure calls cannot contain nowait parameter
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// l) The call operation for a non-blocking procedure shall have no response and exception 
+// handling part, shall raise no timeout exception and shall not use the nowait keyword.
+
+module NegSem_220301_CallOperation_019 {
+
+	signature S() noblock;
+	
+	type port P procedure {
+		inout S;
+	} with {extension "internal"}
+	
+    type component GeneralComp {
+		port P p;
+	}
+	
+	function f_called() runs on GeneralComp {
+		//p.getcall(S:{});
+		//p.reply(S:{});
+	}
+	
+    testcase TC_NegSem_220301_CallOperation_019() runs on GeneralComp system GeneralComp {
+        var GeneralComp v_ptc := GeneralComp.create;
+		connect(self:p, v_ptc:p);
+		v_ptc.start(f_called());
+		p.call(S:{}, nowait);
+		/*alt {
+			[] p.getreply(S:{})
+				{ setverdict(pass, "Reply accepted"); } // guard error expected
+		}*/
+    }
+
+    control {
+        execute(TC_NegSem_220301_CallOperation_019(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: A call of non-blocking signature `@NegSem_220301_CallOperation_019.S' cannot use the `nowait' keyword
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220301_CallOperation_020 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 220301_020 verify that calls cannot be used on disconnected ports >
+
+<COMPILE>
+<EXECUTE_PARALLEL>
+
+<MODULE TTCN NegSem_220301_CallOperation_020 NegSem_220301_CallOperation_020.ttcn >
+/*****************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.1, verify that calls cannot be used on disconnected ports
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// m) Applying a call operation to an unmapped or disconnected port shall cause a test 
+// case error.
+
+module NegSem_220301_CallOperation_020 {
+
+	signature S() noblock;
+	
+	type port P procedure {
+		inout S;
+	} with {extension "internal"}
+	
+    type component GeneralComp {
+		port P p;
+	}
+		
+    testcase TC_NegSem_220301_CallOperation_020() runs on GeneralComp system GeneralComp {
+		p.call(S:{});
+    }
+
+    control {
+        execute(TC_NegSem_220301_CallOperation_020(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+Dynamic test case error: Port p has neither connections nor mappings. Message cannot be sent on it.
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSyn_220301_CallOperation_001 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 220301_001 verify that the response and exception handling part cannot contain an else clause >
+
+<COMPILE>
+
+<MODULE TTCN NegSyn_220301_CallOperation_001 NegSyn_220301_CallOperation_001.ttcn >
+/*****************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.1, verify that the response and exception handling part cannot contain an else clause
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// h) The use of else branches and the invocation of altsteps is not allowed.
+
+module NegSyn_220301_CallOperation_001 {
+
+	signature S();
+	
+	type port P procedure {
+		inout S;
+	}
+	
+    type component GeneralComp {
+		port P p;
+	}
+	
+	function f_called() runs on GeneralComp {
+		p.getcall(S:{});
+		p.reply(S:{});
+	}
+	
+    testcase TC_NegSyn_220301_CallOperation_001() runs on GeneralComp system GeneralComp {
+        var GeneralComp v_ptc := GeneralComp.create;
+		connect(self:p, v_ptc:p);
+		v_ptc.start(f_called());
+		p.call(S:{}) {
+			[] p.getreply(S:{}) { setverdict(pass); }
+			[else] {} // expected error
+		}
+    }
+
+    control {
+        execute(TC_NegSyn_220301_CallOperation_001(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: at or before token `else': syntax error, unexpected ElseKeyword
+<END_RESULT>
+<RESULT COUNT 1>
+error: at or before token `control': syntax error, unexpected ControlKeyword, expecting \$end
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSyn_220301_CallOperation_002 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 220301_002 verify that the response and exception handling part cannot contain an altstep >
+
+<COMPILE>
+
+<MODULE TTCN NegSyn_220301_CallOperation_002 NegSyn_220301_CallOperation_002.ttcn >
+/*****************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.1, verify that the response and exception handling part cannot contain an altstep
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// h) The use of else branches and the invocation of altsteps is not allowed.
+
+module NegSyn_220301_CallOperation_002 {
+
+	signature S();
+	
+	type port P procedure {
+		inout S;
+	} with {extension "internal"}
+	
+    type component GeneralComp {
+		port P p;
+	}
+	
+	function f_called() runs on GeneralComp {
+		p.getcall(S:{});
+		p.reply(S:{});
+	}
+	
+	altstep a_handleReply() runs on GeneralComp {
+		[] p.getreply {}
+	}
+	
+    testcase TC_NegSyn_220301_CallOperation_002() runs on GeneralComp system GeneralComp {
+        var GeneralComp v_ptc := GeneralComp.create;
+		connect(self:p, v_ptc:p);
+		v_ptc.start(f_called());
+		p.call(S:{}) {
+			[] p.getreply(S:{}) { setverdict(pass); }
+			[] a_handleReply() {} // expected error
+		}
+    }
+
+    control {
+        execute(TC_NegSyn_220301_CallOperation_002(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: at or before token `\(': syntax error, unexpected '\(', expecting DotCatchOpKeyword or DotGetReplyOpKeyword
+<END_RESULT>
+<RESULT COUNT 1>
+error: at or before token `control': syntax error, unexpected ControlKeyword, expecting \$end
 <END_RESULT>
 
 <END_TC>
@@ -4019,7 +4990,8 @@ error: Indices of multi-dimensional port arrays can only be redirected to an int
  *****************************************************************/
 
 // The following requirements are tested:
-// No AddressRef shall contain the special value null at the time of the operation.
+// No AddressRef in the to clause shall contain the special value null at the time 
+// of the operation.
 
 module NegSem_220302_GetcallOperation_009 {
 
@@ -4625,7 +5597,8 @@ error: The type of parameter is `integer', which is not a signature
  ***************************************************/
 
 // The following requirements are tested:
-// No AddressRef shall contain the special value null at the time of the operation.
+// No AddressRef in the to clause shall contain the special value null at the time 
+// of the operation.
 
 module NegSem_220303_ReplyOperation_002 { 
 
@@ -4667,6 +5640,487 @@ module NegSem_220303_ReplyOperation_002 {
 
 <RESULT COUNT 1>
 Dynamic test case error: The second argument of connect operation contains the null component reference.
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220303_ReplyOperation_004 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 220303_004 null component in the to clause of the reply operation >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220303_ReplyOperation_004 NegSem_220303_ReplyOperation_004.ttcn >
+/***************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.3, verify that reply operation cannot be used on a message port
+ ** @verdict  pass reject
+ ***************************************************/
+
+// The following requirements are tested:
+// a) A reply operation shall only be used at a procedure-based port.
+
+module NegSem_220303_ReplyOperation_004 { 
+
+    signature S() return integer;
+
+    type port P message {
+        inout integer;
+    } with {extension "internal"}
+
+    type component GeneralComp {
+        port P p;
+    }
+    
+    testcase TC_NegSem_220303_ReplyOperation_004() runs on GeneralComp {
+        p.reply(S:{} value 1);
+        setverdict(pass);
+    }
+
+    control{
+        execute(TC_NegSem_220303_ReplyOperation_004(), 5.0);
+    }
+
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Procedure-based operation `reply' is not applicable to a message-based port of type `@NegSem_220303_ReplyOperation_004.P'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220303_ReplyOperation_005 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 220303_005 verify that signature not listed in the port definition cannot be used in the reply operation >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220303_ReplyOperation_005 NegSem_220303_ReplyOperation_005.ttcn >
+/***************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.3, verify that signature not listed in the port definition cannot be used in the reply operation
+ ** @verdict  pass reject
+ ***************************************************/
+
+// The following requirements are tested:
+// The type definition of the port shall include the name of the procedure 
+// to which the reply operation belongs. 
+
+module NegSem_220303_ReplyOperation_005 { 
+
+    signature S();
+	signature SNotListed();
+
+    type port P procedure {
+        inout S;
+    } with {extension "internal"}
+
+    type component GeneralComp {
+        port P p;
+    }
+
+    function f_server() runs on GeneralComp {
+        p.getcall;
+        p.reply(SNotListed:{});
+    }
+    
+    testcase TC_NegSem_220303_ReplyOperation_005() runs on GeneralComp system GeneralComp {
+        var GeneralComp v_ptc := GeneralComp.create("PTC");        
+        connect(self:p, v_ptc:p);
+        v_ptc.start(f_server());
+        p.call(S:{}, nowait);
+		alt {
+			[] p.getreply {}
+			[] v_ptc.done {}
+		}
+        setverdict(pass);
+    }
+
+    control{
+        execute(TC_NegSem_220303_ReplyOperation_005(), 5.0);
+    }
+
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Incompatible explicit type specification: `@NegSem_220303_ReplyOperation_005.S' was expected instead of `@NegSem_220303_ReplyOperation_005.SNotListed'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220303_ReplyOperation_006 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 220303_006 verify that matching symbols cannot be used in out signature parameters in reply operations >
+
+<COMPILE>
+<EXECUTE_PARALLEL>
+
+<MODULE TTCN NegSem_220303_ReplyOperation_006 NegSem_220303_ReplyOperation_006.ttcn >
+/***************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.3, verify that matching symbols cannot be used in out signature parameters in reply operations
+ ** @verdict  pass reject
+ ***************************************************/
+
+// The following requirements are tested:
+// b) All out and inout parameters of the signature shall have a specific value i.e. 
+// the use of matching mechanisms such as AnyValue is not allowed.
+
+module NegSem_220303_ReplyOperation_006 { 
+
+	type record R {
+		integer field1,
+		integer field2
+	}
+	
+    signature S(out R par1);
+
+    type port P procedure {
+        inout S;
+    } with {extension "internal"}
+
+    type component GeneralComp {
+        port P p;
+    }
+
+    function f_server() runs on GeneralComp {
+		var template R v_rec := { field1 := 0, field2 := ? };
+        p.getcall(S:{-});
+        p.reply(S:{par1 := v_rec});
+    }
+    
+    testcase TC_NegSem_220303_ReplyOperation_006() runs on GeneralComp system GeneralComp {
+        var GeneralComp v_ptc := GeneralComp.create("PTC");
+        connect(self:p, v_ptc:p);
+        v_ptc.start(f_server());
+        p.call(S:{-}, nowait);
+        alt {
+			[] p.getreply {}
+			[] v_ptc.done {}
+		}
+        setverdict(pass);
+    }
+
+    control{
+        execute(TC_NegSem_220303_ReplyOperation_006(), 5.0);
+    }
+
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+Dynamic test case error: Performing a valueof or send operation on a non-specific integer template.
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220303_ReplyOperation_007 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 220303_007 verify that matching symbols cannot be used in inout signature parameters in reply operations >
+
+<COMPILE>
+<EXECUTE_PARALLEL>
+
+<MODULE TTCN NegSem_220303_ReplyOperation_007 NegSem_220303_ReplyOperation_007.ttcn >
+/***************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.3, verify that matching symbols cannot be used in inout signature parameters in reply operations
+ ** @verdict  pass reject
+ ***************************************************/
+
+// The following requirements are tested:
+// b) All out and inout parameters of the signature shall have a specific value i.e. 
+// the use of matching mechanisms such as AnyValue is not allowed.
+
+module NegSem_220303_ReplyOperation_007 { 
+
+	type record R {
+		integer field1,
+		integer field2
+	}
+	
+    signature S(inout R par1);
+
+    type port P procedure {
+        inout S;
+    } with {extension "internal"}
+
+    type component GeneralComp {
+        port P p;
+    }
+
+    function f_server() runs on GeneralComp {
+		var template R v_rec := { field1 := 0, field2 := ? }
+        p.getcall(S:{par1 := {field1 := 0, field2 := 5}});
+        p.reply(S:{par1 := v_rec});
+    }
+    
+    testcase TC_NegSem_220303_ReplyOperation_007() runs on GeneralComp system GeneralComp {
+        var GeneralComp v_ptc := GeneralComp.create("PTC");        
+        connect(self:p, v_ptc:p);
+        v_ptc.start(f_server());
+        p.call(S:{par1 := {field1 := 0, field2 := 5} }, nowait);
+        alt {
+			[] p.getreply {}
+			[] v_ptc.done {}
+		}
+        setverdict(pass);
+    }
+
+    control{
+        execute(TC_NegSem_220303_ReplyOperation_007(), 5.0);
+    }
+
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+Dynamic test case error: Performing a valueof or send operation on a non-specific integer template.
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220303_ReplyOperation_008 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 220303_008 verify that error is issued for a missing to clause in a reply operation in case of one-to-many connections >
+
+<COMPILE>
+<EXECUTE_PARALLEL>
+
+<MODULE TTCN NegSem_220303_ReplyOperation_008 NegSem_220303_ReplyOperation_008.ttcn >
+/***************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.3, verify that error is issued for a missing to clause in a reply operation in case of one-to-many connections
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// c) A to clause shall be present in case of one-to-many connections.
+
+module NegSem_220303_ReplyOperation_008 {
+
+    signature S();
+
+    type port P procedure {
+        inout S;
+    } with {extension "internal"}
+
+    type component GeneralComp {
+        port P p;
+    }
+
+    function f_ClientQuery() runs on GeneralComp {
+	
+        p.call(S:{}, 1.0) {
+	
+            [] p.getreply(S:{}) {
+            }
+            [] p.catch (timeout) {
+            }
+        }
+		setverdict(pass);
+    }
+
+    function f_ServerResponses() runs on GeneralComp {
+        var GeneralComp v_client1 := null, v_client2 := null;
+	
+        alt {
+            [v_client1 == null] p.getcall(S:{}) -> sender v_client1 {
+                if (v_client2 == null) { repeat; }
+            }
+            [v_client2 == null] p.getcall(S:{}) -> sender v_client2 {
+                if (v_client1 == null) { repeat; }
+            }
+        }
+        p.reply(S:{}); // to clause missing, but there are 2 clients!
+		setverdict(pass);
+    }
+		
+    testcase TC_NegSem_220303_ReplyOperation_008() runs on GeneralComp system GeneralComp {
+        var GeneralComp server := GeneralComp.create("RemoteProcedure Service");
+        var GeneralComp client := GeneralComp.create("RemoteProcedure Client");
+        var GeneralComp client2 := GeneralComp.create("RemoteProcedure Client");
+        // map the PTCs to the system port
+        connect(server:p, client:p);
+        connect(server:p, client2:p);
+
+        server.start(f_ServerResponses());
+       
+        client2.start(f_ClientQuery());
+        client.start(f_ClientQuery());
+
+        interleave {
+            [] client.done {}
+            [] client2.done {}
+        }
+        server.stop;
+
+        alt {
+            [] all component.done {}
+        }
+    }
+
+    control{
+        execute(TC_NegSem_220303_ReplyOperation_008());
+    }
+
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+Dynamic test case error: Port p has more than one active connections. Message can be sent on it only with explicit addressing.
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220303_ReplyOperation_009 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 220303_009 verify that error is issued for a missing to clause in a reply operation in case of one-to-many connections >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220303_ReplyOperation_009 NegSem_220303_ReplyOperation_009.ttcn >
+/***************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.3, verify that values that are not addresses or components cannot be used in the to clause of the reply operation
+ ** @verdict  pass reject
+ ***************************************************/
+
+// The following requirements are tested:
+// d) All AddressRef items in the to clause shall be of type address, component or of the address
+// type bound to the port type (see clause 6.2.9) of the port instance referenced in the reply 
+// operation.
+
+module NegSem_220303_ReplyOperation_009 { 
+
+    signature S();
+
+    type port P procedure {
+        inout S;
+    } with {extension "internal"}
+
+    type component GeneralComp {
+        port P p;
+    }
+
+    function f_server() runs on GeneralComp {
+		var integer v_addr := 10;
+        p.getcall(S:{});
+        p.reply(S:{}) to v_addr;
+    }
+    
+    testcase TC_NegSem_220303_ReplyOperation_009() runs on GeneralComp system GeneralComp {
+        var GeneralComp v_ptc := GeneralComp.create("PTC");        
+        connect(self:p, v_ptc:p);
+        v_ptc.start(f_server());
+        p.call(S:{}, nowait);
+        alt {
+			[] p.getreply {}
+			[] v_ptc.done {}
+		}
+        setverdict(pass);
+    }
+
+    control{
+        execute(TC_NegSem_220303_ReplyOperation_009(), 5.0);
+    }
+
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Type mismatch: The type of the operand should be a component type instead of `integer'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220303_ReplyOperation_010 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 220303_010 verify that reply operation on a disconnected port causes an error >
+
+<COMPILE>
+<EXECUTE_PARALLEL>
+
+<MODULE TTCN NegSem_220303_ReplyOperation_010 NegSem_220303_ReplyOperation_010.ttcn >
+/***************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.3, verify that reply operation on a disconnected port causes an error
+ ** @verdict  pass reject
+ ***************************************************/
+
+// The following requirements are tested:
+// f) Applying a reply operation to an unmapped or disconnected port shall cause a test
+// case error.
+
+module NegSem_220303_ReplyOperation_010 { 
+
+    signature S();
+
+    type port P procedure {
+        inout S;
+    } with {extension "internal"}
+
+    type component GeneralComp {
+        port P p;
+    }
+
+    function f_server() runs on GeneralComp {
+        p.getcall(S:{});
+		disconnect(self:p, mtc:p);
+        p.reply(S:{});
+    }
+    
+    testcase TC_NegSem_220303_ReplyOperation_010() runs on GeneralComp system GeneralComp {
+        var GeneralComp v_ptc := GeneralComp.create("PTC");        
+        connect(self:p, v_ptc:p);
+        v_ptc.start(f_server());
+        p.call(S:{}, nowait);
+        alt {
+			[] p.getreply {}
+			[] v_ptc.done {}
+		}
+        setverdict(pass);
+    }
+
+    control{
+        execute(TC_NegSem_220303_ReplyOperation_010(), 5.0);
+    }
+
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+Dynamic test case error: Port p has neither connections nor mappings. Message cannot be sent on it.
 <END_RESULT>
 
 <END_TC>
@@ -5085,7 +6539,8 @@ error: Indices of multi-dimensional port arrays can only be redirected to an int
  *****************************************************************/
 
 // The following requirements are tested:
-// No AddressRef shall contain the special value null at the time of the operation.
+// No AddressRef in the to clause shall contain the special value null at the time 
+// of the operation.
 
 module NegSem_220304_getreply_operation_006 {
 
@@ -5151,7 +6606,8 @@ Dynamic test case error: The second argument of connect operation contains the n
  *****************************************************************/
 
 // The following requirements are tested:
-// No AddressRef shall contain the special value null at the time of the operation.
+// No AddressRef in the to clause shall contain the special value null at the time 
+// of the operation.
 
 module NegSem_220304_getreply_operation_007 {
 
@@ -5980,6 +7436,70 @@ error: The encoding format parameter for the '@decoded' modifier is only availab
 :exmp
 
 *---------------------------------------------------------------------*
+:h3. NegSem_220304_getreply_operation_021 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 220304_021 incompatible template in the from clause of the getreply operation >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220304_getreply_operation_021 NegSem_220304_getreply_operation_021.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.4, incompatible template in the from clause of the getreply operation
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// f) All AddressRef items in the from clause and all VariableRef items in the sender clause
+// shall be of type address, component or of the address type bound to the port type (see 
+// section 6.2.9) of the port instance referenced in the getcall operation.
+
+module NegSem_220304_getreply_operation_021 {
+
+	signature S() return integer;
+	
+	type port P procedure {
+		inout S;
+	} with {extension "internal"}
+	
+    type component GeneralComp {
+		port P p;
+	}
+	
+	function f() runs on GeneralComp {
+        p.getcall(S:{});
+        p.reply(S:{} value 1);
+	}
+	
+    testcase TC_NegSem_220304_getreply_operation_021() runs on GeneralComp system GeneralComp {
+        var charstring v_addr := "addr";
+        var GeneralComp v_ptc := GeneralComp.create;
+		connect(self:p, v_ptc:p);
+		v_ptc.start(f());
+		p.call(S:{}) {
+            [] p.getreply(S:{}) from v_addr {} // error expected
+            [] p.getreply {}
+        }
+        setverdict(pass);
+    }
+
+    control {
+        execute(TC_NegSem_220304_getreply_operation_021(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT >
+error: The type of the template should be a component type instead of `charstring'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+
+*---------------------------------------------------------------------*
 :h3. NegSyn_220304_getreply_operation_001 negative test
 .*---------------------------------------------------------------------*
 :xmp tab=0.
@@ -6061,10 +7581,10 @@ error: Index redirect cannot be used without the 'any from' clause
 
 // The following requirements are tested:
 // Exceptions are specified as types. Therefore the exception value may either be derived 
-// from a template or be the value resulting from an expression (which of course can be 
-// an explicit value). The optional type field in the value specification to the raise 
-// operation shall be used in cases where it is necessary to avoid any ambiguity of the type
-// of the value being sent.
+// from a template conforming to the template(value) restriction or be the value resulting 
+// from an expression (which of course can be an explicit value). The optional type field in 
+// the value specification to the raise operation shall be used in cases where it is necessary
+//  to avoid any ambiguity of the type of the value being sent.
 
 module NegSem_220305_raise_operation_001 {
 	signature S() exception(charstring, octetstring);
@@ -6125,10 +7645,10 @@ error: Type `integer' is not present on the exception list of signature `@NegSem
 
 // The following requirements are tested:
 // Exceptions are specified as types. Therefore the exception value may either be derived 
-// from a template or be the value resulting from an expression (which of course can be 
-// an explicit value). The optional type field in the value specification to the raise 
-// operation shall be used in cases where it is necessary to avoid any ambiguity of the type
-// of the value being sent.
+// from a template conforming to the template(value) restriction or be the value resulting 
+// from an expression (which of course can be an explicit value). The optional type field in 
+// the value specification to the raise operation shall be used in cases where it is necessary
+//  to avoid any ambiguity of the type of the value being sent.
 
 module NegSem_220305_raise_operation_002 {
 	signature S();
@@ -6189,10 +7709,10 @@ error: Signature `@NegSem_220305_raise_operation_002.S' does not have exceptions
 
 // The following requirements are tested:
 // Exceptions are specified as types. Therefore the exception value may either be derived 
-// from a template or be the value resulting from an expression (which of course can be 
-// an explicit value). The optional type field in the value specification to the raise 
-// operation shall be used in cases where it is necessary to avoid any ambiguity of the type
-// of the value being sent.
+// from a template conforming to the template(value) restriction or be the value resulting 
+// from an expression (which of course can be an explicit value). The optional type field in 
+// the value specification to the raise operation shall be used in cases where it is necessary
+//  to avoid any ambiguity of the type of the value being sent.
 
 module NegSem_220305_raise_operation_003 {
     type integer MyInt1 (1..10);
@@ -6446,9 +7966,11 @@ error: Signature `@NegSem_220305_raise_operation_006.S2' is not present on the i
  ** @purpose  1:22.3.5, value of incorrect type in the to clause of the raise operation
  ** @verdict  pass reject
  *****************************************************************/
+
 // The following requirements are tested:
-// AddressRef shall be of type address, component or of the type provided in the address 
-// declaration of the port type of the port instance referenced in the raise operation.
+// All AddressRef items in the to clause shall be of type address, component or of the 
+// address type bound to the port type (see clause 6.2.9) of the port instance referenced
+// in the raise operation.
 
 module NegSem_220305_raise_operation_007 {
 	signature S() exception(integer);
@@ -6509,8 +8031,10 @@ error: A component reference was expected as operand
  ** @purpose  1:22.3.5, null in the to clause of the raise operation
  ** @verdict  pass reject
  *****************************************************************/
+
 // The following requirements are tested:
-// No AddressRef shall contain the special value null at the time of the operation.
+// No AddressRef in the to clause shall contain the special value null at the time 
+// of the operation.
 
 module NegSem_220305_raise_operation_008 {
 	signature S() exception(integer);
@@ -6612,6 +8136,63 @@ module NegSem_220305_raise_operation_009 {
 
 <RESULT COUNT 1>
 Dynamic test case error: Port p has neither connections nor mappings. Message cannot be sent on it.
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220305_raise_operation_010 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 220305_010 raise operation on disconnected and unmapped ports >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220305_raise_operation_010 NegSem_220305_raise_operation_010.ttcn >
+/*****************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.5, exception template not conforming to template(value) restriction
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// f) The TemplateInstance shall conform to the template(value) restriction (see clause 15.8).
+
+module NegSem_220305_raise_operation_010 {
+	signature S() exception(charstring, octetstring);
+	
+	type port P procedure {
+		inout S;
+	} with {extension "internal"}
+	
+    type component GeneralComp {
+		port P p;
+	}
+	
+	function f() runs on GeneralComp {
+		p.getcall(S:{});
+		p.raise(S, charstring:?);
+        setverdict(pass);
+	}
+	
+    testcase TC_NegSem_220305_raise_operation_010() runs on GeneralComp system GeneralComp {
+        var GeneralComp v_ptc := GeneralComp.create;
+		connect(self:p, v_ptc:p);
+        v_ptc.start(f());
+	    p.call(S:{}, nowait); // no processing of the exception to avoid possible errors in the catch operation
+        v_ptc.done;
+    }
+
+    control {
+        execute(TC_NegSem_220305_raise_operation_010(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: A specific value was expected instead of any value
 <END_RESULT>
 
 <END_TC>
@@ -7029,7 +8610,8 @@ error: Indices of multi-dimensional port arrays can only be redirected to an int
  *****************************************************************/
 
 // The following requirements are tested:
-// No AddressRef shall contain the special value null at the time of the operation.
+// No AddressRef in the to clause shall contain the special value null at the time 
+// of the operation.
 
 module NegSem_220306_catch_operation_006 {
 
@@ -7094,7 +8676,8 @@ Dynamic test case error: The second argument of connect operation contains the n
  *****************************************************************/
 
 // The following requirements are tested:
-// No AddressRef shall contain the special value null at the time of the operation.
+// No AddressRef in the to clause shall contain the special value null at the time 
+// of the operation.
 
 module NegSem_220306_catch_operation_007 {
 
@@ -7571,6 +9154,71 @@ module NegSem_220306_catch_operation_013 {
 
 <RESULT COUNT 1>
 error: The types in `from' clause and `sender' redirect are not the same: `@NegSem_220306_catch_operation_013.AltComp' was expected instead of `@NegSem_220306_catch_operation_013.GeneralComp'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220306_catch_operation_015 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 220306_015 incompatible template in the from clause of the catch operation >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220306_catch_operation_015 NegSem_220306_catch_operation_015.ttcn >
+/*****************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.6, incompatible template in the from clause of the catch operation
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// f) All AddressRef items in the from clause and all VariableRef items in the sender clause 
+// shall be of type address, component or of the address type bound to the port type (see 
+// clause 6.2.9) of the port instance referenced in the catch operation.
+
+module NegSem_220306_catch_operation_015 {
+
+	signature S() exception (charstring);
+	
+	type port P procedure {
+		inout S;
+	} with {extension "internal"}
+	
+    type component GeneralComp 
+	{
+		port P p;
+	}
+	
+	function f() runs on GeneralComp
+	{
+        p.getcall(S:{});
+        p.raise(S, "exc");
+	}
+	
+    testcase TC_NegSem_220306_catch_operation_015() runs on GeneralComp system GeneralComp {
+        var charstring v_addr := "addr";
+        var GeneralComp v_ptc := GeneralComp.create;
+		connect(self:p, v_ptc:p);
+		v_ptc.start(f());
+		p.call(S:{}) {
+            [] p.catch(S, charstring:?) from v_addr {} // error expected
+            [] p.catch {}
+        }
+        setverdict(pass);
+    }
+
+    control {
+        execute(TC_NegSem_220306_catch_operation_015(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+ error: The type of the template should be a component type instead of `charstring'
 <END_RESULT>
 
 <END_TC>

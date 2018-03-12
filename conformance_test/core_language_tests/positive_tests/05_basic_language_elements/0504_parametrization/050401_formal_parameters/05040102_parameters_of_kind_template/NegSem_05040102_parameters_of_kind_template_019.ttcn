@@ -1,0 +1,43 @@
+/******************************************************************************
+ * Copyright (c) ETSI 2017.
+ *
+ * This file is subject to copyrights owned by ETSI. Non-exclusive permission
+ * is hereby granted, free of charge, to copy, reproduce and amend this file
+ * under the following conditions: It is provided "as is", without warranty of any
+ * kind, expressed or implied.
+ * 
+ * ETSI shall never be liable for any claim, damages, or other liability arising
+ * from its use or inability of use.This permission does not apply to any documentation
+ * associated with this file for which ETSI keeps all rights reserved. The present
+ * copyright notice shall be included in all copies of whole or part of this
+ * file and shall not imply any sub-license right.
+ *
+ * Modified by: Adrien Kirjak
+ *
+ ** @version  0.0.1
+ ** @purpose  1:5.4.1.2, Verify that template parameter of an activated altstep cannot be an inout parameter
+ ** @verdict  pass reject
+ *****************************************************************/
+
+module NegSem_05040102_parameters_of_kind_template_019 {
+
+    type component C {
+		var template integer v_int := ?;
+    }
+
+    altstep a_test(inout template integer p_par) runs on C {
+        [] any timer.timeout {
+            p_par := ?;
+        }
+    }
+    
+    testcase TC_NegSem_05040102_parameters_of_kind_template_019() runs on C {
+        //var integer v_int := ?; //original line
+        activate(a_test(v_int));  
+        setverdict(pass);
+    }
+    
+    control {
+        execute(TC_NegSem_05040102_parameters_of_kind_template_019());
+    }
+}

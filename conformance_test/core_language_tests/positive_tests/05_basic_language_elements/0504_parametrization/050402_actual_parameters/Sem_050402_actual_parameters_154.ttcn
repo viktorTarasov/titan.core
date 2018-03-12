@@ -38,14 +38,14 @@ module Sem_050402_actual_parameters_154 {
     }
 
 	//function f_test(inout template(present) integer p_val) <-- ref bug everywhere
-    function f_test(inout template integer p_val) {
+    function f_test(inout template(present) integer p_val) {
         if (match(25, p_val)) { setverdict(pass); }
         else { setverdict(fail); }
         p_val := 10;
     }
 
     testcase TC_Sem_050402_actual_parameters_154() runs on GeneralComp {
-        var template R v_rec := {
+        var template(present) R v_rec := {
             field1 := 1,
             field2 := ?
         };

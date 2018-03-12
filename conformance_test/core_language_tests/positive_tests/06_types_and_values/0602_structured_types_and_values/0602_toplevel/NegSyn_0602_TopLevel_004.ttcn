@@ -1,0 +1,37 @@
+/******************************************************************************
+ * Copyright (c) ETSI 2017.
+ *
+ * This file is subject to copyrights owned by ETSI. Non-exclusive permission
+ * is hereby granted, free of charge, to copy, reproduce and amend this file
+ * under the following conditions: It is provided "as is", without warranty of any
+ * kind, expressed or implied.
+ * 
+ * ETSI shall never be liable for any claim, damages, or other liability arising
+ * from its use or inability of use.This permission does not apply to any documentation
+ * associated with this file for which ETSI keeps all rights reserved. The present
+ * copyright notice shall be included in all copies of whole or part of this
+ * file and shall not imply any sub-license right.
+ *
+ * Modified by: Adrien Kirjak
+ *
+ ** @version  0.0.1
+ ** @purpose  1:6.2, Combined value list and assignment notation not allowed in the same (immediate) context.
+ ** @verdict  pass reject
+ ***************************************************/
+/* The following requirements are tested:
+ *The assignment notation can be used for record, record of, set, setof and union value
+ * notations and for arrays. In this notation each field shall not appear more than once.
+*/
+
+module NegSyn_0602_TopLevel_004 {
+    type record MyRecord {
+        integer field1,
+        charstring field2 optional,
+        float field3
+    }
+    const MyRecord c_rec := {
+        field1 := 5,
+        field1 := 6,    // error: already appeared field
+        field3 := 3.14
+    };
+}

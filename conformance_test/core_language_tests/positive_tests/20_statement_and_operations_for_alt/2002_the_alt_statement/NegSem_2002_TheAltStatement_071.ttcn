@@ -1,0 +1,58 @@
+/******************************************************************************
+ * Copyright (c) ETSI 2017.
+ *
+ * This file is subject to copyrights owned by ETSI. Non-exclusive permission
+ * is hereby granted, free of charge, to copy, reproduce and amend this file
+ * under the following conditions: It is provided "as is", without warranty of any
+ * kind, expressed or implied.
+ * 
+ * ETSI shall never be liable for any claim, damages, or other liability arising
+ * from its use or inability of use.This permission does not apply to any documentation
+ * associated with this file for which ETSI keeps all rights reserved. The present
+ * copyright notice shall be included in all copies of whole or part of this
+ * file and shall not imply any sub-license right.
+ *
+ * Modified by: Adrien Kirjak
+ *
+ ** @version  0.0.1
+ ** @purpose  1:20.2, verify that the read operation cannot be used in alt branch events (in templates)
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirement is tested:
+// c) The evaluation of the event of an alt branch shall not have side effects. To avoid side effects that cause 
+// an inconsistency between the actual snapshot and the state of the component or introduce indeterminism 
+// in the evaluation of the following alt branches or the re-evaluation of the same alt branch, the restrictions 
+// imposed on the contents of functions called from special places (clause 16.1.4) shall apply to expressions 
+// occurring in the matching part of an alternative.
+
+module NegSem_2002_TheAltStatement_071 {
+
+    type port MyPort message {
+        inout boolean
+    } with {extension "internal"}
+    
+    type component GeneralComp { 
+	    port MyPort p;
+    }
+    
+    testcase TC_NegSem_2002_TheAltStatement_071() runs on GeneralComp system GeneralComp {
+        timer t_tmr := 4.0;
+        t_tmr.start;
+
+		connect(self:p, self:p);
+
+		var template @fuzzy boolean mw_msg := t_tmr.read > 0.0; //the program is too quick, do not to put this earlier in the code
+		p.send(true);
+
+	    alt {
+		    [] p.receive(mw_msg) {
+			    setverdict(pass);
+		    }
+	    }
+    }
+    
+    control {
+	    execute(TC_NegSem_2002_TheAltStatement_071());
+    }
+}

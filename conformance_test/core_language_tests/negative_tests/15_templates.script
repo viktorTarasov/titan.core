@@ -56,6 +56,47 @@ This TD contains negative tests from ETSI TTCN3 Conformance Test's 15_templates 
 :h1.REQUIREMENT-BASED TESTS
 .*---------------------------------------------------------------------*
 .*---------------------------------------------------------------------*
+:h2. 15_top_level folder
+.*---------------------------------------------------------------------*
+*---------------------------------------------------------------------*
+:h3. NegSyn_15_TopLevel_001 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 15_001 Ensure that the expression or template body initializing a template shall evaluate to a value or template, which is type compatible with the template being declared. >
+
+<COMPILE>
+
+<MODULE TTCN NegSyn_15_TopLevel_001 NegSyn_15_TopLevel_001.ttcn >
+/*****************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:15, Ensure that the expression or template body initializing a template shall evaluate to a value or template, which is type compatible with the template being declared. 
+ ** @verdict  pass reject, noexecution
+ *****************************************************************/
+
+// The following requirement is tested:
+//Restriction C: the expression or template body initializing a template shall evaluate to a value or template, which is type compatible with the template being declared. 
+
+module NegSyn_15_TopLevel_001 {
+
+	type record MyRecord {
+		integer myInt
+	}
+
+	template MyRecord mw_myRecord := {
+    	myInt := 2.1    // error: incompatible type (int req., float is given)
+	}
+
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: integer value was expected
+<END_RESULT>
+
+<END_TC>
+:exmp
+.*---------------------------------------------------------------------*
 :h2. 1503_global_and_local_templates folder
 .*---------------------------------------------------------------------*
 *---------------------------------------------------------------------*
@@ -3589,7 +3630,7 @@ error: Formal parameter with template restriction `present' not allowed here
 <MODULE TTCN NegSem_1508_TemplateRestrictions_043 NegSem_1508_TemplateRestrictions_043.ttcn >
 /******************************************************************************
  ** @version  0.0.1
- ** @purpose  1:15.8, Ensure that template(present) can be parameter to template(omit)
+ ** @purpose  1:15.8, Ensure that template cannot be parameter to template(omit)
  ** @verdict  pass reject
  *****************************************************************/
 
@@ -4197,6 +4238,55 @@ module NegSem_1509_MatchOperation_001 {
 
 <RESULT COUNT 1>
 error: Reference to a value was expected instead of template `@NegSem_1509_MatchOperation_001.m_second'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_1509_MatchOperation_003 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 1509_003 Ensure that the match operation works correctly with enums. >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_1509_MatchOperation_003 NegSem_1509_MatchOperation_003.ttcn >
+/*****************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:15.9, Ensure that the match operation works correctly with enums.
+ ** @verdict  pass reject
+ *****************************************************************/
+
+module NegSem_1509_MatchOperation_003 {
+
+	type component GeneralComp { }
+
+	type enumerated A_enum { A, B, C, D, E };
+	type enumerated B_enum { A, F, G };
+
+	testcase TC_NegSem_1509_MatchOperation_003() runs on GeneralComp {
+		
+		var A_enum v_value := A;
+
+		
+		if (match(v_value, B_enum:G)) { // error: different enum type
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+	}
+
+	control{
+		execute(TC_NegSem_1509_MatchOperation_003());
+	}
+
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Type mismatch: a value of type `@NegSem_1509_MatchOperation_003.B_enum' was expected instead of `@NegSem_1509_MatchOperation_003.A_enum'
 <END_RESULT>
 
 <END_TC>

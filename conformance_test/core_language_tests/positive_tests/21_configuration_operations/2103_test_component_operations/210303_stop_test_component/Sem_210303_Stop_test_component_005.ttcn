@@ -30,6 +30,9 @@ module Sem_210303_Stop_test_component_005 {
 	}
     
     function f_ptcBehaviour() runs on GeneralComp {
+		timer t_tmr := 1.0;
+		t_tmr.start;
+		t_tmr.timeout;
     }
 
     function f_ptcSecondBehaviour() runs on GeneralComp {
