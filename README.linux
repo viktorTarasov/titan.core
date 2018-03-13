@@ -172,3 +172,13 @@ These tests might run for half an hour (regr.tests)  to two hours (func.tests)
 From here on, you can continue with the Titan installation guide, see /Install/docs, to set/change environment variables etc.
 and then, optionally, the Eclipse installation guide.
 
+
+
+Note1:  A script, conributed by Frank Rehberger,  which automates the installation of Titan core, the Eclipse IDE and Titan plug-ins, 
+currently working for Ubuntu/Debian ,  can be downloaded from: 
+
+https://github.com/frehberg/ttcn3-titan-installer
+
+
+
+
