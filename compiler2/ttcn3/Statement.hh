@@ -348,6 +348,7 @@ namespace Ttcn {
         Value *compref2;
         Reference *portref2;
         bool translate; // true if a map statement enables translation mode
+        bool first_is_system; // true if the first operand is the system component (only used in translation mode)
       } config_op; ///< used by S_CONNECT, S_MAP, S_DISCONNECT, S_UNMAP
 
       struct {

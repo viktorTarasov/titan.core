@@ -1414,6 +1414,7 @@ namespace Ttcn {
       config_op.compref2=p_compref2;
       config_op.portref2=p_portref2;
       config_op.translate=false;
+      config_op.first_is_system = false;
       break;
     default:
       FATAL_ERROR("Statement::Statement()");
@@ -4958,13 +4959,20 @@ error:
         warning("Port type `%s' cannot send or receive from system port type `%s'.",
           pt2->get_typename().c_str(), pt1->get_typename().c_str());
       }
+      if (config_op.translate) {
+        config_op.first_is_system = true;
+      }
     } else {
       // we have no idea which one is the system port
-      config_op.translate = (!ptb1->is_legacy() && ptb1->is_translate(ptb2)) ||
-                            (!ptb2->is_legacy() && ptb2->is_translate(ptb1));
-      if (!config_op.translate && !ptb1->is_mappable(ptb1) && !ptb2->is_mappable(ptb1)) {
+      bool first_is_mapped_to_second = !ptb1->is_legacy() && ptb1->is_translate(ptb2);
+      bool second_is_mapped_to_first = !ptb2->is_legacy() && ptb2->is_translate(ptb1);
+      config_op.translate = first_is_mapped_to_second || second_is_mapped_to_first;
+      if (!config_op.translate && !ptb1->is_mappable(ptb2) && !ptb2->is_mappable(ptb1)) {
         error("The mapping between port types `%s' and `%s' is not consistent",
                 pt1->get_typename().c_str(), pt2->get_typename().c_str());
+      }
+      if (config_op.translate) {
+        config_op.first_is_system = second_is_mapped_to_first;
       }
     }
     if (!config_op.translate) {
@@ -7639,14 +7647,16 @@ error:
         config_op.portref1->generate_code_portref(&expr, my_sb);
         expr.expr = mputstr(expr.expr, ".port_is_started())) {\n");
         config_op.portref1->generate_code_portref(&expr, my_sb);
-        expr.expr = mputstr(expr.expr, ".activate_port(TRUE);\n");
+        expr.expr = mputprintf(expr.expr, ".activate_port(%s);\n",
+          config_op.first_is_system ? "TRUE" : "FALSE");
         config_op.portref1->generate_code_portref(&expr, my_sb);
         expr.expr = mputstr(expr.expr, ".start();\n}\n");
         expr.expr = mputstr(expr.expr, "if (!(");
         config_op.portref2->generate_code_portref(&expr, my_sb);
         expr.expr = mputstr(expr.expr, ".port_is_started())) {\n");
         config_op.portref2->generate_code_portref(&expr, my_sb);
-        expr.expr = mputstr(expr.expr, ".activate_port(TRUE);\n");
+        expr.expr = mputprintf(expr.expr, ".activate_port(%s);\n",
+          config_op.first_is_system ? "FALSE" : "TRUE");
         config_op.portref2->generate_code_portref(&expr, my_sb);
         expr.expr = mputstr(expr.expr, ".start();\n}\n");
       }
