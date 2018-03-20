@@ -1884,6 +1884,9 @@ type port MyPort message {
 
 type component K1 {
   port MyPort my_port;
+
+  // updated to match change I82560687cdc511433e453a8e971cdc1173a14b06 (needs to be checked)
+  port ProviderPort provider_port;
 }
 
 type component K2 {
@@ -1894,7 +1897,7 @@ testcase TC1() runs on K1 {
   var K1 k1;
   var K2 k2;
   connect(k1:my_port, k2:user_port);
-  map(k1:my_port, k2:user_port);
+  map(k1:provider_port, k2:user_port);
 }
 }
 <END_MODULE>
