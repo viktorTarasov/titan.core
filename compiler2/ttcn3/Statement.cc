@@ -7629,7 +7629,7 @@ error:
       if (!config_op.compref1->get_expr_governor(Type::EXPECTED_DYNAMIC_VALUE)) {
         warning = true;
         if (strcmp(opname, "map") == 0) {
-          config_op.compref2->warning(
+          config_op.compref1->warning(
             "Cannot determine the type of the component in the first parameter."
             "The port translation will not work.");
         }
@@ -7643,21 +7643,14 @@ error:
         }
       }
       if (warning == false) {
+        Reference* portref = config_op.first_is_system ?
+          config_op.portref1 : config_op.portref2;
         expr.expr = mputstr(expr.expr, "if (!(");
-        config_op.portref1->generate_code_portref(&expr, my_sb);
+        portref->generate_code_portref(&expr, my_sb);
         expr.expr = mputstr(expr.expr, ".port_is_started())) {\n");
-        config_op.portref1->generate_code_portref(&expr, my_sb);
-        expr.expr = mputprintf(expr.expr, ".activate_port(%s);\n",
-          config_op.first_is_system ? "TRUE" : "FALSE");
-        config_op.portref1->generate_code_portref(&expr, my_sb);
-        expr.expr = mputstr(expr.expr, ".start();\n}\n");
-        expr.expr = mputstr(expr.expr, "if (!(");
-        config_op.portref2->generate_code_portref(&expr, my_sb);
-        expr.expr = mputstr(expr.expr, ".port_is_started())) {\n");
-        config_op.portref2->generate_code_portref(&expr, my_sb);
-        expr.expr = mputprintf(expr.expr, ".activate_port(%s);\n",
-          config_op.first_is_system ? "FALSE" : "TRUE");
-        config_op.portref2->generate_code_portref(&expr, my_sb);
+        portref->generate_code_portref(&expr, my_sb);
+        expr.expr = mputstr(expr.expr, ".activate_port(TRUE);\n");
+        portref->generate_code_portref(&expr, my_sb);
         expr.expr = mputstr(expr.expr, ".start();\n}\n");
       }
     }
