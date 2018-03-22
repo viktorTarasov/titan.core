@@ -269,9 +269,14 @@ CHARSTRING int2char(const INTEGER& value)
   const int_val_t& ivt = value.get_val();
   if (ivt < 0 || ivt > 127) {
     char *value_str = ivt.as_string();
-    TTCN_error("The argument of function int2char() is %s, "
-      "which is outside the allowed range 0 .. 127.", value_str);
-    Free(value_str);
+    try {
+      TTCN_error("The argument of function int2char() is %s, "
+        "which is outside the allowed range 0 .. 127.", value_str);
+    }
+    catch (const TC_Error&) {
+      Free(value_str);
+      throw;
+    }
   }
   return CHARSTRING((char)((int)value));
 }
@@ -294,9 +299,14 @@ UNIVERSAL_CHARSTRING int2unichar(const INTEGER& value)
   const int_val_t& ivt = value.get_val();
   if (ivt < 0 || ivt > 2147483647) {
     char *value_str = ivt.as_string();
-    TTCN_error("The argument of function int2unichar() is %s, "
-      "which outside the allowed range 0 .. 2147483647.", value_str);
-    Free(value_str);
+    try {
+      TTCN_error("The argument of function int2unichar() is %s, "
+        "which outside the allowed range 0 .. 2147483647.", value_str);
+    }
+    catch (const TC_Error&) {
+      Free(value_str);
+      throw;
+    }
   }
   return int2unichar((int)value);
 }
@@ -310,9 +320,14 @@ BITSTRING int2bit(const INTEGER& value, int length)
   int_val_t tmp_value(value.get_val());
   if (tmp_value < 0) {
     char *value_str = tmp_value.as_string();
-    TTCN_error("The first argument (value) of function "
-      "int2bit() is a negative integer value: %s.", value_str);
-    Free(value_str);
+    try {
+      TTCN_error("The first argument (value) of function "
+        "int2bit() is a negative integer value: %s.", value_str);
+    }
+    catch (const TC_Error&) {
+      Free(value_str);
+      throw;
+    }
   }
   if (length < 0) TTCN_error("The second argument (length) of function "
     "int2bit() is a negative integer value: %d.", length);
@@ -333,10 +348,15 @@ BITSTRING int2bit(const INTEGER& value, int length)
       i++;
     }
     char *value_str = value.get_val().as_string(); // not tmp_value!
-    TTCN_error("The first argument of function int2bit(), which is %s, "
-      "does not fit in %d bit%s, needs at least %d.", value_str, length,
-      length > 1 ? "s" :"", length + i);
-    Free(value_str);
+    try {
+      TTCN_error("The first argument of function int2bit(), which is %s, "
+        "does not fit in %d bit%s, needs at least %d.", value_str, length,
+        length > 1 ? "s" :"", length + i);
+    }
+    catch (const TC_Error&) {
+      Free(value_str);
+      throw;
+    }
   }
   return ret_val;
 }
@@ -371,9 +391,14 @@ HEXSTRING int2hex(const INTEGER& value, int length)
   int_val_t tmp_value(value.get_val());
   if (value < 0) {
     char *value_str = tmp_value.as_string();
-    TTCN_error("The first argument (value) of function int2hex() is a "
-      "negative integer value: %s.", value_str);
-    Free(value_str);
+    try {
+      TTCN_error("The first argument (value) of function int2hex() is a "
+        "negative integer value: %s.", value_str);
+    }
+    catch (const TC_Error&) {
+      Free(value_str);
+      throw;
+    }
   }
   if (length < 0) TTCN_error("The second argument (length) of function "
     "int2hex() is a negative integer value: %d.", length);
@@ -388,10 +413,15 @@ HEXSTRING int2hex(const INTEGER& value, int length)
   }
   if (tmp_value != 0) {
     char *value_str = value.get_val().as_string(); // not tmp_value!
-    TTCN_error("The first argument of function int2hex(), which is %s, "
-      "does not fit in %d hexadecimal digit%s.", value_str, length,
-      length > 1 ? "s" :"");
-    Free(value_str);  // ???
+    try {
+      TTCN_error("The first argument of function int2hex(), which is %s, "
+        "does not fit in %d hexadecimal digit%s.", value_str, length,
+        length > 1 ? "s" :"");
+    }
+    catch (const TC_Error&) {
+      Free(value_str); 
+      throw;
+    }
   }
   return ret_val;
 }

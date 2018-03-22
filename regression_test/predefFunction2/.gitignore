@@ -1,0 +1,5 @@
+predefFunctTest
+predefFunctTest.exe
+predefFunctTest*.cc
+predefFunctTest*.hh
+predefFunctTest*.log
