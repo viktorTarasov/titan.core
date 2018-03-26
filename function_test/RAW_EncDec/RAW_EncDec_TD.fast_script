@@ -6705,18 +6705,30 @@ type record rec_raw1 {
  
 testcase TC_encoding_decoding_records_with_big_integer_fields() runs on TempComp{
   var rec_raw1 myrec1 := {int1 := -12345678910111213141516, int2 := -3}
+  var octetstring o1 := 'F44174CD76A949BD62FDFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFDFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF'O;
   var rec_raw1 myrec2 := {int1 := -11111111111111111111111, int2 := -11111111111111111111111}
+  var octetstring o2 := '398E6356A2915BAAA5FDFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF398E6356A2915BAAA5FDFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF'O;
   var rec_raw1 myrec3 := {int1 := -2147483648, int2 := -4294967296}
+  var octetstring o3 := '00000080FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF00000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF'O;
   var rec_raw1 myrec4 := {int1 := 2147483648, int2 := -4294967296}
+  var octetstring o4 := '000000800000000000000000000000000000000000000000000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF'O;
   var rec_raw1 myrec5 := {int1 := -2147483649, int2 := 2147483649}
+  var octetstring o5 := 'FFFFFF7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF0100008000000000000000000000000000000000000000000000000000000000'O;
   var rec_raw1 myrec6 := {int1 := -1234, int2 := -4321}
-  var octetstring o
-  o := enc_raw(myrec1);if (myrec1 == dec_raw(o)) {setverdict(pass)} else {setverdict(fail)}
-  o := enc_raw(myrec2);if (myrec2 == dec_raw(o)) {setverdict(pass)} else {setverdict(fail)}
-  o := enc_raw(myrec3);if (myrec3 == dec_raw(o)) {setverdict(pass)} else {setverdict(fail)}
-  o := enc_raw(myrec4);if (myrec4 == dec_raw(o)) {setverdict(pass)} else {setverdict(fail)}
-  o := enc_raw(myrec5);if (myrec5 == dec_raw(o)) {setverdict(pass)} else {setverdict(fail)}
-  o := enc_raw(myrec6);if (myrec6 == dec_raw(o)) {setverdict(pass)} else {setverdict(fail)}
+  var octetstring o6 := '2EFBFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF1FEFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF'O;
+
+  if (o1 == enc_raw(myrec1)) {setverdict(pass)} else {setverdict(fail, "enc_raw(myrec1) is ", enc_raw(myrec1))}
+  if (myrec1 == dec_raw(o1)) {setverdict(pass)} else {setverdict(fail, "dec_raw(o1) is ", dec_raw(o1))}
+  if (o2 == enc_raw(myrec2)) {setverdict(pass)} else {setverdict(fail, "enc_raw(myrec2) is ", enc_raw(myrec2))}
+  if (myrec2 == dec_raw(o2)) {setverdict(pass)} else {setverdict(fail, "dec_raw(o2) is ", dec_raw(o2))}
+  if (o3 == enc_raw(myrec3)) {setverdict(pass)} else {setverdict(fail, "enc_raw(myrec3) is ", enc_raw(myrec3))}
+  if (myrec3 == dec_raw(o3)) {setverdict(pass)} else {setverdict(fail, "dec_raw(o3) is ", dec_raw(o3))}
+  if (o4 == enc_raw(myrec4)) {setverdict(pass)} else {setverdict(fail, "enc_raw(myrec4) is ", enc_raw(myrec4))}
+  if (myrec4 == dec_raw(o4)) {setverdict(pass)} else {setverdict(fail, "dec_raw(o4) is ", dec_raw(o4))}
+  if (o5 == enc_raw(myrec5)) {setverdict(pass)} else {setverdict(fail, "enc_raw(myrec5) is ", enc_raw(myrec5))}
+  if (myrec5 == dec_raw(o5)) {setverdict(pass)} else {setverdict(fail, "dec_raw(o5) is ", dec_raw(o5))}
+  if (o6 == enc_raw(myrec6)) {setverdict(pass)} else {setverdict(fail, "enc_raw(myrec6) is ", enc_raw(myrec6))}
+  if (myrec6 == dec_raw(o6)) {setverdict(pass)} else {setverdict(fail, "dec_raw(o6) is ", dec_raw(o6))}
 }
 
 //=================================================
