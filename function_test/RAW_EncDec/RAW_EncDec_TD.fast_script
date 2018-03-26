@@ -231,8 +231,6 @@ testcase TC_FIELDLENGTH_16_for_bitstring() runs on TempComp {
   else {setverdict(fail,"enc_RAW_PDU_9(i)= ", enc_RAW_PDU_9(i), "; dec_RAW_PDU_9(o)= ", dec_RAW_PDU_9(o));}
 }
 
-
-
 type bitstring RAW_PDU_10
 with { encode "RAW"; variant "FIELDLENGTH(24)"};
 external function enc_RAW_PDU_10(in RAW_PDU_10 pdu) return octetstring with { extension "prototype(convert) encode(RAW)" }
@@ -245,8 +243,6 @@ testcase TC_FIELDLENGTH_24_for_bitstring() runs on TempComp {
   if ((enc_RAW_PDU_10(i) == o)and(dec_RAW_PDU_10(o) =='00000000'B & i)) {setverdict(pass);}
   else {setverdict(fail,"enc_RAW_PDU_10(i)= ", enc_RAW_PDU_10(i), "; dec_RAW_PDU_10(o)= ", dec_RAW_PDU_10(o));}
 }
-
-
 
 type bitstring RAW_PDU_11
 with { encode "RAW"; variant "FIELDLENGTH(0)"};
@@ -401,8 +397,6 @@ testcase TC_FIELDLENGTH_5_for_octetstring_2_octets_long() runs on TempComp {
   if ((enc_RAW_PDU_19(i) == o)and(dec_RAW_PDU_19(o) == i& '000000'O )) {setverdict(pass);}
   else {setverdict(fail,"enc_RAW_PDU_19(i)= ", enc_RAW_PDU_19(i), "; dec_RAW_PDU_19(o)= ", dec_RAW_PDU_19(o));}
 }
-
-
 
 type octetstring RAW_PDU_20
 with { variant "FIELDLENGTH(4)";
@@ -1043,7 +1037,7 @@ testcase TC_BITORDERINFIELD_lsb_for_integer_8() runs on TempComp{
   const RAW_PDU_56      i := 15
   const octetstring 	o := '0F'O
   if ((enc_RAW_PDU_56(i) == o)and(dec_RAW_PDU_56(o) == i)) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_56(i)= ", enc_RAW_PDU_56(i), "; dec_RAW_PDU_56(o)= ", dec_RAW_PDU_56(o));}
 }
 
 type integer RAW_PDU_57
@@ -1058,7 +1052,7 @@ testcase TC_BITORDERINFIELD_msb_for_integer_8() runs on TempComp{
   const RAW_PDU_57         i := 15
   const octetstring 	o := 'F0'O
   if ((enc_RAW_PDU_57(i) == o)and(dec_RAW_PDU_57(o) == i)) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_57(i)= ", enc_RAW_PDU_57(i), "; dec_RAW_PDU_57(o)= ", dec_RAW_PDU_57(o));}
 }
 
 type integer RAW_PDU_58
@@ -1073,7 +1067,7 @@ testcase TC_BITORDERINFIELD_lsb_for_integer_16() runs on TempComp{
   const RAW_PDU_58      i := 4660
   const octetstring 	o := '3412'O 
   if ((enc_RAW_PDU_58(i) == o)and(dec_RAW_PDU_58(o) == i)) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_58(i)= ", enc_RAW_PDU_58(i), "; dec_RAW_PDU_58(o)= ", dec_RAW_PDU_58(o));}
 }
 
 type integer RAW_PDU_59
@@ -1088,7 +1082,7 @@ testcase TC_BITORDERINFIELD_msb_for_integer_16() runs on TempComp{
   const RAW_PDU_59         i := 4660
   const octetstring 	o := '482C'O 
   if ((enc_RAW_PDU_59(i) == o)and(dec_RAW_PDU_59(o) == i)) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_59(i)= ", enc_RAW_PDU_59(i), "; dec_RAW_PDU_59(o)= ", dec_RAW_PDU_59(o));}
 }
 
 type octetstring RAW_PDU_60
@@ -1103,7 +1097,7 @@ testcase TC_BITORDERINFIELD_lsb_for_octetstring_1() runs on TempComp{
   const RAW_PDU_60      i := '0F'O
   const octetstring 	o := '0F'O
   if ((enc_RAW_PDU_60(i) == o)and(dec_RAW_PDU_60(o) == i)) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_60(i)= ", enc_RAW_PDU_60(i), "; dec_RAW_PDU_60(o)= ", dec_RAW_PDU_60(o));}
 }
 
 type octetstring RAW_PDU_61
@@ -1118,7 +1112,7 @@ testcase TC_BITORDERINFIELD_msb_for_octetstring_1() runs on TempComp{
   const RAW_PDU_61      i := '0F'O
   const octetstring 	o := 'F0'O
   if ((enc_RAW_PDU_61(i) == o)and(dec_RAW_PDU_61(o) == i)) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_61(i)= ", enc_RAW_PDU_61(i), "; dec_RAW_PDU_61(o)= ", dec_RAW_PDU_61(o));}
 }
 
 type octetstring RAW_PDU_62
@@ -1133,7 +1127,7 @@ testcase TC_BITORDERINFIELD_lsb_for_octetstring_2() runs on TempComp{
   const RAW_PDU_62      i := '1234'O
   const octetstring 	o := '1234'O
   if ((enc_RAW_PDU_62(i) == o)and(dec_RAW_PDU_62(o) == i)) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_62(i)= ", enc_RAW_PDU_62(i), "; dec_RAW_PDU_62(o)= ", dec_RAW_PDU_62(o));}
 }
 
 type octetstring RAW_PDU_63
@@ -1148,7 +1142,7 @@ testcase TC_BITORDERINFIELD_msb_for_octetstring_2() runs on TempComp{
   const RAW_PDU_63      i := '1234'O
   const octetstring 	o := '2C48'O
   if ((enc_RAW_PDU_63(i) == o)and(dec_RAW_PDU_63(o) == i)) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_63(i)= ", enc_RAW_PDU_63(i), "; dec_RAW_PDU_63(o)= ", dec_RAW_PDU_63(o));}
 }
 
 type bitstring RAW_PDU_64
@@ -1163,7 +1157,7 @@ testcase TC_BITORDERINFIELD_lsb_for_bitstring_8() runs on TempComp{
   const RAW_PDU_64      i := '00000011'B
   const octetstring 	o := '03'O
   if ((enc_RAW_PDU_64(i) == o)and(dec_RAW_PDU_64(o) == i)) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_64(i)= ", enc_RAW_PDU_64(i), "; dec_RAW_PDU_64(o)= ", dec_RAW_PDU_64(o));}
 }
 
 type bitstring RAW_PDU_65
@@ -1178,7 +1172,7 @@ testcase TC_BITORDERINFIELD_msb_for_bitstring_8() runs on TempComp{
   const RAW_PDU_65      i := '00000011'B
   const octetstring 	o := 'C0'O
   if ((enc_RAW_PDU_65(i) == o)and(dec_RAW_PDU_65(o) == i)) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_65(i)= ", enc_RAW_PDU_65(i), "; dec_RAW_PDU_65(o)= ", dec_RAW_PDU_65(o));}
 }
 
 type bitstring RAW_PDU_66
@@ -1193,7 +1187,7 @@ testcase TC_BITORDERINFIELD_lsb_for_bitstring_16() runs on TempComp {
   const RAW_PDU_66      i :=  '0001111100110001'B
   const octetstring 	o :=  '311F'O
   if ((enc_RAW_PDU_66(i) == o)and(dec_RAW_PDU_66(o) == i)) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_66(i)= ", enc_RAW_PDU_66(i), "; dec_RAW_PDU_66(o)= ", dec_RAW_PDU_66(o));}
 }
 
 type bitstring RAW_PDU_67
@@ -1208,7 +1202,7 @@ testcase TC_BITORDERINFIELD_msb_for_bitstring_16() runs on TempComp{
   const RAW_PDU_67      i :=  '0001111100110001'B
   const octetstring 	o :=  'F88C'O
   if ((enc_RAW_PDU_67(i) == o)and(dec_RAW_PDU_67(o) == i)) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_67(i)= ", enc_RAW_PDU_67(i), "; dec_RAW_PDU_67(o)= ", dec_RAW_PDU_67(o));}
 }
 
 
@@ -1229,7 +1223,7 @@ testcase TC_BITORDERINFIELD_lsb_for_enumerated_4() runs on TempComp{
   const RAW_PDU_68 	i := first
   const octetstring 	o := '01'O
   if ((enc_RAW_PDU_68(i) == o)and(dec_RAW_PDU_68(o) == i )) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_68(i)= ", enc_RAW_PDU_68(i), "; dec_RAW_PDU_68(o)= ", dec_RAW_PDU_68(o));}
 }
 
 type enumerated RAW_PDU_69
@@ -1239,8 +1233,6 @@ with { encode "RAW";
        variant "FIELDLENGTH(8)" ;
        variant "BITORDERINFIELD (msb) "};
 
-
-
 external function enc_RAW_PDU_69(in RAW_PDU_69 pdu) return octetstring with { extension "prototype(convert) encode(RAW)" }
 external function dec_RAW_PDU_69(in octetstring stream) return RAW_PDU_69 with { extension "prototype(convert) decode(RAW)" }
 
@@ -1248,13 +1240,12 @@ testcase TC_BITORDERINFIELD_msb_for_enumerated_8() runs on TempComp{
   const RAW_PDU_69 	i := first;
   const octetstring 	o := '80'O;
   if ((enc_RAW_PDU_69(i) == o)and(dec_RAW_PDU_69(o) == i )) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_69(i)= ", enc_RAW_PDU_69(i), "; dec_RAW_PDU_69(o)= ", dec_RAW_PDU_69(o));}
 }
 
 
 type hexstring RAW_PDU_70
 with { encode "RAW"; variant "BITORDERINFIELD(lsb)"};
-
 
 
 external function enc_RAW_PDU_70(in RAW_PDU_70 pdu) return octetstring with { extension "prototype(convert) encode(RAW)" }
@@ -1264,7 +1255,7 @@ testcase TC_BITORDERINFIELD_lsb_for_hexstring() runs on TempComp{
   const RAW_PDU_70 		i := '1234'H
   const octetstring 	o := '2143'O
   if ((enc_RAW_PDU_70(i) == o)and(dec_RAW_PDU_70(o) == i )) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_70(i)= ", enc_RAW_PDU_70(i), "; dec_RAW_PDU_70(o)= ", dec_RAW_PDU_70(o));}
 }
 
 type hexstring RAW_PDU_71
@@ -1279,7 +1270,7 @@ testcase TC_BITORDERINFIELD_msb_for_hexstring() runs on TempComp {
   const RAW_PDU_71        i := '1234'H
   const octetstring 	o := 'C284'O
   if ((enc_RAW_PDU_71(i) == o)and(dec_RAW_PDU_71(o) == i )) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_71(i)= ", enc_RAW_PDU_71(i), "; dec_RAW_PDU_71(o)= ", dec_RAW_PDU_71(o));}
 }
 
 //Testing BITORDERINOCTET Attribute:
@@ -1296,7 +1287,7 @@ testcase TC_BITORDERINOCTET_lsb_for_integer_8() runs on TempComp{
   const RAW_PDU_72	i := 15;
   const octetstring 	o := '0F'O;
   if ((enc_RAW_PDU_72(i) == o)and(dec_RAW_PDU_72(o) == i )) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_72(i)= ", enc_RAW_PDU_72(i), "; dec_RAW_PDU_72(o)= ", dec_RAW_PDU_72(o));}
 }
 
 type integer RAW_PDU_73
@@ -1311,7 +1302,7 @@ testcase TC_BITORDERINOCTET_msb_for_integer_8() runs on TempComp{
   const RAW_PDU_73	i := 15
   const octetstring 	o := 'F0'O
   if ((enc_RAW_PDU_73(i) == o)and(dec_RAW_PDU_73(o) == i )) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_73(i)= ", enc_RAW_PDU_73(i), "; dec_RAW_PDU_73(o)= ", dec_RAW_PDU_73(o));}
 }
 
 type integer RAW_PDU_74
@@ -1326,7 +1317,7 @@ testcase TC_BITORDERINOCTET_lsb_for_integer_16() runs on TempComp{
   const RAW_PDU_74	i := 4660
   const octetstring 	o := '3412'O
   if ((enc_RAW_PDU_74(i) == o)and(dec_RAW_PDU_74(o) == i )) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_74(i)= ", enc_RAW_PDU_74(i), "; dec_RAW_PDU_74(o)= ", dec_RAW_PDU_74(o));}
 }
 
 type integer RAW_PDU_75
@@ -1341,7 +1332,7 @@ testcase TC_BITORDERINOCTET_msb_for_integer_16() runs on TempComp{
   const RAW_PDU_75	i := 4660
   const octetstring 	o := '2C48'O
   if ((enc_RAW_PDU_75(i) == o)and(dec_RAW_PDU_75(o) == i )) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_75(i)= ", enc_RAW_PDU_75(i), "; dec_RAW_PDU_75(o)= ", dec_RAW_PDU_75(o));}
 }
 
 type octetstring RAW_PDU_76
@@ -1357,7 +1348,7 @@ testcase TC_BITORDERINOCTET_lsb_for_octetstring_1() runs on TempComp{
   const RAW_PDU_76	i := '0F'O
   const octetstring 	o := '0F'O
   if ((enc_RAW_PDU_76(i) == o)and(dec_RAW_PDU_76(o) == i )) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_76(i)= ", enc_RAW_PDU_76(i), "; dec_RAW_PDU_76(o)= ", dec_RAW_PDU_76(o));}
 }
 
 type octetstring RAW_PDU_77
@@ -1373,7 +1364,7 @@ testcase TC_BITORDERINOCTET_msb_for_octetstring_1() runs on TempComp{
   const RAW_PDU_77	i := '0F'O
   const octetstring 	o := 'F0'O
   if ((enc_RAW_PDU_77(i) == o)and(dec_RAW_PDU_77(o) == i )) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_77(i)= ", enc_RAW_PDU_77(i), "; dec_RAW_PDU_77(o)= ", dec_RAW_PDU_77(o));}
 }
 
 type octetstring RAW_PDU_78
@@ -1389,7 +1380,7 @@ testcase TC_BITORDERINOCTET_lsb_for_octetstring_2() runs on TempComp{
   const RAW_PDU_78	i := '1234'O
   const octetstring 	o := '1234'O
   if ((enc_RAW_PDU_78(i) == o)and(dec_RAW_PDU_78(o) == i )) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_78(i)= ", enc_RAW_PDU_78(i), "; dec_RAW_PDU_78(o)= ", dec_RAW_PDU_78(o));}
 }
 
 type octetstring RAW_PDU_79
