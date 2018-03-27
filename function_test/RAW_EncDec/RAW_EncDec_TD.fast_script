@@ -1396,7 +1396,7 @@ testcase TC_BITORDERINOCTET_msb_for_octetstring_2() runs on TempComp{
   const RAW_PDU_79	i := '1234'O
   const octetstring 	o := '482C'O
   if ((enc_RAW_PDU_79(i) == o)and(dec_RAW_PDU_79(o) == i )) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_79(i)= ", enc_RAW_PDU_79(i), "; dec_RAW_PDU_79(o)= ", dec_RAW_PDU_79(o));}
 }
 
 type bitstring RAW_PDU_80
@@ -1411,7 +1411,7 @@ testcase TC_BITORDERINOCTET_lsb_for_bitstring_8() runs on TempComp{
   const RAW_PDU_80	i := '00000011'B
   const octetstring 	o := '03'O
   if ((enc_RAW_PDU_80(i) == o)and(dec_RAW_PDU_80(o) == i )) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_80(i)= ", enc_RAW_PDU_80(i), "; dec_RAW_PDU_80(o)= ", dec_RAW_PDU_80(o));}
 }
 
 type bitstring RAW_PDU_81
@@ -1426,7 +1426,7 @@ testcase TC_BITORDERINOCTET_msb_for_bitstring_8() runs on TempComp{
   const RAW_PDU_81	i := '00000011'B
   const octetstring 	o := 'C0'O
   if ((enc_RAW_PDU_81(i) == o)and(dec_RAW_PDU_81(o) == i )) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_81(i)= ", enc_RAW_PDU_81(i), "; dec_RAW_PDU_81(o)= ", dec_RAW_PDU_81(o));}
 }
 
 type bitstring RAW_PDU_82
@@ -1441,7 +1441,7 @@ testcase TC_BITORDERINOCTET_lsb_for_bitstring_16() runs on TempComp{
   const RAW_PDU_82	i := '0001111100110001'B
   const octetstring 	o := '311F'O
   if ((enc_RAW_PDU_82(i) == o)and(dec_RAW_PDU_82(o) == i )) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_82(i)= ", enc_RAW_PDU_82(i), "; dec_RAW_PDU_82(o)= ", dec_RAW_PDU_82(o));}
 }
 
 type bitstring RAW_PDU_83
@@ -1456,7 +1456,7 @@ testcase TC_BITORDERINOCTET_msb_for_bitstring_16() runs on TempComp{
   const RAW_PDU_83	i := '0001111100110001'B
   const octetstring 	o := '8CF8'O
   if ((enc_RAW_PDU_83(i) == o)and(dec_RAW_PDU_83(o) == i )) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_83(i)= ", enc_RAW_PDU_83(i), "; dec_RAW_PDU_83(o)= ", dec_RAW_PDU_83(o));}
 }
 
 type enumerated RAW_PDU_84
@@ -1474,7 +1474,7 @@ testcase TC_BITORDERINOCTET_lsb_for_enumerated() runs on TempComp{
   const RAW_PDU_84	i := first
   const octetstring 	o := '01'O
   if ((enc_RAW_PDU_84(i) == o)and(dec_RAW_PDU_84(o) == i )) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_84(i)= ", enc_RAW_PDU_84(i), "; dec_RAW_PDU_84(o)= ", dec_RAW_PDU_84(o));}
 }
 
 type enumerated RAW_PDU_85
@@ -1493,7 +1493,7 @@ testcase TC_BITORDERINOCTET_msb_for_enumerated() runs on TempComp{
   const octetstring 	o := '80'O
   
   if ((enc_RAW_PDU_85(i) == o)and(dec_RAW_PDU_85(o) == i )) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_85(i)= ", enc_RAW_PDU_85(i), "; dec_RAW_PDU_85(o)= ", dec_RAW_PDU_85(o));}
 }
 
 type hexstring RAW_PDU_86
@@ -1506,7 +1506,7 @@ testcase TC_BITORDERINOCTET_lsb_for_hexstring() runs on TempComp{
   const RAW_PDU_86	i := '1234'H
   const octetstring 	o := '2143'O
   if ((enc_RAW_PDU_86(i) == o)and(dec_RAW_PDU_86(o) == i )) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_86(i)= ", enc_RAW_PDU_86(i), "; dec_RAW_PDU_86(o)= ", dec_RAW_PDU_86(o));}
 }
 
 type hexstring RAW_PDU_87
@@ -1519,7 +1519,7 @@ testcase TC_BITORDERINOCTET_msb_for_hexstring() runs on TempComp{
   const RAW_PDU_87	i := '1234'H
   const octetstring 	o := '84C2'O
   if ((enc_RAW_PDU_87(i) == o)and(dec_RAW_PDU_87(o) == i )) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_87(i)= ", enc_RAW_PDU_87(i), "; dec_RAW_PDU_87(o)= ", dec_RAW_PDU_87(o));}
 }
 
 type integer RAW_PDU_88
@@ -1534,7 +1534,7 @@ testcase TC_COMP_nosign_for_positive_integer_8() runs on TempComp{
   const RAW_PDU_88	i := 2
   const octetstring 	o := '02'O
   if ((enc_RAW_PDU_88(i) == o)and(dec_RAW_PDU_88(o) == i )) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_88(i)= ", enc_RAW_PDU_88(i), "; dec_RAW_PDU_88(o)= ", dec_RAW_PDU_88(o));}
 }
 
 type integer RAW_PDU_89
@@ -1549,14 +1549,14 @@ testcase TC_COMP_signbit_for_positive_integer_8() runs on TempComp{
   const RAW_PDU_89	i := 2
   const octetstring 	o := '02'O
   if ((enc_RAW_PDU_89(i) == o)and(dec_RAW_PDU_89(o) == i )) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_89(i)= ", enc_RAW_PDU_89(i), "; dec_RAW_PDU_89(o)= ", dec_RAW_PDU_89(o));}
 }
 
 testcase TC_COMP_signbit_for_negative_integer_8() runs on TempComp{
   const RAW_PDU_89	i := -2
   const octetstring 	o := '82'O
   if ((enc_RAW_PDU_89(i) == o)and(dec_RAW_PDU_89(o) == i )) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_89(i)= ", enc_RAW_PDU_89(i), "; dec_RAW_PDU_89(o)= ", dec_RAW_PDU_89(o));}
 }
 
 type integer RAW_PDU_90
@@ -1579,7 +1579,7 @@ testcase TC_COMP_2scompl_for_negative_integer_8() runs on TempComp{
   const RAW_PDU_90	i := -2
   const octetstring 	o := 'FE'O
   if ((enc_RAW_PDU_90(i) == o)and(dec_RAW_PDU_90(o) == i )) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_90(i)= ", enc_RAW_PDU_90(i), "; dec_RAW_PDU_90(o)= ", dec_RAW_PDU_90(o));}
 } 
 
 //   PADDING  for integer
@@ -1616,7 +1616,7 @@ testcase TC_PADDING_for_integer() runs on TempComp{
   const octetstring 	o := '010243'O
 
   if ((enc_RAW_PDU_91(i) == o)and(dec_RAW_PDU_91(o) == i )) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_91(i)= ", enc_RAW_PDU_91(i), "; dec_RAW_PDU_91(o)= ", dec_RAW_PDU_91(o));}
 }
 
 //   PADDING  for bitstring
@@ -1652,7 +1652,7 @@ testcase TC_PADDING_for_bitstring() runs on TempComp{
   const octetstring 	o := '010243'O;
 
   if ((enc_RAW_PDU_92(i) == o)and(dec_RAW_PDU_92(o) == i )) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_92(i)= ", enc_RAW_PDU_92(i), "; dec_RAW_PDU_92(o)= ", dec_RAW_PDU_92(o));}
 }
 
 // PADDING  for enumerated
@@ -1701,7 +1701,7 @@ testcase TC_PADDING_for_enumerated() runs on TempComp{
   const octetstring 	o := '010243'O
  
   if ((enc_RAW_PDU_93(i) == o)and(dec_RAW_PDU_93(o) == i )) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_93(i)= ", enc_RAW_PDU_93(i), "; dec_RAW_PDU_93(o)= ", dec_RAW_PDU_93(o));}
 }
 
 //   PADDING  for hexstring
@@ -1738,7 +1738,7 @@ testcase TC_PADDING_for_hexstring() runs on TempComp{
   const octetstring 	o := '010243'O 
  
   if ((enc_RAW_PDU_94(i) == o)and(dec_RAW_PDU_94(o) == i )) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_94(i)= ", enc_RAW_PDU_94(i), "; dec_RAW_PDU_94(o)= ", dec_RAW_PDU_94(o));}
 }
 
 //  PREPADDING(yes)  for bitstring
@@ -1754,7 +1754,7 @@ testcase TC_PREPADDING_yes_for_bitstring() runs on TempComp{
   const octetstring 	o := '05'O
  
   if ((enc_RAW_PDU_95(i) == o)and(dec_RAW_PDU_95(o) == i )) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_95(i)= ", enc_RAW_PDU_95(i), "; dec_RAW_PDU_95(o)= ", dec_RAW_PDU_95(o));}
 }
 
 //  PREPADDING(yes)  for hexstring
@@ -1770,7 +1770,7 @@ testcase TC_PREPADDING_yes_for_hexstring() runs on TempComp{
   const octetstring    o := '0F'O
  
   if ((enc_RAW_PDU_96(i) == o)and(dec_RAW_PDU_96(o) == i )) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_96(i)= ", enc_RAW_PDU_96(i), "; dec_RAW_PDU_96(o)= ", dec_RAW_PDU_96(o));}
 }
 
 //  PREPADDING(word16)  for octetstring
@@ -1789,7 +1789,7 @@ testcase TC_PREPADDING_word16_for_octetstring() runs on TempComp{
   const octetstring    o :=  'AA0AFF'O
  
   if ((enc_RAW_PDU_97(i) == o)and(dec_RAW_PDU_97(o) == i )) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_97(i)= ", enc_RAW_PDU_97(i), "; dec_RAW_PDU_97(o)= ", dec_RAW_PDU_97(o));}
 }
 
 //  PREPADDING(word16)  for record of
@@ -1810,7 +1810,7 @@ testcase TC_PREPADDING_word16_for_record_of() runs on TempComp{
   const octetstring    o :=  '040007'O 
  
   if ((enc_RAW_PDU_98(i) == o)and(dec_RAW_PDU_98(o) == i )) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_98(i)= ", enc_RAW_PDU_98(i), "; dec_RAW_PDU_98(o)= ", dec_RAW_PDU_98(o));}
 }
 
 //  PREPADDING(dword32)  for set of
@@ -1829,7 +1829,7 @@ testcase TC_PREPADDING_dword32_for_set_of() runs on TempComp{
   const octetstring    o :=  '040000002F'O 
  
   if ((enc_RAW_PDU_99(i) == o)and(dec_RAW_PDU_99(o) == i )) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_99(i)= ", enc_RAW_PDU_99(i), "; dec_RAW_PDU_99(o)= ", dec_RAW_PDU_99(o));}
 }
 
 // PREPADDING(dword32)  for record
@@ -1850,7 +1850,7 @@ testcase TC_PREPADDING_dword32_for_record() runs on TempComp{
   const octetstring    o :=   '3F000000060000003F'O
  
   if ((enc_RAW_PDU_100(i) == o)and(dec_RAW_PDU_100(o) == i )) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_100(i)= ", enc_RAW_PDU_100(i), "; dec_RAW_PDU_100(o)= ", dec_RAW_PDU_100(o));}
 }
 
 //  PREPADDING(word16)  for set
@@ -1871,7 +1871,7 @@ testcase TC_PREPADDING_word16_for_set() runs on TempComp{
   const octetstring    o :=  '0700060007'O
  
   if ((enc_RAW_PDU_101(i) == o)and(dec_RAW_PDU_101(o) == i )) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_101(i)= ", enc_RAW_PDU_101(i), "; dec_RAW_PDU_101(o)= ", dec_RAW_PDU_101(o));}
 }
 
 // PREPADDING(word16)  for union
@@ -1892,7 +1892,7 @@ testcase TC_PREPADDING_word16_for_union() runs on TempComp{
   const octetstring    o :=   '0700020007'O
  
   if ((enc_RAW_PDU_102(i) == o)and(dec_RAW_PDU_102(o) == i )) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_102(i)= ", enc_RAW_PDU_102(i), "; dec_RAW_PDU_102(o)= ", dec_RAW_PDU_102(o));}
 }
 
 // PADDING_PATTERN  for record of
@@ -1913,7 +1913,7 @@ testcase TC_PADDING_PATTERN_for_record_of() runs on TempComp{
   const octetstring    o := 'FC07'O;
  
   if ((enc_RAW_PDU_103(i) == o)and(dec_RAW_PDU_103(o) == i )) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_103(i)= ", enc_RAW_PDU_103(i), "; dec_RAW_PDU_103(o)= ", dec_RAW_PDU_103(o));}
 }
 
 // PADDING_PATTERN  for set of:
@@ -1931,7 +1931,7 @@ testcase TC_PADDING_PATTERN_for_set_of() runs on TempComp{
   const octetstring    o :=  '842F'O
  
   if ((enc_RAW_PDU_104(i) == o)and(dec_RAW_PDU_104(o) == i )) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_104(i)= ", enc_RAW_PDU_104(i), "; dec_RAW_PDU_104(o)= ", dec_RAW_PDU_104(o));}
 }
 
 // PADDING_PATTERN  for record:
@@ -1952,7 +1952,7 @@ testcase TC_PADDING_PATTERN_for_record() runs on TempComp{
   const octetstring    o :=  'C78F832008FFFF832008C78F03'O ;
  
   if ((enc_RAW_PDU_105(i) == o)and(dec_RAW_PDU_105(o) == i )) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_105(i)= ", enc_RAW_PDU_105(i), "; dec_RAW_PDU_105(o)= ", dec_RAW_PDU_105(o));}
 }
 
 //PADDING_PATTERN  for set
@@ -1971,7 +1971,7 @@ testcase TC_PADDING_PATTERN_for_set() runs on TempComp{
   const octetstring    o := 'FF9FFFCFFF03'O
  
   if ((enc_RAW_PDU_106(i) == o)and(dec_RAW_PDU_106(o) == i )) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_106(i)= ", enc_RAW_PDU_106(i), "; dec_RAW_PDU_106(o)= ", dec_RAW_PDU_106(o));}
 }
 
 // PADDING_PATTERN  for union:
@@ -1991,7 +1991,7 @@ testcase TC_PADDING_PATTERN_for_union() runs on TempComp{
   const octetstring    o :=  'AABB39E79C73CE39E79C73CE39E79C73CE39E79C73CE39E79C73CE39E79C73CECCDD39E79C73CE39E79C73CE39E79C73CE39E79C73CE39E79C73CE39E79C73CEEEFF'O
  
   if ((enc_RAW_PDU_107(i) == o)and(dec_RAW_PDU_107(o) == i )) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_107(i)= ", enc_RAW_PDU_107(i), "; dec_RAW_PDU_107(o)= ", dec_RAW_PDU_107(o));}
 }
 
 // PADDALL with PADDING Attribute - record
@@ -2011,7 +2011,7 @@ testcase TC_PADDALL_with_PADDING_Attribute_record() runs on TempComp{
   const octetstring    o := '010101010101'O;
  
   if ((enc_RAW_PDU_108(i) == o)and(dec_RAW_PDU_108(o) == i )) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_108(i)= ", enc_RAW_PDU_108(i), "; dec_RAW_PDU_108(o)= ", dec_RAW_PDU_108(o));}
 }
 
 //PADDALL with PADDING Attribute - set
@@ -2032,7 +2032,7 @@ testcase TC_PADDALL_with_PADDING_Attribute_set() runs on TempComp{
   const octetstring    o := '57570000'O;
  
   if ((enc_RAW_PDU_109(i) == o)and(dec_RAW_PDU_109(o) == i )) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_109(i)= ", enc_RAW_PDU_109(i), "; dec_RAW_PDU_109(o)= ", dec_RAW_PDU_109(o));}
 }
 
  // PADDALL with PREPADDING Attribute - record
@@ -2052,7 +2052,7 @@ testcase TC_PADDALL_with_PREPADDING_Attribute_record() runs on TempComp{
   const octetstring    o :=  'BAA00BBA'O
  
   if ((enc_RAW_PDU_110(i) == o)and(dec_RAW_PDU_110(o) == i )) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_110(i)= ", enc_RAW_PDU_110(i), "; dec_RAW_PDU_110(o)= ", dec_RAW_PDU_110(o));}
 }
 
 // PADDALL with PREPADDING Attribute - set
@@ -2073,7 +2073,7 @@ testcase TC_PADDALL_with_PREPADDING_Attribute_set() runs on TempComp{
   const octetstring    o :=  '0AB000FCAF000BC0'O
  
   if ((enc_RAW_PDU_111(i) == o)and(dec_RAW_PDU_111(o) == i )) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_111(i)= ", enc_RAW_PDU_111(i), "; dec_RAW_PDU_111(o)= ", dec_RAW_PDU_111(o));}
 }
 
 //==== Testing PTROFFSET  Attribute ===
@@ -2111,7 +2111,7 @@ testcase TC_PTROFFSET_is_set_to_default_base() runs on TempComp{
   const octetstring    o :=  '100C96'O
  
   if ((enc_RAW_PDU_112(i) == o)and(dec_RAW_PDU_112(o) == i )) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_112(i)= ", enc_RAW_PDU_112(i), "; dec_RAW_PDU_112(o)= ", dec_RAW_PDU_112(o));}
 }
 
 // PTROFFSET is set to the beginning of record
@@ -2155,7 +2155,7 @@ testcase TC_PTROFFSET_is_set_to_the_beginning_of_record() runs on TempComp{
   const octetstring    o :=  '181B1FD7008101'O
  
   if ((enc_RAW_PDU_113(i) == o)and(dec_RAW_PDU_113(o) == i )) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_113(i)= ", enc_RAW_PDU_113(i), "; dec_RAW_PDU_113(o)= ", dec_RAW_PDU_113(o));}
 }
 
 // PTROFFSET is set to data field
@@ -2199,7 +2199,7 @@ testcase TC_PTROFFSET_is_set_to_data_field() runs on TempComp{
   const octetstring    o := '000307D7008101'O
  
   if ((enc_RAW_PDU_114(i) == o)and(dec_RAW_PDU_114(o) == i )) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_114(i)= ", enc_RAW_PDU_114(i), "; dec_RAW_PDU_114(o)= ", dec_RAW_PDU_114(o));}
 }
 
 // ==== Testing HEXORDER Attribute ===
@@ -2216,7 +2216,7 @@ testcase TC_HEXORDER_low_for_hexstring() runs on TempComp{
   const octetstring    o := '2143658709'O
 
   if ((enc_RAW_PDU_115(i) == o)and(dec_RAW_PDU_115(o) == i )) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_115(i)= ", enc_RAW_PDU_115(i), "; dec_RAW_PDU_115(o)= ", dec_RAW_PDU_115(o));}
 }
 
 //HEXORDER(high)  for hexstring
@@ -2232,7 +2232,7 @@ testcase TC_HEXORDER_high_for_hexstring() runs on TempComp{
   const octetstring    o := '1234567890'O
 
   if ((enc_RAW_PDU_116(i) == o)and(dec_RAW_PDU_116(o) == i )) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_116(i)= ", enc_RAW_PDU_116(i), "; dec_RAW_PDU_116(o)= ", dec_RAW_PDU_116(o));}
 }
 
 // EXTENSION_BIT(no)  for octetstring
@@ -2248,7 +2248,7 @@ testcase TC_EXTENSION_BIT_no_for_octetstring() runs on TempComp{
   const octetstring    o :=  '1234567890'O
 
   if ((enc_RAW_PDU_117n(i) == o)and(dec_RAW_PDU_117n(o) == i )) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_117n(i)= ", enc_RAW_PDU_117n(i), "; dec_RAW_PDU_117n(o)= ", dec_RAW_PDU_117n(o));}
 }
 
 // EXTENSION_BIT(yes)  for octetstring
@@ -2264,7 +2264,7 @@ testcase TC_EXTENSION_BIT_yes_for_octetstring() runs on TempComp{
   const octetstring    o := '010203040580'O
 
   if ((enc_RAW_PDU_117(i) == o)and(dec_RAW_PDU_117(o) == '010203040580'O )) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_117(i)= ", enc_RAW_PDU_117(i), "; dec_RAW_PDU_117(o)= ", dec_RAW_PDU_117(o));}
 }
 
 // EXTENSION_BIT(reverse)  for octetstring
@@ -2280,7 +2280,7 @@ testcase TC_EXTENSION_BIT_reverse_for_octetstring() runs on TempComp{
   const octetstring    o := '818283848500'O
 
   if ((enc_RAW_PDU_118(i) == o)and(dec_RAW_PDU_118(o) == '818283848500'O )) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_118(i)= ", enc_RAW_PDU_118(i), "; dec_RAW_PDU_118(o)= ", dec_RAW_PDU_118(o));}
 }
 
 // EXTENSION_BIT(yes)  for record of octetstring
@@ -2299,7 +2299,7 @@ testcase TC_EXTENSION_BIT_yes_for_record_of_octetstring() runs on TempComp{
   const octetstring    o :=  '0480'O
 
   if ((enc_RAW_PDU_119(i) == o)) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_119(i)= ", enc_RAW_PDU_119(i), "; dec_RAW_PDU_119(o)= ", dec_RAW_PDU_119(o));}
 }
 
 // EXTENSION_BIT(reverse)  for record of octetstring
@@ -2317,7 +2317,7 @@ testcase TC_EXTENSION_BIT_reverse_for_record_of_octetstring() runs on TempComp{
   const octetstring    o :=   '00'O
 
   if ((enc_RAW_PDU_119r(i) == o)and(dec_RAW_PDU_119r(o) == i )) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_119r(i)= ", enc_RAW_PDU_119r(i), "; dec_RAW_PDU_119r(o)= ", dec_RAW_PDU_119r(o));}
 }
 
 // EXTENSION_BIT(no)  for record of octetstring
@@ -2335,7 +2335,7 @@ testcase TC_EXTENSION_BIT_no_for_record_of_octetstring() runs on TempComp{
   const octetstring    o :=    '8405'O
 
   if ((enc_RAW_PDU_120(i) == o)and(dec_RAW_PDU_120(o) == i )) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_120(i)= ", enc_RAW_PDU_120(i), "; dec_RAW_PDU_120(o)= ", dec_RAW_PDU_120(o));}
 }
 
 // EXTENSION_BIT(yes)  for record of bitstring
@@ -2354,7 +2354,7 @@ testcase TC_EXTENSION_BIT_yes_for_record_of_bitstring() runs on TempComp{
   const octetstring    o := 'C301'O
 
   if ((enc_RAW_PDU_121(i) == o)) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_121(i)= ", enc_RAW_PDU_121(i), "; dec_RAW_PDU_121(o)= ", dec_RAW_PDU_121(o));}
 }
 
 //EXTENSION_BIT(reverse)  for record of bitstring
@@ -2373,7 +2373,7 @@ testcase TC_EXTENSION_BIT_reverse_for_record_of_bitstring() runs on TempComp{
   const octetstring    o := 'E700'O
 
   if ((enc_RAW_PDU_122(i) == o)) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_122(i)= ", enc_RAW_PDU_122(i), "; dec_RAW_PDU_122(o)= ", dec_RAW_PDU_122(o));}
 }
 
 // EXTENSION_BIT(yes)  for set of bitstring
@@ -2389,7 +2389,7 @@ testcase TC_EXTENSION_BIT_yes_for_set_of_bitstring() runs on TempComp{
   const octetstring    o := 'C301'O
 
   if ((enc_RAW_PDU_123(i) == o)) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_123(i)= ", enc_RAW_PDU_123(i), "; dec_RAW_PDU_123(o)= ", dec_RAW_PDU_123(o));}
 }
 
 // EXTENSION_BIT(reverse)  for set of bitstring
@@ -2405,7 +2405,7 @@ testcase TC_EXTENSION_BIT_reverse_for_set_of_bitstring() runs on TempComp{
   const octetstring    o := 'E700'O
 
   if ((enc_RAW_PDU_124(i) == o)) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_124(i)= ", enc_RAW_PDU_124(i), "; dec_RAW_PDU_124(o)= ", dec_RAW_PDU_124(o));}
 }
 
  
@@ -2423,7 +2423,7 @@ testcase TC_EXTENSION_BIT_yes_for_set_of_hexstring() runs on TempComp{
   const octetstring    o := '070F'O
 
   if ((enc_RAW_PDU_125(i) == o)) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_125(i)= ", enc_RAW_PDU_125(i), "; dec_RAW_PDU_125(o)= ", dec_RAW_PDU_125(o));}
 }
 
 // EXTENSION_BIT(reverse)  for set of hexstring
@@ -2439,7 +2439,7 @@ testcase TC_EXTENSION_BIT_reverse_for_set_of_hexstring() runs on TempComp{
   const octetstring    o :=  '0FF87F'O;
 
   if ((enc_RAW_PDU_126(i) == o)) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_126(i)= ", enc_RAW_PDU_126(i), "; dec_RAW_PDU_126(o)= ", dec_RAW_PDU_126(o));}
 }
 
 // Test of  record with EXTENSION_BIT 1
@@ -2544,7 +2544,7 @@ const RAW_PDU_127
   const octetstring   o :='1234560F010100008002020000800303000080'O
 
   if ((enc_RAW_PDU_127(i) == o)and(dec_RAW_PDU_127(o) == i )) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_127(i)= ", enc_RAW_PDU_127(i), "; dec_RAW_PDU_127(o)= ", dec_RAW_PDU_127(o));}
 }
 
 // Test of  record with EXTENSION_BIT 2
@@ -2582,7 +2582,7 @@ testcase TC_record_with_EXTENSION_BIT_2() runs on TempComp{
   const octetstring o :='1234560C010100008002820303000080'O
 
   if ((enc_RAW_PDU_127(i) == o)and(dec_RAW_PDU_127(o) == i )) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_127(i)= ", enc_RAW_PDU_127(i), "; dec_RAW_PDU_127(o)= ", dec_RAW_PDU_127(o));}
 }
 
 // Test of  record with EXTENSION_BIT 3
@@ -2616,7 +2616,7 @@ testcase TC_record_with_EXTENSION_BIT_3() runs on TempComp{
   const octetstring   o :='12345609010100008002820383'O
 
   if ((enc_RAW_PDU_127(i) == o)and(dec_RAW_PDU_127(o) == i )) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_127(i)= ", enc_RAW_PDU_127(i), "; dec_RAW_PDU_127(o)= ", dec_RAW_PDU_127(o));}
 }
 
 //  Test of  record with EXTENSION_BIT 4
@@ -2650,7 +2650,7 @@ testcase TC_record_with_EXTENSION_BIT_4() runs on TempComp{
   const octetstring   o :='12345606018102820383'O
 
   if ((enc_RAW_PDU_127(i) == o)and(dec_RAW_PDU_127(o) == i )) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_127(i)= ", enc_RAW_PDU_127(i), "; dec_RAW_PDU_127(o)= ", dec_RAW_PDU_127(o));}
 }
 
 // Test of  record with EXTENSION_BIT 5
@@ -2679,7 +2679,7 @@ testcase TC_record_with_EXTENSION_BIT_5() runs on TempComp{
 
 
   if ((enc_RAW_PDU_127(i) == o)and(dec_RAW_PDU_127(o) == i )) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_127(i)= ", enc_RAW_PDU_127(i), "; dec_RAW_PDU_127(o)= ", dec_RAW_PDU_127(o));}}
 }
 
 // Test of  record with EXTENSION_BIT 6
@@ -2700,7 +2700,7 @@ testcase TC_record_with_EXTENSION_BIT_6() runs on TempComp{
   const octetstring   o :='123456020181'O
 
   if ((enc_RAW_PDU_127(i) == o)and(dec_RAW_PDU_127(o) == i )) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_127(i)= ", enc_RAW_PDU_127(i), "; dec_RAW_PDU_127(o)= ", dec_RAW_PDU_127(o));}
 }
 
 // Test of  record with EXTENSION_BIT 7
@@ -2733,7 +2733,7 @@ testcase TC_record_with_EXTENSION_BIT_7() runs on TempComp{
   const octetstring   o :='1234560F010100008002020000800303000080'O
 
   if ((enc_RAW_PDU_127(i) == o)and(dec_RAW_PDU_127(o) == i )) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_127(i)= ", enc_RAW_PDU_127(i), "; dec_RAW_PDU_127(o)= ", dec_RAW_PDU_127(o));}
 }
 
 // Test of  record with EXTENSION_BIT 8
@@ -2754,7 +2754,7 @@ testcase TC_record_with_EXTENSION_BIT_8() runs on TempComp{
   const octetstring   o :='123456050101000080'O
 
   if ((enc_RAW_PDU_127(i) == o)and(dec_RAW_PDU_127(o) == i )) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_127(i)= ", enc_RAW_PDU_127(i), "; dec_RAW_PDU_127(o)= ", dec_RAW_PDU_127(o));}
 }
 
 // Test of  record with EXTENSION_BIT 9
@@ -2781,7 +2781,7 @@ testcase TC_record_with_EXTENSION_BIT_9() runs on TempComp{
   const octetstring   o :='1234560A01010000800202000080'O
   
   if ((enc_RAW_PDU_127(i) == o)and(dec_RAW_PDU_127(o) == i )) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_127(i)= ", enc_RAW_PDU_127(i), "; dec_RAW_PDU_127(o)= ", dec_RAW_PDU_127(o));}
 }
 
 // EXTENSION_BIT_GROUP(no)
@@ -2811,7 +2811,7 @@ testcase TC_EXTENSION_BIT_GROUP_no() runs on TempComp{
   const octetstring o := '7F700F'O
   
   if ((enc_RAW_PDU_128(i) == o)and(dec_RAW_PDU_128(o) == i )) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_128(i)= ", enc_RAW_PDU_128(i), "; dec_RAW_PDU_128(o)= ", dec_RAW_PDU_128(o));}
 }
 
 // EXTENSION_BIT_GROUP(yes)
@@ -2841,7 +2841,7 @@ testcase TC_EXTENSION_BIT_GROUP_yes() runs on TempComp{
   const octetstring o := '7FF00F'O;
   
   if ((enc_RAW_PDU_129(i) == o)) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_129(i)= ", enc_RAW_PDU_129(i), "; dec_RAW_PDU_129(o)= ", dec_RAW_PDU_129(o));}
 }
 
 // EXTENSION_BIT_GROUP(yes) - two groups
@@ -2874,7 +2874,7 @@ testcase TC_EXTENSION_BIT_GROUP_yes_2_groups() runs on TempComp{
   const octetstring o := '7FF00FFF'O
   
   if ((enc_RAW_PDU_130(i) == o)) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_130(i)= ", enc_RAW_PDU_130(i), "; dec_RAW_PDU_130(o)= ", dec_RAW_PDU_130(o));}
 }
 
 // EXTENSION_BIT_GROUP(yes, reverse) - two groups
@@ -2907,7 +2907,7 @@ testcase TC_EXTENSION_BIT_GROUP_yes_reverse_2_groups() runs on TempComp{
   const octetstring o := '7FF08F7F'O 
   
   if ((enc_RAW_PDU_131(i) == o)) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_131(i)= ", enc_RAW_PDU_131(i), "; dec_RAW_PDU_131(o)= ", dec_RAW_PDU_131(o));}
 }
 
 //==== Testing ALIGN Attribute ====
@@ -2927,7 +2927,7 @@ testcase TC_ALIGN_right_for_octetstring() runs on TempComp{
   const octetstring o := '12345600'O 
   
   if ((enc_RAW_PDU_132(i) == o)and((dec_RAW_PDU_132(o) == i & '00'O))) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_132(i)= ", enc_RAW_PDU_132(i), "; dec_RAW_PDU_132(o)= ", dec_RAW_PDU_132(o));}
 }
 
 //ALIGN(left) for octetstring
@@ -2945,7 +2945,7 @@ testcase TC_ALIGN_left_for_octetstring() runs on TempComp{
   const octetstring o := '00123456'O 
   
   if ((enc_RAW_PDU_133(i) == o)and((dec_RAW_PDU_133(o) == '00'O & i ))) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_133(i)= ", enc_RAW_PDU_133(i), "; dec_RAW_PDU_133(o)= ", dec_RAW_PDU_133(o));}
 }
 
 // ALIGN(right) for bitstring
@@ -2964,7 +2964,7 @@ testcase TC_ALIGN_right_for_bitstring() runs on TempComp{
   const octetstring o := 'FF00'O
   
   if ((enc_RAW_PDU_134(i) == o)and((dec_RAW_PDU_134(o) == '00000000'B & i ))) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_134(i)= ", enc_RAW_PDU_134(i), "; dec_RAW_PDU_134(o)= ", dec_RAW_PDU_134(o));}
 }
 
 // ALIGN(left) for bitstring
@@ -2983,7 +2983,7 @@ testcase TC_ALIGN_left_for_bitstring() runs on TempComp{
   const octetstring o := '00FF'O
 
   if ((enc_RAW_PDU_135(i) == o)and((dec_RAW_PDU_135(o) == i & '00000000'B ))) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_135(i)= ", enc_RAW_PDU_135(i), "; dec_RAW_PDU_135(o)= ", dec_RAW_PDU_135(o));}
 }
 
 //======= Testing Compound types ======
@@ -3011,7 +3011,7 @@ testcase TC_record_with_integer_and_octetstring() runs on TempComp{
   const octetstring 	o := '141234'O
 
   if ((enc_RAW_PDU_136(i) == o)and((dec_RAW_PDU_136(o) == i))) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_136(i)= ", enc_RAW_PDU_136(i), "; dec_RAW_PDU_136(o)= ", dec_RAW_PDU_136(o));}
 }
 
 // Test of  record with default values in field
@@ -3036,7 +3036,7 @@ testcase TC_record_with_default_values_in_field() runs on TempComp{
   const octetstring 	o := '141234'O
 
   if ((enc_RAW_PDU_137(i) == o)and((dec_RAW_PDU_137(o) == i))) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_137(i)= ", enc_RAW_PDU_137(i), "; dec_RAW_PDU_137(o)= ", dec_RAW_PDU_137(o));}
 }
 
 // Test of  record with bitstring
@@ -3071,7 +3071,7 @@ testcase TC_record_with_bitstring() runs on TempComp{
   const octetstring 	o := '1412343F'O
 
   if ((enc_RAW_PDU_138(i) == o)and((dec_RAW_PDU_138(o) == i))) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_138(i)= ", enc_RAW_PDU_138(i), "; dec_RAW_PDU_138(o)= ", dec_RAW_PDU_138(o));}
 }
 
 //Test of  record with enumerated and fieldlength calculation
@@ -3124,7 +3124,7 @@ const octetstring 	o := '1412343F0A03123456'O
 
 
   if ((enc_RAW_PDU_139(i) == o)and((dec_RAW_PDU_139(o) == i))) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_139(i)= ", enc_RAW_PDU_139(i), "; dec_RAW_PDU_139(o)= ", dec_RAW_PDU_139(o));}
 }
 
 // Test of record called from record
@@ -3202,7 +3202,7 @@ testcase TC_record_called_from_record() runs on TempComp{
   const octetstring 	o := '1412343F0A0312345607F1341203FFFFFF'O
 
   if ((enc_RAW_PDU_140(i) == o)and((dec_RAW_PDU_140(o) == i))) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_140(i)= ", enc_RAW_PDU_140(i), "; dec_RAW_PDU_140(o)= ", dec_RAW_PDU_140(o));}
 }
 
 //  Test of union called from record with CROSSTAG
@@ -3308,8 +3308,8 @@ testcase TC_union_called_from_record_with_CROSSTAG() runs on TempComp{
 
   const octetstring 	o := '1412343F0A0312345607F1341203FFFFFF05010500'O
   
-if ((enc_RAW_PDU_141(i) == o)and((dec_RAW_PDU_141(o) == i))) {setverdict(pass);}
-  else {setverdict(fail);}
+	if ((enc_RAW_PDU_141(i) == o)and((dec_RAW_PDU_141(o) == i))) {setverdict(pass);}
+  else {setverdict(fail,"enc_RAW_PDU_141(i)= ", enc_RAW_PDU_141(i), "; dec_RAW_PDU_141(o)= ", dec_RAW_PDU_141(o));}
 }
 
 // Test of union called from record with CROSSTAG, OTHERWISE
@@ -3422,7 +3422,7 @@ testcase TC_union_called_from_record_with_CROSSTAG_OTHERWISE() runs on TempComp{
   const octetstring 	o := '1412343F0A0312345607F1341203FFFFFF05010500'O
 
   if ((enc_RAW_PDU_142(i) == o)and((dec_RAW_PDU_142(o) == i))) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_142(i)= ", enc_RAW_PDU_142(i), "; dec_RAW_PDU_142(o)= ", dec_RAW_PDU_142(o));}
 }
 
 
@@ -3523,10 +3523,10 @@ testcase TC_record_without_specifying_the_default_attributes_for_fields() runs o
 
 
 
-const octetstring 	o := '1412343F0A0312345607F1341203FFFFFF05010500'O
+	const octetstring 	o := '1412343F0A0312345607F1341203FFFFFF05010500'O
 
-if ((enc_RAW_PDU_143(i) == o)and(dec_RAW_PDU_143(o) == i)) {setverdict(pass);}
-  else {setverdict(fail);}
+	if ((enc_RAW_PDU_143(i) == o)and(dec_RAW_PDU_143(o) == i)) {setverdict(pass);}
+  else {setverdict(fail,"enc_RAW_PDU_143(i)= ", enc_RAW_PDU_143(i), "; dec_RAW_PDU_143(o)= ", dec_RAW_PDU_143(o));}
 
 }
 
@@ -3574,7 +3574,7 @@ testcase TC_record_of_called_from_record() runs on TempComp{
  
 
   if ((enc_RAW_PDU_144(i) == o)and(dec_RAW_PDU_144(o) == i)) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_144(i)= ", enc_RAW_PDU_144(i), "; dec_RAW_PDU_144(o)= ", dec_RAW_PDU_144(o));}
 }
 
 
@@ -3634,7 +3634,7 @@ testcase TC_set_with_TAG () runs on TempComp{
 
 
   if ((enc_RAW_PDU_145(i) == o)and(dec_RAW_PDU_145(o) == i)) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_145(i)= ", enc_RAW_PDU_145(i), "; dec_RAW_PDU_145(o)= ", dec_RAW_PDU_145(o));}
 }
 
 // Test of union with TAG , first element called
@@ -3685,7 +3685,7 @@ testcase TC_union_with_TAG_first_element_called() runs on TempComp {
   const octetstring 	o := '010F'O
 
   if ((enc_RAW_PDU_146(i) == o)and(dec_RAW_PDU_146(o) == i)) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_146(i)= ", enc_RAW_PDU_146(i), "; dec_RAW_PDU_146(o)= ", dec_RAW_PDU_146(o));}
 
 }
 
@@ -3739,7 +3739,7 @@ testcase TC_union_with_TAG_second_element_called() runs on TempComp {
   const octetstring 	o := '021234'O
 
   if ((enc_RAW_PDU_146(i) == o)and(dec_RAW_PDU_146(o) == i)) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_146(i)= ", enc_RAW_PDU_146(i), "; dec_RAW_PDU_146(o)= ", dec_RAW_PDU_146(o));}
 
 }
 
@@ -3757,7 +3757,7 @@ testcase TC_union_with_TAG_third_element_called() runs on TempComp {
 
 
   if ((enc_RAW_PDU_146(i) == o)and(dec_RAW_PDU_146(o) == i)) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_146(i)= ", enc_RAW_PDU_146(i), "; dec_RAW_PDU_146(o)= ", dec_RAW_PDU_146(o));}
 
 }
 
@@ -3790,7 +3790,7 @@ testcase TC_union_with_TAG_third_element_called_with_OTHERWISE() runs on TempCom
 
 
   if ((enc_RAW_PDU_147(i) == o)and(dec_RAW_PDU_147(o) == i)) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_147(i)= ", enc_RAW_PDU_147(i), "; dec_RAW_PDU_147(o)= ", dec_RAW_PDU_147(o));}
 
 }
 
@@ -3837,7 +3837,7 @@ testcase TC_set_of_called_from_record() runs on TempComp{
   const octetstring 	o := '081202345612027890'O
  
   if ((enc_RAW_PDU_148(i) == o)and(dec_RAW_PDU_148(o) == i)) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_148(i)= ", enc_RAW_PDU_148(i), "; dec_RAW_PDU_148(o)= ", dec_RAW_PDU_148(o));}
 
 }
 
@@ -3964,7 +3964,7 @@ testcase TC_record_with_optional_field_with_PRESENCE() runs on TempComp{
   const octetstring 	o := '1412343F0A0312345607F1341203FFFFFF0812023456120278900502010500'O
 
   if ((enc_RAW_PDU_149(i) == o)and(dec_RAW_PDU_149(o) == i)) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_149(i)= ", enc_RAW_PDU_149(i), "; dec_RAW_PDU_149(o)= ", dec_RAW_PDU_149(o));}
 
 }
 
@@ -3999,7 +3999,7 @@ testcase TC_record_with_UNIT() runs on TempComp{
 
 
   if ((enc_RAW_PDU_150(i) == o)and(dec_RAW_PDU_150(o) == i)) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_150(i)= ", enc_RAW_PDU_150(i), "; dec_RAW_PDU_150(o)= ", dec_RAW_PDU_150(o));}
 }
 
 // Test of  record with PTRUNIT
@@ -4039,7 +4039,7 @@ testcase TC_record_with_PTRUNIT() runs on TempComp{
   const octetstring 	o := '180507010203040506070809'O
 
   if ((enc_RAW_PDU_151(i) == o)and(dec_RAW_PDU_151(o) == i)) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_151(i)= ", enc_RAW_PDU_151(i), "; dec_RAW_PDU_151(o)= ", dec_RAW_PDU_151(o));}
 }
 
 // Test of  record with PTROFFSET
@@ -4084,7 +4084,7 @@ testcase TC_record_with_PTROFFSET() runs on TempComp{
 
 
   if ((enc_RAW_PDU_152(i) == o)and(dec_RAW_PDU_152(o) == i)) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_152(i)= ", enc_RAW_PDU_152(i), "; dec_RAW_PDU_152(o)= ", dec_RAW_PDU_152(o));}
 }
 
 // Test of  structured types - 1
@@ -4204,7 +4204,7 @@ testcase TC_structured_types_1() runs on TempComp{
   
 
   if ((enc_RAW_PDU_153(i) == o)and(dec_RAW_PDU_153(o) == i)) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_153(i)= ", enc_RAW_PDU_153(i), "; dec_RAW_PDU_153(o)= ", dec_RAW_PDU_153(o));}
 }
 
 // Test of  structured types - 2
@@ -4321,7 +4321,7 @@ testcase TC_structured_types_2() runs on TempComp{
   const octetstring 	o := '0202000102FFFF00'O
 
   if ((enc_RAW_PDU_154(i) == o)and(dec_RAW_PDU_154(o) == i)) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_154(i)= ", enc_RAW_PDU_154(i), "; dec_RAW_PDU_154(o)= ", dec_RAW_PDU_154(o));}
 }
 //=====================================
 //Test of  structured types - 3
@@ -4578,7 +4578,7 @@ testcase TC_structured_types_4() runs on TempComp{
   const octetstring 	o := '0207051F031234560102FFFF02070005123456789003048F0F123404060F123456789000'O
 
   if ((enc_RAW_PDU_154(i) == o)and(dec_RAW_PDU_154(o) == i)) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_154(i)= ", enc_RAW_PDU_154(i), "; dec_RAW_PDU_154(o)= ", dec_RAW_PDU_154(o));}
 }
 
 // Test of  structured types - 5
@@ -4680,7 +4680,7 @@ testcase TC_structured_types_4() runs on TempComp{
 // }with{encode "RAW"}
 
 testcase TC_structured_types_5() runs on TempComp{
-const RAW_PDU_154
+	const RAW_PDU_154
 	i := { var_part_ptr :=      2 ,
 	       opt_part_ptr :=      4 ,
 	       length1 :=        2 ,
@@ -4712,11 +4712,11 @@ const RAW_PDU_154
 
 
 
-const octetstring 	o := '0204021F000102FFFF02070005123456789003048F0F123404060F123456789000'O
+	const octetstring 	o := '0204021F000102FFFF02070005123456789003048F0F123404060F123456789000'O
 
 
-if ((enc_RAW_PDU_154(i) == o)and(dec_RAW_PDU_154(o) == i)) {setverdict(pass);}
-  else {setverdict(fail);}
+	if ((enc_RAW_PDU_154(i) == o)and(dec_RAW_PDU_154(o) == i)) {setverdict(pass);}
+  else {setverdict(fail,"enc_RAW_PDU_154(i)= ", enc_RAW_PDU_154(i), "; dec_RAW_PDU_154(o)= ", dec_RAW_PDU_154(o));}
 }
 
 //==================================
@@ -4725,7 +4725,7 @@ if ((enc_RAW_PDU_154(i) == o)and(dec_RAW_PDU_154(o) == i)) {setverdict(pass);}
 
 testcase TC_structured_types_6() runs on TempComp{
  
-const RAW_PDU_154
+	const RAW_PDU_154
 	i := { var_part_ptr :=      2 ,
 	       opt_part_ptr :=      2 ,
 	       length1 :=        0 ,
@@ -4753,10 +4753,10 @@ const RAW_PDU_154
 
 
 
-const octetstring 	o := '0202000102FFFF02070005123456789003048F0F123404060F123456789000'O
+	const octetstring 	o := '0202000102FFFF02070005123456789003048F0F123404060F123456789000'O
 
-if ((enc_RAW_PDU_154(i) == o)and(dec_RAW_PDU_154(o) == i)) {setverdict(pass);}
-  else {setverdict(fail);}
+	if ((enc_RAW_PDU_154(i) == o)and(dec_RAW_PDU_154(o) == i)) {setverdict(pass);}
+  else {setverdict(fail,"enc_RAW_PDU_154(i)= ", enc_RAW_PDU_154(i), "; dec_RAW_PDU_154(o)= ", dec_RAW_PDU_154(o));}
 }
 //==================================
 // Test of  structured types - 7
@@ -4795,7 +4795,7 @@ testcase TC_structured_types_7() runs on TempComp{
   const octetstring 	o := '0202000102FFFF0202000003028F0F04010F00'O
 
   if ((enc_RAW_PDU_154(i) == o)and(dec_RAW_PDU_154(o) == i)) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_154(i)= ", enc_RAW_PDU_154(i), "; dec_RAW_PDU_154(o)= ", dec_RAW_PDU_154(o));}
 
 }
 //==================================
@@ -4814,7 +4814,7 @@ testcase TC_structured_types_8() runs on TempComp{
 
   const octetstring 	o := '02000000'O
   if ((enc_RAW_PDU_154(i) == o)and(dec_RAW_PDU_154(o) == i)) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_154(i)= ", enc_RAW_PDU_154(i), "; dec_RAW_PDU_154(o)= ", dec_RAW_PDU_154(o));}
 
 }
 
@@ -4834,9 +4834,9 @@ testcase TC_structured_types_9() runs on TempComp{
 
 
 
-const octetstring 	o := '020000'O
+	const octetstring 	o := '020000'O
   if ((enc_RAW_PDU_154(i) == o)and(dec_RAW_PDU_154(o) == i)) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_154(i)= ", enc_RAW_PDU_154(i), "; dec_RAW_PDU_154(o)= ", dec_RAW_PDU_154(o));}
 
 }
 
@@ -5109,7 +5109,7 @@ testcase TC_structured_types_10() runs on TempComp{
   const octetstring 	o := '0112345680FF010207051234567890010612345680FF01020612345680FF01030612345680FF01040612345680FF0100'O
 
   if ((enc_RAW_PDU_155(i) == o)and(dec_RAW_PDU_155(o) == i)) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_155(i)= ", enc_RAW_PDU_155(i), "; dec_RAW_PDU_155(o)= ", dec_RAW_PDU_155(o));}
 }
 
 //=======================================
@@ -5138,7 +5138,7 @@ testcase TC_structured_types_11() runs on TempComp{
   const octetstring 	o := '0112345680FF010207051234567890'O
 
   if ((enc_RAW_PDU_155(i) == o)and(dec_RAW_PDU_155(o) == i)) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_155(i)= ", enc_RAW_PDU_155(i), "; dec_RAW_PDU_155(o)= ", dec_RAW_PDU_155(o));}
 }
 
 //=======================================
@@ -5191,7 +5191,7 @@ testcase TC_structured_types_12() runs on TempComp{
 
 
   if ((enc_RAW_PDU_155(i) == o)and(dec_RAW_PDU_155(o) == i)) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_155(i)= ", enc_RAW_PDU_155(i), "; dec_RAW_PDU_155(o)= ", dec_RAW_PDU_155(o));}
 }
 
 //=======================================
@@ -5236,7 +5236,7 @@ testcase TC_structured_types_13() runs on TempComp{
   const octetstring 	o := '0212345680FF010207051234567890010612345680FF01030612345680FF01'O
   
   if ((enc_RAW_PDU_155(i) == o)and(dec_RAW_PDU_155(o) == i)) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_155(i)= ", enc_RAW_PDU_155(i), "; dec_RAW_PDU_155(o)= ", dec_RAW_PDU_155(o));}
 }
 
 //=======================================
@@ -5514,7 +5514,7 @@ testcase TC_structured_types_14() runs on TempComp{
 
   const octetstring    o :='0212345680FF010207051234567890010612345680FF01030612345680FF01040601FFFFFF210100'O
   if ((enc_RAW_PDU_156(i) == o)and(dec_RAW_PDU_156(o) == i)) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_156(i)= ", enc_RAW_PDU_156(i), "; dec_RAW_PDU_156(o)= ", dec_RAW_PDU_156(o));}
 }
 
 // Test of  structured types - 15
@@ -5564,11 +5564,11 @@ testcase TC_structured_types_15() runs on TempComp{
 
 
 
-const octetstring   o :='0212345680FF010207051234567890010612345680FF01030612345680FF01040600000000210100'O
+	const octetstring   o :='0212345680FF010207051234567890010612345680FF01030612345680FF01040600000000210100'O
 
 
   if ((enc_RAW_PDU_156(i) == o)and(dec_RAW_PDU_156(o) == i)) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_156(i)= ", enc_RAW_PDU_156(i), "; dec_RAW_PDU_156(o)= ", dec_RAW_PDU_156(o));}
 }
 
 //=================================
@@ -5635,7 +5635,7 @@ testcase TC_structured_types_16() runs on TempComp{
   const octetstring   o :='01123456'O
 
   if ((enc_RAW_PDU_157(i) == o)and(dec_RAW_PDU_157(o) == i)) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_157(i)= ", enc_RAW_PDU_157(i), "; dec_RAW_PDU_157(o)= ", dec_RAW_PDU_157(o));}
 }
 
 //=================================
@@ -5652,7 +5652,7 @@ testcase TC_structured_types_17() runs on TempComp{
   const octetstring   o :='F71234'O
 
   if ((enc_RAW_PDU_157(i) == o)and(dec_RAW_PDU_157(o) == i)) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_157(i)= ", enc_RAW_PDU_157(i), "; dec_RAW_PDU_157(o)= ", dec_RAW_PDU_157(o));}
 }
 
 //===========================================================
@@ -5719,7 +5719,7 @@ testcase TC_Raw_update_test_1() runs on TempComp{
   const octetstring   o :='12347F'O
  
   if ((enc_RAW_PDU_158(i) == o )and(dec_RAW_PDU_158(o) == i)) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_158(i)= ", enc_RAW_PDU_158(i), "; dec_RAW_PDU_158(o)= ", dec_RAW_PDU_158(o));}
 }
 
 //=================================
@@ -5734,7 +5734,7 @@ testcase TC_Raw_update_test_2() runs on TempComp{
   const octetstring   o :='12341F'O
 
   if ((enc_RAW_PDU_158(i) == o )and(dec_RAW_PDU_158(o) == i)) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_158(i)= ", enc_RAW_PDU_158(i), "; dec_RAW_PDU_158(o)= ", dec_RAW_PDU_158(o));}
 }
 
 //=================================
@@ -5781,7 +5781,7 @@ testcase TC_Raw_update_test_3() runs on TempComp{
   const octetstring   o :='12348F10'O
 
   if ((enc_RAW_PDU_159(i) == o )and(dec_RAW_PDU_159(o) == i)) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_159(i)= ", enc_RAW_PDU_159(i), "; dec_RAW_PDU_159(o)= ", dec_RAW_PDU_159(o));}
 }
 //=================================
 //   Raw update test 4
@@ -5826,7 +5826,7 @@ testcase TC_Raw_update_test_4() runs on TempComp{
   const octetstring   o :='1234081F'O
 
   if ((enc_RAW_PDU_160(i) == o )and(dec_RAW_PDU_160(o) == i)) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_160(i)= ", enc_RAW_PDU_160(i), "; dec_RAW_PDU_160(o)= ", dec_RAW_PDU_160(o));}
 }
 //=================================
 //   Raw update test 5
@@ -5872,7 +5872,7 @@ testcase TC_Raw_update_test_5() runs on TempComp{
 
 
   if ((enc_RAW_PDU_161(i) == o )and(dec_RAW_PDU_161(o) == i)) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_161(i)= ", enc_RAW_PDU_161(i), "; dec_RAW_PDU_161(o)= ", dec_RAW_PDU_161(o));}
 }
 
 //=================================
@@ -5917,7 +5917,7 @@ testcase TC_Raw_update_test_6() runs on TempComp{
 
 
   if ((enc_RAW_PDU_162(i) == o )and(dec_RAW_PDU_162(o) == i)) {setverdict(pass);}
-  else {setverdict(fail);}
+	else {setverdict(fail,"enc_RAW_PDU_162(i)= ", enc_RAW_PDU_162(i), "; dec_RAW_PDU_162(o)= ", dec_RAW_PDU_162(o));}
 }
 
 //=================================
@@ -5936,7 +5936,7 @@ testcase TC_Raw_update_test_7() runs on TempComp{
 
 
   if ((enc_RAW_PDU_162(i) == o )and(dec_RAW_PDU_162(o) == i)) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_162(i)= ", enc_RAW_PDU_162(i), "; dec_RAW_PDU_162(o)= ", dec_RAW_PDU_162(o));}
 }
 
 //=================================
@@ -5995,7 +5995,7 @@ testcase TC_Raw_update_test_8() runs on TempComp{
 
 
   if ((enc_RAW_PDU_163(i) == o )and(dec_RAW_PDU_163(o) == i)) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_163(i)= ", enc_RAW_PDU_163(i), "; dec_RAW_PDU_163(o)= ", dec_RAW_PDU_163(o));}
 }
 //=================================
 //   Raw update test 9 (OTHERWISE)
@@ -6036,7 +6036,7 @@ testcase TC_Raw_update_test_9() runs on TempComp{
   const octetstring   o :='E11F'O
 
   if ((enc_RAW_PDU_164(i) == o )and(dec_RAW_PDU_164(o) == i)) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_164(i)= ", enc_RAW_PDU_164(i), "; dec_RAW_PDU_164(o)= ", dec_RAW_PDU_164(o));}
 }
 //=================================
 //   Raw update test 10
@@ -6084,7 +6084,7 @@ testcase TC_Raw_update_test_10() runs on TempComp{
   const octetstring   o :='1234E11F'O
 
   if ((enc_RAW_PDU_165(i) == o )and(dec_RAW_PDU_165(o) == i)) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_165(i)= ", enc_RAW_PDU_165(i), "; dec_RAW_PDU_165(o)= ", dec_RAW_PDU_165(o));}
 }
 //=================================
 //   Raw update test 11
@@ -6128,7 +6128,7 @@ testcase TC_Raw_update_test_11() runs on TempComp{
   const octetstring   o :='1234E11F'O
 
   if ((enc_RAW_PDU_166(i) == o )and(dec_RAW_PDU_166(o) == i)) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_166(i)= ", enc_RAW_PDU_166(i), "; dec_RAW_PDU_166(o)= ", dec_RAW_PDU_166(o));}
 }
 
 //=================================
@@ -6164,19 +6164,16 @@ external function enc_RAW_PDU_167(in RAW_PDU_167 pdu) return octetstring with { 
 external function dec_RAW_PDU_167(in octetstring stream) return RAW_PDU_167 with { extension "prototype(convert) decode(RAW)" }
 
 testcase TC_Raw_update_test_12() runs on TempComp{
-const RAW_PDU_167
+	const RAW_PDU_167
     i := {  code := { field1 := 16},
             ABCxxxxx := '00000000'B,
             PDU_length := 16,
             id := omit }
 
-const octetstring   o :='10001000'O
+	const octetstring   o :='10001000'O
 
-log ("enc_RAW_PDU_167(i)=     "  , enc_RAW_PDU_167(i)) ;
-log ("dec_RAW_PDU_167(o)=     "  , dec_RAW_PDU_167(o)) ;
-
-if ((enc_RAW_PDU_167(i) == o )and(dec_RAW_PDU_167(o) == i)) {setverdict(pass);}
-  else {setverdict(fail);}
+	if ((enc_RAW_PDU_167(i) == o )and(dec_RAW_PDU_167(o) == i)) {setverdict(pass);}
+  else {setverdict(fail,"enc_RAW_PDU_167(i)= ", enc_RAW_PDU_167(i), "; dec_RAW_PDU_167(o)= ", dec_RAW_PDU_167(o));}
 }
 
 //=================================
@@ -6184,20 +6181,17 @@ if ((enc_RAW_PDU_167(i) == o )and(dec_RAW_PDU_167(o) == i)) {setverdict(pass);}
 //=================================
 
 testcase TC_Raw_update_test_13() runs on TempComp{
-const RAW_PDU_167
-     i := {  code := { field2 := 16},
+	const RAW_PDU_167
+    i := {  code := { field2 := 16},
             ABCxxxxx := '10000000'B,
             PDU_length := 16,
             id := '02'O }
 
 
-const octetstring   o :='1080100002'O
+	const octetstring   o :='1080100002'O
 
-log ("enc_RAW_PDU_167(i)=     "  , enc_RAW_PDU_167(i)) ;
-log ("dec_RAW_PDU_167(o)=     "  , dec_RAW_PDU_167(o)) ;
-
-if ((enc_RAW_PDU_167(i) == o )and(dec_RAW_PDU_167(o) == i)) {setverdict(pass);}
-  else {setverdict(fail);}
+	if ((enc_RAW_PDU_167(i) == o )and(dec_RAW_PDU_167(o) == i)) {setverdict(pass);}
+  else {setverdict(fail,"enc_RAW_PDU_167(i)= ", enc_RAW_PDU_167(i), "; dec_RAW_PDU_167(o)= ", dec_RAW_PDU_167(o));}
 }
 
 //=================================
@@ -6248,7 +6242,7 @@ external function enc_RAW_PDU_168(in RAW_PDU_168 pdu) return octetstring with { 
 external function dec_RAW_PDU_168(in octetstring stream) return RAW_PDU_168 with { extension "prototype(convert) decode(RAW)" }
 
 testcase TC_Raw_update_test_14() runs on TempComp{
-const RAW_PDU_168
+	const RAW_PDU_168
     i := {  code := {E1 := e1c},
             ABCxxxxx := '00000000'B,
             PDU_length := 8,
@@ -6256,10 +6250,10 @@ const RAW_PDU_168
             payload := omit}
 
 
-const octetstring   o :='0000000200000008'O ;
+	const octetstring   o :='0000000200000008'O ;
 
-if ((enc_RAW_PDU_168(i) == o )and(dec_RAW_PDU_168(o) == i)) {setverdict(pass);}
-  else {setverdict(fail);}
+	if ((enc_RAW_PDU_168(i) == o )and(dec_RAW_PDU_168(o) == i)) {setverdict(pass);}
+  else {setverdict(fail,"enc_RAW_PDU_168(i)= ", enc_RAW_PDU_168(i), "; dec_RAW_PDU_168(o)= ", dec_RAW_PDU_168(o));}
 
 }
 
@@ -6268,18 +6262,17 @@ if ((enc_RAW_PDU_168(i) == o )and(dec_RAW_PDU_168(o) == i)) {setverdict(pass);}
 //=================================
 
 testcase TC_Raw_update_test_15() runs on TempComp{
-const RAW_PDU_168
+	const RAW_PDU_168
     i := {  code := {E2 := e2b},
             ABCxxxxx := '10000000'B,
             PDU_length := 14,
             id := id_E2,
             payload := 'ABCD'O}
 
-
-const octetstring   o :='000000028000000E00000001ABCD'O ;
+	const octetstring   o :='000000028000000E00000001ABCD'O ;
  
-if ((enc_RAW_PDU_168(i) == o )and(dec_RAW_PDU_168(o) == i)) {setverdict(pass);}
-  else {setverdict(fail);}
+	if ((enc_RAW_PDU_168(i) == o )and(dec_RAW_PDU_168(o) == i)) {setverdict(pass);}
+  else {setverdict(fail,"enc_RAW_PDU_168(i)= ", enc_RAW_PDU_168(i), "; dec_RAW_PDU_168(o)= ", dec_RAW_PDU_168(o));}
 }
 
 //=================================
@@ -6287,18 +6280,17 @@ if ((enc_RAW_PDU_168(i) == o )and(dec_RAW_PDU_168(o) == i)) {setverdict(pass);}
 //=================================
 
 testcase TC_Raw_update_test_16() runs on TempComp{
-const RAW_PDU_168
+	const RAW_PDU_168
     i := {  code := {E3 := e3b},
             ABCxxxxx := '10100000'B,
             PDU_length := 14,
             id := id_E3,
             payload := 'ABCD'O}
 
+	const octetstring   o :='00000003A000000E00000002ABCD'O ;
 
-const octetstring   o :='00000003A000000E00000002ABCD'O ;
-
-if ((enc_RAW_PDU_168(i) == o )and(dec_RAW_PDU_168(o) == i)) {setverdict(pass);}
-  else {setverdict(fail);}
+	if ((enc_RAW_PDU_168(i) == o )and(dec_RAW_PDU_168(o) == i)) {setverdict(pass);}
+  else {setverdict(fail,"enc_RAW_PDU_168(i)= ", enc_RAW_PDU_168(i), "; dec_RAW_PDU_168(o)= ", dec_RAW_PDU_168(o));}
 
 }
 
@@ -6323,7 +6315,7 @@ testcase TC_group_raw_attribute_test_1() runs on TempComp{
 
 
   if ((enc_RAW_PDU_169(i) == o)and(dec_RAW_PDU_169(o) == i)) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_169(i)= ", enc_RAW_PDU_169(i), "; dec_RAW_PDU_169(o)= ", dec_RAW_PDU_169(o));}
 }
 
 //=================================
@@ -6342,11 +6334,11 @@ external function enc_RAW_PDU_170(in RAW_PDU_170 pdu) return octetstring with { 
 external function dec_RAW_PDU_170(in octetstring stream) return RAW_PDU_170 with { extension "prototype(convert) decode(RAW)" }
 
 testcase TC_group_raw_attribute_test_2() runs on TempComp{
-const RAW_PDU_170 		i := -234
-const octetstring 	o := 'EA0008'O
+	const RAW_PDU_170 		i := -234
+	const octetstring 	o := 'EA0008'O
 
-if ((enc_RAW_PDU_170(i) == o)and(dec_RAW_PDU_170(o) == i)) {setverdict(pass);}
-  else {setverdict(fail);}
+	if ((enc_RAW_PDU_170(i) == o)and(dec_RAW_PDU_170(o) == i)) {setverdict(pass);}
+  else {setverdict(fail,"enc_RAW_PDU_170(i)= ", enc_RAW_PDU_170(i), "; dec_RAW_PDU_170(o)= ", dec_RAW_PDU_170(o));}
 }
 
 //=================================
@@ -6378,7 +6370,7 @@ testcase TC_group_raw_attribute_test_3() runs on TempComp{
 
 
   if ((enc_RAW_PDU_171(i) == o)and(dec_RAW_PDU_171(o) == i)) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_171(i)= ", enc_RAW_PDU_171(i), "; dec_RAW_PDU_171(o)= ", dec_RAW_PDU_171(o));}
 }
 
 //=================================
@@ -6413,7 +6405,7 @@ testcase TC_group_raw_attribute_test_4() runs on TempComp{
   const octetstring 	o := 'EA0008'O
 
   if ((enc_RAW_PDU_172(i) == o)and(dec_RAW_PDU_172(o) == i)) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_172(i)= ", enc_RAW_PDU_172(i), "; dec_RAW_PDU_172(o)= ", dec_RAW_PDU_172(o));}
 }
 
 //=================================
@@ -6439,7 +6431,7 @@ testcase TC_group_raw_attribute_test_5() runs on TempComp{
   const octetstring 	o := 'EA0008'O
 
   if ((enc_RAW_PDU_173(i) == o)and(dec_RAW_PDU_173(o) == i)) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_173(i)= ", enc_RAW_PDU_173(i), "; dec_RAW_PDU_173(o)= ", dec_RAW_PDU_173(o));}
 
 }
 
@@ -6467,7 +6459,7 @@ testcase TC_group_raw_attribute_test_6() runs on TempComp{
   const octetstring 	o := 'FF'O
 
   if ((enc_RAW_PDU_174(i) == o)and(dec_RAW_PDU_174(o) == i)) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"enc_RAW_PDU_174(i)= ", enc_RAW_PDU_174(i), "; dec_RAW_PDU_174(o)= ", dec_RAW_PDU_174(o));}
 }
 //=================================
 //   group raw attribute test 7
@@ -6489,16 +6481,16 @@ group RAW_group51{
 } with {encode "RAW" };
 
 testcase TC_group_raw_attribute_test_7() runs on TempComp{
-const RAW_PDU_175
-	i := {  int1 :=    1  ,
-	        int2 :=    2  ,
-		int3 :=    3  ,
-		int4 :=    4       }
+	const RAW_PDU_175
+		i := {  int1 :=    1  ,
+						int2 :=    2  ,
+						int3 :=    3  ,
+						int4 :=    4       }
 
-const octetstring 	o := '010243'O
+	const octetstring 	o := '010243'O
 
-if ((enc_RAW_PDU_175(i) == o)and(dec_RAW_PDU_175(o) == i)) {setverdict(pass);}
-  else {setverdict(fail);}
+	if ((enc_RAW_PDU_175(i) == o)and(dec_RAW_PDU_175(o) == i)) {setverdict(pass);}
+  else {setverdict(fail,"enc_RAW_PDU_175(i)= ", enc_RAW_PDU_175(i), "; dec_RAW_PDU_175(o)= ", dec_RAW_PDU_175(o));}
 
 }
 
@@ -6526,7 +6518,7 @@ testcase TC_Fast_enc_dec_function() runs on TempComp{
   dec_RAW_PDU_176(o, decoded_pdu);
 
   if ( encoded_pdu == o and decoded_pdu == i ) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"encoded_pdu= ", encoded_pdu, "; decoded_pdu= ", decoded_pdu);}
 }
 //=================================================
 //  Implicit message encoding: prototype backtrack
@@ -6548,10 +6540,11 @@ testcase TC_Backtrack_decode_function() runs on TempComp{
 
   ret_val := dec_RAW_PDU_177(o1, decoded_pdu);
   if (ret_val==0 and decoded_pdu==i) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"dec_RAW_PDU_177(o1, decoded_pdu)=",ret_val,";decoded_pdu=", decoded_pdu );}
 
   ret_val := dec_RAW_PDU_177(o2, decoded_pdu);
-  if (ret_val==1) {setverdict(pass);} else {setverdict(fail);}
+  if (ret_val==1) {setverdict(pass);} 
+	else {setverdict(fail,"ret_val=",ret_val,";decoded_pdu=", decoded_pdu );}
 }
 
 //=================================================
@@ -6573,10 +6566,11 @@ testcase TC_Sliding_decode_function() runs on TempComp{
 
   ret_val := dec_RAW_PDU_178(o1, decoded_pdu);
   if (ret_val==0 and decoded_pdu==i) {setverdict(pass);}
-  else {setverdict(fail);}
+  else {setverdict(fail,"ret_val=",ret_val,";decoded_pdu=", decoded_pdu );}
 
   ret_val := dec_RAW_PDU_178(o2, decoded_pdu);
-  if (ret_val>0) {setverdict(pass);} else {setverdict(fail);}
+  if (ret_val>0) {setverdict(pass);} 
+	else {setverdict(fail,"ret_val=",ret_val,";decoded_pdu=", decoded_pdu );}
 }
 
 //---------------------------------------------------------------------*
@@ -6600,7 +6594,8 @@ testcase TC_Decoding_empty_octetstring() runs on TempComp{
   var octetstring os := ''O;
   var RAW_PDU_179 pdu;
   var integer ret_val := decodePDU(os, pdu);
-  if (ret_val>0) {setverdict(pass);} else {setverdict(fail);}
+  if (ret_val>0) {setverdict(pass);} 
+	else {setverdict(fail,"ret_val=",ret_val,";decoded pdu=", pdu );}
 }
 
 //---------------------------------------------------------------------*
@@ -6656,20 +6651,62 @@ testcase TC_encoding_decoding_of_big_integers() runs on TempComp{
   var myint2 v18 := 34359738368
   var myint2 v19 := 4398046511104
   var octetstring o
-  o := enc_raw3(v1);if (v1 == dec_raw3(o)) {setverdict(pass)} else {setverdict(fail)}
-  o := enc_raw3(v2);if (v2 == dec_raw3(o)) {setverdict(pass)} else {setverdict(fail)}
-  o := enc_raw3(v3);if (v3 == dec_raw3(o)) {setverdict(pass)} else {setverdict(fail)}
-  o := enc_raw3(v4);if (v4 == dec_raw3(o)) {setverdict(pass)} else {setverdict(fail)}
-  o := enc_raw3(-140737488355328);if (v5 == dec_raw3(o)) {setverdict(pass)} else {setverdict(fail)}
-  o := enc_raw3(v6);if (v6 == dec_raw3(o)) {setverdict(pass)} else {setverdict(fail)}
-  o := enc_raw3(v7);if (v7 == dec_raw3(o)) {setverdict(pass)} else {setverdict(fail)}
-  o := enc_raw3(v8);if (v8 == dec_raw3(o)) {setverdict(pass)} else {setverdict(fail)}
-  o := enc_raw3(v9);if (v9 == dec_raw3(o)) {setverdict(pass)} else {setverdict(fail)}
-  o := enc_raw3(v10);if (v10 == dec_raw3(o)) {setverdict(pass)} else {setverdict(fail)}
-  o := enc_raw3(v11);if (v11 == dec_raw3(o)) {setverdict(pass)} else {setverdict(fail)}
-  o := enc_raw3(v12);if (v12 == dec_raw3(o)) {setverdict(pass)} else {setverdict(fail)}
-  o := enc_raw3(v13);if (v13 == dec_raw3(o)) {setverdict(pass)} else {setverdict(fail)}
-  o := enc_raw3(v14);if (v14 == dec_raw3(o)) {setverdict(pass)} else {setverdict(fail)}
+  
+	o := enc_raw3(v1);
+	if (v1 == dec_raw3(o)) {setverdict(pass)} 
+	else {setverdict(fail, v1, "Encoded1: ", o," Decoding error. Expected: ", v1, " got: ", dec_raw3(o) )}
+  
+	o := enc_raw3(v2);
+	if (v2 == dec_raw3(o)) {setverdict(pass)} 
+	else {setverdict(fail, v2, "Encoded2: ", o," Decoding error. Expected: ", v2, " got: ", dec_raw3(o))}
+	
+  o := enc_raw3(v3);
+	if (v3 == dec_raw3(o)) {setverdict(pass)} 
+	else {setverdict(fail, v3, "Encoded3: ", o," Decoding error. Expected: ", v3, " got: ", dec_raw3(o))}
+	
+  o := enc_raw3(v4);
+	if (v4 == dec_raw3(o)) {setverdict(pass)} 
+	else {setverdict(fail, v4, "Encoded4: ", o," Decoding error. Expected: ", v4, " got: ", dec_raw3(o))}
+	
+  o := enc_raw3(-140737488355328);
+	if (v5 == dec_raw3(o)) {setverdict(pass)} 
+	else {setverdict(fail, v5, "Encoded5: ", o," Decoding error. Expected: ", v5, " got: ", dec_raw3(o))}
+	
+  o := enc_raw3(v6);
+	if (v6 == dec_raw3(o)) {setverdict(pass)} 
+	else {setverdict(fail, v6, "Encoded6: ", o," Decoding error. Expected: ", v6, " got: ", dec_raw3(o))}
+	
+  o := enc_raw3(v7);
+	if (v7 == dec_raw3(o)) {setverdict(pass)} 
+	else {setverdict(fail, v7, "Encoded7: ", o," Decoding error. Expected: ", v7, " got: ", dec_raw3(o))}
+	
+  o := enc_raw3(v8);
+	if (v8 == dec_raw3(o)) {setverdict(pass)} 
+	else {setverdict(fail, v8, "Encoded8: ", o," Decoding error. Expected: ", v8, " got: ", dec_raw3(o))}
+  
+	o := enc_raw3(v9);
+	if (v9 == dec_raw3(o)) {setverdict(pass)} 
+	else {setverdict(fail, v9, "Encoded9: ", o," Decoding error. Expected: ", v9, " got: ", dec_raw3(o))}
+	
+  o := enc_raw3(v10);
+	if (v10 == dec_raw3(o)) {setverdict(pass)} 
+	else {setverdict(fail, v10, "Encoded10: ", o," Decoding error. Expected: ", v10, " got: ", dec_raw3(o))}
+  
+	o := enc_raw3(v11);
+	if (v11 == dec_raw3(o)) {setverdict(pass)} 
+	else {setverdict(fail, v11, "Encoded11: ", o," Decoding error. Expected: ", v11, " got: ", dec_raw3(o))}
+	
+  o := enc_raw3(v12);
+	if (v12 == dec_raw3(o)) {setverdict(pass)} 
+	else {setverdict(fail, v12, "Encoded12: ", o," Decoding error. Expected: ", v12, " got: ", dec_raw3(o))}
+	
+  o := enc_raw3(v13);
+	if (v13 == dec_raw3(o)) {setverdict(pass)} 
+	else {setverdict(fail, v13, "Encoded13: ", o," Decoding error. Expected: ", v13, " got: ", dec_raw3(o))}
+  
+	o := enc_raw3(v14);
+	if (v14 == dec_raw3(o)) {setverdict(pass)} 
+	else {setverdict(fail, v14, "Encoded14: ", o," Decoding error. Expected: ", v14, " got: ", dec_raw3(o))}
 } 
 //=================================================
 // Encoding/decoding records with big integer fields
@@ -6708,18 +6745,42 @@ testcase TC_encoding_decoding_records_with_big_integer_fields() runs on TempComp
   var rec_raw1 myrec6 := {int1 := -1234, int2 := -4321}
   var octetstring o6 := '2EFBFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF1FEFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF'O;
 
-  if (o1 == enc_raw(myrec1)) {setverdict(pass)} else {setverdict(fail, "enc_raw(myrec1) is ", enc_raw(myrec1))}
-  if (myrec1 == dec_raw(o1)) {setverdict(pass)} else {setverdict(fail, "dec_raw(o1) is ", dec_raw(o1))}
-  if (o2 == enc_raw(myrec2)) {setverdict(pass)} else {setverdict(fail, "enc_raw(myrec2) is ", enc_raw(myrec2))}
-  if (myrec2 == dec_raw(o2)) {setverdict(pass)} else {setverdict(fail, "dec_raw(o2) is ", dec_raw(o2))}
-  if (o3 == enc_raw(myrec3)) {setverdict(pass)} else {setverdict(fail, "enc_raw(myrec3) is ", enc_raw(myrec3))}
-  if (myrec3 == dec_raw(o3)) {setverdict(pass)} else {setverdict(fail, "dec_raw(o3) is ", dec_raw(o3))}
-  if (o4 == enc_raw(myrec4)) {setverdict(pass)} else {setverdict(fail, "enc_raw(myrec4) is ", enc_raw(myrec4))}
-  if (myrec4 == dec_raw(o4)) {setverdict(pass)} else {setverdict(fail, "dec_raw(o4) is ", dec_raw(o4))}
-  if (o5 == enc_raw(myrec5)) {setverdict(pass)} else {setverdict(fail, "enc_raw(myrec5) is ", enc_raw(myrec5))}
-  if (myrec5 == dec_raw(o5)) {setverdict(pass)} else {setverdict(fail, "dec_raw(o5) is ", dec_raw(o5))}
-  if (o6 == enc_raw(myrec6)) {setverdict(pass)} else {setverdict(fail, "enc_raw(myrec6) is ", enc_raw(myrec6))}
-  if (myrec6 == dec_raw(o6)) {setverdict(pass)} else {setverdict(fail, "dec_raw(o6) is ", dec_raw(o6))}
+  if (o1 == enc_raw(myrec1)) {setverdict(pass)} 
+	else {setverdict(fail, "myrec1: ", myrec1, "; enc_raw(myrec1): ", enc_raw(myrec1), ";Expected: ",o1)}
+  
+	if (myrec1 == dec_raw(o1)) {setverdict(pass)} 
+	else {setverdict(fail, "o1: ", o1, ";dec_raw(o1):", dec_raw(o1), ";Expected: ", myrec1)}
+  
+	if (o2 == enc_raw(myrec2)) {setverdict(pass)} 
+	else {setverdict(fail, "myrec2: ", myrec2, "; enc_raw(myrec2): ", enc_raw(myrec2), ";Expected: ",o2)}
+  
+	if (myrec2 == dec_raw(o2)) {setverdict(pass)} 
+	else {setverdict(fail, "o2: ", o2, ";dec_raw(o2):", dec_raw(o2), ";Expected: ", myrec2)}
+  
+	if (o3 == enc_raw(myrec3)) {setverdict(pass)} 
+	else {setverdict(fail, "myrec3: ", myrec3, "; enc_raw(myrec1): ", enc_raw(myrec3), ";Expected: ",o3)}
+  
+	if (myrec3 == dec_raw(o3)) {setverdict(pass)} 
+	else {setverdict(fail, "o3: ", o3, ";dec_raw(o3):", dec_raw(o3), ";Expected: ", myrec3)}
+  
+	if (o4 == enc_raw(myrec4)) {setverdict(pass)} 
+	else {setverdict(fail, "myrec4: ", myrec4, "; enc_raw(myrec4): ", enc_raw(myrec4), ";Expected: ",o4)}
+  
+	if (myrec4 == dec_raw(o4)) {setverdict(pass)} 
+	else {setverdict(fail, "o4: ", o4, ";dec_raw(o4):", dec_raw(o4), ";Expected: ", myrec4)}
+  
+	if (o5 == enc_raw(myrec5)) {setverdict(pass)} 
+	else {setverdict(fail, "myrec5: ", myrec5, "; enc_raw(myrec5): ", enc_raw(myrec5), ";Expected: ",o5)} 
+  
+	if (myrec5 == dec_raw(o5)) {setverdict(pass)} 
+	else {setverdict(fail, "o5: ", o5, ";dec_raw(o5):", dec_raw(o5), ";Expected: ", myrec5)}
+  
+	if (o6 == enc_raw(myrec6)) {setverdict(pass)} 
+	else {setverdict(fail, "myrec6: ", myrec6, "; enc_raw(myrec6): ", enc_raw(myrec6), ";Expected: ",o6)} 
+  
+	if (myrec6 == dec_raw(o6)) {setverdict(pass)} 
+	else {setverdict(fail, "o6: ", o6, ";dec_raw(o6):", dec_raw(o6), ";Expected: ", myrec6)}
+  
 }
 
 //=================================================
