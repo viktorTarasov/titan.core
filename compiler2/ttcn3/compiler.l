@@ -535,6 +535,8 @@ xor4b		RETURN(Xor4bKeyword);
 "@profiler" RETURN(TitanSpecificProfilerKeyword);
 "@update" RETURN(TitanSpecificUpdateKeyword);
 
+"getref"  RETURN_DOT(GetRefKeyword);
+
 	/* Predefined function identifiers */
 
 bit2hex		RETURN(bit2hexKeyword);

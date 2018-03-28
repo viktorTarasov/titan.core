@@ -8382,11 +8382,10 @@ namespace Ttcn {
     if (!type) FATAL_ERROR("FormalPar::get_Type()");
     return type;
   }
-
+  
   void FormalPar::chk()
   {
     if (checked) return;
-    checked = true;
     TemplateInstance *default_value = defval.ti;
     defval.ti = 0;
     if (type) {
@@ -8400,6 +8399,8 @@ namespace Ttcn {
         case A_PAR_VAL_INOUT:
           asstype = A_PAR_PORT;
           break;
+        case A_PAR_PORT:
+          break; // should only happen in recursive calls
         default:
           error("Port type `%s' cannot be used as %s",
             t->get_fullname().c_str(), get_assname());
@@ -8428,7 +8429,9 @@ namespace Ttcn {
         }
       }
     } else if (asstype != A_PAR_TIMER) FATAL_ERROR("FormalPar::chk()");
-
+    
+    checked = true;
+    
     if (default_value) {
       Error_Context cntxt(default_value, "In default value");
       defval.ap = chk_actual_par(default_value, Type::EXPECTED_STATIC_VALUE);
@@ -9016,6 +9019,18 @@ namespace Ttcn {
       }
       return new ActualPar(ref);
     } else {
+      if (ap_template->get_templatetype() == Template::SPECIFIC_VALUE) {
+        Value* val = ap_template->get_specific_value();
+        if (val->get_valuetype() == Common::Value::V_EXPR &&
+            val->get_optype() == Common::Value::OPTYPE_GET_PORT_REF) {
+          Value *v = ap_template->get_Value(); // steal the value
+          v->set_my_governor(type);
+          type->chk_this_value_ref(v);
+          type->chk_this_value(v, 0, exp_val, INCOMPLETE_NOT_ALLOWED,
+            OMIT_NOT_ALLOWED, SUB_CHK);
+          return new ActualPar(v);
+        }
+      }
       actual_par->error("Reference to a port or port parameter was expected "
         "for a port parameter");
       return new ActualPar();

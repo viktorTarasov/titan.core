@@ -278,6 +278,8 @@ namespace Common {
       OPTYPE_JSON2CBOR, // v1
       OPTYPE_BSON2JSON, // v1
       OPTYPE_JSON2BSON, // v1
+      
+      OPTYPE_GET_PORT_REF, // -
 
       NUMBER_OF_OPTYPES // must be last
     };
@@ -343,6 +345,7 @@ namespace Common {
           TemplateInstance *ti1;
           Ttcn::Ref_base *r1; /**< timer or component */
           LogArguments *logargs; /**< arguments of log2str() */
+          Type* type;
         };
         union {
           Value *v2;
@@ -413,7 +416,7 @@ namespace Common {
     /** Constructor used by V_EXPR "-": RND, TESTCASENAME, COMP_NULL, COMP_MTC,
      *  COMP_SYSTEM, COMP_SELF, COMP_RUNNING_ANY, COMP_RUNNING_ALL,
      *  COMP_ALIVE_ALL, COMP_ALIVE_ANY, TMR_RUNNING_ANY, GETVERDICT,
-     *  PROF_RUNNING */
+     *  PROF_RUNNING, OPTYPE_GET_PORT_REF */
     Value(operationtype_t p_optype);
     /** Constructor used by V_EXPR "v1" or [v1] */
     Value(operationtype_t p_optype, Value *p_v1);

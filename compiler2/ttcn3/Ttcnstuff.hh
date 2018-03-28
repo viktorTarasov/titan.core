@@ -390,6 +390,7 @@ private:
   Types *in_list, *out_list, *inout_list;
   bool in_all, out_all, inout_all; // whether "(in|out|inout) all" was used
   bool checked;
+  bool attributes_checked;
   bool legacy; // Old extension syntax or new standard syntax
   /* Types and signatures that can be sent and received.
    * These are initially empty; filled by PortTypeBody::chk_list based on

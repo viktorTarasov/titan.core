@@ -208,8 +208,19 @@ module PortTranslation {
 		extension "prototype(fast)";
 	}
 	
-	function char_to_hex3(in charstring i, out hexstring j) {
+	function f_port_ref_test(PT3 p1, inout PT3 p2)
+	{
+	  if (log2str(p1) != "port p3") {
+	    setverdict(fail, "First port argument is invalid. Expected port p3, got: ", p1);
+	  }
+	  if (log2str(p2) != "port p3") {
+	    setverdict(fail, "First port argument is invalid. Expected port p3, got: ", p1);
+	  }
+	}
+	
+	function char_to_hex3(in charstring i, out hexstring j) port PT3 {
 	  j := oct2hex(char2oct(i));
+	  f_port_ref_test(port.getref(), port.getref());
 	  port.setstate(0); // translated
 	} with {
 		extension "prototype(fast)";
@@ -788,7 +799,8 @@ module PortTranslation {
 	}
 	
 	// This tests the 'discard' option in the 'setstate' operation when receiving
-	testcase tc_receive_discarded() runs on MyComp system System {
+	// It also tests the operation 'port.getref()'
+	testcase tc_receive_discarded_plus_port_ref() runs on MyComp system System {
 	  map(self:p3, system:p4);
 	  
 	  p3.send(123);
@@ -810,6 +822,7 @@ module PortTranslation {
 		// an integer (-10) and a charstring ("abc") are received on the provider port,
 		// the translation functions discard the integer and convert the charstring into a hexstring,
 		// so only the hexstring is received on the main port
+		// (the charstring-to-hexstring translation function also contains tests for operation 'port.getref()')
 		alt {
 		  [] p3.receive(hexstring: '616263'H) { setverdict(pass); }
 		  [] p3.receive(hexstring: ?) -> value bad { setverdict(fail, "Test #2 failed. Received invalid hexstring: ", bad); }
@@ -836,7 +849,7 @@ module PortTranslation {
 		execute(tc_receive_partially_translated());
 		execute(tc_receive_fragmented());
 		
-		execute(tc_receive_discarded());
+		execute(tc_receive_discarded_plus_port_ref());
 	}
 
 }

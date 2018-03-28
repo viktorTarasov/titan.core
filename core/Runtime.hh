@@ -135,6 +135,7 @@ public:
   
   static void set_port_state(const INTEGER& state, const CHARSTRING& info, boolean by_system);
   static void set_translation_mode(boolean enabled, PORT* port);
+  static PORT* get_translation_port();
 
 private:
   inline static boolean in_controlpart()

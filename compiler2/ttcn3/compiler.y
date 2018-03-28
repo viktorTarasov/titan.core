@@ -684,6 +684,7 @@ static const string anyname("anytype");
 %token FromKeyword
 %token FunctionKeyword
 %token GetCallOpKeyword
+%token GetRefKeyword
 %token GetReplyOpKeyword
 %token GetVerdictKeyword
 %token GotoKeyword
@@ -819,6 +820,7 @@ static const string anyname("anytype");
 %token DotCreateKeyword
 %token DotDoneKeyword
 %token DotGetCallOpKeyword
+%token DotGetRefKeyword
 %token DotGetReplyOpKeyword
 %token DotHaltKeyword
 %token DotKillKeyword
@@ -1899,16 +1901,16 @@ optDecodedModifier
 %left '*' '/' ModKeyword RemKeyword
 %left UnarySign
 
-%expect 67
+%expect 69
 
 %start GrammarRoot
 
 /*
-XXX Source of conflicts (66 S/R):
+XXX Source of conflicts (69 S/R):
 
-1.) 9 conflicts in one state
+1.) 10 conflicts in one state
 The Expression after 'return' keyword is optional in ReturnStatement.
-For 9 tokens the parser cannot decide whether the token is a part of
+For 10 tokens the parser cannot decide whether the token is a part of
 the return expression (shift) or it is the beginning of the next statement
 (reduce).
 
@@ -1947,7 +1949,7 @@ non-standard language extension.
 
 7.) 27 conflicts in one state
 In the DecodedContentMatch rule a SingleExpression encased in round brackets is
-followed by an in-line template. For 26 tokens (after the ')' ) the parser cannot
+followed by an in-line template. For 27 tokens (after the ')' ) the parser cannot
 decide whether the token is the beginning of the in-line template (shift) or
 the brackets are only part of the SingleExpression itself and the conflicting
 token is the next segment in the expression (reduce).
@@ -9435,6 +9437,11 @@ OpCall: // 611
   {
     Ttcn::Reference *r = NULL;
     $$ = new Value(Value::OPTYPE_CHECKSTATE_ALL, r, $5);
+    $$->set_location(infile, @$);
+  }
+| PortKeyword DotGetRefKeyword '(' ')'
+  {
+    $$ = new Value(Value::OPTYPE_GET_PORT_REF);
     $$->set_location(infile, @$);
   }
 ;

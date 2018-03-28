@@ -171,6 +171,9 @@ namespace Common {
       case OPTYPE_TESTCASENAME:
       case OPTYPE_PROF_RUNNING:
         break;
+      case OPTYPE_GET_PORT_REF:
+        u.expr.type = p.u.expr.type; // the type is not owned, don't copy it
+        break;
       case OPTYPE_COMP_RUNNING: // v1 [r2] b4
       case OPTYPE_COMP_ALIVE:
         u.expr.r2 = p.u.expr.r2 != NULL ? p.u.expr.r2->clone() : NULL;
@@ -526,6 +529,7 @@ namespace Common {
     case OPTYPE_GETVERDICT:
     case OPTYPE_TESTCASENAME:
     case OPTYPE_PROF_RUNNING:
+    case OPTYPE_GET_PORT_REF: // type (not owned)
       break;
     case OPTYPE_COMP_RUNNING: // v1 [r2] b4
     case OPTYPE_COMP_ALIVE:
@@ -927,6 +931,9 @@ namespace Common {
     case OPTYPE_GETVERDICT:
     case OPTYPE_TESTCASENAME:
     case OPTYPE_PROF_RUNNING:
+      break;
+    case OPTYPE_GET_PORT_REF:
+      u.expr.type = NULL; // will be set during semantic analysis
       break;
     default:
       FATAL_ERROR("Value::Value()");
@@ -1751,6 +1758,7 @@ namespace Common {
     case OPTYPE_GETVERDICT:
     case OPTYPE_TESTCASENAME:
     case OPTYPE_PROF_RUNNING:
+    case OPTYPE_GET_PORT_REF:
       break;
     case OPTYPE_UNARYPLUS: // v1
     case OPTYPE_UNARYMINUS:
@@ -1998,6 +2006,7 @@ namespace Common {
     case OPTYPE_GETVERDICT:
     case OPTYPE_TESTCASENAME:
     case OPTYPE_PROF_RUNNING:
+    case OPTYPE_GET_PORT_REF:
       break;
     case OPTYPE_COMP_RUNNING: // v1 [r2] b4
     case OPTYPE_COMP_ALIVE:
@@ -2373,6 +2382,7 @@ namespace Common {
       case OPTYPE_GETVERDICT:
       case OPTYPE_TESTCASENAME:
       case OPTYPE_PROF_RUNNING:
+      case OPTYPE_GET_PORT_REF:
         break;
       case OPTYPE_COMP_RUNNING: // v1 [r2] b4
       case OPTYPE_COMP_ALIVE:
@@ -3345,6 +3355,8 @@ namespace Common {
         return Type::T_BOOL;
       case OPTYPE_GETVERDICT:
         return Type::T_VERDICT;
+      case OPTYPE_GET_PORT_REF:
+        return Type::T_PORT;
       case OPTYPE_VALUEOF: {
         Error_Context cntxt(this, "In the operand of operation `%s'",
                             get_opname());
@@ -3790,6 +3802,9 @@ namespace Common {
 	} else return 0;
       case OPTYPE_COMP_CREATE:
 	return chk_expr_operand_comptyperef_create();
+      case OPTYPE_GET_PORT_REF:
+        chk_expr_operands(NULL, exp_val); // calculate the port type
+        return u.expr.type;
       default:
         break;
       }
@@ -4079,6 +4094,8 @@ namespace Common {
       return "ttcn2string()";
     case OPTYPE_PROF_RUNNING:
       return "@profiler.running";
+    case OPTYPE_GET_PORT_REF:
+      return "port.getref()";
     default:
       FATAL_ERROR("Value::get_opname()");
     } // switch
@@ -6876,6 +6893,26 @@ void Value::chk_expr_operand_execute_refd(Value *v1,
     case OPTYPE_TESTCASENAME:
     case OPTYPE_PROF_RUNNING:
       break;
+    case OPTYPE_GET_PORT_REF:
+      if (u.expr.type == NULL) {
+        Ttcn::PortScope* port_scope = my_scope->get_scope_port();
+        if (port_scope == NULL) {
+          error("Operation `%s' can only be used in a function with a port clause.",
+            opname);
+          set_valuetype(V_ERROR);
+          break;
+        }
+        u.expr.type = port_scope->get_port_type();
+        if (u.expr.type == NULL) {
+          FATAL_ERROR("Value::chk_expr_operands");
+        }
+        if (my_governor != NULL && !u.expr.type->is_identical(my_governor)) {
+          error("Type mismatch: A value of type `%s' was expected instead of `%s'",
+            my_governor->get_typename().c_str(), u.expr.type->get_typename().c_str());
+          set_valuetype(V_ERROR);
+        }
+      }
+      break;
     case OPTYPE_COMP_MTC:
     case OPTYPE_COMP_SYSTEM:
       chk_expr_comptype_compat();
@@ -7951,6 +7988,7 @@ void Value::chk_expr_operand_execute_refd(Value *v1,
     case OPTYPE_TMR_RUNNING_ANY:
     case OPTYPE_GETVERDICT:
     case OPTYPE_PROF_RUNNING:
+    case OPTYPE_GET_PORT_REF:
     case OPTYPE_RNDWITHVAL: // v1
     case OPTYPE_COMP_RUNNING: // v1
     case OPTYPE_COMP_ALIVE:
@@ -9275,6 +9313,7 @@ void Value::chk_expr_operand_execute_refd(Value *v1,
       case OPTYPE_GETVERDICT:
       case OPTYPE_TESTCASENAME:
       case OPTYPE_PROF_RUNNING:
+      case OPTYPE_GET_PORT_REF:
       case OPTYPE_RNDWITHVAL: // v1
       case OPTYPE_MATCH: // v1 t2
       case OPTYPE_UNDEF_RUNNING: // v1
@@ -10949,6 +10988,7 @@ void Value::chk_expr_operand_execute_refd(Value *v1,
     case OPTYPE_TMR_RUNNING_ANY: // -
     case OPTYPE_GETVERDICT: // -
     case OPTYPE_PROF_RUNNING: // -
+    case OPTYPE_GET_PORT_REF: // -
     case OPTYPE_CHECKSTATE_ANY:
     case OPTYPE_CHECKSTATE_ALL:
       break; // nothing to do
@@ -11825,6 +11865,8 @@ void Value::chk_expr_operand_execute_refd(Value *v1,
         return ret_val; }
       case OPTYPE_PROF_RUNNING:
         return string("@profiler.running");
+      case OPTYPE_GET_PORT_REF:
+        return string("port.getref()");
       default:
         return string("<unsupported optype>");
       } // switch u.expr.v_optype
@@ -13419,6 +13461,17 @@ void Value::chk_expr_operand_execute_refd(Value *v1,
     case OPTYPE_PROF_RUNNING:
       expr->expr = mputstr(expr->expr, "ttcn3_prof.is_running()");
       break;
+    case OPTYPE_GET_PORT_REF: {
+      string tmp_id = my_scope->get_scope_mod_gen()->get_temporary_id();
+      expr->preamble = mputprintf(expr->preamble,
+        "%s* %s = dynamic_cast<%s*>(TTCN_Runtime::get_translation_port());\n"
+        "if (%s == NULL) TTCN_error(\"Internal error: Conversion of port "
+        "reference to type `%s' failed.\");\n",
+        u.expr.type->get_genname_value(my_scope).c_str(), tmp_id.c_str(),
+        u.expr.type->get_genname_value(my_scope).c_str(), tmp_id.c_str(),
+        u.expr.type->get_typename().c_str());
+      expr->expr = mputprintf(expr->expr, "(*%s)", tmp_id.c_str());
+      break; }
     default:
       FATAL_ERROR("Value::generate_code_expr_expr()");
     }
@@ -15099,6 +15152,7 @@ void Value::chk_expr_operand_execute_refd(Value *v1,
     case OPTYPE_TTCN2STRING:
     case OPTYPE_ENCVALUE_UNICHAR:
     case OPTYPE_DECVALUE_UNICHAR:
+    case OPTYPE_GET_PORT_REF:
       return false;
     case OPTYPE_COMP_RUNNING: // v1 [r2] b4
     case OPTYPE_COMP_ALIVE:

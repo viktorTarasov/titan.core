@@ -141,6 +141,13 @@ void TTCN_Runtime::set_port_state(const INTEGER& state, const CHARSTRING& info, 
   }
 }
 
+PORT* TTCN_Runtime::get_translation_port() {
+  if (p == NULL) {
+    TTCN_error("Operation 'port.getref' was called while not in a port translation procedure.");
+  }
+  return p;
+}
+
 void TTCN_Runtime::set_translation_mode(boolean enabled, PORT* port) {
   if (enabled) {
     translation_count++;

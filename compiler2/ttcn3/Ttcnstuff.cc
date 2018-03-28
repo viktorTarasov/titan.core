@@ -1038,7 +1038,7 @@ namespace Ttcn {
     : Node(), Location(), my_type(0), operation_mode(p_operation_mode),
     in_list(p_in_list), out_list(p_out_list), inout_list(p_inout_list),
     in_all(p_in_all), out_all(p_out_all), inout_all(p_inout_all),
-    checked(false), legacy(true),
+    checked(false), attributes_checked(false), legacy(true),
     in_msgs(0), out_msgs(0), in_sigs(0), out_sigs(0),
     testport_type(TP_REGULAR), port_type(PT_REGULAR),
     provider_refs(), provider_types(), mapper_types(),
@@ -1784,6 +1784,10 @@ namespace Ttcn {
   {
     if (!w_attrib_path || !checked || !my_type)
       FATAL_ERROR("PortTypeBody::chk_attributes()");
+    if (attributes_checked) {
+      return;
+    }
+    attributes_checked = true;
 
     Ttcn::ExtensionAttributes * extarts = parse_extattributes(w_attrib_path);
     if (extarts != 0) { // NULL means parsing error

@@ -253,7 +253,7 @@ static void printUsage(const char * argv0) {
     "	-f|J file:	the names of XSD files are taken from file instead of the command line\n"
     "	-g:		generate TTCN-3 code disallowing element substitution\n"
     "	-h:		generate TTCN-3 code allowing type substitution\n"
-    "	-m:		generate only the UsefulTtcn3Types and XSD predefined modules"
+    "	-m:		generate only the UsefulTtcn3Types and XSD predefined modules\n"
     "	-p:		do not generate the UsefulTtcn3Types and XSD predefined modules\n"
     "	-q:		quiet mode - disable the issue of status messages\n"
     "	-s:		parse and validate only - no TTCN-3 module generation\n"
