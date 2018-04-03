@@ -4992,6 +4992,7 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
       int eag_pos = 0;
       pos = 8;
       ind = 0;
+      boolean has_optional_in_extension = FALSE;
       for (i = limit; i < sdef->nElements; i++) {
         pos--;
         src = mputprintf(src,
@@ -5001,6 +5002,7 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
           eag_pos++;
           for (int j = i; j < limit + sdef->oerEag[eag_pos]; j++) {
             if (sdef->elements[sdef->oerP[j]].isOptional) {
+              has_optional_in_extension = TRUE;
               src = mputprintf(src,
                 "      field_%s = OMIT_VALUE;\n"
                 , sdef->elements[sdef->oerP[j]].name);
@@ -5009,6 +5011,7 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
           eag_pos--;
         } else {
           if (sdef->elements[sdef->oerP[i]].isOptional) {
+            has_optional_in_extension = TRUE;
             src = mputprintf(src,
               "      field_%s = OMIT_VALUE;\n"
               , sdef->elements[i].name);
@@ -5069,6 +5072,18 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
         if (pos == 0) {
           pos = 8;
           ind++;
+        }
+      }
+      if (has_optional_in_extension) {
+        src = mputstr(src,
+          "  }\n"
+          "  else {\n");
+        for (i = limit; i < sdef->nElements; i++) {
+          if (sdef->elements[sdef->oerP[i]].isOptional) {
+            src = mputprintf(src,
+              "    field_%s = OMIT_VALUE;\n"
+              , sdef->elements[i].name);
+          }
         }
       }
       src = mputstr(src,

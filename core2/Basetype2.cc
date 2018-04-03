@@ -6927,6 +6927,14 @@ int Record_Type::OER_decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_bu
       }
     }
   }
+  else if (p_td.oer->extendable) {
+    // Set the optional fields after the extension to 'omit'
+    for (int i = limit; i < field_count; ++i) {
+      if (get_at(p_td.oer->p[i])->is_optional()) {
+        get_at(p_td.oer->p[i])->set_to_omit();
+      }
+    }
+  }
   
   if (is_opentype_outermost()) {
     TTCN_EncDec_ErrorContext ec_1("While decoding opentypes: ");
