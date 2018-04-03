@@ -2291,7 +2291,11 @@
             me := 1,
             me2 := 2,
             me3 := omit,
-            me4 := 4
+            me4 := 4,
+            f2 := omit,
+            f4 := omit,
+            f5 := omit,
+            f7 := omit
         }
         os := enc_ExtensionRecord2(er2);
         if (os != '40010101020104'O) {
@@ -2677,7 +2681,16 @@
         if (os != '400101'O) {
             setverdict(fail, "tc_sequence: ", match('400101'O, os));
         }
-        erres71 := { me := 1 }
+        erres71 := {
+          me := 1,
+          f2 := omit,
+          f4 := omit,
+          f5 := omit,
+          f6 := omit,
+          f7 := omit,
+          f9 := omit,
+          f_nul := omit
+        }
         erres7 := dec_ExtensionRecord5(os);
         if (not(match(log2str(erres7), log2str(erres71)))) {
             setverdict(fail, "tc_sequence: ", match(log2str(erres7), log2str(erres71)));
@@ -3544,6 +3557,20 @@
  	  }
  	  setverdict(pass);
  	}
+ 	
+ 	external function dec_Rec533061(in octetstring stream) return Rec533061
+ 	 	with { extension "prototype (convert) decode(OER)" }
+ 	
+ 	// Testing the fixes to decoding extended records made for bug 533061
+ 	testcase tc_533061() runs on EmptyCT {
+ 	  var octetstring enc := '4001010102'O;
+ 	  var Rec533061 dec := dec_Rec533061(enc);
+ 	  var Rec533061 dec_exp := { field1 := 1, field2 := 2, field_ext1 := omit, field_ext2 := omit };
+ 	  if (dec != dec_exp) {
+ 	    setverdict(fail, "Decoding failed. Got: ", dec, ", expected: ", dec_exp);
+ 	  }
+ 	  setverdict(pass);
+ 	}
 
  	control {
  		execute(tc_boolean());
@@ -3565,6 +3592,7 @@
  		execute(tc_opentype());
  		execute(tc_example());
  		execute(tc_529017());
+ 		execute(tc_533061());
  	}
  	
 }

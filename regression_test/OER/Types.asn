@@ -534,7 +534,14 @@ Enum529017 ::= ENUMERATED
   val1
 }
 
-
+Rec533061 ::= SEQUENCE
+{
+  field1 INTEGER,
+  field2 INTEGER OPTIONAL,
+  ...,
+  field-ext1 INTEGER OPTIONAL,
+  field-ext2 REAL OPTIONAL
+}
 
 
 END
