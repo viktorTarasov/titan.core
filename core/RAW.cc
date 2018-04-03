@@ -309,13 +309,16 @@ RAW_enc_tree* RAW_enc_tree::get_node(RAW_enc_tr_pos &req_pos)
  * @return the number of bits needed to represent the given integer
  * in sign+magnitude
  */
-int min_bits(int a)
+int min_bits(int a, bool signbit)
 {
+  if (a == INT_MIN) {
+    return sizeof(int) * 8 + signbit;
+  }
   register int bits = 0;
   register int tmp = a;
   if (a < 0) {
     bits = 1;
-    tmp = -a;
+    tmp = -a; // doesn't work on INT_MIN
   }
   while (tmp != 0) {
     bits++;

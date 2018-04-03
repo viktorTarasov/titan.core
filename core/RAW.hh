@@ -52,7 +52,7 @@ extern const unsigned char BitMaskTable[9];
 class RAW_enc_tree;
 struct TTCN_Typedescriptor_t;
 struct TTCN_TEXTdescriptor_t;
-int min_bits(int a);
+int min_bits(int a, bool signbit);
 int min_bits(BIGNUM *a);
 enum ext_bit_t{
   EXT_BIT_NO,      /**< No extension bit */
