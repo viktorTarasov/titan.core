@@ -2679,7 +2679,7 @@ testcase TC_record_with_EXTENSION_BIT_5() runs on TempComp{
 
 
   if ((enc_RAW_PDU_127(i) == o)and(dec_RAW_PDU_127(o) == i )) {setverdict(pass);}
-  else {setverdict(fail,"enc_RAW_PDU_127(i)= ", enc_RAW_PDU_127(i), "; dec_RAW_PDU_127(o)= ", dec_RAW_PDU_127(o));}}
+  else {setverdict(fail,"enc_RAW_PDU_127(i)= ", enc_RAW_PDU_127(i), "; dec_RAW_PDU_127(o)= ", dec_RAW_PDU_127(o));}
 }
 
 // Test of  record with EXTENSION_BIT 6

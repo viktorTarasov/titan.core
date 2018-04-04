@@ -1132,8 +1132,7 @@ int INTEGER::RAW_encode(const TTCN_Typedescriptor_t& p_td, RAW_enc_tree& myleaf)
     value = 0;
     neg_sgbit = FALSE;
   }
-  if (value != 0 && value == -value) {
-    // value == -INT_MAX-1 a.k.a. INT_MIN a.k.a. 0x8000....
+  if (value == INT_MIN) {
     INTEGER big_value(to_openssl(val.native)); // too big for native
     return big_value.RAW_encode_openssl(p_td, myleaf);
   }
