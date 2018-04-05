@@ -32,10 +32,10 @@ ASN.1 (Abstract Syntax Notation One).
 http://polarsys.org/sites/default/files/custom_uploads/TITAN%20Datasheet%20A4%202.1.pdf
 
 ## Ericsson TTCN-3 Course, Presentation material
-http://www.ttcn-3.org/files/TTCN3_P.pdf
+https://www.eclipse.org/downloads/download.php?file=/titan/TTCN3_Course_PartI_EclipseLicensed.pdf
 
 ## Ericsson TTCN-3 Course, Presentation material, part II (Titan specifics)
-https://www.eclipse.org/downloads/download.php?file=/titan/TITAN_User_P.pdf
+https://www.eclipse.org/downloads/download.php?file=/titan/TTCN3_Course_PartII_EclipseLicensed.pdf
 
 
 
