@@ -17,10 +17,10 @@
 :docname.Test Description
 :docno.7/152 91-CRL 113 200/5 Uen
 :rev.A
-:date.2015-04-27
+:date.2018-04-05
 .*
 :prep.ETH/XZR Jeno Balasko (+36 1 437 7760)
-:appr.ETH/XZ (Gyula Koos)
+:appr.ETH/XZ (Elemer Lelik)
 :checked.ETHGRY
 .*
 :title.Test description - RAW coder
@@ -6652,61 +6652,114 @@ testcase TC_encoding_decoding_of_big_integers() runs on TempComp{
   var myint2 v19 := 4398046511104
   var octetstring o
   
-	o := enc_raw3(v1);
-	if (v1 == dec_raw3(o)) {setverdict(pass)} 
-	else {setverdict(fail, v1, "Encoded1: ", o," Decoding error. Expected: ", v1, " got: ", dec_raw3(o) )}
+  var octetstring expected1  := '000000000100000000000080'O  //fact: '00000000FF00000000000080'O
+  var octetstring expected2  := 'FFFF FF7F 0000 0000 0000 0080'O;
+  var octetstring expected3  := '0000 0000 0800 0000 0000 0000'O;
+  var octetstring expected4  := '0000 0000 0004 0000 0000 0000'O //dummy
+  var octetstring expected5  := '0000 0000 0080 0000 0000 0080'O //dummy
+  var octetstring expected6  := '0000 0000 0100 0000 0000 0000'O //dummy
+  var octetstring expected7  := 'FFFF FFFF 0000 0000 0000 0000'O //dummy
+  var octetstring expected8  := 'FFFF FFFF 0000 0000 0000 0080'O //dummy
   
-	o := enc_raw3(v2);
-	if (v2 == dec_raw3(o)) {setverdict(pass)} 
-	else {setverdict(fail, v2, "Encoded2: ", o," Decoding error. Expected: ", v2, " got: ", dec_raw3(o))}
-	
+  var octetstring expected9  := '0100 0000 0100 0000 0000 0000'O //dummy
+  var octetstring expected10 := '0100 0000 0100 0000 0000 0080'O 
+  
+  var octetstring expected11 := 'FFFF FF7F 0000 0000 0000 0000'O 
+  
+  var octetstring expected12 := '0000 0080 0000 0000 0000 0080'O;
+  var octetstring expected13 := '0000 0080 0000 0000 0000 0000'O;
+  
+  var octetstring expected14 := '0100 0080 0000 0000 0000 0080'O;
+//  var octetstring expected15 := '0100 0080 0000 0000 0000 0000'O;
+//  var octetstring expected16 := '0000 0000 0000 0000 0000 0000'O;
+//  var octetstring expected17 := '0000 0000 0000 0000 0000 0000'O;
+//  var octetstring expected18 := '0000 0000 0000 0000 0000 0000'O;
+//  var octetstring expected19 := '0000 0000 0000 0000 0000 0000'O;
+
+  o := enc_raw3(v1);
+  if ( o == expected1) { setverdict(pass) }
+  else { setverdict(fail, "Encoding error 1. Expected: ",expected1, "; got: ",o)}
+  if (v1 == dec_raw3(expected1)) {setverdict(pass)} 
+  else {setverdict(fail, "1. Decoding error of ",expected1, " ;Expected:", v1," got ", dec_raw3(expected1) )}
+
+  o := enc_raw3(v2);
+  if ( o == expected2) { setverdict(pass) }
+  else { setverdict(fail, "Encoding error 2. Expected: ",expected2, "; got: ",o)}
+  if (v2 == dec_raw3(expected2)) {setverdict(pass)} 
+  else {setverdict(fail, "2. Decoding error of ",expected2, " ;Expected: ", v2," got ", dec_raw3(expected2) )}
+
+
   o := enc_raw3(v3);
-	if (v3 == dec_raw3(o)) {setverdict(pass)} 
-	else {setverdict(fail, v3, "Encoded3: ", o," Decoding error. Expected: ", v3, " got: ", dec_raw3(o))}
-	
+  if ( o == expected3) { setverdict(pass) }
+  else { setverdict(fail, "Encoding error 3. Expected: ",expected3, "; got: ",o)}
+  if (v3 == dec_raw3(expected3)) {setverdict(pass)} 
+  else {setverdict(fail, "3. Decoding error of ",expected3, " ;Expected: ", v3," got ", dec_raw3(expected3) )}
+
   o := enc_raw3(v4);
-	if (v4 == dec_raw3(o)) {setverdict(pass)} 
-	else {setverdict(fail, v4, "Encoded4: ", o," Decoding error. Expected: ", v4, " got: ", dec_raw3(o))}
-	
+  if ( o == expected4) { setverdict(pass) }
+  else { setverdict(fail, "Encoding error 4. Expected: ",expected4, "; got: ",o)}
+  if (v4 == dec_raw3(expected4)) {setverdict(pass)} 
+  else {setverdict(fail, "4. Decoding error of ",expected4, " ;Expected: ", v4," got ", dec_raw3(expected4) )}
+
   o := enc_raw3(-140737488355328);
-	if (v5 == dec_raw3(o)) {setverdict(pass)} 
-	else {setverdict(fail, v5, "Encoded5: ", o," Decoding error. Expected: ", v5, " got: ", dec_raw3(o))}
-	
+  if ( o == expected5) { setverdict(pass) }
+  else { setverdict(fail, "Encoding error 5. Expected: ",expected5, "; got: ",o)}
+  if (v5 == dec_raw3(expected5)) {setverdict(pass)} 
+  else {setverdict(fail, "5. Decoding error of ",expected5, " ;Expected: ", v5," got ", dec_raw3(expected5) )}
+
   o := enc_raw3(v6);
-	if (v6 == dec_raw3(o)) {setverdict(pass)} 
-	else {setverdict(fail, v6, "Encoded6: ", o," Decoding error. Expected: ", v6, " got: ", dec_raw3(o))}
-	
+  if ( o == expected6) { setverdict(pass) }
+  else { setverdict(fail, "Encoding error 6. Expected: ",expected6, "; got: ",o)}
+  if (v6 == dec_raw3(expected6)) {setverdict(pass)} 
+  else {setverdict(fail, "6. Decoding error of ",expected6, " ;Expected: ", v6," got ", dec_raw3(expected6) )}
+  
   o := enc_raw3(v7);
-	if (v7 == dec_raw3(o)) {setverdict(pass)} 
-	else {setverdict(fail, v7, "Encoded7: ", o," Decoding error. Expected: ", v7, " got: ", dec_raw3(o))}
-	
+  if ( o == expected7) { setverdict(pass) }
+  else { setverdict(fail, "Encoding error 7. Expected: ",expected7, "; got: ",o)}
+  if (v7 == dec_raw3(expected7)) {setverdict(pass)} 
+  else {setverdict(fail, "7. Decoding error of ",expected7, " ;Expected: ", v7," got ", dec_raw3(expected7) )}
+
   o := enc_raw3(v8);
-	if (v8 == dec_raw3(o)) {setverdict(pass)} 
-	else {setverdict(fail, v8, "Encoded8: ", o," Decoding error. Expected: ", v8, " got: ", dec_raw3(o))}
-  
-	o := enc_raw3(v9);
-	if (v9 == dec_raw3(o)) {setverdict(pass)} 
-	else {setverdict(fail, v9, "Encoded9: ", o," Decoding error. Expected: ", v9, " got: ", dec_raw3(o))}
-	
+  if ( o == expected8) { setverdict(pass) }
+  else { setverdict(fail, "Encoding error 8. Expected: ",expected8, "; got: ",o)}
+  if (v8 == dec_raw3(expected8)) {setverdict(pass)} 
+  else {setverdict(fail, "8. Decoding error of ",expected8, " ;Expected: ", v8," got ", dec_raw3(expected8) )}
+
+  o := enc_raw3(v9);
+  if ( o == expected9) { setverdict(pass) }
+  else { setverdict(fail, "Encoding error 9. Expected: ",expected9, "; got: ",o)}
+  if (v9 == dec_raw3(expected9)) {setverdict(pass)} 
+  else {setverdict(fail, "9. Decoding error of ",expected9, " ;Expected: ", v9," got ", dec_raw3(expected9) )}
+
   o := enc_raw3(v10);
-	if (v10 == dec_raw3(o)) {setverdict(pass)} 
-	else {setverdict(fail, v10, "Encoded10: ", o," Decoding error. Expected: ", v10, " got: ", dec_raw3(o))}
+  if ( o == expected10) { setverdict(pass) }
+  else { setverdict(fail, "Encoding error 10. Expected: ",expected10, "; got: ",o)}
+  if (v10 == dec_raw3(expected10)) {setverdict(pass)} 
+  else {setverdict(fail, "10. Decoding error of ",expected10, " ;Expected: ", v10," got ", dec_raw3(expected10) )}
   
-	o := enc_raw3(v11);
-	if (v11 == dec_raw3(o)) {setverdict(pass)} 
-	else {setverdict(fail, v11, "Encoded11: ", o," Decoding error. Expected: ", v11, " got: ", dec_raw3(o))}
-	
+  o := enc_raw3(v11);
+  if ( o == expected11) { setverdict(pass) }
+  else { setverdict(fail, "Encoding error 11. Expected: ",expected11, "; got: ",o)}
+  if (v11 == dec_raw3(expected11)) {setverdict(pass)} 
+  else {setverdict(fail, "11. Decoding error of ",expected11, " ;Expected: ", v11," got ", dec_raw3(expected11) )}
+  
   o := enc_raw3(v12);
-	if (v12 == dec_raw3(o)) {setverdict(pass)} 
-	else {setverdict(fail, v12, "Encoded12: ", o," Decoding error. Expected: ", v12, " got: ", dec_raw3(o))}
-	
-  o := enc_raw3(v13);
-	if (v13 == dec_raw3(o)) {setverdict(pass)} 
-	else {setverdict(fail, v13, "Encoded13: ", o," Decoding error. Expected: ", v13, " got: ", dec_raw3(o))}
+  if ( o == expected12) { setverdict(pass) }
+  else { setverdict(fail, "Encoding error 12. Expected: ",expected12, "; got: ",o)}
+  if (v12 == dec_raw3(expected12)) {setverdict(pass)} 
+  else {setverdict(fail, "12. Decoding error of ",expected12, " ;Expected: ", v12," got ", dec_raw3(expected12) )}
   
-	o := enc_raw3(v14);
-	if (v14 == dec_raw3(o)) {setverdict(pass)} 
-	else {setverdict(fail, v14, "Encoded14: ", o," Decoding error. Expected: ", v14, " got: ", dec_raw3(o))}
+  o := enc_raw3(v13);
+  if ( o == expected13) { setverdict(pass) }
+  else { setverdict(fail, "Encoding error 12. Expected: ",expected13, "; got: ",o)}
+  if (v13 == dec_raw3(expected13)) {setverdict(pass)} 
+  else {setverdict(fail, "13. Decoding error of ",expected13, " ;Expected: ", v13," got ", dec_raw3(expected13) )}
+
+  o := enc_raw3(v14);
+  if ( o == expected14) { setverdict(pass) }
+  else { setverdict(fail, "Encoding error 14. Expected: ",expected14, "; got: ",o)}
+  if (v14 == dec_raw3(expected14)) {setverdict(pass)} 
+  else {setverdict(fail, "14. Decoding error of ",expected14, " ;Expected: ", v14," got ", dec_raw3(expected14) )}
 } 
 //=================================================
 // Encoding/decoding records with big integer fields
