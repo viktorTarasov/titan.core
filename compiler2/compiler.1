@@ -3,9 +3,11 @@
 compiler \- TTCN-3 and ASN.1 to C++ translator
 .SH SYNOPSIS
 .B compiler
-.RB "[\| " \-abcdEfgijlLMnpqrRsStuwxXyY " \|]"
+.RB "[\| " \-abcdDEefgijlLMnpqrRsStuwxXyY " \|]"
 .RB "[\| " \-V
 .IR " verb_level" " \|]"
+.RB "[\| " \-J
+.IR " file" " \|]"
 .RB "[\| " \-K
 .IR " file" " \|]"
 .RB "[\| " \-z
@@ -87,6 +89,12 @@ fields with DEFAULT values as
 .I omit
 in TTCN-3.
 .TP
+.B \-D
+Disable generation of user and time information comments in the output C++ code.
+.TP
+.B \-e
+Enforce legacy handling of encode and variant attributes.
+.TP
 .B \-E
 Instructs the variant attribute parser to display warnings instead of errors
 for unrecognized/erroneous attributes.
@@ -110,6 +118,9 @@ will contain only the
 .I line numbers,
 the column numbers will remain hidden. This option provides backward
 compatibility with the error message format of earlier versions.
+.TP
+.BI \-J " file"
+Read a list of input files from the provided file.
 .TP
 .B \-j
 Disables JSON encoder/decoder functions.
@@ -166,6 +177,9 @@ attribute can still be used for matching omitted fields). This also affects the
 operation and the
 .B present
 template restriction accordingly.
+.TP
+.B \-N
+Ignore UNTAGGED encoding instruction on top level unions (legacy behaviour).
 .TP
 .B \-n
 Activates the debugger and generates extra code for storing debug information.
