@@ -535,8 +535,8 @@ void SimpleType::setReference(const Mstring& ref, bool only_name_dependency) {
         break;
       }
     }
-    fromRef = true;
     if (!found) {
+      fromRef = true;
       return;
     }
   }
