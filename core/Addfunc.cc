@@ -239,7 +239,7 @@ static CharCoding::CharCodingType is_utf8 ( const OCTETSTRING& ostr )
       while (0 < noofUTF8 ) {
         ++i;
   //std::cout << "mask & strptr[" << i << "] " << std::hex << (int)strptr[i]  << std::endl;
-        if (!(strptr[i] & MSB) || (strptr[i] & MSBmin1) || i >= ostr.lengthof()) { // if not like this: 10xx xxxx
+        if (i >= ostr.lengthof() || !(strptr[i] & MSB) || (strptr[i] & MSBmin1)) { // if not like this: 10xx xxxx
           return CharCoding::UNKNOWN;
         }
         --noofUTF8;

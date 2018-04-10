@@ -818,7 +818,7 @@ static CharCoding::CharCodingType is_utf8(size_t length, const unsigned char* st
       // the second and third (and so on) UTF-8 byte looks like 10xx xxxx      
       while (0 < noofUTF8 ) {
         ++i;
-        if (!(strptr[i] & MSB) || (strptr[i] & MSBmin1) || i >= length) { // if not like this: 10xx xxxx
+        if (i >= length || !(strptr[i] & MSB) || (strptr[i] & MSBmin1)) { // if not like this: 10xx xxxx
           return CharCoding::UNKNOWN;
         }
         --noofUTF8;
