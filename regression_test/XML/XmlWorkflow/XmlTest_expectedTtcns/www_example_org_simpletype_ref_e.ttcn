@@ -89,6 +89,16 @@ type Start_list List_ref length(4);
 type XSD.String Info;
 
 
+type XSD.AnyURI ID;
+
+
+type record TypeWithIDs
+{
+	XSD.ID id1,
+	XSD.ID id2
+};
+
+
 }
 with {
   encode "XML";
