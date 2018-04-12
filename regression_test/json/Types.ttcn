@@ -351,6 +351,17 @@ type record StructType3 {
 
 type record of PduWithId PduWithIdList;
 
+type record PduWithId2 {
+  integer protocolId1,
+  integer protocolId2,
+  Choices field optional
+}
+with {
+  variant (field) "chosen (type1, { protocolId1 = 1, protocolId2 = 1 }; type2, protocolId1 = 0; type3, protocolId2 = 0; omit, otherwise)";
+  variant (protocolId1) "default (1)";
+  variant (protocolId2) "default (0)";
+}
+
 } with {
   encode "JSON";
   extension "anytype integer, charstring, R, RoI, Thing";

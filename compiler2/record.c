@@ -3219,7 +3219,16 @@ char* generate_json_decoder(char* src, const struct_def* sdef)
 
     boolean has_metainfo_enabled = FALSE;
     for (int i = 0; i < sdef->nElements; ++i) {
-      src = mputprintf(src, "  boolean %s_found = FALSE;\n", sdef->elements[i].name);
+      if (sdef->elements[i].jsonDefaultValue) {
+        // initialize fields with their default values (they will be overwritten
+        // later, if the JSON document contains data for these fields)
+        src = mputprintf(src,
+          "  field_%s.JSON_decode(%s_descr_, DUMMY_BUFFER, p_silent);\n"
+          , sdef->elements[i].name, sdef->elements[i].typedescrname);
+      }
+      else {
+        src = mputprintf(src, "  boolean %s_found = FALSE;\n", sdef->elements[i].name);
+      }
       if (sdef->elements[i].jsonMetainfoUnbound) {
         // initialize meta info states
         src = mputprintf(src, 
@@ -3259,10 +3268,12 @@ char* generate_json_decoder(char* src, const struct_def* sdef)
       src = mputprintf(src,
         // check field name
         "if (%d == name_len && 0 == strncmp(fld_name, \"%s\", name_len)) {\n"
-        "        %s_found = TRUE;\n"
         , (int)strlen(sdef->elements[i].jsonAlias ? sdef->elements[i].jsonAlias : sdef->elements[i].dispname)
-        , sdef->elements[i].jsonAlias ? sdef->elements[i].jsonAlias : sdef->elements[i].dispname
-        , sdef->elements[i].name);
+        , sdef->elements[i].jsonAlias ? sdef->elements[i].jsonAlias : sdef->elements[i].dispname);
+      if (!sdef->elements[i].jsonDefaultValue) {
+        src = mputprintf(src,
+          "        %s_found = TRUE;\n", sdef->elements[i].name);
+      }
       if (has_metainfo_enabled) {
         src = mputstr(src, "        if (is_metainfo) {\n");
         if (sdef->elements[i].jsonMetainfoUnbound) {
@@ -3416,59 +3427,60 @@ char* generate_json_decoder(char* src, const struct_def* sdef)
           , (unsigned long) strlen(sdef->elements[i].dispname)
           , sdef->elements[i].dispname);
       }
-      src = mputprintf(src,
-        "if (!%s_found) {\n"
-        , sdef->elements[i].name);
-      if (sdef->elements[i].jsonDefaultValue) {
+      if (!sdef->elements[i].jsonDefaultValue) {
         src = mputprintf(src,
-          "    field_%s.JSON_decode(%s_descr_, DUMMY_BUFFER, p_silent);\n"
-          , sdef->elements[i].name, sdef->elements[i].typedescrname);
-      }
-      else if (sdef->elements[i].isOptional) {
-        // if the conditions in attribute 'choice' indicate that this field is
-        // mandatory, then display an error
-        if (sdef->elements[i].jsonChosen != NULL) {
-          int j;
-          boolean has_otherwise = FALSE;
-          for (j = 0; j < sdef->elements[i].jsonChosen->nElements; j++) {
-            if (sdef->elements[i].jsonChosen->list[j].nElements == 0) {
-              has_otherwise = TRUE;
-              break;
-            }
-          }
-          boolean first_found = FALSE;
-          for (j = 0; j < sdef->elements[i].jsonChosen->nElements; j++) {
-            if ((!has_otherwise && sdef->elements[i].jsonChosen->list[j].fieldnum != -2) ||
-                 (has_otherwise && sdef->elements[i].jsonChosen->list[j].fieldnum == -2)) {
-              if (!first_found) {
-                src = mputstr(src, "    if (");
-                first_found = TRUE;
-              }
-              else {
-                src = mputstr(src, "\n        || ");
-              }
-              src = genRawFieldChecker(src, sdef->elements[i].jsonChosen->list + j, !has_otherwise);
-            }
-          }
-          if (first_found) {
-            src = mputprintf(src,
-              ") {\n"
-              "      JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_CHOSEN_FIELD_OMITTED, \"%s\");\n"
-              "      return JSON_ERROR_FATAL;\n"
-              "    }\n", sdef->elements[i].dispname);
-          }
-        }
-        src = mputprintf(src,
-          "    field_%s = OMIT_VALUE;\n"
+          "if (!%s_found) {\n"
           , sdef->elements[i].name);
-      } else {
-        src = mputprintf(src,
-          "    JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_MISSING_FIELD_ERROR, \"%s\");\n"
-          "    return JSON_ERROR_FATAL;\n"
-          , sdef->elements[i].dispname);
-      }
-      src = mputstr(src,
-        "  }\n  ");
+        if (sdef->elements[i].isOptional) {
+          // if the conditions in attribute 'choice' indicate that this field is
+          // mandatory, then display an error
+          if (sdef->elements[i].jsonChosen != NULL) {
+            int j;
+            boolean has_otherwise = FALSE;
+            boolean omit_otherwise = FALSE;
+            for (j = 0; j < sdef->elements[i].jsonChosen->nElements; j++) {
+              if (sdef->elements[i].jsonChosen->list[j].nElements == 0) {
+                has_otherwise = TRUE;
+                if (sdef->elements[i].jsonChosen->list[j].fieldnum == -2) {
+                  omit_otherwise = TRUE;
+                }
+                break;
+              }
+            }
+            boolean first_found = FALSE;
+            for (j = 0; j < sdef->elements[i].jsonChosen->nElements; j++) {
+              if (((!has_otherwise || omit_otherwise) && sdef->elements[i].jsonChosen->list[j].fieldnum != -2) ||
+                   (has_otherwise && !omit_otherwise && sdef->elements[i].jsonChosen->list[j].fieldnum == -2)) {
+                if (!first_found) {
+                  src = mputstr(src, "    if (");
+                  first_found = TRUE;
+                }
+                else {
+                  src = mputstr(src, "\n        || ");
+                }
+                src = genRawFieldChecker(src, sdef->elements[i].jsonChosen->list + j, !has_otherwise || omit_otherwise);
+              }
+            }
+            if (first_found) {
+              src = mputprintf(src,
+                ") {\n"
+                "      JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_CHOSEN_FIELD_OMITTED, \"%s\");\n"
+                "      return JSON_ERROR_FATAL;\n"
+                "    }\n", sdef->elements[i].dispname);
+            }
+          }
+          src = mputprintf(src,
+            "    field_%s = OMIT_VALUE;\n"
+            , sdef->elements[i].name);
+        } else {
+          src = mputprintf(src,
+            "    JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_MISSING_FIELD_ERROR, \"%s\");\n"
+            "    return JSON_ERROR_FATAL;\n"
+            , sdef->elements[i].dispname);
+        }
+        src = mputstr(src,
+          "  }\n  ");
+      } // if there's no default value
     }
     src = mputstr(src,
       "\n  return (int)dec_len;\n");
