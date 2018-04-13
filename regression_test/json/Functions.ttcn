@@ -430,6 +430,9 @@ external function f_dec_null(in octetstring x) return HasNull
 external function f_dec_pduwithid(in octetstring x) return PduWithId
   with { extension "prototype(convert) decode(JSON)" }
   
+external function f_dec_pduwithid2(in octetstring x) return PduWithId2
+  with { extension "prototype(convert) decode(JSON)" }
+  
 //============== Internal Functions ====================
   
 function f_check_encoding(in octetstring encoded, in octetstring expected) {

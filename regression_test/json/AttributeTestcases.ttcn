@@ -627,6 +627,54 @@ testcase tc_attribute_chosen_negtest() runs on MTC {
   setverdict(pass);
 }
 
+// Testing JSON decoding with attributes 'chosen' and 'default'.
+// (The conditions in the attribute 'chosen' depend on fields that have default values.)
+testcase tc_attribute_chosen_default() runs on MTC {
+  // Test #1: both fields use their default values
+  var octetstring buff := char2oct("{\"field\":{\"num\":1,\"str\":\"abc\"}}");
+  var PduWithId2 dec_exp := { protocolId1 := 1, protocolId2 := 0, field := { type1 := { num := 1, str := "abc" } } };
+  var PduWithId2 dec := f_dec_pduwithid2(buff);
+  if (dec != dec_exp) {
+    setverdict(fail, "Test #1 failed. Expected: ", dec_exp, ", got: ", dec);
+  }
+  
+  // Test #2: the first field uses its default value, the second decodes its value from the buffer
+  buff := char2oct("{\"protocolId2\":-1,\"field\":{\"num\":1,\"str\":\"abc\"}}");
+  dec_exp := { protocolId1 := 1, protocolId2 := -1, field := { type1 := { num := 1, str := "abc" } } };
+  dec := f_dec_pduwithid2(buff);
+  if (dec != dec_exp) {
+    setverdict(fail, "Test #2 failed. Expected: ", dec_exp, ", got: ", dec);
+  }
+  
+  // Test #3: the second field uses its default value, the first decodes its value from the buffer
+  buff := char2oct("{\"protocolId1\":6,\"field\":{\"num\":1,\"str\":\"abc\"}}");
+  dec_exp := { protocolId1 := 6, protocolId2 := 0, field := { type3 := { num := 1.0, str := "abc" } } };
+  dec := f_dec_pduwithid2(buff);
+  if (dec != dec_exp) {
+    setverdict(fail, "Test #3 failed. Expected: ", dec_exp, ", got: ", dec);
+  }
+  
+  // Test #4: both fields decode their values from the buffer
+  buff := char2oct("{\"protocolId1\":6,\"protocolId2\":-1}");
+  dec_exp := { protocolId1 := 6, protocolId2 := -1, field := omit };
+  dec := f_dec_pduwithid2(buff);
+  if (dec != dec_exp) {
+    setverdict(fail, "Test #4 failed. Expected: ", dec_exp, ", got: ", dec);
+  }
+  
+  // Test #5: both fields decode their values from the buffer,
+  // however, the first field appears after the union field in the buffer,
+  // so its default value is used when checking the conditions of the attribute 'chosen'
+  buff := char2oct("{\"protocolId2\":-1,\"field\":{\"num\":1,\"str\":\"abc\"},\"protocolId1\":6}");
+  dec_exp := { protocolId1 := 6, protocolId2 := -1, field := { type1 := { num := 1, str := "abc" } } };
+  dec := f_dec_pduwithid2(buff);
+  if (dec != dec_exp) {
+    setverdict(fail, "Test #5 failed. Expected: ", dec_exp, ", got: ", dec);
+  }
+  
+  setverdict(pass);
+}
+
 
 control {
   execute(tc_NoAttributeOnUpperLevel())
@@ -655,5 +703,6 @@ control {
   execute(tc_attribute_default_struct());
   execute(tc_attribute_chosen());
   execute(tc_attribute_chosen_negtest());
+  execute(tc_attribute_chosen_default());
 }
 }
