@@ -1,9 +1,9 @@
-.TH compiler 1 "October 2014" "Ericsson Telecom AB" "TTCN-3 Tools"
+.TH compiler 1 "April 2018" "Ericsson Telecom AB" "TTCN-3 Tools"
 .SH NAME
 compiler \- TTCN-3 and ASN.1 to C++ translator
 .SH SYNOPSIS
 .B compiler
-.RB "[\| " \-abcdDEefgijlLMnpqrRsStuwxXyY " \|]"
+.RB "[\| " \-abcdDeEfgijlLMnNpqrRsStuwxXyY " \|]"
 .RB "[\| " \-V
 .IR " verb_level" " \|]"
 .RB "[\| " \-J
@@ -119,11 +119,11 @@ will contain only the
 the column numbers will remain hidden. This option provides backward
 compatibility with the error message format of earlier versions.
 .TP
-.BI \-J " file"
-Read a list of input files from the provided file.
-.TP
 .B \-j
 Disables JSON encoder/decoder functions.
+.TP
+.BI \-J " file"
+Read a list of input files from the provided file.
 .TP
 .BI \-K " file"
 Enables selective code coverage.
@@ -178,11 +178,11 @@ operation and the
 .B present
 template restriction accordingly.
 .TP
-.B \-N
-Ignore UNTAGGED encoding instruction on top level unions (legacy behaviour).
-.TP
 .B \-n
 Activates the debugger and generates extra code for storing debug information.
+.TP
+.B \-N
+Ignore UNTAGGED encoding instruction on top level unions (legacy behaviour).
 .TP
 .BI \-o " dir"
 The output files (including Test Port skeletons) will be placed into
@@ -430,7 +430,7 @@ ITU-T Recommendations X.680-683:
 .SH AUTHOR
 This manpage is written by Janos Zoltan Szabo, Ericsson Telecom AB
 .br
-Copyright (c) 2000-2017 Ericsson Telecom AB
+Copyright (c) 2000-2018 Ericsson Telecom AB
 .br
 All rights reserved. This program and the accompanying materials
 are made available under the terms of the Eclipse Public License v1.0
