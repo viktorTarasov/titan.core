@@ -11,3 +11,5 @@ Makefile.personal
 *.pdf
 META-INF
 build.properties
+.cproject
+.settings/
