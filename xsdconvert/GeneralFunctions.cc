@@ -49,7 +49,8 @@ extern bool t_flag_used;
 // 				variant - generated variant string for TTCN-3
 //
 
-void XSDName2TTCN3Name(const Mstring& in_str, QualifiedNames & used_names, modeType type_of_the_name,
+void XSDName2TTCN3Name(const Mstring& in_str, const Mstring& in_namespace,
+  QualifiedNames & used_names, modeType type_of_the_name,
   Mstring & res, Mstring & variant, bool no_replace) {
   static const char* TTCN3_reserved_words[] = {
     "action", "activate", "address", "alive", "all", "alt", "altstep", "and", "and4b", "any", "any2unistr", "anytype", "apply",
@@ -150,7 +151,7 @@ void XSDName2TTCN3Name(const Mstring& in_str, QualifiedNames & used_names, modeT
     // if (type_of_the_name == type_reference_name || type_of_the_name == field_reference_name) {
 
     if (type_of_the_name == type_reference_name) {
-      if (isBuiltInType(res)) {
+      if (isBuiltInType(res) && (in_namespace == empty_string || in_namespace == XMLSchema)) {
         res[0] = (char)toupper(res[0]);
         res = "XSD." + res;
         return;

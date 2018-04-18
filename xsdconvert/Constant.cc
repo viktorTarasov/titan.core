@@ -69,7 +69,7 @@ void Constant::nameConversion_types(const List<NamespaceType> & ns) {
     // otherwise the new value is always the same as the old.
   } else {
     Mstring res, var;
-    XSDName2TTCN3Name(value_str, TTCN3ModuleInventory::getInstance().getTypenames(), type_reference_name, res, var);
+    XSDName2TTCN3Name(value_str, empty_string, TTCN3ModuleInventory::getInstance().getTypenames(), type_reference_name, res, var);
     setTypeValue(res);
   }
 }

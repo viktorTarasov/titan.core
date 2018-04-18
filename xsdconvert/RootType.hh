@@ -193,6 +193,11 @@ public:
   void setTypeValue(const Mstring& str) {
     type.convertedValue = str;
   }
+  
+  void setTypeValueWoPrefix(const Mstring& str) {
+    Mstring prefix = type.convertedValue.getPrefix(':');
+    type.convertedValue = prefix + ':' + str;
+  }
 
   void useNameListProperty() {
     name.convertedValue += "_list";

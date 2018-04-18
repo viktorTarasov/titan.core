@@ -33,6 +33,8 @@ RootType::RootType(XMLParser * a_parser, TTCN3Module * a_module, const Construct
 , maxOccurs(1)
 , min_mod(false)
 , max_mod(false){
+  Mstring xsdPrefix = module->getxmlSchemaPrefixes().size() != 0 ?
+    (module->getxmlSchemaPrefixes().front() + ':') : empty_string;
   switch (a_construct) {
     case c_schema:
     case c_annotation:
@@ -43,16 +45,16 @@ RootType::RootType(XMLParser * a_parser, TTCN3Module * a_module, const Construct
     case c_unknown: // because when using fields in complextypes we set construct to c_unknown
     case c_simpleType:
       origin = from_simpleType;
-      type.upload(Mstring("anySimpleType"), false);
+      type.upload(xsdPrefix + Mstring("anySimpleType"), false);
       break;
     case c_element:
       origin = from_element;
-      type.upload(Mstring("anyType"), false);
+      type.upload(xsdPrefix + Mstring("anyType"), false);
       addVariant(V_element);
       break;
     case c_attribute:
       origin = from_attribute;
-      type.upload(Mstring("anySimpleType"), false);
+      type.upload(xsdPrefix + Mstring("anySimpleType"), false);
       addVariant(V_attribute);
       break;
     case c_complexType:

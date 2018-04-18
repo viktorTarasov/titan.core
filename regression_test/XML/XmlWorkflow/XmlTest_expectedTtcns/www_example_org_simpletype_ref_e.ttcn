@@ -94,7 +94,7 @@ type XSD.AnyURI ID;
 
 type record TypeWithIDs
 {
-	XSD.ID id1,
+	ID id1,
 	XSD.ID id2
 };
 

@@ -54,7 +54,7 @@ import from XSD all;
     3 Built-in Datatypes */
 
 
-type XSD.Name NameA
+type Name NameA
 with {
   variant "element";
 };

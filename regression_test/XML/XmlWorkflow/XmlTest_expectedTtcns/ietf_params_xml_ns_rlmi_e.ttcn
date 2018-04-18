@@ -56,7 +56,7 @@ type record List
 	XSD.AnyURI uri,
 	XSD.UnsignedInt version,
 	record of XSD.String attr optional,
-	record of XSD.Name name_list,
+	record of Name name_list,
 	record of Resource resource_list
 }
 with {
@@ -80,7 +80,7 @@ type record Resource
 {
 	XSD.AnyURI uri,
 	record of XSD.String attr optional,
-	record of XSD.Name name_list,
+	record of Name name_list,
 	record of Instance instance_list
 }
 with {

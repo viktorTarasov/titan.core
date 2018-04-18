@@ -25,7 +25,8 @@ enum modeType {
     type_reference_name, type_name, field_name, enum_id_name
 };
 
-void XSDName2TTCN3Name(const Mstring& in, QualifiedNames & used_names, modeType type_of_the_name,
+void XSDName2TTCN3Name(const Mstring& in, const Mstring& in_namespace,
+        QualifiedNames & used_names, modeType type_of_the_name,
         Mstring & res, Mstring & variant, bool no_replace = false);
 
 class ReferenceData;

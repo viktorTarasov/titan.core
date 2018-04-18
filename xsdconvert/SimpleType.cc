@@ -525,7 +525,8 @@ void SimpleType::setReference(const Mstring& ref, bool only_name_dependency) {
     if (name.convertedValue.empty()) {
       name.upload(ref);
     }
-    if (type.convertedValue.empty() || type.convertedValue == "anySimpleType") {
+    if (type.convertedValue.empty() ||
+        type.convertedValue.getValueWithoutPrefix(':') == "anySimpleType") {
       type.upload(ref);
     }
     bool found = false;
@@ -769,11 +770,11 @@ void SimpleType::nameConversion(NameConversionMode conversion_mode, const List<N
 
 void SimpleType::nameConversion_names() {
   Mstring res, var(module->getTargetNamespace());
-  XSDName2TTCN3Name(name.convertedValue, TTCN3ModuleInventory::getInstance().getTypenames(), type_name, res, var);
+  XSDName2TTCN3Name(name.convertedValue, empty_string, TTCN3ModuleInventory::getInstance().getTypenames(), type_name, res, var);
   name.convertedValue = res;
   addVariant(V_onlyValue, var);
   for (List<RootType*>::iterator st = nameDepList.begin(); st; st = st->Next) {
-    st->Data->setTypeValue(res);
+    st->Data->setTypeValueWoPrefix(res);
   }
   if (outside_reference.get_ref() != NULL && defaultForEmptyConstant!= NULL) {
     // We don't know if the name conversion already happened on the get_ref()
@@ -817,7 +818,7 @@ void SimpleType::nameConversion_types(const List<NamespaceType> & ns) {
     // otherwise the new value is always the same as the old.
   } else {
     Mstring res, var;
-    XSDName2TTCN3Name(value_str, TTCN3ModuleInventory::getInstance().getTypenames(), type_reference_name, res, var);
+    XSDName2TTCN3Name(value_str, uri, TTCN3ModuleInventory::getInstance().getTypenames(), type_reference_name, res, var);
     setTypeValue(res);
   }
 }
@@ -1274,7 +1275,7 @@ void EnumerationType::applyFacets() // string types, integer types, float types,
       const LengthType & length = parent->getLength();
       if (length.lower <= facet->Data.size() && facet->Data.size() <= length.upper) {
         Mstring res, var;
-        XSDName2TTCN3Name(facet->Data, items_string, enum_id_name, res, var);
+        XSDName2TTCN3Name(facet->Data, empty_string, items_string, enum_id_name, res, var);
         text_variants.push_back(var);
         converted_facets.push_back(res);
       }
@@ -1341,7 +1342,7 @@ void EnumerationType::applyFacets() // string types, integer types, float types,
     List<Mstring> text_variants;
     for (List<Mstring>::iterator facet = facets.begin(); facet; facet = facet->Next) {
       Mstring res, var;
-      XSDName2TTCN3Name(facet->Data, items_time, enum_id_name, res, var);
+      XSDName2TTCN3Name(facet->Data, empty_string, items_time, enum_id_name, res, var);
       text_variants.push_back(var);
       converted_facets.push_back(res);
     }
