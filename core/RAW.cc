@@ -165,10 +165,10 @@ void RAW_enc_tree::put_to_buf(TTCN_Buffer &buf){
 void RAW_enc_tree::calc_fields()
 {
   if (isleaf) {
-    int szumm = 0;
-    RAW_enc_tree *atm;
     switch (calc) {
     case CALC_LENGTH: {
+      int szumm = 0;
+      RAW_enc_tree *atm;
       if (calcof.lengthto.unit != -1) {
         for (int a = 0; a < calcof.lengthto.num_of_fields; a++) {
           atm = get_node(calcof.lengthto.fields[a]);
@@ -195,7 +195,8 @@ void RAW_enc_tree::calc_fields()
         b = get_node(curr_pos);
       }
       curr_pos.pos[curr_pos.level - 1] = cl;
-      atm = get_node(calcof.pointerto.target);
+      int szumm = 0;
+      RAW_enc_tree *atm = get_node(calcof.pointerto.target);
       if (atm) szumm = (atm->startpos - b->startpos + calcof.pointerto.unit - 1
         - calcof.pointerto.ptr_offset) / calcof.pointerto.unit;
       INTEGER temp(szumm);
