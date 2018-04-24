@@ -1235,8 +1235,8 @@ int OCTETSTRING::RAW_encode(const TTCN_Typedescriptor_t& p_td,
     for (int a = 0; a < blength; a++) bc[a] = val_ptr->octets_ptr[a] << 1;
   }
   else myleaf.body.leaf.data_ptr = val_ptr->octets_ptr;
-  if (p_td.raw->endianness == ORDER_MSB) myleaf.align = -align_length;
-  else myleaf.align = align_length;
+  if (p_td.raw->endianness == ORDER_MSB) myleaf.align = align_length;
+  else myleaf.align = -align_length;
   return myleaf.length = bl + align_length;
 }
 
