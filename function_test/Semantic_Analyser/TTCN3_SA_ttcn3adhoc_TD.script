@@ -5403,7 +5403,7 @@ module module1
 (?is)\berror: inconc is not a valid value for type `verdicttype' which has subtype \(none,pass,fail\)
 <END_RESULT>
 <RESULT COUNT 1>
-(?is)\berror: The subtype restriction is not a subset of the restriction on the parent type. Subtype \(inconc\) is not subset of subtype \(none,pass,fail\)
+(?is)\berror: The intersection between the subtype restriction, \(inconc\), and the parent type's restriction, \(none,pass,fail\), is empty. \(No values satisfy the type's restrictions.\)
 <END_RESULT>
 <RESULT COUNT 9>
 (?is)\berror:
@@ -5449,7 +5449,7 @@ module module1
 (?is)\berror: false is not a valid value for type `boolean' which has subtype \(true\)
 <END_RESULT>
 <RESULT COUNT 1>
-(?is)\berror: The subtype restriction is not a subset of the restriction on the parent type. Subtype \(false\) is not subset of subtype \(true\)
+(?is)\berror: The intersection between the subtype restriction, \(false\), and the parent type's restriction, \(true\), is empty. \(No values satisfy the type's restrictions.\)
 <END_RESULT>
 <RESULT COUNT 9>
 (?is)\berror:
@@ -5511,13 +5511,13 @@ module module1
 (?is)\berror: 4 is not a valid value for type `integer' which has subtype \(1..3\)
 <END_RESULT>
 <RESULT COUNT 1>
-(?is)\berror: The subtype restriction is not a subset of the restriction on the parent type. Subtype \(4\) is not subset of subtype \(1..3\)
+(?is)\berror: The intersection between the subtype restriction, \(4\), and the parent type's restriction, \(1..3\), is empty. \(No values satisfy the type's restrictions.\)
 <END_RESULT>
 <RESULT COUNT 1>
-(?is)\berror: The subtype restriction is not a subset of the restriction on the parent type. Subtype \(4..8\) is not subset of subtype \(1..3\)
+(?is)\berror: The intersection between the subtype restriction, \(4..8\), and the parent type's restriction, \(1..3\), is empty. \(No values satisfy the type's restrictions.\)
 <END_RESULT>
 <RESULT COUNT 1>
-(?is)\berror: The subtype restriction is not a subset of the restriction on the parent type. Subtype \(4..8,16\) is not subset of subtype \(1..3\)
+(?is)\berror: The intersection between the subtype restriction, \(4..8,16\), and the parent type's restriction, \(1..3\), is empty. \(No values satisfy the type's restrictions.\)
 <END_RESULT>
 <RESULT COUNT 1>
 (?is)\berror: While checking circular type references in subtype definitions: Circular reference: `\@module1.myi6' -> `\@module1.myi7' -> `\@module1.myi6'
@@ -5571,13 +5571,13 @@ module module1
 (?is)\berror: 4.0e0 is not a valid value for type `float' which has subtype \(1.0e0,2.0e0,3.0e0\)
 <END_RESULT>
 <RESULT COUNT 1>
-(?is)\berror: The subtype restriction is not a subset of the restriction on the parent type. Subtype \(4.0e0\) is not subset of subtype \(1.0e0,2.0e0,3.0e0\)
+(?is)\berror: The intersection between the subtype restriction, \(4.0e0\), and the parent type's restriction, \(1.0e0,2.0e0,3.0e0\), is empty. \(No values satisfy the type's restrictions.\)
 <END_RESULT>
 <RESULT COUNT 1>
-(?is)\berror: The subtype restriction is not a subset of the restriction on the parent type. Subtype \(4.0e0..8.0e0\) is not subset of subtype \(1.0e0,2.0e0,3.0e0\)
+(?is)\berror: The intersection between the subtype restriction, \(4.0e0..8.0e0\), and the parent type's restriction, \(1.0e0,2.0e0,3.0e0\), is empty. \(No values satisfy the type's restrictions.\)
 <END_RESULT>
 <RESULT COUNT 1>
-(?is)\berror: The subtype restriction is not a subset of the restriction on the parent type. Subtype \(4.0e0..8.0e0,1.6e1\) is not subset of subtype \(1.0e0,2.0e0,3.0e0\)
+(?is)\berror: The intersection between the subtype restriction, \(4.0e0..8.0e0,1.6e1\), and the parent type's restriction, \(1.0e0,2.0e0,3.0e0\), is empty. \(No values satisfy the type's restrictions.\)
 <END_RESULT>
 <RESULT COUNT 11>
 (?is)\berror:
@@ -5744,7 +5744,7 @@ module module1
 (?is)\berror: '10'B is not a valid value for type `bitstring' which has subtype length\(1\)
 <END_RESULT>
 <RESULT COUNT 1>
-(?is)\berror: The subtype restriction is not a subset of the restriction on the parent type. Subtype length\(1\) is not subset of subtype \('00'B,'01'B\)
+(?is)\berror: The intersection between the subtype restriction, length\(1\), and the parent type's restriction, \('00'B,'01'B\), is empty. \(No values satisfy the type's restrictions.\)
 <END_RESULT>
 <RESULT COUNT 3>
 (?is)\berror: Subtype mismatch: subtype length\(1\) has no common value with subtype \('00'B,'01'B\)
@@ -5796,7 +5796,7 @@ module module1
 (?is)\berror: '10'H is not a valid value for type `hexstring' which has subtype length\(1\)
 <END_RESULT>
 <RESULT COUNT 1>
-(?is)\berror: The subtype restriction is not a subset of the restriction on the parent type. Subtype length\(1\) is not subset of subtype \('00'H,'01'H\)
+(?is)\berror: The intersection between the subtype restriction, length\(1\), and the parent type's restriction, \('00'H,'01'H\), is empty. \(No values satisfy the type's restrictions.\)
 <END_RESULT>
 <RESULT COUNT 3>
 (?is)\berror: Subtype mismatch: subtype length\(1\) has no common value with subtype \('00'H,'01'H\)
@@ -5852,7 +5852,7 @@ module module1
 (?is)\berror: '1010'O is not a valid value for type `octetstring' which has subtype length\(1\)
 <END_RESULT>
 <RESULT COUNT 1>
-(?is)\berror: The subtype restriction is not a subset of the restriction on the parent type. Subtype length\(2\) is not subset of subtype \('00'O,'01'O\)
+(?is)\berror: The intersection between the subtype restriction, length\(2\), and the parent type's restriction, \('00'O,'01'O\), is empty. \(No values satisfy the type's restrictions.\)
 <END_RESULT>
 <RESULT COUNT 2>
 (?is)\berror: '1010'O is not a valid value for type `octetstring' which has subtype \('00'O,'01'O\)
@@ -6157,9 +6157,6 @@ module module1
   }
 }
 <END_MODULE>
-<RESULT COUNT 1>
-(?is)\berror: The subtype restriction is not a subset of the restriction on the parent type. Subtype \(\{ 1, 2 \}\) union length\(1\) is not subset of subtype length\(1\)
-<END_RESULT>
 <RESULT COUNT 2>
 (?is)\berror: There must not be more than 1 elements in the list
 <END_RESULT>
@@ -6173,7 +6170,7 @@ module module1
 (?is)\berror: At least 4 elements must be present in the list
 <END_RESULT>
 <RESULT COUNT 1>
-(?is)\berror: The subtype restriction is not a subset of the restriction on the parent type. Subtype \(\{ <erroneous> \},\{ <erroneous> \}\) is not subset of subtype length\(5\)
+(?is)\berror: The intersection between the subtype restriction, \(\{ <erroneous> \},\{ <erroneous> \}\), and the parent type's restriction, length\(5\), is empty. \(No values satisfy the type's restrictions.\)
 <END_RESULT>
 <RESULT COUNT 2>
 (?is)\berror: record of value was expected
@@ -6187,7 +6184,7 @@ module module1
 <RESULT COUNT 1>
 (?is)\berror: Reference `myro2' must refer to a type which has the same root type as this type
 <END_RESULT>
-<RESULT COUNT 21>
+<RESULT COUNT 20>
 (?is)\berror:
 <END_RESULT>
 <END_TC>
@@ -6243,9 +6240,6 @@ module module1
 <RESULT COUNT 2>
 (?is)\berror: Reference `myso2' must refer to a type which has the same root type as this type
 <END_RESULT>
-<RESULT COUNT 1>
-(?is)\berror: The subtype restriction is not a subset of the restriction on the parent type. Subtype \(\{ 1, 2 \}\) union length\(1\) is not subset of subtype length\(1\)
-<END_RESULT>
 <RESULT COUNT 2>
 (?is)\berror: There must not be more than 1 elements in the list
 <END_RESULT>
@@ -6264,7 +6258,7 @@ module module1
 <RESULT COUNT 3>
 (?is)\berror: Type mismatch: `\@module1.myso1' and `\@module1.myso2' are not compatible: Incompatible set of/SET OF subtypes
 <END_RESULT>
-<RESULT COUNT 20>
+<RESULT COUNT 19>
 (?is)\berror:
 <END_RESULT>
 <END_TC>
@@ -6397,12 +6391,9 @@ module module1
 (?is)\berror: 10 is not a valid value for type `integer' which has subtype \(2..9,11..19\)
 <END_RESULT>
 <RESULT COUNT 1>
-(?is)\berror: The subtype restriction is not a subset of the restriction on the parent type. Subtype \(2..19\) is not subset of subtype \(2..9,11..19\)
-<END_RESULT>
-<RESULT COUNT 1>
 (?is)\berror: 20 is not a valid value for type `integer' which has subtype \(2..19\)
 <END_RESULT>
-<RESULT COUNT 6>
+<RESULT COUNT 5>
 (?is)\berror:
 <END_RESULT>
 <END_TC>

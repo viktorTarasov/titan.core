@@ -20,6 +20,7 @@
 
 namespace Asn {
   class Block;
+  class TableConstraint;
 }
 
 namespace Common {
@@ -42,7 +43,7 @@ namespace Common {
   class Value;
   class SubtypeConstraint;
   class Identifier;
-
+  
   using Asn::Block;
 
   /**
@@ -51,6 +52,7 @@ namespace Common {
   class Constraint : public Node, public Location {
   public:
     enum constrtype_t {
+      CT_UNDEFINEDBLOCK, /** UndefinedBlockConstraint (turns into CT_TABLE or CT_SINGLEVALUE after semantic analysis) */
       CT_ELEMENTSETSPEC, /** ElementSetSpecsConstraint */
       CT_IGNORE, /**< Constraint : used if erroneous or not yet supported */
       CT_TABLE, /**< TableConstraint */
@@ -96,9 +98,9 @@ namespace Common {
     Constraints* get_my_cons();
     virtual void chk() = 0;
     /** return the subtype constraint */
-    SubtypeConstraint* get_subtype() const { return subtype; }
+    virtual SubtypeConstraint* get_subtype() const { return subtype; }
     bool is_extendable() const { return extendable; }
-    SubtypeConstraint* get_extension() const { return extension; }
+    virtual SubtypeConstraint* get_extension() const { return extension; }
     /** returns the name of this constraint which can be used in error messages */
     virtual const char* get_name() const = 0;
     /** if this constraint is inside a FROM() constraint then we are in
@@ -112,6 +114,11 @@ namespace Common {
              somehow drop or simplify their constraint, example: (inner subtype) EXCEPT (inner subtype)
     */
     virtual bool is_ignored() const { return false; }
+    
+    /** Returns this (for TableConstraints) or the embedded TableConstraint
+      * object (for UndefinedBlockConstraints that contain a TableConstraint
+      * after semantic analysis) */
+    virtual const Constraint* get_tableconstraint() const;
   };
 
   /**
@@ -135,7 +142,7 @@ namespace Common {
     void add_con(Constraint *p_con);
     size_t get_nof_cons() const {return cons.size();}
     Constraint* get_con_byIndex(size_t p_i) const { return cons[p_i]; }
-    Constraint* get_tableconstraint() const;
+    const Constraint* get_tableconstraint() const;
     void set_my_type(Type *p_my_type);
     Type* get_my_type() const { return my_type; }
     void chk(SubtypeConstraint* parent_subtype);
@@ -487,6 +494,36 @@ namespace Common {
     void set_fullname(const string& p_fullname);
     const char* get_name() const { return "inner type constraint"; }
     bool is_ignored() const { return true; }
+  };
+  
+  
+  // =================================
+  // ===== UndefinedBlockConstraint
+  // =================================
+  
+  /** This class represents a constraint containing a block.
+    * During semantic analysis the block is parsed and causes this object to act
+    * as either a SingleValueConstraint or a TableConstraint afterwards. */
+  class UndefinedBlockConstraint : public Constraint
+  {
+    union {
+      Block* block; // CT_UNDEFINEDBLOCK, before chk()
+      SingleValueConstraint* single; // CT_SINGLEVALUE, after chk()
+      Asn::TableConstraint* table; // CT_TABLE, after chk()
+    };
+    UndefinedBlockConstraint(const UndefinedBlockConstraint& p);
+    /// Assignment disabled
+    UndefinedBlockConstraint& operator=(const UndefinedBlockConstraint& p);
+  public:
+    UndefinedBlockConstraint(Block* p_block);
+    virtual ~UndefinedBlockConstraint();
+    UndefinedBlockConstraint* clone() const { return new UndefinedBlockConstraint(*this); }
+    void chk();
+    const char* get_name() const { return "Undefined block constraint"; }
+    void set_fullname(const string& p_fullname);
+    SubtypeConstraint* get_subtype() const;
+    SubtypeConstraint* get_extension() const;
+    const Constraint* get_tableconstraint() const;
   };
 
 } // namespace Common

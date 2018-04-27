@@ -260,7 +260,7 @@ public:
   RangeListConstraint operator*(const RangeListConstraint& other) const { return set_operation(other, false); } // intersection
   RangeListConstraint operator~() const; // complement
 
-  tribool is_subset(const RangeListConstraint& other) const { return (*this*~other).is_empty(); }
+  tribool can_intersect(const RangeListConstraint& other) const { return !(*this * other).is_empty(); }
   RangeListConstraint operator-(const RangeListConstraint& other) const { return ( *this * ~other ); } // except
 
   // will return the minimal value that is part of the interval,
@@ -616,7 +616,7 @@ public:
   RealRangeListConstraint operator*(const RealRangeListConstraint& other) const { return set_operation(other, false); } // intersection
   RealRangeListConstraint operator~() const; // complement
 
-  tribool is_subset(const RealRangeListConstraint& other) const { return (*this*~other).is_empty(); }
+  tribool can_intersect(const RealRangeListConstraint& other) const { return !(*this * other).is_empty(); }
   RealRangeListConstraint operator-(const RealRangeListConstraint& other) const { return ( *this * ~other ); } // except
 
   tribool is_range_empty() const { return rlc.is_empty(); }
@@ -656,7 +656,7 @@ public:
   BooleanListConstraint operator*(const BooleanListConstraint& other) const { BooleanListConstraint rv; rv.values = values & other.values; return rv; }
   BooleanListConstraint operator~() const { BooleanListConstraint rv; rv.values = values ^ BC_ALL; return rv; }
 
-  tribool is_subset(const BooleanListConstraint& other) const { return (*this*~other).is_empty(); }
+  tribool can_intersect(const BooleanListConstraint& other) const { return !(*this * other).is_empty(); }
 
   BooleanListConstraint operator-(const BooleanListConstraint& other) const { return ( *this * ~other ); }
 
@@ -695,7 +695,7 @@ public:
   VerdicttypeListConstraint operator*(const VerdicttypeListConstraint& other) const { VerdicttypeListConstraint rv; rv.values = values & other.values; return rv; }
   VerdicttypeListConstraint operator~() const { VerdicttypeListConstraint rv; rv.values = values ^ VC_ALL; return rv; }
 
-  tribool is_subset(const VerdicttypeListConstraint& other) const { return (*this*~other).is_empty(); }
+  tribool can_intersect(const VerdicttypeListConstraint& other) const { return !(*this * other).is_empty(); }
 
   VerdicttypeListConstraint operator-(const VerdicttypeListConstraint& other) const { return ( *this * ~other ); }
 
@@ -745,7 +745,7 @@ public:
   StringSizeAndValueListConstraint operator*(const StringSizeAndValueListConstraint& other) const { return set_operation(other, false); } // intersection
   StringSizeAndValueListConstraint operator~() const; // complement
 
-  tribool is_subset(const StringSizeAndValueListConstraint& other) const { return (*this*~other).is_empty(); }
+  tribool can_intersect(const StringSizeAndValueListConstraint& other) const { return !(*this * other).is_empty(); }
   StringSizeAndValueListConstraint operator-(const StringSizeAndValueListConstraint& other) const { return ( *this * ~other ); } // except
 
   tribool get_size_limit(bool is_upper, size_limit_t& limit) const;
@@ -1067,7 +1067,7 @@ public:
   StringPatternConstraint operator*(const StringPatternConstraint& other) const { return set_operation(other, false); } // intersection
   StringPatternConstraint operator~() const { FATAL_ERROR("StringPatternConstraint::operator~(): not implemented"); }
 
-  tribool is_subset(const StringPatternConstraint&) const { return TUNKNOWN; }
+  tribool can_intersect(const StringPatternConstraint&) const { return TUNKNOWN; }
   StringPatternConstraint operator-(const StringPatternConstraint& other) const { return ( *this * ~other ); } // except
 
   string to_string() const;
@@ -1101,7 +1101,7 @@ public:
   StringValueConstraint operator+(const StringValueConstraint& other) const { return set_operation(other, true); } // union
   StringValueConstraint operator*(const StringValueConstraint& other) const { return set_operation(other, false); } // intersection
 
-  tribool is_subset(const StringValueConstraint& other) const { return (*this-other).is_empty(); }
+  tribool can_intersect(const StringValueConstraint& other) const { return !(*this * other).is_empty(); }
   StringValueConstraint operator-(const StringValueConstraint& other) const; // except
 
   // remove strings that are or are not elements of the set defined by the XXX_constraint object,
@@ -1301,7 +1301,7 @@ public:
   tribool is_full() const;
   tribool is_equal(const StringSubtypeTreeElement* other) const;
   bool is_element(const STRINGTYPE& s) const;
-  tribool is_subset(const StringSubtypeTreeElement* other) const;
+  tribool can_intersect(const StringSubtypeTreeElement* other) const;
 
   bool is_single_constraint() const { return ( (elementtype==ET_CONSTRAINT) || (elementtype==ET_NONE) || (elementtype==ET_ALL) ); }
   void set_none() { clean_up(); elementtype = ET_NONE; }
@@ -1803,9 +1803,9 @@ bool StringSubtypeTreeElement<STRINGTYPE,CHARLIMITTYPE>::is_element(const STRING
 // if the constraints are ortogonal (e.g. size and alphabet) or just different then return TUNKNOWN
 // in case of ortogonal constraints we should return TFALSE (if other is not full set)
 // but it seems that the standard wants to ignore such trivial cases, example:
-//   length(1..4) is_subset ('a'..'z') shall not report an error
+//   length(1..4) can_intersect ('a'..'z') shall not report an error
 template <class STRINGTYPE, class CHARLIMITTYPE>
-tribool StringSubtypeTreeElement<STRINGTYPE,CHARLIMITTYPE>::is_subset(const StringSubtypeTreeElement<STRINGTYPE,CHARLIMITTYPE>* other) const
+tribool StringSubtypeTreeElement<STRINGTYPE,CHARLIMITTYPE>::can_intersect(const StringSubtypeTreeElement<STRINGTYPE,CHARLIMITTYPE>* other) const
 {
   switch (elementtype) {
   case ET_NONE:
@@ -1817,18 +1817,18 @@ tribool StringSubtypeTreeElement<STRINGTYPE,CHARLIMITTYPE>::is_subset(const Stri
     if (elementtype!=other->elementtype) return TUNKNOWN;
     if (u.cs.constrainttype!=other->u.cs.constrainttype) return TUNKNOWN;
     switch (u.cs.constrainttype) {
-    case CT_SIZE: return u.cs.s->is_subset(*(other->u.cs.s));
-    case CT_ALPHABET: return u.cs.a.c->is_subset(*(other->u.cs.a.c));
-    case CT_VALUES: return u.cs.v->is_subset(*(other->u.cs.v));
-    case CT_PATTERN: return u.cs.p->is_subset(*(other->u.cs.p));
-    default: FATAL_ERROR("StringSubtypeTreeElement::is_subset()");
+    case CT_SIZE: return u.cs.s->can_intersect(*(other->u.cs.s));
+    case CT_ALPHABET: return u.cs.a.c->can_intersect(*(other->u.cs.a.c));
+    case CT_VALUES: return u.cs.v->can_intersect(*(other->u.cs.v));
+    case CT_PATTERN: return u.cs.p->can_intersect(*(other->u.cs.p));
+    default: FATAL_ERROR("StringSubtypeTreeElement::can_intersect()");
     }
   case ET_INTERSECTION:
   case ET_UNION:
   case ET_EXCEPT:
     return TUNKNOWN;
   default:
-    FATAL_ERROR("StringSubtypeTreeElement::is_subset()");
+    FATAL_ERROR("StringSubtypeTreeElement::can_intersect()");
   }
   return TUNKNOWN;
 }
@@ -2197,7 +2197,7 @@ public:
   ValueList operator*(const ValueList& other) const { return set_operation(other, false); } // intersection
   ValueList operator-(const ValueList& other) const; // except
 
-  tribool is_subset(const ValueList& other) const { return (*this-other).is_empty(); }
+  tribool can_intersect(const ValueList& other) const { return !(*this * other).is_empty(); }
 
   string to_string() const;
 };
@@ -2222,8 +2222,8 @@ public:
   ValueListConstraint operator*(const ValueListConstraint& other) const; // intersection
   ValueListConstraint operator~() const; // complement
 
-  inline tribool is_subset(const ValueListConstraint& other) const
-    { return (*this*~other).is_empty(); }
+  inline tribool can_intersect(const ValueListConstraint& other) const
+    { return !(*this * other).is_empty(); }
   inline ValueListConstraint operator-(const ValueListConstraint& other) const
     { return ( *this * ~other ); } // except
 
@@ -2257,7 +2257,7 @@ public:
   inline RecofConstraint operator*(const RecofConstraint& other) const { return set_operation(other, false); } // intersection
   RecofConstraint operator~() const; // complement
 
-  inline tribool is_subset(const RecofConstraint& other) const { return (*this*~other).is_empty(); }
+  inline tribool can_intersect(const RecofConstraint& other) const { return !(*this * other).is_empty(); }
   inline RecofConstraint operator-(const RecofConstraint& other) const { return ( *this * ~other ); } // except
 
   tribool get_size_limit(bool is_upper, size_limit_t& limit) const;

@@ -29,8 +29,8 @@ type float myf9     (myf123, minf_to_zero)
 type myf9 myf10 (myf123)
 type two31_32 myf11 (2147483648.0..4294967296.0, 4294967296.0..4294967300.0)
 
-type myf123 su2 (3.14);        //^In type definition//    //^error\: The subtype restriction is not a subset of the restriction on the parent type\. Subtype \(3\.14e0\) is not subset of subtype \(1\.0e0,2\.0e0,3\.0e0\)$//
-type minf_to_zero su3 (!6.0 .. 10.0); //^In type definition//    //^error\: The subtype restriction is not a subset of the restriction on the parent type\. Subtype \(\!6\.0e0\.\.1\.0e1\) is not subset of subtype \(\-INF\.\.0\.0e0\)$//
+type myf123 su2 (3.14);        //^In type definition//    //^error\: The intersection between the subtype restriction, \(3\.14e0\), and the parent type's restriction, \(1\.0e0,2\.0e0,3\.0e0\), is empty. \(No values satisfy the type's restrictions.\)$//
+type minf_to_zero su3 (!6.0 .. 10.0); //^In type definition//    //^error\: The intersection between the subtype restriction, \(\!6\.0e0\.\.1\.0e1\), and the parent type's restriction, \(\-INF\.\.0\.0e0\), is empty. \(No values satisfy the type's restrictions.\)$//
 
 type float buzz_lightyear (infinity .. not_a_number) //^In type definition//    //^error: upper boundary cannot be not_a_number in float subtype range$//
 // to infinity and beyond

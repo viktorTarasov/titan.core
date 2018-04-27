@@ -934,7 +934,7 @@ SubtypeConstraint* SubtypeConstraint::create_asn_size_constraint(
     static const int_val_t zero((Int)0);
     static const int_limit_t ilt0(zero);
     IntegerRangeListConstraint valid_range(ilt0, int_limit_t::maximum);
-    if (integer_stc->integer_st->is_subset(valid_range)==TFALSE) {
+    if (integer_stc->integer_st->can_intersect(valid_range)==TFALSE) {
       loc->error("Range %s is not a valid range for a size constraint", integer_stc->to_string().c_str());
     } else {
       bool success = convert_int_to_size(*(integer_stc->integer_st), size_constraint);
@@ -1707,38 +1707,38 @@ void SubtypeConstraint::intersection(const SubtypeConstraint* other)
   }
 }
 
-tribool SubtypeConstraint::is_subset(const SubtypeConstraint* other) const
+tribool SubtypeConstraint::can_intersect(const SubtypeConstraint* other) const
 {
   if (other==NULL) return TTRUE;
-  if (other->subtype!=subtype) FATAL_ERROR("SubtypeConstraint::is_subset()");
+  if (other->subtype!=subtype) FATAL_ERROR("SubtypeConstraint::can_intersect()");
   switch (subtype) {
   case ST_INTEGER:
     if (other->integer_st==NULL) return TTRUE;
-    return integer_st ? integer_st->is_subset(*(other->integer_st)) : TTRUE;
+    return integer_st ? integer_st->can_intersect(*(other->integer_st)) : TTRUE;
   case ST_FLOAT:
     if (other->float_st==NULL) return TTRUE;
-    return float_st ? float_st->is_subset(*(other->float_st)) : TTRUE;
+    return float_st ? float_st->can_intersect(*(other->float_st)) : TTRUE;
   case ST_BOOLEAN:
     if (other->boolean_st==NULL) return TTRUE;
-    return boolean_st ? boolean_st->is_subset(*(other->boolean_st)) : TTRUE;
+    return boolean_st ? boolean_st->can_intersect(*(other->boolean_st)) : TTRUE;
   case ST_VERDICTTYPE:
     if (other->verdict_st==NULL) return TTRUE;
-    return verdict_st ? verdict_st->is_subset(*(other->verdict_st)) : TTRUE;
+    return verdict_st ? verdict_st->can_intersect(*(other->verdict_st)) : TTRUE;
   case ST_BITSTRING:
     if (other->bitstring_st==NULL) return TTRUE;
-    return bitstring_st ? bitstring_st->is_subset(*(other->bitstring_st)) : TTRUE;
+    return bitstring_st ? bitstring_st->can_intersect(*(other->bitstring_st)) : TTRUE;
   case ST_HEXSTRING:
     if (other->hexstring_st==NULL) return TTRUE;
-    return hexstring_st ? hexstring_st->is_subset(*(other->hexstring_st)) : TTRUE;
+    return hexstring_st ? hexstring_st->can_intersect(*(other->hexstring_st)) : TTRUE;
   case ST_OCTETSTRING:
     if (other->octetstring_st==NULL) return TTRUE;
-    return octetstring_st ? octetstring_st->is_subset(*(other->octetstring_st)) : TTRUE;
+    return octetstring_st ? octetstring_st->can_intersect(*(other->octetstring_st)) : TTRUE;
   case ST_CHARSTRING:
     if (other->charstring_st==NULL) return TTRUE;
-    return charstring_st ? charstring_st->is_subset(other->charstring_st) : TTRUE;
+    return charstring_st ? charstring_st->can_intersect(other->charstring_st) : TTRUE;
   case ST_UNIVERSAL_CHARSTRING:
     if (other->universal_charstring_st==NULL) return TTRUE;
-    return universal_charstring_st ? universal_charstring_st->is_subset(other->universal_charstring_st) : TTRUE;
+    return universal_charstring_st ? universal_charstring_st->can_intersect(other->universal_charstring_st) : TTRUE;
   case ST_OBJID:
   case ST_RECORD:
   case ST_SET:
@@ -1748,13 +1748,13 @@ tribool SubtypeConstraint::is_subset(const SubtypeConstraint* other) const
   case ST_ALTSTEP:
   case ST_TESTCASE:
     if (other->value_st==NULL) return TTRUE;
-    return value_st ? value_st->is_subset(*(other->value_st)) : TTRUE;
+    return value_st ? value_st->can_intersect(*(other->value_st)) : TTRUE;
   case ST_RECORDOF:
   case ST_SETOF:
     if (other->recof_st==NULL) return TTRUE;
-    return recof_st ? recof_st->is_subset(*(other->recof_st)) : TTRUE;
+    return recof_st ? recof_st->can_intersect(*(other->recof_st)) : TTRUE;
   default:
-    FATAL_ERROR("SubtypeConstraint::is_subset()");
+    FATAL_ERROR("SubtypeConstraint::can_intersect()");
   }
   return TUNKNOWN;
 }
@@ -2857,9 +2857,11 @@ void SubType::chk()
     if (subtype==ST_ERROR) { checked = STC_YES; return; }
 
     if (parent_subtype) {
-      if (is_subset(parent_subtype->get_root())==TFALSE) {
-        my_owner->error("The subtype restriction is not a subset of the restriction on the parent type. "
-          "Subtype %s is not subset of subtype %s", to_string().c_str(), parent_subtype->get_root()->to_string().c_str());
+      if (can_intersect(parent_subtype->get_root())==TFALSE) {
+        my_owner->error("The intersection between the subtype restriction, %s, "
+          "and the parent type's restriction, %s, is empty. (No values satisfy "
+          "the type's restrictions.)",
+          to_string().c_str(), parent_subtype->get_root()->to_string().c_str());
         set_to_error();
         checked = STC_YES;
         return;

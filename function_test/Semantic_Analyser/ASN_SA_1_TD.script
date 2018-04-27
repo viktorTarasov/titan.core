@@ -6337,7 +6337,7 @@ MyInt3 ::= INTEGER ( SIZE(10) EXCEPT FROM(1..10) )
 MyInt4 ::= MyInt2 (MyInt3)
 MyInt5 ::= INTEGER ( PATTERN "abc" EXCEPT 5 )
 MyInt6 ::= INTEGER ( ALL EXCEPT ((MIN..0) UNION (0..MAX)) )
-MyInt7 ::= INTEGER (1..10) (5..15)
+MyInt7 ::= INTEGER (1..10) (12..15)
 MyInt9 ::= INTEGER (5..6 EXCEPT 1..10)
 MyInt10::= INTEGER ( MIN..MAX )
 MyInt11::= INTEGER ( INTEGER )
@@ -6363,7 +6363,7 @@ END
 (?im)\berror: The subtype is an empty set
 <END_RESULT>
 <RESULT COUNT 1>
-(?im)\berror: Constraint #2 is \(5..15\), this is not a subset of \(1..10\)
+(?im)\berror: Constraint #2 is \(12..15\), intersecting this with \(1..10\) results in an empty set \(no values satisfy the type's restrictions\)
 <END_RESULT>
 <RESULT COUNT 1>
 (?im)\bwarning: The subtype of type `integer' is a full set, it does not constrain the root type.
@@ -6559,12 +6559,6 @@ END
 (?im)\berror: 0 is not a valid value for type `integer' which has subtype \(-100..-11,11..100\)
 <END_RESULT>
 <RESULT COUNT 1>
-(?im)\berror: Constraint #1 is \(-100..100\), this is not a subset of \(-100..-11,11..100\)
-<END_RESULT>
-<RESULT COUNT 1>
-(?im)\berror: Constraint #1 is from\(" ".."6"\), this is not a subset of from\(" ","0".."9"\)
-<END_RESULT>
-<RESULT COUNT 1>
 (?im)\berror: "abc" is not a valid value for type `NumericString' which has subtype from\("3".."9"\)
 <END_RESULT>
 <RESULT COUNT 1>
@@ -6583,7 +6577,7 @@ END
 (?im)\berror: Cannot determine the value of MAX: the parent subtype has no range
 <END_RESULT>
 <RESULT COUNT 1>
-(?im)\berror: Constraint #2 is \(-INF..INF\), this is not a subset of \(NaN\)
+(?im)\berror: Constraint #2 is \(-INF..INF\), intersecting this with \(NaN\) results in an empty set \(no values satisfy the type's restrictions\)
 <END_RESULT>
 <RESULT COUNT 1>
 (?im)\berror: Cannot determine the value of MAX: the parent subtype does not define a maximal size value
@@ -6591,7 +6585,7 @@ END
 <RESULT COUNT 1>
 (?im)\berror: Cannot determine the value of MIN: the parent subtype does not define a minimal size value
 <END_RESULT>
-<RESULT COUNT 11>
+<RESULT COUNT 9>
 (?is)\berror:
 <END_RESULT>
 <RESULT COUNT 2>
@@ -6644,9 +6638,6 @@ END
 (?im)\berror: Size constraint is not allowed for type `integer'
 <END_RESULT>
 <RESULT COUNT 1>
-(?im)\berror: Constraint #2 is \(1..20\), this is not a subset of \(1..10\)
-<END_RESULT>
-<RESULT COUNT 1>
 (?im)\berror: 22 is not a valid value for type `integer' which has subtype \(1..20\)
 <END_RESULT>
 <RESULT COUNT 1>
@@ -6655,7 +6646,7 @@ END
 <RESULT COUNT 1>
 (?im)\berror: 222 is not a valid value for type `integer' which has subtype \(1..20\)
 <END_RESULT>
-<RESULT COUNT 6>
+<RESULT COUNT 5>
 (?is)\berror: 
 <END_RESULT>
 <END_TC>
@@ -6715,12 +6706,9 @@ END
 (?im)\berror: INF is not a valid value for type `float' which has subtype \(0.0e0..!INF,NaN\)
 <END_RESULT>
 <RESULT IF_PASS COUNT 1>
-(?im)\berror: Constraint #1 is \(1..20\), this is not a subset of \(1..10\)
-<END_RESULT>
-<RESULT IF_PASS COUNT 1>
 (?im)\berror: 21 is not a valid value for type `integer' which has subtype \(1..20\)
 <END_RESULT>
-<RESULT IF_PASS COUNT 6>
+<RESULT IF_PASS COUNT 5>
 (?is)\berror:
 <END_RESULT>
 <END_TC>
@@ -6823,12 +6811,6 @@ B3 ::= B (FALSE,...,TRUE)
 END
 <END_MODULE>
 <RESULT COUNT 1>
-(?im)\berror: Constraint #1 is \(1..128\), this is not a subset of \(1..32\)
-<END_RESULT>
-<RESULT COUNT 1>
-(?im)\berror: Constraint #2 is \(1..128\), this is not a subset of \(1..32\)
-<END_RESULT>
-<RESULT COUNT 1>
 (?im)\berror: -1 is not a valid value for type `integer' which has subtype \(1..256\)
 <END_RESULT>
 <RESULT COUNT 1>
@@ -6838,7 +6820,7 @@ END
 (?im)\bwarning: The subtype of type `integer' is a full set, it does not constrain the root type.
 <END_RESULT>
 <RESULT COUNT 1>
-(?im)\berror: Constraint #1 is \(73\), this is not a subset of \(1..6\)
+(?im)\berror: Constraint #1 is \(73\), intersecting this with \(1..6\) results in an empty set \(no values satisfy the type's restrictions\)
 <END_RESULT>
 <RESULT COUNT 1>
 (?im)\berror: 99 is not a valid value for type `integer' which has subtype \(1..6\), ..., \(73..80\)
@@ -6862,9 +6844,9 @@ END
 (?im)\bwarning: The subtype of type `boolean' is a full set, it does not constrain the root type.
 <END_RESULT>
 <RESULT COUNT 1>
-(?im)\berror: Extension addition of constraint #1 is \(true\), this is not a subset of \(false\)
+(?im)\berror: Extension addition of constraint #1 is \(true\), intersecting this with \(false\) results in an empty set \(no values satisfy the type's restrictions\)
 <END_RESULT>
-<RESULT COUNT 12>
+<RESULT COUNT 10>
 (?is)\berror: 
 <END_RESULT>
 <RESULT COUNT 2>

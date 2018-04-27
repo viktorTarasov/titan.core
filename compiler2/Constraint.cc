@@ -62,12 +62,14 @@ namespace Common {
     if (my_type) p_con->set_my_type(my_type);
   }
 
-  Constraint* Constraints::get_tableconstraint() const
+  const Constraint* Constraints::get_tableconstraint() const
   {
     size_t nof_cons = cons.size();
     for (size_t i = 0; i < nof_cons; i++) {
       Constraint *con = cons[i];
-      if (con->get_constrtype() == Constraint::CT_TABLE) return con;
+      if (con->get_constrtype() == Constraint::CT_TABLE) {
+        return con->get_tableconstraint();
+      }
     }
     return 0;
   }
@@ -116,15 +118,18 @@ namespace Common {
         extension = 0;
       }
       if (subtype) {
-        if (sc->is_subset(subtype)==TFALSE) {
-          cons[i]->error("Constraint #%lu is %s, this is not a subset of %s",
+        if (sc->can_intersect(subtype)==TFALSE) {
+          cons[i]->error("Constraint #%lu is %s, intersecting this with %s "
+            "results in an empty set (no values satisfy the type's restrictions)",
             (unsigned long) (i + 1),
             sc->to_string().c_str(),
             subtype->to_string().c_str());
           break; // stop on error
         }
-        if (sc_ext && (sc_ext->is_subset(subtype)==TFALSE)) {
-          cons[i]->error("Extension addition of constraint #%lu is %s, this is not a subset of %s",
+        if (sc_ext && (sc_ext->can_intersect(subtype)==TFALSE)) {
+          cons[i]->error("Extension addition of constraint #%lu is %s, "
+            "intersecting this with %s results in an empty set (no values "
+            "satisfy the type's restrictions)",
             (unsigned long) (i + 1),
             sc_ext->to_string().c_str(),
             subtype->to_string().c_str());
@@ -218,7 +223,12 @@ namespace Common {
     }
     return false;
   }
-
+  
+  const Constraint* Constraint::get_tableconstraint() const
+  {
+    FATAL_ERROR("Constraint::get_tableconstraint()");
+  }
+  
   // =================================
   // ===== ElementSetSpecsConstraint
   // =================================
@@ -1144,6 +1154,129 @@ namespace Common {
     Node::set_fullname(p_fullname);
     block->set_fullname(p_fullname);
     if (constraint) constraint->set_fullname(p_fullname);
+  }
+  
+  // =================================
+  // ===== UndefinedBlockConstraint
+  // =================================
+
+  UndefinedBlockConstraint::UndefinedBlockConstraint(const UndefinedBlockConstraint& p)
+    : Constraint(p)
+  {
+    switch (constrtype) {
+    case CT_UNDEFINEDBLOCK:
+      block = p.block->clone();
+      break;
+    case CT_SINGLEVALUE:
+      single = p.single->clone();
+      break;
+    case CT_TABLE:
+      table = p.table->clone();
+      break;
+    default:
+      FATAL_ERROR("UndefinedBlockConstraint::UndefinedBlockConstraint");
+    }
+  }
+
+  UndefinedBlockConstraint::UndefinedBlockConstraint(Block* p_block)
+    : Constraint(CT_UNDEFINEDBLOCK), block(p_block)
+  {
+    if (p_block == NULL) {
+      FATAL_ERROR("UndefinedBlockConstraint::UndefinedBlockConstraint()");
+    }
+  }
+
+  UndefinedBlockConstraint::~UndefinedBlockConstraint()
+  {
+    switch (constrtype) {
+    case CT_UNDEFINEDBLOCK:
+      delete block;
+      break;
+    case CT_SINGLEVALUE:
+      delete single;
+      break;
+    case CT_TABLE:
+      delete table;
+      break;
+    default:
+      FATAL_ERROR("UndefinedBlockConstraint::~UndefinedBlockConstraint");
+    }
+  }
+
+  void UndefinedBlockConstraint::chk()
+  {
+    if (checked) return;
+    checked = true;
+    if (my_parent != NULL && my_parent->get_constrtype() == CT_SETOPERATION) {
+      single = new SingleValueConstraint(new Value(Value::V_UNDEF_BLOCK, block));
+      constrtype = CT_SINGLEVALUE;
+      single->set_my_type(my_type);
+      single->set_my_scope(my_scope);
+      single->set_my_parent(my_parent);
+      single->chk();
+      extendable = single->is_extendable();
+    }
+    else {
+      table = new Asn::TableConstraint(block, NULL);
+      constrtype = CT_TABLE;
+      table->set_my_type(my_type);
+      table->set_my_scope(my_scope);
+      table->set_my_parent(my_parent);
+      table->chk();
+      extendable = table->is_extendable();
+    }
+  }
+
+  void UndefinedBlockConstraint::set_fullname(const string& p_fullname)
+  {
+    Node::set_fullname(p_fullname);
+    switch (constrtype) {
+    case CT_UNDEFINEDBLOCK:
+      block->set_fullname(p_fullname + ".<block>");
+      break;
+    case CT_SINGLEVALUE:
+      single->set_fullname(p_fullname);
+      break;
+    case CT_TABLE:
+      table->set_fullname(p_fullname);
+      break;
+    default:
+      FATAL_ERROR("UndefinedBlockConstraint::UndefinedBlockConstraint");
+    }
+  }
+  
+  SubtypeConstraint* UndefinedBlockConstraint::get_subtype() const
+  {
+    switch (constrtype) {
+    case CT_SINGLEVALUE:
+      return single->get_subtype();
+    case CT_TABLE:
+      return table->get_subtype();
+    case CT_UNDEFINEDBLOCK:
+    default:
+      FATAL_ERROR("UndefinedBlockConstraint::get_subtype");
+    }
+  }
+  
+  SubtypeConstraint* UndefinedBlockConstraint::get_extension() const
+  {
+    switch (constrtype) {
+    case CT_SINGLEVALUE:
+      return single->get_extension();
+    case CT_TABLE:
+      return table->get_extension();
+    case CT_UNDEFINEDBLOCK:
+    default:
+      FATAL_ERROR("UndefinedBlockConstraint::get_extension");
+    }
+  }
+  
+  const Constraint* UndefinedBlockConstraint::get_tableconstraint() const
+  {
+    if (constrtype != CT_TABLE) {
+      FATAL_ERROR("UndefinedBlockConstraint::get_tableconstraint()");
+    }
+    return table;
   }
 
 } // namespace Common

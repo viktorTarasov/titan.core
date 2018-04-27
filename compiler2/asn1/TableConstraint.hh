@@ -103,6 +103,7 @@ namespace Asn {
     ObjectSet* get_os() const {return os;}
     const Identifier* get_oc_fieldname() const {return oc_fieldname;}
     const char* get_name() const { return "table constraint"; }
+    const Constraint* get_tableconstraint() const { return this; }
   private:
     void parse_blocks();
   };
