@@ -2780,9 +2780,10 @@ SingleValue:
   }
 | TOK_Block
   {
-    /* Create an undefined constraint for now, and classify it later on during
-       semantic analysis to TableConstraint or SingleValueConstraint. */
-    $$ = new UndefinedBlockConstraint($1);
+    /** \todo: It would be more straightforward to create an undefined
+     * constraint here and classify it later on during parsing or semantic
+     * analysis to SimpleTableConstraint or SingleValue. */
+    $$ = new TableConstraint($1, 0);
     $$->set_location(asn1_infile, @1.first_line);
   }
 | ReferencedValue_reg

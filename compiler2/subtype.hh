@@ -189,7 +189,7 @@ public:
   void union_(const SubtypeConstraint* other);
   void except(const SubtypeConstraint* other);
 
-  tribool can_intersect(const SubtypeConstraint* other) const;
+  tribool is_subset(const SubtypeConstraint* other) const;
 
   /** special ASN.1 types (NumericString, etc.) have default subtype constraints,
       return default constraint or NULL */
