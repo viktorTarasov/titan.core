@@ -2136,24 +2136,35 @@ void defPortClass(const port_def* pdef, output_struct* output)
     
   if (pdef->port_type == USER && !pdef->legacy) {
     // add_port and remove_port is called after the map and unmap statements.
+    def = mputstr(def, "void add_port(PORT* p);\n");
+    src = mputprintf(src, "void %s::add_port(PORT* p)\n{\n", class_name);
     for (i = 0; i < pdef->provider_msg_outlist.nElements; i++) {
-      def = mputprintf(def, "void add_port(%s* p);\n", pdef->provider_msg_outlist.elements[i].name);
       src = mputprintf(src,
-        "void %s::add_port(%s*p) {\n"
+        "%s* x_%i = dynamic_cast<%s*>(p);\n"
+        "if (x_%i != NULL) {\n"
         "n_%i++;\n"
         "p_%i = static_cast<%s**>(Realloc(p_%i, n_%i * sizeof(%s*)));\n"
-        "p_%i[n_%i-1] = p;\n"
-        "}\n\n",
-        class_name, pdef->provider_msg_outlist.elements[i].name, (int)i,
+        "p_%i[n_%i-1] = x_%i;\n"
+        "return;\n"
+        "}\n",
+        pdef->provider_msg_outlist.elements[i].name, (int)i,
+        pdef->provider_msg_outlist.elements[i].name, (int)i, (int)i,
         (int)i, pdef->provider_msg_outlist.elements[i].name, (int)i, (int)i,
-        pdef->provider_msg_outlist.elements[i].name, (int)i, (int)i);
+        pdef->provider_msg_outlist.elements[i].name, (int)i, (int)i, (int)i);
+    }
+    src = mputstr(src,
+      "TTCN_error(\"Internal error: Adding invalid port type.\");\n"
+      "}\n\n");
+    
+    def = mputstr(def, "void remove_port(PORT* p);\n");
+    src = mputprintf(src, "void %s::remove_port(PORT* p)\n{\n", class_name);
       
-      def = mputprintf(def, "void remove_port(%s* p);\n", pdef->provider_msg_outlist.elements[i].name);
+    for (i = 0; i < pdef->provider_msg_outlist.nElements; i++) {
       src = mputprintf(src,
-        "void %s::remove_port(%s* p) {\n"
+        "%s* x_%i = dynamic_cast<%s*>(p);\n"
+        "if (x_%i != NULL) {\n"
         "for (size_t i = 0; i < n_%i; i++) {\n"
-        "if (p_%i[i] == p) {\n"
-        "p_%i[i]->remove_port(static_cast<%s*>(this));\n"
+        "if (p_%i[i] == x_%i) {\n"
         "p_%i[i] = NULL;\n"
         "}\n"
         "}\n"
@@ -2169,11 +2180,18 @@ void defPortClass(const port_def* pdef, output_struct* output)
         "Free(p_%i);\n"
         "p_%i = port_list;\n"
         "n_%i = size;\n"
-        "}\n\n", class_name, pdef->provider_msg_outlist.elements[i].name, (int)i, (int)i,
-        (int)i, pdef->name, (int)i, pdef->provider_msg_outlist.elements[i].name, (int)i, (int)i,
+        "return;\n"
+        "}\n",
+        pdef->provider_msg_outlist.elements[i].name, (int)i,
+        pdef->provider_msg_outlist.elements[i].name, (int)i, (int)i, (int)i,
+        (int)i, (int)i, pdef->provider_msg_outlist.elements[i].name, (int)i, (int)i,
         pdef->provider_msg_outlist.elements[i].name, pdef->provider_msg_outlist.elements[i].name,
         (int)i, (int)i, (int)i, (int)i);
     }
+    
+    src = mputstr(src,
+      "TTCN_error(\"Internal error: Removing invalid port type.\");\n"
+      "}\n\n");
     
     // in_translation_mode returns true if one of the port type variables are not null
     def = mputstr(def, "boolean in_translation_mode() const;\n");
@@ -2211,22 +2229,35 @@ void defPortClass(const port_def* pdef, output_struct* output)
   if (pdef->n_mapper_name > 0) {
     def = mputstr(def, "public:\n");
     // add_port and remove_port is called after the map and unmap statements.
+    def = mputstr(def, "void add_port(PORT* p);\n");
+    src = mputprintf(src, "void %s::add_port(PORT* p)\n{\n", class_name);
     for (i = 0; i < pdef->n_mapper_name; i++) {
-      def = mputprintf(def, "void add_port(%s* p);\n", pdef->mapper_name[i]);
       src = mputprintf(src,
-        "void %s::add_port(%s*p) {\n"
+        "%s* x_%i = dynamic_cast<%s*>(p);\n"
+        "if (x_%i != NULL) {\n"
         "n_%i++;\n"
         "p_%i = static_cast<%s**>(Realloc(p_%i, n_%i * sizeof(%s*)));\n"
-        "p_%i[n_%i-1] = p;\n"
-        "}\n\n", class_name, pdef->mapper_name[i], (int)i, (int)i,
-        pdef->mapper_name[i], (int)i, (int)i, pdef->mapper_name[i],
-        (int)i, (int)i);
+        "p_%i[n_%i-1] = x_%i;\n"
+        "return;\n"
+        "}\n",
+        pdef->mapper_name[i], (int)i,
+        pdef->mapper_name[i], (int)i, (int)i,
+        (int)i, pdef->mapper_name[i], (int)i, (int)i,
+        pdef->mapper_name[i], (int)i, (int)i, (int)i);
+    }
+    src = mputstr(src,
+      "TTCN_error(\"Internal error: Adding invalid port type.\");\n"
+      "}\n\n");
+    
+    def = mputstr(def, "void remove_port(PORT* p);\n");
+    src = mputprintf(src, "void %s::remove_port(PORT* p)\n{\n", class_name);
       
-      def = mputprintf(def, "void remove_port(%s*);\n", pdef->mapper_name[i]);
+    for (i = 0; i < pdef->n_mapper_name; i++) {
       src = mputprintf(src,
-        "void %s::remove_port(%s* p) {\n"
+        "%s* x_%i = dynamic_cast<%s*>(p);\n"
+        "if (x_%i != NULL) {\n"
         "for (size_t i = 0; i < n_%i; i++) {\n"
-        "if (p_%i[i] == p) {\n"
+        "if (p_%i[i] == x_%i) {\n"
         "p_%i[i] = NULL;\n"
         "}\n"
         "}\n"
@@ -2242,11 +2273,18 @@ void defPortClass(const port_def* pdef, output_struct* output)
         "Free(p_%i);\n"
         "p_%i = port_list;\n"
         "n_%i = size;\n"
-        "}\n\n", class_name, pdef->mapper_name[i], (int)i,
-        (int)i, (int)i, pdef->mapper_name[i], (int)i, (int)i,
+        "return;\n"
+        "}\n",
+        pdef->mapper_name[i], (int)i, pdef->mapper_name[i], (int)i,
+        (int)i, (int)i, (int)i, (int)i, pdef->mapper_name[i], (int)i, (int)i,
         pdef->mapper_name[i], pdef->mapper_name[i],
         (int)i, (int)i, (int)i, (int)i);
     }
+    
+    src = mputstr(src,
+      "TTCN_error(\"Internal error: Removing invalid port type.\");\n"
+      "}\n\n");
+    
     def = mputstr(def, "private:\n");
     // Resets all port type variables to NULL
     def = mputstr(def, "void reset_port_variables();\n");

@@ -204,6 +204,14 @@ public:
       array_elements[v_index].activate_port();
     }
   }
+  
+  // needed by the init_system_port function
+  void safe_start()
+  {
+    for (unsigned int v_index = 0; v_index < array_size; v_index++) {
+      array_elements[v_index].safe_start();
+    }
+  }
 
   void log() const
   {

@@ -3232,13 +3232,14 @@ void MainController::send_create_mtc(host_struct *hc)
 
 void MainController::send_create_ptc(host_struct *hc,
   component component_reference, const qualified_name& component_type,
-  const char *component_name, boolean is_alive,
-  const qualified_name& current_testcase)
+  const qualified_name& system_type, const char *component_name,
+  boolean is_alive, const qualified_name& current_testcase)
 {
   Text_Buf text_buf;
   text_buf.push_int(MSG_CREATE_PTC);
   text_buf.push_int(component_reference);
   text_buf.push_qualified_name(component_type);
+  text_buf.push_qualified_name(system_type);
   text_buf.push_string(component_name);
   text_buf.push_int(is_alive ? 1 : 0);
   text_buf.push_qualified_name(current_testcase);
@@ -3997,7 +3998,7 @@ void MainController::process_create_nak(host_struct *hc)
       tc->initial.location_str);
     if (new_host != NULL) {
       send_create_ptc(new_host, component_reference, tc->comp_type,
-        tc->comp_name, tc->is_alive, mtc->tc_fn_name);
+        system->comp_type, tc->comp_name, tc->is_alive, mtc->tc_fn_name);
       notify("PTC with component reference %d was relocated from host "
         "%s to %s because of overload: %s.", component_reference,
         hc->hostname, new_host->hostname, reason);
@@ -4145,8 +4146,8 @@ void MainController::process_create_req(component_struct *tc)
   }
 
   component comp_ref = next_comp_ref++;
-  send_create_ptc(host, comp_ref, component_type, component_name, is_alive,
-    mtc->tc_fn_name);
+  send_create_ptc(host, comp_ref, component_type, system->comp_type,
+    component_name, is_alive, mtc->tc_fn_name);
 
   tc->tc_state = TC_CREATE;
 

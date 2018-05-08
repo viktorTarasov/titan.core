@@ -74,6 +74,7 @@ TTCN_Runtime::executor_state_enum
     TTCN_Runtime::executor_state = UNDEFINED_STATE;
 
 qualified_name TTCN_Runtime::component_type = { NULL, NULL };
+qualified_name TTCN_Runtime::system_type = { NULL, NULL };
 char *TTCN_Runtime::component_name = NULL;
 boolean TTCN_Runtime::is_alive = FALSE;
 
@@ -204,6 +205,7 @@ void TTCN_Runtime::clear_qualified_name(qualified_name& q_name)
 void TTCN_Runtime::clean_up()
 {
   clear_qualified_name(component_type);
+  clear_qualified_name(system_type);
   Free(component_name);
   component_name = NULL;
   control_module_name = NULL;
@@ -267,6 +269,20 @@ void TTCN_Runtime::set_component_type(const char *component_type_module,
 
   component_type.module_name = mcopystr(component_type_module);
   component_type.definition_name = mcopystr(component_type_name);
+}
+
+void TTCN_Runtime::set_system_type(const char* system_type_module,
+  const char* system_type_name)
+{
+  if (system_type_module == NULL || system_type_module[0] == '\0' ||
+      system_type_name == NULL || system_type_name[0] == '\0') {
+    TTCN_error("Internal error: TTCN_Runtime::set_system_type: "
+      "Trying to set an invalid system component type.");
+  }
+
+  clear_qualified_name(system_type);
+  system_type.module_name = mcopystr(system_type_module);
+  system_type.definition_name = mcopystr(system_type_name);
 }
 
 void TTCN_Runtime::set_component_name(const char *new_component_name)
@@ -624,6 +640,12 @@ int TTCN_Runtime::ptc_main()
   }
   TTCN_Logger::log_executor_component(API::ExecutorComponent_reason::ptc__finished);
   return ret_val;
+}
+
+void TTCN_Runtime::initialize_system_port(const char* port_name)
+{
+  Module_List::initialize_system_port(system_type.module_name,
+    system_type.definition_name, port_name);
 }
 
 component TTCN_Runtime::create_component(
@@ -2042,6 +2064,7 @@ void TTCN_Runtime::begin_testcase(
   TIMER::save_control_timers();
   TTCN_Default::save_control_defaults();
   set_testcase_name(par_module_name, par_testcase_name);
+  set_system_type(system_comptype_module, system_comptype_name);
   char *command_arguments = mprintf("%s.%s", testcase_name.module_name,
     testcase_name.definition_name);
   execute_command(begin_testcase_command, command_arguments);
@@ -2422,6 +2445,7 @@ void TTCN_Runtime::process_create_mtc()
 
 void TTCN_Runtime::process_create_ptc(component component_reference,
   const char *component_type_module, const char *component_type_name,
+  const char *system_type_module, const char *system_type_name,
   const char *par_component_name, boolean par_is_alive,
   const char *current_testcase_module, const char *current_testcase_name)
 {
@@ -2468,6 +2492,7 @@ void TTCN_Runtime::process_create_ptc(component component_reference,
     TTCN_Communication::close_mc_connection();
     self = component_reference;
     set_component_type(component_type_module, component_type_name);
+    set_system_type(system_type_module, system_type_name);
     set_component_name(par_component_name);
     is_alive = par_is_alive;
     set_testcase_name(current_testcase_module, current_testcase_name);

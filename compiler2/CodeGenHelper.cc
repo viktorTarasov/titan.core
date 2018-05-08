@@ -373,6 +373,7 @@ void CodeGenHelper::finalize_generation(Type* type) {
   transfer_value(dst.functions.get_param, src.functions.get_param);
   transfer_value(dst.functions.log_param, src.functions.log_param);
   transfer_value(dst.functions.init_comp, src.functions.init_comp);
+  transfer_value(dst.functions.init_system_port, src.functions.init_system_port);
   transfer_value(dst.functions.start,     src.functions.start);
   transfer_value(dst.functions.control,   src.functions.control);
 }

@@ -1357,15 +1357,20 @@ void TTCN_Communication::process_create_ptc()
       "component reference %d.", component_reference);
     return;
   }
-  qualified_name component_type;
+  qualified_name component_type, system_type;
   incoming_buf.pull_qualified_name(component_type);
+  incoming_buf.pull_qualified_name(system_type);
   if (component_type.module_name == NULL ||
-    component_type.definition_name == NULL) {
+      component_type.definition_name == NULL ||
+      system_type.module_name == NULL ||
+      system_type.definition_name == NULL) {
     incoming_buf.cut_message();
     delete [] component_type.module_name;
     delete [] component_type.definition_name;
+    delete [] system_type.module_name;
+    delete [] system_type.definition_name;
     send_error("Message CREATE_PTC with component reference %d contains "
-      "an invalid component type.", component_reference);
+      "an invalid component type or system type.", component_reference);
     return;
   }
   char *component_name = incoming_buf.pull_string();
@@ -1377,12 +1382,15 @@ void TTCN_Communication::process_create_ptc()
   try {
     TTCN_Runtime::process_create_ptc(component_reference,
       component_type.module_name, component_type.definition_name,
+      system_type.module_name, system_type.definition_name,
       component_name, is_alive, current_testcase.module_name,
       current_testcase.definition_name);
   } catch (...) {
     // to prevent from memory leaks
     delete [] component_type.module_name;
     delete [] component_type.definition_name;
+    delete [] system_type.module_name;
+    delete [] system_type.definition_name;
     delete [] component_name;
     delete [] current_testcase.module_name;
     delete [] current_testcase.definition_name;
@@ -1391,6 +1399,8 @@ void TTCN_Communication::process_create_ptc()
 
   delete [] component_type.module_name;
   delete [] component_type.definition_name;
+  delete [] system_type.module_name;
+  delete [] system_type.definition_name;
   delete [] component_name;
   delete [] current_testcase.module_name;
   delete [] current_testcase.definition_name;
@@ -1759,6 +1769,13 @@ void TTCN_Communication::process_map()
     if (translation == TRUE) {
       PORT::map_port(local_port, system_port, TRUE);
     }
+    if (!TTCN_Runtime::is_single()) {
+      if (translation == FALSE) {
+        send_mapped(local_port, system_port, translation);
+      } else {
+        send_mapped(system_port, local_port, translation);
+      }
+    }
   } catch (...) {
     delete [] local_port;
     delete [] system_port;
@@ -1797,6 +1814,13 @@ void TTCN_Communication::process_unmap()
     PORT::unmap_port(local_port, system_port, FALSE);
     if (translation == TRUE) {
       PORT::unmap_port(local_port, system_port, TRUE);
+    }
+    if (!TTCN_Runtime::is_single()) {
+      if (translation == FALSE) {
+        send_unmapped(local_port, system_port, translation);
+      } else {
+        send_unmapped(system_port, local_port, translation);
+      }
     }
   } catch (...) {
     delete [] local_port;

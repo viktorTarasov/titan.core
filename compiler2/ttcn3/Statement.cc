@@ -1414,7 +1414,6 @@ namespace Ttcn {
       config_op.compref2=p_compref2;
       config_op.portref2=p_portref2;
       config_op.translate=false;
-      config_op.first_is_system = false;
       break;
     default:
       FATAL_ERROR("Statement::Statement()");
@@ -4959,9 +4958,6 @@ error:
         warning("Port type `%s' cannot send or receive from system port type `%s'.",
           pt2->get_typename().c_str(), pt1->get_typename().c_str());
       }
-      if (config_op.translate) {
-        config_op.first_is_system = true;
-      }
     } else {
       // we have no idea which one is the system port
       bool first_is_mapped_to_second = !ptb1->is_legacy() && ptb1->is_translate(ptb2);
@@ -4970,9 +4966,6 @@ error:
       if (!config_op.translate && !ptb1->is_mappable(ptb2) && !ptb2->is_mappable(ptb1)) {
         error("The mapping between port types `%s' and `%s' is not consistent",
                 pt1->get_typename().c_str(), pt2->get_typename().c_str());
-      }
-      if (config_op.translate) {
-        config_op.first_is_system = second_is_mapped_to_first;
       }
     }
     if (!config_op.translate) {
@@ -7624,10 +7617,8 @@ error:
   {
     expression_struct expr;
     Code::init_expr(&expr);
-    bool warning = false;
     if (config_op.translate == true) {
       if (!config_op.compref1->get_expr_governor(Type::EXPECTED_DYNAMIC_VALUE)) {
-        warning = true;
         if (strcmp(opname, "map") == 0) {
           config_op.compref1->warning(
             "Cannot determine the type of the component in the first parameter."
@@ -7635,23 +7626,11 @@ error:
         }
       }
       if (!config_op.compref2->get_expr_governor(Type::EXPECTED_DYNAMIC_VALUE)) {
-        warning = true;
         if (strcmp(opname, "map") == 0) {
           config_op.compref2->warning(
             "Cannot determine the type of the component in the second parameter."
             "The port translation will not work.");
         }
-      }
-      if (warning == false) {
-        Reference* portref = config_op.first_is_system ?
-          config_op.portref1 : config_op.portref2;
-        expr.expr = mputstr(expr.expr, "if (!(");
-        portref->generate_code_portref(&expr, my_sb);
-        expr.expr = mputstr(expr.expr, ".port_is_started())) {\n");
-        portref->generate_code_portref(&expr, my_sb);
-        expr.expr = mputstr(expr.expr, ".activate_port(TRUE);\n");
-        portref->generate_code_portref(&expr, my_sb);
-        expr.expr = mputstr(expr.expr, ".start();\n}\n");
       }
     }
     expr.expr = mputprintf(expr.expr, "TTCN_Runtime::%s_port(", opname);
@@ -7680,32 +7659,10 @@ error:
       // a simple string shall be formed from the port name and array indices
       generate_code_portref(&expr, config_op.portref2);
     }
-    if (config_op.translate == true && warning == false) {
-      expr.expr = mputstr(expr.expr, ", TRUE");
-      }
-    expr.expr = mputstr(expr.expr, ")");
     if (config_op.translate == true) {
-      string funcname;
-      if (strcmp(opname, "map") == 0) {
-        funcname = "add_port";
-      } else if (strcmp(opname, "unmap") == 0) {
-        funcname = "remove_port";
-      } else {
-        //connect, disconnect are not supported
-      }
-      if (!funcname.empty() && warning == false) {
-        expr.expr = mputstr(expr.expr, ";\n");
-        config_op.portref1->generate_code_portref(&expr, my_sb);
-        expr.expr = mputprintf(expr.expr, ".%s(&(", funcname.c_str());
-        config_op.portref2->generate_code_portref(&expr, my_sb);
-        expr.expr = mputstr(expr.expr, "));\n");
-
-        config_op.portref2->generate_code_portref(&expr, my_sb);
-        expr.expr = mputprintf(expr.expr, ".%s(&(", funcname.c_str());
-        config_op.portref1->generate_code_portref(&expr, my_sb);
-        expr.expr = mputstr(expr.expr, "))");
-      }
+      expr.expr = mputstr(expr.expr, ", TRUE");
     }
+    expr.expr = mputstr(expr.expr, ")");
     return Code::merge_free_expr(str, &expr);
   }
 

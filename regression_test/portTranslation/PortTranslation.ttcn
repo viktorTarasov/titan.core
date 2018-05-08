@@ -231,6 +231,26 @@ module PortTranslation {
 	} with {
 		extension "prototype(fast)";
 	}
+	
+	function int_to_int(in integer i, out integer j) port PT4 {
+		j := i;
+		port.setstate(0);
+	} with {
+		extension "prototype(fast)";
+	}
+
+	function char_to_char2(in charstring i, out charstring j) port PT4 {
+		j := i;
+		if (i == "abc") {
+			setverdict(pass);
+		}
+		else {
+			setverdict(fail, "Sending invalid message: ", i);
+		}
+		port.setstate(0);
+	} with {
+		extension "prototype(fast)";
+	}
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -272,6 +292,13 @@ module PortTranslation {
 	} with {
 	  extension "provider"
 	}
+	
+	type port P5 message {
+		in integer
+		out charstring
+	} with {
+		extension "provider"
+	}
 
 	type port PT2 message map to P1, P2 {
 		in charstring from charstring with char_to_char()
@@ -294,23 +321,32 @@ module PortTranslation {
 	  out integer, charstring
 	  out boolean to boolean with bool_to_bool_discard()
 	}
+	
+	type port PT4 message map to P5 {
+		in integer from integer with int_to_int()
+		out charstring to charstring with char_to_char2()
+	}
 
 
 	type component MyComp {
 		port PT2 p;
 		port PT3 p3;
+		port PT4 p4;
 
 		// Extra port types to check if multiple map/unmaps does not make things go bad
 		port PT2 p11;
 		port PT2 p12;
 		port PT2 p13;
 	}
+	
+	type component MyComp2 {}
 
 	type component System {
 		port P1 p1
 		port P2 p2
 		port P3 p3
 		port P4 p4
+		port P5 p5
 
 		// Extra port types to check if multiple map/unmaps does not make things go bad
 		port P1 p11
@@ -831,6 +867,55 @@ module PortTranslation {
 		}
 		t.stop;
 	}
+	
+	// Test function for remote mappings (is executed on the same PTC where the mappings take place)
+	function f_behavior_mapping_test(boolean mapping_required) runs on MyComp system System {
+		var boolean is_mapped := p4.checkstate("Mapped");
+		if (is_mapped and mapping_required) {
+			// it's mapped and it should be
+			// the translation function will set the verdict
+			p4.send("abc");
+		}
+		else if (not is_mapped and not mapping_required) {
+			// it's correctly not mapped
+			setverdict(pass);
+		}
+		else {
+			var charstring mapped_state;
+			if (is_mapped) {
+				mapped_state := "mapped";
+			}
+			else {
+				mapped_state := "unmapped";
+			}
+			setverdict(fail, "Invalid port state (port is ", mapped_state, ").");
+		}
+	}
+
+	// Remote mapping function
+	// Maps and unmaps ports (in translation mode) on a different PTC, and runs the test function.
+	function f_behavior_map_and_unmap() runs on MyComp2 system System {
+		var MyComp ct := MyComp.create alive;
+		map(ct:p4, system:p5);
+		ct.start(f_behavior_mapping_test(true));
+		ct.done;
+		
+		unmap(ct:p4, system:p5);
+		ct.start(f_behavior_mapping_test(false));
+		ct.done;
+	}
+
+	// Tests remote mapping and unmapping (initiated from a PTC).
+	testcase tc_remote_mapping_from_ptc() runs on MyComp2 system System {
+		var MyComp2 ct := MyComp2.create;
+		ct.start(f_behavior_map_and_unmap());
+		ct.done;
+	}
+
+	// Tests remote mapping and unmapping (initiated from the MTC).
+	testcase tc_remote_mapping_from_mtc() runs on MyComp2 system System {
+		f_behavior_map_and_unmap();
+	}
 
 	control {
 		execute(tc_send())
@@ -850,6 +935,9 @@ module PortTranslation {
 		execute(tc_receive_fragmented());
 		
 		execute(tc_receive_discarded_plus_port_ref());
+		
+		execute(tc_remote_mapping_from_ptc());
+		execute(tc_remote_mapping_from_mtc());
 	}
 
 }

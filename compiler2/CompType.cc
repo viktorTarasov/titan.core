@@ -546,6 +546,37 @@ void ComponentTypeBody::generate_code(output_struct* target)
   target->functions.init_comp = mputstr(target->functions.init_comp,
     "return TRUE;\n"
     "} else ");
+  
+  // system port initializer function
+  bool first_port_found = false;
+  nof_defs = all_defs_m.size();
+  for (size_t i = 0; i < nof_defs; i++) {
+    // go through all port definitions, including inherited ones
+    Ttcn::Definition* def = all_defs_m.get_nth_elem(i);
+    if (def->get_asstype() == Common::Assignment::A_PORT) {
+      if (!first_port_found) {
+        // only add a segment for this component if it has at least one port
+        first_port_found = true;
+        target->functions.init_system_port = mputprintf(
+          target->functions.init_system_port,
+          "%sif (!strcmp(component_type, \"%s\")) {\n",
+          target->functions.init_system_port == NULL ? "" : "else ",
+          comp_id->get_dispname().c_str());
+      }
+      target->functions.init_system_port = mputprintf(
+        target->functions.init_system_port,
+        "if (!strcmp(port_name, \"%s\")) {\n"
+        "%s.safe_start();\n"
+        "return TRUE;\n"
+        "}\n",
+        def->get_id().get_dispname().c_str(),
+        def->get_genname_from_scope(my_type->get_my_scope()).c_str());
+    }
+  }
+  if (first_port_found) {
+    target->functions.init_system_port = mputstr(
+      target->functions.init_system_port, "}\n");
+  }
 }
 
 char *ComponentTypeBody::generate_code_comptype_name(char *str)

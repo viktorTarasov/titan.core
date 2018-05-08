@@ -62,6 +62,7 @@ private:
   static executor_state_enum executor_state;
 
   static qualified_name component_type;
+  static qualified_name system_type;
   static char *component_name;
   static boolean is_alive;
 
@@ -153,6 +154,8 @@ public:
   static void clean_up();
   static void set_component_type(const char *component_type_module,
     const char *component_type_name);
+  static void set_system_type(const char* system_type_module,
+    const char* system_type_name);
   static void set_component_name(const char *new_component_name);
   inline static void set_alive_flag(boolean par_is_alive)
   { is_alive = par_is_alive; }
@@ -195,6 +198,8 @@ public:
     unsigned short MC_port);
   static int mtc_main();
   static int ptc_main();
+  
+  static void initialize_system_port(const char* port_name);
 
   static component create_component(const char *created_component_type_module,
     const char *created_component_type_name,
@@ -306,6 +311,7 @@ public:
   static void process_create_mtc();
   static void process_create_ptc(component component_reference,
     const char *component_type_module, const char *component_type_name,
+    const char *system_type_module, const char *system_type_name,
     const char *par_component_name, boolean par_is_alive,
     const char *current_testcase_module, const char *current_testcase_name);
 

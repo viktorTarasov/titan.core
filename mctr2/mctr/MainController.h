@@ -491,8 +491,9 @@ private:
   static void send_exit_hc(host_struct *hc);
   static void send_create_mtc(host_struct *hc);
   static void send_create_ptc(host_struct *hc, component component_reference,
-    const qualified_name& component_type, const char *component_name,
-    boolean is_alive, const qualified_name& current_testcase);
+    const qualified_name& component_type, const qualified_name& system_type,
+    const char *component_name, boolean is_alive,
+    const qualified_name& current_testcase);
   static void send_kill_process(host_struct *hc,
     component component_reference);
 

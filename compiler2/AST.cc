@@ -1064,6 +1064,29 @@ namespace Common {
       output->functions.init_comp = NULL;
       has_init_comp = true;
     } else has_init_comp = false;
+    // init system port function
+    bool has_init_system_port;
+    if (output->functions.init_system_port != NULL) {
+      output->source.static_function_prototypes =
+        mputprintf(output->source.static_function_prototypes,
+        "%sboolean init_system_port(const char* component_type, const char* port_name);\n",
+        split_to_slices ? "extern " : "static ");
+      output->source.static_function_bodies =
+        mputprintf(output->source.static_function_bodies,
+        "%sboolean init_system_port(const char* component_type, const char* port_name)\n"
+        "{\n", split_to_slices ? "" : "static ");
+      output->source.static_function_bodies =
+        mputstr(output->source.static_function_bodies, output->functions.init_system_port);
+      output->source.static_function_bodies =
+        mputstr(output->source.static_function_bodies, "return FALSE;\n"
+        "}\n\n");
+      Free(output->functions.init_system_port);
+      output->functions.init_system_port = NULL;
+      has_init_system_port = true;
+    }
+    else {
+      has_init_system_port = false;
+    }
     // start function
     bool has_start;
     if (output->functions.start) {
@@ -1187,15 +1210,16 @@ namespace Common {
       }
       string extra_str = extra ? ( string('"') + extra + string('"') ) : string("NULL");
       output->source.global_vars = mputprintf(output->source.global_vars,
-	", %uU, %uU, %uU, %uU, %s, %luLU, %s, %s, %s, %s, %s, %s, %s, %s",
+	", %uU, %uU, %uU, %uU, %s, %luLU, %s, %s, %s, %s, %s, %s, %s, %s, %s",
         suffix, release, patch, build, extra_str.c_str(),
         (unsigned long)num_xml_namespaces,
         ((num_xml_namespaces || (control_ns && control_ns_prefix)) ? "xml_namespaces" : "0"),
 	has_post_init ? "post_init_module" : "NULL",
 	has_set_param ? "set_module_param" : "NULL",
-  has_get_param ? "get_module_param" : "NULL",
+	has_get_param ? "get_module_param" : "NULL",
 	has_log_param ? "log_module_param" : "NULL",
 	has_init_comp ? "init_comp_type" : "NULL",
+	has_init_system_port ? "init_system_port" : "NULL",
 	has_start ? "start_ptc_function" : "NULL",
 	has_control ? "module_control_part" : "NULL");
     } else {
@@ -1210,6 +1234,8 @@ namespace Common {
 	FATAL_ERROR("Module::generate_functions(): log_param function in ASN.1 module");
       if (has_init_comp)
 	FATAL_ERROR("Module::generate_functions(): init_comp function in ASN.1 module");
+      if (has_init_system_port)
+	FATAL_ERROR("Module::generate_functions(): init_system_port function in ASN.1 module");
       if (has_start)
 	FATAL_ERROR("Module::generate_functions(): startable function in ASN.1 module");
       if (has_control)

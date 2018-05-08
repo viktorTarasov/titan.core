@@ -63,6 +63,7 @@ extern "C" {
       char *get_param; /**< Code for get_module_param() */
       char *log_param; /**< Code for log_module_param() */
       char *init_comp; /**< Code for init_comp_type() */
+      char* init_system_port; /**< Code for init_system_port() */
       char *start;     /**< Code for start_ptc_function() */
       char *control;   /**< Code for module_control_part() */
     } functions;

@@ -155,6 +155,24 @@ void Module_List::initialize_component(const char *module_name,
       "module %s.", component_type, module_name);
 }
 
+void Module_List::initialize_system_port(const char* module_name,
+  const char* component_type, const char* port_name)
+{
+  TTCN_Module* system_module = Module_List::lookup_module(module_name);
+  if (system_module == NULL) {
+    TTCN_error("Internal error: Module %s does not exist.", module_name);
+  }
+  if (system_module->initialize_system_port_func == NULL) {
+    TTCN_error("Internal error: Module %s does not have a system port "
+      "initializer function.", module_name);
+  }
+  if (!system_module->initialize_system_port_func(component_type, port_name)) {
+    TTCN_error("Internal error: Cannot find port %s in component type %s, or "
+      "component type %s in module %s.", port_name, component_type,
+      component_type, module_name);
+  }
+}
+
 void Module_List::set_param(Module_Param& param)
 {
 #ifndef TITAN_RUNTIME_2
@@ -786,6 +804,7 @@ TTCN_Module::TTCN_Module(const char *par_module_name,
   get_param_func_t par_get_param_func,
   log_param_func_t par_log_param_func,
   initialize_component_func_t par_initialize_component_func,
+  initialize_system_port_func_t par_initialize_system_port_func,
   start_func_t par_start_func,
   control_func_t par_control_func)
 : list_prev(NULL), list_next(NULL)
@@ -810,6 +829,7 @@ TTCN_Module::TTCN_Module(const char *par_module_name,
 , get_param_func(par_get_param_func)
 , log_param_func(par_log_param_func)
 , initialize_component_func(par_initialize_component_func)
+, initialize_system_port_func(par_initialize_system_port_func)
 , start_func(par_start_func)
 , control_func(par_control_func)
 , function_head(NULL)
@@ -850,6 +870,7 @@ TTCN_Module::TTCN_Module(const char *par_module_name,
 , get_param_func(NULL)
 , log_param_func(NULL)
 , initialize_component_func(NULL)
+, initialize_system_port_func(NULL)
 , start_func(NULL)
 , control_func(NULL)
 , function_head(NULL)
@@ -888,6 +909,7 @@ TTCN_Module::TTCN_Module(const char *par_module_name,
 , set_param_func(NULL)
 , log_param_func(NULL)
 , initialize_component_func(NULL)
+, initialize_system_port_func(NULL)
 , start_func(NULL)
 , control_func(NULL)
 , function_head(NULL)
