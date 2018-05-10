@@ -91,6 +91,12 @@ with {
 };
 
 
+type XSD.Long LongMin_1 (-1 .. 9223372036854775807)
+with {
+  variant "name as 'longMin-1'";
+};
+
+
 }
 with {
   encode "XML";

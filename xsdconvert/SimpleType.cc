@@ -1524,6 +1524,9 @@ void ValueType::applyFacets() // only for integer and float types
     upper = -1;
   } else if (base == "nonNegativeInteger") {
     lower = 0;
+  } else if (base == "long") {
+    lower = LLONG_MIN;
+    upper = LLONG_MAX;
   } else if (base == "unsignedLong") {
     lower = 0;
     upper = ULLONG_MAX;

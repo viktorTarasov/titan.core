@@ -65,4 +65,10 @@ targetNamespace="www.example.org/ranges/integer">
 	</restriction>
 </simpleType>
 
+<simpleType name="longMin-1">
+	<restriction base="long">
+		<minInclusive value="-1" />
+	</restriction>
+</simpleType>
+
 </schema>
