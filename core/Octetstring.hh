@@ -89,9 +89,6 @@ public:
 
   OCTETSTRING operator+(const OCTETSTRING& other_value) const;
   OCTETSTRING operator+(const OCTETSTRING_ELEMENT& other_value) const;
-#ifdef TITAN_RUNTIME_2
-  OCTETSTRING operator+(const OPTIONAL<OCTETSTRING>& other_value) const;
-#endif
 
   OCTETSTRING& operator+=(const OCTETSTRING& other_value);
   OCTETSTRING& operator+=(const OCTETSTRING_ELEMENT& other_value);
@@ -225,9 +222,6 @@ public:
 
   OCTETSTRING operator+(const OCTETSTRING& other_value) const;
   OCTETSTRING operator+(const OCTETSTRING_ELEMENT& other_value) const;
-#ifdef TITAN_RUNTIME_2
-  OCTETSTRING operator+(const OPTIONAL<OCTETSTRING>& other_value) const;
-#endif
   
   OCTETSTRING operator~() const;
   OCTETSTRING operator&(const OCTETSTRING& other_value) const;
@@ -264,22 +258,16 @@ private:
     const OCTETSTRING_template& right_template);
   friend OCTETSTRING_template operator+(const OCTETSTRING_ELEMENT& left_value,
     const OCTETSTRING_template& right_template);
-  friend OCTETSTRING_template operator+(const OPTIONAL<OCTETSTRING>& left_value,
-    const OCTETSTRING_template& right_template);
   friend OCTETSTRING_template operator+(template_sel left_template_sel,
     const OCTETSTRING_template& right_template);
   friend OCTETSTRING_template operator+(const OCTETSTRING& left_value,
     template_sel right_template_sel);
   friend OCTETSTRING_template operator+(const OCTETSTRING_ELEMENT& left_value,
     template_sel right_template_sel);
-  friend OCTETSTRING_template operator+(const OPTIONAL<OCTETSTRING>& left_value,
-    template_sel right_template_sel);
   friend OCTETSTRING_template operator+(template_sel left_template_sel,
     const OCTETSTRING& right_value);
   friend OCTETSTRING_template operator+(template_sel left_template_sel,
     const OCTETSTRING_ELEMENT& right_value);
-  friend OCTETSTRING_template operator+(template_sel left_template_sel,
-    const OPTIONAL<OCTETSTRING>& right_value);
 #endif
   
   OCTETSTRING single_value;
@@ -324,7 +312,6 @@ public:
   OCTETSTRING_template operator+(const OCTETSTRING_template& other_value) const;
   OCTETSTRING_template operator+(const OCTETSTRING& other_value) const;
   OCTETSTRING_template operator+(const OCTETSTRING_ELEMENT& other_value) const;
-  OCTETSTRING_template operator+(const OPTIONAL<OCTETSTRING>& other_value) const;
   OCTETSTRING_template operator+(template_sel other_template_sel) const;
 #endif
 
@@ -375,22 +362,16 @@ extern OCTETSTRING_template operator+(const OCTETSTRING& left_value,
   const OCTETSTRING_template& right_template);
 extern OCTETSTRING_template operator+(const OCTETSTRING_ELEMENT& left_value,
   const OCTETSTRING_template& right_template);
-extern OCTETSTRING_template operator+(const OPTIONAL<OCTETSTRING>& left_value,
-  const OCTETSTRING_template& right_template);
 extern OCTETSTRING_template operator+(template_sel left_template_sel,
   const OCTETSTRING_template& right_template);
 extern OCTETSTRING_template operator+(const OCTETSTRING& left_value,
   template_sel right_template_sel);
 extern OCTETSTRING_template operator+(const OCTETSTRING_ELEMENT& left_value,
   template_sel right_template_sel);
-extern OCTETSTRING_template operator+(const OPTIONAL<OCTETSTRING>& left_value,
-  template_sel right_template_sel);
 extern OCTETSTRING_template operator+(template_sel left_template_sel,
   const OCTETSTRING& right_value);
 extern OCTETSTRING_template operator+(template_sel left_template_sel,
   const OCTETSTRING_ELEMENT& right_value);
-extern OCTETSTRING_template operator+(template_sel left_template_sel,
-  const OPTIONAL<OCTETSTRING>& right_value);
 #endif
 
 #endif

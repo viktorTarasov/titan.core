@@ -263,16 +263,6 @@ HEXSTRING HEXSTRING::operator+(const HEXSTRING_ELEMENT& other_value) const
   return ret_val;
 }
 
-#ifdef TITAN_RUNTIME_2
-HEXSTRING HEXSTRING::operator+(const OPTIONAL<HEXSTRING>& other_value) const
-{
-  if (other_value.is_present()) {
-    return *this + (const HEXSTRING&)other_value;
-  }
-  TTCN_error("Unbound or omitted right operand of hexstring concatenation.");
-}
-#endif
-
 HEXSTRING HEXSTRING::operator~() const
 {
   must_bound("Unbound hexstring operand of operator not4b.");
@@ -1236,17 +1226,6 @@ HEXSTRING HEXSTRING_ELEMENT::operator+(const HEXSTRING_ELEMENT& other_value) con
   return HEXSTRING(2, &result);
 }
 
-#ifdef TITAN_RUNTIME_2
-HEXSTRING HEXSTRING_ELEMENT::operator+(
-  const OPTIONAL<HEXSTRING>& other_value) const
-{
-  if (other_value.is_present()) {
-    return *this + (const HEXSTRING&)other_value;
-  }
-  TTCN_error("Unbound or omitted right operand of hexstring concatenation.");
-}
-#endif
-
 HEXSTRING HEXSTRING_ELEMENT::operator~() const
 {
   must_bound("Unbound hexstring element operand of operator not4b.");
@@ -1722,16 +1701,6 @@ HEXSTRING_template HEXSTRING_template::operator+(
 }
 
 HEXSTRING_template HEXSTRING_template::operator+(
-  const OPTIONAL<HEXSTRING>& other_value) const
-{
-  if (other_value.is_present()) {
-    return *this + (const HEXSTRING&)other_value;
-  }
-  TTCN_error("Operand of hexstring template concatenation is an "
-    "unbound or omitted record/set field.");
-}
-
-HEXSTRING_template HEXSTRING_template::operator+(
   template_sel other_template_sel) const
 {
   if (template_selection == ANY_VALUE && other_template_sel == ANY_VALUE &&
@@ -1764,16 +1733,6 @@ HEXSTRING_template operator+(const HEXSTRING_ELEMENT& left_value,
   const HEXSTRING_template& right_template)
 {
   return HEXSTRING(left_value) + right_template;
-}
-
-HEXSTRING_template operator+(const OPTIONAL<HEXSTRING>& left_value,
-  const HEXSTRING_template& right_template)
-{
-  if (left_value.is_present()) {
-    return (const HEXSTRING&)left_value + right_template;
-  }
-  TTCN_error("Operand of hexstring template concatenation is an "
-    "unbound or omitted record/set field.");
 }
 
 HEXSTRING_template operator+(template_sel left_template_sel,
@@ -1809,16 +1768,6 @@ HEXSTRING_template operator+(const HEXSTRING_ELEMENT& left_value,
   return HEXSTRING(left_value) + right_template_sel;
 }
 
-HEXSTRING_template operator+(const OPTIONAL<HEXSTRING>& left_value,
-  template_sel right_template_sel)
-{
-  if (left_value.is_present()) {
-    return (const HEXSTRING&)left_value + right_template_sel;
-  }
-  TTCN_error("Operand of hexstring template concatenation is an "
-    "unbound or omitted record/set field.");
-}
-
 HEXSTRING_template operator+(template_sel left_template_sel,
   const HEXSTRING& right_value)
 {
@@ -1833,16 +1782,6 @@ HEXSTRING_template operator+(template_sel left_template_sel,
   const HEXSTRING_ELEMENT& right_value)
 {
   return left_template_sel + HEXSTRING(right_value);
-}
-
-HEXSTRING_template operator+(template_sel left_template_sel,
-  const OPTIONAL<HEXSTRING>& right_value)
-{
-  if (right_value.is_present()) {
-    return left_template_sel + (const HEXSTRING&)right_value;
-  }
-  TTCN_error("Operand of hexstring template concatenation is an "
-    "unbound or omitted record/set field.");
 }
 #endif // TITAN_RUNTIME_2
 

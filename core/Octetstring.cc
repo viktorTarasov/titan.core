@@ -186,16 +186,6 @@ OCTETSTRING OCTETSTRING::operator+(const OCTETSTRING_ELEMENT& other_value) const
   return ret_val;
 }
 
-#ifdef TITAN_RUNTIME_2
-OCTETSTRING OCTETSTRING::operator+(const OPTIONAL<OCTETSTRING>& other_value) const
-{
-  if (other_value.is_present()) {
-    return *this + (const OCTETSTRING&)other_value;
-  }
-  TTCN_error("Unbound or omitted right operand of octetstring concatenation.");
-}
-#endif
-
 OCTETSTRING& OCTETSTRING::operator+=(const OCTETSTRING& other_value)
 {
   must_bound("Appending an octetstring value to an unbound octetstring value.");
@@ -1518,17 +1508,6 @@ OCTETSTRING OCTETSTRING_ELEMENT::operator+
   return OCTETSTRING(2, result);
 }
 
-#ifdef TITAN_RUNTIME_2
-OCTETSTRING OCTETSTRING_ELEMENT::operator+(
-  const OPTIONAL<OCTETSTRING>& other_value) const
-{
-  if (other_value.is_present()) {
-    return *this + (const OCTETSTRING&)other_value;
-  }
-  TTCN_error("Unbound or omitted right operand of octetstring concatenation.");
-}
-#endif
-
 OCTETSTRING OCTETSTRING_ELEMENT::operator~() const
 {
   must_bound("Unbound octetstring element operand of operator not4b.");
@@ -2017,16 +1996,6 @@ OCTETSTRING_template OCTETSTRING_template::operator+(
 }
 
 OCTETSTRING_template OCTETSTRING_template::operator+(
-  const OPTIONAL<OCTETSTRING>& other_value) const
-{
-  if (other_value.is_present()) {
-    return *this + (const OCTETSTRING&)other_value;
-  }
-  TTCN_error("Operand of octetstring template concatenation is an "
-    "unbound or omitted record/set field.");
-}
-
-OCTETSTRING_template OCTETSTRING_template::operator+(
   template_sel other_template_sel) const
 {
   if (template_selection == ANY_VALUE && other_template_sel == ANY_VALUE &&
@@ -2059,16 +2028,6 @@ OCTETSTRING_template operator+(const OCTETSTRING_ELEMENT& left_value,
   const OCTETSTRING_template& right_template)
 {
   return OCTETSTRING(left_value) + right_template;
-}
-
-OCTETSTRING_template operator+(const OPTIONAL<OCTETSTRING>& left_value,
-  const OCTETSTRING_template& right_template)
-{
-  if (left_value.is_present()) {
-    return (const OCTETSTRING&)left_value + right_template;
-  }
-  TTCN_error("Operand of octetstring template concatenation is an "
-    "unbound or omitted record/set field.");
 }
 
 OCTETSTRING_template operator+(template_sel left_template_sel,
@@ -2104,16 +2063,6 @@ OCTETSTRING_template operator+(const OCTETSTRING_ELEMENT& left_value,
   return OCTETSTRING(left_value) + right_template_sel;
 }
 
-OCTETSTRING_template operator+(const OPTIONAL<OCTETSTRING>& left_value,
-  template_sel right_template_sel)
-{
-  if (left_value.is_present()) {
-    return (const OCTETSTRING&)left_value + right_template_sel;
-  }
-  TTCN_error("Operand of octetstring template concatenation is an "
-    "unbound or omitted record/set field.");
-}
-
 OCTETSTRING_template operator+(template_sel left_template_sel,
   const OCTETSTRING& right_value)
 {
@@ -2128,16 +2077,6 @@ OCTETSTRING_template operator+(template_sel left_template_sel,
   const OCTETSTRING_ELEMENT& right_value)
 {
   return left_template_sel + OCTETSTRING(right_value);
-}
-
-OCTETSTRING_template operator+(template_sel left_template_sel,
-  const OPTIONAL<OCTETSTRING>& right_value)
-{
-  if (right_value.is_present()) {
-    return left_template_sel + (const OCTETSTRING&)right_value;
-  }
-  TTCN_error("Operand of octetstring template concatenation is an "
-    "unbound or omitted record/set field.");
 }
 #endif // TITAN_RUNTIME_2
 

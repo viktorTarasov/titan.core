@@ -85,9 +85,6 @@ public:
 
   HEXSTRING operator+(const HEXSTRING& other_value) const;
   HEXSTRING operator+(const HEXSTRING_ELEMENT& other_value) const;
-#ifdef TITAN_RUNTIME_2
-  HEXSTRING operator+(const OPTIONAL<HEXSTRING>& other_value) const;
-#endif
 
   HEXSTRING operator~() const;
   HEXSTRING operator&(const HEXSTRING& other_value) const;
@@ -186,9 +183,6 @@ public:
 
   HEXSTRING operator+(const HEXSTRING& other_value) const;
   HEXSTRING operator+(const HEXSTRING_ELEMENT& other_value) const;
-#ifdef TITAN_RUNTIME_2
-  HEXSTRING operator+(const OPTIONAL<HEXSTRING>& other_value) const;
-#endif
 
   HEXSTRING operator~() const;
   HEXSTRING operator&(const HEXSTRING& other_value) const;
@@ -224,22 +218,16 @@ private:
     const HEXSTRING_template& right_template);
   friend HEXSTRING_template operator+(const HEXSTRING_ELEMENT& left_value,
     const HEXSTRING_template& right_template);
-  friend HEXSTRING_template operator+(const OPTIONAL<HEXSTRING>& left_value,
-    const HEXSTRING_template& right_template);
   friend HEXSTRING_template operator+(template_sel left_template_sel,
     const HEXSTRING_template& right_template);
   friend HEXSTRING_template operator+(const HEXSTRING& left_value,
     template_sel right_template_sel);
   friend HEXSTRING_template operator+(const HEXSTRING_ELEMENT& left_value,
     template_sel right_template_sel);
-  friend HEXSTRING_template operator+(const OPTIONAL<HEXSTRING>& left_value,
-    template_sel right_template_sel);
   friend HEXSTRING_template operator+(template_sel left_template_sel,
     const HEXSTRING& right_value);
   friend HEXSTRING_template operator+(template_sel left_template_sel,
     const HEXSTRING_ELEMENT& right_value);
-  friend HEXSTRING_template operator+(template_sel left_template_sel,
-    const OPTIONAL<HEXSTRING>& right_value);
 #endif
   
   HEXSTRING single_value;
@@ -284,7 +272,6 @@ public:
   HEXSTRING_template operator+(const HEXSTRING_template& other_value) const;
   HEXSTRING_template operator+(const HEXSTRING& other_value) const;
   HEXSTRING_template operator+(const HEXSTRING_ELEMENT& other_value) const;
-  HEXSTRING_template operator+(const OPTIONAL<HEXSTRING>& other_value) const;
   HEXSTRING_template operator+(template_sel other_template_sel) const;
 #endif
 
@@ -335,22 +322,16 @@ extern HEXSTRING_template operator+(const HEXSTRING& left_value,
   const HEXSTRING_template& right_template);
 extern HEXSTRING_template operator+(const HEXSTRING_ELEMENT& left_value,
   const HEXSTRING_template& right_template);
-extern HEXSTRING_template operator+(const OPTIONAL<HEXSTRING>& left_value,
-  const HEXSTRING_template& right_template);
 extern HEXSTRING_template operator+(template_sel left_template_sel,
   const HEXSTRING_template& right_template);
 extern HEXSTRING_template operator+(const HEXSTRING& left_value,
   template_sel right_template_sel);
 extern HEXSTRING_template operator+(const HEXSTRING_ELEMENT& left_value,
   template_sel right_template_sel);
-extern HEXSTRING_template operator+(const OPTIONAL<HEXSTRING>& left_value,
-  template_sel right_template_sel);
 extern HEXSTRING_template operator+(template_sel left_template_sel,
   const HEXSTRING& right_value);
 extern HEXSTRING_template operator+(template_sel left_template_sel,
   const HEXSTRING_ELEMENT& right_value);
-extern HEXSTRING_template operator+(template_sel left_template_sel,
-  const OPTIONAL<HEXSTRING>& right_value);
 #endif
 
 #endif

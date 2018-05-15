@@ -1733,6 +1733,17 @@ namespace Ttcn {
     return first ? u.concat.op1 : u.concat.op2;
   }
   
+  bool Template::is_optional_value_ref() const
+  {
+    if (templatetype != SPECIFIC_VALUE ||
+        u.specific_value->get_valuetype() != Common::Value::V_REFD) {
+      return false;
+    }
+    Common::Reference* ref = u.specific_value->get_reference();
+    return ref->get_refd_assignment()->get_Type()->field_is_optional(
+      ref->get_subrefs());
+  }
+  
   Template* Template::get_template_refd(ReferenceChain *refch)
   {
     unsigned int const prev_err_count = get_error_count();
@@ -5006,7 +5017,7 @@ compile_time:
     string left_expr;
     string right_expr;
     if (u.concat.op1->has_single_expr()) {
-      left_expr = u.concat.op1->get_single_expr(false);
+      left_expr = u.concat.op1->get_single_expr(u.concat.op1->is_optional_value_ref());
     }
     else {
       left_expr = my_scope->get_scope_mod_gen()->get_temporary_id();
@@ -5015,7 +5026,7 @@ compile_time:
       str = u.concat.op1->generate_code_init(str, left_expr.c_str());
     }
     if (u.concat.op2->has_single_expr()) {
-      right_expr = u.concat.op2->get_single_expr(false);
+      right_expr = u.concat.op2->get_single_expr(u.concat.op2->is_optional_value_ref());
     }
     else {
       right_expr = my_scope->get_scope_mod_gen()->get_temporary_id();
@@ -5326,8 +5337,8 @@ compile_time:
       if (!use_runtime_2) {
         FATAL_ERROR("Template::get_single_expr()");
       }
-      ret_val = u.concat.op1->get_single_expr(false) + " + " +
-        u.concat.op2->get_single_expr(false);
+      ret_val = u.concat.op1->get_single_expr(u.concat.op1->is_optional_value_ref()) + " + " +
+        u.concat.op2->get_single_expr(u.concat.op2->is_optional_value_ref());
       break;
     default:
       FATAL_ERROR("Template::get_single_expr()");

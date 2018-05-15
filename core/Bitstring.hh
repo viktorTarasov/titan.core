@@ -112,9 +112,6 @@ public:
 
   BITSTRING operator+(const BITSTRING& other_value) const;
   BITSTRING operator+(const BITSTRING_ELEMENT& other_value) const;
-#ifdef TITAN_RUNTIME_2
-  BITSTRING operator+(const OPTIONAL<BITSTRING>& other_value) const;
-#endif
 
   BITSTRING operator~() const;
   BITSTRING operator&(const BITSTRING& other_value) const;
@@ -241,9 +238,6 @@ public:
 
   BITSTRING operator+(const BITSTRING& other_value) const;
   BITSTRING operator+(const BITSTRING_ELEMENT& other_value) const;
-#ifdef TITAN_RUNTIME_2
-  BITSTRING operator+(const OPTIONAL<BITSTRING>& other_value) const;
-#endif
 
   BITSTRING operator~() const;
   BITSTRING operator&(const BITSTRING& other_value) const;
@@ -278,22 +272,16 @@ private:
     const BITSTRING_template& right_template);
   friend BITSTRING_template operator+(const BITSTRING_ELEMENT& left_value,
     const BITSTRING_template& right_template);
-  friend BITSTRING_template operator+(const OPTIONAL<BITSTRING>& left_value,
-    const BITSTRING_template& right_template);
   friend BITSTRING_template operator+(template_sel left_template_sel,
     const BITSTRING_template& right_template);
   friend BITSTRING_template operator+(const BITSTRING& left_value,
     template_sel right_template_sel);
   friend BITSTRING_template operator+(const BITSTRING_ELEMENT& left_value,
     template_sel right_template_sel);
-  friend BITSTRING_template operator+(const OPTIONAL<BITSTRING>& left_value,
-    template_sel right_template_sel);
   friend BITSTRING_template operator+(template_sel left_template_sel,
     const BITSTRING& right_value);
   friend BITSTRING_template operator+(template_sel left_template_sel,
     const BITSTRING_ELEMENT& right_value);
-  friend BITSTRING_template operator+(template_sel left_template_sel,
-    const OPTIONAL<BITSTRING>& right_value);
 #endif
   
   BITSTRING single_value;
@@ -338,7 +326,6 @@ public:
   BITSTRING_template operator+(const BITSTRING_template& other_value) const;
   BITSTRING_template operator+(const BITSTRING& other_value) const;
   BITSTRING_template operator+(const BITSTRING_ELEMENT& other_value) const;
-  BITSTRING_template operator+(const OPTIONAL<BITSTRING>& other_value) const;
   BITSTRING_template operator+(template_sel other_template_sel) const;
 #endif
 
@@ -389,22 +376,16 @@ extern BITSTRING_template operator+(const BITSTRING& left_value,
   const BITSTRING_template& right_template);
 extern BITSTRING_template operator+(const BITSTRING_ELEMENT& left_value,
   const BITSTRING_template& right_template);
-extern BITSTRING_template operator+(const OPTIONAL<BITSTRING>& left_value,
-  const BITSTRING_template& right_template);
 extern BITSTRING_template operator+(template_sel left_template_sel,
   const BITSTRING_template& right_template);
 extern BITSTRING_template operator+(const BITSTRING& left_value,
   template_sel right_template_sel);
 extern BITSTRING_template operator+(const BITSTRING_ELEMENT& left_value,
   template_sel right_template_sel);
-extern BITSTRING_template operator+(const OPTIONAL<BITSTRING>& left_value,
-  template_sel right_template_sel);
 extern BITSTRING_template operator+(template_sel left_template_sel,
   const BITSTRING& right_value);
 extern BITSTRING_template operator+(template_sel left_template_sel,
   const BITSTRING_ELEMENT& right_value);
-extern BITSTRING_template operator+(template_sel left_template_sel,
-  const OPTIONAL<BITSTRING>& right_value);
 #endif
 
 #endif

@@ -310,6 +310,7 @@ namespace Ttcn {
     Value* get_string_encoding() const;
     TemplateInstance* get_decode_target() const;
     Template* get_concat_operand(bool first) const;
+    bool is_optional_value_ref() const;
   private:
     Template* get_template_refd(ReferenceChain *refch);
     Template* get_refd_field_template(const Identifier& field_id,

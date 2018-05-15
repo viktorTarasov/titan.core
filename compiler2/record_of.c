@@ -4686,15 +4686,11 @@ void defRecordOfTemplate2(const struct_of_def *sdef, output_struct *output)
     "const %s_template& right_template);\n", name, name);
   def = mputprintf(def, "friend %s_template operator+(const %s& left_value, "
     "const %s_template& right_template);\n", name, name, name);
-  def = mputprintf(def, "friend %s_template operator+(const OPTIONAL<%s>& left_value, "
-    "const %s_template& right_template);\n", name, name, name);
   def = mputprintf(def, "friend %s_template operator+(template_sel left_template, "
     "const %s& right_value);\n", name, name);
   def = mputprintf(def, "friend %s_template operator+(template_sel left_template, "
     "const OPTIONAL<%s>& right_value);\n", name, name);
   def = mputprintf(def, "friend %s_template operator+(const %s& left_value, "
-    "template_sel right_template);\n", name, name);
-  def = mputprintf(def, "friend %s_template operator+(const OPTIONAL<%s>& left_value, "
     "template_sel right_template);\n", name, name);
 
   /* public member functions */
@@ -4821,18 +4817,6 @@ void defRecordOfTemplate2(const struct_of_def *sdef, output_struct *output)
     "ret_val.concat(pos, other_value);\n"
     "return ret_val;\n"
     "}\n\n", name, name, name, name);
-  
-  def = mputprintf(def, "%s_template operator+("
-    "const OPTIONAL<%s>& other_value) const;\n", name, name);
-  src = mputprintf(src,
-    "%s_template %s_template::operator+(const OPTIONAL<%s>& other_value) const\n"
-    "{\n"
-    "if (other_value.is_present()) {\n"
-    "return *this + (const %s&)other_value;\n"
-    "}\n"
-    "TTCN_error(\"Operand of %s of template concatenation is an unbound or "
-    "omitted record/set field.\");\n"
-    "}\n\n", name, name, name, name, sdef->kind == RECORD_OF ? "record" : "set");
   
   def = mputprintf(def, "%s_template operator+(template_sel other_value) const;\n",
     name);
@@ -5020,22 +5004,6 @@ void defRecordOfTemplate2(const struct_of_def *sdef, output_struct *output)
   
   output->header.function_prototypes =
     mputprintf(output->header.function_prototypes,
-    "extern %s_template operator+(const OPTIONAL<%s>& left_value, "
-    "const %s_template& right_template);\n", name, name, name);
-  output->source.function_bodies =
-    mputprintf(output->source.function_bodies,
-    "%s_template operator+(const OPTIONAL<%s>& left_value, "
-    "const %s_template& right_template)\n"
-    "{\n"
-    "if (left_value.is_present()) {\n"
-    "return (const %s&)left_value + right_template;\n"
-    "}\n"
-    "TTCN_error(\"Operand of %s of template concatenation is an unbound or "
-    "omitted record/set field.\");\n"
-    "}\n\n", name, name, name, name, sdef->kind == RECORD_OF ? "record" : "set");
-  
-  output->header.function_prototypes =
-    mputprintf(output->header.function_prototypes,
     "extern %s_template operator+(template_sel left_template, "
     "const %s& right_value);\n", name, name);
   output->source.function_bodies =
@@ -5057,22 +5025,6 @@ void defRecordOfTemplate2(const struct_of_def *sdef, output_struct *output)
   
   output->header.function_prototypes =
     mputprintf(output->header.function_prototypes,
-    "extern %s_template operator+(template_sel left_template, "
-    "const OPTIONAL<%s>& right_value);\n", name, name);
-  output->source.function_bodies =
-    mputprintf(output->source.function_bodies,
-    "%s_template operator+(template_sel left_template, "
-    "const OPTIONAL<%s>& right_value)\n"
-    "{\n"
-    "if (right_value.is_present()) {\n"
-    "return left_template + (const %s&)right_value;\n"
-    "}\n"
-    "TTCN_error(\"Operand of %s template concatenation is an unbound or "
-    "omitted record/set field.\");\n"
-    "}\n\n", name, name, name, sdef->kind == RECORD_OF ? "record" : "set");
-  
-  output->header.function_prototypes =
-    mputprintf(output->header.function_prototypes,
     "extern %s_template operator+(const %s& left_value, "
     "template_sel right_template);\n", name, name);
   output->source.function_bodies =
@@ -5091,20 +5043,4 @@ void defRecordOfTemplate2(const struct_of_def *sdef, output_struct *output)
     "ret_val.concat(pos);\n"
     "return ret_val;\n"
     "}\n\n", name, name, name, name, name);
-  
-  output->header.function_prototypes =
-    mputprintf(output->header.function_prototypes,
-    "extern %s_template operator+(const OPTIONAL<%s>& left_value, "
-    "template_sel right_template);\n", name, name);
-  output->source.function_bodies =
-    mputprintf(output->source.function_bodies,
-    "%s_template operator+(const OPTIONAL<%s>& left_value, "
-    "template_sel right_template)\n"
-    "{\n"
-    "if (left_value.is_present()) {\n"
-    "return (const %s&)left_value + right_template;\n"
-    "}\n"
-    "TTCN_error(\"Operand of %s template concatenation is an unbound or "
-    "omitted record/set field.\");\n"
-    "}\n\n", name, name, name, sdef->kind == RECORD_OF ? "record" : "set");
 }
