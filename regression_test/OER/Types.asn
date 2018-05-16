@@ -543,5 +543,11 @@ Rec533061 ::= SEQUENCE
   field-ext2 REAL OPTIONAL
 }
 
+RecWithDefault ::= SEQUENCE
+{
+  field1 INTEGER DEFAULT 1,
+  field2 INTEGER
+}
+
 
 END

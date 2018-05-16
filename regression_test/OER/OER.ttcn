@@ -3571,6 +3571,20 @@
  	  }
  	  setverdict(pass);
  	}
+ 	
+ 	external function dec_RecWithDefault(in octetstring stream) return RecWithDefault
+ 	 	with { extension "prototype (convert) decode(OER)" }
+ 	
+ 	// Testing the decoding of a field with a default value (bug 534769)
+ 	testcase tc_default() runs on EmptyCT {
+ 	  var octetstring enc := '000104'O;
+ 	  var RecWithDefault dec := dec_RecWithDefault(enc);
+ 	  var RecWithDefault dec_exp := { field2 := 4 }; // the default value is currently not set, the field remains unbound, but there should be no DTE
+ 	  if (log2str(dec) != log2str(dec_exp)) {
+ 	    setverdict(fail, "Decoding failed. Got: ", dec, ", expected: ", dec_exp);
+ 	  }
+ 	  setverdict(pass);
+ 	}
 
  	control {
  		execute(tc_boolean());
@@ -3593,6 +3607,7 @@
  		execute(tc_example());
  		execute(tc_529017());
  		execute(tc_533061());
+ 		execute(tc_default());
  	}
  	
 }

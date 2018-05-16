@@ -6814,7 +6814,9 @@ int Record_Type::OER_decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_bu
     }
     if (get_at(p_td.oer->p[i])->is_optional() || is_default_field) {
       if (!(uc[0] & 1 << (7-act_pos))) {
-        get_at(p_td.oer->p[i])->set_to_omit();
+        if (get_at(p_td.oer->p[i])->is_optional()) {
+          get_at(p_td.oer->p[i])->set_to_omit();
+        }
       } else {
         get_at(p_td.oer->p[i])->OER_decode(*fld_descr(p_td.oer->p[i]), p_buf, p_oer);
       }
