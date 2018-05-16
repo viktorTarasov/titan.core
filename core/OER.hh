@@ -16,8 +16,8 @@
 #include "Vector.hh"
 
 class TTCN_Buffer;
-class ASN_BERdescriptor_t;
-class ASN_Tag_t;
+struct ASN_BERdescriptor_t;
+struct ASN_Tag_t;
 
 struct TTCN_OERdescriptor_t 
 {

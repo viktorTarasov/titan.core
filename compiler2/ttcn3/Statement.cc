@@ -3579,7 +3579,7 @@ error:
   {
     Error_Context cntxt(this, "In send statement");
     // checking the port reference
-    Type *port_type;
+    Type *port_type = NULL;
     if (port_op.translate) {
       PortScope* ps = my_sb->get_scope_port();
       if (ps) {
@@ -3973,7 +3973,7 @@ error:
     const char *stmt_name = get_stmt_name();
     Error_Context cntxt(this, "In %s statement", stmt_name);
     // checking the port reference
-    Type *port_type;
+    Type *port_type = NULL;
     if (port_op.translate) {
       PortScope* ps = my_sb->get_scope_port();
       if (ps) {

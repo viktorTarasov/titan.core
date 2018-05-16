@@ -2838,12 +2838,12 @@ Base_Template* Record_Template::get_at(int index_value)
 
 const Base_Template* Record_Template::get_at(int index_value) const
 {
-  if (index_value < 0 || index_value >= single_value.n_elements)
-    TTCN_error("Internal error: accessing an element of a template of type %s using an "
-      "invalid index: %d.", get_descriptor()->name, index_value);
   if (template_selection != SPECIFIC_VALUE)
     TTCN_error("Accessing field %s of a non-specific template of type %s.",
                fld_name(index_value), get_descriptor()->name);
+  if (index_value < 0 || index_value >= single_value.n_elements)
+    TTCN_error("Internal error: accessing an element of a template of type %s using an "
+      "invalid index: %d.", get_descriptor()->name, index_value);
   return single_value.value_elements[index_value];
 }
 
