@@ -174,11 +174,5 @@ and then, optionally, the Eclipse installation guide.
 
 
 
-Note1:  A script, conributed by Frank Rehberger,  which automates the installation of Titan core, the Eclipse IDE and Titan plug-ins, 
-currently working for Ubuntu/Debian ,  can be downloaded from: 
-
-https://github.com/frehberg/ttcn3-titan-installer
-
-
 
 
