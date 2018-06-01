@@ -1759,6 +1759,58 @@ tribool SubtypeConstraint::is_subset(const SubtypeConstraint* other) const
   return TUNKNOWN;
 }
 
+tribool SubtypeConstraint::can_intersect(const SubtypeConstraint* other) const
+{
+  if (other==NULL) return TTRUE;
+  if (other->subtype!=subtype) FATAL_ERROR("SubtypeConstraint::can_intersect()");
+  switch (subtype) {
+  case ST_INTEGER:
+    if (other->integer_st==NULL) return TTRUE;
+    return integer_st ? integer_st->can_intersect(*(other->integer_st)) : TTRUE;
+  case ST_FLOAT:
+    if (other->float_st==NULL) return TTRUE;
+    return float_st ? float_st->can_intersect(*(other->float_st)) : TTRUE;
+  case ST_BOOLEAN:
+    if (other->boolean_st==NULL) return TTRUE;
+    return boolean_st ? boolean_st->can_intersect(*(other->boolean_st)) : TTRUE;
+  case ST_VERDICTTYPE:
+    if (other->verdict_st==NULL) return TTRUE;
+    return verdict_st ? verdict_st->can_intersect(*(other->verdict_st)) : TTRUE;
+  case ST_BITSTRING:
+    if (other->bitstring_st==NULL) return TTRUE;
+    return bitstring_st ? bitstring_st->can_intersect(*(other->bitstring_st)) : TTRUE;
+  case ST_HEXSTRING:
+    if (other->hexstring_st==NULL) return TTRUE;
+    return hexstring_st ? hexstring_st->can_intersect(*(other->hexstring_st)) : TTRUE;
+  case ST_OCTETSTRING:
+    if (other->octetstring_st==NULL) return TTRUE;
+    return octetstring_st ? octetstring_st->can_intersect(*(other->octetstring_st)) : TTRUE;
+  case ST_CHARSTRING:
+    if (other->charstring_st==NULL) return TTRUE;
+    return charstring_st ? charstring_st->can_intersect(other->charstring_st) : TTRUE;
+  case ST_UNIVERSAL_CHARSTRING:
+    if (other->universal_charstring_st==NULL) return TTRUE;
+    return universal_charstring_st ? universal_charstring_st->can_intersect(other->universal_charstring_st) : TTRUE;
+  case ST_OBJID:
+  case ST_RECORD:
+  case ST_SET:
+  case ST_ENUM:
+  case ST_UNION:
+  case ST_FUNCTION:
+  case ST_ALTSTEP:
+  case ST_TESTCASE:
+    if (other->value_st==NULL) return TTRUE;
+    return value_st ? value_st->can_intersect(*(other->value_st)) : TTRUE;
+  case ST_RECORDOF:
+  case ST_SETOF:
+    if (other->recof_st==NULL) return TTRUE;
+    return recof_st ? recof_st->can_intersect(*(other->recof_st)) : TTRUE;
+  default:
+    FATAL_ERROR("SubtypeConstraint::can_intersect()");
+  }
+  return TUNKNOWN;
+}
+
 /********************
 class SubType
 ********************/

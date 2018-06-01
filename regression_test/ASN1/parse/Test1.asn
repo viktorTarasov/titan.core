@@ -937,6 +937,14 @@ MyElementSetType9-String2   ::= IA5String ( FROM ("A".. "Z" UNION "a".. "z"))
 
 MyElementSetType10 ::= INTEGER (0|1|4|6)
 
+MyElementSetType11 ::= BIT STRING { bit0 (0), bit1 (1) } (SIZE (8)) (ALL EXCEPT {})
+
+MyElementSetType12 ::= BIT STRING { bit0 (0), bit1 (1) } (SIZE (8)) (ALL EXCEPT { bit0 })
+
+MyElementSetType13 ::= BIT STRING { bit0 (0), bit1 (1) } (SIZE (8)) (ALL EXCEPT { bit1 })
+
+MyElementSetType14 ::= BIT STRING { bit0 (0), bit1 (1) } (SIZE (8)) (ALL EXCEPT { bit0, bit1 })
+
 -- 46 SUBTYPE ELEMENTS  *******************************************************************
 -- to be added later
 

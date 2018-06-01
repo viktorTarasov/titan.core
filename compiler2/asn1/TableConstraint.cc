@@ -225,7 +225,7 @@ namespace Asn {
             Constraints *t_cons=t_type->get_constraints();
             if(!t_cons) break;
             t_cons->chk_table();
-            TableConstraint *t_tc=dynamic_cast<TableConstraint*>
+            const TableConstraint *t_tc=dynamic_cast<const TableConstraint*>
               (t_cons->get_tableconstraint());
             if(!t_tc) break;
             Type *t_ocft=t_tc->consdtype;

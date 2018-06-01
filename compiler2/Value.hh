@@ -315,7 +315,7 @@ namespace Common {
       ttcn3float val_Real;
       struct {
         string *val_str;
-	map<size_t, Value> *str_elements;
+        map<size_t, Value> *str_elements;
       } str;
       struct {
         ustring *val_ustr;
