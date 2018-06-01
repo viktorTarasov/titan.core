@@ -8841,13 +8841,14 @@ namespace Ttcn {
               ref->error("%s", info.get_error_str_str().c_str());
             }
           }
-          else if ((asstype == A_PAR_VAL_OUT || asstype == A_PAR_VAL_INOUT ||
+          else if (type->get_type_refd_last()->get_typetype() != Common::Type::T_COMPONENT &&
+                   (asstype == A_PAR_VAL_OUT || asstype == A_PAR_VAL_INOUT ||
                    asstype == A_PAR_TEMPL_OUT || asstype == A_PAR_TEMPL_INOUT) &&
                    !ref_type->is_compatible(type, &info, NULL,
                    &l_chain_base, &r_chain_base)) {
             // run the type compatibility check in the reverse order, too, for 
             // 'out' and 'inout' parameters (they need to be converted back after
-            // the function call)
+            // the function call; except if they're component types)
             // this should never fail if the first type compatibility succeeded
             FATAL_ERROR("FormalPar::chk_actual_par_by_ref");
           }

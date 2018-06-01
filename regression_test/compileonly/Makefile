@@ -30,7 +30,7 @@ CODIRS := dynamicTemplate styleGuide topLevelPdu \
 	defaultParamUsageBeforeDecl deterministic readFromFile \
 	asn1_hyphen nameClash portTranslation UntaggedOnTopLevelUnionSwitch \
 	typeDescrGenWIthNoXER languageSpec asn1_opentype openTypeXER \
-	asnStringSubtypes
+	asnStringSubtypes componentParameter
 
 ifdef DYN
 CODIRS +=  mfgen-xsd
