@@ -1888,6 +1888,7 @@ int UNIVERSAL_CHARSTRING::XER_encode(const XERdescriptor_t& p_td,
         XmlReaderWrap checker(other_buf);
         // Walk through the XML. If it's not well-formed, XmlReaderWrap
         // will call TTCN_error => Dynamic testcase error.
+        bool top_element_checked = false;
         while (1 == checker.Read()) {
           if (checker.NodeType() == XML_READER_TYPE_ELEMENT &&
               (p_td.xer_bits & (ANY_FROM | ANY_EXCEPT))) {
@@ -1912,9 +1913,11 @@ int UNIVERSAL_CHARSTRING::XER_encode(const XERdescriptor_t& p_td,
               other_buf.set_pos(index);
               new_buf.put_s(other_buf.get_len() - index, other_buf.get_read_data());
               other_buf = new_buf;
-            } else {
+            } else if (!top_element_checked) {
+              // the namespace restrictions only apply to the top-level element
               check_namespace_restrictions(p_td, xmlns);
             }
+            top_element_checked = true;
           }
         }
           

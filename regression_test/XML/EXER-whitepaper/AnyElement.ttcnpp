@@ -404,6 +404,37 @@ testcase decode_aes() runs on AE
   CHECK_DECODE(exer_dec_aes, str_aes_e, AEProductSingle, aesp_e);
 }
 
+
+const AEProduct aep_emb := {
+  name  := "nothing",
+  price := 1,
+  info  := "<ns:top xmlns:ns=\"http://www.example.com/A\">" &
+             "<ns1:sub1 xmlns:ns1=\"http://www.example.com/C\">100</ns1:sub1>" &
+             "<ns2:sub2 xmlns:ns2=\"http://www.somewhereelse.com\">200</ns2:sub2>" &
+           "</ns:top>"
+}
+
+const universal charstring str_ae_emb :=
+"<AEProduct>\n" &
+"\t<name>nothing</name>\n" &
+"\t<price>1</price>\n" &
+"\t<ns:top xmlns:ns=\"http://www.example.com/A\">" &
+    "<ns1:sub1 xmlns:ns1=\"http://www.example.com/C\">100</ns1:sub1>" &
+    "<ns2:sub2 xmlns:ns2=\"http://www.somewhereelse.com\">200</ns2:sub2>" &
+  "</ns:top>\n" &
+"</AEProduct>\n\n";
+
+testcase encode_ae_emb() runs on AE
+{
+  CHECK_METHOD(exer_enc_ae, aep_emb, str_ae_emb);
+}
+
+testcase decode_ae_emb() runs on AE
+{
+  CHECK_DECODE(exer_dec_ae, str_ae_emb, AEProduct, aep_emb);
+}
+
+
 control
 {
   execute(encode_ae())
@@ -423,6 +454,9 @@ control
 
   execute(encode_aes())
   execute(decode_aes())
+  
+  execute(encode_ae_emb())
+  execute(decode_ae_emb())
 }
 
 }
