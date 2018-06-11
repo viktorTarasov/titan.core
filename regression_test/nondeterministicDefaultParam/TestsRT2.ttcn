@@ -215,6 +215,77 @@ testcase tc_pard_def_set_multi_layered() runs on CT
   }
 }
 
+/******************************************************************/
+/* Declarations and tests for bug 535729 (caused by this feature) */
+/******************************************************************/
+
+type record R1 {
+  integer f1,
+  boolean f2
+}
+
+type record R2 {
+  integer f1,
+  record of R1 f2
+}
+
+type record R3 {
+  charstring f1,
+  union {
+    integer a1,
+    R2 a2
+  } f2
+}
+
+// not used during the test, but needed for code generation;
+// it also has to be declared before t_pard
+template R3 t_pard2(template charstring p1,
+                    template integer p2) := {
+  f1 := p1,
+  f2 := {
+    a2 := t_pard(p2)
+  }
+}
+
+// has to be declared before t_default and c_default
+template R2 t_pard(template integer p1,
+                   template R1 p2 := t_default,
+                   template R1 p3 := c_default,
+                   template R1 p4 := modifies t_default := { f1 := -10 }) := {
+  f1 := p1,
+  f2 := { p2, p3, p4 }
+};
+
+// the init code for this template was generated into t_pard2's function
+// instead of the module's init function
+template R1 t_default := {
+  f1 := 10,
+  f2 := true
+};
+
+const R1 c_default := {
+  f1 := 4,
+  f2 := false
+}
+
+testcase tc_535729() runs on CT {
+  var R2 x := valueof(t_pard(21)); // caused a DTE, since t_default was not initialized
+  var R2 exp := {
+    f1 := 21,
+    f2 := {
+      { f1 := 10, f2 := true },
+      { f1 := 4, f2 := false },
+      { f1 := -10, f2 := true }
+    }
+  };
+  if (x == exp) {
+    setverdict(pass);
+  }
+  else {
+    setverdict(fail, x);
+  }
+}
+
 control {
   execute(tc_pard_def_int());
   execute(tc_pard_def_int_expr());
@@ -229,6 +300,7 @@ control {
   execute(tc_pard_def_encvalue_w_custom_encoding());
   execute(tc_pard_def_encvalue_unichar_w_custom_encoding());
   execute(tc_pard_def_set_multi_layered());
+  execute(tc_535729());
 }
 
 }

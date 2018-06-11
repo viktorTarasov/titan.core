@@ -10429,15 +10429,35 @@ namespace Ttcn {
             param_eval == LAZY_EVAL);
         }
         else if (use_runtime_2) {
-          // for now single expressions are not handled separately, since this
-          // may change the order of function calls in the default templates
+          // use the actual parameter's scope, not the formal parameter's
+          act->temp->set_my_scope(my_scope);
+          Template* temp_ = act->temp->get_Template();
+          if (temp_->get_templatetype() == Template::TEMPLATE_REFD ||
+              (temp_->get_templatetype() == Template::SPECIFIC_VALUE &&
+               temp_->get_specific_value()->get_valuetype() == Common::Value::V_REFD)) {
+            Common::Assignment* ass = temp_->get_templatetype() == Template::TEMPLATE_REFD ?
+              temp_->get_reference()->get_refd_assignment() :
+              temp_->get_specific_value()->get_reference()->get_refd_assignment();
+            if (ass->get_asstype() != Common::Assignment::A_FUNCTION_RVAL &&
+                ass->get_asstype() != Common::Assignment::A_FUNCTION_RTEMP &&
+                ass->get_asstype() != Common::Assignment::A_EXT_FUNCTION_RVAL &&
+                ass->get_asstype() != Common::Assignment::A_EXT_FUNCTION_RTEMP &&
+                (ass->get_asstype() != Common::Assignment::A_TEMPLATE ||
+                 ass->get_FormalParList() == NULL)) {
+              // reference to a deterministic value or template, generate normally
+              act->temp->generate_code(expr, act->get_gen_restriction_check());
+              break;
+            }
+          }
+          // the template might contain non-deterministic function calls,
+          // re-generate the template's initializer code every time the
+          // parameter's default value is used
+          // (for now single expressions are not handled separately, since this
+          // may change the order of function calls in the default templates)
           string tmp_id = my_scope->get_scope_mod_gen()->get_temporary_id();
           expr->preamble = mputprintf(expr->preamble, "%s %s;\n",
             formal_par->get_Type()->get_genname_template(my_scope).c_str(),
             tmp_id.c_str());
-          // use the actual parameter's scope, not the formal parameter's, when
-          // generating the template's initialization code
-          act->temp->set_my_scope(my_scope);
           expr->preamble = FormalPar::generate_code_defval_template(expr->preamble,
             act->temp, tmp_id, act->get_gen_restriction_check());
           expr->expr = mputstr(expr->expr, tmp_id.c_str());
