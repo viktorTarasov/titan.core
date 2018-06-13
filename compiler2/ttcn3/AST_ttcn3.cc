@@ -7391,7 +7391,7 @@ namespace Ttcn {
       // checking for remaining data in the buffer if decoding was successful
       str = mputprintf(str, "if (TTCN_EncDec::get_last_error_type() == "
           "TTCN_EncDec::ET_NONE) {\n"
-        "if (ttcn_buffer.get_pos() < ttcn_buffer.get_len()-1 && "
+        "if (ttcn_buffer.get_pos() < ttcn_buffer.get_len() && "
           "TTCN_Logger::log_this_event(TTCN_WARNING)) {\n"
         "ttcn_buffer.cut();\n"
         "%s remaining_stream;\n",
