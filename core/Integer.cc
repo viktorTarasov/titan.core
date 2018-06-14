@@ -1176,7 +1176,11 @@ int INTEGER::RAW_encode(const TTCN_Typedescriptor_t& p_td, RAW_enc_tree& myleaf)
   }
   else { // not IntX, use the field length
     length = (p_td.raw->fieldlength + 7) / 8;
-    if (min_bits(value) > p_td.raw->fieldlength) {
+    int min_bits_ = min_bits(value);
+    if (p_td.raw->comp == SG_SG_BIT) {
+      ++min_bits_;
+    }
+    if (min_bits_ > p_td.raw->fieldlength) {
       TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_LEN_ERR,
         "There are insufficient bits to encode '%s' : ", p_td.name);
       value = 0; // substitute with zero
