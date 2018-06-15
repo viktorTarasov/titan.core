@@ -2301,6 +2301,7 @@
         if (os != '40010101020104'O) {
             setverdict(fail, "tc_sequence: ", match('40010101020104'O, os));
         }
+        er2 := { f0 := 5, f9 := 2 }; // default values
         erres2 := dec_ExtensionRecord2(os);
         if (not(match(log2str(er2), log2str(erres2)))) {
             setverdict(fail, "tc_sequence: ", match(log2str(er2), log2str(erres2)));
@@ -2392,7 +2393,7 @@
             f6 := 6,
             f7 := omit,
             f8 := 8,
-            f9 := -,
+            f9 := 2, // default value
             f_nul := NULL
         }
         erres2 := dec_ExtensionRecord2(os);
@@ -2432,7 +2433,7 @@
             f6 := 6,
             f7 := omit,
             f8 := 8,
-            f9 := -,
+            f9 := 2, // default value
             f_nul := -
         }
         erres2 := dec_ExtensionRecord2(os);
@@ -2683,11 +2684,15 @@
         }
         erres71 := {
           me := 1,
+          f0 := 5, // default value
+          f1 := 5, // default value
           f2 := omit,
+          f3 := 5, // default value
           f4 := omit,
           f5 := omit,
           f6 := omit,
           f7 := omit,
+          f8 := 4, // default value
           f9 := omit,
           f_nul := omit
         }
@@ -3575,11 +3580,11 @@
  	external function dec_RecWithDefault(in octetstring stream) return RecWithDefault
  	 	with { extension "prototype (convert) decode(OER)" }
  	
- 	// Testing the decoding of a field with a default value (bug 534769)
+ 	// Testing the decoding of a field with a default value (bug 534769, bug 534943)
  	testcase tc_default() runs on EmptyCT {
  	  var octetstring enc := '000104'O;
  	  var RecWithDefault dec := dec_RecWithDefault(enc);
- 	  var RecWithDefault dec_exp := { field2 := 4 }; // the default value is currently not set, the field remains unbound, but there should be no DTE
+ 	  var RecWithDefault dec_exp := { field1 := 1, field2 := 4 };
  	  if (log2str(dec) != log2str(dec_exp)) {
  	    setverdict(fail, "Decoding failed. Got: ", dec, ", expected: ", dec_exp);
  	  }

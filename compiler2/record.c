@@ -4977,10 +4977,13 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
             "    field_%s.OER_decode(%s_descr_, p_buf, p_oer);\n"
             , ind, pos, sdef->elements[i].name
             , sdef->elements[sdef->oerP[i]].typedescrname);
-          if (sdef->elements[sdef->oerP[i]].isOptional) {
+          if (sdef->elements[sdef->oerP[i]].isOptional ||
+              sdef->elements[sdef->oerP[i]].isDefault) {
             src = mputprintf(src, " else\n"
-              "    field_%s = OMIT_VALUE;\n"
-              , sdef->elements[sdef->oerP[i]].name);
+              "    field_%s = %s;\n"
+              , sdef->elements[sdef->oerP[i]].name
+              , sdef->elements[sdef->oerP[i]].isOptional ? "OMIT_VALUE"
+              : sdef->elements[sdef->oerP[i]].defvalname);
           }
         if (pos == 0) {
           ind++;
@@ -5013,20 +5016,26 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
         if (sdef->oerEagNum != 0 && sdef->oerEag[eag_pos] == i - limit) {
           eag_pos++;
           for (int j = i; j < limit + sdef->oerEag[eag_pos]; j++) {
-            if (sdef->elements[sdef->oerP[j]].isOptional) {
+            if (sdef->elements[sdef->oerP[j]].isOptional ||
+                sdef->elements[sdef->oerP[j]].isDefault) {
               has_optional_in_extension = TRUE;
               src = mputprintf(src,
-                "      field_%s = OMIT_VALUE;\n"
-                , sdef->elements[sdef->oerP[j]].name);
+                "      field_%s = %s;\n"
+                , sdef->elements[sdef->oerP[j]].name
+                , sdef->elements[sdef->oerP[j]].isOptional ? "OMIT_VALUE"
+                : sdef->elements[sdef->oerP[j]].defvalname);
             }
           }
           eag_pos--;
         } else {
-          if (sdef->elements[sdef->oerP[i]].isOptional) {
+          if (sdef->elements[sdef->oerP[i]].isOptional ||
+              sdef->elements[sdef->oerP[i]].isDefault) {
             has_optional_in_extension = TRUE;
             src = mputprintf(src,
-              "      field_%s = OMIT_VALUE;\n"
-              , sdef->elements[i].name);
+              "      field_%s = %s;\n"
+              , sdef->elements[sdef->oerP[i]].name
+              , sdef->elements[sdef->oerP[i]].isOptional ? "OMIT_VALUE"
+              : sdef->elements[sdef->oerP[i]].defvalname);
           }
         }
         src = mputstr(src,
@@ -5056,12 +5065,15 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
                 "        field_%s.OER_decode(%s_descr_, p_buf, p_oer);\n"
                 "      }\n"
                 , ind2, 1 << pos2, sdef->elements[sdef->oerP[j]].name, sdef->elements[sdef->oerP[j]].typedescrname);
-              if (sdef->elements[sdef->oerP[j]].isOptional) {
+              if (sdef->elements[sdef->oerP[j]].isOptional ||
+                  sdef->elements[sdef->oerP[j]].isDefault) {
                 src = mputprintf(src,
                   "        else {\n"
-                  "          field_%s = OMIT_VALUE;\n"
+                  "          field_%s = %s;\n"
                   "        }\n"
-                  , sdef->elements[sdef->oerP[j]].name);
+                  , sdef->elements[sdef->oerP[j]].name
+                  , sdef->elements[sdef->oerP[j]].isOptional ? "OMIT_VALUE"
+                  : sdef->elements[sdef->oerP[j]].defvalname);
               }
               if (pos2 == 0) {
                 pos2 = 8;
@@ -5091,10 +5103,13 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
           "  }\n"
           "  else {\n");
         for (i = limit; i < sdef->nElements; i++) {
-          if (sdef->elements[sdef->oerP[i]].isOptional) {
+          if (sdef->elements[sdef->oerP[i]].isOptional ||
+              sdef->elements[sdef->oerP[i]].isDefault) {
             src = mputprintf(src,
-              "    field_%s = OMIT_VALUE;\n"
-              , sdef->elements[i].name);
+              "    field_%s = %s;\n"
+              , sdef->elements[sdef->oerP[i]].name
+              , sdef->elements[sdef->oerP[i]].isOptional ? "OMIT_VALUE"
+              : sdef->elements[sdef->oerP[i]].defvalname);
           }
         }
       }

@@ -6809,6 +6809,7 @@ int Record_Type::OER_decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_bu
   next_default_idx = 0;
   for (int i = 0; i < limit; ++i) {
     boolean is_default_field = default_indexes && (default_indexes[next_default_idx].index==p_td.oer->p[i]);
+    const Base_Type* default_value = is_default_field ? default_indexes[next_default_idx].value : NULL;
     if (is_default_field) {
       next_default_idx++;
     }
@@ -6816,6 +6817,9 @@ int Record_Type::OER_decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_bu
       if (!(uc[0] & 1 << (7-act_pos))) {
         if (get_at(p_td.oer->p[i])->is_optional()) {
           get_at(p_td.oer->p[i])->set_to_omit();
+        }
+        else if (is_default_field) {
+          get_at(p_td.oer->p[i])->set_value(default_value);
         }
       } else {
         get_at(p_td.oer->p[i])->OER_decode(*fld_descr(p_td.oer->p[i]), p_buf, p_oer);
@@ -6843,6 +6847,7 @@ int Record_Type::OER_decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_bu
     // Decode fields
     for (int i = limit; i < field_count; ++i) {
       boolean is_default_field = default_indexes && (default_indexes[next_default_idx].index==p_td.oer->p[i]);
+      const Base_Type* default_value = is_default_field ? default_indexes[next_default_idx].value : NULL;
       if (is_default_field) {
         next_default_idx++;
       }
@@ -6852,8 +6857,13 @@ int Record_Type::OER_decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_bu
         if (eag_pos != -1 && p_td.oer->eag[eag_pos] == i - limit) {
           eag_pos++;
           for (int j = i; j < limit + p_td.oer->eag[eag_pos]; j++) {
+            is_default_field = default_indexes && (default_indexes[next_default_idx].index==p_td.oer->p[j]);
+            default_value = is_default_field ? default_indexes[next_default_idx].value : NULL;
             if (get_at(p_td.oer->p[j])->is_optional()) {
               get_at(p_td.oer->p[j])->set_to_omit();
+            }
+            else if (is_default_field) {
+              get_at(p_td.oer->p[j])->set_value(default_value);
             }
           }
           i += p_td.oer->eag[eag_pos] - p_td.oer->eag[eag_pos-1] - 1;
@@ -6861,6 +6871,9 @@ int Record_Type::OER_decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_bu
         } else {
           if (get_at(p_td.oer->p[i])->is_optional()) {
             get_at(p_td.oer->p[i])->set_to_omit();
+          }
+          else if (is_default_field) {
+            get_at(p_td.oer->p[i])->set_value(default_value);
           }
         }
       } else {
@@ -6892,6 +6905,7 @@ int Record_Type::OER_decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_bu
           next_default_idx = old_next_default_idx;
           for (int j = i; j < limit + p_td.oer->eag[eag_pos]; j++) {
             is_default_field = default_indexes && (default_indexes[next_default_idx].index==p_td.oer->p[j]);
+            default_value = is_default_field ? default_indexes[next_default_idx].value : NULL;
             if (is_default_field) {
               next_default_idx++;
             }
@@ -6900,6 +6914,9 @@ int Record_Type::OER_decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_bu
               if (!(uc2[0] & 1 << (7-act_pos2))) {
                 if (get_at(p_td.oer->p[j])->is_optional()) {
                   get_at(p_td.oer->p[j])->set_to_omit();
+                }
+                else if (is_default_field) {
+                  get_at(p_td.oer->p[j])->set_value(default_value);
                 }
               } else {
                 // Field is present
@@ -6932,8 +6949,16 @@ int Record_Type::OER_decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_bu
   else if (p_td.oer->extendable) {
     // Set the optional fields after the extension to 'omit'
     for (int i = limit; i < field_count; ++i) {
+      boolean is_default_field = default_indexes && (default_indexes[next_default_idx].index==p_td.oer->p[i]);
+      const Base_Type* default_value = is_default_field ? default_indexes[next_default_idx].value : NULL;
+      if (is_default_field) {
+        next_default_idx++;
+      }
       if (get_at(p_td.oer->p[i])->is_optional()) {
         get_at(p_td.oer->p[i])->set_to_omit();
+      }
+      else if (is_default_field) {
+        get_at(p_td.oer->p[i])->set_value(default_value);
       }
     }
   }
