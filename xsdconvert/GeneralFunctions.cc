@@ -1,9 +1,9 @@
 /******************************************************************************
  * Copyright (c) 2000-2018 Ericsson Telecom AB
  * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
+ * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * https://www.eclipse.org/org/documents/epl-2.0/EPL-2.0.html
  *
  * Contributors:
  *   Baji, Laszlo
@@ -859,9 +859,9 @@ void generate_TTCN3_header(FILE * file, const char * modulename, const bool time
   }
   fprintf(file,
     "* All rights reserved. This program and the accompanying materials\n"
-    "* are made available under the terms of the Eclipse Public License v1.0\n"
+    "* are made available under the terms of the Eclipse Public License v2.0\n"
     "* which accompanies this distribution, and is available at\n"
-    "* http://www.eclipse.org/legal/epl-v10.html\n"
+    "* https://www.eclipse.org/org/documents/epl-2.0/EPL-2.0.html\n"
     "*******************************************************************************/\n"
     "//\n"
     "//  File:          %s.ttcn\n"
