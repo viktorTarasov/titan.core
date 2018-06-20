@@ -57,7 +57,8 @@ XMLParser::XMLParser(const char * a_filename)
 , actualTagAttributes(this)
 , parentTagNames()
 , inside_annotation()
-, lastWasListEnd(false){
+, lastWasListEnd(false)
+, commentInterrupted(false) {
   xmlSetExternalEntityLoader(xmlNoNetExternalEntityLoader);
 
   parserCheckingXML = (xmlSAXHandler *) malloc(sizeof (xmlSAXHandler));
@@ -361,6 +362,10 @@ void XMLParser::startelementHandlerWhenXSDRead(const xmlChar * localname,
 }
 
 void XMLParser::endelementHandler(const xmlChar * localname) {
+  if (commentInterrupted) {
+    // close and store any interrupted comments
+    characterdataHandler((const xmlChar *)" ", 0);
+  }
   fillUpActualTagName((const char *) localname, endElement);
 
   bool modify = false;
@@ -437,17 +442,19 @@ void XMLParser::characterdataHandler(const xmlChar * text, const int length) {
     return;
   }
   
-  // the parser sometimes sends a comment in multiple parts (most likely when
-  // the parser's read buffer ends in the middle of a comment)
-  // use static variables to flag this event and store the data for the next call
-  static bool interrupted = false;
+  // the parser sometimes sends a comment in multiple parts (XML escape sequences
+  // are sent separately; it can also happen at other random times, most likely
+  // when the parser's read buffer ends in the middle of a comment)
+  // use a static buffer to store the data for the next call
   static char* temp;
   size_t old_length;
-  if (interrupted) {
+  if (commentInterrupted) {
     // the comment was interrupted in the previous call, append this call's data
     // to the previous call's
     old_length = strlen(temp);
-    temp = (char *) Realloc(temp, old_length + length + 1);
+    if (length > 0) {
+      temp = (char *) Realloc(temp, old_length + length + 1);
+    }
   }
   else {
     // the comment was not interrupted in the previous call, proceed as normal
@@ -457,15 +464,19 @@ void XMLParser::characterdataHandler(const xmlChar * text, const int length) {
   memcpy(temp + old_length, text, length);
   temp[old_length + length] = '\0';
   
-  if (text[length] == '\0') {
-    // a \0 character means the parser's read buffer has ended (otherwise the
-    // next character would be the beginning of an XML tag)
-    interrupted = true;
+  if (text[length] == '\0' || text[length] == '&') {
+    // if the comment was finished, the next character would be '<' (the start
+    // of an XML tag)
+    //  - a \0 character means the parser's read buffer has ended or the processed
+    // XML escape sequence has ended
+    //  - an & character means that an XML escape sequence is coming (which will
+    // be processed by the parser and sent in the next call)
+    commentInterrupted = true;
     return; // the comment will continue in the next call
   }
   
   // the comment is assembled
-  interrupted = false;
+  commentInterrupted = false;
   Mstring comment(temp);
   Free(temp);
 

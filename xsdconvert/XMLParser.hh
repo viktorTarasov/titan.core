@@ -174,6 +174,10 @@ private:
   List<TagName> inside_annotation;
   
   bool lastWasListEnd;
+  
+  // This flag indicates that the last comment processed by characterdataHandler()
+  // may be incomplete, and further parts may follow
+  bool commentInterrupted;
 
   static bool suspended;
 

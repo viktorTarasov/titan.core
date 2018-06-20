@@ -374,4 +374,5 @@
       <xs:restriction base="xs:string"/>
     </xs:simpleType>
   </xs:element>
+  <xs:element name="errorMessage2"><xs:annotation><xs:documentation xml:lang="en">&lt;/xs:simpleType&gt;</xs:documentation></xs:annotation><xs:simpleType><xs:restriction base="xs:string"/></xs:simpleType></xs:element>
 </xs:schema>

@@ -280,18 +280,16 @@ with {
         uses this attribute, as a foreign attribute, rather than the
         standard 'xs:default' attribute.
 
-        Consider this example: */
-/* <xs:element name="size" type="xs:long" minOccurs="0"
-                    xmlns:confd="http://tail-f.com/ns/confd/1.0" confd:default="42" */
-/* >
+        Consider this example:
+
+        <xs:element name="size" type="xs:long" minOccurs="0"
+                    xmlns:confd="http://tail-f.com/ns/confd/1.0" confd:default="42">
 
         In an instance document this means:
 
         o If the size tag is left out; "42" is stored in the
           configuration database. 
-        o If the size tag is empty, i.e. */
-/* <size/ */
-/* >, the empty string is
+        o If the size tag is empty, i.e. <size/>, the empty string is
           stored in the configuration database.
         
         Using the standard attribute this would have happened:
@@ -323,32 +321,27 @@ with {
 /* Used to add custom error message to facets used in restritive
 	xs:simpleType constructs in confspec files.
 
-        Consider this example: */
-/* <xs:simpleType name="foo" */
-/* > */
-/* <xs:restriction base="xs:string" */
-/* > */
-/* <xs:minLength value="7"/ */
-/* > */
-/* <xs:maxLength value="15"/ */
-/* > */
-/* <xs:pattern value="[a-z]*" */
-/* > */
-/* <confd:error-app-tag */
-/* >... */
-/* </confd:error-app-tag */
-/* > */
-/* <confd:error-message */
-/* >... */
-/* </confd:error-message */
-/* > */
-/* </xs:pattern */
-/* > */
-/* </xs:restriction */
-/* > */
-/* </xs:simpleType */
-/* > */
+        Consider this example:
+
+        <xs:simpleType name="foo">
+          <xs:restriction base="xs:string">
+            <xs:minLength value="7"/>
+            <xs:maxLength value="15"/>
+            <xs:pattern value="[a-z]*">
+              <confd:error-app-tag>...</confd:error-app-tag>
+              <confd:error-message>...</confd:error-message>
+            </xs:pattern>
+          </xs:restriction>
+        </xs:simpleType> */
 type XSD.String ErrorMessage
+with {
+  variant "name as uncapitalized";
+  variant "element";
+};
+
+
+/* </xs:simpleType> */
+type XSD.String ErrorMessage2
 with {
   variant "name as uncapitalized";
   variant "element";
