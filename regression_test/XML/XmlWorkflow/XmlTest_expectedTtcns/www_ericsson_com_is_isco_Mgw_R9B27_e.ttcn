@@ -417,8 +417,7 @@ type XSD.Token GwmAlphaNumericString_l35 (pattern "[a-zA-Z0-9]*") length(1 .. 35
 /* This datatype defines the images that can be loaded on the media processing 
       devices. Image type is called 'media profile' in the CPI (Customer Product 
       Information) and in the ISM (IS Management).
-        The media profile supports various types of compress */
-/* ion algorithms.
+        The media profile supports various types of compression algorithms.
         1 - voiceStandard, supports the following codecs:
             * G.711 (PCM 64 kbit/s) for voice coding, fax, text telephone,
               TTY/Telecommunication Device for Deaf (TDD) or modem
@@ -2149,8 +2148,7 @@ with {
        Delete MO cannot be performed (operation-failed) in the following cases:
        - if MO is system created
        - if MO contains childs and the childs are not system created
-       - if MO is referred to fro */
-/* m other MO in the model
+       - if MO is referred to from other MO in the model
 
     3) Any MOC specific error case is described in the MOC description. */
 type record Mgw
@@ -2295,8 +2293,7 @@ type record Mgw
         The threshold value is 10 raised to -N (10^-N). An alarm will be issued when the threshold has been reached.
         The alarm will be cleared when the excessive BER falls below one tenth of the threshold value.
         The threshold value must not be less than the linkDegBerThr threshold.
-        The default a */
-			/* ttribute value is 3, corresponding to a threshold value of 10^-3, for both CRC4 and Basic frame mode. */
+        The default attribute value is 3, corresponding to a threshold value of 10^-3, for both CRC4 and Basic frame mode. */
 			IntfE1ExcBerThreshold linkExcBerThr optional,
 			/* An integer value N that defines the threshold value for degraded Bit Error Rate (BER) on the E1 interface. 
         The threshold value is 10 raised to -N (10^-N). An alarm will be issued when the threshold has been reached.
@@ -3999,8 +3996,7 @@ associated interface route is also deleted. */
 	_ (underscore).
 	Uppercase letters may be entered but are converted to lower case 
 	when the attribute is stored internally. The name is optional and
-	may be */
-				/* left empty. Used for ISM purpose only */
+	may be left empty. Used for ISM purpose only */
 				InterfaceNameType_195 interfaceName optional,
 				/* A hexadecimal indicating which timeslots are used as signaling 
 	interfaces.
@@ -4154,8 +4150,7 @@ associated interface route is also deleted. */
 	30 ms for G.723. 
 
 	For example: If G.711 with ptime 20 ms and G.723 with ptime 30 ms are 
-	used in the network, the b */
-			/* uffer size must at least have a size of 
+	used in the network, the buffer size must at least have a size of 
 	60 ms, since G.723 is the worst case (30 ms ptime + 30 ms frame time)
 
 	A modification of this attribute does only affect new calls, not 
@@ -4786,8 +4781,7 @@ associated interface route is also deleted. */
 	normalMGExecutionTime received via H.248 from the GC overwrites the 
 	configured value.
 	
-	Attribute admState must be locked when cha */
-				/* nged.
+	Attribute admState must be locked when changed.
 	
 	Recommended value: 2000 */
 				NormalMGExecutionTimeType_147 normalMGExecutionTime optional,
@@ -4949,8 +4943,7 @@ associated interface route is also deleted. */
          (which implies that the remote IP address is disregarded when sorting  
          the connection).
 
-         Note! When changing defaultRemotePre */
-			/* fixMaskLength, streams set up after
+         Note! When changing defaultRemotePrefixMaskLength, streams set up after
          the change will be sorted according to the new value, but existing 
          streams will not be affected. */
 			DefaultRemotePrefixMaskLengthType_3 defaultRemotePrefixMaskLength optional,
@@ -4992,8 +4985,8 @@ associated interface route is also deleted. */
       A new NetworkPathGroup is dynamically created when a RTP media   
       connection with a new local and remote IP address prefix combination   
       is established. Connections established later on with the same IP  
-      address prefix combination will be placed in the same group. */
-			/* Once a day the unused NetworkPathGroups are removed.(A 
+      address prefix combination will be placed in the same group.
+			Once a day the unused NetworkPathGroups are removed.(A 
       NetworkPathGroup is considered as unused when there has been no 
       connection part of that group during the last 24 hours).
 
@@ -5118,8 +5111,7 @@ associated interface route is also deleted. */
 				/* The amount of received RTP packets for the video streams. Lost packets 
         are not included.
         To get an average value, this counter can be divided by the counter 
-        accumVideoNoOfReadings. The */
-				/* division will result in an average 
+        accumVideoNoOfReadings. The division will result in an average 
         per video channel and 15-second period.        
         Family=Accumulated RTP/RTCP statistics. */
 				MbqmCounter64 accumVideoPackRcvd optional,
@@ -5177,8 +5169,7 @@ associated interface route is also deleted. */
 		} qosMonitoring,
 		/* The 3G-324M parameters. */
 		record {
-			/* The attribute is used to enable or disable continous AMR transmission towards the 3G-324M terminal. The attribute affects channels configured for transcoder-free AMR operation. Continuous AMR transmission means that AMR 'No Data' frames will be inserted in the audio stream towards the 3G-324M terminal if the channel runs out of audio data, for example, due to loss */
-			/* of audio RTP packets in the IP network. The default value is 1 (enabled). */
+			/* The attribute is used to enable or disable continous AMR transmission towards the 3G-324M terminal. The attribute affects channels configured for transcoder-free AMR operation. Continuous AMR transmission means that AMR 'No Data' frames will be inserted in the audio stream towards the 3G-324M terminal if the channel runs out of audio data, for example, due to loss of audio RTP packets in the IP network. The default value is 1 (enabled). */
 			DspcpContinousAmrTrans continousAmrTrans optional,
 			/* The size (number of bytes) of the video buffer per channel towards the 3G-324M terminal. The buffer absorbs network jitter and video bit rate peaks sent by the remote IP terminal. Additional received video RTP packets are discarded when reaching the limit. */
 			VideoBufferSizeType_5 videoBufferSize optional,

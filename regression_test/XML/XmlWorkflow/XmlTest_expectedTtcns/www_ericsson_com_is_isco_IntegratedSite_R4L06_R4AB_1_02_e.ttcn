@@ -757,8 +757,9 @@ type record IntegratedSite
        are created, each one needs to be mapped to an IS
        Subnet Segment before the blades can be unlocked
        via the Hardware service.  The mapping is done
-       with the 'isSubnetSegmentRef' attribute. */
-						/* Different instances of a blade system type may
+       with the 'isSubnetSegmentRef' attribute.
+
+       Different instances of a blade system type may
        call their BS Subnet Segments the same thing but
        in the end the IS Site Designer can choose to
        map them to the same or different IS Subnet

@@ -436,10 +436,36 @@ void XMLParser::characterdataHandler(const xmlChar * text, const int length) {
   if (suspended) {
     return;
   }
-
-  char * temp = (char *) Malloc(length + 1);
-  memcpy(temp, text, length);
-  temp[length] = '\0';
+  
+  // the parser sometimes sends a comment in multiple parts (most likely when
+  // the parser's read buffer ends in the middle of a comment)
+  // use static variables to flag this event and store the data for the next call
+  static bool interrupted = false;
+  static char* temp;
+  size_t old_length;
+  if (interrupted) {
+    // the comment was interrupted in the previous call, append this call's data
+    // to the previous call's
+    old_length = strlen(temp);
+    temp = (char *) Realloc(temp, old_length + length + 1);
+  }
+  else {
+    // the comment was not interrupted in the previous call, proceed as normal
+    temp = (char *) Malloc(length + 1);
+    old_length = 0;
+  }
+  memcpy(temp + old_length, text, length);
+  temp[old_length + length] = '\0';
+  
+  if (text[length] == '\0') {
+    // a \0 character means the parser's read buffer has ended (otherwise the
+    // next character would be the beginning of an XML tag)
+    interrupted = true;
+    return; // the comment will continue in the next call
+  }
+  
+  // the comment is assembled
+  interrupted = false;
   Mstring comment(temp);
   Free(temp);
 

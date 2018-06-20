@@ -281,19 +281,17 @@ with {
         standard 'xs:default' attribute.
 
         Consider this example: */
-/* < */
-/* xs:element name="size" type="xs:long" minOccurs="0"
+/* <xs:element name="size" type="xs:long" minOccurs="0"
                     xmlns:confd="http://tail-f.com/ns/confd/1.0" confd:default="42" */
-/* > */
-/* In an instance document this means:
+/* >
+
+        In an instance document this means:
 
         o If the size tag is left out; "42" is stored in the
           configuration database. 
         o If the size tag is empty, i.e. */
-/* < */
-/* size/ */
-/* > */
-/* , the empty string is
+/* <size/ */
+/* >, the empty string is
           stored in the configuration database.
         
         Using the standard attribute this would have happened:
@@ -326,43 +324,29 @@ with {
 	xs:simpleType constructs in confspec files.
 
         Consider this example: */
-/* < */
-/* xs:simpleType name="foo" */
+/* <xs:simpleType name="foo" */
 /* > */
-/* < */
-/* xs:restriction base="xs:string" */
+/* <xs:restriction base="xs:string" */
 /* > */
-/* < */
-/* xs:minLength value="7"/ */
+/* <xs:minLength value="7"/ */
 /* > */
-/* < */
-/* xs:maxLength value="15"/ */
+/* <xs:maxLength value="15"/ */
 /* > */
-/* < */
-/* xs:pattern value="[a-z]*" */
+/* <xs:pattern value="[a-z]*" */
 /* > */
-/* < */
-/* confd:error-app-tag */
+/* <confd:error-app-tag */
+/* >... */
+/* </confd:error-app-tag */
 /* > */
-/* ... */
-/* < */
-/* /confd:error-app-tag */
+/* <confd:error-message */
+/* >... */
+/* </confd:error-message */
 /* > */
-/* < */
-/* confd:error-message */
+/* </xs:pattern */
 /* > */
-/* ... */
-/* < */
-/* /confd:error-message */
+/* </xs:restriction */
 /* > */
-/* < */
-/* /xs:pattern */
-/* > */
-/* < */
-/* /xs:restriction */
-/* > */
-/* < */
-/* /xs:simpleType */
+/* </xs:simpleType */
 /* > */
 type XSD.String ErrorMessage
 with {
