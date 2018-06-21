@@ -56,13 +56,14 @@ Cygwin setup
     Devel: gcc-g++
     Devel: make
     Libs: libxml2-devel
-      Net: openssl-devel (automatically installs Net:openssl 
-                        as well, if selected)
-        c) To compile your own Titan Cygwin binary: in addition to the
+    Net: openssl-devel
+  c) To compile your own Titan Cygwin binary: in addition to the
            above, select the following packages:
     Devel: bison
-    Devel: ctags 
-    Devel: cygwin32-expat
+    Devel: ctags
+    Lib: libexpat1
+    Lib: libiconv-devel
+    Lib: libiconv2
     Devel: diffstat
     Devel: flex
     Devel: gcc-core
