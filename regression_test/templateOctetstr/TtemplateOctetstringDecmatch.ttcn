@@ -1,0 +1,255 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v2.0
+ * which accompanies this distribution, and is available at
+ * https://www.eclipse.org/org/documents/epl-2.0/EPL-2.0.html
+ *
+ * Contributors:
+ *   Balasko, Jeno
+ *
+ ******************************************************************************/
+module TtemplateOctetstringDecmatch {
+
+//Status: java: pass cpp:pass
+
+type component CT{}
+
+//See RAW_struct_test
+type bitstring BS1 length(1) with { variant "FIELDLENGTH(1)" }
+
+type record PDU101 {
+  integer i,
+  BS1 bs,
+  octetstring os
+} with { variant "PADDING(yes)"}
+
+external function enc_PDU101(in PDU101 pdu) return octetstring
+with { extension "prototype(convert) encode(RAW)"}
+external function dec_PDU101(in octetstring os) return PDU101
+with { extension "prototype(convert) decode(RAW)" }
+
+type record Message1 {
+  integer id,
+  octetstring payload
+} 
+
+template Message1 t_Message1 := {
+  id := ?,
+  payload := decmatch PDU101:{i:=1, bs:=?,os:=?}
+}
+
+//parameterized template
+template Message1 t_Message1p(template integer t_i, template bitstring t_bs, template octetstring t_os) := {
+  id := ?,
+  payload := decmatch PDU101:{i:=1, bs:=?,os:=?}
+}
+
+//fails, because the buffer is not empty at the end and this is evaluated as unmatch
+testcase tc_PDU101_1() runs on CT {
+  var PDU101 vl_1 := { i:= 1, bs:='1'B, os:= '01'O} //encoded: '010300'O;
+  var octetstring vl_encoded := enc_PDU101(vl_1);
+  var PDU101 vl_decoded_pdu:= dec_PDU101(vl_encoded);
+  var Message1 vl_msg := { id:= 1, payload := enc_PDU101(vl_1)}
+  log("vl_msg: ",vl_msg);
+  log("vl_decoded_pdu: ", vl_decoded_pdu);
+  //log("t_Message1:", t_Message1);
+  if( match(vl_msg,t_Message1)) {
+    setverdict(pass)
+  } else {
+    setverdict(fail, match(vl_msg,t_Message1))
+  }
+}
+
+//parametrized template
+testcase tc_PDU101_1param() runs on CT {
+  var PDU101 vl_1 := { i:= 1, bs:='1'B, os:= '01'O} //encoded: '010300'O;
+  var octetstring vl_encoded := enc_PDU101(vl_1);
+  var PDU101 vl_decoded_pdu:= dec_PDU101(vl_encoded);
+  var Message1 vl_msg := { id:= 1, payload := enc_PDU101(vl_1)}
+  log("vl_msg: ",vl_msg);
+  log("vl_decoded_pdu: ", vl_decoded_pdu);
+  log("t_Message1p:", t_Message1p(1,?,?));
+  if( match(vl_msg,  t_Message1p(1, ?, ?))) {
+    setverdict(pass)
+  } else {
+    setverdict(fail, match(vl_msg,t_Message1))
+  }
+}
+
+//======================================================================================
+type record PDU103 {
+  integer i1,
+  integer i2,
+  integer i3
+}
+
+external function enc_PDU103(in PDU103 pdu) return octetstring
+with { extension "prototype(convert) encode(RAW)"}
+external function dec_PDU103(in octetstring os) return PDU103
+with { extension "prototype(convert) decode(RAW)"}
+
+type record Message2 {
+  integer id,
+  octetstring payload
+} 
+
+template Message2 t_Message2 := {
+  id := ?,
+  payload := decmatch PDU103:{ i1:= (1..2), i2:=(2,10), i3:= ?}
+}
+
+template octetstring t_payload := decmatch PDU103:{ i1:= (1..2), i2:=(2,10), i3:= ?}
+
+template Message2 t_Message2a := {
+  id := ?,
+  payload := t_payload
+}
+
+//static template test
+testcase tc_PDU103_1()runs on CT {
+  var PDU103 vl_1 := {1,2,3}
+  var octetstring vl_expected := '010203'O;
+  var octetstring vl_encoded := enc_PDU103(vl_1);
+  var Message2 vl_msg := { id:= 100, payload := vl_expected };
+  if( match(vl_msg, t_Message2)) {  
+    setverdict(pass)
+  } else {
+    setverdict(fail, match(vl_msg, t_Message2));
+  }
+  //just testing the logging:
+  log("vl_encoded: ", vl_encoded);
+  log("t_Message2: ", t_Message2);
+  log(match(vl_msg, t_Message2))
+}
+
+//local template const
+testcase tc_PDU103_2()runs on CT {
+  var PDU103 vl_1 := {1,2,3}
+  var octetstring vl_expected := '010203'O;
+  var octetstring vl_encoded := enc_PDU103(vl_1);
+  var Message2 vl_msg := { id:= 100, payload := vl_expected };
+
+  template Message2 tl_Message2 := {
+    id := ?,
+    payload := decmatch PDU103:{ i1:= (1..2), i2:=(2,10), i3:= ?}
+  }
+  if( match(vl_msg, t_Message2)) {  
+    setverdict(pass)
+  } else {
+    setverdict(fail, match(vl_msg, tl_Message2));
+  }
+  //just testing the logging:
+  log("vl_encoded: ", vl_encoded);
+  log("t_Message2: ", t_Message2);
+  log(match(vl_msg, t_Message2))
+}
+
+//local template var
+testcase tc_PDU103_3()runs on CT {
+  var PDU103 vl_1 := {1,2,3}
+  var octetstring vl_expected := '010203'O;
+  var octetstring vl_encoded := enc_PDU103(vl_1);
+  var Message2 vl_msg := { id:= 100, payload := vl_expected };
+
+  var template Message2 tl_Message2 := {
+    id := ?,
+    payload := decmatch PDU103:{ i1:= (1..2), i2:=(2,10), i3:= ?}
+  }
+  
+  if( match(vl_msg, t_Message2)) {  
+    setverdict(pass)
+  } else {
+    setverdict(fail, match(vl_msg, tl_Message2));
+  }
+  //just testing the logging:
+  log("vl_encoded: ", vl_encoded);
+  //log("tl_Message2: ", tl_Message2);
+  log(match(vl_msg, t_Message2))
+}
+
+//local template var with modification
+testcase tc_PDU103_4()runs on CT {
+  var PDU103 vl_1 := {1,2,3}
+  var octetstring vl_expected := '010203'O;
+  var octetstring vl_encoded := enc_PDU103(vl_1);
+  var Message2 vl_msg := { id:= 100, payload := vl_expected };
+
+  var template Message2 tl_Message2 := {
+    id := ?,
+    payload := decmatch PDU103:{ i1:= (1..2), i2:=(2,10), i3:= ?}
+  }
+  
+  tl_Message2.id := 100;
+  
+  if( match(vl_msg, t_Message2)) {  
+    setverdict(pass)
+  } else {
+    setverdict(fail, match(vl_msg, tl_Message2));
+  }
+  //just testing the logging:
+  log("vl_encoded: ", vl_encoded);
+  log("tl_Message2: ", tl_Message2);
+  log(match(vl_msg, t_Message2))
+}
+//local template var with modification and unmatch
+testcase tc_PDU103_5()runs on CT {
+  var PDU103 vl_1 := {1,2,3}
+  var octetstring vl_expected := '010203'O;
+  var octetstring vl_encoded := enc_PDU103(vl_1);
+  var Message2 vl_msg := { id:= 100, payload := vl_expected };
+
+  var template Message2 tl_Message2 := {
+    id := ?,
+    payload := decmatch PDU103:{ i1:= (1..2), i2:=(2,10), i3:= ?}
+  }
+  
+  tl_Message2.id := 101;
+  
+  if( not match(vl_msg, tl_Message2)) {  
+    setverdict(pass, match(vl_msg, tl_Message2));
+  } else {
+    setverdict(fail, match(vl_msg, tl_Message2));
+  }
+  //just testing the logging:
+  log("vl_encoded: ", vl_encoded);
+  log("tl_Message2: ", tl_Message2);
+ // log(match(vl_msg, t_Message2))
+}
+
+//local template var with modification and unmatch. Named decmatch template is applied
+testcase tc_PDU103_6()runs on CT {
+  var PDU103 vl_1 := {1,2,3}
+  var octetstring vl_expected := '010203'O;
+  var octetstring vl_encoded := enc_PDU103(vl_1);
+  var Message2 vl_msg := { id:= 100, payload := vl_expected };
+
+  var template Message2 tl_Message2 := {
+    id := ?,
+    payload := t_payload
+  }
+  
+  tl_Message2.id := 101;
+  log(vl_msg, ":",tl_Message2);
+  if( not match(vl_msg, tl_Message2)) {  
+    setverdict(pass, match(vl_msg, tl_Message2));
+  } else {
+    setverdict(fail, match(vl_msg, tl_Message2));
+  }
+  //just testing the logging:
+  log("vl_encoded: ", vl_encoded);
+  log("tl_Message2: ", tl_Message2);
+ // log(match(vl_msg, t_Message2))
+}
+control {
+  execute( tc_PDU101_1());
+  execute(tc_PDU101_1param());
+  execute( tc_PDU103_1());
+  execute( tc_PDU103_2());
+  execute( tc_PDU103_3());
+  execute( tc_PDU103_4());
+  execute( tc_PDU103_5());
+  execute( tc_PDU103_6());
+}
+
+} with { encode "RAW"}
