@@ -131,8 +131,8 @@ while (<MAKEFILE_IN>) {
     print MAKEFILE_OUT <<MKF;
 TOPDIR := ../../..
 include   ../../../Makefile.regression
-export PATH+=:\$(TTCN3_DIR)/bin:
-export LD_LIBRARY_PATH+=:\$(ABS_SRC):\$(TTCN3_DIR)/lib:
+export PATH:=\$(PATH):\$(TTCN3_DIR)/bin:
+export LD_LIBRARY_PATH:=\$(LD_LIBRARY_PATH):\$(ABS_SRC):\$(TTCN3_DIR)/lib:
 MKF
   }
 }
