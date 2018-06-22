@@ -1,0 +1,1049 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v2.0
+ * which accompanies this distribution, and is available at
+ * https://www.eclipse.org/org/documents/epl-2.0/EPL-2.0.html
+ *
+ * Contributors:
+ *   Balasko, Jeno – initial implementation
+ *
+ ******************************************************************************/
+
+//These tests extends the base RAW integer tests.
+//They are developed to give simple, easily separable function tests to the ttcn2java compiler
+
+module RAW_integer_test {
+
+type component CT {}
+
+//=========================================================
+//       Types
+//=========================================================
+
+//FIELDLENGTH(N), BITORDERINFIELD default (lsb), 
+type integer PDU1 //default: variant ""
+type integer PDU2 with {variant ""}
+type integer PDU3 with {variant "FIELDLENGTH(8)"}
+type integer PDU4 with {variant "FIELDLENGTH(16)"}
+type integer PDU5 with {variant "FIELDLENGTH(24)"}
+type integer PDU6 with {variant "FIELDLENGTH(32)"}
+type integer PDU7 with {variant "FIELDLENGTH(64)"}
+type integer PDU8 with {variant "FIELDLENGTH(128)"}
+
+//FIELDLENGTH(N), BITORDERINFIELD lsb
+type integer PDU13 with {variant "FIELDLENGTH(8), BITORDERINFIELD(lsb)"}
+type integer PDU14 with {variant "FIELDLENGTH(16), BITORDERINFIELD(lsb)"}
+type integer PDU15 with {variant "FIELDLENGTH(16), BITORDERINFIELD(lsb), BYTEORDER(last)"}
+type integer PDU16 with {variant "FIELDLENGTH(16), BITORDERINFIELD(lsb), BYTEORDER(first)"}
+
+//FIELDLENGTH(N), BITORDERINFIELD msb
+type integer PDU23 with {variant "FIELDLENGTH(8), BITORDERINFIELD(msb)"}
+type integer PDU24 with {variant "FIELDLENGTH(16), BITORDERINFIELD(msb)"}
+
+type integer PDU25 with {variant "FIELDLENGTH(8), BITORDER(msb)"}
+type integer PDU26 with {variant "FIELDLENGTH(16), BITORDER(msb), BYTEORDER(last)"}
+
+//COMP
+type integer PDU31 with {variant "FIELDLENGTH(8), COMP(nosign)"}
+type integer PDU32 with {variant "FIELDLENGTH(8), COMP(2scompl)"}
+type integer PDU33 with {variant "FIELDLENGTH(8), COMP(signbit)"}
+type integer PDU34 with {variant "FIELDLENGTH(16), COMP(nosign)"}
+type integer PDU35 with {variant "FIELDLENGTH(16), COMP(2scompl)"}
+type integer PDU36 with {variant "FIELDLENGTH(16), COMP(signbit)"}
+
+//N bit /unsigned N bit
+type integer PDU41 with {variant "8 bit"} // byteorder last, signbit,
+type integer PDU42 with {variant "unsigned 8 bit"} // byteorder last, nosign,
+type integer PDU43 with {variant "16 bit"} // byteorder last, signbit,
+type integer PDU44 with {variant "unsigned 16 bit"} // byteorder last, nosign,
+
+//BYTEORDER
+//first: the first octet placed first into the buffer
+//last: the last octet placed first into the buffer
+//default: first
+//see PDU16
+
+//IntX  (see4.23.4.7 of the referenceguide.pdf)
+//default:
+//BITORDER: msb, BYTEORDER:first, LENGTHTO: dynamic
+type integer PDU51 with {variant "IntX"}
+//type integer PDU52 with {variant }
+//TODO: IntX with COMP
+//TODO: IntX restrictions
+
+//===========
+// Record ofs
+//===========
+type record of octetstring RoOS;
+type record of PDU1 RoPDU1;
+type record of PDU2 RoPDU2;
+type record of PDU3 RoPDU3;
+type record of PDU4 RoPDU4
+type record of PDU5 RoPDU5
+type record of PDU6 RoPDU6 
+type record of PDU7 RoPDU7 
+type record of PDU8 RoPDU8
+
+//FIELDLENGTH(N), BITORDERINFIELD lsb
+type record of PDU13 RoPDU13
+type record of PDU14 RoPDU14
+type record of PDU15 RoPDU15
+type record of PDU16 RoPDU16
+
+//FIELDLENGTH(N), BITORDERINFIELD msb
+type record of PDU23 RoPDU23
+type record of PDU24 RoPDU24
+type record of PDU25 RoPDU25
+type record of PDU26 RoPDU26
+
+//COMP
+type record of PDU31 RoPDU31
+type record of PDU32 RoPDU32
+type record of PDU33 RoPDU33
+type record of PDU34 RoPDU34
+type record of PDU35 RoPDU35
+type record of PDU36 RoPDU36
+//
+type record of PDU41 RoPDU41
+type record of PDU42 RoPDU42
+type record of PDU43 RoPDU43
+type record of PDU44 RoPDU44
+
+type record of PDU44 RoPDU51
+//=========================================================
+//       Encoder/decoder functions
+//=========================================================
+
+external function enc_PDU1(in PDU1 pdu) return octetstring
+with { extension "prototype(convert) encode(RAW)"}
+external function dec_PDU1(in octetstring os) return PDU1
+with { extension "prototype(convert) decode(RAW)"}
+
+external function enc_PDU2(in PDU2 pdu) return octetstring
+with { extension "prototype(convert) encode(RAW)"}
+external function dec_PDU2(in octetstring os) return PDU2
+with { extension "prototype(convert) decode(RAW)"}
+
+external function enc_PDU3(in PDU3 pdu) return octetstring
+with { extension "prototype(convert) encode(RAW)"}
+external function dec_PDU3(in octetstring os) return PDU3
+with { extension "prototype(convert) decode(RAW)"}
+
+external function enc_PDU4(in PDU4 pdu) return octetstring
+with { extension "prototype(convert) encode(RAW)"}
+external function dec_PDU4(in octetstring os) return PDU4
+with { extension "prototype(convert) decode(RAW)"}
+
+external function enc_PDU5(in PDU5 pdu) return octetstring
+with { extension "prototype(convert) encode(RAW)"}
+external function dec_PDU5(in octetstring os) return PDU5
+with { extension "prototype(convert) decode(RAW)"}
+
+external function enc_PDU6(in PDU6 pdu) return octetstring
+with { extension "prototype(convert) encode(RAW)"}
+external function dec_PDU6(in octetstring os) return PDU6
+with { extension "prototype(convert) decode(RAW)"}
+
+external function enc_PDU7(in PDU7 pdu) return octetstring
+with { extension "prototype(convert) encode(RAW)"}
+external function dec_PDU7(in octetstring os) return PDU7
+with { extension "prototype(convert) decode(RAW)"}
+
+external function enc_PDU8(in PDU8 pdu) return octetstring
+with { extension "prototype(convert) encode(RAW)"}
+external function dec_PDU8(in octetstring os) return PDU8
+with { extension "prototype(convert) decode(RAW)"}
+
+
+//FIELDLENGTH(N), BITORDERINFIELD lsb
+external function enc_PDU13(in PDU13 pdu) return octetstring
+with { extension "prototype(convert) encode(RAW)"}
+external function dec_PDU13(in octetstring os) return PDU13
+with { extension "prototype(convert) decode(RAW)"}
+
+external function enc_PDU14(in PDU14 pdu) return octetstring
+with { extension "prototype(convert) encode(RAW)"}
+external function dec_PDU14(in octetstring os) return PDU14
+with { extension "prototype(convert) decode(RAW)"}
+
+external function enc_PDU15(in PDU15 pdu) return octetstring
+with { extension "prototype(convert) encode(RAW)"}
+external function dec_PDU15(in octetstring os) return PDU15
+with { extension "prototype(convert) decode(RAW)"}
+
+external function enc_PDU16(in PDU16 pdu) return octetstring
+with { extension "prototype(convert) encode(RAW)"}
+external function dec_PDU16(in octetstring os) return PDU16
+with { extension "prototype(convert) decode(RAW)"}
+
+//FIELDLENGTH(N), BITORDERINFIELD msb
+external function enc_PDU23(in PDU23 pdu) return octetstring
+with { extension "prototype(convert) encode(RAW)"}
+external function dec_PDU23(in octetstring os) return PDU23
+with { extension "prototype(convert) decode(RAW)"}
+
+external function enc_PDU24(in PDU24 pdu) return octetstring
+with { extension "prototype(convert) encode(RAW)"}
+external function dec_PDU24(in octetstring os) return PDU24
+with { extension "prototype(convert) decode(RAW)"}
+
+external function enc_PDU25(in PDU25 pdu) return octetstring
+with { extension "prototype(convert) encode(RAW)"}
+external function dec_PDU25(in octetstring os) return PDU25
+with { extension "prototype(convert) decode(RAW)"}
+
+external function enc_PDU26(in PDU26 pdu) return octetstring
+with { extension "prototype(convert) encode(RAW)"}
+external function dec_PDU26(in octetstring os) return PDU26
+with { extension "prototype(convert) decode(RAW)"}
+
+external function enc_PDU31(in PDU31 pdu) return octetstring
+with { extension "prototype(convert) encode(RAW)"}
+external function dec_PDU31(in octetstring os) return PDU31
+with { extension "prototype(convert) decode(RAW)"}
+
+external function enc_PDU32(in PDU32 pdu) return octetstring
+with { extension "prototype(convert) encode(RAW)"}
+external function dec_PDU32(in octetstring os) return PDU32
+with { extension "prototype(convert) decode(RAW)"}
+
+external function enc_PDU33(in PDU33 pdu) return octetstring
+with { extension "prototype(convert) encode(RAW)"}
+external function dec_PDU33(in octetstring os) return PDU33
+with { extension "prototype(convert) decode(RAW)"}
+
+external function enc_PDU34(in PDU34 pdu) return octetstring
+with { extension "prototype(convert) encode(RAW)"}
+external function dec_PDU34(in octetstring os) return PDU34
+with { extension "prototype(convert) decode(RAW)"}
+
+external function enc_PDU35(in PDU35 pdu) return octetstring
+with { extension "prototype(convert) encode(RAW)"}
+external function dec_PDU35(in octetstring os) return PDU35
+with { extension "prototype(convert) decode(RAW)"}
+
+external function enc_PDU36(in PDU36 pdu) return octetstring
+with { extension "prototype(convert) encode(RAW)"}
+external function dec_PDU36(in octetstring os) return PDU36
+with { extension "prototype(convert) decode(RAW)"}
+
+//N bit /unsigned N bit
+external function enc_PDU41(in PDU41 pdu) return octetstring
+with { extension "prototype(convert) encode(RAW)"}
+external function dec_PDU41(in octetstring os) return PDU41
+with { extension "prototype(convert) decode(RAW)"}
+
+external function enc_PDU42(in PDU42 pdu) return octetstring
+with { extension "prototype(convert) encode(RAW)"}
+external function dec_PDU42(in octetstring os) return PDU42
+with { extension "prototype(convert) decode(RAW)"}
+
+external function enc_PDU43(in PDU43 pdu) return octetstring
+with { extension "prototype(convert) encode(RAW)"}
+external function dec_PDU43(in octetstring os) return PDU43
+with { extension "prototype(convert) decode(RAW)"}
+
+external function enc_PDU44(in PDU44 pdu) return octetstring
+with { extension "prototype(convert) encode(RAW)"}
+external function dec_PDU44(in octetstring os) return PDU44
+with { extension "prototype(convert) decode(RAW)"}
+
+external function enc_PDU51(in PDU51 pdu) return octetstring
+with { extension "prototype(convert) encode(RAW)"}
+external function dec_PDU51(in octetstring os) return PDU51
+with { extension "prototype(convert) decode(RAW)"}
+//=========================================================
+//         Testcases
+//=========================================================
+
+testcase tc_raw_int_default1() runs on CT {
+  var PDU1 vl_pdu1 := 1;
+  var octetstring vl_result := enc_PDU1(vl_pdu1);
+  var octetstring vl_expected := '01'O;
+  log( vl_result);
+  if(vl_result != vl_expected) { 
+    setverdict(fail,"Expected:", vl_expected," got:", vl_result);
+  }
+  if( dec_PDU1(vl_expected) != vl_pdu1){
+    setverdict(fail,"Expected:", vl_pdu1," got:", dec_PDU1(vl_expected));
+  }
+  log(dec_PDU1(vl_expected));
+  setverdict(pass);
+}
+
+const PDU1 c_pdu1 := 1;
+testcase tc_raw_int_default2() runs on CT {
+  //  var PDU1 vl_pdu1 := 1;
+  var octetstring vl_result := enc_PDU1(c_pdu1);
+  var octetstring vl_expected := '01'O;
+  log( vl_result);
+  if(vl_result != vl_expected) { 
+    setverdict(fail,"Expected:", vl_expected," got:", vl_result);
+  }
+  if( dec_PDU1(vl_expected) != c_pdu1){
+    setverdict(fail,"Expected:", c_pdu1," got:", dec_PDU1(vl_expected));
+  }
+  log(dec_PDU1(vl_expected));
+  setverdict(pass);
+}
+
+testcase tc_raw_int_default3() runs on CT {
+  var PDU1 vl_pdu1 := 256; //too big
+  @try {
+    var octetstring vl_result := enc_PDU1(vl_pdu1);
+    setverdict(fail,"This line should not be reached, expected:DTE");
+  } @catch(e){
+    setverdict(pass, "Caught the expected DTE (While RAW-encoding type '@RAW_integer_test.PDU1': There are insufficient bits to encode '@RAW_integer_test.PDU1') got:", e);
+  }
+
+  //log( dec_PDU1('0100'O) ); real result: 1, expected :???
+  //setverdict(fail,"Expected:", dec_PDU1('0100'O));
+  setverdict(pass);
+}
+
+//default: FIELDLENGTH(8), BITORDERINFIELD(lsb), BYTEORDER(first): for integer the least significant byte is the leftmost
+testcase tc_raw_int_default1_seq() runs on CT {
+  var RoPDU1 vl_pdu1s := {1,15,16,255};
+  var octetstring vl_result;
+  var RoOS vl_expected := {'01'O,'0F'O,'10'O,'FF'O};
+
+  var integer N :=sizeof(vl_pdu1s);
+  for( var integer i:=0; i<N; i:=i+1) {
+    vl_result := enc_PDU1(vl_pdu1s[i]);
+    log( i,":",vl_result);
+    if(vl_result != vl_expected[i]) { 
+      setverdict(fail,"Expected:", vl_expected[i]," got:", vl_result);
+    }
+    if( dec_PDU1(vl_expected[i]) != vl_pdu1s[i]){
+      setverdict(fail,"Expected:", vl_pdu1s[i]," got:", dec_PDU1(vl_expected[i]));
+    }
+    log(dec_PDU1(vl_expected[i]));
+  }
+  setverdict(pass);
+}
+
+testcase tc_raw_int_FIELDLENGTH8_seq() runs on CT {
+  var RoPDU3 vl_pdu1s := {1,15,16,255};
+  var octetstring vl_result;
+  var RoOS vl_expected := {'01'O,'0F'O,'10'O,'FF'O};
+
+  var integer N :=sizeof(vl_pdu1s);
+  for( var integer i:=0; i<N; i:=i+1) {
+    vl_result := enc_PDU3(vl_pdu1s[i]);
+    log( i,":",vl_result);
+    if(vl_result != vl_expected[i]) { 
+      setverdict(fail,"Expected:", vl_expected[i]," got:", vl_result);
+    }
+    if( dec_PDU3(vl_expected[i]) != vl_pdu1s[i]){
+      setverdict(fail,"Expected:", vl_pdu1s[i]," got:", dec_PDU3(vl_expected[i]));
+    }
+    log(dec_PDU3(vl_expected[i]));
+  }
+  setverdict(pass);
+}
+
+//Status: wrong, the enc_PDU3 should not accept the args of type PDU4 (???)
+testcase tc_raw_int_FIELDLENGTH16_seq_wrong() runs on CT {
+  var RoPDU4 vl_pdu1s := {1,15,16,255};
+  var octetstring vl_result;
+  var RoOS vl_expected := {'01'O,'0F'O,'10'O,'FF'O};
+
+  var integer N :=sizeof(vl_pdu1s);
+  for( var integer i:=0; i<N; i:=i+1) {
+    vl_result := enc_PDU3(vl_pdu1s[i]); 
+    log( i,":",vl_result);
+    if(vl_result != vl_expected[i]) { 
+      setverdict(fail,"Expected:", vl_expected[i]," got:", vl_result);
+    }
+    if( dec_PDU3(vl_expected[i]) != vl_pdu1s[i]){
+      setverdict(fail,"Expected:", vl_pdu1s[i]," got:", dec_PDU3(vl_expected[i]));
+      log("Expected:", vl_pdu1s[i]," got:", dec_PDU3(vl_expected[i]));
+    }
+    log(dec_PDU3(vl_expected[i]));
+  }
+  setverdict(pass);
+}
+
+//default byte order: first encoded byte-> result[0]
+testcase tc_raw_int_FIELDLENGTH16_seq() runs on CT {
+  var RoPDU4 vl_pdu1s := {1,15,16,255,256,4660};
+  var octetstring vl_result;
+  var RoOS vl_expected := {'0100'O,'0F00'O,'1000'O,'FF00'O,'0001'O,'3412'O};
+
+  var integer N :=sizeof(vl_pdu1s);
+  for( var integer i:=0; i<N; i:=i+1) {
+    vl_result := enc_PDU4(vl_pdu1s[i]); //expected: semantic error (???)
+    log( i,":",vl_result);
+    if(vl_result != vl_expected[i]) { 
+      setverdict(fail,"Expected:", vl_expected[i]," got:", vl_result); 
+    }
+    if( dec_PDU4(vl_expected[i]) != vl_pdu1s[i]){
+      setverdict(fail,"Expected:", vl_pdu1s[i]," got:", dec_PDU4(vl_expected[i]));
+    }
+    log(dec_PDU4(vl_expected[i]));
+  }
+  setverdict(pass);
+}
+
+//default byte order: first encoded byte-> result[0]
+testcase tc_raw_int_FIELDLENGTH24_seq() runs on CT {
+  var RoPDU5 vl_pdu1s := {1,15,16,255,256,4660};
+  var octetstring vl_result;
+  var RoOS vl_expected := {'010000'O,'0F0000'O,'100000'O,'FF0000'O,'000100'O,'341200'O};
+
+  var integer N :=sizeof(vl_pdu1s);
+  for( var integer i:=0; i<N; i:=i+1) {
+    vl_result := enc_PDU5(vl_pdu1s[i]); //expected: semantic error (???)
+    log( i,":",vl_result);
+    if(vl_result != vl_expected[i]) { 
+      setverdict(fail,"Expected:", vl_expected[i]," got:", vl_result); 
+    }
+    if( dec_PDU5(vl_expected[i]) != vl_pdu1s[i]){
+      setverdict(fail,"Expected:", vl_pdu1s[i]," got:", dec_PDU5(vl_expected[i]));
+    }
+    log(dec_PDU5(vl_expected[i]));
+  }
+  setverdict(pass);
+}
+
+//default byte order: first encoded byte-> result[0]
+testcase tc_raw_int_FIELDLENGTH32_seq() runs on CT {
+  var RoPDU6 vl_pdu1s := {1,15,16,255,256,4660};
+  var octetstring vl_result;
+  var RoOS vl_expected := {'01000000'O,'0F000000'O,'10000000'O,'FF000000'O,'00010000'O,'34120000'O};
+
+  var integer N :=sizeof(vl_pdu1s);
+  for( var integer i:=0; i<N; i:=i+1) {
+    vl_result := enc_PDU6(vl_pdu1s[i]); //expected: semantic error (???)
+    log( i,":",vl_result);
+    if(vl_result != vl_expected[i]) { 
+      setverdict(fail,"Expected:", vl_expected[i]," got:", vl_result); 
+    }
+    if( dec_PDU6(vl_expected[i]) != vl_pdu1s[i]){
+      setverdict(fail,"Expected:", vl_pdu1s[i]," got:", dec_PDU6(vl_expected[i]));
+    }
+    log(dec_PDU6(vl_expected[i]));
+  }
+  setverdict(pass);
+}
+
+//default byte order: first encoded byte-> result[0]
+testcase tc_raw_int_FIELDLENGTH64_seq() runs on CT {
+  var RoPDU7 vl_pdu1s := {1,15,16,255,256,4660};
+  var octetstring vl_result;
+  var RoOS vl_expected := {'0100 0000 0000 0000'O,'0F00 0000 0000 0000'O,'1000 0000 0000 0000'O,'FF00 0000 0000 0000'O,'0001 0000 0000 0000'O,'3412 0000 0000 0000'O};
+
+  var integer N :=sizeof(vl_pdu1s);
+  for( var integer i:=0; i<N; i:=i+1) {
+    vl_result := enc_PDU7(vl_pdu1s[i]); //expected: semantic error (???)
+    log( i,":",vl_result);
+    if(vl_result != vl_expected[i]) { 
+      setverdict(fail,"Expected:", vl_expected[i]," got:", vl_result); 
+    }
+    if( dec_PDU7(vl_expected[i]) != vl_pdu1s[i]){
+      setverdict(fail,"Expected:", vl_pdu1s[i]," got:", dec_PDU7(vl_expected[i]));
+    }
+    log(dec_PDU7(vl_expected[i]));
+  }
+  setverdict(pass);
+}
+
+//default byte order: first encoded byte-> result[0]
+testcase tc_raw_int_FIELDLENGTH128_seq() runs on CT {
+  var RoPDU8 vl_pdu1s := {1,15,16,255,256,4660, 81985529216486895 } //old:1311768467463790320};
+  var octetstring vl_result;
+  var RoOS vl_expected := {
+    '0100 0000 0000 0000 0000 0000 0000 0000'O,
+    '0F00 0000 0000 0000 0000 0000 0000 0000'O,
+    '1000 0000 0000 0000 0000 0000 0000 0000'O,
+    'FF00 0000 0000 0000 0000 0000 0000 0000'O,
+    '0001 0000 0000 0000 0000 0000 0000 0000'O,
+    '3412 0000 0000 0000 0000 0000 0000 0000'O,
+    'EFCD AB89 6745 2301 0000 0000 0000 0000'O
+    //'F0DE BC9A 7856 3412 0000 0000 0000 0000'O
+  };
+
+  var integer N :=sizeof(vl_pdu1s);
+  for( var integer i:=0; i<N; i:=i+1) {
+    vl_result := enc_PDU8(vl_pdu1s[i]); //expected: semantic error (???)
+    log( i,":",vl_result);
+    if(vl_result != vl_expected[i]) { 
+      setverdict(fail,"Expected:", vl_expected[i]," got:", vl_result); 
+    }
+    if( dec_PDU8(vl_expected[i]) != vl_pdu1s[i]){
+      setverdict(fail,"Expected:", vl_pdu1s[i]," got:", dec_PDU8(vl_expected[i]));
+    }
+    log(dec_PDU8(vl_expected[i]));
+  }
+  setverdict(pass);
+}
+
+//=== lsb ===
+testcase tc_raw_int_FIELDLENGTH8_lsb_seq() runs on CT {
+  var RoPDU13 vl_pdu1s := {1,15,16,255};
+  var octetstring vl_result;
+  var RoOS vl_expected := {'01'O,'0F'O,'10'O,'FF'O};
+
+  var integer N :=sizeof(vl_pdu1s);
+  for( var integer i:=0; i<N; i:=i+1) {
+    vl_result := enc_PDU13(vl_pdu1s[i]);
+    log( i,":",vl_result);
+    if(vl_result != vl_expected[i]) { 
+      setverdict(fail,"Expected:", vl_expected[i]," got:", vl_result);
+    }
+    if( dec_PDU13(vl_expected[i]) != vl_pdu1s[i]){
+      setverdict(fail,"Expected:", vl_pdu1s[i]," got:", dec_PDU13(vl_expected[i]));
+    }
+    log(dec_PDU13(vl_expected[i]));
+  }
+  setverdict(pass);
+}
+
+//default byte order: first encoded byte-> result[0]
+testcase tc_raw_int_FIELDLENGTH16_lsb_seq() runs on CT {
+  var RoPDU14 vl_pdu1s := {1,15,16,255,256,4660};
+  var octetstring vl_result;
+  var RoOS vl_expected := {'0100'O,'0F00'O,'1000'O,'FF00'O,'0001'O,'3412'O};
+
+  var integer N :=sizeof(vl_pdu1s);
+  for( var integer i:=0; i<N; i:=i+1) {
+    vl_result := enc_PDU14(vl_pdu1s[i]);
+    log( i,":",vl_result);
+    if(vl_result != vl_expected[i]) { 
+      setverdict(fail,"Expected:", vl_expected[i]," got:", vl_result); 
+    }
+    if( dec_PDU14(vl_expected[i]) != vl_pdu1s[i]){
+      setverdict(fail,"Expected:", vl_pdu1s[i]," got:", dec_PDU14(vl_expected[i]));
+    }
+    log(dec_PDU14(vl_expected[i]));
+  }
+  setverdict(pass);
+}
+
+// byte order: last encoded byte-> result[0]
+testcase tc_raw_int_FIELDLENGTH16_lsb_last_seq() runs on CT {
+  var RoPDU15 vl_pdu1s := {1,15,16,255,256,4660};
+  var octetstring vl_result;
+  var RoOS vl_expected := {'0001'O,'000F'O,'0010'O,'00FF'O,'0100'O,'1234'O};
+
+  var integer N :=sizeof(vl_pdu1s);
+  for( var integer i:=0; i<N; i:=i+1) {
+    vl_result := enc_PDU15(vl_pdu1s[i]);
+    log( i,":",vl_result);
+    if(vl_result != vl_expected[i]) { 
+      setverdict(fail,"Expected:", vl_expected[i]," got:", vl_result); 
+    }
+    if( dec_PDU15(vl_expected[i]) != vl_pdu1s[i]){
+      setverdict(fail,"Expected:", vl_pdu1s[i]," got:", dec_PDU15(vl_expected[i]));
+    }
+    log(dec_PDU15(vl_expected[i]));
+  }
+  setverdict(pass);
+}
+
+// byte order: first encoded byte-> result[0]
+testcase tc_raw_int_FIELDLENGTH16_lsb_first_seq() runs on CT {
+  var RoPDU16 vl_pdu1s := {1,15,16,255,256,4660};
+  var octetstring vl_result;
+  var RoOS vl_expected := {'0100'O,'0F00'O,'1000'O,'FF00'O,'0001'O,'3412'O};
+
+  var integer N :=sizeof(vl_pdu1s);
+  for( var integer i:=0; i<N; i:=i+1) {
+    vl_result := enc_PDU16(vl_pdu1s[i]);
+    log( i,":",vl_result);
+    if(vl_result != vl_expected[i]) { 
+      setverdict(fail,"Expected:", vl_expected[i]," got:", vl_result);
+      log("Expected:", vl_expected[i]," got:", vl_result);
+    }
+    if( dec_PDU16(vl_expected[i]) != vl_pdu1s[i]){
+      setverdict(fail,"Expected:", vl_pdu1s[i]," got:", dec_PDU16(vl_expected[i]));
+    }
+    log(dec_PDU16(vl_expected[i]));
+  }
+  setverdict(pass);
+}
+//=== msb ===
+testcase tc_raw_int_FIELDLENGTH8_msb_seq() runs on CT {
+  var RoPDU23 vl_pdu1s := {1,15,16,255};
+  var octetstring vl_result;
+  var RoOS vl_expected := {'80'O,'F0'O,'08'O,'FF'O};
+
+  var integer N :=sizeof(vl_pdu1s);
+  for( var integer i:=0; i<N; i:=i+1) {
+    vl_result := enc_PDU23(vl_pdu1s[i]);
+    log( i,":",vl_result);
+    if(vl_result != vl_expected[i]) { 
+      setverdict(fail,"Expected:", vl_expected[i]," got:", vl_result);
+    }
+    if( dec_PDU23(vl_expected[i]) != vl_pdu1s[i]){
+      setverdict(fail,"Expected:", vl_pdu1s[i]," got:", dec_PDU23(vl_expected[i]));
+    }
+    log(dec_PDU23(vl_expected[i]));
+  }
+  setverdict(pass);
+}
+
+//default byte order: first encoded byte-> result[0], lsb -> os[0]
+testcase tc_raw_int_FIELDLENGTH16_msb_seq() runs on CT {
+  var RoPDU24 vl_pdu1s := {1,15,16,255,256,4660};
+  var octetstring vl_result;
+  var RoOS vl_expected := {'0080'O,'00F0'O,'0008'O,'00FF'O,'8000'O,'482C'O};
+
+  var integer N :=sizeof(vl_pdu1s);
+  for( var integer i:=0; i<N; i:=i+1) {
+    vl_result := enc_PDU24(vl_pdu1s[i]);
+    log( i,":",vl_result);
+    if(vl_result != vl_expected[i]) { 
+      setverdict(fail,"Expected:", vl_expected[i]," got:", vl_result); 
+    }
+    if( dec_PDU24(vl_expected[i]) != vl_pdu1s[i]){
+      setverdict(fail,"Expected:", vl_pdu1s[i]," got:", dec_PDU24(vl_expected[i]));
+    }
+    log(dec_PDU24(vl_expected[i]));
+  }
+  setverdict(pass);
+}
+
+testcase tc_raw_int_FIELDLENGTH8_bitorder_seq() runs on CT {
+  var RoPDU25 vl_pdu1s := {1,15,16,255};
+  var octetstring vl_result;
+  var RoOS vl_expected := {'80'O,'F0'O,'08'O,'FF'O};
+
+  var integer N :=sizeof(vl_pdu1s);
+  for( var integer i:=0; i<N; i:=i+1) {
+    vl_result := enc_PDU25(vl_pdu1s[i]);
+    log( i,":",vl_result);
+    if(vl_result != vl_expected[i]) { 
+      setverdict(fail,"Expected:", vl_expected[i]," got:", vl_result);
+    }
+    if( dec_PDU25(vl_expected[i]) != vl_pdu1s[i]){
+      setverdict(fail,"Expected:", vl_pdu1s[i]," got:", dec_PDU25(vl_expected[i]));
+    }
+    log(dec_PDU25(vl_expected[i]));
+  }
+  setverdict(pass);
+}
+
+//FIELDLENGTH(16), BITORDER(msb), BYTEORDER(last)
+testcase tc_raw_int_FIELDLENGTH16_byteorder_seq() runs on CT {
+  var RoPDU26 vl_pdu1s := {1,15,16,255,256,4660};
+  var octetstring vl_result;
+  var RoOS vl_expected := {'0080'O,'00F0'O,'0008'O,'00FF'O,'8000'O,'482C'O};
+
+  var integer N :=sizeof(vl_pdu1s);
+  for( var integer i:=0; i<N; i:=i+1) {
+    vl_result := enc_PDU26(vl_pdu1s[i]);
+    log( i,":",vl_result);
+    if(vl_result != vl_expected[i]) { 
+      setverdict(fail,"Expected:", vl_expected[i]," got:", vl_result);
+    }
+    if( dec_PDU26(vl_expected[i]) != vl_pdu1s[i]){
+      setverdict(fail,"Expected:", vl_pdu1s[i]," got:", dec_PDU26(vl_expected[i]));
+    }
+    log(dec_PDU26(vl_expected[i]));
+  }
+  setverdict(pass);
+}
+
+//COMP tests
+testcase tc_raw_int_FIELDLENGTH8_comp_nosign_seq() runs on CT {
+  var RoPDU31 vl_pdu1s := {1,15,16,255};
+  var octetstring vl_result;
+  var RoOS vl_expected := {'01'O,'0F'O,'10'O,'FF'O};
+
+  var integer N :=sizeof(vl_pdu1s);
+  for( var integer i:=0; i<N; i:=i+1) {
+    vl_result := enc_PDU31(vl_pdu1s[i]);
+    log( i,":",vl_result);
+    if(vl_result != vl_expected[i]) { 
+      setverdict(fail,"Expected:", vl_expected[i]," got:", vl_result);
+    }
+    if( dec_PDU31(vl_expected[i]) != vl_pdu1s[i]){
+      setverdict(fail,"Expected:", vl_pdu1s[i]," got:", dec_PDU31(vl_expected[i]));
+    }
+    log(dec_PDU31(vl_expected[i]));
+  }
+  @try{
+    vl_result := enc_PDU31(-1);
+    setverdict(fail, "This line should not be reached");
+    log("nok");
+  } @catch(e) {
+    setverdict(pass,"Expected DTE");
+    log("ok");
+  }
+
+
+  setverdict(pass);
+}
+
+testcase tc_raw_int_FIELDLENGTH8_comp_2scomp_seq() runs on CT {
+  var RoPDU32 vl_pdu1s := {0,1,15,16,127,-127,-126,-125};          //255,-1,-2, 127,128}; //-1=>'1000 0001'B
+  var octetstring vl_result;
+  var RoOS vl_expected := {'00'O, '01'O,'0F'O,'10'O,'7F'O,'81'O,'82'O,'83'O} //'81'O,'82'O, '7F'O,'80'O};
+
+  var integer N :=sizeof(vl_pdu1s);
+  for( var integer i:=0; i<N; i:=i+1) {
+    vl_result := enc_PDU32(vl_pdu1s[i]);
+    log( i,":",vl_result);
+    if(vl_result != vl_expected[i]) { 
+      setverdict(fail,"Expected:", vl_expected[i]," got:", vl_result);
+    }
+    if( dec_PDU32(vl_expected[i]) != vl_pdu1s[i]){
+      setverdict(fail,"Expected:", vl_pdu1s[i]," got:", dec_PDU32(vl_expected[i]));
+    }
+    log(dec_PDU32(vl_expected[i]));
+  }
+  setverdict(pass);
+}
+testcase tc_raw_int_FIELDLENGTH8_comp_signbit_seq() runs on CT {
+  var RoPDU33 vl_pdu1s := {0,1,15,16,126,127,-126,-127,-1,-2};
+  var octetstring vl_result;
+  var RoOS vl_expected := {'00'O, '01'O,'0F'O,'10'O,'7E'O,'7F'O,'FE'O,'FF'O,'81'O,'82'O};
+
+  var integer N :=sizeof(vl_pdu1s);
+  for( var integer i:=0; i<N; i:=i+1) {
+    vl_result := enc_PDU33(vl_pdu1s[i]);
+    log( i,":",vl_result);
+    if(vl_result != vl_expected[i]) { 
+      setverdict(fail,"Expected:", vl_expected[i]," got:", vl_result);
+    }
+    if( dec_PDU33(vl_expected[i]) != vl_pdu1s[i]){
+      setverdict(fail,"Expected:", vl_pdu1s[i]," got:", dec_PDU33(vl_expected[i]));
+    }
+    log(dec_PDU33(vl_expected[i]));
+  }
+  setverdict(pass);
+}
+
+testcase tc_raw_int_FIELDLENGTH16_comp_nosign_seq() runs on CT {
+  var RoPDU34 vl_pdu1s := {1,15,16,255,65534,65535};
+  var octetstring vl_result;
+  var RoOS vl_expected := {'0100'O,'0F00'O,'1000'O,'FF00'O,'FEFF'O,'FFFF'O};
+
+  var integer N :=sizeof(vl_pdu1s);
+  for( var integer i:=0; i<N; i:=i+1) {
+    vl_result := enc_PDU34(vl_pdu1s[i]);
+    log( i,":",vl_result);
+    if(vl_result != vl_expected[i]) {
+      setverdict(fail,"Expected encoded:", vl_expected[i]," got:", vl_result);
+    }
+    if( dec_PDU34(vl_expected[i]) != vl_pdu1s[i]){
+      setverdict(fail,"Expected decoded:", vl_pdu1s[i]," got:", dec_PDU34(vl_expected[i]));
+    }
+    log(dec_PDU34(vl_expected[i]));
+  }
+  @try{
+    vl_result := enc_PDU34(-1);
+    setverdict(fail, "This line should not be reached");
+    log("nok");
+  } @catch(e) {
+    setverdict(pass,"Expected DTE");
+    log("ok");
+  }
+
+
+  setverdict(pass);
+}
+
+testcase tc_raw_int_FIELDLENGTH16_comp_2scomp_seq() runs on CT {
+  var RoPDU35 vl_pdu1s := {0,1,15,16,127,128,-127,-126,-125, 32767,-32767,-1,-2};          //255,-1,-2, 127,128};
+  var octetstring vl_result;
+  //reverse byte order:
+  var RoOS vl_expected := {'0000'O, '0100'O,'0F00'O,'1000'O,'7F00'O,'8000'O,'81FF'O,'82FF'O,'83FF'O,'FF7F'O,'0180'O,'FFFF'O,'FEFF'O}
+
+  var integer N :=sizeof(vl_pdu1s);
+  for( var integer i:=0; i<N; i:=i+1) {
+    vl_result := enc_PDU35(vl_pdu1s[i]);
+    log( i,":",vl_result);
+    if(vl_result != vl_expected[i]) { 
+      setverdict(fail,"Expected:", vl_expected[i]," got:", vl_result);
+    }
+    if( dec_PDU35(vl_expected[i]) != vl_pdu1s[i]){
+      setverdict(fail,"Expected:", vl_pdu1s[i]," got:", dec_PDU35(vl_expected[i]));
+    }
+    log(dec_PDU35(vl_expected[i]));
+  }
+  setverdict(pass);
+}
+
+
+testcase tc_raw_int_FIELDLENGTH16_comp_signbit_seq() runs on CT {
+  var RoPDU36 vl_pdu1s := {0,1,15,16,126,127,-126,-127,-1,-2};
+  var octetstring vl_result;
+  var RoOS vl_expected := {'0000'O, '0100'O,'0F00'O,'1000'O,'7E00'O,'7F00'O,'7E80'O,'7F80'O,'0180'O,'0280'O};
+
+  var integer N :=sizeof(vl_pdu1s);
+  for( var integer i:=0; i<N; i:=i+1) {
+    vl_result := enc_PDU36(vl_pdu1s[i]);
+    log( i,":",vl_result);
+    if(vl_result != vl_expected[i]) { 
+      setverdict(fail,"Expected:", vl_expected[i]," got:", vl_result);
+    }
+    if( dec_PDU36(vl_expected[i]) != vl_pdu1s[i]){
+      setverdict(fail,"Expected:", vl_pdu1s[i]," got:", dec_PDU36(vl_expected[i]));
+    }
+    log(dec_PDU36(vl_expected[i]));
+  }
+  setverdict(pass);
+}
+
+testcase tc_raw_int_8bit_seq() runs on CT {
+  var RoPDU41 vl_pdu1s :=  {0,1,15,16,126,127,-126,-127,-1,-2};
+  var octetstring vl_result;
+  var RoOS vl_expected := {'00'O, '01'O,'0F'O,'10'O,'7E'O,'7F'O,'FE'O,'FF'O,'81'O,'82'O};
+
+  var integer N :=sizeof(vl_pdu1s);
+  for( var integer i:=0; i<N; i:=i+1) {
+    vl_result := enc_PDU41(vl_pdu1s[i]);
+    log( i,":",vl_result);
+    if(vl_result != vl_expected[i]) { 
+      setverdict(fail,"Expected:", vl_expected[i]," got:", vl_result);
+    }
+    if( dec_PDU41(vl_expected[i]) != vl_pdu1s[i]){
+      setverdict(fail,"Expected:", vl_pdu1s[i]," got:", dec_PDU41(vl_expected[i]));
+    }
+    log(dec_PDU41(vl_expected[i]));
+  }
+  setverdict(pass);
+}
+
+testcase tc_raw_int_unsigned_8bit_seq() runs on CT {
+  var RoPDU42 vl_pdu1s := {1,15,16,255};
+  var octetstring vl_result;
+  var RoOS vl_expected := {'01'O,'0F'O,'10'O,'FF'O};
+
+  var integer N :=sizeof(vl_pdu1s);
+  for( var integer i:=0; i<N; i:=i+1) {
+    vl_result := enc_PDU42(vl_pdu1s[i]);
+    log( i,":",vl_result);
+    if(vl_result != vl_expected[i]) { 
+      setverdict(fail,"Expected:", vl_expected[i]," got:", vl_result);
+    }
+    if( dec_PDU42(vl_expected[i]) != vl_pdu1s[i]){
+      setverdict(fail,"Expected:", vl_pdu1s[i]," got:", dec_PDU42(vl_expected[i]));
+    }
+    log(dec_PDU42(vl_expected[i]));
+  }
+  @try{
+    vl_result := enc_PDU42(-1);
+    setverdict(fail, "This line should not be reached");
+    log("nok");
+  } @catch(e) {
+    setverdict(pass,"Expected DTE");
+    log("ok");
+  }
+  setverdict(pass);
+}
+
+//16bit:  byteorder last, signbit,
+testcase tc_raw_int_16bit_seq() runs on CT {
+  var RoPDU43 vl_pdu1s :=  {
+    0,1,15,16,126,127,
+    255, 256,257,16384,32767, //32768, 32769, <=wrong encoding!
+    -126,-127,-1,-2,
+    -255,-256,-257,-16384,-32767
+  };
+  var octetstring vl_result;
+  var RoOS vl_expected := {
+    '0000'O, '0001'O,'000F'O,'0010'O,'007E'O,'007F'O,
+    '00FF'O, '0100'O,'0101'O,'4000'O,'7fff'O, //'8000'O,'8001'O,
+    '807E'O,'807F'O,'8001'O,'8002'O,
+    '80FF'O,'8100'O,'8101'O,'C000'O,'ffff'O
+  };
+
+  var integer N :=sizeof(vl_pdu1s);
+  for( var integer i:=0; i<N; i:=i+1) {
+    vl_result := enc_PDU43(vl_pdu1s[i]);
+    log( i,":",vl_result);
+    if(vl_result != vl_expected[i]) { 
+      setverdict(fail,"Expected:", vl_expected[i]," got:", vl_result);
+      log("Expected:", vl_expected[i]," got:", vl_result);
+    }
+    if( dec_PDU43(vl_expected[i]) != vl_pdu1s[i]){
+      setverdict(fail,"Expected:", vl_pdu1s[i]," got:", dec_PDU43(vl_expected[i]));
+    }
+    log(dec_PDU43(vl_expected[i]));
+  }
+  setverdict(pass);
+}
+
+testcase tc_raw_int_16bit_wrong1() runs on CT {
+  var PDU43 vl_pdu1 := 32768; //too big '1000 0000'B
+  @try {
+    var octetstring vl_result := enc_PDU43(vl_pdu1);
+    log(vl_result);
+    setverdict(fail,"This line should not be reached, expected:DTE"); //fails in cpp
+    log("This line should not be reached, expected:DTE");
+  } @catch(e){
+    setverdict(pass, "Caught the expected DTE (While RAW-encoding type '@RAW_integer_test.PDU43') got:", e);
+  }
+  setverdict(pass);
+}
+testcase tc_raw_int_16bit_wrong2() runs on CT {
+  var PDU43 vl_pdu1 := 32768*2; //too big
+  @try {
+    var octetstring vl_result := enc_PDU43(vl_pdu1);
+    log(vl_result);
+    setverdict(fail,"This line should not be reached, expected:DTE");
+    log("This line should not be reached, expected:DTE");
+  } @catch(e){
+    setverdict(pass, "Caught the expected DTE (While RAW-encoding type '@RAW_integer_test.PDU43') got:", e);
+  }
+  setverdict(pass);
+}
+
+testcase tc_raw_int_16bit_wrong3() runs on CT {
+  var PDU43 vl_pdu1 := -32768; //too big
+  @try {
+    var octetstring vl_result := enc_PDU43(vl_pdu1);
+    log(vl_result);
+    setverdict(fail,"This line should not be reached, expected:DTE");
+    log("This line should not be reached, expected:DTE");
+  } @catch(e){
+    setverdict(pass, "Caught the expected DTE (While RAW-encoding type '@RAW_integer_test.PDU43') got:", e);
+  }
+  setverdict(pass);
+}
+testcase tc_raw_int_unsigned_16bit_seq() runs on CT {
+  var RoPDU44 vl_pdu1s := {
+    0,1,15,16,126,127,
+    255, 256,257,16384,32767,32768,
+    32894, 32895, 32769, 32770,
+    33023, 33024, 33025, 49152, 65535
+  };
+  var octetstring vl_result;
+  var RoOS vl_expected := {
+    '0000'O, '0001'O,'000F'O,'0010'O,'007E'O,'007F'O,
+    '00FF'O, '0100'O,'0101'O,'4000'O,'7fff'O,'8000'O,
+    '807E'O,'807F'O,'8001'O,'8002'O,
+    '80FF'O,'8100'O,'8101'O,'C000'O,'ffff'O
+  };
+
+  var integer N :=sizeof(vl_pdu1s);
+  for( var integer i:=0; i<N; i:=i+1) {
+    vl_result := enc_PDU44(vl_pdu1s[i]);
+    log( i,":",vl_result);
+    if(vl_result != vl_expected[i]) { 
+      setverdict(fail,"Expected:", vl_expected[i]," got:", vl_result);
+    }
+    if( dec_PDU44(vl_expected[i]) != vl_pdu1s[i]){
+      setverdict(fail,"Expected:", vl_pdu1s[i]," got:", dec_PDU44(vl_expected[i]));
+    }
+    log(dec_PDU44(vl_expected[i]));
+  }
+  @try{
+    vl_result := enc_PDU44(-1);
+    setverdict(fail, "This line should not be reached");
+    log("nok");
+  } @catch(e) {
+    setverdict(pass,"Expected DTE");
+    log("ok");
+  }
+  setverdict(pass);
+}
+
+testcase tc_raw_int_unsigned_16bit_wrong1() runs on CT {
+  var PDU44 vl_pdu1 := -1; //neg
+  @try {
+    var octetstring vl_result := enc_PDU44(vl_pdu1);
+    setverdict(fail,"This line should not be reached, expected:DTE");
+  } @catch(e){
+    setverdict(pass, "Caught the expected DTE (While RAW-encoding type '@RAW_integer_test.PDU44') got:", e);
+  }
+  setverdict(pass);
+}
+
+testcase tc_raw_IntX_seq() runs on CT {
+  var RoPDU51 vl_pdu1s := {
+    0,1,15,16,127,128,
+    255, 256,257,16384,32767,32768,
+    32894, 32895, 32769, 32770,
+    33023, 33024, 33025, 49152, 65535,
+    2097151,16777216,268435455
+  };
+  var octetstring vl_result;
+  var RoOS vl_expected := {
+    '00'O, '01'O,'0F'O,'10'O,'7F'O,'8080'O,
+    '80FF'O, '8100'O,'8101'O,'C04000'O,'C07fff'O,'C08000'O,
+    'C0807E'O,'C0807F'O,'C08001'O,'C08002'O,
+    'C080FF'O,'C08100'O,'C08101'O,'C0C000'O,'C0ffff'O,
+    'DF FFFF'O, 'E100 0000'O, 'EFFF FFFF'O
+  };
+
+  var integer N :=sizeof(vl_pdu1s);
+  for( var integer i:=0; i<N; i:=i+1) {
+    vl_result := enc_PDU51(vl_pdu1s[i]);
+    log( i,":",vl_pdu1s[i],"->",vl_result);
+    if(vl_result != vl_expected[i]) {
+      setverdict(fail,"Expected:", vl_expected[i]," got:", vl_result);
+      log("Expected:", vl_expected[i]," got:", vl_result);
+    }
+    if( dec_PDU51(vl_expected[i]) != vl_pdu1s[i]){
+      setverdict(fail,"Expected:", vl_pdu1s[i]," got:", dec_PDU51(vl_expected[i]));
+      log("Decoding failed. Expected:", vl_pdu1s[i]," got:", dec_PDU51(vl_expected[i]))
+    }
+    log(dec_PDU51(vl_expected[i]));
+  }
+  @try{
+    vl_result := enc_PDU51(-1);
+    setverdict(fail, "This line should not be reached");
+    log("This line should not be reached");
+  } @catch(e) {
+    setverdict(pass,"Expected DTE");
+    log("Expected DTE");
+  }
+  setverdict(pass);
+}
+
+//The input should contain 16 bits
+testcase tc_decode_error() runs on CT {
+  var octetstring vl_o :='00'O;
+  @try {
+    var PDU36 vl_decoded :=dec_PDU36(vl_o);
+    setverdict(fail,"This line should not be reached, DTE expected")
+  } @catch(e) {
+    setverdict(pass,"Caught the expected DTE:",e)
+  }
+
+}
+
+control {
+  execute( tc_raw_int_default1());
+  execute( tc_raw_int_default2());
+  execute(tc_raw_int_default3());
+  execute(tc_raw_int_default1_seq());
+  execute(tc_raw_int_FIELDLENGTH8_seq());
+  execute(tc_raw_int_FIELDLENGTH16_seq_wrong());
+  execute(tc_raw_int_FIELDLENGTH16_seq());
+  execute(tc_raw_int_FIELDLENGTH24_seq());
+  execute(tc_raw_int_FIELDLENGTH32_seq());
+  execute(tc_raw_int_FIELDLENGTH64_seq());
+  execute(tc_raw_int_FIELDLENGTH128_seq());
+  execute(tc_raw_int_FIELDLENGTH8_lsb_seq());
+  execute(tc_raw_int_FIELDLENGTH16_lsb_seq());
+  execute(tc_raw_int_FIELDLENGTH16_lsb_last_seq());
+  execute(tc_raw_int_FIELDLENGTH16_lsb_first_seq());
+  execute(tc_raw_int_FIELDLENGTH8_msb_seq());
+  execute(tc_raw_int_FIELDLENGTH16_msb_seq());
+  execute(tc_raw_int_FIELDLENGTH8_bitorder_seq());
+  execute(tc_raw_int_FIELDLENGTH16_byteorder_seq())
+  execute(tc_raw_int_FIELDLENGTH8_comp_nosign_seq());
+  execute(tc_raw_int_FIELDLENGTH8_comp_2scomp_seq());
+  execute(tc_raw_int_FIELDLENGTH8_comp_signbit_seq());
+  execute(tc_raw_int_FIELDLENGTH16_comp_nosign_seq());
+  execute(tc_raw_int_FIELDLENGTH16_comp_2scomp_seq());
+  execute(tc_raw_int_FIELDLENGTH16_comp_signbit_seq());
+  execute(tc_raw_int_8bit_seq());
+  execute(tc_raw_int_unsigned_8bit_seq())
+  execute(tc_raw_int_16bit_seq());
+  execute(tc_raw_int_16bit_wrong1()); //failed in cpp
+  execute(tc_raw_int_16bit_wrong2()); //passed in cpp
+  execute(tc_raw_int_16bit_wrong3()); //failed in cpp
+  execute(tc_raw_int_unsigned_16bit_seq());
+  execute(tc_raw_int_unsigned_16bit_wrong1());
+  execute(tc_raw_IntX_seq()); //fixed in java
+  execute(tc_decode_error());
+}
+
+} with { encode "RAW" }
