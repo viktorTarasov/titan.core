@@ -604,7 +604,8 @@ int char2int(char value)
 
 int char2int(const char *value)
 {
-  if (value == NULL) value = "";
+  if (value == NULL) TTCN_error("The length of the argument in function "
+    "char2int() must be exactly 1 instead of 0.");
   int value_length = strlen(value);
   if (value_length != 1) TTCN_error("The length of the argument in function "
     "char2int() must be exactly 1 instead of %d.", value_length);
