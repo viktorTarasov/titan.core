@@ -49,7 +49,7 @@ void OBJID::init_struct(int n_components)
     TTCN_error("Initializing an objid value with a negative number of "
       "components.");
   }
-  // TODO check n_components >= 2
+
   val_ptr = (objid_struct*)Malloc(sizeof(objid_struct)
     + (n_components - MIN_COMPONENTS) * sizeof(objid_element));
   val_ptr->ref_count = 1;
