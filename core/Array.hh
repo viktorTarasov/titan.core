@@ -2472,7 +2472,7 @@ template <typename T_value_type, typename T_template_type,
 void TEMPLATE_ARRAY<T_value_type,T_template_type,array_size,index_offset>::
 encode_text(Text_Buf& text_buf) const
 {
-  encode_text_restricted(text_buf);
+  encode_text_permutation(text_buf);
   switch (template_selection)
   {
     case SPECIFIC_VALUE:
@@ -2503,7 +2503,7 @@ void TEMPLATE_ARRAY<T_value_type,T_template_type,array_size,index_offset>::
 decode_text(Text_Buf& text_buf)
 {
   clean_up();
-  decode_text_restricted(text_buf);
+  decode_text_permutation(text_buf);
   switch (template_selection)
   {
     case SPECIFIC_VALUE:
