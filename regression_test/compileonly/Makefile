@@ -36,5 +36,9 @@ ifdef DYN
 CODIRS +=  mfgen-xsd
 endif
 
+ifdef RT2
+CODIRS += typeCompat
+endif
+
 all dep clean distclean:
 	for dir in $(CODIRS); do $(MAKE) -C $$dir $@ || exit; done

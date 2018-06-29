@@ -166,6 +166,7 @@ char *TypeConv::gen_conv_code_refd(char *p_str, const char *p_name,
   const char *tmp_id_str1 = tmp_id1.c_str();  // For "p_val/p_temp".
   const string& tmp_id2 = p_val_or_temp->get_temporary_id();
   const char *tmp_id_str2 = tmp_id2.c_str();  // For converted "p_val/p_temp".
+  p_str = mputprintf(p_str, "%s %s;\n", current_type_genname.c_str(), tmp_id_str2);
   expression_struct expr;
   Code::init_expr(&expr);
   expr.expr = mputprintf(expr.expr,
@@ -180,12 +181,11 @@ char *TypeConv::gen_conv_code_refd(char *p_str, const char *p_name,
     static_cast<Value *>(p_val_or_temp)->get_reference()->generate_code(&expr);
   else static_cast<Template *>(p_val_or_temp)->get_reference()->generate_code(&expr);
   expr.expr = mputprintf(expr.expr,
-    ";\n%s %s;\n"
+    ";\n"
     "if (!%s(%s, %s)) TTCN_error(\"Values or templates of types `%s' and "
     "`%s' are not compatible at run-time\")",  // ";\n" will be added later.
-    current_type_genname.c_str(), tmp_id_str2, get_conv_func(original_type,
-    current_type, my_scope->get_scope_mod()).c_str(), tmp_id_str2,
-    tmp_id_str1, original_type->get_typename().c_str(),
+    get_conv_func(original_type, current_type, my_scope->get_scope_mod()).c_str(),
+    tmp_id_str2, tmp_id_str1, original_type->get_typename().c_str(),
     current_type->get_typename().c_str());
   // Merge by hand.  Code::merge_free_expr() puts an additional ";\n".
   // "p_str" is just a local pointer here, it needs an mputprintf() at the
