@@ -1037,12 +1037,12 @@ control {
   execute(tc_raw_int_8bit_seq());
   execute(tc_raw_int_unsigned_8bit_seq())
   execute(tc_raw_int_16bit_seq());
-  execute(tc_raw_int_16bit_wrong1()); //failed in cpp
-  execute(tc_raw_int_16bit_wrong2()); //passed in cpp
-  execute(tc_raw_int_16bit_wrong3()); //failed in cpp
+  execute(tc_raw_int_16bit_wrong1());
+  execute(tc_raw_int_16bit_wrong2());
+  execute(tc_raw_int_16bit_wrong3());
   execute(tc_raw_int_unsigned_16bit_seq());
   execute(tc_raw_int_unsigned_16bit_wrong1());
-  execute(tc_raw_IntX_seq()); //fixed in java
+  execute(tc_raw_IntX_seq());
   execute(tc_decode_error());
 }
 
