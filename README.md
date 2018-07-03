@@ -99,7 +99,7 @@ Compressed update site and SHA512 checksum:
 * https://github.com/eclipse/titan.TestPorts.UDPasp
 * https://github.com/eclipse/titan.TestPorts.UNIX_DOMAIN_SOCKETasp
 * http://git.eclipse.org/gitroot/titan/titan.TestPorts.GPIO  
-* http://git.eclipse.org/gitroot/titan/titan.TestPorts.MTP3  
+* http://git.eclipse.org/gitroot/titan/titan.TestPorts.MTP3asp  
 * http://git.eclipse.org/gitroot/titan/titan.TestPorts.Serial  
 * http://git.eclipse.org/gitroot/titan/titan.TestPorts.SocketCANasp   
  
