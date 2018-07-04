@@ -83,7 +83,7 @@ TARGET = Bug522656$(EXESUFFIX)
 # Rules for building the executable...
 #
 
-all: $(TARGET) ;
+all: $(TARGET)
 
 objects: $(OBJECTS) ;
 

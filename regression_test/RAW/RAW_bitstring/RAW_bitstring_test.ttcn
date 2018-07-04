@@ -1,0 +1,1430 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v2.0
+ * which accompanies this distribution, and is available at
+ * https://www.eclipse.org/org/documents/epl-2.0/EPL-2.0.html
+ *
+ * Contributors:
+ *   Balasko, Jeno – initial implementation
+ *
+ ******************************************************************************/
+
+//These tests extends the base RAW bitstring tests.
+//They are developed to give simple, easily separable function tests to the ttcn2java compiler
+module RAW_bitstring_test {
+//Version: 2018.03.26 09:02
+type component CT {}
+
+const bitstring c_8bit_0 := '0000 0000'B;
+const bitstring c_16bit_0 := '0000 0000 0000 0000'B;
+const bitstring c_24bit_0 := '0000 0000 0000 0000 0000 0000'B;
+const bitstring c_32bit_0 := c_16bit_0 & c_16bit_0;
+const bitstring c_64bit_0 := c_32bit_0 & c_32bit_0;
+//=========================================================
+//       Types
+//=========================================================
+
+//FIELDLENGTH(N), BITORDERINFIELD default (lsb), 
+type bitstring PDU1; //default: variant ""
+type bitstring PDU2 with {variant ""} //length:variable
+type bitstring PDU3 with {variant "FIELDLENGTH(8)"}
+type bitstring PDU4 with {variant "FIELDLENGTH(16)"}
+type bitstring PDU5 with {variant "FIELDLENGTH(24)"}
+type bitstring PDU6 with {variant "FIELDLENGTH(32)"}
+type bitstring PDU7 with {variant "FIELDLENGTH(64)"}
+type bitstring PDU8 with {variant "FIELDLENGTH(128)"}
+
+//FIELDLENGTH(N), BITORDERINFIELD lsb
+type bitstring PDU13 with {variant "FIELDLENGTH(8), BITORDERINFIELD(lsb)"}
+type bitstring PDU14 with {variant "FIELDLENGTH(16), BITORDERINFIELD(lsb)"} //default: BYTEORDER(first)=reverse
+type bitstring PDU15 with {variant "FIELDLENGTH(16), BITORDERINFIELD(lsb), BYTEORDER(last)"}//this has padding difficulties
+type bitstring PDU16 with {variant "FIELDLENGTH(16), BITORDERINFIELD(lsb), BYTEORDER(first)"}
+
+//align
+type bitstring PDU13ar with {variant "FIELDLENGTH(8),  BITORDERINFIELD(lsb), ALIGN(right)"} //explicit right aligned, padding: no=for the first octet
+type bitstring PDU13al with {variant "FIELDLENGTH(8),  BITORDERINFIELD(lsb), ALIGN(left)"} //explicit left aligned, padding: no=for the first octet
+type bitstring PDU14ar with {variant "FIELDLENGTH(16), BITORDERINFIELD(lsb), ALIGN(right)"} //default: BYTEORDER(first)- reverse byte order
+type bitstring PDU14al with {variant "FIELDLENGTH(16), BITORDERINFIELD(lsb), ALIGN(left)"} //byte order: reverse, byte order normal, align: left
+type bitstring PDU15ar with {variant "FIELDLENGTH(16), BITORDERINFIELD(lsb), BYTEORDER(last),ALIGN(right)"} //normal
+type bitstring PDU15al with {variant "FIELDLENGTH(16), BITORDERINFIELD(lsb), BYTEORDER(last),ALIGN(left)"}
+type bitstring PDU16ar with {variant "FIELDLENGTH(16), BITORDERINFIELD(lsb), BYTEORDER(first),ALIGN(right)"}//bit order: normal, byte order normal, align: right
+type bitstring PDU16al with {variant "FIELDLENGTH(16), BITORDERINFIELD(lsb), BYTEORDER(first),ALIGN(left)"}
+
+//PADDING
+type bitstring PDU13ar_padding_no with {variant "FIELDLENGTH(8),  BITORDERINFIELD(lsb), ALIGN(right), PADDING(no)"} //explicit right aligned, padding: no=for the first octet
+type bitstring PDU13al_padding_yes with {variant "FIELDLENGTH(8),  BITORDERINFIELD(lsb), ALIGN(left), PADDING(yes)"} //explicit left aligned, padding: yes=for the first octet
+type bitstring PDU14ar_padding_no with {variant "FIELDLENGTH(16), BITORDERINFIELD(lsb), ALIGN(right), PADDING(no)"} //default: BYTEORDER(first)- reverse byte order
+type bitstring PDU14al_padding_yes with {variant "FIELDLENGTH(16), BITORDERINFIELD(lsb), ALIGN(left), PADDING(yes)"} //byte order: reverse, byte order normal, align: right
+type bitstring PDU14ar_padding_yes with {variant "FIELDLENGTH(16), BITORDERINFIELD(lsb), ALIGN(right), PADDING(yes)"} //byte order: reverse, byte order normal, align: right
+type bitstring PDU15ar_padding_no with {variant "FIELDLENGTH(16), BITORDERINFIELD(lsb), BYTEORDER(last),ALIGN(right), PADDING(no)"} //normal
+type bitstring PDU15al_padding_yes with {variant "FIELDLENGTH(16), BITORDERINFIELD(lsb), BYTEORDER(last),ALIGN(left), PADDING(yes)"}
+type bitstring PDU16ar_padding_octet with {variant "FIELDLENGTH(16), BITORDERINFIELD(lsb), BYTEORDER(first),ALIGN(right), PADDING(octet)"}//bit order: normal, byte order normal, align: right
+type bitstring PDU16al_padding_octet with {variant "FIELDLENGTH(16), BITORDERINFIELD(lsb), BYTEORDER(first),ALIGN(left), PADDING(word16)"}
+//TODO: nibble, dwod32, integer to padding unit
+
+
+//FIELDLENGTH(N), BITORDERINFIELD msb
+type bitstring PDU23 with {variant "FIELDLENGTH(8), BITORDERINFIELD(msb)"}
+type bitstring PDU24 with {variant "FIELDLENGTH(16), BITORDERINFIELD(msb)"}
+
+type bitstring PDU25 with {variant "FIELDLENGTH(8), BITORDER(msb)"}
+type bitstring PDU26 with {variant "FIELDLENGTH(16), BITORDER(msb), BYTEORDER(last)"}
+
+//COMP - not applicable for bitstring
+
+//N bit /unsigned N bit
+type bitstring PDU41 with {variant "8 bit"} // byteorder last, no sign bit
+type bitstring PDU43 with {variant "16 bit"} // byteorder last, no sign bit
+
+//BYTEORDER
+//first: the first octet placed first into the buffer: reverse oder
+//last: the last octet placed first into the buffer: normal order
+//default: first
+//see PDU16
+
+//ALIGN: see PDU13-PDU16
+
+//PADDING
+
+//HEXORDER:
+//type bitstring PDU51 with {variant "FIELDLENGTH(16), BYTEORDER(first), HEXORDER(low)"} --just for hexastring and octetstring
+//type bitstring PDU52 with {variant "FIELDLENGTH(16), BYTEORDER(last)"} --just for hexastring and octetstring
+
+//TODO:padding:no, yes, octet, nibble, word16,dword32
+
+//===========
+// Record ofs
+//===========
+type record of octetstring RoOS;
+type record of PDU1 RoPDU1;
+type record of PDU2 RoPDU2;
+type record of PDU3 RoPDU3;
+type record of PDU4 RoPDU4
+type record of PDU5 RoPDU5
+type record of PDU6 RoPDU6 
+type record of PDU7 RoPDU7 
+type record of PDU8 RoPDU8
+
+//FIELDLENGTH(N), BITORDERINFIELD lsb
+type record of PDU13 RoPDU13
+type record of PDU13ar RoPDU13ar
+type record of PDU13al RoPDU13al
+type record of PDU14 RoPDU14
+type record of PDU14ar RoPDU14ar
+type record of PDU14al RoPDU14al
+type record of PDU15 RoPDU15
+type record of PDU15ar RoPDU15ar
+type record of PDU15al RoPDU15al
+type record of PDU16 RoPDU16
+type record of PDU16ar RoPDU16ar
+type record of PDU16al RoPDU16al
+
+type record of PDU13ar_padding_no RoPDU13ar_padding_no
+type record of PDU13al_padding_yes RoPDU13al_padding_yes
+type record of PDU14ar_padding_no RoPDU14ar_padding_no
+type record of PDU14al_padding_yes RoPDU14al_padding_yes
+type record of PDU14ar_padding_yes RoPDU14ar_padding_yes
+type record of PDU15ar_padding_no RoPDU15ar_padding_no
+type record of PDU15al_padding_yes RoPDU15al_padding_yes
+type record of PDU16ar_padding_octet RoPDU16ar_padding_octet
+type record of PDU16al_padding_octet RoPDU16al_padding_octet
+
+
+
+//FIELDLENGTH(N), BITORDERINFIELD msb
+type record of PDU23 RoPDU23
+type record of PDU24 RoPDU24
+type record of PDU25 RoPDU25
+type record of PDU26 RoPDU26
+
+//
+type record of PDU41 RoPDU41
+type record of PDU43 RoPDU43
+
+//=========================================================
+//       Encoder/decoder functions
+//=========================================================
+
+external function enc_PDU1(in PDU1 pdu) return octetstring
+with { extension "prototype(convert) encode(RAW)"}
+external function dec_PDU1(in octetstring os) return PDU1
+with { extension "prototype(convert) decode(RAW)"}
+
+external function enc_PDU2(in PDU2 pdu) return octetstring
+with { extension "prototype(convert) encode(RAW)"}
+external function dec_PDU2(in octetstring os) return PDU2
+with { extension "prototype(convert) decode(RAW)"}
+
+external function enc_PDU3(in PDU3 pdu) return octetstring
+with { extension "prototype(convert) encode(RAW)"}
+external function dec_PDU3(in octetstring os) return PDU3
+with { extension "prototype(convert) decode(RAW)"}
+
+external function enc_PDU4(in PDU4 pdu) return octetstring
+with { extension "prototype(convert) encode(RAW)"}
+external function dec_PDU4(in octetstring os) return PDU4
+with { extension "prototype(convert) decode(RAW)"}
+
+external function enc_PDU5(in PDU5 pdu) return octetstring
+with { extension "prototype(convert) encode(RAW)"}
+external function dec_PDU5(in octetstring os) return PDU5
+with { extension "prototype(convert) decode(RAW)"}
+
+external function enc_PDU6(in PDU6 pdu) return octetstring
+with { extension "prototype(convert) encode(RAW)"}
+external function dec_PDU6(in octetstring os) return PDU6
+with { extension "prototype(convert) decode(RAW)"}
+
+external function enc_PDU7(in PDU7 pdu) return octetstring
+with { extension "prototype(convert) encode(RAW)"}
+external function dec_PDU7(in octetstring os) return PDU7
+with { extension "prototype(convert) decode(RAW)"}
+
+external function enc_PDU8(in PDU8 pdu) return octetstring
+with { extension "prototype(convert) encode(RAW)"}
+external function dec_PDU8(in octetstring os) return PDU8
+with { extension "prototype(convert) decode(RAW)"}
+
+
+//FIELDLENGTH(N), BITORDERINFIELD lsb
+external function enc_PDU13(in PDU13 pdu) return octetstring
+with { extension "prototype(convert) encode(RAW)"}
+external function dec_PDU13(in octetstring os) return PDU13
+with { extension "prototype(convert) decode(RAW)"}
+
+external function enc_PDU13ar(in PDU13ar pdu) return octetstring
+with { extension "prototype(convert) encode(RAW)"}
+external function dec_PDU13ar(in octetstring os) return PDU13ar
+with { extension "prototype(convert) decode(RAW)"}
+
+external function enc_PDU13al(in PDU13 pdu) return octetstring
+with { extension "prototype(convert) encode(RAW)"}
+external function dec_PDU13al(in octetstring os) return PDU13al
+with { extension "prototype(convert) decode(RAW)"}
+
+external function enc_PDU14(in PDU14 pdu) return octetstring
+with { extension "prototype(convert) encode(RAW)"}
+external function dec_PDU14(in octetstring os) return PDU14
+with { extension "prototype(convert) decode(RAW)"}
+
+external function enc_PDU14ar(in PDU14ar pdu) return octetstring
+with { extension "prototype(convert) encode(RAW)"}
+external function dec_PDU14ar(in octetstring os) return PDU14ar
+with { extension "prototype(convert) decode(RAW)"}
+
+external function enc_PDU14al(in PDU14al pdu) return octetstring
+with { extension "prototype(convert) encode(RAW)"}
+external function dec_PDU14al(in octetstring os) return PDU14al
+with { extension "prototype(convert) decode(RAW)"}
+
+external function enc_PDU15(in PDU15 pdu) return octetstring
+with { extension "prototype(convert) encode(RAW)"}
+external function dec_PDU15(in octetstring os) return PDU15
+with { extension "prototype(convert) decode(RAW)"}
+
+external function enc_PDU15ar(in PDU15ar pdu) return octetstring
+with { extension "prototype(convert) encode(RAW)"}
+external function dec_PDU15ar(in octetstring os) return PDU15ar
+with { extension "prototype(convert) decode(RAW)"}
+
+external function enc_PDU15al(in PDU15al pdu) return octetstring
+with { extension "prototype(convert) encode(RAW)"}
+external function dec_PDU15al(in octetstring os) return PDU15al
+with { extension "prototype(convert) decode(RAW)"}
+
+external function enc_PDU16(in PDU16 pdu) return octetstring
+with { extension "prototype(convert) encode(RAW)"}
+external function dec_PDU16(in octetstring os) return PDU16
+with { extension "prototype(convert) decode(RAW)"}
+
+external function enc_PDU16ar(in PDU16ar pdu) return octetstring
+with { extension "prototype(convert) encode(RAW)"}
+external function dec_PDU16ar(in octetstring os) return PDU16ar
+with { extension "prototype(convert) decode(RAW)"}
+
+external function enc_PDU16al(in PDU16al pdu) return octetstring
+with { extension "prototype(convert) encode(RAW)"}
+external function dec_PDU16al(in octetstring os) return PDU16al
+with { extension "prototype(convert) decode(RAW)"}
+
+//PADDING
+external function enc_PDU13ar_padding_no(in PDU13ar_padding_no pdu) return octetstring
+with { extension "prototype(convert) encode(RAW)"}
+external function dec_PDU13ar_padding_no(in octetstring os) return PDU13ar_padding_no
+with { extension "prototype(convert) decode(RAW)"}
+
+external function enc_PDU13al_padding_yes(in PDU13al_padding_yes pdu) return octetstring
+with { extension "prototype(convert) encode(RAW)"}
+external function dec_PDU13al_padding_yes(in octetstring os) return PDU13al_padding_yes
+with { extension "prototype(convert) decode(RAW)"}
+
+external function enc_PDU14ar_padding_no(in PDU14ar_padding_no pdu) return octetstring
+with { extension "prototype(convert) encode(RAW)"}
+external function dec_PDU14ar_padding_no(in octetstring os) return PDU14ar_padding_no
+with { extension "prototype(convert) decode(RAW)"}
+
+external function enc_PDU14al_padding_yes(in PDU14al_padding_yes pdu) return octetstring
+with { extension "prototype(convert) encode(RAW)"}
+external function dec_PDU14al_padding_yes(in octetstring os) return PDU14al_padding_yes
+with { extension "prototype(convert) decode(RAW)"}
+
+external function enc_PDU14ar_padding_yes(in PDU14ar_padding_yes pdu) return octetstring
+with { extension "prototype(convert) encode(RAW)"}
+external function dec_PDU14ar_padding_yes(in octetstring os) return PDU14ar_padding_yes
+with { extension "prototype(convert) decode(RAW)"}
+
+external function enc_PDU15ar_padding_no(in PDU15ar_padding_no pdu) return octetstring
+with { extension "prototype(convert) encode(RAW)"}
+external function dec_PDU15ar_padding_no(in octetstring os) return PDU15ar_padding_no
+with { extension "prototype(convert) decode(RAW)"}
+
+external function enc_PDU15al_padding_yes(in PDU15al_padding_yes pdu) return octetstring
+with { extension "prototype(convert) encode(RAW)"}
+external function dec_PDU15al_padding_yes(in octetstring os) return PDU15al_padding_yes
+with { extension "prototype(convert) decode(RAW)"}
+
+external function enc_PDU16ar_padding_octet(in PDU16ar_padding_octet pdu) return octetstring
+with { extension "prototype(convert) encode(RAW)"}
+external function dec_PDU16ar_padding_octet(in octetstring os) return PDU16ar_padding_octet
+with { extension "prototype(convert) decode(RAW)"}
+
+external function enc_PDU16al_padding_octet(in PDU16al_padding_octet pdu) return octetstring
+with { extension "prototype(convert) encode(RAW)"}
+external function dec_PDU16al_padding_octet(in octetstring os) return PDU16al_padding_octet
+with { extension "prototype(convert) decode(RAW)"}
+
+//FIELDLENGTH(N), BITORDERINFIELD msb
+external function enc_PDU23(in PDU23 pdu) return octetstring
+with { extension "prototype(convert) encode(RAW)"}
+external function dec_PDU23(in octetstring os) return PDU23
+with { extension "prototype(convert) decode(RAW)"}
+
+external function enc_PDU24(in PDU24 pdu) return octetstring
+with { extension "prototype(convert) encode(RAW)"}
+external function dec_PDU24(in octetstring os) return PDU24
+with { extension "prototype(convert) decode(RAW)"}
+
+external function enc_PDU25(in PDU25 pdu) return octetstring
+with { extension "prototype(convert) encode(RAW)"}
+external function dec_PDU25(in octetstring os) return PDU25
+with { extension "prototype(convert) decode(RAW)"}
+
+external function enc_PDU26(in PDU26 pdu) return octetstring
+with { extension "prototype(convert) encode(RAW)"}
+external function dec_PDU26(in octetstring os) return PDU26
+with { extension "prototype(convert) decode(RAW)"}
+
+//N bit /unsigned N bit
+external function enc_PDU41(in PDU41 pdu) return octetstring
+with { extension "prototype(convert) encode(RAW)"}
+external function dec_PDU41(in octetstring os) return PDU41
+with { extension "prototype(convert) decode(RAW)"}
+
+external function enc_PDU43(in PDU43 pdu) return octetstring
+with { extension "prototype(convert) encode(RAW)"}
+external function dec_PDU43(in octetstring os) return PDU43
+with { extension "prototype(convert) decode(RAW)"}
+
+//=========================================================
+//         Testcases
+//=========================================================
+
+testcase tc_raw_bitstring_default1() runs on CT {
+  var PDU1 vl_pdu1 := '1'B;
+  var  PDU1 vl_expected_decoded := '0000 0001'B;
+  var octetstring vl_result := enc_PDU1(vl_pdu1);
+  var octetstring vl_expected := '01'O;
+  log("Encoding:",vl_pdu1,"->",vl_result);
+  if(vl_result != vl_expected) { 
+    setverdict(fail,"Expected:", vl_expected," got:", vl_result);
+    log("Encoding fault. Expected:",vl_expected," got:",vl_result);
+  }
+  if( dec_PDU1(vl_expected) != vl_expected_decoded){
+    setverdict(fail,"Expected:", vl_pdu1," got:", dec_PDU1(vl_expected));
+    log("Decoding fault.Expected:", vl_pdu1," got:", dec_PDU1(vl_expected));
+  }
+  log(dec_PDU1(vl_expected));
+  setverdict(pass);
+}
+
+const PDU1 c_pdu1 := '1'B;
+testcase tc_raw_bitstring_default2() runs on CT {
+  var  PDU1 vl_expected_decoded := '0000 0001'B;
+  var octetstring vl_result := enc_PDU1(c_pdu1);
+  var octetstring vl_expected := '01'O;
+  log("Encoding:",c_pdu1,"->",vl_result);
+  if(vl_result != vl_expected) { 
+    setverdict(fail,"Expected:", vl_expected," got:", vl_result);
+  }
+  if( dec_PDU1(vl_expected) != vl_expected_decoded){
+    setverdict(fail,"Expected:", c_pdu1," got:", dec_PDU1(vl_expected));
+  }
+  log(dec_PDU1(vl_expected));
+  setverdict(pass);
+}
+//BYTEORDER(first): for bitstring the least significant byte is the leftmost
+testcase tc_raw_bitstring_default3() runs on CT {
+  var PDU1 vl_pdu1 := '1 0000 0000'B;
+  var  PDU1 vl_expected_decoded := '0000 0001 0000 0000'B
+  var octetstring vl_result := enc_PDU1(vl_pdu1);
+  var octetstring vl_expected := '0001'O;
+  log( vl_result);
+  log("Encoding:",vl_pdu1,"->",vl_result);
+  if(vl_result != vl_expected) { 
+    setverdict(fail,"Expected:", vl_expected," got:", vl_result);
+  }
+  if( dec_PDU1(vl_expected) != vl_expected_decoded){
+    setverdict(fail,"Expected:", vl_pdu1," got:", dec_PDU1(vl_expected));
+  }
+  log(dec_PDU1(vl_expected));
+  setverdict(pass);
+}
+
+//BYTEORDER(first): for bitstring the least significant byte is the leftmost
+testcase tc_raw_bitstring_default4() runs on CT {
+  var PDU1 vl_pdu1 := '0000 0001 0000 0000'B;
+  var  PDU1 vl_expected_decoded := '0000 0001 0000 0000'B
+  var octetstring vl_result := enc_PDU1(vl_pdu1);
+  var octetstring vl_expected := '0001'O;
+  log( vl_result);
+  log("Encoding:",vl_pdu1,"->",vl_result);
+  if(vl_result != vl_expected) { 
+    setverdict(fail,"Expected:", vl_expected," got:", vl_result);
+  }
+  if( dec_PDU1(vl_expected) != vl_expected_decoded){
+    setverdict(fail,"Expected:", vl_pdu1," got:", dec_PDU1(vl_expected));
+  }
+  log(dec_PDU1(vl_expected));
+  setverdict(pass);
+}
+
+//default: FIELDLENGTH(8), BITORDERINFIELD(lsb), BYTEORDER(first): for bitstring the least significant byte is the leftmost
+//Paddig is required for the next full octet. 
+testcase tc_raw_bitstring_default1_seq() runs on CT {
+  var RoPDU1 vl_pdu1s := {'1'B, '1111'B, '0000 1111'B,'1 0000'B, '1111 1111'B}//{1,15,15,16,255};
+  var RoPDU1 vl_expected_decoded := {'0000 0001'B, '0000 1111'B, '0000 1111'B,'0001 0000'B, '1111 1111'B}//{1,15,15,16,255};
+  var octetstring vl_result;
+  var RoOS vl_expected := {'01'O,'0F'O,'0F'O, '10'O,'FF'O};
+
+  var integer N :=sizeof(vl_pdu1s);
+  for( var integer i:=0; i<N; i:=i+1) {
+    vl_result := enc_PDU1(vl_pdu1s[i]);
+    log( i,":",vl_result);
+    if(vl_result != vl_expected[i]) { 
+      setverdict(fail,"Expected:", vl_expected[i]," got:", vl_result);
+    }
+    if( dec_PDU1(vl_expected[i]) !=  vl_expected_decoded[i]){
+      setverdict(fail,"Expected:",   vl_expected_decoded[i]," got:", dec_PDU1(vl_expected[i]));
+    }
+    log(dec_PDU1(vl_expected[i]));
+  }
+  setverdict(pass);
+}
+
+testcase tc_raw_bitstring_FIELDLENGTH8_seq() runs on CT {
+  var RoPDU3 vl_pdu1s := {'1'B, '1111'B, '0000 1111'B,'1 0000'B, '1111 1111'B}//{1,15,15,16,255};
+  var RoPDU3 vl_expected_decoded := {'0000 0001'B, '0000 1111'B, '0000 1111'B,'0001 0000'B, '1111 1111'B}//{1,15,15,16,255};
+  var octetstring vl_result;
+  var RoOS vl_expected := {'01'O,'0F'O,'0F'O, '10'O,'FF'O};
+
+  var integer N :=sizeof(vl_pdu1s);
+  for( var integer i:=0; i<N; i:=i+1) {
+    vl_result := enc_PDU3(vl_pdu1s[i]);
+    log( i,":",vl_result);
+    if(vl_result != vl_expected[i]) { 
+      setverdict(fail,"Expected:", vl_expected[i]," got:", vl_result);
+    }
+    if( dec_PDU3(vl_expected[i]) != vl_expected_decoded[i]){
+      setverdict(fail,"Expected:", vl_expected_decoded[i]," got:", dec_PDU3(vl_expected[i]));
+    }
+    log(dec_PDU3(vl_expected[i]));
+  }
+  setverdict(pass);
+}
+
+//Status: wrong, the enc_PDU3 should not accept the args of type PDU4 (???)
+testcase tc_raw_bitstring_FIELDLENGTH16_seq_wrong() runs on CT {
+  var RoPDU4 vl_pdu1s := {'1'B, '1111'B, '0000 1111'B,'1 0000'B, '1111 1111'B }//{1,15,15,16,255};
+  var RoPDU3 vl_expected_decoded := {'0000 0001'B, '0000 1111'B, '0000 1111'B,'0001 0000'B, '1111 1111'B}//{1,15,15,16,255};
+  var octetstring vl_result;
+  var RoOS vl_expected :={'01'O,'0F'O,'0F'O, '10'O,'FF'O};
+
+  var integer N :=sizeof(vl_pdu1s);
+  for( var integer i:=0; i<N; i:=i+1) {
+    vl_result := enc_PDU3(vl_pdu1s[i]); 
+    log( i,":",vl_result);
+    if(vl_result != vl_expected[i]) { 
+      setverdict(fail,"Expected:", vl_expected[i]," got:", vl_result);
+    }
+    if( dec_PDU3(vl_expected[i]) != vl_expected_decoded[i]){
+      setverdict(fail,"Expected:", vl_expected_decoded[i]," got:", dec_PDU3(vl_expected[i]));
+      log("Expected:", vl_expected_decoded[i]," got:", dec_PDU3(vl_expected[i]));
+    }
+    log(dec_PDU3(vl_expected[i]));
+  }
+  setverdict(pass);
+}
+
+//default byte order: least significant byte (rightmost) -> result[0] (leftmost)
+testcase tc_raw_bitstring_FIELDLENGTH16_seq() runs on CT {
+  var RoPDU4 vl_pdu1s := {'1'B, '1111'B, '0000 1111'B,'1 0000'B, '1111 1111'B,'1 0000 0000'B,'0001 0010 0011 0100'B} 
+  //{1,15,15,16,255,256,4660};
+  var RoPDU4 vl_expected_decoded := {
+    '0000 0000 0000 0001'B,
+    '0000 0000 0000 1111'B,
+    '0000 0000 0000 1111'B,
+    '0000 0000 0001 0000'B, 
+    '0000 0000 1111 1111'B,
+    '0000 0001 0000 0000'B,
+    '0001 0010 0011 0100'B
+  }//{1,15,15,16,255,256,4660};
+
+  var octetstring vl_result;
+  var RoOS vl_expected := {'0100'O,'0F00'O,'0F00'O,'1000'O,'FF00'O,'0001'O,'3412'O};
+
+  var integer N :=sizeof(vl_pdu1s);
+  for( var integer i:=0; i<N; i:=i+1) {
+    vl_result := enc_PDU4(vl_pdu1s[i]);
+    log( i,":",vl_result);
+    if(vl_result != vl_expected[i]) { 
+      setverdict(fail,"Expected:", vl_expected[i]," got:", vl_result); 
+    }
+    if( dec_PDU4(vl_expected[i]) != vl_expected_decoded[i]){
+      setverdict(fail,"Expected:", vl_expected_decoded[i]," got:", dec_PDU4(vl_expected[i]));
+    }
+    log(dec_PDU4(vl_expected[i]));
+  }
+  setverdict(pass);
+}
+
+//default byte order: first encoded byte-> result[0]
+testcase tc_raw_bitstring_FIELDLENGTH24_seq() runs on CT {
+  var RoPDU5 vl_pdu1s := {'1'B, '1111'B, '0000 1111'B,'1 0000'B, '1111 1111'B,'1 0000 0000'B,'0001 0010 0011 0100'B}
+  //{1,15,15,16,255,256,4660};
+  var RoPDU5 vl_expected_decoded := {
+    '0000 0000 0000 0000 0000 0001'B,
+    '0000 0000 0000 0000 0000 1111'B,
+    '0000 0000 0000 0000 0000 1111'B,
+    '0000 0000 0000 0000 0001 0000'B, 
+    '0000 0000 0000 0000 1111 1111'B,
+    '0000 0000 0000 0001 0000 0000'B,
+    '0000 0000 0001 0010 0011 0100'B
+  }//{1,15,15,16,255,256,4660};
+  var octetstring vl_result;
+  var RoOS vl_expected := {'010000'O,'0F0000'O,'0F0000'O,'100000'O,'FF0000'O,'000100'O,'341200'O};
+
+  var integer N :=sizeof(vl_pdu1s);
+  for( var integer i:=0; i<N; i:=i+1) {
+    vl_result := enc_PDU5(vl_pdu1s[i]); //expected: semantic error (???)
+    log( i,":",vl_result);
+    if(vl_result != vl_expected[i]) { 
+      setverdict(fail,"Expected:", vl_expected[i]," got:", vl_result); 
+    }
+    if( dec_PDU5(vl_expected[i]) != vl_expected_decoded[i]){
+      setverdict(fail,"Expected:", vl_expected_decoded[i]," got:", dec_PDU5(vl_expected[i]));
+    }
+    log(dec_PDU5(vl_expected[i]));
+  }
+  setverdict(pass);
+}
+
+//default byte order: first encoded byte-> result[0]
+testcase tc_raw_bitstring_FIELDLENGTH32_seq() runs on CT {
+  var RoPDU6 vl_pdu1s := {'1'B, '1111'B, '0000 1111'B,'1 0000'B, '1111 1111'B, '01 0000 0000'B,'0001 0010 0011 0100'B};
+  //{1,15,15,16,255,256,4660};
+  var RoPDU6 vl_expected_decoded := {
+    '0000 0000 0000 0000 0000 0000 0000 0001'B,
+    '0000 0000 0000 0000 0000 0000 0000 1111'B,
+    '0000 0000 0000 0000 0000 0000 0000 1111'B,
+    '0000 0000 0000 0000 0000 0000 0001 0000'B, 
+    '0000 0000 0000 0000 0000 0000 1111 1111'B,
+    '0000 0000 0000 0000 0000 0001 0000 0000'B,
+    '0000 0000 0000 0000 0001 0010 0011 0100'B
+  }//{1,15,15,16,255,256,4660};
+  var octetstring vl_result;
+  var RoOS vl_expected := {'01000000'O,'0F000000'O,'0F000000'O,'10000000'O,'FF000000'O,'00010000'O,'34120000'O};
+
+  var integer N :=sizeof(vl_pdu1s);
+  for( var integer i:=0; i<N; i:=i+1) {
+    vl_result := enc_PDU6(vl_pdu1s[i]); //expected: semantic error (???)
+    log( i,":",vl_result);
+    if(vl_result != vl_expected[i]) { 
+      setverdict(fail,"Expected:", vl_expected[i]," got:", vl_result); 
+    }
+    if( dec_PDU6(vl_expected[i]) != vl_expected_decoded[i]){
+      setverdict(fail,"Expected:", vl_expected_decoded[i]," got:", dec_PDU6(vl_expected[i]));
+    }
+    log(dec_PDU6(vl_expected[i]));
+  }
+  setverdict(pass);
+}
+
+//default byte order: first encoded byte-> result[0]
+testcase tc_raw_bitstring_FIELDLENGTH64_seq() runs on CT {
+  var RoPDU7 vl_pdu1s := {'1'B, '1111'B, '0000 1111'B,'1 0000'B, '1111 1111'B, '01 0000 0000'B,'0001 0010 0011 0100'B,
+    '0000 0001 0010 0011 0100 0101 0110 0111 1000 1001 1010 1011 1100 1101 1110 1111'B
+  };
+  //{1,15,15,16,255,256,4660,81985529216486895};
+  var RoPDU7 vl_expected_decoded := {
+    '0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0001'B,
+    '0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 1111'B,
+    '0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 1111'B,
+    '0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0001 0000'B, 
+    '0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 1111 1111'B,
+    '0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0001 0000 0000'B,
+    '0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0001 0010 0011 0100'B,
+    '0000 0001 0010 0011 0100 0101 0110 0111 1000 1001 1010 1011 1100 1101 1110 1111'B
+  }//{1,15,15,16,255,256,4660};
+  var octetstring vl_result;
+  var RoOS vl_expected := {
+    '0100 0000 0000 0000'O,
+    '0F00 0000 0000 0000'O,
+    '0F00 0000 0000 0000'O,
+    '1000 0000 0000 0000'O,
+    'FF00 0000 0000 0000'O,
+    '0001 0000 0000 0000'O,
+    '3412 0000 0000 0000'O,
+    'EFCD AB89 6745 2301'O
+  };
+
+  var integer N :=sizeof(vl_pdu1s);
+  for( var integer i:=0; i<N; i:=i+1) {
+    vl_result := enc_PDU7(vl_pdu1s[i]); //expected: semantic error (???)
+    log( i,":",vl_result);
+    if(vl_result != vl_expected[i]) { 
+      setverdict(fail,"Expected:", vl_expected[i]," got:", vl_result); 
+    }
+    if( dec_PDU7(vl_expected[i]) != vl_expected_decoded[i]){
+      setverdict(fail,"Expected:", vl_expected_decoded[i]," got:", dec_PDU7(vl_expected[i]));
+    }
+    log(dec_PDU7(vl_expected[i]));
+  }
+  setverdict(pass);
+}
+
+//default byte order: first encoded byte-> result[0]
+testcase tc_raw_bitstring_FIELDLENGTH128_seq() runs on CT {
+  var RoPDU8 vl_pdu1s := {'1'B, '1111'B, '0000 1111'B,'1 0000'B, '1111 1111'B, 
+    '01 0000 0000'B,'0001 0010 0011 0100'B,
+    '0000 0001 0010 0011 0100 0101 0110 0111 1000 1001 1010 1011 1100 1101 1110 1111'B}; //'0123456789ABCDEF'O
+  //{1,15,16,255,256,4660, 81985529216486895};
+
+  var RoPDU8 vl_expected_decoded := {
+    c_64bit_0 &'0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0001'B,
+    c_64bit_0 &'0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 1111'B,
+    c_64bit_0 &'0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 1111'B,
+    c_64bit_0 &'0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0001 0000'B, 
+    c_64bit_0 &'0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 1111 1111'B,
+    c_64bit_0 &'0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0001 0000 0000'B,
+    c_64bit_0 &'0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0001 0010 0011 0100'B,
+    c_64bit_0 &'0000 0001 0010 0011 0100 0101 0110 0111 1000 1001 1010 1011 1100 1101 1110 1111'B
+  }//{1,15,15,16,255,256,4660,81985529216486895};
+  var octetstring vl_result;
+  var RoOS vl_expected := {
+    '0100 0000 0000 0000 0000 0000 0000 0000'O,
+    '0F00 0000 0000 0000 0000 0000 0000 0000'O,
+    '0F00 0000 0000 0000 0000 0000 0000 0000'O,
+    '1000 0000 0000 0000 0000 0000 0000 0000'O,
+    'FF00 0000 0000 0000 0000 0000 0000 0000'O,
+    '0001 0000 0000 0000 0000 0000 0000 0000'O,
+    '3412 0000 0000 0000 0000 0000 0000 0000'O,
+    //'F0DE BC9A 7856 3412 0000 0000 0000 0000'O
+    'EFCD AB89 6745 2301 0000 0000 0000 0000'O
+  };
+
+  var integer N :=sizeof(vl_pdu1s);
+  for( var integer i:=0; i<N; i:=i+1) {
+    vl_result := enc_PDU8(vl_pdu1s[i]); //expected: semantic error (???)
+    log( i,":",vl_result);
+    if(vl_result != vl_expected[i]) { 
+      setverdict(fail,"Expected:", vl_expected[i]," got:", vl_result); 
+    }
+    if( dec_PDU8(vl_expected[i]) != vl_expected_decoded[i]){
+      setverdict(fail,"Expected:", vl_expected_decoded[i]," got:", dec_PDU8(vl_expected[i]));
+    }
+    log(dec_PDU8(vl_expected[i]));
+  }
+  setverdict(pass);
+}
+
+//=== lsb ==
+//default align: right, default padding: to the full octet
+testcase tc_raw_bitstring_FIELDLENGTH8_lsb_seq() runs on CT {
+  var RoPDU13 vl_pdu1s := {'1'B, '10'B, '1111'B, '0000 1111'B,'1 0000'B, '1111 1111'B}//{1,15,15,16,255};
+  var RoPDU13 vl_expected_decoded := {'0000 0001'B, '0000 0010'B,'0000 1111'B, '0000 1111'B,'0001 0000'B, '1111 1111'B}//{1,15,15,16,255};
+  var octetstring vl_result;
+  var RoOS vl_expected := {'01'O,'02'O,'0F'O,'0F'O,'10'O,'FF'O};
+
+  var integer N :=sizeof(vl_pdu1s);
+  for( var integer i:=0; i<N; i:=i+1) {
+    vl_result := enc_PDU13(vl_pdu1s[i]);
+    log( i,":",vl_result);
+    if(vl_result != vl_expected[i]) { 
+      setverdict(fail,"Expected:", vl_expected[i]," got:", vl_result);
+    }
+    if( dec_PDU13(vl_expected[i]) != vl_expected_decoded[i]){
+      setverdict(fail,"Expected:", vl_expected_decoded[i]," got:", dec_PDU13(vl_expected[i]));
+    }
+    log(dec_PDU13(vl_expected[i]));
+  }
+  setverdict(pass);
+}
+
+testcase tc_raw_bitstring_FIELDLENGTH8_lsb_alignright_seq() runs on CT {
+  var RoPDU13ar vl_pdu1s := {'1'B, '10'B, '1111'B, '0000 1111'B,'1 0000'B, '1111 1111'B}//{1,15,15,16,255};
+  var RoPDU13ar vl_expected_decoded := {'0000 0001'B, '0000 0010'B,'0000 1111'B, '0000 1111'B,'0001 0000'B, '1111 1111'B}//{1,15,15,16,255};
+  var octetstring vl_result;
+  var RoOS vl_expected := {'01'O,'02'O,'0F'O,'0F'O,'10'O,'FF'O};
+
+  var integer N :=sizeof(vl_pdu1s);
+  for( var integer i:=0; i<N; i:=i+1) {
+    vl_result := enc_PDU13ar(vl_pdu1s[i]);
+    log( i,":",vl_result);
+    if(vl_result != vl_expected[i]) { 
+      setverdict(fail,"Expected:", vl_expected[i]," got:", vl_result);
+    }
+    if( dec_PDU13ar(vl_expected[i]) != vl_expected_decoded[i]){
+      setverdict(fail,"Expected:", vl_expected_decoded[i]," got:", dec_PDU13ar(vl_expected[i]));
+    }
+    log(dec_PDU13ar(vl_expected[i]));
+  }
+  setverdict(pass);
+}
+
+testcase tc_raw_bitstring_FIELDLENGTH8_lsb_alignleft_seq() runs on CT {
+  var RoPDU13al vl_pdu1s := {'1'B, '10'B, '1111'B, '0000 1111'B,'1 0000'B, '1111 1111'B}//{1,15,15,16,255};
+  var RoPDU13al vl_expected_decoded := {'0000 0001'B, '0000 0010'B,'0000 1111'B, '0000 1111'B,'0001 0000'B, '1111 1111'B}//{1,15,15,16,255};
+  var octetstring vl_result;
+  var RoOS vl_expected := {'01'O,'02'O,'0F'O,'0F'O,'10'O,'FF'O};
+
+  var integer N :=sizeof(vl_pdu1s);
+  for( var integer i:=0; i<N; i:=i+1) {
+    vl_result := enc_PDU13al(vl_pdu1s[i]);
+    log( i,":",vl_result);
+    if(vl_result != vl_expected[i]) { 
+      setverdict(fail,"Expected:", vl_expected[i]," got:", vl_result);
+    }
+    if( dec_PDU13al(vl_expected[i]) != vl_expected_decoded[i]){
+      setverdict(fail,"Expected:", vl_expected_decoded[i]," got:", dec_PDU13al(vl_expected[i]));
+    }
+    log(dec_PDU13al(vl_expected[i]));
+  }
+  setverdict(pass);
+}
+
+//default byte order: first encoded byte-> result[0]
+testcase tc_raw_bitstring_FIELDLENGTH16_lsb_seq() runs on CT {
+  var RoPDU14 vl_pdu1s := {'1'B, '1111'B, '0000 1111'B,'1 0000'B, '1111 1111'B, '01 0000 0000'B,'0001 0010 0011 0100'B};
+  //{1,15,15,16,255,256,4660};
+  var RoPDU14 vl_expected_decoded := {
+    '0000 0000 0000 0001'B,
+    '0000 0000 0000 1111'B,
+    '0000 0000 0000 1111'B,
+    '0000 0000 0001 0000'B, 
+    '0000 0000 1111 1111'B,
+    '0000 0001 0000 0000'B,
+    '0001 0010 0011 0100'B
+  }//{1,15,15,16,255,256,4660};
+  var octetstring vl_result;
+  var RoOS vl_expected := {'0100'O,'0F00'O,'0F00'O,'1000'O,'FF00'O,'0001'O,'3412'O};
+
+  var integer N :=sizeof(vl_pdu1s);
+  for( var integer i:=0; i<N; i:=i+1) {
+    vl_result := enc_PDU14(vl_pdu1s[i]);
+    log( i,":",vl_result);
+    if(vl_result != vl_expected[i]) { 
+      setverdict(fail,"Expected:", vl_expected[i]," got:", vl_result); 
+    }
+    if( dec_PDU14(vl_expected[i]) != vl_expected_decoded[i]){
+      setverdict(fail,"Expected:", vl_expected_decoded[i]," got:", dec_PDU14(vl_expected[i]));
+    }
+    log(dec_PDU14(vl_expected[i]));
+  }
+  setverdict(pass);
+}
+
+//default byte order: first encoded byte-> result[0]
+testcase tc_raw_bitstring_FIELDLENGTH16_lsb_alignright_seq() runs on CT {
+  var RoPDU14ar vl_pdu1s := {'1'B, '1111'B, '0000 1111'B,'1 0000'B, '1111 1111'B, '01 0000 0000'B,'0001 0010 0011 0100'B};
+  //{1,15,15,16,255,256,4660};
+  var RoPDU14ar vl_expected_decoded := {
+    '0000 0000 0000 0001'B,
+    '0000 0000 0000 1111'B,
+    '0000 0000 0000 1111'B,
+    '0000 0000 0001 0000'B, 
+    '0000 0000 1111 1111'B,
+    '0000 0001 0000 0000'B,
+    '0001 0010 0011 0100'B
+  }//{1,15,15,16,255,256,4660};
+  var octetstring vl_result;
+  var RoOS vl_expected := {'0100'O,'0F00'O,'0F00'O,'1000'O,'FF00'O,'0001'O,'3412'O};
+
+  var integer N :=sizeof(vl_pdu1s);
+  for( var integer i:=0; i<N; i:=i+1) {
+    vl_result := enc_PDU14ar(vl_pdu1s[i]);
+    log( i,":",vl_result);
+    if(vl_result != vl_expected[i]) { 
+      setverdict(fail,"Expected:", vl_expected[i]," got:", vl_result); 
+    }
+    if( dec_PDU14ar(vl_expected[i]) != vl_expected_decoded[i]){
+      setverdict(fail,"Expected:", vl_expected_decoded[i]," got:", dec_PDU14ar(vl_expected[i]));
+    }
+    log(dec_PDU14ar(vl_expected[i]));
+  }
+  setverdict(pass);
+}
+
+//default byte order: first encoded byte-> result[0]
+testcase tc_raw_bitstring_FIELDLENGTH16_lsb_alignleft_seq() runs on CT {
+  var RoPDU14al vl_pdu1s := {'1'B, '1111'B, '0000 1111'B,'1 0000'B, '1111 1111'B, '01 0000 0000'B,'0001 0010 0011 0100'B};
+  //{1,15,15,16,255,256,4660};
+  //new: decoded!=original
+  var RoPDU14al vl_expected_decoded := {
+    '1000 0000 0000 0000'B,
+    '1111 0000 0000 0000'B,
+    '0000 1111 0000 0000'B,
+    '1000 0000 0000 0000'B, 
+    '1111 1111 0000 0000'B,
+    '0100 0000 0000 0000'B,
+    '0001 0010 0011 0100'B
+  }
+  var octetstring vl_result;
+  //'1'B->'1000 0000 0000 0000'B (align left)-> '0080'O (reverse byte order)
+  //'10000'B->'1000 0000 0000 0000'B (align left)-> '0080'O (reverse byte order)
+  //'1111 1111'B->'1111 1111 0000 0000'B (align left)-> '00FF'O (reverse byte order)
+  //'01 0000 0000'B->'0100 0000 0000 0000'B (align left)-> '0040'O (reverse byte order)
+
+  var RoOS vl_expected := {'0080'O,'00F0'O,'000F'O,'0080'O,'00FF'O,'0040'O,'3412'O};
+
+  var integer N :=sizeof(vl_pdu1s);
+  for( var integer i:=0; i<N; i:=i+1) {
+    vl_result := enc_PDU14al(vl_pdu1s[i]);
+    log( i,":",vl_result);
+    if(vl_result != vl_expected[i]) { 
+      setverdict(fail,"Expected:", vl_expected[i]," got:", vl_result); 
+    }
+    if( dec_PDU14al(vl_expected[i]) != vl_expected_decoded[i]){
+      setverdict(fail,"Expected:", vl_expected_decoded[i]," got:", dec_PDU14al(vl_expected[i]));
+    }
+    log(dec_PDU14al(vl_expected[i]));
+  }
+  setverdict(pass);
+}
+
+// byte order: last encoded byte-> result[0], no padding
+//Problem: wrong aligning in java
+//2 faults:0,1.
+//cpp ok
+testcase tc_raw_bitstring_FIELDLENGTH16_lsb_last_nopadding1_seq() runs on CT {
+  var RoPDU15 vl_pdu1s := {'0001'B, '1111'B, '0000 1111'B,'0001 0000'B, '1111 1111'B, '0001 0000 0000'B,'0001 0010 0011 0100'B};
+  //{1,15,16,255,256,4660};
+  var RoPDU15 vl_expected_decoded := {
+    '0000 0000 0000 0001'B,
+    '0000 0000 0000 1111'B,
+    '0000 0000 0000 1111'B,
+    '0000 0000 0001 0000'B, 
+    '0000 0000 1111 1111'B,
+    '0000 0001 0000 0000'B,
+    '0001 0010 0011 0100'B
+  }//{1,15,15,16,255,256,4660};
+  var octetstring vl_result;
+  var RoOS vl_expected := {'0001'O,'000F'O,'000F'O,'0010'O,'00FF'O,'0100'O,'1234'O};
+                //cpp:ok
+                //java got:'0100'O,'0F00'O,'000F'O,'0010'O,'00FF'O,'0100'O,'1234'O
+  var integer N :=sizeof(vl_pdu1s);
+  for( var integer i:=0; i<N; i:=i+1) {
+    vl_result := enc_PDU15(vl_pdu1s[i]);
+    log( i,":",vl_pdu1s[i],"->",vl_result);
+    if(vl_result != vl_expected[i]) { 
+      setverdict(fail,"Expected:", vl_expected[i]," got:", vl_result); 
+      log("Encoding fault: Expected:", vl_expected[i]," got:", vl_result)
+    }
+    if( dec_PDU15(vl_expected[i]) != vl_expected_decoded[i]){
+      setverdict(fail,"Expected:", vl_expected_decoded[i]," got:", dec_PDU15(vl_expected[i]));
+      log("Decodong fault: Expected :",vl_expected_decoded[i]," got:", dec_PDU15(vl_expected[i]))
+    }
+    log(dec_PDU15(vl_expected[i]));
+  }
+  setverdict(pass);
+}
+
+// byte order: last encoded byte-> result[0], no padding
+//Problem: wrong align,
+// Status:  wrong in ttcn2cpp, wrong:0,3,5 i.e if no of bits != 4*n
+//corrected in java
+//TODO: implement in cpp
+testcase tc_raw_bitstring_FIELDLENGTH16_lsb_last_nopadding2_seq() runs on CT {
+  var RoPDU15 vl_pdu1s := {'1'B, '1111'B, '0000 1111'B,'01 0000'B, '1111 1111'B, '1 0000 0000'B,'0001 0010 0011 0100'B};//{1,15,16,255,256,4660};
+  var RoOS vl_expected := {'0001'O,'000F'O,'000F'O,'0010'O,'00FF'O,'0100'O,'1234'O};
+                 //cpp got:'0040'O,'000F'O,'000F'O,'0001'O,'00FF'O,'4000'O,'1234'O
+                //java  got:'0010'O,'000F'O,'000F'O,'0001'O,'00FF'O,'4000'O,'1234'O
+  var RoPDU15 vl_expected_decoded := {
+    '0000 0000 0000 0001'B,
+    '0000 0000 0000 1111'B,
+    '0000 0000 0000 1111'B,
+    '0000 0000 0001 0000'B, 
+    '0000 0000 1111 1111'B,
+    '0000 0001 0000 0000'B,
+    '0001 0010 0011 0100'B
+  }//{1,15,15,16,255,256,4660};
+  //0:'01'B->'0000 0000 0000 0001'B (align right)->'00 01'O
+  //1:'1111'B->'0000 0000 0000 1111'B (align right)-> '000F'O
+  //2:'0000 1111'B->'0000 0000 0000 1111'B (align right)-> '000F'O
+  //3:'01 0000'B->'0000 0000 0001 0000'B(align right)-> '0010'O
+  //4:'1111 1111'B->'0000 0000 1111 1111'B (align right)-> '00FF'O
+  //5:'1 0000 0000'B->'0000 0001 0000 0000'B-> '0100'O
+  //6:ok
+  var octetstring vl_result;
+
+ 
+  var integer N :=sizeof(vl_pdu1s);
+  for( var integer i:=0; i<N; i:=i+1) {
+    vl_result := enc_PDU15(vl_pdu1s[i]);
+    log( i,":",vl_pdu1s[i],"->",vl_result);
+    if(vl_result != vl_expected[i]) { 
+      setverdict(fail,"Encoding fault.Expected:", vl_expected[i]," got:", vl_result); 
+      //log("Encoding fault: Expected:", vl_expected[i]," got:", vl_result)
+    }
+    if( dec_PDU15(vl_expected[i]) != vl_expected_decoded[i]){
+      setverdict(fail,"Decoding fault.Expected:", vl_expected_decoded[i]," got:", dec_PDU15(vl_expected[i]));
+      //log("Decodong fault: Expected :",vl_expected_decoded[i]," got:", dec_PDU15(vl_expected[i]))
+    }
+    log(dec_PDU15(vl_expected[i]));
+  }
+  setverdict(pass);
+}
+
+//===
+// byte order: last encoded byte-> result[0], no padding
+//Problem: wrong padding, BYTEORDER(last) is not handled!!!
+//The behaviour is the same as in tc_raw_bitstring_FIELDLENGTH16_lsb_last_nopadding1_seq!
+testcase tc_raw_bitstring_FIELDLENGTH16_lsb_last_alignright_nopadding1_seq() runs on CT {
+  var RoPDU15ar vl_pdu1s := {'0001'B, '1111'B, '0000 1111'B,'0001 0000'B, '1111 1111'B, '0001 0000 0000'B,'0001 0010 0011 0100'B};
+  //{1,15,16,255,256,4660};
+  var RoPDU15ar vl_expected_decoded := {
+    '0000 0000 0000 0001'B,
+    '0000 0000 0000 1111'B,
+    '0000 0000 0000 1111'B,
+    '0000 0000 0001 0000'B, 
+    '0000 0000 1111 1111'B,
+    '0000 0001 0000 0000'B,
+    '0001 0010 0011 0100'B
+  }//{1,15,15,16,255,256,4660};
+  var octetstring vl_result;
+  var RoOS vl_expected := {'0001'O,'000F'O,'000F'O,'0010'O,'00FF'O,'0100'O,'1234'O};
+                // cpp got:'0001'O,'000F'O,'000F'O,'0010'O,  
+                //java got:'0100'O,'0F00'O,'000F'O,'0010'O,'00FF'O,'0100'O,'1234'O
+//0:'0001'B->'0000 0000 0000 0001'B (right aligned)->'0001'O
+  var integer N :=sizeof(vl_pdu1s);
+  for( var integer i:=0; i<N; i:=i+1) {
+    vl_result := enc_PDU15ar(vl_pdu1s[i]);
+    log( i,":",vl_pdu1s[i],"->",vl_result);
+    if(vl_result != vl_expected[i]) { 
+      setverdict(fail,"Expected:", vl_expected[i]," got:", vl_result); 
+      log("Encoding fault: Expected:", vl_expected[i]," got:", vl_result)
+    }
+    if( dec_PDU15ar(vl_expected[i]) != vl_expected_decoded[i]){
+      setverdict(fail,"Expected:", vl_expected_decoded[i]," got:", dec_PDU15ar(vl_expected[i]));
+      log("Decodong fault: Expected :",vl_expected_decoded[i]," got:", dec_PDU15ar(vl_expected[i]))
+    }
+    log(dec_PDU15ar(vl_expected[i]));
+  }
+  setverdict(pass);
+}
+//Status: java code runtime failed. Wrong alignment
+testcase tc_raw_bitstring_FIELDLENGTH16_lsb_last_alignright_nopadding2_seq() runs on CT {
+  var RoPDU15ar vl_pdu1s := {'1'B, '1111'B, '0000 1111'B,'1 0000'B, '1111 1111'B, '1 0000 0000'B,'0001 0010 0011 0100'B};
+  //{1,15,16,255,256,4660}
+  var RoPDU14ar vl_expected_decoded := {
+    '0000 0000 0000 0001'B,
+    '0000 0000 0000 1111'B,
+    '0000 0000 0000 1111'B,
+    '0000 0000 0001 0000'B, 
+    '0000 0000 1111 1111'B,
+    '0000 0001 0000 0000'B,
+    '0001 0010 0011 0100'B
+  }
+  
+  var octetstring vl_result;
+  var RoOS vl_expected := {'0001'O,'000F'O,'000F'O,'0010'O,'00FF'O,'0100'O,'1234'O};
+  //cpp got:              {'0040'B,'000F'O,'000F'O,'0004'O,'00FF'O,'4000'O,'1234'B}
+  //java got :=           {'0040'O,'0F00'O,'000F'O,'0004'O,'00FF'O,'4000'O,'1234'O};<==== corrected, pass
+
+  var integer N :=sizeof(vl_pdu1s);
+  for( var integer i:=0; i<N; i:=i+1) {
+    vl_result := enc_PDU15ar(vl_pdu1s[i]);
+    log( i,":",vl_pdu1s[i],"->",vl_result);
+    if(vl_result != vl_expected[i]) { 
+      setverdict(fail,"Expected:", vl_expected[i]," got:", vl_result); 
+      log("Encoding fault: Expected:", vl_expected[i]," got:", vl_result)
+    }
+    if( dec_PDU15ar(vl_expected[i]) != vl_expected_decoded[i]){
+      setverdict(fail,"Expected:", vl_expected_decoded[i]," got:", dec_PDU15ar(vl_expected[i]));
+      log("Decodong fault: Expected :",vl_expected_decoded[i]," got:", dec_PDU15ar(vl_expected[i]))
+    }
+    log(dec_PDU15ar(vl_expected[i]));
+  }
+  setverdict(pass);
+}
+
+// Status: pass
+testcase tc_raw_bitstring_FIELDLENGTH16_lsb_last_alignleft_nopadding1_seq() runs on CT {
+  var RoPDU15al vl_pdu1s := {'0001'B, '1111'B, '0000 1111'B,'0001 0000'B, '1111 1111'B, '0001 0000 0000'B,'0001 0010 0011 0100'B};
+  //{1,15,16,255,256,4660};
+  var RoPDU15al vl_expected_decoded := {
+    '0001 0000 0000 0000'B,
+    '1111 0000 0000 0000'B,
+    '0000 1111 0000 0000'B,
+    '0001 0000 0000 0000'B, 
+    '1111 1111 0000 0000'B,
+    '0001 0000 0000 0000'B,
+    '0001 0010 0011 0100'B
+  }//{1,15,15,16,255,256,4660};
+  var octetstring vl_result;
+  
+  var RoOS vl_expected := {'1000'O,'F000'O,'0F00'O,'1000'O,'FF00'O,'1000'O,'1234'O};
+  //got:'1000'O,'000F'O,'000F'O,'0004'O,'00FF'O,'1000'O,'1234'O
+//0:'0001'B->'0001 0000 0000 0000'B (left aligned)->'1000'O
+  var integer N :=sizeof(vl_pdu1s);
+  for( var integer i:=0; i<N; i:=i+1) {
+    vl_result := enc_PDU15al(vl_pdu1s[i]);
+    log( i,":",vl_pdu1s[i],"->",vl_result);
+    if(vl_result != vl_expected[i]) { 
+      setverdict(fail,"Expected:", vl_expected[i]," got:", vl_result); 
+      log("Encoding fault: Expected:", vl_expected[i]," got:", vl_result)
+    }
+    if( dec_PDU15al(vl_expected[i]) != vl_expected_decoded[i]){
+      setverdict(fail,"Expected:", vl_expected_decoded[i]," got:", dec_PDU15al(vl_expected[i]));
+      log("Decodong fault: Expected :",vl_expected_decoded[i]," got:", dec_PDU15al(vl_expected[i]))
+    }
+    log(dec_PDU15al(vl_expected[i]));
+  }
+  setverdict(pass);
+}
+
+testcase tc_raw_bitstring_FIELDLENGTH16_lsb_last_alignleft_nopadding2_seq() runs on CT {
+  var RoPDU15al vl_pdu1s := {'1'B, '1111'B, '0000 1111'B,'1 0000'B, '1111 1111'B, '1 0000 0000'B,'0001 0010 0011 0100'B};
+  //{1,15,16,255,256,4660}
+  var RoPDU14al vl_expected_decoded := {
+    '1000 0000 0000 0000'B,
+    '1111 0000 0000 0000'B,
+    '0000 1111 0000 0000'B,
+    '1000 0000 0000 0000'B, 
+    '1111 1111 0000 0000'B,
+    '1000 0000 0000 0000'B,
+    '0001 0010 0011 0100'B
+  }
+  var octetstring vl_result;
+  var RoOS vl_expected := {'8000'O,'F000'O,'0F00'O,'8000'O,'FF00'O,'8000'O,'1234'O};
+
+  var integer N :=sizeof(vl_pdu1s);
+  for( var integer i:=0; i<N; i:=i+1) {
+    vl_result := enc_PDU15al(vl_pdu1s[i]);
+    log( i,":",vl_pdu1s[i],"->",vl_result);
+    if(vl_result != vl_expected[i]) { 
+      setverdict(fail,"Expected:", vl_expected[i]," got:", vl_result); 
+      log("Encoding fault: Expected:", vl_expected[i]," got:", vl_result)
+    }
+    if( dec_PDU15al(vl_expected[i]) != vl_expected_decoded[i]){
+      setverdict(fail,"Expected:", vl_expected_decoded[i]," got:", dec_PDU15al(vl_expected[i]));
+      log("Decodong fault: Expected :",vl_expected_decoded[i]," got:", dec_PDU15al(vl_expected[i]))
+    }
+    log(dec_PDU15al(vl_expected[i]));
+  }
+  setverdict(pass);
+}
+// byte order: first encoded byte-> result[0], no padding - no problem
+testcase tc_raw_bitstring_FIELDLENGTH16_lsb_first_seq() runs on CT {
+  var RoPDU16 vl_pdu1s := {'1'B, '1111'B, '0000 1111'B,'1 0000'B, '1111 1111'B, '01 0000 0000'B,'0001 0010 0011 0100'B};
+  //{1,15,16,255,256,4660};
+  var RoPDU16 vl_expected_decoded := {
+    '0000 0000 0000 0001'B,
+    '0000 0000 0000 1111'B,
+    '0000 0000 0000 1111'B,
+    '0000 0000 0001 0000'B, 
+    '0000 0000 1111 1111'B,
+    '0000 0001 0000 0000'B,
+    '0001 0010 0011 0100'B
+  }//{1,15,15,16,255,256,4660};
+  var octetstring vl_result;
+  var RoOS vl_expected := {'0100'O,'0F00'O,'0F00'O,'1000'O,'FF00'O,'0001'O,'3412'O};
+
+  var integer N :=sizeof(vl_pdu1s);
+  for( var integer i:=0; i<N; i:=i+1) {
+    vl_result := enc_PDU16(vl_pdu1s[i]);
+    log( i,":",vl_result);
+    if(vl_result != vl_expected[i]) { 
+      setverdict(fail,"Expected:", vl_expected[i]," got:", vl_result);
+      log("Encoding fault.Expected:", vl_expected[i]," got:", vl_result);
+    }
+    if( dec_PDU16(vl_expected[i]) != vl_expected_decoded[i]){
+      setverdict(fail,"Expected:", vl_expected_decoded[i]," got:", dec_PDU16(vl_expected[i]));
+      log("Decoding fault.Expected:", vl_expected_decoded[i]," got:", dec_PDU16(vl_expected[i]));
+    }
+    log(dec_PDU16(vl_expected[i]));
+  }
+  setverdict(pass);
+}
+
+//=====padding=====
+testcase tc_raw_bitstring_FIELDLENGTH8_lsb_alignright_padding_no_seq() runs on CT {
+  var RoPDU13ar_padding_no vl_pdu1s := {'1'B, '10'B, '1111'B, '0000 1111'B,'1 0000'B, '1111 1111'B}//{1,15,15,16,255};
+  var RoPDU13ar_padding_no vl_expected_decoded := {'0000 0001'B, '0000 0010'B,'0000 1111'B, '0000 1111'B,'0001 0000'B, '1111 1111'B}//{1,15,15,16,255};
+  var octetstring vl_result;
+  var RoOS vl_expected := {'01'O,'02'O,'0F'O,'0F'O,'10'O,'FF'O};
+
+  var integer N :=sizeof(vl_pdu1s);
+  for( var integer i:=0; i<N; i:=i+1) {
+    vl_result := enc_PDU13ar_padding_no(vl_pdu1s[i]);
+    log( i,":",vl_result);
+    if(vl_result != vl_expected[i]) { 
+      setverdict(fail,"Expected:", vl_expected[i]," got:", vl_result);
+    }
+    if( dec_PDU13ar_padding_no(vl_expected[i]) != vl_expected_decoded[i]){
+      setverdict(fail,"Expected:", vl_expected_decoded[i]," got:", dec_PDU13ar_padding_no(vl_expected[i]));
+    }
+    log(dec_PDU13ar_padding_no(vl_expected[i]));
+  }
+  setverdict(pass);
+}
+
+testcase tc_raw_bitstring_FIELDLENGTH8_lsb_alignleft_seq_padding_yes() runs on CT {
+  var RoPDU13al vl_pdu1s := {'1'B, '10'B, '1111'B, '0000 1111'B,'1 0000'B, '1111 1111'B}//{1,15,15,16,255};
+  var RoPDU13al vl_expected_decoded := {'0000 0001'B, '0000 0010'B,'0000 1111'B, '0000 1111'B,'0001 0000'B, '1111 1111'B}//{1,15,15,16,255};
+  var octetstring vl_result;
+  var RoOS vl_expected := {'01'O,'02'O,'0F'O,'0F'O,'10'O,'FF'O};
+
+  var integer N :=sizeof(vl_pdu1s);
+  for( var integer i:=0; i<N; i:=i+1) {
+    vl_result := enc_PDU13al(vl_pdu1s[i]);
+    log( i,":",vl_result);
+    if(vl_result != vl_expected[i]) { 
+      setverdict(fail,"Expected:", vl_expected[i]," got:", vl_result);
+    }
+    if( dec_PDU13al(vl_expected[i]) != vl_expected_decoded[i]){
+      setverdict(fail,"Expected:", vl_expected_decoded[i]," got:", dec_PDU13al(vl_expected[i]));
+    }
+    log(dec_PDU13al(vl_expected[i]));
+  }
+  setverdict(pass);
+}
+//==== 
+//default byte order: first encoded byte-> result[0]
+testcase tc_raw_bitstring_FIELDLENGTH16_lsb_alignright_padding_no_seq() runs on CT {
+  var RoPDU14ar_padding_no vl_pdu1s := {'1'B, '1111'B, '0000 1111'B,'1 0000'B, '1111 1111'B, '01 0000 0000'B,'0001 0010 0011 0100'B};
+  //{1,15,15,16,255,256,4660};
+  var RoPDU14ar vl_expected_decoded := {
+    '0000 0000 0000 0001'B,
+    '0000 0000 0000 1111'B,
+    '0000 0000 0000 1111'B,
+    '0000 0000 0001 0000'B, 
+    '0000 0000 1111 1111'B,
+    '0000 0001 0000 0000'B,
+    '0001 0010 0011 0100'B
+  }//{1,15,15,16,255,256,4660};
+  var octetstring vl_result;
+  var RoOS vl_expected := {'0100'O,'0F00'O,'0F00'O,'1000'O,'FF00'O,'0001'O,'3412'O};
+
+  var integer N :=sizeof(vl_pdu1s);
+  for( var integer i:=0; i<N; i:=i+1) {
+    vl_result := enc_PDU14ar_padding_no(vl_pdu1s[i]);
+    log( i,":",vl_result);
+    if(vl_result != vl_expected[i]) { 
+      setverdict(fail,"Expected:", vl_expected[i]," got:", vl_result); 
+    }
+    if( dec_PDU14ar_padding_no(vl_expected[i]) != vl_expected_decoded[i]){
+      setverdict(fail,"Expected:", vl_expected_decoded[i]," got:", dec_PDU14ar_padding_no(vl_expected[i]));
+    }
+    log(dec_PDU14ar_padding_no(vl_expected[i]));
+  }
+  setverdict(pass);
+}
+
+//default byte order: first encoded byte-> result[0]
+testcase tc_raw_bitstring_FIELDLENGTH16_lsb_alignleft_padding_yes_seq() runs on CT {
+  var RoPDU14al_padding_yes vl_pdu1s := {'1'B, '1111'B, '0000 1111'B,'1 0000'B, '1111 1111'B, '01 0000 0000'B,'0001 0010 0011 0100'B};
+  //{1,15,15,16,255,256,4660};
+  //new: decoded!=original
+  var RoPDU14al_padding_yes vl_expected_decoded := {
+    '1000 0000 0000 0000'B,
+    '1111 0000 0000 0000'B,
+    '0000 1111 0000 0000'B,
+    '1000 0000 0000 0000'B, 
+    '1111 1111 0000 0000'B,
+    '0100 0000 0000 0000'B,
+    '0001 0010 0011 0100'B
+  }
+  var octetstring vl_result;
+  //'1'B->'1000 0000 0000 0000'B (align left)-> '0080'O (reverse byte order)
+  //'10000'B->'1000 0000 0000 0000'B (align left)-> '0080'O (reverse byte order)
+  //'1111 1111'B->'1111 1111 0000 0000'B (align left)-> '00FF'O (reverse byte order)
+  //'01 0000 0000'B->'0100 0000 0000 0000'B (align left)-> '0040'O (reverse byte order)
+
+  var RoOS vl_expected := {'0080'O,'00F0'O,'000F'O,'0080'O,'00FF'O,'0040'O,'3412'O};
+
+  var integer N :=sizeof(vl_pdu1s);
+  for( var integer i:=0; i<N; i:=i+1) {
+    vl_result := enc_PDU14al_padding_yes(vl_pdu1s[i]);
+    log( i,":",vl_result);
+    if(vl_result != vl_expected[i]) { 
+      setverdict(fail,"Expected:", vl_expected[i]," got:", vl_result); 
+    }
+    if( dec_PDU14al_padding_yes(vl_expected[i]) != vl_expected_decoded[i]){
+      setverdict(fail,"Expected:", vl_expected_decoded[i]," got:", dec_PDU14al_padding_yes(vl_expected[i]));
+    }
+    log(dec_PDU14al_padding_yes(vl_expected[i]));
+  }
+  setverdict(pass);
+}
+
+//default byte order: first encoded byte-> result[0]
+//padding has no fluence for the result because alignment already filled all bits in.
+testcase tc_raw_bitstring_FIELDLENGTH16_lsb_alignright_padding_yes_seq() runs on CT {
+  var RoPDU14ar_padding_yes vl_pdu1s := {'1'B, '1111'B, '0000 1111'B,'1 0000'B, '1111 1111'B, '01 0000 0000'B,'0001 0010 0011 0100'B};
+  //{1,15,15,16,255,256,4660};
+  //new: decoded!=original
+  var RoPDU14ar_padding_yes vl_expected_decoded := {
+    '0000 0000 0000 0001'B,
+    '0000 0000 0000 1111'B,
+    '0000 0000 0000 1111'B,
+    '0000 0000 0001 0000'B, 
+    '0000 0000 1111 1111'B,
+    '0000 0001 0000 0000'B,
+    '0001 0010 0011 0100'B
+  }
+  var octetstring vl_result;
+  //'1'B->'0000 0000 0000 0001'B (align right)-> '0100'O (reverse byte order)
+  //'1111'B->'0000 0000 0000 1111'B (align right)-> '0F00'O (reverse byte order)
+  //'10000'B->'0000 0000 0001 0000'B (align right)-> '1000'O (reverse byte order)
+  //'1111 1111'B->'0000 0000 1111 1111'B (align right)-> 'FF00'O (reverse byte order)
+  //'01 0000 0000'B->'0000 0001 0000 0000'B (align right)-> '0001'O (reverse byte order)
+  //'0001 0010 0011 0100'B-> (reverse order)->'3412'O
+  var RoOS vl_expected := {'0100'O,'0F00'O,'0F00'O,'1000'O,'FF00'O,'0001'O,'3412'O};
+
+  var integer N :=sizeof(vl_pdu1s);
+  for( var integer i:=0; i<N; i:=i+1) {
+    vl_result := enc_PDU14ar_padding_yes(vl_pdu1s[i]);
+    log( i,":",vl_result);
+    if(vl_result != vl_expected[i]) { 
+      setverdict(fail,"Expected:", vl_expected[i]," got:", vl_result); 
+    }
+    if( dec_PDU14ar_padding_yes(vl_expected[i]) != vl_expected_decoded[i]){
+      setverdict(fail,"Expected:", vl_expected_decoded[i]," got:", dec_PDU14ar_padding_yes(vl_expected[i]));
+    }
+    log(dec_PDU14ar_padding_yes(vl_expected[i]));
+  }
+  setverdict(pass);
+}
+
+
+//=== msb (reverse bit order)===
+testcase tc_raw_bitstring_FIELDLENGTH8_msb_seq() runs on CT {
+  var RoPDU23 vl_pdu1s := {'1'B, '1111'B, '0000 1111'B,'1 0000'B, '1111 1111'B};//{1,15,16,255};
+  var RoPDU23 vl_expected_decoded := {'0000 0001'B, '0000 1111'B, '0000 1111'B,'0001 0000'B, '1111 1111'B}//{1,15,15,16,255};
+  var octetstring vl_result;
+  var RoOS vl_expected := {'80'O,'F0'O,'F0'O,'08'O,'FF'O};
+
+  var integer N :=sizeof(vl_pdu1s);
+  for( var integer i:=0; i<N; i:=i+1) {
+    vl_result := enc_PDU23(vl_pdu1s[i]);
+    log( i,":",vl_result);
+    if(vl_result != vl_expected[i]) { 
+      setverdict(fail,"Expected:", vl_expected[i]," got:", vl_result);
+    }
+    if( dec_PDU23(vl_expected[i]) != vl_expected_decoded[i]){
+      setverdict(fail,"Expected:", vl_expected_decoded[i]," got:", dec_PDU23(vl_expected[i]));
+    }
+    log(dec_PDU23(vl_expected[i]));
+  }
+  setverdict(pass);
+}
+
+//default byte order: first encoded byte-> result[0], lsb -> os[0], bits reversed per bytes
+testcase tc_raw_bitstring_FIELDLENGTH16_msb_seq() runs on CT {
+  var RoPDU24 vl_pdu1s := {'1'B, '1111'B, '0000 1111'B,'1 0000'B, '1111 1111'B, '01 0000 0000'B,'0001 0010 0011 0100'B};
+  var RoPDU24 vl_expected_decoded := {
+    '0000 0000 0000 0001'B,
+    '0000 0000 0000 1111'B,
+    '0000 0000 0000 1111'B,
+    '0000 0000 0001 0000'B, 
+    '0000 0000 1111 1111'B,
+    '0000 0001 0000 0000'B,
+    '0001 0010 0011 0100'B
+  }//{1,15,15,16,255,256,4660};
+  //{1,15,16,255,256,4660};
+  var octetstring vl_result;
+  var RoOS vl_expected := {'0080'O,'00F0'O,'00F0'O,'0008'O,'00FF'O,'8000'O,'482C'O};
+
+  var integer N :=sizeof(vl_pdu1s);
+  for( var integer i:=0; i<N; i:=i+1) {
+    vl_result := enc_PDU24(vl_pdu1s[i]);
+    log( i,":",vl_result);
+    if(vl_result != vl_expected[i]) { 
+      setverdict(fail,"Expected:", vl_expected[i]," got:", vl_result); 
+    }
+    if( dec_PDU24(vl_expected[i]) != vl_expected_decoded[i]){
+      setverdict(fail,"Expected:", vl_expected_decoded[i]," got:", dec_PDU24(vl_expected[i]));
+    }
+    log(dec_PDU24(vl_expected[i]));
+  }
+  setverdict(pass);
+}
+
+//no padding
+testcase tc_raw_bitstring_FIELDLENGTH8_bitorder_seq() runs on CT {
+  var RoPDU25 vl_pdu1s := {'0001'B, '1111'B, '0000 1111'B,'0001 0000'B, '1111 1111'B}; //{1,15,15,16,255};
+  var RoPDU25 vl_expected_decoded := {'0000 0001'B, '0000 1111'B, '0000 1111'B,'0001 0000'B, '1111 1111'B}//{1,15,15,16,255};
+  var octetstring vl_result;
+  var RoOS vl_expected := {'80'O,'F0'O,'F0'O,'08'O,'FF'O};
+
+  var integer N :=sizeof(vl_pdu1s);
+  for( var integer i:=0; i<N; i:=i+1) {
+    vl_result := enc_PDU25(vl_pdu1s[i]);
+    log( i,":",vl_result);
+    if(vl_result != vl_expected[i]) { 
+      setverdict(fail,"Expected:", vl_expected[i]," got:", vl_result);
+    }
+    if( dec_PDU25(vl_expected[i]) != vl_expected_decoded[i]){
+      setverdict(fail,"Expected:", vl_expected_decoded[i]," got:", dec_PDU25(vl_expected[i]));
+    }
+    log(dec_PDU25(vl_expected[i]));
+  }
+  setverdict(pass);
+}
+
+//FIELDLENGTH(16), BITORDER(msb), BYTEORDER(last)
+testcase tc_raw_bitstring_FIELDLENGTH16_byteorder_seq() runs on CT {
+  var RoPDU26 vl_pdu1s := {'1'B, '1111'B, '0000 1111'B,'1 0000'B, '1111 1111'B, '01 0000 0000'B,'0001 0010 0011 0100'B};
+  //{1,15,16,255,256,4660};
+  var RoPDU26 vl_expected_decoded := {
+    '0000 0000 0000 0001'B,
+    '0000 0000 0000 1111'B,
+    '0000 0000 0000 1111'B,
+    '0000 0000 0001 0000'B, 
+    '0000 0000 1111 1111'B,
+    '0000 0001 0000 0000'B,
+    '0001 0010 0011 0100'B
+  }//{1,15,15,16,255,256,4660};
+  var octetstring vl_result;
+  var RoOS vl_expected := {'0080'O,'00F0'O,'00F0'O,'0008'O,'00FF'O,'8000'O,'482C'O};
+
+  var integer N :=sizeof(vl_pdu1s);
+  for( var integer i:=0; i<N; i:=i+1) {
+    vl_result := enc_PDU26(vl_pdu1s[i]);
+    log( i,":",vl_result);
+    if(vl_result != vl_expected[i]) { 
+      setverdict(fail,"Expected:", vl_expected[i]," got:", vl_result);
+    }
+    if( dec_PDU26(vl_expected[i]) != vl_expected_decoded[i]){
+      setverdict(fail,"Expected:", vl_expected_decoded[i]," got:", dec_PDU26(vl_expected[i]));
+    }
+    log(dec_PDU26(vl_expected[i]));
+  }
+  setverdict(pass);
+}
+
+testcase tc_raw_bitstring_8bit_seq() runs on CT {
+  //var RoPDU41 vl_pdu1s :=  {'0'B,'01'B}//{0,1,15,16,126,127,-126,-127,-1,-2};
+  var RoPDU41 vl_pdu1s := {'0'B,'0001'B, '1111'B, '0000 1111'B,'0001 0000'B, '1111 1110'B,'1111 1111'B}; //{1,15,15,16,254,255};
+  var RoPDU41 vl_expected_decoded := {'0000 0000'B, '0000 0001'B, '0000 1111'B, '0000 1111'B,'0001 0000'B, '1111 1110'B,'1111 1111'B}//{1,15,15,16,254,255};
+  var octetstring vl_result;
+  var RoOS vl_expected := {'00'O, '01'O,'0F'O,'0F'O,'10'O,'FE'O,'FF'O};
+
+  var integer N :=sizeof(vl_pdu1s);
+  for( var integer i:=0; i<N; i:=i+1) {
+    vl_result := enc_PDU41(vl_pdu1s[i]);
+    log( i,":",vl_result);
+    if(vl_result != vl_expected[i]) { 
+      setverdict(fail,"Expected:", vl_expected[i]," got:", vl_result);
+    }
+    if( dec_PDU41(vl_expected[i]) != vl_expected_decoded[i]){
+      setverdict(fail,"Expected:", vl_expected_decoded[i]," got:", dec_PDU41(vl_expected[i]));
+    }
+    log(dec_PDU41(vl_expected[i]));
+  }
+  setverdict(pass);
+}
+
+testcase tc_raw_bitstring_16bit_wrong1() runs on CT {
+  var PDU43 vl_pdu1 := '1 0000 0000 0000 0000'B; //too big 17 bits long
+  @try {
+    var octetstring vl_result := enc_PDU43(vl_pdu1);
+    log(vl_result);
+    setverdict(fail,"This line should not be reached, expected:DTE");
+    log("This line should not be reached, expected:DTE");
+  } @catch(e){
+    setverdict(pass, "Caught the expected DTE (While RAW-encoding type '@RAW_integer_test.PDU43') got:", e);
+  }
+  setverdict(pass);
+}
+testcase tc_raw_bitstring_16bit_wrong2() runs on CT {
+  var PDU43 vl_pdu1 := '1 0000 0000 0000 0001'B
+  @try {
+    var octetstring vl_result := enc_PDU43(vl_pdu1);
+    log(vl_result);
+    setverdict(fail,"This line should not be reached, expected:DTE");
+    log("This line should not be reached, expected:DTE");
+  } @catch(e){
+    setverdict(pass, "Caught the expected DTE (While RAW-encoding type '@RAW_integer_test.PDU43') got:", e);
+  }
+  setverdict(pass);
+}
+
+testcase tc_raw_bitstring_16bit_wrong3() runs on CT {
+  var PDU43 vl_pdu1 := '11 0000 0000 0000 1111'B; // too big 18 bits long
+  @try {
+    var octetstring vl_result := enc_PDU43(vl_pdu1);
+    log(vl_result);
+    setverdict(fail,"This line should not be reached, expected:DTE");
+    log("This line should not be reached, expected:DTE");
+  } @catch(e){
+    setverdict(pass, "Caught the expected DTE (While RAW-encoding type '@RAW_integer_test.PDU43') got:", e);
+  }
+  setverdict(pass);
+}
+
+control {
+  execute( tc_raw_bitstring_default1());
+  execute( tc_raw_bitstring_default2());
+  execute(tc_raw_bitstring_default3()); //pass, is it ok???
+  execute(tc_raw_bitstring_default4()); //pass, is it ok???
+  execute(tc_raw_bitstring_default1_seq());
+  execute(tc_raw_bitstring_FIELDLENGTH8_seq());
+  execute(tc_raw_bitstring_FIELDLENGTH16_seq_wrong());
+  execute(tc_raw_bitstring_FIELDLENGTH16_seq());
+  execute(tc_raw_bitstring_FIELDLENGTH24_seq());
+  execute(tc_raw_bitstring_FIELDLENGTH32_seq());
+  execute(tc_raw_bitstring_FIELDLENGTH64_seq());
+  execute(tc_raw_bitstring_FIELDLENGTH128_seq());
+  execute(tc_raw_bitstring_FIELDLENGTH8_lsb_seq());
+  execute(tc_raw_bitstring_FIELDLENGTH8_lsb_alignright_seq());
+  execute(tc_raw_bitstring_FIELDLENGTH8_lsb_alignleft_seq());
+  execute(tc_raw_bitstring_FIELDLENGTH16_lsb_seq());
+  execute(tc_raw_bitstring_FIELDLENGTH16_lsb_alignright_seq());
+  execute(tc_raw_bitstring_FIELDLENGTH16_lsb_alignleft_seq());
+  execute(tc_raw_bitstring_FIELDLENGTH16_lsb_last_nopadding1_seq()); //pass
+  //execute(tc_raw_bitstring_FIELDLENGTH16_lsb_last_nopadding2_seq()); //fails in cpp, i:0,3,5
+  execute(tc_raw_bitstring_FIELDLENGTH16_lsb_last_alignright_nopadding1_seq());//pass
+  //execute(tc_raw_bitstring_FIELDLENGTH16_lsb_last_alignright_nopadding2_seq());//fails in cpp; i:0,3,5
+  execute(tc_raw_bitstring_FIELDLENGTH16_lsb_last_alignleft_nopadding1_seq());//pass
+  execute(tc_raw_bitstring_FIELDLENGTH16_lsb_last_alignleft_nopadding2_seq());//pass
+  execute(tc_raw_bitstring_FIELDLENGTH16_lsb_first_seq());
+  //===padding
+  execute(tc_raw_bitstring_FIELDLENGTH8_lsb_alignright_padding_no_seq());
+  execute(tc_raw_bitstring_FIELDLENGTH8_lsb_alignleft_seq_padding_yes());
+  execute(tc_raw_bitstring_FIELDLENGTH16_lsb_alignright_padding_no_seq());
+  execute(tc_raw_bitstring_FIELDLENGTH16_lsb_alignleft_padding_yes_seq());
+  execute(tc_raw_bitstring_FIELDLENGTH16_lsb_alignright_padding_yes_seq());
+  //===
+  execute(tc_raw_bitstring_FIELDLENGTH8_msb_seq());
+  execute(tc_raw_bitstring_FIELDLENGTH16_msb_seq());
+  execute(tc_raw_bitstring_FIELDLENGTH8_bitorder_seq());
+  execute(tc_raw_bitstring_FIELDLENGTH16_byteorder_seq())
+  execute(tc_raw_bitstring_8bit_seq()); 
+  execute(tc_raw_bitstring_16bit_wrong1()); 
+  execute(tc_raw_bitstring_16bit_wrong2());
+  execute(tc_raw_bitstring_16bit_wrong3()); 
+}
+
+} with { encode "RAW" }

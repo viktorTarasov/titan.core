@@ -16,7 +16,7 @@ include $(TOPDIR)/Makefile.regression
 
 TTCN3_LIB = ttcn3$(RT2_SUFFIX)$(DYNAMIC_SUFFIX)
 
-TTCN3_MODULES = RAW_integer_test.ttcn
+TTCN3_MODULES = RAW_bitstring_test.ttcn
 
 GENERATED_SOURCES = $(TTCN3_MODULES:.ttcn=.cc)
 GENERATED_HEADERS = $(GENERATED_SOURCES:.cc=.hh)
@@ -35,7 +35,7 @@ USER_SOURCES =
 OBJECTS = $(GENERATED_SOURCES:.cc=.o) $(USER_SOURCES:.cc=.o)
 
 # The name of the executable test suite:
-TARGET = RAW_integer_test$(EXESUFFIX)
+TARGET = RAW_bitstring_test$(EXESUFFIX)
 
 all: $(TARGET)
 
@@ -57,7 +57,7 @@ clean distclean:
 dep: $(GENERATED_SOURCES)
 	makedepend $(CPPFLAGS) $(USER_SOURCES) $(GENERATED_SOURCES)
 
-run: $(TARGET) RAW_integer_test.cfg
+run: $(TARGET) RAW_bitstring_test.cfg
 	./$^
 
 # DO NOT DELETE
