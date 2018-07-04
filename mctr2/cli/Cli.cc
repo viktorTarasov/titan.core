@@ -340,7 +340,7 @@ void Cli::printWelcome()
     "* All rights reserved. This program and the accompanying materials      *\n"
     "* are made available under the terms of the Eclipse Public License v2.0 *\n"
     "* which accompanies this distribution, and is available at              *\n"
-    "* https://www.eclipse.org/org/documents/epl-2.0/EPL-2.0.html                             *\n"
+    "* https://www.eclipse.org/org/documents/epl-2.0/EPL-2.0.html            *\n"
     "*************************************************************************\n"
     "\n", PRODUCT_NUMBER);
 }
