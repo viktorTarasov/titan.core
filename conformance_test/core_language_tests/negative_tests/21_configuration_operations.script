@@ -4035,7 +4035,7 @@ module NegSyn_210307_done_operation_002 {
 <END_MODULE>
 
 <RESULT COUNT 1>
-error: at or before token `->': syntax error, unexpected ->, expecting '{'
+error: at or before token `->': syntax error, unexpected ->, expecting '\{'
 <END_RESULT>
 <RESULT COUNT 1>
 error: at or before token `control': syntax error, unexpected ControlKeyword, expecting \$end
@@ -4091,7 +4091,7 @@ module NegSyn_210307_done_operation_003 {
 <END_MODULE>
 
 <RESULT COUNT 1>
-error: at or before token `->': syntax error, unexpected ->, expecting '{'
+error: at or before token `->': syntax error, unexpected ->, expecting '\{'
 <END_RESULT>
 <RESULT COUNT 1>
 error: at or before token `control': syntax error, unexpected ControlKeyword, expecting \$end
@@ -4640,7 +4640,7 @@ module NegSyn_210308_killed_operation_001 {
 <END_MODULE>
 
 <RESULT COUNT 1>
-error: at or before token `->': syntax error, unexpected ->, expecting '{'
+error: at or before token `->': syntax error, unexpected ->, expecting '\{'
 <END_RESULT>
 <RESULT COUNT 1>
 error: at or before token `control': syntax error, unexpected ControlKeyword, expecting \$end
@@ -4696,7 +4696,7 @@ module NegSyn_210308_killed_operation_002 {
 <END_MODULE>
 
 <RESULT COUNT 1>
-error: at or before token `->': syntax error, unexpected ->, expecting '{'
+error: at or before token `->': syntax error, unexpected ->, expecting '\{'
 <END_RESULT>
 <RESULT COUNT 1>
 error: at or before token `control': syntax error, unexpected ControlKeyword, expecting \$end
@@ -4752,7 +4752,7 @@ module NegSyn_210308_killed_operation_003 {
 <END_MODULE>
 
 <RESULT COUNT 1>
-error: at or before token `->': syntax error, unexpected ->, expecting '{'
+error: at or before token `->': syntax error, unexpected ->, expecting '\{'
 <END_RESULT>
 <RESULT COUNT 1>
 error: at or before token `control': syntax error, unexpected ControlKeyword, expecting \$end
