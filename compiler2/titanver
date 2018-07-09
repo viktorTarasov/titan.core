@@ -69,6 +69,7 @@ my $obj = '?';
 sub match_comment() {
     if (length($comment)) {
         ($found_ver) = $comment =~ /((GCC|Clang): \([^)]*\) \d\.\d+(?:\.\d+)?)/;
+        $found_ver =~ s/ \([^)]*\)//;
 	if ($found_ver) {
           print "$compiler version was $found_ver for $obj\n" if $v;
 
