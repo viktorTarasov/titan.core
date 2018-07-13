@@ -237,6 +237,32 @@ void TTCN3ModuleInventory::nameConversion() {
 }
 
 void TTCN3ModuleInventory::moduleGeneration() {
+  FILE * file = NULL;
+  if (o_flag_used) {
+    file = fopen("XSD_Definitions.ttcn", "w");
+    if (file == NULL) {
+      perror("Cannot open file XSD_Definitions.ttcn for writing.");
+      ++num_errors;
+      return;
+    }
+    generate_TTCN3_header(file, "XSD_Definitions");
+    fprintf(file,
+      "//     Modification header(s):\n"
+      "//-----------------------------------------------------------------------------\n"
+      "//  Modified by:\n"
+      "//  Modification date:\n"
+      "//  Description:\n"
+      "//  Modification contact:\n"
+      "//------------------------------------------------------------------------------\n"
+      "////////////////////////////////////////////////////////////////////////////////\n"
+      "\n"
+      "\n"
+      "module XSD_Definitions {\n"
+      "\n"
+      "\n"
+      "import from XSD all;\n");
+  }
+  
   for (List<TTCN3Module*>::iterator module = definedModules.begin(); module; module = module->Next) {
     if (module->Data->isnotIntoFile()) {
       continue;
@@ -261,12 +287,14 @@ void TTCN3ModuleInventory::moduleGeneration() {
     }
 
     Mstring filename_s = module->Data->getModulename() + ".ttcn";
-    FILE * file = fopen(filename_s.c_str(), "w");
-    if (file == NULL) {
-      Mstring cannot_write("Cannot write file ");
-      perror((cannot_write + filename_s).c_str());
-      ++num_errors;
-      return;
+    if (!o_flag_used) {
+      file = fopen(filename_s.c_str(), "w");
+      if (file == NULL) {
+        Mstring cannot_write("Cannot write file ");
+        perror((cannot_write + filename_s).c_str());
+        ++num_errors;
+        return;
+      }
     }
 #ifndef NDEBUG
     // In debug mode, set the output stream to unbuffered.
@@ -274,7 +302,14 @@ void TTCN3ModuleInventory::moduleGeneration() {
     setvbuf(file, NULL, _IONBF, 0);
 #endif
 
-    generate_TTCN3_header(file, module->Data->getModulename().c_str());
+    if (!o_flag_used) {
+      generate_TTCN3_header(file, module->Data->getModulename().c_str());
+    }
+    
+    if (o_flag_used) {
+      fprintf(file, "\n\n"
+        "////////////////////////////////////////////////////////////////////////////////\n");
+    }
 
     fprintf(file, "//\tGenerated from file(s):\n");
 
@@ -283,25 +318,31 @@ void TTCN3ModuleInventory::moduleGeneration() {
         module2->Data->generate_TTCN3_fileinfo(file);
       }
     }
-
+    
     fprintf(file,
-      "////////////////////////////////////////////////////////////////////////////////\n"
-      "//     Modification header(s):\n"
-      "//-----------------------------------------------------------------------------\n"
-      "//  Modified by:\n"
-      "//  Modification date:\n"
-      "//  Description:\n"
-      "//  Modification contact:\n"
-      "//------------------------------------------------------------------------------\n"
-      "////////////////////////////////////////////////////////////////////////////////\n"
-      "\n"
-      "\n");
+      "////////////////////////////////////////////////////////////////////////////////\n");
+
+    if (!o_flag_used) {
+      fprintf(file,
+        "//     Modification header(s):\n"
+        "//-----------------------------------------------------------------------------\n"
+        "//  Modified by:\n"
+        "//  Modification date:\n"
+        "//  Description:\n"
+        "//  Modification contact:\n"
+        "//------------------------------------------------------------------------------\n"
+        "////////////////////////////////////////////////////////////////////////////////\n"
+        "\n"
+        "\n");
+    }
 
     module->Data->generate_TTCN3_modulestart(file);
 
-    for (List<TTCN3Module*>::iterator module2 = module; module2; module2 = module2->Next) {
-      if (module2->Data->getModulename() == module->Data->getModulename()) {
-        module2->Data->generate_TTCN3_import_statements(file);
+    if (!o_flag_used) {
+      for (List<TTCN3Module*>::iterator module2 = module; module2; module2 = module2->Next) {
+        if (module2->Data->getModulename() == module->Data->getModulename()) {
+          module2->Data->generate_TTCN3_import_statements(file);
+        }
       }
     }
 
@@ -318,8 +359,20 @@ void TTCN3ModuleInventory::moduleGeneration() {
 
     module->Data->generate_with_statement(file, used_namespaces);
 
-    if (!q_flag_used) fprintf(stderr, "Notify: File '%s' was generated.\n", filename_s.c_str());
+    if (!o_flag_used) {
+      if (!q_flag_used) {
+        fprintf(stderr, "Notify: File '%s' was generated.\n", filename_s.c_str());
+      }
 
+      fclose(file);
+    }
+  }
+  
+  if (o_flag_used) {
+    fprintf(file, "\n\n}\n");
+    if (!q_flag_used) {
+      fprintf(stderr, "Notify: File 'XSD_Definitions.ttcn' was generated.\n");
+    }
     fclose(file);
   }
 }

@@ -38,6 +38,8 @@
 extern bool e_flag_used;
 extern bool z_flag_used;
 
+unsigned int TTCN3Module::static_const_counter = 1;
+
 TTCN3Module::TTCN3Module(const char * a_filename, XMLParser * a_parser)
 : parser(a_parser)
 , schemaname()
@@ -272,13 +274,13 @@ void TTCN3Module::generate_TTCN3_fileinfo(FILE * file) {
 
 void TTCN3Module::generate_TTCN3_modulestart(FILE * file) {
   fprintf(file,
-    "module %s {\n"
+    "%s %s {\n"
     "\n"
     "\n"
     "import from XSD all;\n"
     "\n"
     "\n",
-    modulename.c_str()
+    o_flag_used ? "group" : "module", modulename.c_str()
     );
 }
 

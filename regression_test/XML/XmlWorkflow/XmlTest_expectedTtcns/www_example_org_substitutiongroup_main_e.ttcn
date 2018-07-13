@@ -66,6 +66,7 @@ with {
   variant (subsgroup) "form as qualified";
   variant (subsgroup) "abstract";
   variant (replace_) "name as 'replace'";
+  variant (replace_) "namespace as 'www.example.org/substitutiongroup/ref' prefix 'this'";
 };
 
 

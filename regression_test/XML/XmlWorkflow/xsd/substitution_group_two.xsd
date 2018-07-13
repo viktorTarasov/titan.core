@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<xs:schema targetNamespace="http://www.somewhere.com/two"
+        xmlns:two="http://www.somewhere.com/two"
+        xmlns:one="http://www.somewhere.com/one"
+        xmlns:xs="http://www.w3.org/2001/XMLSchema"
+        version="3.1.1" elementFormDefault="qualified">
+  <xs:import namespace="http://www.somewhere.com/one" schemaLocation="substitution_group_one.xsd"/>
+  <xs:element name="Extended" type="two:ExtendedType"
+        substitutionGroup="one:Head"/>
+  <xs:complexType name="ExtendedType">
+    <xs:complexContent>
+      <xs:extension base="one:HeadType">
+        <xs:sequence>
+          <xs:element name="num" type="xs:integer"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+</xs:schema>

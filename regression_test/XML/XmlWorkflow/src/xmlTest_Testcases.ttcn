@@ -2613,6 +2613,18 @@ group Elements{
   testcase tc_element_nillable_RemarkNillable_nilTrue_encDec() runs on xmlTest_CT {
     f_encDecTest_RemarkNillable2();
   }//tc_
+  
+  
+  testcase tc_substitution_group_merged() runs on xmlTest_CT {
+    f_shellCommandWithVerdict(xsd2ttcn_command & " -o substitution_group_one.xsd substitution_group_two.xsd",
+      "", c_shell_successWithoutWarningAndError);
+
+    if(getverdict == pass) {
+      f_compareFiles(
+        "XSD_Definitions_e.ttcn",
+        "XSD_Definitions.ttcn", c_numOfDiff);
+    }
+  }
 
 }//Element
 
@@ -2888,6 +2900,7 @@ control {
   execute(tc_element_nillable_RemarkNillable_nilFalse_encDec());
   execute(tc_element_nillable_RemarkNillable_nilTrue_encDec());
 
+  execute(tc_substitution_group_merged());
 }
 
 } with {

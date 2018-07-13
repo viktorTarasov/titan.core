@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<schema xmlns="http://www.w3.org/2001/XMLSchema"
+        xmlns:one="http://www.somewhere.com/one"
+        targetNamespace="http://www.somewhere.com/one"
+        version="3.1.1" elementFormDefault="qualified">
+  <element name="Head" type="one:HeadType" abstract="true"/>
+  <complexType name="HeadType" abstract="true">
+    <attribute name="str" type="string" use="optional"/>
+  </complexType>
+</schema>

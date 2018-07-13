@@ -22,6 +22,7 @@
 #include "TTCN3ModuleInventory.hh"
 #include "Annotation.hh"
 #include "Constant.hh"
+#include "converter.hh"
 
 #include <assert.h>
 
@@ -2355,6 +2356,31 @@ void ComplexType::addSubstitution(SimpleType * st){
       Mstring elem_type = findRoot(front_block, st, head_type, true);
       if(head_type == elem_type){
         element->addVariant(V_block);
+      }
+    }
+    if (st->getModule()->getTargetNamespace() != module->getTargetNamespace() &&
+        st->getModule()->getTargetNamespace() != "NoTargetNamespace") {
+      element->addVariant(V_namespaceAs, st->getModule()->getTargetNamespace());
+    }
+    if (!o_flag_used && st->getModule() != module &&
+        !isBuiltInType(st->getType().convertedValue)) {
+      bool import_found = false;
+      for (List<const TTCN3Module*>::iterator imp = module->getImportedModules().begin();
+           imp != module->getImportedModules().end(); ++imp) {
+        if (imp->Data == st->getModule()) {
+          import_found = true;
+          break;
+        }
+      }
+      if (!import_found) {
+        printWarning(st->getModule()->getSchemaname(), st->getName().convertedValue,
+          Mstring("Type `") + st->getName().convertedValue + Mstring("' is used "
+          "in a substitution group in module `") + module->getModulename() +
+          Mstring("', which does not import the type's module. This may lead to "
+          "errors in the generated code. For a safe solution, please use the "
+          "single module command line option (-o) or disable element "
+          "substitution (-g)."));
+        TTCN3ModuleInventory::incrNumWarnings();
       }
     }
   }

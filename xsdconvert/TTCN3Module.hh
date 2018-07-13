@@ -19,6 +19,7 @@
 #include "GeneralTypes.hh"
 #include "GeneralFunctions.hh"
 #include "TTCN3ModuleInventory.hh"
+#include "converter.hh"
 
 class TTCN3ModuleInventory;
 class RootType;
@@ -98,6 +99,8 @@ class TTCN3Module {
   bool moduleNotIntoNameConversion;
   
   unsigned int const_counter;
+  
+  static unsigned int static_const_counter;
 
   TTCN3Module & operator=(const TTCN3Module &); // not implemented
   TTCN3Module(const TTCN3Module &); // not implemented
@@ -271,11 +274,16 @@ public:
   friend bool compareModules(TTCN3Module * lhs, TTCN3Module * rhs);
   
   unsigned int getConstCounter() {
-    return const_counter;
+    return o_flag_used ? static_const_counter : const_counter;
   }
   
   void increaseConstCounter() {
-    ++const_counter;
+    if (o_flag_used) {
+      ++static_const_counter;
+    }
+    else {
+      ++const_counter;
+    }
   }
 
   void dump() const;
