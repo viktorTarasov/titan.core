@@ -741,6 +741,8 @@ namespace Common {
     /** Checks that the value (expression) evals to a default value */
     inline void chk_expr_default(Type::expected_value_t exp_val)
       { chk_expr_type(Type::T_DEFAULT, "default", exp_val); }
+
+    void chk_expr_immutability();
     
     /** Checks that the value is (or evaluates to) a valid universal charstring
       * encoding format. */

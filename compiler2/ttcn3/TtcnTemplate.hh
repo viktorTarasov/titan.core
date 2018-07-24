@@ -363,6 +363,8 @@ namespace Ttcn {
     void chk_invoke();
     void chk_concat_double_length_res();
 
+    void chk_immutability();
+
     /** Copy template elements from the "all from" into the template.
      *
      * @param from_permutation \a true if the "all from" occurs inside
@@ -592,6 +594,8 @@ namespace Ttcn {
 
     bool chk_restriction(const char* definition_name,
       template_restriction_t template_restriction, const Location* usage_loc);
+
+    void chk_immutability() const ;
 
     /** Returns whether the template instance can be represented by an in-line
      *  C++ expression. */
