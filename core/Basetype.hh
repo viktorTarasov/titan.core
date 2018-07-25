@@ -51,6 +51,7 @@ class Module_Param_Name;
 struct embed_values_enc_struct_t;
 struct embed_values_dec_struct_t;
 struct OER_struct;
+class RAW_Force_Omit;
 
 /** @brief Type descriptor
  *
@@ -448,7 +449,7 @@ public:
   VIRTUAL_IF_RUNTIME_2 int RAW_decode(
     const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf, int limit,
     raw_order_t top_bit_ord, boolean no_err=FALSE, int sel_field=-1,
-    boolean first_call=TRUE);
+    boolean first_call=TRUE, const RAW_Force_Omit* force_omit = NULL);
 
 
   /** Encode with TEXT encoding.
@@ -835,7 +836,7 @@ public:
    * @return number of bits used, or a negative number in case of error
    */
   virtual int RAW_decode(const TTCN_Typedescriptor_t& td, TTCN_Buffer& buf, int limit,
-    raw_order_t top_bit_ord, boolean no_err=FALSE, int sel_field=-1, boolean first_call=TRUE);
+    raw_order_t top_bit_ord, boolean no_err=FALSE, int sel_field=-1, boolean first_call=TRUE, const RAW_Force_Omit* force_omit = NULL);
   /// raw extension bit
   virtual int rawdec_ebv() const;
 
@@ -994,7 +995,8 @@ public:
 
   virtual int RAW_encode(const TTCN_Typedescriptor_t&, RAW_enc_tree&) const;
   virtual int RAW_encode_negtest(const Erroneous_descriptor_t *, const TTCN_Typedescriptor_t&, RAW_enc_tree&) const;
-  virtual int RAW_decode(const TTCN_Typedescriptor_t&, TTCN_Buffer&, int, raw_order_t, boolean no_err = FALSE, int sel_field = -1, boolean first_call = TRUE);
+  virtual int RAW_decode(const TTCN_Typedescriptor_t&, TTCN_Buffer&, int, raw_order_t,
+    boolean no_err = FALSE, int sel_field = -1, boolean first_call = TRUE, const RAW_Force_Omit* force_omit = NULL);
   // Helper functions for RAW enc/dec, shall be overridden in descendants if the default behavior is not enough.
   virtual boolean raw_has_ext_bit() const { return FALSE; }
 
@@ -1092,7 +1094,8 @@ public:
   virtual boolean BER_decode_TLV(const TTCN_Typedescriptor_t& p_td, const ASN_BER_TLV_t& p_tlv, unsigned L_form);
 
   virtual int RAW_encode(const TTCN_Typedescriptor_t&, RAW_enc_tree&) const;
-  virtual int RAW_decode(const TTCN_Typedescriptor_t&, TTCN_Buffer&, int, raw_order_t, boolean no_err=FALSE, int sel_field=-1, boolean first_call=TRUE);
+  virtual int RAW_decode(const TTCN_Typedescriptor_t&, TTCN_Buffer&, int, raw_order_t,
+    boolean no_err=FALSE, int sel_field=-1, boolean first_call=TRUE, const RAW_Force_Omit* force_omit = NULL);
 
   virtual int TEXT_encode(const TTCN_Typedescriptor_t&, TTCN_Buffer&) const;
   virtual int TEXT_decode(const TTCN_Typedescriptor_t&, TTCN_Buffer&, Limit_Token_List&, boolean no_err=FALSE, boolean first_call=TRUE);

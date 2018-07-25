@@ -50,7 +50,8 @@ void def_encdec(const char *p_classname,
      "int RAW_encode(const TTCN_Typedescriptor_t&, RAW_enc_tree&) const;\n"
      "int RAW_decode(const TTCN_Typedescriptor_t&, TTCN_Buffer&,"
      " int, raw_order_t, boolean no_err=FALSE,"
-     "int sel_field=-1, boolean first_call=TRUE);\n"
+     "int sel_field=-1, boolean first_call=TRUE, "
+     "const RAW_Force_Omit* force_omit = NULL);\n"
      );
   if(text)
     def=mputprintf(def,

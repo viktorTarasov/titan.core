@@ -289,6 +289,7 @@ LENGTHINDEX { BEGIN(rawcodec); RETURN(XLengthIndexKeyword); }
 TAG         { BEGIN(rawcodec); RETURN(XTagKeyword); }
 CROSSTAG    { BEGIN(rawcodec); RETURN(XCrossTagKeyword); }
 PRESENCE    { BEGIN(rawcodec); RETURN(XPresenceKeyword); }
+FORCEOMIT   { BEGIN(rawcodec); RETURN(XForceOmitKeyword); }
 FIELDLENGTH { BEGIN(rawcodec); RETURN(XFieldLengthKeyword); }
 FORMAT      { BEGIN(rawcodec); RETURN(XFieldLengthKeyword); }
 ALIGN       { BEGIN(rawcodec); RETURN(XAlignKeyword); }

@@ -279,7 +279,7 @@ public:
 
 #ifdef TITAN_RUNTIME_2
   virtual int RAW_decode(const TTCN_Typedescriptor_t& td, TTCN_Buffer& buf, int limit,
-    raw_order_t top_bit_ord, boolean no_err=FALSE, int sel_field=-1, boolean first_call=TRUE);
+    raw_order_t top_bit_ord, boolean no_err=FALSE, int sel_field=-1, boolean first_call=TRUE, const RAW_Force_Omit* force_omit = NULL);
 #endif
 
   int XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& buf, unsigned int flavor,
@@ -1061,7 +1061,8 @@ OPTIONAL<T_type>::BER_encode_TLV_negtest(const Erroneous_descriptor_t* p_err_des
 template<typename T_type>
 int OPTIONAL<T_type>::RAW_decode(const TTCN_Typedescriptor_t& p_td,
   TTCN_Buffer&, int /* limit */, raw_order_t /* top_bit_ord */,
-  boolean /* no_error */, int /* sel_field */, boolean /* first_call */ )
+  boolean /* no_error */, int /* sel_field */, boolean /* first_call */,
+  const RAW_Force_Omit* /* force_omit */ )
 {
   TTCN_error("RAW decoding requested for optional type '%s'"
              " which has no RAW decoding method.",p_td.name);

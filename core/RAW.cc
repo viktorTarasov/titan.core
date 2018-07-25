@@ -26,6 +26,77 @@
 
 #include <openssl/bn.h>
 
+RAW_Force_Omit::RAW_Force_Omit(int p_size, const RAW_Field_List** p_lists)
+: size(p_size), lists(p_lists), temporary(false)
+{
+}
+
+RAW_Force_Omit::RAW_Force_Omit(int p_field_index,
+                               const RAW_Force_Omit* p_parent,
+                               const RAW_Force_Omit* p_variant)
+: size(p_variant != NULL ? p_variant->size : 0), lists(NULL), temporary(true)
+{
+  // the first index in each of the parent's field index lists should be skipped
+  // (as these refer to the parent type's fields)
+  if (p_parent != NULL) {
+    for (int i = 0; i < p_parent->size; ++i) {
+      if (p_parent->lists[i]->field_index == p_field_index &&
+          p_parent->lists[i]->next_ptr != NULL) {
+        ++size;
+      }
+    }
+  }
+  if (size == 0) {
+    return;
+  }
+  lists = new const RAW_Field_List*[size];
+  int j = 0;
+  if (p_parent != NULL) {
+    for (int i = 0; i < p_parent->size; ++i) {
+      if (p_parent->lists[i]->field_index == p_field_index &&
+          p_parent->lists[i]->next_ptr != NULL) {
+        lists[j] = p_parent->lists[i]->next_ptr;
+        ++j;
+      }
+    }
+  }
+  if (p_variant != NULL) {
+    memcpy(lists + j, p_variant->lists, static_cast<size_t>(p_variant->size) *
+      sizeof(RAW_Field_List*));
+  }
+}
+
+RAW_Force_Omit::~RAW_Force_Omit()
+{
+  if (!temporary) {
+    // the list array is statically allocated in this case, but the lists
+    // themselves are allocated dynamically and need to be deleted
+    for (int i = 0; i < size; ++i) {
+      // only delete the list head, its destructor will do the rest
+      delete lists[i];
+    }
+  }
+  else {
+    // temporary objects only contain pointers to the lists in RAW descriptors;
+    // only the list array needs to be deleted
+    delete[] lists;
+  }
+}
+
+bool RAW_Force_Omit::operator()(int p_field_index) const
+{
+  for (int i = 0; i < size; ++i) {
+    if (lists[i]->field_index == p_field_index &&
+        lists[i]->next_ptr == NULL) {
+      // the field index is correct, and it's the last index in the list
+      // => the field should be omitted
+      return true;
+    }
+  }
+  // none of the lists indicate this field => it should not be omitted
+  return false;
+}
+
 const unsigned char BitReverseTable[256] =
 {
 0x00, 0x80, 0x40, 0xc0, 0x20, 0xa0, 0x60, 0xe0,

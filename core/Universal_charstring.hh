@@ -43,6 +43,8 @@ class Module_Param;
 template<typename T>
 class OPTIONAL;
 
+class RAW_Force_Omit;
+
 extern boolean operator==(const universal_char& left_value,
   const universal_char& right_value);
 extern boolean operator<(const universal_char& left_value,
@@ -356,7 +358,7 @@ public:
     * It must be public because it can be called by other types during encoding.
     * Returns the number of decoded bits */
   int RAW_decode(const TTCN_Typedescriptor_t&, TTCN_Buffer&, int, raw_order_t,
-                 boolean no_err=FALSE, int sel_field=-1, boolean first_call=TRUE);
+                 boolean no_err=FALSE, int sel_field=-1, boolean first_call=TRUE, const RAW_Force_Omit* force_omit = NULL);
   
   int TEXT_encode(const TTCN_Typedescriptor_t&,
                  TTCN_Buffer&) const;

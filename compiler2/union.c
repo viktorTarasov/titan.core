@@ -839,7 +839,8 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
     }
     src = mputprintf(src, "int %s::RAW_decode(\n"
       "const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf, int limit, \n"
-      "raw_order_t top_bit_ord, boolean no_err, int sel_field, boolean)\n"
+      "raw_order_t top_bit_ord, boolean no_err, int sel_field, boolean, "
+      "const RAW_Force_Omit* force_omit)\n"
       "{\n"
       "  int prepaddlength=p_buf.increase_pos_padd(p_td.raw->prepadding);\n"
       "  limit-=prepaddlength;\n"
@@ -849,10 +850,13 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
       "    switch(sel_field){\n", name);
     for (i = 0; i < sdef->nElements; i++) {
       src = mputprintf(src,
-        "    case %lu:\n"
+        "    case %lu: {\n"
+        "      RAW_Force_Omit field_force_omit(%d, force_omit, "
+        "%s_descr_.raw->forceomit);\n"
         "      decoded_length = %s().RAW_decode(%s_descr_, p_buf, limit, "
-        "top_bit_ord, no_err);\n"
-        "      break;\n", (unsigned long) i, sdef->elements[i].name,
+        "top_bit_ord, no_err, -1, TRUE, &field_force_omit);\n"
+        "      break; }\n", (unsigned long) i, (int) i,
+        sdef->elements[i].typedescrname, sdef->elements[i].name,
         sdef->elements[i].typedescrname);
     }
     src = mputstr(src, "    default: break;\n"
@@ -966,10 +970,13 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
             }
             src = mputprintf(src, ") {\n"
               "          p_buf.set_pos_bit(starting_pos);\n"
+              "          RAW_Force_Omit field_force_omit(%d, force_omit, "
+              "%s_descr_.raw->forceomit);\n"
               "          decoded_length = %s().RAW_decode(%s_descr_, p_buf, "
-              "limit, top_bit_ord, TRUE);\n"
-              "          if (decoded_length > 0) {\n", sdef->elements[i].name,
-              sdef->elements[i].typedescrname);
+              "limit, top_bit_ord, TRUE, -1, TRUE, &field_force_omit);\n"
+              "          if (decoded_length > 0) {\n",
+              (int) i, sdef->elements[i].typedescrname,
+              sdef->elements[i].name, sdef->elements[i].typedescrname);
             src = mputstr(src, "             if (");
             src = genRawFieldChecker(src, cur_choice, TRUE);
             src = mputstr(src, ") {\n"
@@ -991,10 +998,13 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
           if (cur_choice->fields[j].start_pos < 0) {
             src = mputprintf(src, "    if (already_failed) {\n"
               "      p_buf.set_pos_bit(starting_pos);\n"
+              "      RAW_Force_Omit field_force_omit(%d, force_omit, "
+              "%s_descr_.raw->forceomit);\n"
               "      decoded_length = %s().RAW_decode(%s_descr_, p_buf, limit, "
-              "top_bit_ord, TRUE);\n"
-              "      if (decoded_length > 0) {\n", sdef->elements[i].name,
-              sdef->elements[i].typedescrname);
+              "top_bit_ord, TRUE, -1, TRUE, &field_force_omit);\n"
+              "      if (decoded_length > 0) {\n",
+              (int) i, sdef->elements[i].typedescrname,
+              sdef->elements[i].name, sdef->elements[i].typedescrname);
             src = mputstr(src, "        if (");
             src = genRawFieldChecker(src, cur_choice, TRUE);
             src = mputstr(src, ") {\n"
@@ -1015,10 +1025,13 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
         rawAST_coding_taglist* cur_choice = sdef->raw.taglist.list
           - tag_type[i] - 1;
         src = mputprintf(src, "      p_buf.set_pos_bit(starting_pos);\n"
+          "      RAW_Force_Omit field_%d_force_omit(%d, force_omit, "
+          "%s_descr_.raw->forceomit);\n"
           "      decoded_length = %s().RAW_decode(%s_descr_, p_buf, limit, "
-          "top_bit_ord, TRUE);\n"
-          "      if (decoded_length >= 0) {\n", sdef->elements[i].name,
-          sdef->elements[i].typedescrname);
+          "top_bit_ord, TRUE, -1, TRUE, &field_%d_force_omit);\n"
+          "      if (decoded_length >= 0) {\n",
+          (int) i, (int) i, sdef->elements[i].typedescrname,
+          sdef->elements[i].name, sdef->elements[i].typedescrname, (int) i);
         src = mputstr(src, "        if (");
         src = genRawFieldChecker(src, cur_choice, TRUE);
         src = mputstr(src, ") {\n"
@@ -1031,10 +1044,13 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
     for (i = 0; i < sdef->nElements; i++) { /* fields without tag */
       if (!tag_type[i]) {
         src = mputprintf(src, "      p_buf.set_pos_bit(starting_pos);\n"
+          "      RAW_Force_Omit field_%d_force_omit(%d, force_omit, "
+          "%s_descr_.raw->forceomit);\n"
           "      decoded_length = %s().RAW_decode(%s_descr_, p_buf, limit, "
-          "top_bit_ord, TRUE);\n"
-          "      if (decoded_length >= 0) {\n", sdef->elements[i].name,
-          sdef->elements[i].typedescrname);
+          "top_bit_ord, TRUE, -1, TRUE, &field_%d_force_omit);\n"
+          "      if (decoded_length >= 0) {\n",
+          (int) i, (int) i, sdef->elements[i].typedescrname,
+          sdef->elements[i].name, sdef->elements[i].typedescrname, (int) i);
         src = mputstr(src, "         return decoded_length + "
           "p_buf.increase_pos_padd(p_td.raw->padding) + prepaddlength;\n"
           "       }\n");

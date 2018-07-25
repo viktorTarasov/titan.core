@@ -1404,7 +1404,7 @@ int INTEGER::RAW_encode_openssl(const TTCN_Typedescriptor_t& p_td,
 
 int INTEGER::RAW_decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& buff,
   int limit, raw_order_t top_bit_ord, boolean no_err, int /*sel_field*/,
-  boolean /*first_call*/)
+  boolean /*first_call*/, const RAW_Force_Omit* /*force_omit*/)
 {
   bound_flag = FALSE;
   int prepaddlength = buff.increase_pos_padd(p_td.raw->prepadding);

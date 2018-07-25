@@ -619,7 +619,8 @@ void defEnumClass(const enum_def *edef, output_struct *output)
     }
     src = mputprintf(src,
       "int %s::RAW_decode(const TTCN_Typedescriptor_t& p_td,TTCN_Buffer& p_buf,"
-      "int limit, raw_order_t top_bit_ord, boolean no_err, int, boolean)\n"
+      "int limit, raw_order_t top_bit_ord, boolean no_err, int, boolean, "
+      "const RAW_Force_Omit*)\n"
       "{\n"
       "  int decoded_value = 0;\n"
       "  int decoded_length = RAW_decode_enum_type(p_td, p_buf, limit, "

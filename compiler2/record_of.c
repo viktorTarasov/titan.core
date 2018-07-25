@@ -960,7 +960,7 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
       src=mputprintf(src,
     "int %s::RAW_decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf, "
     "int limit, raw_order_t top_bit_ord, boolean /*no_err*/, int sel_field"
-    ", boolean first_call){\n"
+    ", boolean first_call, const RAW_Force_Omit*){\n"
     "  int prepaddlength=p_buf.increase_pos_padd(p_td.raw->prepadding);\n"
     "  limit-=prepaddlength;\n"
     "  int decoded_length=0;\n"
@@ -2504,7 +2504,7 @@ void defRecordOfClassMemAllocOptimized(const struct_of_def *sdef, output_struct 
       src=mputprintf(src,
     "int %s::RAW_decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf, "
     "int limit, raw_order_t top_bit_ord, boolean /*no_err*/, int sel_field"
-    ", boolean first_call){\n"
+    ", boolean first_call, const RAW_Force_Omit*){\n"
     "  int prepaddlength=p_buf.increase_pos_padd(p_td.raw->prepadding);\n"
     "  limit-=prepaddlength;\n"
     "  int decoded_length=0;\n"

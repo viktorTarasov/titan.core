@@ -207,7 +207,7 @@ char* generate_raw_coding(char* src,
     }
     src = mputprintf(src, "int %s::RAW_decode(const TTCN_Typedescriptor_t& "
       "p_td, TTCN_Buffer& p_buf, int limit, raw_order_t top_bit_ord, "
-      "boolean, int, boolean)\n"
+      "boolean, int, boolean, const RAW_Force_Omit* force_omit)\n"
       "{\n"
         "int prepaddlength = p_buf.increase_pos_padd(p_td.raw->prepadding);\n"
         "limit -= prepaddlength;\n"
@@ -249,8 +249,12 @@ char* generate_raw_coding(char* src,
 	    }
 	    if (has_fixed && has_variable) break;
 	  }
-	  src = mputprintf(src, "if (field_map[%lu] == 0) {\n",
+	  src = mputprintf(src, "if (field_map[%lu] == 0",
             (unsigned long) i);
+    if (sdef->elements[i].isOptional) {
+      src = mputprintf(src, " && (force_omit == NULL || !(*force_omit)(%d))", i);
+    }
+    src = mputstr(src, ") {\n");
 	  if (flag_needed)
 	    src = mputstr(src, "boolean already_failed = FALSE;\n");
 	  if (has_fixed) {
@@ -281,16 +285,19 @@ char* generate_raw_coding(char* src,
 		  "p_buf, limit, temporal_top_order, TRUE);\n"
 		"p_buf.set_pos_bit(fl_start_pos);\n"
 		"if (temporal_decoded_length > 0 && temporal_%lu == %s) {\n"
+    "RAW_Force_Omit field_%d_force_omit(%d, force_omit, "
+    "%s_descr_.raw->forceomit);\n"
 		"int decoded_field_length = field_%s%s.RAW_decode(%s_descr_, "
-		  "p_buf, limit, local_top_order, TRUE);\n"
+		  "p_buf, limit, local_top_order, TRUE, -1, TRUE, &field_%d_force_omit);\n"
 		"if (decoded_field_length %s 0 && (",
 		cur_field_list->fields[cur_field_list->nElements - 1].type,
 		(unsigned long) j, cur_field_list->start_pos, (unsigned long) j,
 		cur_field_list->fields[cur_field_list->nElements - 1].typedescr,
 		(unsigned long) j, cur_field_list->value,
+    i, i, sdef->elements[i].typedescrname,
                 sdef->elements[i].name,
 		sdef->elements[i].isOptional ? "()" : "",
-		sdef->elements[i].typedescrname,
+		sdef->elements[i].typedescrname, i,
 		sdef->elements[i].isOptional ? ">" : ">=");
 	      src = genRawFieldChecker(src, cur_choice, TRUE);
 	      src = mputstr(src, ")) {\n"
@@ -318,12 +325,16 @@ char* generate_raw_coding(char* src,
 	     * than we have to decode it.
 	     */
 	    if (flag_needed) src = mputstr(src, "if (!already_failed) {\n");
-	    src = mputprintf(src, "int decoded_field_length = "
+	    src = mputprintf(src, 
+    "RAW_Force_Omit field_%d_force_omit(%d, force_omit, "
+    "%s_descr_.raw->forceomit);\n"
+    "int decoded_field_length = "
 		"field_%s%s.RAW_decode(%s_descr_, p_buf, limit, "
-		"local_top_order, TRUE);\n"
+		"local_top_order, TRUE, -1, TRUE, &field_%d_force_omit);\n"
 	      "if (decoded_field_length %s 0 && (",
-	      sdef->elements[i].name, sdef->elements[i].isOptional ? "()" : "",
-	      sdef->elements[i].typedescrname,
+	      i, i, sdef->elements[i].typedescrname,
+        sdef->elements[i].name, sdef->elements[i].isOptional ? "()" : "",
+	      sdef->elements[i].typedescrname, i,
 	      sdef->elements[i].isOptional ? ">" : ">=");
 	    src = genRawFieldChecker(src, cur_choice, TRUE);
 	    src = mputstr(src, ")) {\n"
@@ -349,25 +360,40 @@ char* generate_raw_coding(char* src,
 	if (!raw_options[i].tag_type) {
 	  boolean repeatable;
 	  if (sdef->elements[i].of_type && sdef->elements[i].hasRaw &&
-	      sdef->elements[i].raw.repeatable == XDEFYES) repeatable = TRUE;
+	      sdef->elements[i].raw.repeatable == XDEFYES) {
+      repeatable = TRUE;
+      if (sdef->elements[i].isOptional) {
+        src = mputprintf(src, "if (force_omit == NULL || !(*force_omit)(%d)) ", i);
+      }
+    }
 	  else {
 	    repeatable = FALSE;
-	    src = mputprintf(src, "if (field_map[%lu] == 0) ",
-              (unsigned long) i);
+	    src = mputprintf(src, "if (field_map[%lu] == 0",
+            (unsigned long) i);
+      if (sdef->elements[i].isOptional) {
+        src = mputprintf(src, " && (force_omit == NULL || !(*force_omit)(%d))", i);
+      }
+      src = mputstr(src, ") ");
 	  }
 	  src = mputprintf(src, "{\n"
+      "RAW_Force_Omit field_%d_force_omit(%d, force_omit, "
+      "%s_descr_.raw->forceomit);\n"
 	    "int decoded_field_length = field_%s%s.RAW_decode(%s_descr_, "
-	      "p_buf, limit, local_top_order, TRUE",
+	      "p_buf, limit, local_top_order, TRUE, -1, ",
+      i, i, sdef->elements[i].typedescrname,
 	    sdef->elements[i].name, sdef->elements[i].isOptional ? "()" : "",
 	    sdef->elements[i].typedescrname);
 	  if (repeatable)
-            src = mputprintf(src, ", -1, field_map[%lu] == 0",
+            src = mputprintf(src, "field_map[%lu] == 0",
               (unsigned long) i);
-	  src = mputprintf(src, ");\n"
+    else {
+      src = mputstr(src, "TRUE");
+    }
+	  src = mputprintf(src, ", &field_%d_force_omit);\n"
 	    "if (decoded_field_length %s 0) {\n"
 	    "decoded_length += decoded_field_length;\n"
 	    "limit -= decoded_field_length;\n",
-	    sdef->elements[i].isOptional ? ">" : ">=");
+	    i, sdef->elements[i].isOptional ? ">" : ">=");
 	  if (repeatable) {
 	    if (!sdef->elements[i].isOptional) src = mputprintf(src,
 	      "if (field_map[%lu] == 0) nof_mand_fields++;\n",
@@ -396,14 +422,21 @@ char* generate_raw_coding(char* src,
 	/* decoding fields with tag OTHERWISE */
 	if (raw_options[i].tag_type &&
 	    sdef->raw.taglist.list[raw_options[i].tag_type-1].nElements == 0) {
-	  src = mputprintf(src, "if (field_map[%lu] == 0) {\n"
+	  src = mputprintf(src, "if (field_map[%lu] == 0", (unsigned long) i);
+    if (sdef->elements[i].isOptional) {
+      src = mputprintf(src, " && (force_omit == NULL || !(*force_omit)(%d))", i);
+    }
+    src = mputprintf(src, ") {\n"
+      "RAW_Force_Omit field_%d_force_omit(%d, force_omit, "
+      "%s_descr_.raw->forceomit);\n"
 	    "int decoded_field_length = field_%s%s.RAW_decode(%s_descr_, "
-	      "p_buf, limit, local_top_order, TRUE);\n"
+	      "p_buf, limit, local_top_order, TRUE, -1, TRUE, &field_%d_force_omit);\n"
 	    "if (decoded_field_length %s 0) {\n"
 	    "decoded_length += decoded_field_length;\n"
-	    "limit -= decoded_field_length;\n", (unsigned long) i,
+	    "limit -= decoded_field_length;\n",
+      i, i, sdef->elements[i].typedescrname,
 	    sdef->elements[i].name, sdef->elements[i].isOptional ? "()" : "",
-	    sdef->elements[i].typedescrname,
+	    sdef->elements[i].typedescrname, i,
 	    sdef->elements[i].isOptional ? ">" : ">=");
 	  if (!sdef->elements[i].isOptional)
 	    src = mputstr(src, "nof_mand_fields++;\n");
@@ -437,7 +470,7 @@ char* generate_raw_coding(char* src,
     src = mputprintf(src,
       "int %s::RAW_decode(const TTCN_Typedescriptor_t& p_td, "
       "TTCN_Buffer& p_buf, int limit, raw_order_t top_bit_ord, boolean no_err, "
-      "int, boolean)\n"
+      "int, boolean, const RAW_Force_Omit* force_omit)\n"
       "{ (void)no_err;\n"
 	"  int prepaddlength=p_buf.increase_pos_padd(p_td.raw->prepadding);\n"
 	"  limit-=prepaddlength;\n"
@@ -5335,10 +5368,20 @@ static char *genRawDecodeRecordField(char *src, const struct_def *sdef,
     );
   }
   /* decoding of normal field */
-  if (sdef->elements[i].isOptional) src = mputstr(src,
-    "  size_t fl_start_pos = p_buf.get_pos_bit();\n");
+  if (sdef->elements[i].isOptional) {
+    src = mputprintf(src,
+      "  if (force_omit != NULL && (*force_omit)(%d)) {\n"
+      "    field_%s = OMIT_VALUE;\n"
+      "  }\n"
+      "  else {\n"
+      "  size_t fl_start_pos = p_buf.get_pos_bit();\n",
+      i, sdef->elements[i].name);
+  }
   src = mputprintf(src,
+    "  RAW_Force_Omit field_%d_force_omit(%d, force_omit, "
+    "%s_descr_.raw->forceomit);\n"
     "  decoded_field_length = field_%s%s.RAW_decode(%s_descr_, p_buf, ",
+    i, i, sdef->elements[i].typedescrname,
     sdef->elements[i].name, sdef->elements[i].isOptional ? "()" : "",
     sdef->elements[i].typedescrname);
   if (delayed_decode) {
@@ -5352,15 +5395,21 @@ static char *genRawDecodeRecordField(char *src, const struct_def *sdef,
   if (sdef->elements[i].hasRaw &&
       sdef->elements[i].raw.crosstaglist.nElements > 0)
     src = mputstr(src, ", selected_field");
+  else src = mputstr(src, ", -1");
+  boolean lengthof_found = FALSE;
   for (a = 0; a < raw_options[i].lengthof; a++) {
     int field_index = raw_options[i].lengthoffield[a];
     /* number of elements in 'record of' or 'set of' */
     if (sdef->elements[field_index].raw.unit == -1) {
       src = mputprintf(src, ", value_of_length_field%d", field_index);
+      lengthof_found = TRUE;
       break;
     }
   }
-  src = mputstr(src, ");\n");
+  if (!lengthof_found) {
+    src = mputstr(src, ", TRUE");
+  }
+  src = mputprintf(src, ", &field_%d_force_omit);\n", i);
   if (delayed_decode) {
     src = mputprintf(src, "  if (decoded_field_length != %d) return -1;\n",
       sdef->elements[i].raw.length);
@@ -5494,7 +5543,7 @@ static char *genRawDecodeRecordField(char *src, const struct_def *sdef,
   }
   if(sdef->elements[i].isOptional){
     src=mputprintf(src,
-    "  }\n  }\n%s"
+    "  }\n  }\n  }\n%s"
     "  else field_%s=OMIT_VALUE;\n"
     ,raw_options[i].tag_type?"  }\n":"",sdef->elements[i].name
     );
@@ -6584,7 +6633,8 @@ static void defEmptyRecordClass(const struct_def *sdef,
 
 	src = mputprintf(src,
 	    "int %s::RAW_decode(const TTCN_Typedescriptor_t& p_td, "
-		"TTCN_Buffer& p_buf, int, raw_order_t, boolean, int, boolean)\n"
+		"TTCN_Buffer& p_buf, int, raw_order_t, boolean, int, boolean, "
+		"const RAW_Force_Omit*)\n"
 	    "{\n"
 	    "bound_flag = TRUE;\n"
 	    "return p_buf.increase_pos_padd(p_td.raw->prepadding) + "
@@ -7539,7 +7589,7 @@ check_generate_end:
          "virtual int RAW_encode_negtest(const Erroneous_descriptor_t *, const TTCN_Typedescriptor_t&, RAW_enc_tree&) const;\n"
          "int RAW_decode(const TTCN_Typedescriptor_t&, TTCN_Buffer&, "
          "int, raw_order_t, boolean no_err = FALSE, "
-         "int sel_field = -1, boolean first_call = TRUE);\n");
+         "int sel_field = -1, boolean first_call = TRUE, const RAW_Force_Omit* force_omit = NULL);\n");
         src = generate_raw_coding(src, sdef, raw_options, haspointer,
                                   hascrosstag, has_ext_bit);
       } else { /* generate helper functions for the default RAW enc/dec */

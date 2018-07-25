@@ -51,6 +51,11 @@ typedef struct {
 } rawAST_tag_field_value;
 
 typedef struct {
+  int nElements;
+  rawAST_field_list** lists;
+} rawAST_force_omit;
+
+typedef struct {
     Common::Identifier* fieldName; // NULL == omit
     int nElements;
     rawAST_tag_field_value* keyList; // NULL == otherwise/OTHERWISE
@@ -115,6 +120,8 @@ public:
                                    multiple tagValues may be specified */
     rawAST_single_tag presence;    /**< Presence indicator expressions for an
                                    optional field */
+    rawAST_force_omit forceomit;   /**< forces lower level optional fields to
+                                   be omitted */
     int topleveleind;
     rawAST_toplevel toplevel;      /**< Toplevel attributes */
     int length_restrition;

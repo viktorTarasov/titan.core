@@ -39,6 +39,8 @@ class HEXSTRING_ELEMENT;
 
 class Module_Param;
 
+class RAW_Force_Omit;
+
 template<typename T>
 class OPTIONAL;
 
@@ -146,7 +148,7 @@ public:
    * another types during encoding. Returns the number of decoded
    * bits. */
   int RAW_decode(const TTCN_Typedescriptor_t&, TTCN_Buffer&, int, raw_order_t,
-                 boolean no_err=FALSE, int sel_field=-1, boolean first_call=TRUE);
+                 boolean no_err=FALSE, int sel_field=-1, boolean first_call=TRUE, const RAW_Force_Omit* force_omit = NULL);
   int XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,
     unsigned int flavor, unsigned int flavor2, int indent, embed_values_enc_struct_t*) const;
   int XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,

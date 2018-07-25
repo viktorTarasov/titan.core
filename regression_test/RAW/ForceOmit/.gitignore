@@ -1,0 +1,6 @@
+ForceOmit
+ForceOmit.exe
+ForceOmit*.cc
+ForceOmit*.hh
+ForceOmit.log
+compile

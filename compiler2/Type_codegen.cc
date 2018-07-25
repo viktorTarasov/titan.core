@@ -751,9 +751,41 @@ void Type::generate_code_rawdescriptor(output_struct *target)
       ->add_padding_pattern(string(rawattrib->padding_pattern)).c_str());
   else str = mputstr(str, "NULL,");
   str = mputprintf(str, "%d,", rawattrib->length_restrition);
-  str = mputprintf(str, "CharCoding::%s};\n",
+  str = mputprintf(str, "CharCoding::%s,",
       rawattrib->stringformat == CharCoding::UTF_8 ? "UTF_8" :
       (rawattrib->stringformat == CharCoding::UTF16 ? "UTF16" : "UNKNOWN"));
+  if (rawattrib->forceomit.nElements > 0) {
+    char* force_omit_str = mprintf("const RAW_Field_List* "
+      "%s_raw_force_omit_lists[] = {\n  ", gennameown_str);
+    for (int i = 0; i < rawattrib->forceomit.nElements; ++i) {
+      if (i > 0) {
+        force_omit_str = mputstr(force_omit_str, ",\n  ");
+      }
+      Type* t = get_type_refd_last();
+      for (int j = 0; j < rawattrib->forceomit.lists[i]->nElements; ++j) {
+        Identifier* name = rawattrib->forceomit.lists[i]->names[j];
+        force_omit_str = mputprintf(force_omit_str, "new RAW_Field_List(%d, ",
+          static_cast<int>(t->get_comp_index_byName(*name)));
+        t = t->get_comp_byName(*name)->get_type()->get_type_refd_last();
+      }
+      force_omit_str = mputstr(force_omit_str, "NULL");
+      for (int j = 0; j < rawattrib->forceomit.lists[i]->nElements; ++j) {
+        force_omit_str = mputc(force_omit_str, ')');
+      }
+    }
+    
+    force_omit_str = mputprintf(force_omit_str,
+      "\n};\n"
+      "const RAW_Force_Omit %s_raw_force_omit(%d, %s_raw_force_omit_lists);\n",
+      gennameown_str, rawattrib->forceomit.nElements, gennameown_str);
+    target->source.global_vars = mputstr(target->source.global_vars, force_omit_str);
+    Free(force_omit_str);
+    str = mputprintf(str, "&%s_raw_force_omit", gennameown_str);
+  }
+  else {
+    str = mputstr(str, "NULL");
+  }
+  str = mputstr(str, "};\n");
   target->source.global_vars = mputstr(target->source.global_vars, str);
   Free(str);
   if (dummy_raw) {

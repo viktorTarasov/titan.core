@@ -194,7 +194,7 @@ public:
    * another types during encoding. Returns the number of decoded
    * bits. */
   int RAW_decode(const TTCN_Typedescriptor_t& , TTCN_Buffer&, int, raw_order_t,
-     boolean no_err=FALSE, int sel_field=-1, boolean first_call=TRUE);
+     boolean no_err=FALSE, int sel_field=-1, boolean first_call=TRUE, const RAW_Force_Omit* force_omit = NULL);
 
   int XER_encode(const XERdescriptor_t&, TTCN_Buffer&, unsigned int, unsigned int, int, embed_values_enc_struct_t*) const;
   int XER_decode(const XERdescriptor_t&, XmlReaderWrap& reader, unsigned int, unsigned int, embed_values_dec_struct_t*);

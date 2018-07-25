@@ -73,6 +73,7 @@ static void yyprint(FILE *file, int type, const YYSTYPE& value);
     Common::Value::verdict_t verdictval;
     Common::Identifier *identifier;
     rawAST_field_list *fieldlist;
+    rawAST_force_omit forceomit;
     rawAST_tag_list taglist;
     rawAST_tag_field_value keyid;
     rawAST_single_tag singletag;
@@ -149,6 +150,7 @@ static void yyprint(FILE *file, int type, const YYSTYPE& value);
 %token XTagKeyword
 %token XCrossTagKeyword
 %token XPresenceKeyword
+%token XForceOmitKeyword
 %token XFieldLengthKeyword
 %token XAlignKeyword
 %token <enumval> XLeft
@@ -308,6 +310,9 @@ static void yyprint(FILE *file, int type, const YYSTYPE& value);
 %type <fieldlist>
     XLengthIndexDef XStructFieldRefOrEmpty XStructFieldRef
 
+%type <forceomit>
+    XStructFieldRefList
+
 %type <str>
     XEncodeToken XmatchDef XAliasToken XJsonValueSegment XJsonValueCore XJsonValue
     XJsonAlias
@@ -381,6 +386,14 @@ XRecordFieldRef
 XLengthIndexDef
 XStructFieldRef
 XStructFieldRefOrEmpty
+
+%destructor {
+  for (int i = 0; i < $$.nElements; ++i) {
+    free_rawAST_field_list($$.lists[i]);
+  }
+  Free($$.lists);
+}
+XStructFieldRefList
 
 %destructor { free_rawAST_tag_list(&$$); }
 XAssocList
@@ -478,6 +491,8 @@ XSingleEncodingDef : XPaddingDef
         {raw_f=true; }
     | XPresenceDef
         { raw_f=true;}
+    | XForceOmitDef
+        { raw_f = true; }
     | XFieldLengthDef
         { rawstruct->fieldlength = $1*length_multiplier; raw_f=true;}
     | XPtrOffsetDef
@@ -747,6 +762,42 @@ XPresenceDef : XPresenceKeyword '(' XKeyIdList XoptSemiColon ')'
         { free_rawAST_single_tag(&(rawstruct->presence));
         link_rawAST_single_tag(&(rawstruct->presence), &$3);};
 
+/* ForceOmit */
+XForceOmitDef:
+  XForceOmitKeyword '(' XStructFieldRefList ')'
+  {
+    if (rawstruct->forceomit.nElements == 0) {
+      rawstruct->forceomit = $3;
+    }
+    else {
+      rawstruct->forceomit.lists = static_cast<rawAST_field_list**>(
+        Realloc(rawstruct->forceomit.lists,
+        (rawstruct->forceomit.nElements + $3.nElements) *
+        sizeof(rawAST_field_list*)));
+      memcpy(rawstruct->forceomit.lists + rawstruct->forceomit.nElements,
+        $3.lists, $3.nElements * sizeof(rawAST_field_list*));
+      rawstruct->forceomit.nElements += $3.nElements;
+      Free($3.lists);
+    }
+  }
+;
+
+XStructFieldRefList:
+  XStructFieldRef
+  {
+    $$.nElements = 1;
+    $$.lists = static_cast<rawAST_field_list**>(
+      Malloc(sizeof(rawAST_field_list*)) );
+    $$.lists[0] = $1;
+  }
+| XStructFieldRefList ',' XStructFieldRef
+  {
+    $$.nElements = $1.nElements + 1;
+    $$.lists = static_cast<rawAST_field_list**>(
+      Realloc($1.lists, $$.nElements * sizeof(rawAST_field_list*)) );
+    $$.lists[$1.nElements] = $3;
+  }
+;
 
 /* FieldLength */
 XFieldLengthDef : XFieldLengthKeyword '(' XNumber ')'

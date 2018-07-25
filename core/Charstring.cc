@@ -1555,7 +1555,7 @@ int CHARSTRING::RAW_encode(const TTCN_Typedescriptor_t& p_td,
 
 int CHARSTRING::RAW_decode(const TTCN_Typedescriptor_t& p_td,
   TTCN_Buffer& buff, int limit, raw_order_t top_bit_ord, boolean no_err,
-  int /*sel_field*/, boolean /*first_call*/)
+  int /*sel_field*/, boolean /*first_call*/, const RAW_Force_Omit* /*force_omit*/)
 {
   int prepaddlength = buff.increase_pos_padd(p_td.raw->prepadding);
   limit -= prepaddlength;

@@ -1266,7 +1266,7 @@ void Record_Of_Type::BER_decode_opentypes(TTCN_Type_list& p_typelist,
 
 int Record_Of_Type::RAW_decode(const TTCN_Typedescriptor_t& p_td,
   TTCN_Buffer& buff, int limit, raw_order_t top_bit_ord, boolean /*no_err*/,
-  int sel_field, boolean first_call)
+  int sel_field, boolean first_call, const RAW_Force_Omit* /*force_omit*/)
 {
   int prepaddlength = buff.increase_pos_padd(p_td.raw->prepadding);
   limit -= prepaddlength;
@@ -3589,7 +3589,8 @@ int Record_Type::RAW_encode_negtest(const Erroneous_descriptor_t *p_err_descr,
 }
 
 int Record_Type::RAW_decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& buff,
-  int limit, raw_order_t top_bit_ord, boolean no_err, int, boolean)
+  int limit, raw_order_t top_bit_ord, boolean no_err, int, boolean,
+  const RAW_Force_Omit* force_omit)
 {
   int field_cnt = get_count();
   int opt_cnt = optional_count();
@@ -3616,14 +3617,16 @@ int Record_Type::RAW_decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& buff
       const int* optional_indexes = get_optional_indexes();
       for (int i=0; i<field_cnt; i++) { /* decoding fields without TAG */
         boolean is_optional_field = optional_indexes && (optional_indexes[next_optional_idx]==i);
-        if (field_map[i] == 0) {
+        if (field_map[i] == 0 && (!is_optional_field ||
+            (force_omit == NULL || !(*force_omit)(i)))) {
           Base_Type* field_ptr = get_at(i);
           if (is_optional_field) {
             field_ptr->set_to_present();
             field_ptr=field_ptr->get_opt_value();
           }
+          RAW_Force_Omit field_force_omit(i, force_omit, fld_descr(i)->raw->forceomit);
           int decoded_field_length = field_ptr->RAW_decode(*fld_descr(i), buff,
-            limit, local_top_order, TRUE);
+            limit, local_top_order, TRUE, -1, TRUE, &field_force_omit);
           if ( (is_optional_field && (decoded_field_length>0)) ||
             (!is_optional_field && (decoded_field_length>=0)) ) {
             decoded_length += decoded_field_length;
@@ -3676,7 +3679,8 @@ continue_while: ;
     for (int i=0; i<field_cnt; i++) { /* decoding fields */
       boolean is_optional_field = optional_indexes && (optional_indexes[next_optional_idx]==i);
       /* check if enough bits to decode the field*/
-      if (!is_optional_field || (limit>0)) {
+      if (!is_optional_field || (limit>0 &&
+          (force_omit == NULL || !(*force_omit)(i)))) {
         /* decoding of normal field */
         fl_start_pos = buff.get_pos_bit();
         Base_Type* field_ptr = get_at(i);
@@ -3684,8 +3688,9 @@ continue_while: ;
           field_ptr->set_to_present();
           field_ptr=field_ptr->get_opt_value();
         }
+        RAW_Force_Omit field_force_omit(i, force_omit, fld_descr(i)->raw->forceomit);
         decoded_field_length = field_ptr->RAW_decode(*fld_descr(i), buff, limit,
-          local_top_order, is_optional_field ? TRUE : no_err);
+          local_top_order, is_optional_field ? TRUE : no_err, -1, TRUE, &field_force_omit);
         boolean field_present = TRUE;
         if (is_optional_field) {
           if (decoded_field_length < 1) { // swallow any error and become omit
@@ -7234,7 +7239,8 @@ int Empty_Record_Type::RAW_encode(const TTCN_Typedescriptor_t& p_td,
 
 int Empty_Record_Type::RAW_decode(const TTCN_Typedescriptor_t& p_td,
   TTCN_Buffer& buff, int /*limit*/, raw_order_t /*top_bit_ord*/,
-  boolean /*no_err*/, int /*sel_field*/, boolean /*first_call*/)
+  boolean /*no_err*/, int /*sel_field*/, boolean /*first_call*/,
+  const RAW_Force_Omit* /*force_omit*/)
 {
   bound_flag = TRUE;
   return buff.increase_pos_padd(p_td.raw->prepadding)

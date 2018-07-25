@@ -43,6 +43,8 @@ class Module_Param;
 template<typename T>
 class OPTIONAL;
 
+class RAW_Force_Omit;
+
 // octetstring value class
 
 class OCTETSTRING : public Base_Type {
@@ -173,7 +175,7 @@ public:
    * bits. */
   int RAW_decode(const TTCN_Typedescriptor_t&, TTCN_Buffer& buff, int limit,
                  raw_order_t top_bit_ord, boolean no_err=FALSE,
-                 int sel_field=-1, boolean first_call=TRUE);
+                 int sel_field=-1, boolean first_call=TRUE, const RAW_Force_Omit* force_omit = NULL);
   int TEXT_encode(const TTCN_Typedescriptor_t&,
                  TTCN_Buffer&) const;
   int TEXT_decode(const TTCN_Typedescriptor_t&, TTCN_Buffer&,  Limit_Token_List&,

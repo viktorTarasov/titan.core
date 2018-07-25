@@ -44,6 +44,8 @@ class UNIVERSAL_CHARSTRING_ELEMENT;
 class UNIVERSAL_CHARSTRING_template;
 #endif
 
+class RAW_Force_Omit;
+
 class Module_Param;
 
 template<typename T>
@@ -232,7 +234,7 @@ public:
     * another types during encoding. Returns the number of decoded
     * bits */
   int RAW_decode(const TTCN_Typedescriptor_t&, TTCN_Buffer&, int, raw_order_t,
-                 boolean no_err=FALSE, int sel_field=-1, boolean first_call=TRUE);
+                 boolean no_err=FALSE, int sel_field=-1, boolean first_call=TRUE, const RAW_Force_Omit* force_omit = NULL);
   int TEXT_encode(const TTCN_Typedescriptor_t&,
                  TTCN_Buffer&) const;
   int TEXT_decode(const TTCN_Typedescriptor_t&, TTCN_Buffer&,  Limit_Token_List&,

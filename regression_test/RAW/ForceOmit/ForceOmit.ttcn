@@ -1,0 +1,507 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v2.0
+ * which accompanies this distribution, and is available at
+ * https://www.eclipse.org/org/documents/epl-2.0/EPL-2.0.html
+ *
+ * Contributors:
+ *   Baranyi, Botond
+ *
+ ******************************************************************************/
+
+// this module contains tests for the RAW coding instruction 'FORCEOMIT'
+module ForceOmit {
+
+
+type component CT {}
+
+// tests with records
+type record InnerRec {
+  integer opt1 optional,
+  integer opt2 optional,
+  integer opt3 optional,
+  integer mand
+}
+
+type record OuterRec1 {
+  integer f1,
+  InnerRec f2,
+  integer f3
+}
+with {
+  variant (f2) "FORCEOMIT(opt1)"
+}
+
+type record OuterRec2 {
+  OuterRec1 f
+}
+with {
+  variant (f) "FORCEOMIT(f2.opt2)"
+}
+
+type record OuterRec3 {
+  OuterRec1 f1,
+  OuterRec1 f2
+}
+with {
+  variant (f1) "FORCEOMIT(f2.opt2, f2.opt3)"
+  variant (f2) "FORCEOMIT(f2.opt2), FORCEOMIT(f2.opt3)"
+}
+
+external function f_dec_rec1(in octetstring x) return OuterRec1
+  with { extension "prototype(convert) decode(RAW)" }
+
+external function f_dec_rec2(in octetstring x) return OuterRec2
+  with { extension "prototype(convert) decode(RAW)" }
+
+external function f_dec_rec3(in octetstring x) return OuterRec3
+  with { extension "prototype(convert) decode(RAW)" }
+
+testcase tc_force_omit_record1() runs on CT {
+  var octetstring data := '0102030405'O;
+  var OuterRec1 expected := {
+    f1 := 1,
+    f2 := { opt1 := omit, opt2 := 2, opt3 := 3, mand := 4 },
+    f3 := 5
+  };
+  var OuterRec1 result := f_dec_rec1(data);
+  if (result == expected) {
+    setverdict(pass);
+  }
+  else {
+    setverdict(fail, "Expected: ", expected, ", got: ", result);
+  }
+}
+
+testcase tc_force_omit_record2() runs on CT {
+  var octetstring data := '01020304'O;
+  var OuterRec2 expected := {
+    f := {
+      f1 := 1,
+      f2 := { opt1 := omit, opt2 := omit, opt3 := 2, mand := 3 },
+      f3 := 4
+    }
+  };
+  var OuterRec2 result := f_dec_rec2(data);
+  if (result == expected) {
+    setverdict(pass);
+  }
+  else {
+    setverdict(fail, "Expected: ", expected, ", got: ", result);
+  }
+}
+
+testcase tc_force_omit_record3() runs on CT {
+  var octetstring data := '010203040506'O;
+  var OuterRec3 expected := {
+    f1 := {
+      f1 := 1,
+      f2 := { opt1 := omit, opt2 := omit, opt3 := omit, mand := 2 },
+      f3 := 3
+    },
+    f2 := {
+      f1 := 4,
+      f2 := { opt1 := omit, opt2 := omit, opt3 := omit, mand := 5 },
+      f3 := 6
+    }
+  };
+  var OuterRec3 result := f_dec_rec3(data);
+  if (result == expected) {
+    setverdict(pass);
+  }
+  else {
+    setverdict(fail, "Expected: ", expected, ", got: ", result);
+  }
+}
+
+// tests with sets
+type set InnerSet {
+  integer opt1 optional,
+  integer opt2 optional,
+  integer opt3 optional,
+  integer mand
+}
+
+type set OuterSet1 {
+  integer f1,
+  InnerSet f2,
+  integer f3
+}
+with {
+  variant (f2) "FORCEOMIT(opt1)"
+}
+
+type set OuterSet2 {
+  OuterSet1 f
+}
+with {
+  variant (f) "FORCEOMIT(f2.opt2)"
+}
+
+type set OuterSet3 {
+  OuterSet1 f1,
+  OuterSet1 f2
+}
+with {
+  variant (f1) "FORCEOMIT(f2.opt2, f2.opt3)"
+  variant (f2) "FORCEOMIT(f2.opt2), FORCEOMIT(f2.opt3)"
+}
+
+external function f_dec_set1(in octetstring x) return OuterSet1
+  with { extension "prototype(convert) decode(RAW)" }
+
+external function f_dec_set2(in octetstring x) return OuterSet2
+  with { extension "prototype(convert) decode(RAW)" }
+
+external function f_dec_set3(in octetstring x) return OuterSet3
+  with { extension "prototype(convert) decode(RAW)" }
+
+testcase tc_force_omit_set1() runs on CT {
+  var octetstring data := '0102030405'O;
+  var OuterSet1 expected := {
+    f1 := 1,
+    f2 := { opt1 := omit, opt2 := 2, opt3 := 3, mand := 4 },
+    f3 := 5
+  };
+  var OuterSet1 result := f_dec_set1(data);
+  if (result == expected) {
+    setverdict(pass);
+  }
+  else {
+    setverdict(fail, "Expected: ", expected, ", got: ", result);
+  }
+}
+
+testcase tc_force_omit_set2() runs on CT {
+  var octetstring data := '01020304'O;
+  var OuterSet2 expected := {
+    f := {
+      f1 := 1,
+      f2 := { opt1 := omit, opt2 := omit, opt3 := 2, mand := 3 },
+      f3 := 4
+    }
+  };
+  var OuterSet2 result := f_dec_set2(data);
+  if (result == expected) {
+    setverdict(pass);
+  }
+  else {
+    setverdict(fail, "Expected: ", expected, ", got: ", result);
+  }
+}
+
+testcase tc_force_omit_set3() runs on CT {
+  var octetstring data := '010203040506'O;
+  var OuterSet3 expected := {
+    f1 := {
+      f1 := 1,
+      f2 := { opt1 := omit, opt2 := omit, opt3 := omit, mand := 2 },
+      f3 := 3
+    },
+    f2 := {
+      f1 := 4,
+      f2 := { opt1 := omit, opt2 := omit, opt3 := omit, mand := 5 },
+      f3 := 6
+    }
+  };
+  var OuterSet3 result := f_dec_set3(data);
+  if (result == expected) {
+    setverdict(pass);
+  }
+  else {
+    setverdict(fail, "Expected: ", expected, ", got: ", result);
+  }
+}
+
+// tests with unions
+type union Uni1 {
+  InnerRec r,
+  InnerSet s
+}
+with {
+  variant (r) "FORCEOMIT(opt1)";
+  variant (s) "FORCEOMIT(opt2, opt3)";
+}
+
+type record OuterRec4 {
+  integer f1,
+  Uni1 f2
+}
+with {
+  variant (f2) "FORCEOMIT(r.opt3), FORCEOMIT(s.opt1)"
+}
+
+external function f_dec_uni1(in octetstring x) return Uni1
+  with { extension "prototype(convert) decode(RAW)" }
+
+external function f_dec_rec4(in octetstring x) return OuterRec4
+  with { extension "prototype(convert) decode(RAW)" }
+
+testcase tc_force_omit_union1() runs on CT {
+  var octetstring data := '010203'O;
+  var Uni1 expected := { r := { opt1 := omit, opt2 := 1, opt3 := 2, mand := 3 } };
+  var Uni1 result := f_dec_uni1(data);
+  if (result == expected) {
+    setverdict(pass);
+  }
+  else {
+    setverdict(fail, "Expected: ", expected, ", got: ", result);
+  }
+}
+
+testcase tc_force_omit_union2() runs on CT {
+  var octetstring data := '0102'O;
+  var Uni1 expected := { s := { opt1 := 1, opt2 := omit, opt3 := omit, mand := 2 } };
+  var Uni1 result := f_dec_uni1(data);
+  if (result == expected) {
+    setverdict(pass);
+  }
+  else {
+    setverdict(fail, "Expected: ", expected, ", got: ", result);
+  }
+}
+
+testcase tc_force_omit_union_in_record1() runs on CT {
+  var octetstring data := '010203'O;
+  var OuterRec4 expected := {
+    f1 := 1,
+    f2 := { r := { opt1 := omit, opt2 := 2, opt3 := omit, mand := 3 } }
+  };
+  var OuterRec4 result := f_dec_rec4(data);
+  if (result == expected) {
+    setverdict(pass);
+  }
+  else {
+    setverdict(fail, "Expected: ", expected, ", got: ", result);
+  }
+}
+
+testcase tc_force_omit_union_in_record2() runs on CT {
+  var octetstring data := '0102'O;
+  var OuterRec4 expected := {
+    f1 := 1,
+    f2 := { s := { opt1 := omit, opt2 := omit, opt3 := omit, mand := 2 } }
+  };
+  var OuterRec4 result := f_dec_rec4(data);
+  if (result == expected) {
+    setverdict(pass);
+  }
+  else {
+    setverdict(fail, "Expected: ", expected, ", got: ", result);
+  }
+}
+
+// tests with tag
+type record TaggedRec {
+  InnerRec f1 optional,
+  InnerSet f2 optional
+}
+with {
+  variant "TAG(f1, opt1 = 1; f2, opt1 = 0)"
+}
+
+type set TaggedSet {
+  InnerRec f1 optional,
+  InnerSet f2 optional
+}
+with {
+  variant "TAG(f1, opt1 = 1)"
+}
+
+type union TaggedUni {
+  InnerRec f1,
+  InnerSet f2
+}
+with {
+  variant "TAG(f1, opt1 = 0; f2, OTHERWISE)"
+}
+
+type record OuterRec5 {
+  TaggedRec f1,
+  TaggedSet f2,
+  TaggedUni f3
+}
+with {
+  variant (f1) "FORCEOMIT(f2, f1.opt2)";
+  variant (f2) "FORCEOMIT(f1, f2)";
+  variant (f3) "FORCEOMIT(f1.opt2, f2.opt2, f2.opt3)";
+}
+
+external function f_dec_rec5(in octetstring x) return OuterRec5
+  with { extension "prototype(convert) decode(RAW)" }
+
+testcase tc_force_omit_with_tag1() runs on CT {
+  var octetstring data := '0102030405'O;
+  var OuterRec5 expected := {
+    f1 := { f1 := { opt1 := 1, opt2 := omit, opt3 := 2, mand := 3 }, f2 := omit },
+    f2 := { f1 := omit, f2 := omit },
+    f3 := { f2 := { opt1 := 4, opt2 := omit, opt3 := omit, mand := 5 } }
+  };
+  var OuterRec5 result := f_dec_rec5(data);
+  if (result == expected) {
+    setverdict(pass);
+  }
+  else {
+    setverdict(fail, "Expected: ", expected, ", got: ", result);
+  }
+}
+
+testcase tc_force_omit_with_tag2() runs on CT {
+  var octetstring data := '000102'O;
+  var OuterRec5 expected := {
+    f1 := { f1 := omit, f2 := omit /* FORCEOMIT overwrites the field's TAG option */ },
+    f2 := { f1 := omit, f2 := omit },
+    f3 := { f1 := { opt1 := 0, opt2 := omit, opt3 := 1, mand := 2 } }
+  };
+  var OuterRec5 result := f_dec_rec5(data);
+  if (result == expected) {
+    setverdict(pass);
+  }
+  else {
+    setverdict(fail, "Expected: ", expected, ", got: ", result);
+  }
+}
+
+// tests with crosstag
+type union CrosstaggedUni {
+  InnerRec f1,
+  InnerSet f2
+}
+with {
+  variant (f2) "FORCEOMIT(opt1, opt3)";
+}
+
+type record OuterRec6 {
+  integer sel,
+  CrosstaggedUni data
+}
+with {
+  variant (data) "CROSSTAG(f1, sel = 1; f2, OTHERWISE), FORCEOMIT(f1.opt2)";
+}
+
+external function f_dec_rec6(in octetstring x) return OuterRec6
+  with { extension "prototype(convert) decode(RAW)" }
+
+testcase tc_force_omit_with_crosstag1() runs on CT {
+  var octetstring data := '01020304'O;
+  var OuterRec6 expected := {
+    sel := 1,
+    data := { f1 := { opt1 := 2, opt2 := omit, opt3 := 3, mand := 4 } }
+  };
+  var OuterRec6 result := f_dec_rec6(data);
+  if (result == expected) {
+    setverdict(pass);
+  }
+  else {
+    setverdict(fail, "Expected: ", expected, ", got: ", result);
+  }
+}
+
+testcase tc_force_omit_with_crosstag2() runs on CT {
+  var octetstring data := '020304'O;
+  var OuterRec6 expected := {
+    sel := 2,
+    data := { f2 := { opt1 := omit, opt2 := 3, opt3 := omit, mand := 4 } }
+  };
+  var OuterRec6 result := f_dec_rec6(data);
+  if (result == expected) {
+    setverdict(pass);
+  }
+  else {
+    setverdict(fail, "Expected: ", expected, ", got: ", result);
+  }
+}
+
+// tests with repeatable
+type record IntRec1 {
+  integer f1,
+  integer f2
+}
+with {
+  variant "PRESENCE(f1=1)";
+}
+
+type record IntRec2 {
+  integer f1,
+  integer f2
+}
+with {
+  variant "PRESENCE(f1=2)";
+}
+
+type record IntRec3 {
+  integer f1,
+  integer f2
+}
+with {
+  variant "PRESENCE(f1=0)";
+}
+
+type record of IntRec3 IntRecList;
+
+type set RepeatableSet {
+  IntRec1 f1,
+  IntRec2 f2,
+  IntRecList f3 optional
+}
+with {
+  variant (f3) "REPEATABLE(yes)";
+}
+
+type record OuterRec7 {
+  RepeatableSet f1,
+  RepeatableSet f2
+}
+with {
+  variant (f1) "FORCEOMIT(f3)";
+}
+
+external function f_dec_rec7(in octetstring x) return OuterRec7
+  with { extension "prototype(convert) decode(RAW)" }
+
+testcase tc_force_omit_with_repeatable() runs on CT {
+  var octetstring data := '0101 0202 0003 0104 0005 0206 0007'O;
+  var OuterRec7 expected := {
+    f1 := {
+      f1 := { f1 := 1, f2 := 1 },
+      f2 := { f1 := 2, f2 := 2 },
+      f3 := omit
+    },
+    f2 := {
+      f1 := { f1 := 1, f2 := 4 },
+      f2 := { f1 := 2, f2 := 6 },
+      f3 := { { f1 := 0, f2 := 3 }, { f1 := 0, f2 := 5 }, { f1 := 0, f2 := 7 } }
+    }
+  };
+  var OuterRec7 result := f_dec_rec7(data);
+  if (result == expected) {
+    setverdict(pass);
+  }
+  else {
+    setverdict(fail, "Expected: ", expected, ", got: ", result);
+  }
+}
+
+control {
+  execute(tc_force_omit_record1());
+  execute(tc_force_omit_record2());
+  execute(tc_force_omit_record3());
+  execute(tc_force_omit_set1());
+  execute(tc_force_omit_set2());
+  execute(tc_force_omit_set3());
+  execute(tc_force_omit_union1());
+  execute(tc_force_omit_union2());
+  execute(tc_force_omit_union_in_record1());
+  execute(tc_force_omit_union_in_record2());
+  execute(tc_force_omit_with_tag1());
+  execute(tc_force_omit_with_tag2());
+  execute(tc_force_omit_with_crosstag1());
+  execute(tc_force_omit_with_crosstag2());
+  execute(tc_force_omit_with_repeatable());
+}
+
+}
+with {
+  encode "RAW";
+}

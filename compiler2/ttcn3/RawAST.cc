@@ -62,6 +62,8 @@ RawAST::RawAST(RawAST *other, int default_length){
     presence.fieldName=NULL;
     presence.nElements=0;
     presence.keyList=NULL;
+    forceomit.nElements = 0;
+    forceomit.lists = NULL;
     topleveleind=other->topleveleind;
     toplevel.bitorder=other->toplevel.bitorder;
     length_restrition=other->length_restrition;
@@ -105,6 +107,8 @@ void RawAST::init_rawast(int default_length){
     presence.fieldName=NULL;
     presence.nElements=0;
     presence.keyList=NULL;
+    forceomit.nElements = 0;
+    forceomit.lists = NULL;
     topleveleind=0;
     intx = false;
     stringformat = CharCoding::UNKNOWN;
@@ -121,6 +125,10 @@ RawAST::~RawAST(){
     free_rawAST_tag_list(&taglist);
     free_rawAST_tag_list(&crosstaglist);
     free_rawAST_single_tag(&presence);
+    for (int i = 0; i < forceomit.nElements; ++i) {
+      free_rawAST_field_list(forceomit.lists[i]);
+    }
+    Free(forceomit.lists);
     if(lengthindex!=NULL) {
         for(int a=0;a<lengthindex->nElements;a++) delete lengthindex->names[a];
 	Free(lengthindex->names);
@@ -157,6 +165,14 @@ void RawAST::print_RawAST(){
       printf("    field:");
       for(int b=0;b<presence.keyList[a].keyField->nElements;b++){
        printf("%s.",presence.keyList[a].keyField->names[b]->get_name().c_str());
+      }
+      printf("\n\r");
+    }
+    printf("forceomit:\n\r");
+    for (int i = 0; i < forceomit.nElements; ++i) {
+      for (int j = 0; j < forceomit.lists[i]->nElements; ++j) {
+        printf("%s%s", j > 0 ? "." : "  ",
+          forceomit.lists[i]->names[j]->get_name().c_str());
       }
       printf("\n\r");
     }

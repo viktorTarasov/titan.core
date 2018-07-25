@@ -2487,6 +2487,33 @@ namespace Common {
               }
             }
           }
+          for (int j = 0; j < rawpar->forceomit.nElements; ++j) { // FORCEOMIT
+            Type* t = field_type_last;
+            bool erroneous = false;
+            for (int k = 0; k < rawpar->forceomit.lists[j]->nElements; ++k) {
+              Identifier* idf = rawpar->forceomit.lists[j]->names[k];
+              t = t->get_type_refd_last();
+              if (!t->is_secho()) {
+                error("Invalid field type in RAW parameter FORCEOMIT for "
+                  "field %s.", field_id.get_dispname().c_str());
+                erroneous = true;
+                break;
+              }
+              if (!t->has_comp_withName(*idf)) {
+                error("Invalid field name '%s' in RAW parameter FORCEOMIT for "
+                  "field %s",
+                  rawpar->forceomit.lists[j]->names[k]->get_dispname().c_str(),
+                  field_id.get_dispname().c_str());
+                erroneous = true;
+                break;
+              }
+              t = t->get_comp_byName(*idf)->get_type();
+            }
+            if (!erroneous && !t->is_optional_field()) {
+              error("RAW parameter FORCEOMIT for field %s does not refer to an "
+                "optional field.", field_id.get_dispname().c_str());
+            }
+          }
           for(int c=0;c<rawpar->crosstaglist.nElements;c++) { // CROSSTAG
             Identifier *idf=rawpar->crosstaglist.tag[c].fieldName;
             if(!field_type_last->is_secho()){

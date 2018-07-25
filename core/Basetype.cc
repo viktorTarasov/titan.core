@@ -997,7 +997,8 @@ int Base_Type::TEXT_decode(const TTCN_Typedescriptor_t& p_td,
 
 int Base_Type::RAW_decode(const TTCN_Typedescriptor_t& p_td,
   TTCN_Buffer&, int /* limit */, raw_order_t /* top_bit_ord */,
-  boolean /* no_error */, int /* sel_field */, boolean /* first_call */ )
+  boolean /* no_error */, int /* sel_field */, boolean /* first_call */,
+  const RAW_Force_Omit* /* force_omit */ )
 {
   TTCN_error("RAW decoding requested for type '%s'"
              " which has no RAW decoding method.",p_td.name);
