@@ -6274,9 +6274,16 @@ int Record_Type::OER_encode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_bu
   // If extendable record and has real extensions the first bit of the
   // preamble is 1
   if (p_td.oer->extendable) {
-    for (int i = p_td.oer->nr_of_root_comps; i < field_count; i++) {
+    for (int i = 0; i < field_count; i++) {
+      boolean is_default_field = default_indexes && (default_indexes[next_default_idx].index==p_td.oer->p[i]);
+      const Base_Type* default_value = is_default_field ? default_indexes[next_default_idx].value : NULL;
+      if (is_default_field) {
+        next_default_idx++;
+      }
       // If there are extension fields the first bit is 1
-      if (get_at(p_td.oer->p[i])->is_bound() && get_at(p_td.oer->p[i])->is_present()) {
+      if (i >= p_td.oer->nr_of_root_comps &&
+          get_at(p_td.oer->p[i])->is_bound() && get_at(p_td.oer->p[i])->is_present() &&
+          (!is_default_field || !get_at(p_td.oer->p[i])->is_equal(default_value))) {
         c = 1 << 7;
         has_extension = true;
         break;
@@ -6285,14 +6292,19 @@ int Record_Type::OER_encode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_bu
     pos--;
     limit = p_td.oer->nr_of_root_comps;
   }
+  next_default_idx = 0;
   for (int i = 0; i < limit; i++) {
     boolean is_default_field = default_indexes && (default_indexes[next_default_idx].index==p_td.oer->p[i]);
+    const Base_Type* default_value = is_default_field ? default_indexes[next_default_idx].value : NULL;
     if (is_default_field) {
       next_default_idx++;
     }
     if (get_at(p_td.oer->p[i])->is_optional() || is_default_field) {
       pos--;
-      c += get_at(p_td.oer->p[i])->is_present() << pos;
+      if (get_at(p_td.oer->p[i])->is_present() &&
+          (!is_default_field || !get_at(p_td.oer->p[i])->is_equal(default_value))) {
+        c += 1 << pos;
+      }
       if (pos == 0) {
         p_buf.put_c(c);
         pos = 8;
@@ -6303,9 +6315,19 @@ int Record_Type::OER_encode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_bu
   if (pos != 8) {
     p_buf.put_c(c);
   }
+  next_default_idx = 0;
   for (int i = 0; i < limit; ++i) {
-    get_at(p_td.oer->p[i])->OER_encode(*fld_descr(p_td.oer->p[i]), p_buf);
+    boolean is_default_field = default_indexes && (default_indexes[next_default_idx].index==p_td.oer->p[i]);
+    const Base_Type* default_value = is_default_field ? default_indexes[next_default_idx].value : NULL;
+    if (is_default_field) {
+      next_default_idx++;
+    }
+    if (!is_default_field || !get_at(p_td.oer->p[i])->is_equal(default_value)) {
+      get_at(p_td.oer->p[i])->OER_encode(*fld_descr(p_td.oer->p[i]), p_buf);
+    }
   }
+  
+  int ext_default_idx_start = next_default_idx;
 
   // If the record is extendable and has real extensions
   if (has_extension) {
@@ -6315,21 +6337,38 @@ int Record_Type::OER_encode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_bu
     pos = 8;
     int eag_pos = p_td.oer->eag_len == 0 ? -1 : 0;
     for (int i = limit; i < field_count; i++) {
+      boolean is_default_field = default_indexes && (default_indexes[next_default_idx].index==p_td.oer->p[i]);
+      const Base_Type* default_value = is_default_field ? default_indexes[next_default_idx].value : NULL;
+      if (is_default_field) {
+        next_default_idx++;
+      }
       pos--;
       if (eag_pos != -1 && p_td.oer->eag[eag_pos] == i - limit) {
         eag_pos++;
+        bool found = false;
         for (int j = i; j < limit + p_td.oer->eag[eag_pos]; j++) {
-          if (get_at(p_td.oer->p[j])->is_bound() && get_at(p_td.oer->p[j])->is_present()) {
-            // Add bit if there are at least one present field
-            c += 1 << pos;
-            break;
+          if (j != i) {
+            is_default_field = default_indexes && (default_indexes[next_default_idx].index==p_td.oer->p[j]);
+            default_value = is_default_field ? default_indexes[next_default_idx].value : NULL;
+            if (is_default_field) {
+              next_default_idx++;
+            }
           }
+          if (get_at(p_td.oer->p[j])->is_bound() && get_at(p_td.oer->p[j])->is_present() &&
+              (!is_default_field || !get_at(p_td.oer->p[j])->is_equal(default_value))) {
+            found = true;
+          }
+        }
+        if (found) {
+          // Add bit if there is at least one present field
+          c += 1 << pos;
         }
         i += p_td.oer->eag[eag_pos] - p_td.oer->eag[eag_pos-1] - 1;
         eag_pos++;
       } else {
         // extension attribute groups counted as one in the presence bitmap
-        if (get_at(p_td.oer->p[i])->is_present()) {
+        if (get_at(p_td.oer->p[i])->is_present() &&
+            (!is_default_field || !get_at(p_td.oer->p[i])->is_equal(default_value))) {
           c += 1 << pos;
         }
       }
@@ -6351,9 +6390,11 @@ int Record_Type::OER_encode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_bu
     p_buf.put_buf(tmp_buf);
     tmp_buf.clear();
     
+    next_default_idx = ext_default_idx_start;
     eag_pos = p_td.oer->eag_len == 0 ? -1 : 0;
     for (int i = limit; i < field_count; ++i) {
       boolean is_default_field = default_indexes && (default_indexes[next_default_idx].index==p_td.oer->p[i]);
+      const Base_Type* default_value = is_default_field ? default_indexes[next_default_idx].value : NULL;
       if (is_default_field) {
         next_default_idx++;
       }
@@ -6366,18 +6407,24 @@ int Record_Type::OER_encode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_bu
         if (is_default_field) {
           next_default_idx--;
         }
+        int current_default_idx = next_default_idx;
         bool has_present = false;
         for (int j = i; j < limit + p_td.oer->eag[eag_pos]; j++) {
-          if (get_at(p_td.oer->p[j])->is_present()) {
-            has_present = true;
-          }
           is_default_field = default_indexes && (default_indexes[next_default_idx].index==p_td.oer->p[j]);
+          default_value = is_default_field ? default_indexes[next_default_idx].value : NULL;
           if (is_default_field) {
             next_default_idx++;
           }
+          if (get_at(p_td.oer->p[j])->is_present() &&
+              (!is_default_field || !get_at(p_td.oer->p[j])->is_equal(default_value))) {
+            has_present = true;
+          }
           if (get_at(p_td.oer->p[j])->is_optional() || is_default_field) {
             pos--;
-            c += get_at(p_td.oer->p[j])->is_present() << pos;
+            if (get_at(p_td.oer->p[j])->is_present() &&
+                (!is_default_field || !get_at(p_td.oer->p[j])->is_equal(default_value))) {
+              c += 1 << pos;
+            }
             if (pos == 0) {
               tmp_buf.put_c(c);
               pos = 8;
@@ -6389,8 +6436,16 @@ int Record_Type::OER_encode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_bu
           tmp_buf.put_c(c);
         }
         if (has_present) {
+          next_default_idx = current_default_idx;
           for (int j = i; j < limit + p_td.oer->eag[eag_pos]; j++) {
-            get_at(p_td.oer->p[j])->OER_encode(*fld_descr(p_td.oer->p[j]), tmp_buf);
+            is_default_field = default_indexes && (default_indexes[next_default_idx].index==p_td.oer->p[j]);
+            default_value = is_default_field ? default_indexes[next_default_idx].value : NULL;
+            if (is_default_field) {
+              next_default_idx++;
+            }
+            if (!is_default_field || !get_at(p_td.oer->p[j])->is_equal(default_value)) {
+              get_at(p_td.oer->p[j])->OER_encode(*fld_descr(p_td.oer->p[j]), tmp_buf);
+            }
           }
           encode_oer_length(tmp_buf.get_len(), p_buf, FALSE);
           p_buf.put_buf(tmp_buf);
@@ -6398,7 +6453,8 @@ int Record_Type::OER_encode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_bu
         tmp_buf.clear();
         i += p_td.oer->eag[eag_pos] - p_td.oer->eag[eag_pos-1] - 1;
         eag_pos++;
-      } else if (get_at(p_td.oer->p[i])->is_bound() && get_at(p_td.oer->p[i])->is_present()) {
+      } else if (get_at(p_td.oer->p[i])->is_bound() && get_at(p_td.oer->p[i])->is_present() &&
+                 (!is_default_field || !get_at(p_td.oer->p[i])->is_equal(default_value))) {
         get_at(p_td.oer->p[i])->OER_encode(*fld_descr(p_td.oer->p[i]), tmp_buf);
         encode_oer_length(tmp_buf.get_len(), p_buf, FALSE);
         p_buf.put_buf(tmp_buf);
@@ -6862,8 +6918,13 @@ int Record_Type::OER_decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_bu
         if (eag_pos != -1 && p_td.oer->eag[eag_pos] == i - limit) {
           eag_pos++;
           for (int j = i; j < limit + p_td.oer->eag[eag_pos]; j++) {
-            is_default_field = default_indexes && (default_indexes[next_default_idx].index==p_td.oer->p[j]);
-            default_value = is_default_field ? default_indexes[next_default_idx].value : NULL;
+            if (j != i) {
+              is_default_field = default_indexes && (default_indexes[next_default_idx].index==p_td.oer->p[j]);
+              default_value = is_default_field ? default_indexes[next_default_idx].value : NULL;
+              if (is_default_field) {
+                next_default_idx++;
+              }
+            }
             if (get_at(p_td.oer->p[j])->is_optional()) {
               get_at(p_td.oer->p[j])->set_to_omit();
             }

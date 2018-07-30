@@ -4799,8 +4799,14 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
         "  boolean has_extension = FALSE;\n");
       for (i = sdef->oerNrOrRootcomps; i < sdef->nElements; i++) {
         src = mputprintf(src,
-        "  has_extension = has_extension || (field_%s.is_bound() && field_%s.is_present());\n",
-          sdef->elements[i].name, sdef->elements[sdef->oerP[i]].name);
+        "  has_extension = has_extension || (field_%s.is_bound() && field_%s.is_present()",
+           sdef->elements[sdef->oerP[i]].name, sdef->elements[sdef->oerP[i]].name);
+        if (sdef->elements[sdef->oerP[i]].isDefault) {
+          src = mputprintf(src, " && field_%s != %s",
+            sdef->elements[sdef->oerP[i]].name,
+            sdef->elements[sdef->oerP[i]].defvalname);
+        }
+        src = mputstr(src, ");\n");
       }
     }
     size_t opt_elements = 0;
@@ -4833,10 +4839,16 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
       if (sdef->elements[sdef->oerP[i]].isOptional || sdef->elements[sdef->oerP[i]].isDefault) {
         pos--;
         src = mputprintf(src,
-          "  if (field_%s.is_present()) {\n"
+          "  if (field_%s.is_present()", sdef->elements[sdef->oerP[i]].name);
+        if (sdef->elements[sdef->oerP[i]].isDefault) {
+          src = mputprintf(src, " && field_%s != %s",
+            sdef->elements[sdef->oerP[i]].name,
+            sdef->elements[sdef->oerP[i]].defvalname);
+        }
+        src = mputprintf(src,
+          ") {\n"
           "    c += %i;\n"
           "  }\n"
-          , sdef->elements[sdef->oerP[i]].name
           , 1 << pos);
         if (pos == 0) {
           pos = 8;
@@ -4856,8 +4868,13 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
     for (i = 0; i < limit; i++) {
       if (sdef->elements[sdef->oerP[i]].isOptional || sdef->elements[sdef->oerP[i]].isDefault) {
         src = mputprintf(src,
-          "  if (field_%s.is_present())\n  "
-          , sdef->elements[sdef->oerP[i]].name);
+          "  if (field_%s.is_present()", sdef->elements[sdef->oerP[i]].name);
+        if (sdef->elements[sdef->oerP[i]].isDefault) {
+          src = mputprintf(src, " && field_%s != %s",
+            sdef->elements[sdef->oerP[i]].name,
+            sdef->elements[sdef->oerP[i]].defvalname);
+        }
+        src = mputstr(src, ")\n  ");
       }
       src = mputprintf(src,
         "  field_%s.OER_encode(%s_descr_, p_buf);\n"
@@ -4899,7 +4916,13 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
               opt_elems++;
             }
             src = mputprintf(src,
-              "    has_present = has_present || field_%s.is_present();\n", sdef->elements[sdef->oerP[j]].name);
+              "    has_present = has_present || (field_%s.is_present()", sdef->elements[sdef->oerP[j]].name);
+            if (sdef->elements[sdef->oerP[j]].isDefault) {
+              src = mputprintf(src, " && field_%s != %s",
+                sdef->elements[sdef->oerP[j]].name,
+                sdef->elements[sdef->oerP[j]].defvalname);
+            }
+            src = mputstr(src, ");\n");
           }
           src = mputprintf(src,
             "    if (has_present) {\n"
@@ -4914,10 +4937,18 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
               if (sdef->elements[sdef->oerP[j]].isOptional || sdef->elements[sdef->oerP[j]].isDefault) {
                 pos2--;
                 src = mputprintf(src,
-                  "      if (field_%s.is_present()) {\n"
+                  "      if (field_%s.is_present()",
+                  sdef->elements[sdef->oerP[j]].name);
+                if (sdef->elements[sdef->oerP[j]].isDefault) {
+                  src = mputprintf(src, " && field_%s != %s",
+                    sdef->elements[sdef->oerP[j]].name,
+                    sdef->elements[sdef->oerP[j]].defvalname);
+                }
+                src = mputprintf(src,
+                  ") {\n"
                   "        c2 += %i;\n"
                   "      }\n"
-                  , sdef->elements[sdef->oerP[j]].name, 1 << pos2);
+                  , 1 << pos2);
                 if (pos2 == 0) {
                   pos2 = 8;
                   ind2++;
@@ -4946,14 +4977,21 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
           eag_pos++;
         } else {
           src = mputprintf(src,
-            "    if (field_%s.is_present()) {\n"
+            "    if (field_%s.is_present()", sdef->elements[sdef->oerP[i]].name);
+          if (sdef->elements[sdef->oerP[i]].isDefault) {
+            src = mputprintf(src, " && field_%s != %s",
+              sdef->elements[sdef->oerP[i]].name,
+              sdef->elements[sdef->oerP[i]].defvalname);
+          }
+          src = mputprintf(src,
+            ") {\n"
             "      c += %i;\n"
             "      field_%s.OER_encode(%s_descr_, tmp_buf2);\n"
             "      encode_oer_length(tmp_buf2.get_len(), tmp_buf, FALSE);\n"
             "      tmp_buf.put_buf(tmp_buf2);\n"
             "      tmp_buf2.clear();\n"
             "    }\n"
-             , sdef->elements[sdef->oerP[i]].name, 1 << pos
+             , 1 << pos
              , sdef->elements[sdef->oerP[i]].name, sdef->elements[sdef->oerP[i]].typedescrname);
         }
         if (pos == 0) {

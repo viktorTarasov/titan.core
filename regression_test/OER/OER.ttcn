@@ -2700,6 +2700,17 @@
         if (not(match(log2str(erres7), log2str(erres71)))) {
             setverdict(fail, "tc_sequence: ", match(log2str(erres7), log2str(erres71)));
         }
+        
+        er7 := {
+            me := 1,
+            f1 := 5, // default value
+            f2 := omit,
+            f3 := 5 // default value
+        }
+        os := enc_ExtensionRecord5(er7);
+        if (os != '400101'O) { // there's no extension in the encoding, since it only contains default values and 'omit'
+            setverdict(fail, "tc_sequence: ", match('400101'O, os));
+        }
 
         er7 := {
             me := 1,
@@ -2747,7 +2758,7 @@
             setverdict(fail, "tc_sequence: ", match(log2str(er7), log2str(erres7)));
         }
 
-        var ExtensionRecord6 er8, erres8;
+        var ExtensionRecord6 er8, erres8, erres81;
         er8 := {
             me := 1,
             f0 := 0,
@@ -2766,9 +2777,24 @@
         if (os != 'C001010302FFE0038001000380010103800102038001030380010403800105038001060380010703800108038001090180'O) {
             setverdict(fail, "tc_sequence: ", match('C001010302FFE0038001000380010103800102038001030380010403800105038001060380010703800108038001090180'O, os));
         }
+        erres81 := {
+            me := 1,
+            f0 := 0,
+            f1 := 1,
+            f2 := 2,
+            f3 := 3,
+            f4 := 4,
+            f5 := 5,
+            f6 := 6,
+            f7 := 7,
+            f8 := 8,
+            f9 := 9,
+            f_nul := NULL,
+            f10 := 4 // default value
+        }
         erres8 := dec_ExtensionRecord6(os);
-        if (not(match(log2str(er8), log2str(erres8)))) {
-            setverdict(fail, "tc_sequence: ", match(log2str(er8), log2str(erres8)));
+        if (not(match(log2str(erres81), log2str(erres8)))) {
+            setverdict(fail, "tc_sequence: ", match(log2str(erres81), log2str(erres8)));
         }
 
         er8 := {
@@ -2789,9 +2815,24 @@
         if (os != 'C001010302D8A003800100038001010380010303800104038001080180'O) {
             setverdict(fail, "tc_sequence: ", match('C001010302D8A003800100038001010380010303800104038001080180'O, os));
         }
+        erres81 := {
+            me := 1,
+            f0 := 0,
+            f1 := 1,
+            f2 := omit,
+            f3 := 3,
+            f4 := 4,
+            f5 := omit,
+            f6 := omit,
+            f7 := omit,
+            f8 := 8,
+            f9 := omit,
+            f_nul := NULL,
+            f10 := 4 // default value
+        }
         erres8 := dec_ExtensionRecord6(os);
-        if (not(match(log2str(er8), log2str(erres8)))) {
-            setverdict(fail, "tc_sequence: ", match(log2str(er8), log2str(erres8)));
+        if (not(match(log2str(erres81), log2str(erres8)))) {
+            setverdict(fail, "tc_sequence: ", match(log2str(erres81), log2str(erres8)));
         }
 
         er8 := {
@@ -2865,6 +2906,33 @@
         os := enc_ExtensionRecord6(er8);
         if (os != 'C001010302D8BC0380010003800101038001030380010403800108018002010A04010B010C02010D'O) {
             setverdict(fail, "tc_sequence: ", match('C001010302D8BC0380010003800101038001030380010403800108018002010A04010B010C02010D'O, os));
+        }
+        erres8 := dec_ExtensionRecord6(os);
+        if (not(match(log2str(er8), log2str(erres8)))) {
+            setverdict(fail, "tc_sequence: ", match(log2str(er8), log2str(erres8)));
+        }
+        
+        er8 := {
+            me := 1,
+            f0 := 5, // default value
+            f1 := 3,
+            f2 := omit,
+            f3 := 5, // default value
+            f4 := omit,
+            f5 := omit,
+            f6 := omit,
+            f7 := 2,
+            f8 := 1,
+            f9 := omit,
+            f_nul := omit,
+            f10 := 4, // default value
+            f11 := 11,
+            f12 := 12,
+            f13 := 13
+        }
+        os := enc_ExtensionRecord6(er8);
+        if (os != 'C001010302418C03800103038001020380010104010B010C02010D'O) {
+            setverdict(fail, "tc_sequence: ", match('C001010302418C03800103038001020380010104010B010C02010D'O, os));
         }
         erres8 := dec_ExtensionRecord6(os);
         if (not(match(log2str(er8), log2str(erres8)))) {
@@ -3581,12 +3649,26 @@
  	 	with { extension "prototype (convert) decode(OER)" }
  	
  	// Testing the decoding of a field with a default value (bug 534769, bug 534943)
- 	testcase tc_default() runs on EmptyCT {
+ 	testcase tc_default_dec() runs on EmptyCT {
  	  var octetstring enc := '000104'O;
  	  var RecWithDefault dec := dec_RecWithDefault(enc);
  	  var RecWithDefault dec_exp := { field1 := 1, field2 := 4 };
  	  if (log2str(dec) != log2str(dec_exp)) {
  	    setverdict(fail, "Decoding failed. Got: ", dec, ", expected: ", dec_exp);
+ 	  }
+ 	  setverdict(pass);
+ 	}
+ 	
+ 	external function enc_RecWithDefault(in RecWithDefault pdu) return octetstring
+ 	 	with { extension "prototype (convert) encode(OER)" }
+ 	
+ 	// Testing that the encoder omits the default field if its value is equal to the default value (bug 537502)
+ 	testcase tc_default_enc() runs on EmptyCT {
+ 	  var RecWithDefault x := { field1 := 1, field2 := 4 };
+ 	  var octetstring enc := enc_RecWithDefault(x);
+ 	  var octetstring enc_exp := '000104'O;
+ 	  if (enc != enc_exp) {
+ 	    setverdict(fail, "Encoding failed. Got: ", enc, ", expected: ", enc_exp);
  	  }
  	  setverdict(pass);
  	}
@@ -3612,7 +3694,8 @@
  		execute(tc_example());
  		execute(tc_529017());
  		execute(tc_533061());
- 		execute(tc_default());
+ 		execute(tc_default_dec());
+ 		execute(tc_default_enc());
  	}
  	
 }
