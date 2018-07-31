@@ -4983,6 +4983,21 @@ error:
           (!ptb2->is_legacy() && ptb2->get_type() == PortTypeBody::PT_USER)) {
         note("This mapping is not done in translation mode");
       }
+    } else {
+      if (!config_op.compref1->get_expr_governor(Type::EXPECTED_DYNAMIC_VALUE)) {
+        if (statementtype == S_MAP) {
+          config_op.compref1->warning(
+            "Cannot determine the type of the component in the first parameter."
+            "The port translation will not work.");
+        }
+      }
+      if (!config_op.compref2->get_expr_governor(Type::EXPECTED_DYNAMIC_VALUE)) {
+        if (statementtype == S_MAP) {
+          config_op.compref2->warning(
+            "Cannot determine the type of the component in the second parameter."
+            "The port translation will not work.");
+        }
+      }
     }
   }
 
@@ -7617,22 +7632,7 @@ error:
   {
     expression_struct expr;
     Code::init_expr(&expr);
-    if (config_op.translate == true) {
-      if (!config_op.compref1->get_expr_governor(Type::EXPECTED_DYNAMIC_VALUE)) {
-        if (strcmp(opname, "map") == 0) {
-          config_op.compref1->warning(
-            "Cannot determine the type of the component in the first parameter."
-            "The port translation will not work.");
-        }
-      }
-      if (!config_op.compref2->get_expr_governor(Type::EXPECTED_DYNAMIC_VALUE)) {
-        if (strcmp(opname, "map") == 0) {
-          config_op.compref2->warning(
-            "Cannot determine the type of the component in the second parameter."
-            "The port translation will not work.");
-        }
-      }
-    }
+
     expr.expr = mputprintf(expr.expr, "TTCN_Runtime::%s_port(", opname);
     config_op.compref1->generate_code_expr(&expr);
     expr.expr = mputstr(expr.expr, ", ");
