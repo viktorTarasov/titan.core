@@ -19,6 +19,12 @@ make
 Do it with the subfolder name,
 e.g:
 make Text_EncDec
+make Semantic_Analyser
+
+or 
+
+for the subfolders of folder Semantic_Analyser:
+make Semantic_Analyser_Csaba
 
 Note: It is not the same as 
 >cd Text_EncDec; ./run_test
