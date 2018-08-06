@@ -29,6 +29,7 @@
 #include "encdec.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 #include "main.hh"
 #include "ttcn3/compiler.h"
@@ -268,13 +269,15 @@ void defEnumClass(const enum_def *edef, output_struct *output)
   src = mputprintf(src, "%s %s::str_to_enum(const char *str_par)\n"
     "{\n", qualified_enum_type, name);
   for (i = 0; i < edef->nElements; i++) {
-    if (edef->elements[i].text) {
-      src = mputprintf(src, "if (!strcmp(str_par, \"%s\") || !strcmp(str_par, \"%s\") || !strcmp(str_par, \"%s\")) return %s;\n"
-        "else ", edef->elements[i].text, edef->elements[i].descaped_text, edef->elements[i].dispname, edef->elements[i].name);
-    }
-    else {
+    if (!edef->elements[i].text) {
       src = mputprintf(src, "if (!strcmp(str_par, \"%s\")) return %s;\n"
         "else ", edef->elements[i].dispname, edef->elements[i].name);
+    } else if (!strcmp(edef->elements[i].text, edef->elements[i].descaped_text)) {
+      src = mputprintf(src, "if (!strcmp(str_par, \"%s\") || !strcmp(str_par, \"%s\")) return %s;\n"
+        "else ", edef->elements[i].text, edef->elements[i].dispname, edef->elements[i].name);
+    } else {
+      src = mputprintf(src, "if (!strcmp(str_par, \"%s\") || !strcmp(str_par, \"%s\") || !strcmp(str_par, \"%s\")) return %s;\n"
+        "else ", edef->elements[i].text, edef->elements[i].descaped_text, edef->elements[i].dispname, edef->elements[i].name);
     }
   }
   src = mputprintf(src, "return %s;\n"
