@@ -4828,7 +4828,7 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
         if (sdef->oerNrOrRootcomps != sdef->nElements) {
           src = mputprintf(src,
             "  if (has_extension) {\n"
-            "    c += %i;\n"
+            "    c |= %i;\n"
             "  }\n", 1 << 7);
         }
       }
@@ -4847,7 +4847,7 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
         }
         src = mputprintf(src,
           ") {\n"
-          "    c += %i;\n"
+          "    c |= %i;\n"
           "  }\n"
           , 1 << pos);
         if (pos == 0) {
@@ -4927,7 +4927,7 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
           src = mputprintf(src,
             "    if (has_present) {\n"
             "      has_present = FALSE;\n"
-            "      c += %i;\n", 1 << pos);
+            "      c |= %i;\n", 1 << pos);
           if (opt_elems != 0) {
             src = mputstr(src,
               "      char c2 = 0;\n");
@@ -4946,7 +4946,7 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
                 }
                 src = mputprintf(src,
                   ") {\n"
-                  "        c2 += %i;\n"
+                  "        c2 |= %i;\n"
                   "      }\n"
                   , 1 << pos2);
                 if (pos2 == 0) {
@@ -4985,7 +4985,7 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
           }
           src = mputprintf(src,
             ") {\n"
-            "      c += %i;\n"
+            "      c |= %i;\n"
             "      field_%s.OER_encode(%s_descr_, tmp_buf2);\n"
             "      encode_oer_length(tmp_buf2.get_len(), tmp_buf, FALSE);\n"
             "      tmp_buf.put_buf(tmp_buf2);\n"
@@ -5044,9 +5044,9 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
       if (sdef->elements[sdef->oerP[i]].isOptional || sdef->elements[sdef->oerP[i]].isDefault) {
         pos--;
           src = mputprintf(src,
-            "  if (uc[%i] & (1 << %i))\n"
+            "  if (uc[%i] & %i)\n"
             "    field_%s.OER_decode(%s_descr_, p_buf, p_oer);\n"
-            , ind, pos, sdef->elements[i].name
+            , ind, 1 << pos, sdef->elements[i].name
             , sdef->elements[sdef->oerP[i]].typedescrname);
           if (sdef->elements[sdef->oerP[i]].isOptional ||
               sdef->elements[sdef->oerP[i]].isDefault) {
