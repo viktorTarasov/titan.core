@@ -164,6 +164,8 @@ namespace Ttcn {
     /** Checks the embedded recursions within the values and template
      * instances of actual parameters. */
     void chk_recursions(ReferenceChain& refch);
+
+    void chk_immutability();
     /** Generates the C++ equivalent of the actual parameter list without
      * considering any aliasing between variables and 'in' parameters. */
     void generate_code_noalias(expression_struct *expr, FormalParList *p_fpl);

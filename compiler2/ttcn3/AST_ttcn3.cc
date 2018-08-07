@@ -10614,6 +10614,38 @@ namespace Ttcn {
       params[i]->chk_recursions(refch);
   }
 
+  void ActualParList::chk_immutability() {
+      size_t num = this->get_nof_pars();
+        for (size_t i = 0; i < num; ++i) {
+          const Ttcn::ActualPar *ap = this->get_par(i);
+        deeper:
+          switch (ap->get_selection()) {
+            case ActualPar::AP_ERROR:
+              break;
+            case ActualPar::AP_VALUE: ///< "in" value parameter
+              ap->get_Value()->chk_expr_immutability();
+              break;
+            case ActualPar::AP_TEMPLATE: ///< "in" template parameter
+              ap->get_TemplateInstance()->chk_immutability();
+              break;
+            case ActualPar::AP_REF: ///< out/inout value or template parameter
+              // TODO: test!
+              if(ap->get_Value())
+                ap->get_Value()->chk_expr_immutability();
+              if(ap->get_TemplateInstance())
+                ap->get_TemplateInstance()->chk_immutability();
+              break;
+            case ActualPar::AP_DEFAULT: { ///< created from the default value of a formal parameter
+              // TODO: test!
+              ap = ap->get_ActualPar();
+              goto deeper;
+              break;
+            }
+            // no default
+          } // switch actual par selection
+        }   // next
+    }
+
   void ActualParList::generate_code_noalias(expression_struct *expr, FormalParList *p_fpl)
   {
     size_t nof_pars = params.size();

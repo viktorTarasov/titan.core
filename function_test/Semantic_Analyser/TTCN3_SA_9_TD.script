@@ -832,6 +832,883 @@ module ModuleA {
 :exmp.
 
 .*---------------------------------------------------------------------*
+:h3.Functions->invoking functions from specific places
+.*---------------------------------------------------------------------*
+Requirement: Functions->invoking functions from specific places (16.1.4)
+:nl.Explanation:
+:nl.Invoking functions and some other features (e.g. get state of port or components)
+:nl.may have side effects or different return-value
+:nl.and it's can create unexpected changes on the actual snapshot.
+:nl.In these cases the compiler gives warnings.
+.*---------------------------------------------------------------------*
+:h4.TTCN3::Value::chk_expr_immutability: V_REFD->A_FUNCTION_RVAL
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+<TC - TTCN3::Value::chk_expr_immutability: V_REFD->A_FUNCTION_RVAL>
+<COMPILE>
+<VERDICT_LEAF FAIL>
+<MODULE TTCN M M.ttcn>
+module M {
+	type component C {};
+	function FB() return boolean { return true; }
+	testcase T() runs on C {
+		timer t := 5.0; t.start;
+		var boolean VB := FB();
+		alt {
+			[VB] t.timeout {}
+			[FB()] t.timeout {}
+		}
+	}
+}
+<END_MODULE>
+<RESULT IF_FAIL COUNT 1>
+(?im)\bwarning\b.+?\bFunction invocation\b.+?\bmay change the actual snapshot\b
+<END_RESULT>
+<END_TC>
+:exmp.
+
+.*---------------------------------------------------------------------*
+:h4.TTCN3::Value::chk_expr_immutability: V_REFD->A_EXT_FUNCTION_RVAL
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+<TC - TTCN3::Value::chk_expr_immutability: V_REFD->A_EXT_FUNCTION_RVAL>
+<COMPILE>
+<VERDICT_LEAF FAIL>
+<MODULE TTCN M M.ttcn>
+module M {
+	type component C {};
+	external function FB() return boolean;
+	testcase T() runs on C {
+		timer t := 5.0; t.start;
+		var boolean VB := FB();
+		alt {
+			[VB] t.timeout {}	// OK
+			[FB()] t.timeout {}	// NOT OK
+		}
+	}
+}
+<END_MODULE>
+<RESULT IF_FAIL COUNT 1>
+(?im)\bwarning\b.+?\bFunction invocation\b.+?\bmay change the actual snapshot\b
+<END_RESULT>
+<END_TC>
+:exmp.
+
+.*---------------------------------------------------------------------*
+:h4.TTCN3::Value::chk_expr_immutability: V_REFD->A_PAR_VAL_IN->FUZZY_EVAL
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+<TC - TTCN3::Value::chk_expr_immutability: V_REFD->A_PAR_VAL_IN->FUZZY_EVAL>
+<COMPILE>
+<VERDICT_LEAF FAIL>
+<MODULE TTCN M M.ttcn>
+module M {
+	type component C {};
+	testcase T(in @fuzzy boolean FFP_B) runs on C {
+		timer t := 5.0; t.start;
+		var boolean VB := FFP_B;
+		alt {
+			[VB] t.timeout {}		// OK
+			[FFP_B] t.timeout {}	// NOT OK
+		}
+	}
+}
+<END_MODULE>
+<RESULT IF_FAIL COUNT 1>
+(?im)\bwarning\b.+?\bFuzzy parameter\b.+?\bmay change \(during\) the actual snapshot\b
+<END_RESULT>
+<END_TC>
+:exmp.
+
+.*---------------------------------------------------------------------*
+:h4.TTCN3::Value::chk_expr_immutability: V_EXPR->OPTYPE_RND
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+<TC - TTCN3::Value::chk_expr_immutability: V_EXPR->OPTYPE_RND>
+<COMPILE>
+<VERDICT_LEAF FAIL>
+<MODULE TTCN M M.ttcn>
+module M {
+	type component C {};
+	testcase T() runs on C {
+		timer t := 5.0; t.start;
+		var float VF := rnd();
+		alt {
+			[VF < 1.0]  t.timeout {}	// OK
+			[rnd() < 1.0]  t.timeout {}	// NOT OK
+		}
+	}
+}
+<END_MODULE>
+<RESULT IF_FAIL COUNT 1>
+(?im)\bwarning\b.+?\bRandom number generation\b.+?\bchange the actual snapshot\b
+<END_RESULT>
+<END_TC>
+:exmp.
+
+.*---------------------------------------------------------------------*
+:h4.TTCN3::Value::chk_expr_immutability: V_EXPR->OPTYPE_RNDWITHVAL
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+<TC - TTCN3::Value::chk_expr_immutability: V_EXPR->OPTYPE_RNDWITHVAL>
+<COMPILE>
+<VERDICT_LEAF FAIL>
+<MODULE TTCN M M.ttcn>
+module M {
+	type component C {};
+	testcase T() runs on C {
+		timer t := 5.0; t.start;
+		var float VF := rnd(2.0);
+		alt {
+			[VF < 1.0]  t.timeout {}		// OK
+			[rnd(2.0) < 1.0]  t.timeout {}	// NOT OK
+		}
+	}
+}
+<END_MODULE>
+<RESULT IF_FAIL COUNT 1>
+(?im)\bwarning\b.+?\bRandom number generation\b.+?\bchange the actual snapshot\b
+<END_RESULT>
+<END_TC>
+:exmp.
+
+.*---------------------------------------------------------------------*
+:h4.TTCN3::Value::chk_expr_immutability: V_EXPR->OPTYPE_NOT
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+<TC - TTCN3::Value::chk_expr_immutability: V_EXPR->OPTYPE_NOT>
+<COMPILE>
+<VERDICT_LEAF FAIL>
+<MODULE TTCN M M.ttcn>
+module M {
+	type component C {};
+	function FB() return boolean { return true; }
+	testcase T() runs on C {
+		timer t := 5.0; t.start;
+		var boolean VB := FB();
+		alt {
+			[not VB]  t.timeout {}		// OK
+			[not FB()]  t.timeout {}	// NOT OK
+		}
+	}
+}
+<END_MODULE>
+<RESULT IF_FAIL COUNT 1>
+(?im)\bwarning\b.+?\bFunction invocation\b.+?\bmay change the actual snapshot\b
+<END_RESULT>
+<END_TC>
+:exmp.
+
+.*---------------------------------------------------------------------*
+:h4.TTCN3::Value::chk_expr_immutability: V_EXPR->OPTYPE_AND
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+<TC - TTCN3::Value::chk_expr_immutability: V_EXPR->OPTYPE_AND>
+<COMPILE>
+<VERDICT_LEAF FAIL>
+<MODULE TTCN M M.ttcn>
+module M {
+	type component C {};
+	function FB1() return boolean { return true; }
+	function FB2() return boolean { return true; }
+	testcase T() runs on C {
+		timer t := 5.0; t.start;
+		var boolean VB1 := FB1();
+		var boolean VB2 := FB2();
+		alt {
+			[VB1 and VB2]  t.timeout {}		// OK
+			[FB1() and FB2()]  t.timeout {}	// NOT OK
+		}
+	}
+}
+<END_MODULE>
+<RESULT IF_FAIL COUNT 2>
+(?im)\bwarning\b.+?\bFunction invocation\b.+?\bmay change the actual snapshot\b
+<END_RESULT>
+<END_TC>
+:exmp.
+
+.*---------------------------------------------------------------------*
+:h4.TTCN3::Value::chk_expr_immutability: V_EXPR->OPTYPE_EQ
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+<TC - TTCN3::Value::chk_expr_immutability: V_EXPR->OPTYPE_EQ>
+<COMPILE>
+<VERDICT_LEAF FAIL>
+<MODULE TTCN M M.ttcn>
+module M {
+	type component C {};
+	function FB1() return boolean { return true; }
+	function FB2() return boolean { return true; }
+	testcase T() runs on C {
+		timer t := 5.0; t.start;
+		var boolean VB1 := FB1();
+		var boolean VB2 := FB2();
+		alt {
+			[VB1 == VB2] t.timeout {}		// OK
+			[FB1() == FB2()] t.timeout {}	// NOT OK
+		}
+	}
+}
+<END_MODULE>
+<RESULT IF_FAIL COUNT 2>
+(?im)\bwarning\b.+?\bFunction invocation\b.+?\bmay change the actual snapshot\b
+<END_RESULT>
+<END_TC>
+:exmp.
+
+.*---------------------------------------------------------------------*
+:h4.TTCN3::Value::chk_expr_immutability: V_EXPR->OPTYPE_SUBSTR
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+<TC - TTCN3::Value::chk_expr_immutability: V_EXPR->OPTYPE_SUBSTR>
+<COMPILE>
+<VERDICT_LEAF FAIL>
+<MODULE TTCN M M.ttcn>
+module M {
+	type component C {};
+	function FI1() return integer { return 0; }
+	function FI2() return integer { return 1; }
+	function FS() return charstring { return "ABC"; }
+	testcase T() runs on C {
+		timer t := 5.0; t.start;
+		alt {
+			["A" == substr("ABC",0,1)]  t.timeout {}		// OK
+			["A" == substr(FS(),0,1)]  t.timeout {}			// NOT OK
+			["A" == substr("ABC",FI1(),1)]  t.timeout {}	// NOT OK
+			["A" == substr("ABC",0,FI2())]  t.timeout {}	// NOT OK
+		}
+	}
+}
+<END_MODULE>
+<RESULT IF_FAIL COUNT 3>
+(?im)\bwarning\b.+?\bFunction invocation\b.+?\bmay change the actual snapshot\b
+<END_RESULT>
+<END_TC>
+:exmp.
+
+.*---------------------------------------------------------------------*
+:h4.TTCN3::Value::chk_expr_immutability: V_EXPR->OPTYPE_REGEXP
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+<TC - TTCN3::Value::chk_expr_immutability: V_EXPR->OPTYPE_REGEXP>
+<COMPILE>
+<VERDICT_LEAF FAIL>
+<MODULE TTCN M M.ttcn>
+module M {
+	type component C {};
+	function FI() return integer { return 1; }
+	function FS1() return charstring { return "ABC"; }
+	function FS2() return charstring { return "?+"; }
+	testcase T() runs on C {
+		timer t := 5.0; t.start;
+		alt {
+			["ABC" == regexp("ABC",charstring:"?+",1)]  t.timeout {}	// OK
+			["ABC" == regexp(FS1(),charstring:"?+",1)]  t.timeout {}	// NOT OK
+			["ABC" == regexp("ABC",FS2(),1)]  t.timeout {}				// NOT OK
+			["ABC" == regexp("ABC",charstring:"?+",FI())]  t.timeout {} // NOT OK
+		}
+	}
+}
+<END_MODULE>
+<RESULT IF_FAIL COUNT 3>
+(?im)\bwarning\b.+?\bFunction invocation\b.+?\bmay change the actual snapshot\b
+<END_RESULT>
+<END_TC>
+:exmp.
+
+.*---------------------------------------------------------------------*
+:h4.TTCN3::Value::chk_expr_immutability: V_EXPR->OPTYPE_REPLACE
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+<TC - TTCN3::Value::chk_expr_immutability: V_EXPR->OPTYPE_REPLACE>
+<COMPILE>
+<VERDICT_LEAF FAIL>
+<MODULE TTCN M M.ttcn>
+module M {
+	type component C {};
+	function FI() return integer { return 1; }
+	function FS1() return charstring { return "ACC"; }
+	function FS2() return charstring { return "B"; }
+	testcase T() runs on C {
+		timer t := 5.0; t.start;
+		alt {  ["ABC" == replace("ACC",1,1,"B")]  t.timeout {} }	// OK
+		alt {  ["ABC" == replace(FS1(),1,1,"B")]  t.timeout {} }	// NOT OK
+		alt {  ["ABC" == replace("ACC",FI(),1,"B")]  t.timeout {} }	// NOT OK
+		alt {  ["ABC" == replace("ACC",1,FI(),"B")]  t.timeout {} }	// NOT OK
+		alt {  ["ABC" == replace("ACC",1,1,FS2())]  t.timeout {} }	// NOT OK
+	}
+}
+<END_MODULE>
+<RESULT IF_FAIL COUNT 4>
+(?im)\bwarning\b.+?\bFunction invocation\b.+?\bmay change the actual snapshot\b
+<END_RESULT>
+<END_TC>
+:exmp.
+
+.*---------------------------------------------------------------------*
+:h4.TTCN3::Value::chk_expr_immutability: V_EXPR->OPTYPE_ISVALUE ti1
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+<TC - TTCN3::Value::chk_expr_immutability: V_EXPR->OPTYPE_ISVALUE ti1>
+<COMPILE>
+<VERDICT_LEAF FAIL>
+<MODULE TTCN M M.ttcn>
+module M {
+	type component C {};
+  	type record R { integer field, boolean field2 optional }
+  	template R TR := {field1 := FI(), field2 := omit}
+  	template R PTR (boolean field_param) := {field1 := FI(), field2 := field_param}
+	function FB() return boolean { return true; }
+	function FI() return integer { return 1; }
+	testcase T() runs on C {
+		timer t := 5.0; t.start;
+		alt {
+			[isvalue(R:PTR(true))] t.timeout {} // OK
+			[isvalue(R:PTR(FB()))] t.timeout {} // NOT OK
+		}
+	}
+}
+<END_MODULE>
+<RESULT IF_FAIL COUNT 1>
+(?im)\bwarning\b.+?\bFunction invocation\b.+?\bmay change the actual snapshot\b
+<END_RESULT>
+<END_TC>
+:exmp.
+
+.*---------------------------------------------------------------------*
+:h4.TTCN3::Value::chk_expr_immutability: V_EXPR->OPTYPE_ISCHOSEN_V
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+<TC - TTCN3::Value::chk_expr_immutability: V_EXPR->OPTYPE_ISCHOSEN_V>
+<COMPILE>
+<VERDICT_LEAF FAIL>
+<MODULE TTCN M M.ttcn>
+module M {
+	type component C {};
+  	type union U { boolean option1, boolean option2 }
+	testcase T(in @fuzzy U FFP_U) runs on C {
+		timer t := 5.0; t.start;
+		var U VU := { option2 := true }
+		alt {  
+			[ischosen(VU.option1)] t.timeout {}		// OK
+      		[ischosen(FFP_U.option1)] t.timeout {} // NOT OK
+		}
+	}
+}
+<END_MODULE>
+<RESULT IF_FAIL COUNT 1>
+(?im)\bwarning\b.+?\bFuzzy parameter\b.+?\bmay change \(during\) the actual snapshot\b
+<END_RESULT>
+<END_TC>
+:exmp.
+
+.*---------------------------------------------------------------------*
+:h4.TTCN3::Value::chk_expr_immutability: V_EXPR->OPTYPE_ISCHOSEN_T
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+<TC - TTCN3::Value::chk_expr_immutability: V_EXPR->OPTYPE_ISCHOSEN_T>
+<COMPILE>
+<VERDICT_LEAF FAIL>
+<MODULE TTCN M M.ttcn>
+module M {
+	type component C {};
+  	type union U { boolean option1, boolean option2 }
+	template U UT := { option2 := true }
+	testcase T(in template @fuzzy U FFP_UT) runs on C {
+		timer t := 5.0; t.start;
+		alt {  
+			[ischosen(UT.option1)] t.timeout {}		// OK
+      		[ischosen(FFP_UT.option1)] t.timeout {} // NOT OK
+		}
+	}
+}
+<END_MODULE>
+<RESULT IF_FAIL COUNT 1>
+(?im)\bwarning\b.+?\bFuzzy parameter\b.+?\bmay change \(during\) the actual snapshot\b
+<END_RESULT>
+<END_TC>
+:exmp.
+
+.*---------------------------------------------------------------------*
+:h4.TTCN3::Value::chk_expr_immutability: V_EXPR->OPTYPE_MATCH
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+<TC - TTCN3::Value::chk_expr_immutability: V_EXPR->OPTYPE_MATCH>
+<COMPILE>
+<VERDICT_LEAF FAIL>
+<MODULE TTCN M M.ttcn>
+module M {
+	type component C {};
+  	function FI() return integer { return 1 }
+  	function FTI() return template integer { return ? }
+	template integer PTI (integer param1) := param1 * FI();	// NOT CHECKED
+	testcase T(in @fuzzy integer FFP_I, in template @fuzzy integer FFP_TI) runs on C {
+		timer t := 5.0; t.start;
+		var template integer VTI := FTI(); 
+		alt {
+			[match(1,VTI)] t.timeout {}		// OK
+			[match(1,PTI(1))] t.timeout {} 	// OK
+			[match(1,FTI())] t.timeout {} 	// NOT OK
+			[match(1,FFP_TI)] t.timeout {} 	// NOT OK
+			[match(FFP_I, 1)] t.timeout {} 	// NOT OK
+			[match(FI(),?)] t.timeout {} 	// NOT OK
+		}
+	}
+}
+<END_MODULE>
+<RESULT IF_FAIL COUNT 2>
+(?im)\bwarning\b.+?\bFunction invocation\b.+?\bmay change the actual snapshot\b
+<END_RESULT>
+<RESULT IF_FAIL COUNT 2>
+(?im)\bwarning\b.+?\bFuzzy parameter\b.+?\bmay change \(during\) the actual snapshot\b
+<END_RESULT>
+<END_TC>
+:exmp.
+
+.*---------------------------------------------------------------------*
+:h4.TTCN3::Value::chk_expr_immutability: V_EXPR->OPTYPE_COMP_RUNNING*
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+<TC - TTCN3::Value::chk_expr_immutability: V_EXPR->OPTYPE_COMP_RUNNING*>
+<COMPILE>
+<VERDICT_LEAF FAIL>
+<MODULE TTCN M M.ttcn>
+module M {
+	type component C {};
+	testcase T() runs on C {
+		timer t := 5.0; t.start;
+		var C PTC := C.create;
+		alt {
+			[PTC.running] t.timeout {}				// NOT OK
+			[any component.running] t.timeout {}	// NOT OK
+			[all component.running] t.timeout {}	// NOT OK
+		}
+	}
+}
+<END_MODULE>
+<RESULT IF_FAIL COUNT 3>
+(?im)\bwarning\b.+?\bState of component\(s\) may change during the actual snapshot\b
+<END_RESULT>
+<END_TC>
+:exmp.
+
+.*---------------------------------------------------------------------*
+:h4.TTCN3::Value::chk_expr_immutability: V_EXPR->OPTYPE_TMR_RUNNING*
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+<TC - TTCN3::Value::chk_expr_immutability: V_EXPR->OPTYPE_TMR_RUNNING*>
+<COMPILE>
+<VERDICT_LEAF FAIL>
+<MODULE TTCN M M.ttcn>
+module M {
+	type component C {};
+	testcase T() runs on C {
+		timer t := 5.0; t.start;
+		alt {
+			[t.running] t.timeout {}			// NOT OK
+			[any timer.running] t.timeout {}	// NOT OK
+		}
+	}
+}
+<END_MODULE>
+<RESULT IF_FAIL COUNT 2>
+(?im)\bwarning\b.+?\bState of timer\(s\) may change during the actual snapshot\b
+<END_RESULT>
+<END_TC>
+:exmp.
+
+.*---------------------------------------------------------------------*
+:h4.TTCN3::Value::chk_expr_immutability: V_EXPR->OPTYPE_CHECKSTATE*
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+<TC - TTCN3::Value::chk_expr_immutability: V_EXPR->OPTYPE_CHECKSTATE*>
+<COMPILE>
+<VERDICT_LEAF FAIL>
+<MODULE TTCN M M.ttcn>
+module M {
+	type port P message { inout integer }
+	type component C { port P p };
+	function FS() return charstring { return "Connected" }
+	testcase T() runs on C {
+		timer t := 5.0; t.start;
+		alt {
+			[(p.checkstate("Connected"))] t.timeout {}			// OK?
+			[(any port.checkstate("Connected"))] t.timeout {}	// OK?
+			[(p.checkstate(FS()))] t.timeout {}					// NOT OK
+			[(any port.checkstate(FS()))] t.timeout {}			// NOT OK
+		}
+	}
+}
+<END_MODULE>
+<RESULT IF_FAIL COUNT 2>
+(?im)\bwarning\b.+?\bFunction invocation\b.+?\bmay change the actual snapshot\b
+<END_RESULT>
+<END_TC>
+:exmp.
+
+.*---------------------------------------------------------------------*
+:h4.TTCN3::Value::chk_expr_immutability: V_EXPR->OPTYPE_HOSTID
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+<TC - TTCN3::Value::chk_expr_immutability: V_EXPR->OPTYPE_HOSTID>
+<COMPILE>
+<VERDICT_LEAF FAIL>
+<MODULE TTCN M M.ttcn>
+module M {
+	type component C {};
+	function FS() return charstring { return "ABC" }
+	function FI() return integer { return 3 }
+	testcase T() runs on C {
+		timer t := 5.0; t.start;
+		alt {
+			[hostid() == ""] t.timeout {}						// OK
+      		[hostid("") == ""] t.timeout {}						// OK
+      		[hostid(FS()) == ""] t.timeout {}					// NOT OK
+      		[hostid(substr("ABC",0,FI())) == ""] t.timeout {} 	// NOT OK
+		}
+	}
+}
+<END_MODULE>
+<RESULT IF_FAIL COUNT 2>
+(?im)\bwarning\b.+?\bFunction invocation\b.+?\bmay change the actual snapshot\b
+<END_RESULT>
+<END_TC>
+:exmp.
+
+.*---------------------------------------------------------------------*
+:h4.TTCN3::Value::chk_expr_immutability: V_EXPR->OPTYPE_ISTEMPLATEKIND
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+<TC - TTCN3::Value::chk_expr_immutability: V_EXPR->OPTYPE_ISTEMPLATEKIND>
+<COMPILE>
+<VERDICT_LEAF FAIL>
+<MODULE TTCN M M.ttcn>
+module M {
+	type component C {};
+	template boolean PT(boolean param1) := param1 and true;
+	function FS() return charstring { return "AnyValue" }
+	function FB() return boolean { return true }
+	testcase T() runs on C {
+		timer t := 5.0; t.start;
+		alt {
+      		[istemplatekind(PT(true),"AnyValue")] t.timeout {}	// OK
+      		[istemplatekind(PT(FB()),"AnyValue")] t.timeout {} 	// NOT OK
+      		[istemplatekind(PT(true),FS())] t.timeout {} 		// NOT OK
+		}
+	}
+}
+<END_MODULE>
+<RESULT IF_FAIL COUNT 2>
+(?im)\bwarning\b.+?\bFunction invocation\b.+?\bmay change the actual snapshot\b
+<END_RESULT>
+<END_TC>
+:exmp.
+
+.*---------------------------------------------------------------------*
+:h4.TTCN3::TemplateInstance::chk_immutability: template_body->chk_immutability
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+<TC - TTCN3::TemplateInstance::chk_immutability: template_body->chk_immutability>
+<COMPILE>
+<VERDICT_LEAF FAIL>
+<MODULE TTCN M M.ttcn>
+module M {
+	type port P message { inout integer }
+	type component C { port P p };
+	function FI() return integer { return 2 }
+	testcase T() runs on C {
+		alt {
+      		[] p.receive(integer:?) {} 		// OK
+      		[] p.receive(integer:FI()) {}	// NOT OK
+		}
+	}
+}
+<END_MODULE>
+<RESULT IF_FAIL COUNT 1>
+(?im)\bwarning\b.+?\bFunction invocation\b.+?\bmay change the actual snapshot\b
+<END_RESULT>
+<END_TC>
+:exmp.
+
+.*---------------------------------------------------------------------*
+:h4.TTCN3::TemplateInstance::chk_immutability: derived_reference->A_TEMPLATE
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+<TC - TTCN3::TemplateInstance::chk_immutability: derived_reference->A_TEMPLATE>
+<COMPILE>
+<VERDICT_LEAF FAIL>
+<MODULE TTCN M M.ttcn>
+module M {
+	type port P message { inout R }
+	type component C { port P p };
+	function FI() return integer { return 2 }
+	type record R { integer field1 }
+	template R PTR (integer param1) := { field1 := param1 };
+	testcase T(in @fuzzy integer FFP_I) runs on C {
+		alt {
+      		[] p.receive(R:?) {} 		// OK
+			[] p.receive(R: {field1 := 3}) {} 	 // OK
+			[] p.receive(R: modifies PTR(2) := {field1 := 3}) {} 	 	// OK
+			[] p.receive(R: modifies PTR(FI()) := {field1 := 3}) {} 	// NOT OK
+			[] p.receive(R: modifies PTR(FFP_I) := {field1 := 3}) {} 	// NOT OK
+		}
+	}
+}
+<END_MODULE>
+<RESULT IF_FAIL COUNT 1>
+(?im)\bwarning\b.+?\bFunction invocation\b.+?\bmay change the actual snapshot\b
+<END_RESULT>
+<RESULT IF_FAIL COUNT 1>
+(?im)\bwarning\b.+?\bFuzzy parameter\b.+?\bmay change \(during\) the actual snapshot\b
+<END_RESULT>
+<END_TC>
+:exmp.
+
+.*---------------------------------------------------------------------*
+:h4.TTCN3::TemplateInstance::chk_immutability: derived_reference->A_PAR_TEMPL_IN
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+<TC - TTCN3::TemplateInstance::chk_immutability: derived_reference->A_PAR_TEMPL_IN>
+<COMPILE>
+<VERDICT_LEAF FAIL>
+<MODULE TTCN M M.ttcn>
+module M {
+	type port P message { inout R }
+	type component C { port P p };
+	function FI() return integer { return 2 }
+	type record R { integer field1 }
+	testcase T(in template @fuzzy R FFP_TR) runs on C {
+		alt {
+			[] p.receive(R: modifies FFP_TR := {field1 := 3}) {} 	 // NOT OK
+		}
+	}
+}
+<END_MODULE>
+<RESULT IF_FAIL COUNT 1>
+(?im)\bwarning\b.+?\bFuzzy parameter\b.+?\bmay change \(during\) the actual snapshot\b
+<END_RESULT>
+<END_TC>
+:exmp.
+
+.*---------------------------------------------------------------------*
+:h4.TTCN3::Template::chk_immutability: templatetype->ALL_FROM/SPECIFIC_VALUE
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+<TC - TTCN3::Template::chk_immutability: templatetype->ALL_FROM/SPECIFIC_VALUE>
+<COMPILE>
+<VERDICT_LEAF FAIL>
+<MODULE TTCN M M.ttcn>
+module M {
+	type port P message { inout integer }
+	type component C { port P p };
+	function FI() return integer { return 2 }
+	
+	type record of integer RoI;
+
+	template RoI TRoI := {0, (2..5)}
+	template RoI PTRoI (integer param1) := {0, (param1..5)} 
+
+	testcase T(in template @fuzzy RoI FFP_TRoI) runs on C {
+		alt {
+			[] p.receive(integer: (all from TRoI)) {} 	 		// OK
+			[] p.receive(integer: (all from PTRoI(2))) {} 	 	// OK
+			[] p.receive(integer: (all from PTRoI(FI()))) {} 	// NOT OK
+			[] p.receive(integer: (all from FFP_TRoI)) {} 	// NOT OK
+		}
+	}
+}
+<END_MODULE>
+<RESULT IF_FAIL COUNT 1>
+(?im)\bwarning\b.+?\bFunction invocation\b.+?\bmay change the actual snapshot\b
+<END_RESULT>
+<RESULT IF_FAIL COUNT 1>
+(?im)\bwarning\b.+?\bFuzzy parameter\b.+?\bmay change \(during\) the actual snapshot\b
+<END_RESULT>
+<END_TC>
+:exmp.
+
+.*---------------------------------------------------------------------*
+:h4.TTCN3::Template::chk_immutability: templatetype->TEMPLATE_REFD
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+<TC - TTCN3::Template::chk_immutability: templatetype->TEMPLATE_REFD>
+<COMPILE>
+<VERDICT_LEAF FAIL>
+<MODULE TTCN M M.ttcn>
+module M {
+	type port P message { inout R }
+	type component C { port P p };
+	function FB() return boolean { return true }
+	type record R { boolean field1 }
+	template R PTR (boolean param1) := { field1 := param1 }
+	testcase T(in @fuzzy boolean FFP_B) runs on C {
+		alt {
+      		[] p.receive(PTR(false)) {}						// OK
+      		[] p.receive(PTR(FB())) {}						// NOT OK
+      		[] p.receive(PTR(FFP_B)) {}						// NOT OK
+      		[] p.receive(PTR(all component.running)) {}		// NOT OK
+		}
+	}
+}
+<END_MODULE>
+<RESULT IF_FAIL COUNT 1>
+(?im)\bwarning\b.+?\bFunction invocation\b.+?\bmay change the actual snapshot\b
+<END_RESULT>
+<RESULT IF_FAIL COUNT 1>
+(?im)\bwarning\b.+?\bFuzzy parameter\b.+?\bmay change \(during\) the actual snapshot\b
+<END_RESULT>
+<RESULT IF_FAIL COUNT 1>
+(?im)\bwarning\b.+?\bState of component\(s\) may change during the actual snapshot\b
+<END_RESULT>
+<END_TC>
+:exmp.
+
+
+.*---------------------------------------------------------------------*
+:h4.TTCN3::Template::chk_immutability: templatetype->TEMPLATE_REFD->A_PAR_TEMPL_IN->FUZZY_EVAL
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+<TC - TTCN3::Template::chk_immutability: templatetype->TEMPLATE_REFD->A_PAR_TEMPL_IN->FUZZY_EVAL>
+<COMPILE>
+<VERDICT_LEAF FAIL>
+<MODULE TTCN M M.ttcn>
+module M {
+	type port P message { inout boolean }
+	type component C { port P p };
+	testcase T(in template @fuzzy boolean FFP_TB) runs on C {
+		alt { [] p.receive(FFP_TB) {} }
+	}
+}
+<END_MODULE>
+<RESULT IF_FAIL COUNT 1>
+(?im)\bwarning\b.+?\bFuzzy parameter\b.+?\bmay change \(during\) the actual snapshot\b
+<END_RESULT>
+<END_TC>
+:exmp.
+
+.*---------------------------------------------------------------------*
+:h4.TTCN3::Template::chk_immutability: templatetype->INDEXED_TEMPLATE_LIST
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+<TC - TTCN3::Template::chk_immutability: templatetype->INDEXED_TEMPLATE_LIST>
+<COMPILE>
+<VERDICT_LEAF FAIL>
+<MODULE TTCN M M.ttcn>
+module M {
+	type port P message { inout RoI }
+	type component C { port P p };
+	type record of integer RoI;
+	function FI() return integer { return 2 }
+	testcase T() runs on C {
+		alt {
+      		[] p.receive(RoI: {[0]:=0,[2]:=(0,1,2)}) {}		// OK
+      		[] p.receive(RoI: {[0]:=0,[2]:=(0,1,FI())}) {}	// NOT OK
+      		[] p.receive(RoI: {[0]:=0,[FI()]:=(0,1,2)}) {}	// NOT OK
+		}
+	}
+}
+<END_MODULE>
+<RESULT IF_FAIL COUNT 2>
+(?im)\bwarning\b.+?\bFunction invocation\b.+?\bmay change the actual snapshot\b
+<END_RESULT>
+<RESULT IF_FAIL COUNT 0>
+(?im)\bwarning\b.+?\bFuzzy parameter\b.+?\bmay change \(during\) the actual snapshot\b
+<END_RESULT>
+<END_TC>
+:exmp.
+
+.*---------------------------------------------------------------------*
+:h4.TTCN3::Template::chk_immutability: templatetype->SUBSET_MATCH
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+<TC - TTCN3::Template::chk_immutability: templatetype->SUBSET_MATCH>
+<COMPILE>
+<VERDICT_LEAF FAIL>
+<MODULE TTCN M M.ttcn>
+module M {
+	type port P message { inout SoI }
+	type component C { port P p };
+	type set of integer SoI;
+	function FI() return integer { return 2 }
+	testcase T() runs on C {
+		alt {
+      		[] p.receive(SoI: subset(0,1,2,3)) {}		// OK
+      		[] p.receive(SoI: subset(0,FI(),2,3)) {}	// NOT OK
+		}
+	}
+}
+<END_MODULE>
+<RESULT IF_FAIL COUNT 1>
+(?im)\bwarning\b.+?\bFunction invocation\b.+?\bmay change the actual snapshot\b
+<END_RESULT>
+<RESULT IF_FAIL COUNT 0>
+(?im)\bwarning\b.+?\bFuzzy parameter\b.+?\bmay change \(during\) the actual snapshot\b
+<END_RESULT>
+<END_TC>
+:exmp.
+
+.*---------------------------------------------------------------------*
+:h4.TTCN3::Template::chk_immutability: templatetype->VALUE_RANGE
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+<TC - TTCN3::Template::chk_immutability: templatetype->VALUE_RANGE>
+<COMPILE>
+<VERDICT_LEAF FAIL>
+<MODULE TTCN M M.ttcn>
+module M {
+	type port P message { inout RoI }
+	type component C { port P p };
+	type record of integer RoI;
+	function FI() return integer { return 2 }
+	testcase T() runs on C {
+		alt {
+      		[] p.receive(RoI: {(0..10)}) {}		// OK
+      		[] p.receive(RoI: {(0..FI())}) {}	// NOT OK
+      		[] p.receive(RoI: {(FI()..10)}) {}	// NOT OK
+		}
+	}
+}
+<END_MODULE>
+<RESULT IF_FAIL COUNT 2>
+(?im)\bwarning\b.+?\bFunction invocation\b.+?\bmay change the actual snapshot\b
+<END_RESULT>
+<RESULT IF_FAIL COUNT 0>
+(?im)\bwarning\b.+?\bFuzzy parameter\b.+?\bmay change \(during\) the actual snapshot\b
+<END_RESULT>
+<END_TC>
+:exmp.
+
+.*---------------------------------------------------------------------*
+:h4.TTCN3::Template::chk_immutability: templatetype->TEMPLATE_CONCAT
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+<TC - TTCN3::Template::chk_immutability: templatetype->TEMPLATE_CONCAT>
+<COMPILE>
+<VERDICT_LEAF FAIL>
+<MODULE TTCN M M.ttcn>
+module M {
+	type port P message { inout SoI }
+	type component C { port P p };
+	type set of integer SoI;
+	function FI() return integer { return 2 }
+	testcase T() runs on C {
+		alt {
+      		// [] p.receive(SoI: ({0,2} & {1})) {}	// SYNTAX ERROR
+		}
+	}
+}
+<END_MODULE>
+<RESULT IF_FAIL COUNT 0>
+(?im)\bwarning\b.+?\bFunction invocation\b.+?\bmay change the actual snapshot\b
+<END_RESULT>
+<RESULT IF_FAIL COUNT 0>
+(?im)\bwarning\b.+?\bFuzzy parameter\b.+?\bmay change \(during\) the actual snapshot\b
+<END_RESULT>
+<END_TC>
+:exmp.
+
+.*---------------------------------------------------------------------*
 :h3.Altsteps->runs on clause SA-9/9
 .*---------------------------------------------------------------------*
 Requirement: Altsteps->runs on clause (16.1.0).

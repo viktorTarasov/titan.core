@@ -1,0 +1,228 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v2.0
+ * which accompanies this distribution, and is available at
+ * https://www.eclipse.org/org/documents/epl-2.0/EPL-2.0.html
+ *
+ * Contributors:
+ *   Aron Simon
+ *
+ ******************************************************************************/
+
+module InvokingFunctionFromSpecificPlaces_SW { //^In TTCN-3 module//
+
+  modulepar boolean mp := true;
+
+  type component MTC { port P p }
+  type component PTC { }
+
+  type record R { integer field, boolean field2 optional }
+  type record SR { R field }
+
+  type union U {integer i1, integer i2}
+  template U TU := { i1 := 1 }
+
+  type port P message { inout R, SR, RoI, SoI }
+
+  template R T := {field := fi(), field2 := omit}
+  template R PT (boolean field_param) := {field := fi(), field2 := field_param}
+  template R PTD (boolean field_param := false) := {field := fi(), field2 := field_param}
+  template SR ST := {field := T}
+  template SR PST (template R field_param) := { field := field_param}
+
+  type record of integer RoI;
+  template RoI roi := {1,2,3,(4..6)}
+  template RoI proi (integer ip) := {1,2,3,ip} 
+
+  type set of integer SoI;
+
+
+  function fb() return boolean { return true; }
+  function fi() return integer { return 1; }
+  function fs() return charstring { return "abcabc"; }
+  external function ef() return boolean;
+
+  testcase                        //^In testcase definition//
+  tc(in boolean fp,
+     in @fuzzy boolean ffp,
+     in template @fuzzy R ftfp,
+     in template @fuzzy U futfp,
+     in @fuzzy U fuvfp,
+     in @fuzzy RoI froifp
+     )
+  runs on MTC {
+    var boolean vb := true;
+    var @fuzzy boolean fvb := true;
+    var PTC ptc := PTC.create;
+
+    var template R VT := { field := fi() }
+    var U VU := { i1 := 1 }
+
+
+    timer t := 1.0; t.start; 
+
+    alt {                         //^In alt construct//
+      /* A_MODULEPAR */
+      [mp]  t.timeout {}
+
+      /* A_VAR */
+      [vb]  t.timeout {}
+
+      /* A_FUNCTION_RVAL */
+      [fb()] t.timeout {}          //^In guard expression// //^warning\: Function invocation// 
+    
+      /* A_EXT_FUNCTION_RVAL */
+      [ef()] t.timeout {}         //^In guard expression// //^warning\: Function invocation// 
+    
+      /* A_PAR_VAL_IN */
+      [fp]  t.timeout {}
+
+      /* A_PAR_VAL_IN @fuzzy */
+      [ffp]  t.timeout {}         //^In guard expression// //^warning\: Fuzzy parameter//
+
+      /* OPTYPE_RND */
+      [rnd() < 1.0]  t.timeout {} //^In guard expression// //Random number generation//
+
+      /* OPTYPE_RNDWITHVAL */
+      [rnd(5.0) < 1.0]  t.timeout {} //^In guard expression// //Random number generation//
+    
+      /* OPTYPE_ with v1 */
+      [+(fi()) < 5] t.timeout {}          //^In guard expression// //^warning\: Function invocation// 
+      [-(fi()) < 5] t.timeout {}          //^In guard expression// //^warning\: Function invocation// 
+      [not fb()]    t.timeout {}          //^In guard expression// //^warning\: Function invocation// 
+      [int2float(fi()) < 5.0] t.timeout {}          //^In guard expression// //^warning\: Function invocation// 
+      
+
+      /* OPTYPE_ with v1 v2 */
+      [fi() + 1 < 5] t.timeout {}          //^In guard expression// //^warning\: Function invocation// 
+      [fi() - 1 <= 5] t.timeout {}          //^In guard expression// //^warning\: Function invocation// 
+      [fi() + 1 == 5] t.timeout {}          //^In guard expression// //^warning\: Function invocation// 
+      [fi() / 1 > 5] t.timeout {}          //^In guard expression// //^warning\: Function invocation// 
+      [fi() * 1 >= 5] t.timeout {}          //^In guard expression// //^warning\: Function invocation// 
+
+      /* OPTYPE_SUBSTR */
+      ["abc" == substr("abcabc",0,3)] t.timeout {}
+      ["abc" == substr("abcabc",0,fi())] t.timeout {}          //^In guard expression// //^warning\: Function invocation// 
+      ["abc" == substr("abcabc",fi(),3)] t.timeout {}          //^In guard expression// //^warning\: Function invocation// 
+      ["abc" == substr(fs(),0,3)] t.timeout {}          //^In guard expression// //^warning\: Function invocation// 
+
+      /* OPTYPE_REGEXP */
+      ["abc" == regexp(fs(),charstring:"?+",1)] t.timeout {}          //^In guard expression// //^warning\: Function invocation// 
+      ["abc" == regexp("asd",fs(),1)] t.timeout {}          //^In guard expression// //^warning\: Function invocation// 
+      ["abc" == regexp("asd",charstring:"?+",fi())] t.timeout {}          //^In guard expression// //^warning\: Function invocation// 
+
+      /* OPTYPE_REPLACE */
+      ["abc" == replace("acc",1,1,"b")] t.timeout {}
+      ["abc" == replace(fs(),1,1,"b")] t.timeout {}          //^In guard expression// //^warning\: Function invocation// 
+      ["abc" == replace("acc",fi(),1,"b")] t.timeout {}          //^In guard expression// //^warning\: Function invocation// 
+      ["abc" == replace("acc",1,fi(),"b")] t.timeout {}          //^In guard expression// //^warning\: Function invocation// 
+      ["abc" == replace("acc",1,1,fs())] t.timeout {}          //^In guard expression// //^warning\: Function invocation// 
+
+      /* OPTYPE_ISVALUE */
+      [isvalue(R:T)] t.timeout {} 
+      [isvalue(R:PT(fb()))] t.timeout {}          //^In guard expression// //^warning\: Function invocation// 
+
+      /* OPTYPE_ISCHOSEN_T */
+      [ischosen(TU.i1)] t.timeout {}
+      [ischosen(futfp.i1)] t.timeout {}          //^In guard expression//  //^warning\: Fuzzy parameter// 
+
+      /* OPTYPE_ISCHOSEN_V */
+      [ischosen(VU.i1)] t.timeout {}
+      [ischosen(fuvfp.i1)] t.timeout {}          //^In guard expression//  //^warning\: Fuzzy parameter// 
+
+      /* OPTYPE_MATCH VALUE_RANGE (Template::chk_immutability()) */
+      [match(2,(fi()..3))] t.timeout {}          //^In guard expression// //^warning\: Function invocation// 
+      [match(2,(1..fi()))] t.timeout {}          //^In guard expression// //^warning\: Function invocation// 
+      [match(fi(),(1..3))] t.timeout {}          //^In guard expression// //^warning\: Function invocation// 
+
+      /* OPTYPE_COMP_RUNNING_ALL */
+      [all component.running] t.timeout {} //^In guard expression// //^warning\: State of component//
+      /* OPTYPE_COMP_RUNNING_ANY */
+      [any component.running] t.timeout {} //^In guard expression// //^warning\: State of component//
+      /* OPTYPE_COMP_RUNNING */
+      [ptc.running] t.timeout {} //^In guard expression// //^warning\: State of component//
+
+      /* OPTYPE_TMR_RUNNING_ANY */
+      [any timer.running] t.timeout {} //^In guard expression// //^warning\: State of timer//
+      /* OPTYPE_TMR_RUNNING */
+      [t.running] t.timeout {} //^In guard expression// //^warning\: State of timer//
+
+      /* OPTYPE_CHECKSTATE_ANY */
+      [(any port.checkstate("Connected"))] t.timeout {}
+      [(any port.checkstate(fs()))] t.timeout {} //^In guard expression//  //^warning\: Function invocation//
+      /* OPTYPE_CHECKSTATE_ALL */ 
+      [(all port.checkstate(fs()))] t.timeout {} //^In guard expression//  //^warning\: Function invocation// 
+
+      /* OPTYPE_HOSTID */
+      [hostid() == ""] t.timeout {}
+      [hostid("") == ""] t.timeout {}
+      [hostid(fs()) == ""] t.timeout {} //^In guard expression//  //^warning\: Function invocation//
+      [hostid(substr("abcabc",0,fi())) == ""] t.timeout {} //^In guard expression//  //^warning\: Function invocation// 
+
+      /* OPTYPE_ISTEMPLATEKIND */
+      [istemplatekind(PT(fb()),"AnyValue")] t.timeout {} //^In guard expression//  //^warning\: Function invocation// 
+      [istemplatekind(PT(true),fs())] t.timeout {} //^In guard expression//  //^warning\: Function invocation// 
+
+      /* correct use of receive */
+      [] p.receive(R:?) {}
+      [] p.receive(R:T) {}
+      [] p.receive(T) {}
+
+      /* A_PAR_TEMPL_IN @fuzzy */
+      [] p.receive(ftfp) {} //^In guard operation// //^In receive statement// //^warning\: Fuzzy parameter//
+      /* +inline template */
+      [] p.receive(SR:{field:=ftfp}) {} //^In guard operation// //^In receive statement// //^warning\: Fuzzy parameter//
+
+      /* A_FUNCTION_RVAL */
+      [] p.receive(R:{field:=fi(), field2:=true}) {} //^In guard operation// //^In receive statement// //^warning\: Function invocation//   
+    
+      [] p.receive(PTD(false)) {}
+      [] p.receive(PTD()) {}
+
+      [] p.receive(VT) {}
+
+      /* modifies base_template, (NAMED_TEMPLATE_LIST) */
+      [] p.receive(R: modifies VT := { field := 2 }) {}
+      [] p.receive(R: modifies PT(false) := { field := 2 }) {}
+      [] p.receive(R: modifies PT(fb()) := { field := 2 }) {}//^In guard operation// //^In receive statement// //^warning\: Function invocation//
+      [] p.receive(R: modifies ftfp := { field := 2 }) {} //^In guard operation// //^In receive statement// //^warning\: Fuzzy parameter//
+      /* modifies template_body */
+      [] p.receive(R: modifies VT := ftfp) {} //^In guard operation// //^In receive statement// //^warning\: Fuzzy parameter//
+
+      /* ALL_FROM, (SPECIFIC_VALUE) */
+      [] p.receive(R:{field := (all from roi), field2 := true }) {}
+      [] p.receive(R:{field := (all from froifp), field2 := true }) {} //^In guard operation// //^In receive statement// //^warning\: Fuzzy parameter//
+      [] p.receive(R:{field := (all from proi(3)), field2 := true }) {} 
+      [] p.receive(R:{field := (all from proi(fi())), field2 := true }) {} //^In guard operation// //^In receive statement// //^warning\: Function invocation//
+
+      /* TEMPLATE_REFD */
+      [] p.receive(PT(false)) {}
+      [] p.receive(PT(fb())) {} //^In guard operation// //^In receive statement// //^warning\: Function invocation//
+      [] p.receive(SR:PST(PT(fb()))) {} //^In guard operation// //^In receive statement// //^warning\: Function invocation//
+      [] p.receive(SR:PST(PT(all component.running))) {} //^In guard operation// //^In receive statement// //^warning\: State of component//
+      
+      /* TEMPLATE_REFD @fuzzy */
+      [] p.receive(SR:PST(ftfp)) {} //^In guard operation// //^In receive statement// //^warning\: Fuzzy parameter//
+ 
+      /* INDEXED_TEMPLATE_LIST */
+      [] p.receive(RoI: {[0]:=0,[2]:=(0,1,2)}) {}
+      [] p.receive(RoI: {[0]:=0,[2]:=(0,1,fi())}) {} //^In guard operation// //^In receive statement// //^warning\: Function invocation//
+
+      /* SUBSET_MATCH */
+      [] p.receive(SoI: subset(0,1,2,3)) {}
+      [] p.receive(SoI: subset(0,fi(),2,3)) {} //^In guard operation// //^In receive statement// //^warning\: Function invocation//
+      
+      /* VALUE_RANGE */
+      [] p.receive(RoI: {(0..10)}) {}
+      [] p.receive(RoI: {(0..fi())}) {} //^In guard operation// //^In receive statement// //^warning\: Function invocation//
+      [] p.receive(RoI: {(fi()..10)}) {} //^In guard operation// //^In receive statement// //^warning\: Function invocation//
+
+      /* TEMPLATE_CONCAT */
+      // [] p.receive(SoI: {0,2} & {1}) {}
+    }
+  }
+}
+
+
+// get_reference()->get_refd_assignment()->chk_immutability(get_reference()->get_dispname().c_str());

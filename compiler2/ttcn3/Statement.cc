@@ -4089,6 +4089,11 @@ error:
       chk_index_redirect(port_op.r.redirect.index,
         t_ass != NULL ? t_ass->get_Dimensions() : NULL, port_op.anyfrom, "port");
     }
+
+    // checking deterministic
+    if (port_op.r.rcvpar) {
+      port_op.r.rcvpar->chk_immutability();
+    }
   }
 
   void Statement::chk_getcall()
@@ -12749,6 +12754,7 @@ error:
       if (expr) {
 	Error_Context cntxt(expr, "In guard expression");
         expr->chk_expr_bool(Type::EXPECTED_DYNAMIC_VALUE);
+        expr->chk_expr_immutability();
       }
       {
 	Error_Context cntxt(stmt, "In guard operation");
@@ -12760,6 +12766,7 @@ error:
       if (expr) {
 	Error_Context cntxt(expr, "In guard expression");
         expr->chk_expr_bool(Type::EXPECTED_DYNAMIC_VALUE);
+        expr->chk_expr_immutability();
       }
       {
 	Error_Context cntxt(ref, "In guard statement");
@@ -12779,6 +12786,7 @@ error:
       if (expr) {
 	Error_Context cntxt(expr, "In guard expression");
         expr->chk_expr_bool(Type::EXPECTED_DYNAMIC_VALUE);
+        expr->chk_expr_immutability();
       }
       {
         if (!invoke.t_list) return; //already_checked
