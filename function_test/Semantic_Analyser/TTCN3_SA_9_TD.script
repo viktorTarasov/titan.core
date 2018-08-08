@@ -1466,6 +1466,33 @@ module M {
 :exmp.
 
 .*---------------------------------------------------------------------*
+:h4.TTCN3::TemplateInstance::chk_immutability: derived_reference->A_TEMPLATE non parametrized
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+<TC - TTCN3::TemplateInstance::chk_immutability: derived_reference->A_TEMPLATE non parametrized>
+<COMPILE>
+<VERDICT_LEAF FAIL>
+<MODULE TTCN M M.ttcn>
+module M {
+	type port P message { inout R }
+	type component C { port P p };
+	type record R { integer field1 }
+    template R TR := { field := FI() }
+	testcase T(in template @fuzzy R FFP_TR) runs on C {
+		alt {
+			[] p.receive(R: modifies TR := {field1 := 3}) {} // OK
+			[] p.receive(R: modifies FFP_TR := {field1 := 3}) {} // NOT OK
+		}
+	}
+}
+<END_MODULE>
+<RESULT IF_FAIL COUNT 1>
+(?im)\bwarning\b.+?\bFuzzy parameter\b.+?\bmay change \(during\) the actual snapshot\b
+<END_RESULT>
+<END_TC>
+:exmp.
+
+.*---------------------------------------------------------------------*
 :h4.TTCN3::TemplateInstance::chk_immutability: derived_reference->A_PAR_TEMPL_IN
 .*---------------------------------------------------------------------*
 :xmp tab=0.

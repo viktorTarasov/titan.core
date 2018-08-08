@@ -5795,7 +5795,8 @@ compile_time:
           case Assignment::A_EXT_FUNCTION_RTEMP: /**< ext. func that returns a template (TTCN-3) */
             break;
           case Assignment::A_TEMPLATE:       /**< template (TTCN-3) */
-            ((Reference*)derived_reference)->get_parlist()->chk_immutability();
+            if(((Reference*)derived_reference)->get_parlist())
+              ((Reference*)derived_reference)->get_parlist()->chk_immutability();
             break;
           case Assignment::A_PAR_VAL:        /**< formal parameter (value) (TTCN-3) */
           case Assignment::A_PAR_VAL_IN:     /**< formal parameter (in value) (TTCN-3) */
