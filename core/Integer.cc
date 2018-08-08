@@ -1800,7 +1800,11 @@ int INTEGER::OER_encode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf) c
     size_t len = 1;
     // No length restriction on integer
     if (p_td.oer->bytes == -1) {
-      ulong_val >>= 7;
+      if (p_td.oer->signed_) {
+        ulong_val >>= 7;
+      } else {
+        ulong_val >>= 8;
+      }
       while (ulong_val != 0) {
         len++;
         ulong_val >>= 8;
