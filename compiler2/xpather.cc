@@ -3130,7 +3130,7 @@ static tpd_result process_tpd_internal(const char **p_tpd_name, char *tpdName, c
 
   // (argc - optind) is the number of non-option arguments (assumed to be files)
   // given on the command line.
-  int new_argc = local_argc - local_optind + files.size() + base_files.size();
+  size_t new_argc = local_argc - local_optind + files.size() + base_files.size();
   char ** new_argv = (char**)Malloc(sizeof(char*) * new_argc);
 
   size_t n = 0;
@@ -3259,7 +3259,7 @@ static tpd_result process_tpd_internal(const char **p_tpd_name, char *tpdName, c
     *p_argc = new_argc;
     *p_optind = 0;
   } else {
-    for (int i = 0; i < new_argc; ++i) {
+    for (size_t i = 0; i < new_argc; ++i) {
       Free(new_argv[i]);
     }
     Free(new_argv);
