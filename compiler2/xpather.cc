@@ -3133,13 +3133,13 @@ static tpd_result process_tpd_internal(const char **p_tpd_name, char *tpdName, c
   int new_argc = local_argc - local_optind + files.size() + base_files.size();
   char ** new_argv = (char**)Malloc(sizeof(char*) * new_argc);
 
-  int n = 0;
+  size_t n = 0;
 
   // First, copy the filenames gathered from the TPD
   //
   // We symlink the files into the working directory
   // and pass only the filename to the makefile generator
-  for (int nf = files.size(); n < nf; ++n) {
+  for (size_t nf = files.size(); n < nf; ++n) {
     const char *fn = files.get_nth_elem(n); // relativeURI to the TPD location
     autostring  dir_n (get_dir_from_path (fn));
     autostring  file_n(get_file_from_path(fn));
