@@ -431,7 +431,7 @@ string TSTLogger::post_message(std::map<std::string,std::string> req_params, con
     client.close_connection();
     return response;
   }
-  catch (SocketException exc) {
+  catch (SocketException &exc) {
     cerr << this->name_ << ": " << "HTTP error: " << exc.getMessage() << " (" << exc.getReason() << ")\n";
   }
   return "";
