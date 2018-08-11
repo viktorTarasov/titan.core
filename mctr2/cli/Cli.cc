@@ -1157,7 +1157,7 @@ boolean Cli::conditionHolds(waitStateEnum askedState)
 
 int Cli::getHostIndex(const char* hostname)
 {
-  int hostname_len = strlen(hostname);
+  size_t hostname_len = strlen(hostname);
   int index, found = -1;
   for (index = 0; ; index++) {
     const mctr::host_struct *host =
