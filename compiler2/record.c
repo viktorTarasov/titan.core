@@ -3640,6 +3640,11 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
   src = mputstr(src,
       "}\n\n");
 
+  def = mputstr(def, "const TTCN_Typedescriptor_t* get_descriptor() const;\n");
+  src = mputprintf(src,
+    "const TTCN_Typedescriptor_t* %s::get_descriptor() const { return &%s_descr_; }\n",
+    name, name);
+
   /* = operator */
   def = mputprintf(def, "  %s& operator=(const %s& other_value);\n", name, name);
   src = mputprintf(src, "%s& %s::operator=(const %s& other_value)\n"
