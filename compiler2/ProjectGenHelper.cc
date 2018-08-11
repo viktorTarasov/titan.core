@@ -607,7 +607,7 @@ bool ProjectGenHelper::isCPPSourceFile(const char* fileName) const
   if (std::string::npos == pos) return false;
   const std::string EXT_CC("cc");
   const std::string EXT_CPP("cpp");
-  int length = 0;
+  size_t length = 0;
   if (std::string::npos != fnStr.find (EXT_CC, pos + 1))
     length = EXT_CC.size();
   else if (std::string::npos != fnStr.find (EXT_CPP, pos + 1))
@@ -627,7 +627,7 @@ bool ProjectGenHelper::isCPPHeaderFile(const char* fileName) const
   const std::string EXT_HPP("hpp");
   const std::string EXT_HH("hh");
   const std::string EXT_H("h");
-  int length = 0;
+  size_t length = 0;
   if (std::string::npos != fnStr.find (EXT_HH, pos + 1))
     length = EXT_HH.size();
   else if (std::string::npos != fnStr.find (EXT_HPP, pos + 1))
@@ -647,7 +647,7 @@ bool ProjectGenHelper::isTtcnPPFile(const char* fileName) const
   size_t pos = fnStr.find_last_of('.');
   if (std::string::npos == pos) return false;
   const std::string EXT_TTCNPP("ttcnpp");
-  int length = 0;
+  size_t length = 0;
   if (std::string::npos != fnStr.find (EXT_TTCNPP, pos + 1))
     length = EXT_TTCNPP.size();
 
