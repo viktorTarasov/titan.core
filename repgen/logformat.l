@@ -36,7 +36,7 @@ static size_t indent_depth = 4;
 static FILE *output_file = NULL;
 static int separate_files = 0;
 static int format_tab_newline = 1;
-static int replaced_tab_newline = 0;
+static size_t replaced_tab_newline = 0;
 
 static size_t indent_level = 0;
 static enum { OPEN_BRACE, CLOSE_BRACE, COMMA, OTHER, OTHER_WS }
@@ -129,7 +129,7 @@ static void write_failure(void)
 }
 
 //Solaris does not have strndup
-char * my_strndup(const char *string, const int len){
+char * my_strndup(const char *string, const size_t len){
   char* dup = (char*)malloc(len + 1);
   strncpy(dup, string, len);
   dup[len] = '\0';
@@ -137,12 +137,12 @@ char * my_strndup(const char *string, const int len){
 }
 
 char *
-str_replace ( const char *string, const int len, const char *substr, const char *replacement ){
+str_replace ( const char *string, const size_t len, const char *substr, const char *replacement ){
   char *tok = NULL;
   char *newstr = NULL;
   char *oldstr = NULL;
   char *head = NULL;
-  int length_diff = strlen(substr) - strlen(replacement);
+  size_t length_diff = strlen(substr) - strlen(replacement);
  
   /* if either substr or replacement is NULL, duplicate string a let caller handle it */
   if ( substr == NULL || replacement == NULL ) return my_strndup (string, len);
