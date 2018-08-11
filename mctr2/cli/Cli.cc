@@ -520,6 +520,7 @@ void Cli::cmtcCallback(const char *arguments)
   case mctr::MC_LISTENING_CONFIGURED:
     puts("Waiting for HC to connect...");
     waitMCState(WAIT_HC_CONNECTED);
+    //intentional fall through
   case mctr::MC_HC_CONNECTED:
     MainController::configure(mycfg.config_read_buffer);
     waitMCState(WAIT_ACTIVE);
@@ -527,6 +528,7 @@ void Cli::cmtcCallback(const char *arguments)
       puts("Error during initialization. Cannot create MTC.");
       break;
     }
+    //intentional fall through
   case mctr::MC_ACTIVE:
     MainController::create_mtc(hostIndex);
     waitMCState(WAIT_MTC_CREATED);
