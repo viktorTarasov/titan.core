@@ -9983,10 +9983,10 @@ void Value::chk_expr_operand_execute_refd(Value *v1,
               }
               return 0;
             } else {
-              Value* temp = u.val_vs->get_v_byIndex(index);
+              Value* temp = u.val_vs->get_v_byIndex((size_t)index);
               if(!silent && temp->get_value_refd_last()->get_valuetype() == V_NOTUSED)
                 temp->error("Not used symbol is not allowed in this context");
-              return u.val_vs->get_v_byIndex(index);
+              return u.val_vs->get_v_byIndex((size_t)index);
             }
           } else {
             // Search the appropriate constant index.
@@ -10032,7 +10032,7 @@ void Value::chk_expr_operand_execute_refd(Value *v1,
               }
               return 0;
             } else {
-              Value* temp = u.val_vs->get_v_byIndex(index);
+              Value* temp = u.val_vs->get_v_byIndex((size_t)index);
               if(!silent && temp->get_value_refd_last()->get_valuetype() == V_NOTUSED)
                 temp->error("Not used symbol is not allowed in this context");
               return temp;
@@ -10069,7 +10069,7 @@ void Value::chk_expr_operand_execute_refd(Value *v1,
             if (index < 0 ||
                 index >= static_cast<Int>(u.val_vs->get_nof_vs()))
               return 0;
-            else return u.val_vs->get_v_byIndex(index);
+            else return u.val_vs->get_v_byIndex((size_t)index);
           } else {
             if (index < 0) return 0;
             for (size_t i = 0; i < u.val_vs->get_nof_ivs(); i++) {
@@ -10077,7 +10077,7 @@ void Value::chk_expr_operand_execute_refd(Value *v1,
                 ->get_value_refd_last();
               if (iv_index->get_valuetype() != V_INT) continue;
               if (iv_index->get_val_Int()->get_val() == index)
-                return u.val_vs->get_iv_byIndex(index)->get_value();
+                return u.val_vs->get_iv_byIndex((size_t)index)->get_value();
             }
             return 0;
           }
