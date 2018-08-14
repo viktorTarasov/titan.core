@@ -15940,7 +15940,7 @@ void Value::chk_expr_operand_execute_refd(Value *v1,
       case Assignment::A_PAR_VAL_IN:
       case Assignment::A_PAR_TEMPL_IN:
         refd_ass_is_lazy_or_fuzzy_fpar = ass->get_eval_type() != NORMAL_EVAL;
-        if (ass->get_eval_type() != NORMAL_EVAL) {
+        if (refd_ass_is_lazy_or_fuzzy_fpar) {
           *type_str = string("Lazy_Fuzzy_Expr<") + *type_str + string(">");
         }
         break;
