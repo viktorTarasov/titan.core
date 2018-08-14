@@ -2367,7 +2367,7 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
             "if (%d == name_len && 0 == strncmp(fld_name, \"%s\", name_len)) {\n"
             "      int ret_val = %s%s().JSON_decode(%s_descr_, p_tok, p_silent);\n"
             "      if (0 > ret_val) {\n"
-            "        if (JSON_ERROR_INVALID_TOKEN) {\n"
+            "        if (JSON_ERROR_INVALID_TOKEN == ret_val) {\n"
             "          JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_FIELD_TOKEN_ERROR, %lu, \"%s\");\n"
             "        }\n"
             "        return JSON_ERROR_FATAL;\n"
