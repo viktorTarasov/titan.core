@@ -149,10 +149,10 @@ module InvokingFunctionFromSpecificPlaces_SW { //^In TTCN-3 module//
       [t.running] t.timeout {} //^In guard expression// //^warning\: State of timer//
 
       /* OPTYPE_CHECKSTATE_ANY */
-      [(any port.checkstate("Connected"))] t.timeout {}
-      [(any port.checkstate(fs()))] t.timeout {} //^In guard expression//  //^warning\: Function invocation//
+      [(any port.checkstate("Connected"))] t.timeout {} //^In guard expression//  //^warning\: State of port//
+      [(any port.checkstate(fs()))] t.timeout {} //^In guard expression//  //^warning\: State of port//
       /* OPTYPE_CHECKSTATE_ALL */ 
-      [(all port.checkstate(fs()))] t.timeout {} //^In guard expression//  //^warning\: Function invocation// 
+      [(all port.checkstate(fs()))] t.timeout {} //^In guard expression//  //^warning\: State of port// 
 
       /* OPTYPE_HOSTID */
       [hostid() == ""] t.timeout {}

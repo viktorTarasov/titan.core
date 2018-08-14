@@ -630,7 +630,7 @@ namespace Common {
             break;
           case OPTYPE_CHECKSTATE_ANY: // [r1] v2: port or any
           case OPTYPE_CHECKSTATE_ALL: // [r1] v2: port or all
-            u.expr.v2->chk_expr_immutability();
+            warning("State of port(s) may change during the actual snapshot.");
             break;
           case OPTYPE_HOSTID: // [v1]
             if (u.expr.v1) u.expr.v1->chk_expr_immutability();

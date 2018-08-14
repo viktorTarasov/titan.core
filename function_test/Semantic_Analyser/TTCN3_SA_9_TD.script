@@ -1333,16 +1333,16 @@ module M {
 	testcase T() runs on C {
 		timer t := 5.0; t.start;
 		alt {
-			[(p.checkstate("Connected"))] t.timeout {}			// OK?
-			[(any port.checkstate("Connected"))] t.timeout {}	// OK?
+			[(p.checkstate("Connected"))] t.timeout {}			// NOT OK
+			[(any port.checkstate("Connected"))] t.timeout {}	// NOT OK
 			[(p.checkstate(FS()))] t.timeout {}					// NOT OK
 			[(any port.checkstate(FS()))] t.timeout {}			// NOT OK
 		}
 	}
 }
 <END_MODULE>
-<RESULT IF_FAIL COUNT 2>
-(?im)\bwarning\b.+?\bFunction invocation\b.+?\bmay change the actual snapshot\b
+<RESULT IF_FAIL COUNT 4>
+(?im)\bwarning\b.+?\bstate of port\b.+?\bmay change during the actual snapshot\b
 <END_RESULT>
 <END_TC>
 :exmp.
