@@ -3059,7 +3059,7 @@ void Type::chk_oer() {
         bool lower_inf = lower.get_type() != int_limit_t::NUMBER;
         bool upper_inf = upper.get_type() != int_limit_t::NUMBER;
         if (lower_inf || upper_inf) {
-          oerattrib->signed_ = lower_inf;
+          oerattrib->signed_ = lower_inf || lower.get_value() < 0;
           oerattrib->bytes = -1;
         } else {
           int_val_t low = lower.get_value();
