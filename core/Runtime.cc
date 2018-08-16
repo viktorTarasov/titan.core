@@ -138,7 +138,6 @@ void TTCN_Runtime::set_port_state(const INTEGER& state, const CHARSTRING& info, 
     }
   } else {
     TTCN_error("setstate operation was called without being in a translation procedure.");
-    translation_count--;
   }
 }
 
