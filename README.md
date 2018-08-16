@@ -101,7 +101,8 @@ Compressed update site and SHA512 checksum:
 * http://git.eclipse.org/gitroot/titan/titan.TestPorts.GPIO  
 * http://git.eclipse.org/gitroot/titan/titan.TestPorts.MTP3asp  
 * http://git.eclipse.org/gitroot/titan/titan.TestPorts.Serial  
-* http://git.eclipse.org/gitroot/titan/titan.TestPorts.SocketCANasp   
+* http://git.eclipse.org/gitroot/titan/titan.TestPorts.SocketCANasp
+* http://git.eclipse.org/gitroot/titan/titan.TestPorts.Thrift_TPG
  
  
 ## Protocol Modules:
@@ -146,10 +147,12 @@ Compressed update site and SHA512 checksum:
 * http://git.eclipse.org/gitroot/titan/titan.ProtocolModules.CoAP   
 * http://git.eclipse.org/gitroot/titan/titan.ProtocolModules.DSS1_ETSI   
 * http://git.eclipse.org/gitroot/titan/titan.ProtocolModules.DUA   
-* http://git.eclipse.org/gitroot/titan/titan.ProtocolModules.EAP   
+* http://git.eclipse.org/gitroot/titan/titan.ProtocolModules.EAP
+* http://git.eclipse.org/gitroot/titan/titan.ProtocolModules.GCP_31r1
 * http://git.eclipse.org/gitroot/titan/titan.ProtocolModules.GRE   
 * http://git.eclipse.org/gitroot/titan/titan.ProtocolModules.GTP_v13.5.0  
-* http://git.eclipse.org/gitroot/titan/titan.ProtocolModules.GTPv2_v13.7.0  
+* http://git.eclipse.org/gitroot/titan/titan.ProtocolModules.GTPv2_v13.7.0
+* http://git.eclipse.org/gitroot/titan/titan.ProtocolModules.GTPv2_v15.2.0
 * http://git.eclipse.org/gitroot/titan/titan.ProtocolModules.HTTP2  
 * http://git.eclipse.org/gitroot/titan/titan.ProtocolModules.ISUP_Q.762  
 * http://git.eclipse.org/gitroot/titan/titan.ProtocolModules.LLC_v7.1.0  
@@ -157,20 +160,26 @@ Compressed update site and SHA512 checksum:
 * http://git.eclipse.org/gitroot/titan/titan.ProtocolModules.M2UA  
 * http://git.eclipse.org/gitroot/titan/titan.ProtocolModules.MQTT   
 * http://git.eclipse.org/gitroot/titan/titan.ProtocolModules.MobileL3_v13.4.0  
-* http://git.eclipse.org/gitroot/titan/titan.ProtocolModules.MongoDB  
+* http://git.eclipse.org/gitroot/titan/titan.ProtocolModules.MongoDB
+* http://git.eclipse.org/gitroot/titan/titan.ProtocolModules.NAS_EPS_15.2.0.1
 * http://git.eclipse.org/gitroot/titan/titan.ProtocolModules.NDP   
 * http://git.eclipse.org/gitroot/titan/titan.ProtocolModules.NS_v7.3.0  
 * http://git.eclipse.org/gitroot/titan/titan.ProtocolModules.NTAF   
-* http://git.eclipse.org/gitroot/titan/titan.ProtocolModules.OPC_UA   
+* http://git.eclipse.org/gitroot/titan/titan.ProtocolModules.OPC_UA
+* http://git.eclipse.org/gitroot/titan/titan.ProtocolModules.PFCP_v15.1.0
 * http://git.eclipse.org/gitroot/titan/titan.ProtocolModules.ROSE   
 * http://git.eclipse.org/gitroot/titan/titan.ProtocolModules.SCTP   
-* http://git.eclipse.org/gitroot/titan/titan.ProtocolModules.SDP   
+* http://git.eclipse.org/gitroot/titan/titan.ProtocolModules.SDP
+* http://git.eclipse.org/gitroot/titan/titan.ProtocolModules.SGsAP_13.2.0
 * http://git.eclipse.org/gitroot/titan/titan.ProtocolModules.SNDCP_v7.0.0  
-* http://git.eclipse.org/gitroot/titan/titan.ProtocolModules.STOMP  
+* http://git.eclipse.org/gitroot/titan/titan.ProtocolModules.STOMP
+* http://git.eclipse.org/gitroot/titan/titan.ProtocolModules.STUN
 * http://git.eclipse.org/gitroot/titan/titan.ProtocolModules.STUN_RFC5389   
 * http://git.eclipse.org/gitroot/titan/titan.ProtocolModules.SUA   
-* http://git.eclipse.org/gitroot/titan/titan.ProtocolModules.TLS   
-* http://git.eclipse.org/gitroot/titan/titan.ProtocolModules.WTP  
+* http://git.eclipse.org/gitroot/titan/titan.ProtocolModules.TLS
+* http://git.eclipse.org/gitroot/titan/titan.ProtocolModules.V5
+* http://git.eclipse.org/gitroot/titan/titan.ProtocolModules.WTP 
+* http://git.eclipse.org/gitroot/titan/titan.ProtocolModules.XML_RPC
 * http://git.eclipse.org/gitroot/titan/titan.ProtocolModules.XTDP   
 
 
@@ -179,6 +188,7 @@ Compressed update site and SHA512 checksum:
 * http://git.eclipse.org/gitroot/titan/titan.ProtocolEmulations.M3UA  
 * http://git.eclipse.org/gitroot/titan/titan.ProtocolEmulations.SCCP  
 * http://git.eclipse.org/gitroot/titan/titan.ProtocolEmulations.SUA  
+* http://git.eclipse.org/gitroot/titan/titan.ProtocolEmulations.SCTP
 
 ## Libraries:
 
@@ -199,6 +209,12 @@ Compressed update site and SHA512 checksum:
 * http://git.eclipse.org/gitroot/titan/titan.Applications.IoT_Functiontest_Framework  
 * http://git.eclipse.org/gitroot/titan/titan.Applications.IoT_Loadtest_Framework  
 * http://git.eclipse.org/gitroot/titan/titan.Applications.RIoT  
+
+## Servers
+
+* http://git.eclipse.org/gitroot/titan/titan.Servers.GTP_Tunnel_Daemon
+* http://git.eclipse.org/gitroot/titan/titan.Servers.IP_Daemon_Dynamic
+* http://git.eclipse.org/gitroot/titan/titan.Servers.SCTP_Daemon_Dynamic
 
 ## Miscellaneous projects: 
 
