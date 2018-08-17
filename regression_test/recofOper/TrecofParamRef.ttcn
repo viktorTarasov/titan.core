@@ -118,6 +118,45 @@ testcase tc_param_ref_replace() runs on CT_Empty
   else { setverdict(fail, "@6 got: ", v_roi, ", expected: { 0, 1, 7, 6, 5, 4, 3 }"); }
 }
 
+// 3.B Simplified replacing
+//======== Simplified case, deterministic behavior expected: =====
+
+function f_param_ref_replace_1arg(inout RoI p_roi) runs on CT_Empty
+{
+  const RoI c1 := { 7, 6 };
+  const RoI c2 := { 5, 4, 3 };
+
+  p_roi := replace(p_roi, 2, 4, c1);
+
+  if (p_roi == { 0, 1, 7, 6 }) { setverdict(pass); } //ok
+  else { setverdict(fail, "@1 got: ", p_roi, ", expected: { 0, 1, 7, 6 }"); }
+//
+//  if (log2str(p_roi[5]) == "<unbound>") { setverdict(pass); }
+//  else { setverdict(fail, "@2 got: ", p_roi[5], ", expected: <unbound>"); } //nok!!!
+
+  p_roi[5] := 20;
+
+  if (log2str(p_roi) == "{ 0, 1, 7, 6, <unbound>, 20 }") { setverdict(pass); }
+  else { setverdict(fail, "@3 got: ", p_roi, ", expected: { 0, 1, 7, 6, <unbound>, 20 }"); }
+
+  p_roi := replace(p_roi, 4, 2, c2);
+  
+  if (p_roi == { 0, 1, 7, 6, 5, 4, 3 }) { setverdict(pass); }
+  else { setverdict(fail, "@4 got: ", p_roi, ", expected: { 0, 1, 7, 6, 5, 4, 3 }"); }
+
+  if (p_roi[5] == 4) { setverdict(pass); }
+  else { setverdict(fail, "@5 got: ", p_roi[5], ", expected: 4"); }
+}
+
+//There is no expected sideeffect
+testcase tc_param_ref_replace_1arg() runs on CT_Empty
+{
+  var RoI v_roi := { 0, 1, 2, 3, 4, 5 };
+  f_param_ref_replace_1arg(v_roi);
+  
+  if (log2str(v_roi) == "{ 0, 1, 7, 6, 5, 4, 3 }") { setverdict(pass); }
+  else { setverdict(fail, "@6 got: ", v_roi, ", expected: { 0, 1, 7, 6, 5, 4, 3 }"); }
+}
 // 4. JSON decoding
 type record of integer RoI_json with { encode "JSON" };
 
@@ -695,6 +734,7 @@ control {
   execute(tc_param_ref_assign());
   execute(tc_param_ref_concat());
   execute(tc_param_ref_replace());
+  execute(tc_param_ref_replace_1arg());
 
   execute(tc_param_ref_json());
   execute(tc_param_ref_xer());
