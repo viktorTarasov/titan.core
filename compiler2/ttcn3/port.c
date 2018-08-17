@@ -200,10 +200,10 @@ static char *generate_send_mapping(char *src, const port_def *pdef,
     if (has_condition) {
       if (!pdef->legacy && pdef->port_type == USER) {
         src = mputstr(src, "if (port_state != PARTIALLY_TRANSLATED) {\n");
-      }
-      src = mputstr(src, "return;\n");
-      if (!pdef->legacy && pdef->port_type == USER) {
-        src = mputstr(src, "}\n");
+      	src = mputstr(src, "return;\n");
+      	src = mputstr(src, "}\n");
+      } else {
+      	src = mputstr(src, "return;\n");
       }
       if (pdef->legacy) {
         src = mputstr(src, "}\n");
