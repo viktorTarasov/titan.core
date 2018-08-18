@@ -1774,7 +1774,7 @@ namespace Common {
                 pt->get_typename().c_str());
               return 0;
             }
-            len = pt->get_sub_type()->get_length_restriction();
+            len = sub->get_length_restriction();
             if (len == -1) {
               ref->error("The type `%s' must have single size length restriction when used as a short-hand notation for nested indexes.",
                 pt->get_typename().c_str());
