@@ -201,7 +201,9 @@ Compressed update site and SHA512 checksum:
 ## Application Libraries:
 
 * http://git.eclipse.org/gitroot/titan/titan.ApplicationLibraries.CoAP  
+* http://git.eclipse.org/gitroot/titan/titan.ApplicationLibraries.HTTP  
 * http://git.eclipse.org/gitroot/titan/titan.ApplicationLibraries.LWM2M   
+* http://git.eclipse.org/gitroot/titan/titan.ApplicationLibraries.MBT
 * http://git.eclipse.org/gitroot/titan/titan.ApplicationLibraries.MQTT  
  
 ## Applications:
