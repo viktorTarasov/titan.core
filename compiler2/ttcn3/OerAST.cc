@@ -33,6 +33,6 @@ OerAST::~OerAST() {
 }
 
 bool OerAST::empty() const {
-  return bytes == -1 && signed_ == true && length == -1 &&
+  return bytes == -1 && signed_ && length == -1 &&
     extendable == false && nr_of_root_comps == 0 && ext_attr_groups.empty() && p.empty();
 }
