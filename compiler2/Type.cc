@@ -6535,8 +6535,8 @@ namespace Common {
 
       for (;;) {
         // For ASN.1 types, the answer depends solely on the -a switch.
-        // They are all considered to have Basic (i.e. useless) XER,
-        // unless the -a switch says removes XER from all ASN.1 types.
+        // They are all considered to not have XER,
+        // unless the -a switch says force XER from all ASN.1 types.
         if (t->is_asn1()) return memory.remember(t,
           asn1_xer ? ANSWER_YES : ANSWER_NO);
         else if (t->is_ref()) t = t->get_type_refd();

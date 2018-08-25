@@ -874,7 +874,7 @@ void Type::chk_encodings()
         add_coding(string(get_encoding_name(CT_JSON)), Ttcn::MOD_NONE, true);
         add_coding(string(get_encoding_name(CT_OER)), Ttcn::MOD_NONE, true);
         if (asn1_xer) {
-          // XER encoding for ASN.1 types can be disabled with a command line option
+          // XER encoding for ASN.1 types can be forced with a command line option
           add_coding(string(get_encoding_name(CT_XER)), Ttcn::MOD_NONE, true);
         }
         break;
