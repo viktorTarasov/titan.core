@@ -7414,7 +7414,7 @@ namespace Common {
       if (t->is_tagged() || t->rawattrib || t->textattrib || t->jsonattrib ||
           (!t->is_asn1() && t->hasEncodeAttr(get_encoding_name(CT_JSON))) ||
           (t->xerattrib && !t->xerattrib->empty() ) ||
-          (t->oerattrib /*&& !t->oerattrib->empty()*/ && t->is_asn1()))
+          (t->oerattrib && !t->oerattrib->empty() && t->is_asn1()))
       {
         return t->get_genname_own(p_scope);
       }
