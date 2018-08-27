@@ -481,7 +481,11 @@ FLOAT::BER_encode_TLV(const TTCN_Typedescriptor_t& p_td,
       double mantissa, exponent;
       exponent=floor(log10(fabs(float_value)))+1.0-DBL_DIG;
       mantissa=floor(float_value*pow(10.0,-exponent)+0.5);
-      if(mantissa)while(!fmod(mantissa,10.0))mantissa/=10.0,exponent+=1.0;
+      if(mantissa != 0.0) {
+        while(fmod(mantissa,10.0) == 0.0) {
+          mantissa/=10.0,exponent+=1.0;
+        }
+      }
       /** \todo review
           gcc 2.95:
           in mprintf below:
@@ -1188,7 +1192,11 @@ int FLOAT::OER_encode(const TTCN_Typedescriptor_t&, TTCN_Buffer& p_buf) const {
     double mantissa, exponent;
     exponent=floor(log10(fabs(float_value)))+1.0-DBL_DIG;
     mantissa=floor(float_value*pow(10.0,-exponent)+0.5);
-    if(mantissa)while(!fmod(mantissa,10.0))mantissa/=10.0,exponent+=1.0;
+    if(mantissa != 0.0) {
+      while(fmod(mantissa,10.0) == 0.0) {
+        mantissa/=10.0,exponent+=1.0;
+      }
+    }
     char * uc =
       mprintf("\x03%.f.E%s%.0f", mantissa, exponent==0.0?"+":"", exponent);
     size_t len = mstrlen(uc);
