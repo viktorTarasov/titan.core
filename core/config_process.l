@@ -1256,7 +1256,7 @@ LOG_ALL	{
 
 <SC_MODULE_PARAMETERS>{ASN1LOWERIDENTIFIER}	{
     yylval.str_val = mcopystr(yytext);
-    for (size_t i = 0; i < yyleng; i++) {
+    for (size_t i = 0; i < (size_t)yyleng; i++) {
 	if (yylval.str_val[i] == '-') yylval.str_val[i] = '_';
     }
     TTCN_warning("In line %d of configuration file: `%s' is not a valid TTCN-3 "

@@ -714,7 +714,7 @@ WARNING_UNQUALIFIED RETURN(LoggingBit);
 
 <SC_MODULE_PARAMETERS>{ASN1LOWERIDENTIFIER} {
   char *ttcn3_id = (char*)Malloc(yyleng + 1);
-  for (size_t i = 0; i < yyleng; i++) {
+  for (size_t i = 0; i < (size_t)yyleng; i++) {
     if (yytext[i] == '-') ttcn3_id[i] = '_';
     else ttcn3_id[i] = yytext[i];
   }
@@ -728,7 +728,9 @@ WARNING_UNQUALIFIED RETURN(LoggingBit);
 
 <SC_GROUPS,SC_COMPONENTS,SC_MAIN_CONTROLLER>{DNSNAME}|{IPV6} {
   yylval.str_val = (char*)Malloc(yyleng + 1);
-  for (size_t i = 0; i < yyleng; i++) yylval.str_val[i] = tolower(yytext[i]);
+  for (size_t i = 0; i < (size_t)yyleng; i++) {
+    yylval.str_val[i] = tolower(yytext[i]);
+  }
   yylval.str_val[yyleng] = '\0';
   RETURN(DNSName);
 }
