@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c903dc38_8580b256",
+        "filename": "function_test/OER_EncDec/ISOIEC-8825-7-2015-AnnexA-PersonnelRecord.script",
+        "patchSetId": 1
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1007689
+      },
+      "writtenOn": "2018-08-28T11:59:55Z",
+      "side": 1,
+      "message": "should contain your name",
+      "range": {
+        "startLine": 9,
+        "startChar": 5,
+        "endLine": 13,
+        "endChar": 22
+      },
+      "revId": "a44d1e546bfd30bd5c49a44e9c357a0d75a237d6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5e08a352_f4cccd5c",
+        "filename": "function_test/OER_EncDec/Makefile",
+        "patchSetId": 1
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1007689
+      },
+      "writtenOn": "2018-08-28T11:59:55Z",
+      "side": 1,
+      "message": "should contain your name",
+      "range": {
+        "startLine": 10,
+        "startChar": 4,
+        "endLine": 18,
+        "endChar": 23
+      },
+      "revId": "a44d1e546bfd30bd5c49a44e9c357a0d75a237d6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "175d44c3_6b34df79",
+        "filename": "function_test/OER_EncDec/OER_EncDec_ITSPKI.script",
+        "patchSetId": 1
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1007689
+      },
+      "writtenOn": "2018-08-28T11:59:55Z",
+      "side": 1,
+      "message": "should contain your name",
+      "range": {
+        "startLine": 9,
+        "startChar": 5,
+        "endLine": 13,
+        "endChar": 22
+      },
+      "revId": "a44d1e546bfd30bd5c49a44e9c357a0d75a237d6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
