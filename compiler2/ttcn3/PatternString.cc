@@ -739,7 +739,7 @@ namespace Ttcn {
             i = pstr.find('}', i + 1);
             
             // convert the character to UTF-8 format
-            utf8str += ustring_to_uft8(ustring(group, plane, row, cell));
+            utf8str += ustring_to_uft8(ustring((unsigned char)group, (unsigned char)plane, (unsigned char)row, (unsigned char)cell));
             continue;
           }
           else if ('\\' == pstr[i + 1]) {
