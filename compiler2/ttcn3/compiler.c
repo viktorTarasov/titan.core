@@ -91,8 +91,8 @@ static boolean update_file(const char *file_name, FILE *fp, size_t skip_lines)
 	/* compare the rest of the files */
         for ( ; ; ) {
 	    char buf1[BUFSIZE], buf2[BUFSIZE];
-	    int len1 = fread(buf1, 1, BUFSIZE, fp);
-	    int len2 = fread(buf2, 1, BUFSIZE, target);
+	    size_t len1 = fread(buf1, 1, BUFSIZE, fp);
+	    size_t len2 = fread(buf2, 1, BUFSIZE, target);
 	    if ((len1 != len2) || memcmp(buf1, buf2, len1)) {
 		files_differ = TRUE;
 		break;
