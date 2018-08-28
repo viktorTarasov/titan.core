@@ -1715,9 +1715,9 @@ void ValueType::printToFile(FILE * file) const {
     if (lower == -DBL_MAX) {
       fputs("-infinity", file);
     } else {
-      double intpart = 0;
-      double fracpart = 0;
-      fracpart = modf(lower, &intpart);
+      long double intpart = 0;
+      long double fracpart = 0;
+      fracpart = modfl(lower, &intpart);
       if (fracpart == 0) {
         fprintf(file, "%.1Lf", lower);
       } else {
@@ -1733,9 +1733,9 @@ void ValueType::printToFile(FILE * file) const {
     if (upper == DBL_MAX) {
       fputs("infinity", file);
     } else {
-      double intpart = 0;
-      double fracpart = 0;
-      fracpart = modf(upper, &intpart);
+      long double intpart = 0;
+      long double fracpart = 0;
+      fracpart = modfl(upper, &intpart);
       if (fracpart == 0) {
         fprintf(file, "%.1Lf", upper);
       } else {
