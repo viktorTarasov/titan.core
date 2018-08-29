@@ -3417,6 +3417,8 @@ namespace Common {
     if (legacy_codec_handling) {
       FATAL_ERROR("Type::add_coding");
     }
+
+    MessageEncodingType_t built_in_coding = get_enc_type(name);
     for (size_t i = 0; i < coding_table.size(); ++i) {
       if (!encode_attrib_mod_conflict && modifier != coding_table[i]->modifier) {
         encode_attrib_mod_conflict = true;
@@ -3426,11 +3428,13 @@ namespace Common {
       const char* coding_name = coding_table[i]->built_in ?
         get_encoding_name(coding_table[i]->built_in_coding) :
         coding_table[i]->custom_coding.name;
-      if (name == coding_name) {
+      const char* current_name = coding_table[i]->built_in ?
+        get_encoding_name(built_in_coding) : name.c_str();
+      if (strcmp(current_name, coding_name) == 0) {
         return; // coding already added
       }
     }
-    MessageEncodingType_t built_in_coding = get_enc_type(name);
+
     if (built_in_coding != CT_CUSTOM && built_in_coding != CT_PER) {
       if (get_type_refd_last()->can_have_coding(built_in_coding)) {
         coding_t* new_coding = new coding_t;
