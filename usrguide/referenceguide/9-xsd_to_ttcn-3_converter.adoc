@@ -1,0 +1,326 @@
+= XSD to TTCN-3 Converter
+:toc:
+
+The XSD to TTCN-3 converter is converting XSD components to TTCN-3 modules according to the ETSI standard ES 201 873-9 (part 9 of the TTCN-3 standard).
+
+The *XSD to TTCN-3 converter* takes as input one or more schemas written in XML Schema and produces one or more TTCN-3 modules containing a set of type definitions and encoding instructions to keep the same XML encoding, in such a way that there is one-to-one correspondence between TTCN-3 values and valid XML instances.
+
+== Terminology
+
+For the purposes of the present section the following definitions apply:
+
+== Schema Component
+
+Schema component is the generic XSD term for the building blocks that comprise the abstract data model of the schema.
+
+=== Schema Document
+
+A schema document contains a collection of schema components, assembled in a _schema_ element information item. The target namespace of the schema document may be defined (specified by the _targetNamespace_ attribute of the _schema_ element) or may be absent (identified by a missing _targetNamespace_ attribute of the _schema_ element). The latter case is handled in this document as a particular case of the target namespace being defined.
+
+=== Target TTCN-3 Module
+
+This is the TTCN-3 module, generated during the conversion, to which the TTCN-3 definition produced by the translation of a given XSD declaration or definition is added.
+
+=== XML Schema
+
+An XML Schema is represented by a set of schema documents forming a complete specification (i.e. all definitions and references are completely defined). The set may be composed of one or more schema documents, and in the latter case identifying one or more target namespaces. More than one schema documents of the set may have the same target namespace.
+
+== Command-line Syntax
+
+The command line syntax of the converter is the following:
+
+[source]
+xsd2ttcn [-ceghmpstVwx] [-f file] [-J file] schema.xsd [-schema.xsd…]
+
+or
+
+[source]
+xsd2ttcn -v
+
+The XSD to TTCN-3 converter takes the name of files containing XML schemas as arguments (usually with the extension .xsd). The converter expects input files to be plain text files.
+
+The following command line options are available (listed in alphabetical order):
+
+* `-c`
++
+Disables the generation of comments derived from top level XML comments and also from XSD annotations and notations. TTCN-3 comments derived from XSD annotations and notations contain the actual character data of the nested XSD 'documentation' or 'appinfo' elements.
+
+* `-e`
++
+Disables the generation of encoding instructions for TTCN-3 types and modules.
+
+* `-f file`
++
+The list of the XSD files will be taken from the given file instead of the command line. The file format is a white-space separated list of XSD files. (Other XSD files in the command line will not be taken into account if this option is used.)
+
+* `-J file`
++
+It has the same effect as the `-f file` flag.
+
+* `-g`
++
+Instructs the converter to generate TTCN-3 code disallowing element substitution.
+
+* `-h`
++
+Instructs the converter to generate TTCN-3 code allowing type substitution.
+
+* `-m`
++
+Instructs the converter to only generate the `UsefulTtcn3Types` and `XSD` predefined modules.
+
+* `-p`
++
+Disables the generation of `UsefulTtcn3Types` and `XSD` predefined modules.
+
+* `-s`
++
+Instructs the converter to parse the given XML schemas and perform only syntactic analysis on them (well-formedness check), but not to generate TTCN-3 output. This option is useful if you do not wish to generate TTCN-3 files when debugging an XML Schema.
+
+* `-t`
++
+Disables the generation of timing information in TTCN-3 modules. These parts are the changing parts of the generated modules. By using this switch it is possible to generate TTCN-3 modules that will be the same even if time and version change.
+
+* `-v`
++
+Prints version and license key information and exits.
+
+* `-V`
++
+Disables status messages, for example, indicates which input file is currently being read, while converting.
+
+* `-w`
++
+Suppresses warnings.
+
+* `-x`
++
+Disables schema validation but generates TTCN-3 modules.
+
+== The Compilation Process for XML Schema
+
+The XSD to TTCN-3 converter requires that each schema file used by the specification must be present in the input. From the input schema files, the converter will build one or possibly more independent TTCN-3 modules. The names of the output files (and the names of the TTCN-3 modules within) are set according to the value of the `targetNamespace` attribute defined in the schema element. Suffixes of TTCN-3 modules are .ttcn.
+
+Whenever a schema file contains an `import` element with the `namespace` attribute, all components (elements, types, groups, etc.) from that namespace are imported into the final XML schema.
+
+NOTE: There can be several schema files having one namespace. All components from that namespace are imported.
+
+The following examples demonstrate how the XSD to TTCN-3 converter assembles input schema files to create the XML Schema.
+
+=== Include
+
+*Example 1-1.* ‘include’ with resolvable schemaLocation attribute
+
+A.xsd:
+[source]
+----
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+	xmlns="http://www.example.org/xsd"
+	targetNamespace="http://www.example.org/xsd">
+<xsd:include schemaLocation="B.xsd"/>
+</xsd:schema>
+----
+
+B.xsd:
+
+[source]
+----
+<xsd:schema	xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+	xmlns="http://www.example.org/xsd"
+	targetNamespace="http://www.example.org/xsd">
+     ...
+</xsd:schema>
+----
+
+Converter command:
+
+[source]
+xsd2ttcn A.xsd B.xsd
+
+In Example 1-1, the `schemaLocation` attribute indicates a schema file name that is present in the command line. The referenced schema file must be provided and listed in the command line.
+
+=== Import
+
+*Example 1-2.* ‘import’ with resolvable schemaLocation attribute
+
+A.xsd:
+[source]
+----
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+	xmlns="http://www.example.org/xsd"
+	targetNamespace="http://www.example.org/xsd">
+		<xsd:import namespace=”http://www.example.org/xsd/B”
+	schemaLocation="B.xsd"/>
+     ...
+</xsd:schema>
+----
+
+B.xsd:
+[source]
+----
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+	xmlns="http://www.example.org/xsd/B"
+	targetNamespace="http://www.example.org/xsd/B">
+     ...
+</xsd:schema>
+----
+
+Converter command:
+
+[source]
+xsd2ttcn A.xsd B.xsd
+
+Example 1-3 shows the use of `import`. Schema `A.xsd` is importing schema `B.xsd`. The `schemaLocation` attribute in schema `A.xsd` is pointing to a schema file which is present on the command line input.
+
+*Example 1-3.* ‘import’ without schemaLocation attribute
+
+A.xsd:
+[source]
+----
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+	xmlns="http://www.example.org/xsd"
+	targetNamespace="http://www.example.org/xsd">
+<xsd:import namespace="http://www.example.org/xsd/B"/>
+     ...
+</xsd:schema>
+----
+
+B.xsd:
+[source]
+----
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+	xmlns="http://www.example.org/xsd/B"
+	targetNamespace="http://www.example.org/xsd/B">
+     ...
+</xsd:schema>
+----
+
+B2.xsd:
+[source]
+----
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+	xmlns="http://www.example.org/xsd/B"
+	targetNamespace="http://www.example.org/xsd/B">
+		<xsd:include schemaLocation="http://www.example.org/xsd/B.xsd"/>
+     ...
+</xsd:schema>
+----
+
+Converter command:
+
+[source]
+xsd2ttcn A.xsd B.xsd B2.xsd
+
+An `import` with only `namespace` attribute, imports all the schemas present on the command line having the same targetNamespace as the value specified by the namespace attribute in the import element. In Example 1-3, `A.xsd` contains an `import` element having specified the `namespace` attribute only; the XSD to TTCN-3 converter will import both `B.xsd` and `B2.xsd`, as they have the same targetNamespace as the one defined in the `namespace` attribute of the import element from the schema `A.xsd`.
+
+*Example 1-4.* ‘import’ without namespace attribute
+
+A.xsd:
+[source]
+----
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+	xmlns="http://www.example.org/xsd"
+	targetNamespace="http://www.example.org/xsd">
+     <xsd:import schemaLocation="B.xsd"/>
+     ...
+</xsd:schema>
+----
+
+B.xsd:
+[source]
+----
+<xsd:schema xmlns:xsd=”http://www.w3.org/2001/XMLSchema”>
+     ...
+</xsd:schema>
+----
+
+Converter command:
+
+[source]
+xsd2ttcn A.xsd B.xsd
+
+If the import element specifies the `schemaLocation` attribute only, the imported schema (`B.xsd`) should not be associated with any namespace; otherwise the converter reports an error message.
+
+*Example 1-5.* ‘import’ with no attributes
+
+A.xsd:
+[source]
+----
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+	xmlns="http://www.example.org/xsd"
+	targetNamespace="http://www.example.org/xsd">
+     <xsd:import/>
+     ...
+</xsd:schema>
+----
+
+Converter command:
+
+[source]
+xsd2ttcn A.xsd B.xsd C.xsd D.xsd E.xsd F.xsd G.xsd H.xsd
+
+The `import` statement with no attributes specified imports all the schema files in the command line input that have no `targetNamespace` specified. In Example 1-5, if `B.``xsd`, `C.xsd`, and `H.xsd` are not associated with any namespace they are imported in the `A.xsd`.
+
+== Restrictions
+
+Some features of XSD have no equivalent in TTCN-3 or make no sense when translated to the TTCN-3 language. Whenever possible, these features are translated into encoding instructions completing the TTCN-3 code. For any further information about unsupported features see <<13-references.adoc#_4, [4]>>.
+
+Translation of the following XML schema elements is not supported:
+
+`field`, `key`, `keyref`, `selector`, `unique` (identity-constraint definition schema components)
+
+Translation of the following XML schema attributes is not supported:
+
+`final`, `processContents`
+
+The following XML schema attributes are ignored, when they are used as attributes of schema element:
+
+`finalDefault`, `id`, `version`, `xml:lang`
+
+Numeric types are not allowed to be restricted by patterns.
+
+List types are not allowed to be restricted by enumerations or patterns.
+
+All time types restrict year to 4 digits.
+
+Information in the `appinfo` tags are not translated.
+
+== Extensions
+
+The XSD to TTCN-3 Converted has the following non-standard additions to the Using XML Schema with TTCN–3 <<13-references.adoc#_4, [4]>> .
+
+TITAN allows the usage of constants and module parameters in the value of a `defaultForEmpty` encoding instruction. The `xsd2ttcn` tool generates the `defaultForEmpty` encoding instructions with a constant definition as a value to provide reusability of the `defaultForEmpty` values. Only the conversion of `default` and `fixed` attributes of elements is changed.
+
+For example:
+
+A.xsd:
+[source]
+----
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+	xmlns="http://www.example.org/xsd"
+	targetNamespace="http://www.example.org/xsd">
+     <xsd:element name="DefStr" type="xsd:string" default="abc"/>
+
+     <xsd:element name="FixStr" type="xsd:string" fixed="def"/>
+</xsd:schema>
+----
+
+The `DefStr` and `FixStr` elements are generated into the following type definitions:
+[source]
+----
+const XSD.String c_defaultForEmpty_1 := "abc";
+
+const XSD.String c_defaultForEmpty_2 := "def";
+
+type XSD.String DefStr
+with {
+  variant "defaultForEmpty as c_defaultForEmpty_1";
+  variant "element";
+};
+
+type XSD.String FixStr (c_defaultForEmpty_2)
+with {
+  variant "defaultForEmpty as c_defaultForEmpty_2";
+  variant "element";
+};
+----

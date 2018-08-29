@@ -1,0 +1,1858 @@
+= The Run-time Configuration File
+:toc:
+:table-number: 12
+
+The behavior of the executable test program is described in the run-time configuration file. This is a simple text file, which contains various sections. The usual suffix of configuration files is `.cfg`.
+
+Each section begins with a section name within square brackets. Different sections use different syntax, thus the section name determines the possible syntax of the members.
+
+The configuration file can contain any white space characters. There are three ways to put comments in the file: you can use the C comment delimiters (i.e. /* and */). Additionally, characters beginning with # or // are treated as comments until the end of line.
+
+Character string values shall be given between quotation marks. The non-printable characters as well as the quotation mark character within string values must be escaped using TTCN–3 or C escape sequences or quadruple notation. All kinds of escape sequences that are available in TTCN–3 and C languages (including octal and hexadecimal notation) are recognized.
+
+All sections are optional, thus an empty file is also a valid (but meaningless) configuration file. The sections are processed in the given order. In case of duplicated sections, all sections will be processed and no warnings will be issued.
+
+In the following we present all possible sections of the configuration file. The majority of sections are applicable in both single and parallel modes with identical meaning. However, some sections or settings in a section are applicable either in single or parallel mode only.
+
+The indication (Parallel mode) following the section title signals that the concerned section is processed in parallel operation mode only. Irrelevant sections or options are ignored in each mode and a warning message is displayed during configuration file processing. For details on running TITAN TTCN–3 test suites in either single or parallel mode using see the TITAN TTCN–3 User Guide (see <<13-references.adoc#_13, [13]>>).
+
+The component name defined by the `create` operation (see <<4-ttcn3_language_extensions.adoc#parameters-of-create-operation, here>>) can contain any characters. This component name can be used without quoted marks but it shall be used with quoted marks (i.e as quoted string) if it contains extra characters e.g. space (“ “), hyphen (“-“) or dot ("."). See also the examples of this chapter in sections <<module-parameters, [MODULE_PARAMETERS]>> and <<testport-parameters, [TESTPORT_PARAMETERS]>>.
+
+[[module-parameters]]
+== [MODULE_PARAMETERS]
+
+This section may contain the values of any parameters that are defined in your TTCN–3 modules.
+
+The parameters shall be specified after each other in any order. Each parameter must be given in the following order: module name (optional) <<13-references.adoc#_24, [24]>>, parameter name, field names (in case of records, sets or unions; optional) or array indexes (in case of arrays, records of or sets of; optional), assignment or concatenation operator (that is, the characters := or &=) and parameter value. An optional terminator semicolon may be used after each parameter value. The concatenation operator can be applied to list types (record of, set of). In this case only the value list notation can be used.
+
+[[bnf-productions-for-this-section-25]]
+=== BNF Productions for this Section
+
+In the Function Test runtime:
+[source]
+----
+ModuleParametersSection ::= "[MODULE_PARAMETERS]" {ModuleParameter}
+ModuleParameter ::= ParameterName ParamOpType ParameterValue [SemiColon]
+ParameterName ::= [(ModuleName | “*”) "."] ParameterIdentifier
+ModuleName ::= Identifier
+ParameterIdentifier ::= Identifier | ParameterIdentifier “.” Identifier
+| ParameterIdentifier “[” ParameterExpression “]”
+ParamOpType ::= “:=” | “&=”
+ParameterValue ::= ParameterExpression [LengthMatch] [“ifpresent”]
+ParameterExpression ::= SimpleParameterValue | ParameterIdentifier
+	| “(” ParameterExpression “)” | (“+” | “-”) ParameterExpression
+	| ParameterExpression (“+” | “-” | “*” | “/” | “&”) ParameterExpression
+LengthMatch ::= “length” “(“ LengthBound [“..” (LengthBound|”infinity”)] “)”
+LengthBound ::= ParameterExpression
+SimpleParameterValue ::= IntegerValue | FloatValue | BitstringValue | HexstringValue
+	| OctetstringValue | StringValue | UniversalCharstringValue | BooleanValue
+	| ObjIdValue | VerdictValue | EnumeratedValue | “omit” | “NULL” | “null”
+	| “?” | “*” | IntegerRange | FloatRange | StringRange
+	| “pattern” PatternChunk
+	| BitStringMatch | HexStringMatch | OctetStringMatch
+	| “mtc” | “system”
+	| CompoundValue
+IntegerValue ::= Number
+FloatValue ::= FloatDotNotation | FloatENotation
+StringValue ::= Cstring
+BitstringValue ::= Bstring
+HexstringValue ::= Hstring
+OctetstringValue ::= Ostring
+UniversalCharstringValue ::= Quadruple
+Quadruple ::= "char" "(" ParameterExpression "," ParameterExpression ","
+    ParameterExpression "," ParameterExpression ")"
+ObjIdValue ::= "objid" "{" {ObjIdComponent}+ "}"
+ObjIdComponent ::= NumberForm | NameAndNumberForm
+NumberForm ::= Number
+NameAndNumberForm ::= Identifier "(" Number ")"
+EnumeratedValue ::= Identifier
+PatternChunk ::= Cstring | Quadruple
+IntegerRange ::= “(“ (“-“ “infinity” | IntegerValue) “..” (IntegerValue | “infinity”) “)”
+FloatRange ::= “(“ (“-“ “infinity” | FloatValue) “..” (FloatValue | “infinity”) “)”
+StringRange ::= “(“ StringRangeBound “..” StringRangeBound “)”
+StringRangeBound ::= Cstring | Quadruple
+CompoundValue ::= “{“ “}”
+ 	| “{“ FieldValue {“,” FieldValue} “}”
+ 	| “{“ ArrayItem {“,” ArrayItem} “}”
+ 	| “{“ IndexItem {“,” IndexItem} “}”
+	| “(“ ParameterValue “,” ParameterValue {“,” ParameterValue} “)”
+	| (“complement” | “superset” | “subset”) “(“ParameterValue {“,”
+   ParameterValue} “)”
+FieldValue ::= FieldName “:=” ParameterValueOrNotUsedSymbol
+FieldName ::= Identifier | ASN1LowerIdentifier
+ArrayItem ::= ParameterValueOrNotUsedSymbol | (“permutation” “(“ParameterValue {“,” ParameterValue} “)”)
+IndexItem ::= “[“ ParameterExpression “]” “:=” ParameterValue
+ParameterValueOrNotUsedSymbol ::= ParameterValue | “-“
+----
+
+The BNF productions in the Load Test runtime are mostly the same with one difference:
+
+`ParameterIdentifier ::= Identifier`
+
+The parameter value can be one of the following:
+
+* Integer value. A number in decimal notation or an expression composed of numbers using the basic arithmetic operations to allow more flexibility with macro substitution.
+* Floating point value. A floating point number in decimal dot notation or exponential notation or an arithmetic expression composed of such values.
+* Bitstring value (in the notation of TTCN–3). String fragments can be concatenated to allow more flexible macro substitution.
+* Hexstring value (in the notation of TTCN–3). String fragments can be concatenated to allow more flexible macro substitution.
+* Octetstring value (in the notation of TTCN–3). String fragments can be concatenated to allow more flexible macro substitution.
+* Charstring value (between quotation marks; escape sequences are allowed). String fragments can be concatenated to allow more flexible macro substitution.
+* Universal charstring value (sequence of concatenated fragments; each fragment can be either a printable string within quotation marks or a quadruple in TTCN–3 notation).
+* Boolean value (`true` or `false`).
+* Object identifier (`objid`) value (in the notation of TTCN–3). Only `NumberForm` or `NameAndNumberForm` notations are allowed.
+* Verdict value (`none`, `pass`, `inconc`, `fail` or `error`).
+* Enumerated value (the symbolic value, i.e. an identifier). Numeric values are not allowed.
+* Omit value (i.e.` omit`). Valid for optional record or set fields only.
+* `null` value for TTCN–3 component and default references.
+* `NULL` value for the ASN.1 `NULL` type.
+* "?" value: AnyValue for matching
+* “*” value: AnyValueOrNone for matching
+* IntegerRange/FloatRange/StringRange: matching an integer/float/charstring range
+* Pattern for pattern matching in charstring and universal charstring
+* Bit/Hex/Octet –string matching mechanism which are bit/hex/octet strings that contain "?" and “*” for matching
+* "mtc" and "system" values for component references
+* Compound value with assignment notation. One or more fields (separated by commas) with field names within brackets for types `record` and `set`.
+* Compound value with value list notation. Comma separated list of values between brackets for types `record of`, `set of` and `array`.
+* Compound value with indexed list notation. One or more fields with field index and value for types record of and set of
+* Compound value containing a template list. Can be a value list, complemented value list, superset and subset list.
+* Reference to a module parameter (or a field/element of a module parameter). Its syntax is the same as the left hand side of a module parameter assignment/concatenation (except the symbol ‘*’ cannot be used to specify all modules). The reference is substituted with the current value of the specified module parameter (its value prior to the execution of this module parameter assignment/concatenation). References can also appear in the expressions specified above (integer and float references can appear in arithmetic expressions, references to string types can be concatenated with other strings of the same type). A dynamic test case error is displayed if the referenced module parameter is unbound.
+
+Nested compound values are permitted in arbitrary depth. In compound values with assignment and value list notations the “-“ symbol can be used to skip an element. In value list notation for record of and set of permutation lists can be used.
+
+Parsing conflict: An asterisk (*) after a module parameter expression could be treated as a multiplication operator or the "all modules" symbol for the next module parameter assignment/concatenation. The configuration parser always treats it as a multiplication operator. In order to use the asterisk as an "all modules" symbol, the previous statement must be closed with a semicolon (;).
+
+Example:
+[source]
+----
+# correct:
+tsp_IntPar := tsp_IntPar + 1;
+*.tsp_FloatPar := 3.0;
+# incorrect, causes a parser error:
+tsp_IntPar := tsp_IntPar + 1
+*.tsp_FloatPar := 3.0;
+----
+
+=== Differences between the TTCN-3 and the Configuration File Module Parameters Section Syntax
+
+Neither the ttcn-3 syntax nor the module parameter section syntax is the subset of the other. Historically some module parameter values that are not legal in ttcn-3 have been accepted, for backward compatibility reasons this behavior has been kept. In most cases the module parameter syntax is a subset of the ttcn-3 syntax but there are important exceptions:
+
+* Field values of records and sets can be referenced multiple times, in this case all field value assignments will be executed in order of appearance. Example: mp_myRecord := { a :=1, b:=3, a:=2 } // a==2
+* In an assignment notation used for a union multiple field values can appear, only the last value will be used. Example: mp_myUnion := { a:=1,b:=2,a:=3 } only a:=3 will be used, the other 2 assignments are disregarded without warnings.
+* The order of fields in assignment notation for records does not have to be identical to the order of fields specified in the type definition of the record type. Example: type record MYREC { integer a, integer b } mp_myRec := { b:=2, a:=1}
+* The “\*” matching symbol can be used for mandatory fields (in TTCN-3 this cannot be used directly but indirectly any field of a variable template can be set to “*”).
+
+In the module parameters section only constant values and references to module parameters can be used. Function calls are not allowed (not even predefined functions).
+
+Example:
+[source]
+----
+[MODULE_PARAMETERS]
+par1 := -5
+MyModule1.par2 := "This is a string\n"
+MyModule1.par3 := {
+  ethernet_header := {
+    source_address := ’000100010005’O,
+    destination_address := ’0008C7993605’O,
+    ether_type := 34525
+  },
+  ipv6 := {
+    header := {
+      version := 6,
+      traffic_class := 0,
+      flow_label := 0,
+      payload_length := 0,
+      next_header := 58,
+      hop_limit := 255,
+      source_address := ’FE80000000000000020100FFFE010005’O,
+      destination_address := ’FE800000000000000208C7FFFE993605’O
+    },
+    extension_headers := {
+      {
+        hop_by_hop_options_header := {
+          next_header := 1,
+          header_length := 2,
+          options := ’13’O
+        }
+      }
+    },
+    data := {
+      f_router_advertisement := {
+        icmp_type := 134,
+        code := 0,
+        checksum := 0,
+        hop_limit := 255,
+        m_bit := ’0’B,
+        o_bit := ’0’B,
+        reserved := ’000000’B,
+        lifetime := 600,
+        reachable_time := 300000,
+        retrans_timer := 1000,
+        options := {
+          {
+            lla := {
+              option_type := 1,
+              option_length := 1,
+              lla_address := ’0008C7993605’O
+            }
+          }
+        }
+      }
+    }
+  }
+}
+MyModule2.par4 := ’10010’B
+par5 := objid { itu_t(0) identified_organization(4) etsi(0) 12345 6789 }
+par6 := "Character " & char(0, 0, 1, 113) & " is a Hungarian letter."
+par_record_of_int &= {1,2,3}
+par_record_of_int &= {4,5,6}
+par_record_of_int[6] := 7
+MyModule1.par3.ethernet_header.ether_type := 34526
+----
+
+[[logging]]
+== [LOGGING]
+
+The executable test program produces a log file during its run. The log file contains important test execution events with time stamps[26]. This section explains how to set the log file name and the event classes to be logged. Logging may be directed to file or displayed on console (standard error).
+
+Various options can be set in the section [`LOGGING`]. They affect the format and appearance of the test execution logs. Any option may be omitted; that is, each has a default value that is used if the option is omitted. If the same option is present several times in a configuration file only the latest value will take effect; the previously assigned values are ignored and a warning message is issued during configuration file processing.
+
+[[LoggerPlugins]]
+=== LoggerPlugins
+
+TITAN is equipped with an extensible logging architecture. The test execution events are directed towards the logger plugin interface. This interface can host arbitrary number of logger plugins.
+
+The logging can be statically and dynamically loaded.
+
+The default logging is the statically loaded built in logging.
+
+The dynamically loaded logging can be the built in LegacyLogger, the plugins shipped with TITAN (see <<dynamically-loaded-logger-plugins-shipped-with-titan, here>>) or user created dynamically linked plugins (for advanced users, see chapter 3 in <<13-references.adoc#_16, [16]>>.
+
+NOTE: *When using dynamically loaded logger plugins it is very important to use the dynamic runtime library of TITAN, this can be done by using the –l switch when generating the makefile.*
+
+The desired logger plugins need to be set in the `LoggerPlugins` option. The `LoggerPlugins` option takes a non-empty, comma separated list of logger plugin settings. These settings can be specified in the following ways:
+
+* A logger plugin identifier followed by an assignment and a quoted string containing the plugin location. E.g. `LoggerPlugins := { plugin1 := "/absolute/path/to/plugin1.so" } or LoggerPlugins := { plugin1 := "/absolute/path/to/plugin1" }`. The identifier of a logger plugin is determined by its author can be learned from its documentation. The plugin location includes the file name of the plugin with an optional file system path prefix. A logger plugin is a dynamically linked shared object thus the logger plugin typically resides in a `.so` file. When the path prefix is missing or a relative path is used then TITAN attempts to locate the plugin in the path specified in the `LD_LIBRARY_PATH` environment variable. The plugin file name can be provided in two different ways: either by specifying the whole file name (ending with .so) or by specifying only the base of the name (omit the .so ending). The latter method is preferred because a logger plugin usually consists of 4 different shared library files and the proper file must be selected. The 4 different versions correspond to the single/parallel mode and the load/function test TITAN runtimes. If the file name ending is not provided the executable will determine it automatically, but if the whole file name is provided then it must correspond to the runtime which is actually used by the executable.
+* A single logger plugin identifier. E.g. `LoggerPlugins := { plugin1 }`. In this case there should be a logger plugin named plugin1.so in one of the paths specified in the `LD_LIBRARY_PATH` environment variable.
+
+NOTE: If TITAN is unable to locate any of the listed logger plugins, it will quit immediately with an error message. So, if the `LoggerPlugins` option is used, take special care to set `LD_LIBRARY_PATH` correctly or use absolute paths when specifying the plugins. There is a built-in logger plugin in TITAN, which provides the usual text-based logging format. This plugin is used when the `LoggerPlugins` option is omitted or it was listed explicitly in the list with the `LegacyLogger` case insensitive identifier. Since it’s not possible to specify the path for this special, built-in logger plugin, only the second (with no path) specification mode is applicable here.
+
+The logger plugins are responsible for the "final appearance" of the test execution log. The current TITAN distribution comes with a single logger plugin but it also supports user written logging plugins. The built-in `LegacyLogger` plugin produces log files and console log entries with similar content to elder TITAN revisions.
+
+In case of overlapping plugin settings in multiple `LoggerPlugins` options, all configured plugins are attached to the list of existing plugins and take part in logging (i.e. do not overwrite them).
+
+The configured logger plugins are valid for each test component unless otherwise configured (see subsection below).
+
+It is possible to reference all the listed plugins with * to e.g. assign the same parameters and values for multiple plugins. However, plugin configuration through * will not have an effect on plugin parameters, whose value was set previously by referencing explicitly the exact plugin using its name and optionally the component identifier it is configured for.
+
+Logger plugins can be configured with arbitrary name-value pairs in the configuration file (see <<EmergencyLogging, here>>). E.g. `*.*.param1 := "value1"` will set the param1 parameter to a string value1 for all, not explicitly configured logger plugins on all test components. Logger plugins can ignore unknown parameters.
+
+Each logger plugin has 4 .so files. The following table contains the names of the 4 different cases if the base file name (this is not the name of the plugin, library file names start with "lib") of the plugin is "libplugin":
+
+NOTE: The preferred method of specifying the above logger plugin in the configuration file is: `LoggerPlugins := { MyPluginName := "libplugin"}` +
+The name MyPluginName is the name of the plugin and can be different than the library file names. If the full plugin file name is provided ( “libplugin.so, libplugin-parallel.so, etc.) then care must be taken to always use the name that corresponds to the mode in which the executable is running.
+
+==== Component-based Logger Plugin Settings
+
+It is possible to associate an individual set of logger plugins for each test component. The component designation can be:
+
+* the component name as given in the command `create`,
+* the component reference (though using component references as identifiers is not recommended as this is a tool dependent identifier),
+* the symbol * meaning all valid test components or
+* the keyword `mtc` in the case of the Main Test Component.
+
+The component name, if present, precedes the keyword `LoggerPlugins`. They are separated by a dot (.). The absent component reference is equivalent to `*.LoggerPlugins` meaning all valid test components.
+
+[[dynamically-loaded-logger-plugins-shipped-with-titan]]
+=== Dynamically Loaded Logger Plugins Shipped with TITAN
+
+Anyone can write a logger plugin to use with TITAN, but there are some widely used plugins that were made part of TITAN. These are available in the `$(TTCN3_DIR)/lib` sub-directory. Usually `LD_LIBRARY_PATH` contains this directory, if not then it should either be added to it or the path to the .so file has to be specified.
+
+[[junit-logger-plugin]]
+==== JUnitLogger Plugin
+
+It outputs XML files in JUnit format. This format is needed by Hudson/Jenkins, a continuous integration test tool. The XML files written by this logger plugin are a subset of the JUnit XML output format.
+
+At first select dynamic linking at Makefile generation according to <<LoggerPlugins, LoggerPlugins>>.
+
+To load the plugin the section `[LOGGING]` of the runtime configuration file should contain the following line: `LoggerPlugins := { JUnitLogger := "libjunitlogger" }`
+
+The plugin has 2 parameters:filename_stem: set the output file name, the name will start with the string specified in this parameter and end with "-<process_id>.log". The default value is "junit-xml". +
+testsuite_name: the name of the test suite, this will be written into the XML file.
+
+_Example 1:_ Simplest HelloWorld example.
+
+Source file
+[source]
+----
+module hello {
+  type component CT {}
+  testcase tc1() runs on CT {
+    log("Hello Titan!");
+    setverdict(pass,"Everything is ok");
+  }
+
+  testcase tc2() runs on CT {
+    log("Hello Titan!");
+    setverdict(fail,"Something was wrong");
+  }
+control {
+  execute(tc1());
+  execute(tc2());
+}
+
+}
+}
+----
+
+Configuration file (`cfg.cfg`):
+
+----
+[LOGGING]
+LogSourceInfo := Yes
+SourceInfoFormat := Single
+LoggerPlugins := { JUnitLogger := "libjunitlogger" }
+*.JUnitLogger.filename_stem := "MyJunitLogFile"
+*.JUnitLogger.testsuite_name := "myJUnitTest"
+
+[EXECUTE]
+hello.control
+----
+
+The makefile was generated by the command `makefilegen –fl hello.ttcn`.
+
+The executable was executed by the command `ttcn3_start hello cfg.cfg`.
+
+After running the log file name was `MyJunitLogFile-6426.log`, its content was:
+[source]
+----
+<?xml version="1.0"?>
+<testsuite name='myJUnitTest'><!-- logger name="JUnitLogger" version="v1.0" -->
+<!-- Testcase tc1 started -->
+<!-- Testcase tc1 finished in 0.000399, verdict: pass, reason: Everything is ok -->
+  <testcase classname='hello' name='tc1' time='0.000399'>
+  </testcase>
+<!-- Testcase tc2 started -->
+<!-- Testcase tc2 finished in 0.000225, verdict: fail, reason: Something was wrong -->
+  <testcase classname='hello' name='tc2' time='0.000225'>
+    <failure type='fail-verdict'>Something was wrong
+
+      hello.ttcn:14 hello control part
+      hello.ttcn:10 tc2 testcase
+    </failure>
+  </testcase>
+</testsuite>
+----
+
+*Format of the results*
+
+The results are included in testcases (between <testcase> tags) within a testsuite (between <testsuite> tags).The testsuite has only one attribute "name" which contains the name of the testsuite.
+
+Each testcase starts with two xml style comments which is followed by a <testcase> xml tag.
+
+*_The comments_*
+
+Each testcase starts with the following two xml comments:
+
+* `<!– Testcase "name of the testcase" started –>`
+* `<!– Testcase "name of the testcase" finished in "execution time is seconds", verdict:”verdict” –>`
+
+This is followed by a <testcase> tag.
+
+*_The <testcase> tag_*
+
+The <testcase> tag has the following attributes:
+
+* `classname=’name of the module’`
+* `name=’name of the testcase’`
+* `time=’execution duration in seconds’`
+
+Depending of the verdict the <testcase> may have element contents which can be the following:
+
+_Verdict: pass_
+
+No children
+
+_Verdict: fail_
+
+Has the following element content with the following attribute:
+
+<failure type=`fail-verdict'>
+
+The <failure> tag can have several of the following text contents – each in a separate line (see results log example above):
+
+* control part
+* testcase
+* altstep
+* function
+* external function
+* template
+
+Each line contains `"filename:linenumber identifier definition"`, where each of the items mean the following:
+
+* filename:linenumber – the file and the line where the test failed
+* identifier – the identifier depending on the definition, e.g. the classname in case of "control part" or the name of the test in case of "testcase"
+* definition – see the list in <failure> tag text content
+
+This is a simple stacktrace of the failure.
+
+Verdict: none
+
+[source]
+<skipped>no verdict</skipped>
+
+Verdict: `inconclusive`
+
+No children
+
+Verdict: `error`
+
+Has the following element content with the following attribute:
+
+[source]
+<error type='DTE'>
+
+The <error> tag has the text contents containing the reason of the error.
+
+*_XSD validation_*
+
+This is the xsd file to validate the xml generated by the plugin:
+[source]
+----
+<?xml version="1.0" encoding="UTF-8" ?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+    <xs:element name="failure">
+        <xs:complexType mixed="true">
+            <xs:attribute name="type" type="xs:string" use="optional"/>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="skipped" type="xs:string"/>
+
+    <xs:element name="error">
+        <xs:complexType mixed="true">
+            <xs:attribute name="type" type="xs:string" use="optional"/>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="testcase">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="skipped" minOccurs="0" maxOccurs="1"/>
+                <xs:element ref="error" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:element ref="failure" minOccurs="0" maxOccurs="unbounded"/>
+            </xs:sequence>
+            <xs:attribute name="classname" type="xs:string" use="required"/>
+            <xs:attribute name="name" type="xs:string" use="required"/>
+            <xs:attribute name="time" type="xs:string" use="required"/>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="testsuite">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="testcase" minOccurs="0" maxOccurs="unbounded"/>
+            </xs:sequence>
+            <xs:attribute name="name" type="xs:string" use="required"/>
+        </xs:complexType>
+    </xs:element>
+
+</xs:schema>
+----
+
+==== JUnitLogger2 Plugin
+
+It outputs XML files in JUnit format. This format is needed by Hudson/Jenkins, a continuous integration test tool. The XML files written by this logger plugin are a subset of the JUnit XML output format.
+
+The JUnitLogger2 plugin works as the <<junit-logger-plugin, JUnitLogger plugin>> with the following exceptions:
+
+* Configuration file (`cfg.cfg`):
++
+In the configuration file when specifying the logger plugin libjunitlogger2 should be written.
++
+[source]
+----
+[LOGGING]
+LogSourceInfo := Yes
+SourceInfoFormat := Single
+LoggerPlugins := { JUnitLogger := "libjunitlogger2" }
+*.JUnitLogger.filename_stem := "MyJunitLogFile"
+*.JUnitLogger.testsuite_name := "myJUnitTest"
+----
+* The results are included in testcases (between <testcase> tags) within a testsuite (between <testsuite> tags) like the JUnitLogger butthe testsuite has attributes other than "name" which contains the name of the testsuite.
++
+New attributes:
++
+tests – number of all testcases executed
++
+failures – number of testcases whose final verdict is fail
++
+errors – number of testcases that encountered an error
++
+skipped – number of testcases with a none verdict
++
+time – the time in seconds from the start of the tests until all the testcases executed.
++
+* XML comments are not added to the output.
+* XSD:
++
+[source]
+----
+<?xml version="1.0" encoding="UTF-8" ?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+	<xs:element name="failure">
+		<xs:complexType mixed="true">
+			<xs:attribute name="type" type="xs:string" use="optional"/>
+		</xs:complexType>
+	</xs:element>
+
+	<xs:element name="skipped" type="xs:string"/>
+
+	<xs:element name="error">
+		<xs:complexType mixed="true">
+			<xs:attribute name="type" type="xs:string" use="optional"/>
+		</xs:complexType>
+	</xs:element>
+
+	<xs:element name="testcase">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="skipped" minOccurs="0" maxOccurs="1"/>
+				<xs:element ref="error" minOccurs="0" maxOccurs="unbounded"/>
+				<xs:element ref="failure" minOccurs="0" maxOccurs="unbounded"/>
+			</xs:sequence>
+			<xs:attribute name="classname" type="xs:string" use="required"/>
+			<xs:attribute name="name" type="xs:string" use="required"/>
+			<xs:attribute name="time" type="xs:string" use="required"/>
+		</xs:complexType>
+	</xs:element>
+
+	<xs:element name="testsuite">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="testcase" minOccurs="0" maxOccurs="unbounded"/>
+			</xs:sequence>
+			<xs:attribute name="name" type="xs:string"  use="required"/>
+			<xs:attribute name="tests" type="xs:int" use="required"/>
+			<xs:attribute name="failures" type="xs:int" use="required"/>
+			<xs:attribute name="errors" type="xs:int" use="required"/>
+			<xs:attribute name="skipped" type="xs:int" use="required"/>
+			<xs:attribute name="time" type="xs:string" use="required"/>
+		</xs:complexType>
+	</xs:element>
+
+</xs:schema>
+----
+
+==== TSTLogger plugin
+
+The `TestStatistics` TITAN Logger plugin sends HTTP messages to the `TestStatistics` web based tool. `TestStatistics` has a web interface (http://eta-teststatistics.rnd.ki.sw.ericsson.se/ts/login) where the test result data can be examined. Currently the following messages are sent to the `TestStatistics` tool:
+
+* Test suite started (tsstart)
+* Test case started (tcstart)
+* Test case finished (tcstop)
+* Test suite finished (tsstop)
+* Test case fail reason (tcfailreason)
+
+The content of these messages is filled based on the log data and data given in the configuration file. Some data needs to be set as logger plugin parameters in the configuration file because it is needed by the `TestStatistics` tool but the TITAN log messages do not contain such information. The plugin parameters:
+
+[cols="m,,",options="header",]
+|===
+|Name |Default value |Description
+|tst_host_name |"eta-teststatistics.rnd.ki.sw.ericsson.se" |`TestStatistics` web service host name
+|tst_service_name |"http" |`TestStatistics` web service name or port number
+|tst_tcstart_url |"/ts-rip/rip/tcstart" |Path for the tcstart message
+|tst_tcstop_url |"/ts-rip/rip/tcstop" |Path for the tcstop message
+|tst_tsstart_url |"/ts-rip/rip/tsstart" |Path for the tsstart message
+|tst_tsstop_url |"/ts-rip/rip/tsstop" |Path for the tsstop message
+|tst_tcfailreason_url |"/ts-rip/rip/tcfailreason" |Path for the tcfailreason message
+|dbsUrl |"esekilx0007-sql5.rnd.ki.sw.ericsson.se:3314" |database URL
+|dbUser |"demo" |database user
+|dbPass |"demo" |plain text password of the user
+|dbName |"teststatistics_demo" |name of the database
+|log_plugin_debug |"0" |The logger plugin will print some debug information to the console if this value is not "0".
+|testConfigName |"DefaultConfigName" |name of this specific configuration of the test suite
+|suiteName |"DefaultSuiteName" |name of test suite
+|executingHost |the host name of the MTC (determined with gethostname()) |host where the test was executed
+|sutId |"0.0.0.0" |IP address of SUT
+|sutName |"DefaultSUTName" |name of SUT
+|lsvMajor |"1" |major version number of SUT
+|lsvMinor |"0" |minor version number of SUT
+|runByUser |Login name of the user running the MTC (determined with getlogin()) |name of user running the tests
+|projectName |"DefaultProjectname" |name of the project
+|productName |"DefaultProductName" |name of the product
+|productVersion |"0.0" |version of the product
+|configType |"configType" |
+|configVersion |"configVersion" |
+|testType |"testType" |
+|logLink |"default_log_location" |absolute location of log files
+|logEnd |"default_web_log_dir" |log directory relative to web server root
+|reportEmail |automatically set to < runByUser > +“@ericsson.com&quot; |who is to be notified via email
+|reportTelnum |"0" |where to send the SMS notification
+|===
+
+The parameters starting with "tst_" should be modified only if the TestStatistics tool is moved to another location on the intranet.
+
+There are 4 parameters for setting the database connection, the database can also be selected on the web interface, all information sent by TITAN will be stored there. The default values will use a demo database which can be used for experimentation.
+
+All parameters have default values, thus the plugin can be used even without setting any parameters. However some parameters should be set to a meaningful value, such as the suiteName or the projectName. An example from a configuration file:
+[source]
+----
+LoggerPlugins := { TSTLogger := "libtstlogger" }
+*.TSTLogger.testConfigName = "Hiper Giga Test"
+*.TSTLogger.sutId = "11.22.33.44"
+*.TSTLogger.projectName = "MagicProject"
+*.TSTLogger.suiteName = "Super Test Suite"
+*.TSTLogger.lsvMajor = "3"
+*.TSTLogger.lsvMinor = "14"
+----
+To load the plugin the runtime configuration file should contain the following line: +
+`LoggerPlugins := { TSTLogger := "libtstlogger" }`
+
+[[lttngustlogger-plugin]]
+==== LTTngUSTLogger plugin
+
+The LTTng-UST logger plugin emits each logging statement as an http://lttng.org/[LTTng-UST] event. LTTng is a low-overhead tracer for Linux which generates http://diamon.org/ctf[CTF] traces.
+
+To use the LTTng-UST logger plugin:
+
+. Make sure LTTng (2.7 or greater) is installed (the LTTng-tools and LTTng-UST components are required).
+. Add the following line to your runtime configuration file:LoggerPlugins := { LTTngUSTLogger := "liblttng-ust-logger" }
+. Create an LTTng tracing session:lttng create
+. Enable TITAN events:lttng enable-event –userspace titan_core:'*'
+. Start tracing:lttng start
+. Run your test script.
+. When you are done, stop tracing:lttng stop
+. Inspect the recorded events with an LTTng trace viewer, for example http://tracecompass.org/[Trace Compass] or http://diamon.org/babeltrace[Babeltrace].
+
+When the plugin is loaded, it dynamically loads the LTTng-UST tracepoint provider, a shared object installed in the same directory. It is important that the `LD_LIBRARY_PATH` environment variable be set to this directory, otherwise the plugin issues a warning message and does not emit LTTng events.
+
+[[logfile]]
+=== `LogFile`
+
+Option `LogFile` stands for the name of the log file. A string value is expected, which is interpreted as a skeleton to determine the file name. To make the file name handling more flexible the string may contain special metacharacters, which are substituted dynamically during test execution.
+
+The table below contains the list of available metacharacters in alphabetical order. Any unsupported metacharacter sequence, that is, if the `%` character is followed by any character that is not listed in the table below or a single percent character stays at the end of the string, will remain unchanged.
+
+.Available metacharacters for setting log file names
+[cols="m,",options="header",]
+|===
+|Meta-character |Substituted with . . .
+|%c |the name of the TTCN–3 test case that the PTC belongs to.
+|%e |the name of the TTCN–3 executable. The .exe suffix (on Windows platforms) and the directory part of the path name (if present) are truncated.
+|%h |the name of the computer returned by the gethostname(2) system call. This usually does not include the domain name.
+|%i |the sequence number of the log fragment.
+|%l |the login name of the current user. If the login name cannot be determined (e.g. the current UNIX user ID has no associated login name) an empty string is returned.
+|%n |
+- the name of the test component if the PTC has been given a name with the command create in the TTCN-3 create operation; an empty string otherwise. +
+- the string HC if the logfile is generated by a Host Controller +
+- the string MTC if the component is the Main Test Component (both in parallel and in single mode)
+| %p | the process ID (`pid`) of the UNIX process that implements the current test component. The `pid` is written in decimal notation.
+| %r | the component reference or component identifier. On PTCs it is the component reference (an integer number greater or equal to 3) in decimal notation. On the Main Test Component, Host Controller or in single mode the strings `mtc`, `hc` or `single` are substituted, respectively.
+| %s | the default suffix for the log files without the leading dot. Now it always results in string log, but future versions may support log file compression. In this case the suffix will depend on the chosen compression method.
+| %t | the TTCN–3 component type. Note: The MTC and HC have no dedicated component type since they can implement several component types in different test cases.
+| %% | a single % character.
+|===
+
+The outcome of substitution will result in the name of the log file. It may resolve either to a simple file name or to an absolute or relative path. The relative pathnames are always related to the current working directory of the executable tests in single mode or that of the Host Controller in parallel mode, respectively. If the pathname contains one or more nonexistent directories, those directories (and/or subdirectories) will be automatically created with permissions `0755` before the log file is opened.
+
+If the given string or the result of substitution is empty, no log file will be created and only console logging will be performed regardless the setting of `FileMask`. Empty log files will not be created when logging to files is completely disabled (i.e.` FileMask` is set to `LOG_NOTHING`) even if the value of `LogFile` would yield a valid file name.
+
+In parallel mode the user must ensure that the resulting log file names are unique for every component. Otherwise, if several components try to write into the same log file, the contents of the log will be unpredictable. The uniqueness is automatically provided if the host name (`%h`) and the component reference (`%r`) or the process ID (`%p`) is included in the file name.
+
+If testcase name (`%c`) or component name (`%t`) is included, the log file name may change during runtime. A new log file will be created/opened in this case. If a log file with the new name already exists, it is overwritten by default. Because of this, it is *highly recommended* to set `AppendFile` (see <<AppendFile, here>>) to `Yes` if LogFile contains `%c` or `%t`.
+
+If omitted, the default value for option `LogFile` is `%e-part%i.%s` in single mode and `%e.%h-%r-part%i.%s` in parallel mode, respectively. This ensures backward compatibility with earlier versions in parallel mode and follows the most commonly used file naming convention in single mode.
+
+[[filemask]]
+=== `FileMask`
+
+Option `FileMask` determines which events will be written to the log file and which ones will be filtered out.
+
+==== Category-based Filtering
+
+Table 14 enumerates the first level groups of events (that is, logging categories) along with a symbolic constant. The selected constants separated by a pipe (|) will determine what will be logged. When `FileMask` is omitted from the configuration file, its default value (`LOG_ALL`) is applied.
+
+Some of the first level logging categories may be divided in second level subcategories to get a finer logging granularity. These categories are listed in the tables 11 to 21. First level categories and second level subcategories may be mixed in the option.
+
+First level logging categories may be considered as notational convenience. They are maintained also for backward compatibility: legacy configuration files containing only first level categories will continue to work unmodified. However, the resulting log file may look different, as event categories have been modified; some messages, mostly `PARALLEL` and `FUNCTION`, have changed category, usually to `EXECUTOR`. When a first level logging category is included in the option `FileMask`, all second level subcategories pertaining to it will also be implicitly included, thus, it is redundant to list one ore more subcategories along with the concerned first level category.
+
+==== Component and Plugin Based Filtering
+
+It is possible to filter events based on the identity of the component generating them. For component designation it is recommended to use the component name given in the command `create` or the keyword `mtc`; latter one in the case of the Main Test Component. Using component numbers as identifiers is not recommended as this is a tool dependent identifier.
+
+The component name, if present, precedes the keyword `FileMask`. They are separated by a dot (.).
+
+It is also possible to apply the filtering on selected logger plugins of a component. The identifier of the desired logger plugin is appended after the component designation. The component and plugin identifiers are separated by a dot(.).
+
+[[consolemask]]
+=== `ConsoleMask`
+
+Option `ConsoleMask` determines which events will be written to the console and which ones will be filtered.
+
+[[category-based-filtering-0]]
+==== Category-based Filtering
+
+Table 14 enumerates the first level groups of events (that is, logging categories) along with a symbolic constant. The selected constants separated by a pipe (|) will determine what will be logged. When `ConsoleMask` is omitted from the configuration file, its default value (`ERROR|WARNING|ACTION |TESTCASE|STATISTICS`) is applied.
+
+Some of the first level logging categories may be divided in second level subcategories to get a finer logging granularity. These categories are listed in the tables 11 to 21. First level categories and second level subcategories may be mixed in the option.
+
+First level logging categories may be considered as notational convenience. They are maintained also for backward compatibility: legacy configuration files containing only first level categories will continue to work unmodified. However, the resulting log file may look different, as event categories have been modified; some messages, mostly `PARALLEL` and `FUNCTION`, have changed category, usually to `EXECUTOR`. When a first level logging category is included in the option `ConsoleMask`, all second level subcategories pertaining to it will also be implicitly included, thus, it is redundant to list one ore more subcategories along with the concerned first level category.
+
+In single mode the console log messages are written to the standard error of the ETS. For the interpretation of console logging in parallel mode, see section 12.3.3. of the TITAN User Guide (<<13-references.adoc#_13, [13]>>).
+
+WARNING: Please note that neither the timestamp nor the event type, nor location information is printed on the console.
+
+[[component-and-plugin-based-filtering-0]]
+==== Component and Plugin Based Filtering
+
+It is possible to filter events based on the identity of the component generating them. For component designation it is recommended to use the component name given in the command `create` or the keyword `mtc`; latter one in the case of the Main Test Component. Using component numbers as identifiers is not recommended as this is a tool dependent identifier.
+
+The component name, if present, precedes the keyword `ConsoleMask`. They are separated by a dot (.).
+
+It is also possible to apply the filtering on selected logger plugins of a component. The identifier of the desired logger plugin is appended after the component designation. The component and plugin identifiers are separated by a dot (.).
+
+.First level (coarse) log filtering
+[cols=",",options="header",]
+|===
+|Logging categories |Symbolic constantfootnote:[In order to be compatible with older configuration files, the following symbolic constants are also recognized: TTCN_ERROR, TTCN_WARNING, TTCN_PORTEVENT, TTCN_TIMEROP, TTCN_VERDICTOP, TTCN_DEFAULTOP, TTCN_TESTCASE, TTCN_ACTION, TTCN_USER, TTCN_FUNCTION, TTCN_STATISTICS, TTCN_PARALLEL, TTCN_EXECUTOR, TTCN_MATCHING and TTCN_DEBUG.These constants have the same meaning as their counterparts without the prefix TTCN_.]
+|TTCN–3 action(…) statements(No subcategory is implemented) |`ACTION`
+|Debug messages in Test Ports and external functions(For subcategories see Table 15) |`DEBUG`
+|Default operations (`activate`, `deactivate`, `return`)(For subcategories see Table 16) |`DEFAULTOP`
+|Dynamic test case errors (e.g. snapshot matching failures)(No subcategory is implemented) |`ERROR`
+|Internal TITAN events(For subcategories see Table 17) |`EXECUTOR`
+|Random number function calls(For subcategories see Note: `EXECUTOR_EXTCOMMAND` is always logged, regardless of the user’s settings. |`FUNCTION`
+|Bitwise OR of all the above except `MATCHING` and `DEBUG` |`LOG_ALL`
+|Nothing to be logged |`LOG_NOTHING`
+|Analysis of template matching failures in receiving port operations(For subcategories see Table 19) |`MATCHING`
+|Parallel test execution and test configuration related operations (`create`, `done`, `connect`, `map`, etc.)(For subcategories see Table 20) |`PARALLEL`
+|Port events (`send`, `receive`)(For subcategories see Table 22) |`PORTEVENT`
+|Statistics of verdicts at the end of execution(For subcategories see Table 23) |`STATISTICS`
+|The start, the end and the final verdict of test cases(For subcategories see Table 21) |`TESTCASE`
+|Timer operations (`start`, `stop`, `timeout`, `read`)(For subcategories see Table 24) |`TIMEROP`
+|User log(…) statements(No subcategory is implemented) |`USER`
+|Verdict operations (`setverdict`, `getverdict`)(For subcategories see Table 25) |`VERDICTOP`
+|Run-time warnings (e.g. stopping of an inactive timer)(No subcategory is implemented) |`WARNING`
+|===
+
+.Second level (fine) log filtering for *DEBUG*
+[cols=",",options="header",]
+|===
+|Logging subcategories |Symbolic constant
+|Debug information coming from generated functions of dual faced ports and built-in encoder/decoders.footnote:[Everyone writing encoder/decoder functions should implement logging in this subcategory.] |`DEBUG_ENCDEC`
+| |`DEBUG_TESTPORT`
+|Other, non categorized log messages of the category |`DEBUG_UNQUALIFIED`
+|===
+
+.Second level (fine) log filtering for *DEFAULTOP*
+[cols=",",options="header",]
+|===
+|Logging subcategories |Symbolic constant
+|TTCN-3 `activate` statement (activation of a default) |`DEFAULTOP_ACTIVATE`
+|Deactivation of a `default` |`DEFAULTOP_DEACTIVATE`
+|Leaving an invoked default at the end of a branch (causing leaving the `alt` statement in which it was invoked) or calling `repeat` in an invoked default (causing new snapshot and evaluation of the `alt` statement) |`DEFAULTOP_EXIT`
+|Other, non categorized log messages of the category |`DEFAULTOP_UNQUALIFIED`
+|===
+
+.Second level (fine) log filtering for *EXECUTOR*
+[cols=",",options="header",]
+|===
+|Logging subcategories |Symbolic constant
+|Starting and stopping MTC and HCs |`EXECUTOR_COMPONENT`
+|ETS runtime events (user control of execution, control connections between the processes of the ETS, ETS overloaded messages, etc.) |`EXECUTOR_RUNTIME`
+|Runtime test configuration data processing |`EXECUTOR_CONFIGDATA`
+|When this subcategory is present in the configuration file, logging options are printed in the second line of each log file. |`EXECUTOR_LOGOPTIONS`
+|Running of external command |`EXECUTOR_EXTCOMMAND`
+|Other, non categorized log messages of the category |`EXECUTOR_UNQUALIFIED`
+|===
+NOTE: `EXECUTOR_EXTCOMMAND` is always logged, regardless of the user’s settings.
+
+.Second level (fine) log filtering for *FUNCTION*
+[cols=",",options="header",]
+|===
+|Logging subcategories |Symbolic constant
+|Random number functions in TTCN-3 |`FUNCTION_RND`
+|Other, non categorized log messages of the category |`FUNCTION_UNQUALIFIED`
+|===
+
+.Second level (fine) log filtering for *MATCHING*
+[cols=",",options="header",]
+|===
+|Logging subcategories |Symbolic constant
+|Matching a TTCN-3 `done` operation |`MATCHING_DONE`
+|Timer in timeout operation is not started or not on the list of expired timers |`MATCHING_TIMEOUT`
+|Procedure-based mapped ports: successful template matching |`MATCHING_PMSUCCESS`
+|Procedure-based mapped ports: unsuccessful template matching |`MATCHING_PMUNSUCC`
+|Procedure-based connected ports: successful template matching |`MATCHING_PCSUCCESS`
+|Procedure-based connected ports: unsuccessful template matching |`MATCHING_PCUNSUCC`
+|Message-based mapped ports: successful template matching |`MATCHING_MMSUCCESS`
+|Message-based mapped ports: unsuccessful template matching |`MATCHING_MMUNSUCC`
+|Message-based connected ports: successful template matching |`MATCHING_MCSUCCESS`
+|Message-based connected ports: unsuccessful template matching |`MATCHING_MCUNSUCC`
+|Unsuccessful matching |`MATCHING_PROBLEM`
+|Other, non categorized log messages of the category |`MATCHING_UNQUALIFIED`
+|===
+
+.Second level (fine) log filtering for *PARALLEL*
+[cols=",",options="header",]
+|===
+|Logging subcategories |Symbolic constant
+|PTC creation and finishing, starting and finishing a function started on a PTC |`PARALLEL_PTC`
+|Port `connect` and `disconnect` operations |`PARALLEL_PORTCONN`
+|Port `map` and `unmap` operations |`PARALLEL_PORTMAP`
+|Other, non categorized log messages of the category |`PARALLEL_UNQUALIFIED`
+|===
+
+.Second level (fine) log filtering for *TESTCASE*
+[cols=",",options="header",]
+|===
+|Logging subcategories |Symbolic constant
+|A testcase is starting |`TESTCASE_START`
+|A testcase ends; final verdict of the testcase |`TESTCASE_FINISH`
+|Other, non categorized log messages of the category |`TESTCASE_UNQUALIFIED`
+|===
+
+.Second level (fine) log filtering for *PORTEVENT*
+[cols=",",options="header",]
+|===
+|Logging subcategories |Symbolic constant
+|Procedure-based ports: call, reply or exception enqueued in the queue of the port or extracted from the queue |`PORTEVENT_PQUEUE`
+|Message-based ports: message enqueued in the queue of the port or extracted from the queue |`PORTEVENT_MQUEUE`
+|Port state changesfootnote:[In mixed ports message and proc. ports cannot be distinguished] (`halt`, `start`, `stop`, port `clear` operation finished) |`PORTEVENT_STATE`
+|Procedure-based mapped ports: incoming data received (`getcall`, `getreply`, `catch`, `check`) |`PORTEVENT_PMIN`
+|Procedure-based mapped ports: outgoing data sent (`call`, `reply`, `raise`) |`PORTEVENT_PMOUT`
+|Procedure-based connected ports: incoming data received (`getcall`, `getreply`, `catch`, `check`) |`PORTEVENT_PCIN`
+|Procedure-based connected ports: outgoing data sent (`call`, `reply`, `raise`) |`PORTEVENT_PCOUT`
+|Message-based mapped ports: incoming data received (`receive`, `trigger`, `check`) |`PORTEVENT_MMRECV`
+|Message-based mapped ports: outgoing data sent (`send`) |`PORTEVENT_MMSEND`
+|Message-based connected ports: incoming data received (`receive`, `trigger`, `check`) |`PORTEVENT_MCRECV`
+|Message-based connected ports: outgoing data sent (`send`) |`PORTEVENT_MCSEND`
+|Mappings of incoming message from the external interface of dual-faced ports to the internal interface (decoding) |`PORTEVENT_DUALRECV`
+|Mappings of outgoing message from the internal interface of dual-faced ports to the external interface (encoding) |`PORTEVENT_DUALSEND`
+|Other, non categorized log messages of the category |`PORTEVENT_UNQUALIFIED`
+|===
+
+.Second level (fine) log filtering for *STATISTICS*
+[cols=",",options="header",]
+|===
+|Logging subcategories |Symbolic constant
+|Verdict statistics of executed test cases (% of `none`, `pass`, `inconc`, `fail`, `error`) |`STATISTICS_VERDICT`
+|Other, non categorized log messages of the category |`STATISTICS_UNQUALIFIED`
+|===
+
+.Second level (fine) log filtering for *TIMEROP*
+[cols=",",options="header",]
+|===
+|Logging subcategories |Symbolic constant
+|TTCN-3 `read timer` operation |`TIMEROP_READ`
+|TTCN-3 `start timer` operation |`TIMEROP_START`
+|Log events related to the guard timer used in TTCN-3 `execute` statements |`TIMEROP_GUARD`
+|TTCN-3 `stop timer` operation |`TIMEROP_STOP`
+|Successful TTCN-3 `timeout` operation (timer found on the list of expired timers) |`TIMEROP_TIMEOUT`
+|Other, non categorized log messages of the category |`TIMEROP_UNQUALIFIED`
+|===
+
+.Second level (fine) log filtering for *VERDICTOP*
+[cols=",",options="header",]
+|===
+|Logging subcategories |Symbolic constant
+|TTCN-3 `getverdict` operation |`VERDICTOP_GETVERDICT`
+|TTCN-3 `setverdict` operation |`VERDICTOP_SETVERDICT`
+|Final verdict of a test component (MTC or PTC) |`VERDICTOP_FINAL`
+|Other, non categorized log messages of the category |`VERDICTOP_UNQUALIFIED`
+|===
+
+[[AppendFile]]
+=== `AppendFile`
+
+Option `AppendFile` controls whether the run-time environment shall keep the contents of existing log files when starting execution. The possible values are `Yes` or `No`. The default is `No`, which means that all events from the previous test execution will be overwritten.
+
+This option can be used in both single and parallel modes. Its usefulness in single mode is obvious. If the executable test suite is started several times, the logs of the successive test sessions will be stored in the same single file after each other.
+
+In parallel mode the naming of log files is automatic and is based on the host name and component references. The option is applicable to all log files: all of them will be either appended or overwritten. If the test execution is repeated several times with different configuration or test case selection, the same file may contain the log of totally different test components. When appending is enabled the log files can be interpreted after using the logmerge utility (see Section 13.1. of the TITAN User Guide, <<13-references.adoc#_13, [13]>>). The option `AppendFile` guarantees only that no logged events will be lost during the entire test campaign.
+
+[[TimeStampFormat]]
+=== `TimeStampFormat`
+
+Option `TimeStampFormat` configures the formatting of timestamps in the log file. It can have three possible values: `Time` stands for the format `hh:mm:ss.microsec`. `DateTime` results in `yyyy/Mon/dd hh:mm:ss.microsec`. This is useful for long test durations (for instance, when a stability test runs for a couple of days). Using the third alternative (`Seconds`) results relative timestamps in format `s.microsec`. The time is related to the starting of the test component or test execution (i.e. this is the zero time). The default value for `TimeStampFormat` is `Time`.
+
+=== `ConsoleTimeStampFormat`
+
+Option `ConsoleTimeStampFormat` configures the formatting of timestamps in console log. It can have the same three values as `TimeStampFormat` can have: `Time`, `DateTime` and `Seconds` (see <<TimeStampFormat, here>>). If it is omitted (default) timestamp will not be inserted in the console log.
+
+=== `LogEventTypes`
+
+Option `LogEventTypes` indicates whether to include the symbolic event type (without the TTCN prefix) in each logged event immediately after the timestamp. This option can be useful for log post-filtering scripts. The possible values for `LogEventTypes` are `Yes`, `No`, `Detailed` and `Subcategories`.
+
+The default is `No`: no events will be logged.
+
+The setting `Yes` results a logfile containing event categories listed in Table 14.
+
+The setting `Subcategories` (and the equivalent `Detailed`) produces a logfile containing both event categories and subcategories. Subcategories are listed in the tables 11 to 21.
+
+In both single and parallel modes some log events are created before processing the configuration data. At this time the logging options (name of the log file, filter settings, timestamp format, etc.) are not known by the run-time environment, thus, these events are collected in a temporary memory buffer and are flushed to the log file when the processing of configuration file is finished. This implies that if the Host Controller is stopped in parallel mode before configuring it, no log file will be created at all.
+
+=== `SourceInfoFormat`
+
+Option `SourceInfoFormat` controls the appearance of the location information for the test events. The location information refers to a position in theTTCN–3 source code. It consists of the name of the TTCN–3 file and the line number separated by a colon character (:). Optionally, it may contain the name of the TTCN–3 entity (function, testcase, etc.) in parentheses that the source line belongs to. See also the option <<LogEntityName, `LogEntityName`>> below.
+
+The option can take one of the three possible values: `None`, `Single` and `Stack`. In case of `Single`, the location information of the TTCN–3 statement is logged that is currently being executed. When `Stack` is used the entire TTCN–3 call stack is logged. The logged information starts from the outermost control part or testcase and ends with the innermost TTCN–3 statement. An arrow (that is, the character sequence ->) is used as separator between the stack frames. The value `None` disables the printing of location information.The default value for `SourceInfoFormat` is `None`.
+
+The location information is placed in each line of the log file between the event type or timestamp and the textual description of the event.
+
+This option works only if the command line option `–L` is passed to the compiler (see <<6-compiling_ttcn3_and_asn1_modules.adoc#command-line-syntax, here>>). This feature is useful for debugging new TTCN–3 code or for understanding the traces of complex control constructs. If the location information is not generated into the C++ code the executable tests run faster, which can be more important when doing performance tests.
+
+NOTE: The reception of messages or procedure calls can only occur while the run-time environment is taking a new snapshot. A new snapshot is taken when the testcomponent is evaluating a stand-alone receiving operation, an `alt` construct or a standalone `altstep` invocation. Thus, the location information of the incoming messages or calls points to the first line of the above statements. The log event belonging to a TTCN–3 operation can be the extraction of a message from the port queue and not the reception of an incoming message.
+
+If the event has no associated line in the TTCN–3 source code (e.g. because it belongs to test environment startup or termination) and `SourceInfoFormat` is set to either `Single` or `Stack`, a single dash character `(-)` is printed into the log instead of the location information. This makes the automated processing of log files easier.
+
+The obsolete option `LogSourceInfo` is also accepted for backward compatibility with earlier versions. Setting `LogSourceInfo` `:= Yes` is equivalent to `SourceInfoFormat` `:= Single`, and similarly `LogSourceInfo := No` means `SourceInfoFormat := None`.
+
+[[LogEntityName]]
+=== `LogEntityName`
+
+Option `LogEntityName` controls whether the name of the corresponding TTCN–3 entity (`function`, `testcase`, `altstep, control` part, etc.) shall be included in the location information. If this option is set to `Yes`, the file name and line number is followed by the name of the TTCN–3 entity within parentheses. The default value is `No`. The option has no effect if `SourceInfoFormat` is set to `None`.
+
+=== `LogFileSize`
+
+Option `LogFileSize` sets the upper limit for the log file size. The limitation prevents load tests or long duration tests from triggering dynamic test case error when the growing log file exceeds file system size limits or available disk space.
+
+When the size limit is reached, the file is closed and a new log file will be created with an increased part number. For example, the first two log files when running `ExampleTestCase` in single mode will be `ExampleTestCase-part1.log` and `ExampleTestCase-part2.log`, respectively provided that the file name skeleton default values have not been modified.
+
+This option must be set together with <<LogFileNumber,`LogFileNumber`>>.
+
+The parameter value, a non-negative integer, is understood in kilobytes. The default value is 0, meaning that the file size is unlimited; or, to be precise, is only limited by the file system.
+
+==== Component and Plugin Dependent File Size
+
+It is possible to set different file sizes based on the identity of the component generating the log. For component designation it is recommended to use the component name given in the parameter of the command `create` (or the keyword `mtc` for the Main Test Component). Using component numbers as identifiers is not recommended as this is a tool dependent identifier.
+
+The component name, if present, precedes the keyword `LogFileSize`. The name and the keyword are separated by a dot (.).
+
+It is also possible to limit the file size on selected logger plugins of a component. The identifier of the desired logger plugin is appended after the component designation. The component and plugin identifiers are separated by a dot (.).
+
+[[LogFileNumber]]
+=== `LogFileNumber`
+
+Option `LogFileNumber`, a positive integer, sets the the maximum number of log files (fragments) kept. If the log file number limit is reached, the oldest log file of the component will be deleted and logging continues in the next log fragment file.
+
+The default value is 1, meaning that the number of log files equals one.
+
+==== Component and Plugin Dependent Fragment Number
+
+It is possible to set different fragment limits based on the identity of the component generating the log. For component designation it is recommended to use the component name given in the parameter of the command `create` (or the keyword `mtc` for the Main Test Component). Using component numbers as identifiers is not recommended as this is a tool dependent identifier.
+
+The component name, if present, precedes the keyword `LogFileNumber`. The name and the keyword are separated by a dot (.).
+
+It is also possible to limit the number of log fragments on selected logger plugins of a component. The identifier of the desired logger plugin is appended after the component designation. The component and plugin identifiers are separated by a dot (.).
+
+=== `DiskFullAction`
+
+Option `DiskFullAction` determines TITAN behavior when writing to the log file fails.
+
+If this option set to `Stop` test case execution continues without logging when an error occurs.
+
+The setting `Retry` causes test case execution to continue without logging and TITAN attempts to restart logging activity periodically (events in the unlogged periods are lost). The retry period is set by default to 30 seconds and can be changed by a parameter. Example: `Retry`(`60`) doubles the period.
+
+If the parameter is set to `Delete`, TITAN deletes the oldest log file and continues logging to a new log file fragment. If log writing fails again, the procedure is repeated until one two log files (the actual one and the previous one) are left. Further log writing failure causes a dynamic test case error.
+
+The default behavior is `Error`. With this setting, writing error causes a runtime (dynamic) test case error.
+
+==== Component and Plugin Dependent Behavior
+
+It is possible to set different error behavior based on the identity of the component generating the log. For component designation it is recommended to use the component name given in the parameter of the command `create` (or the keyword `mtc` for the Main Test Component). Using component numbers as identifiers is not recommended as this is a tool dependent identifier.
+
+The component name, if present, precedes the keyword `DiskFullAction`. The name and the keyword are separated by a dot (.).
+
+It is also possible configure different error behavior on selected logger plugins of a component. The identifier of the desired logger plugin is appended after the component designation. The component and plugin identifiers are separated by a dot (.).
+
+=== `MatchingHints`
+
+Option `MatchingHints` controls the amount and format of log messages describing template matching failures. These are written during port receive operations as logging category `MATCHING`, and as a response to TTCN-3 `log(match(…))` statements as logging category `USER`.
+
+There are two possible values: `Compact` and `Detailed`.
+
+When the `Detailed` option is in effect, a field-by-field description of the value and template is logged, followed by additional hints when matching set-of types. Example:
+
+[source]
+----
+{
+    {
+        field_rr1 := 1,
+        field_rr2 := 2
+    },
+    {
+        field_rr1 := 3,
+        field_rr2 := 4
+    }
+} with {
+    {
+        field_rr1 := 1,
+        field_rr2 := 2
+    },
+    {
+        field_rr1 := 3,
+        field_rr2 := 5
+    }
+} unmatched Some hints to find the reason of mismatch: {
+    value elements that have no pairs in the template: {
+        field_rr1 := 3,
+        field_rr2 := 4
+    } at index 1,
+    template elements that have no pairs in the value: {
+        field_rr1 := 3,
+        field_rr2 := 5
+    } at index 1,
+    matching value <-> template index pairs: {
+        0 <-> 0
+    },
+    matching unmatched value <-> template index pairs: {
+        1 <-> 1: {
+            {
+                field_rr1 := 3 with 3 matched,
+                field_rr2 := 4 with 5 unmatched
+            }
+        }
+    }
+}
+----
+
+The printout is similar to the TTCN-3 assignment notation for the entire structure.
+
+When the `Compact` option is in effect, fields and structures that match are omitted in order to pinpoint the reason why the entire match operation failed. Every mismatch is represented as a path from the outermost (containing) type to the innermost simple type that failed to match. This is similar to a mixture of dot notation referencing fields of record/set types and indexed notation referencing elements of record-of/set-of types, as it would be used to reference the innermost member of a structured type:
+
+* Mismatched fields of a record/set are represented by the field name preceded by a dot (a.k.a. full stop).
+* Mismatched elements of a record-of are represented by the index in square brackets.
+* Mismatched elements of a set-of are represented by the indexes of the mismatching elements in the vale and the template, separated by a two-headed arrow.
+
+Example: The following line is the equivalent of the nested display above when the `Compact` option is in effect instead of `Detailed`.
+
+`[1 <-> 1].field_rr2 := 4 with 5 unmatched`
+
+This means that the second element (indexing is 0-based) of the value didn’t match the second element of the template because field_rr2 in the value was 4 whereas field_rr2 in the template was 5.
+
+The default value of `MatchingHints` is `Compact`.
+
+[[EmergencyLogging]]
+=== `EmergencyLogging`
+
+Titan implements an emergency logging feature. The purpose of this feature is to help diagnose errors by logging events that would normally be suppressed, for example if only a few event types are logged (e.g. to minimize I/O overhead or log file size) and all the other log events are discarded. If something unexpected occurs (e.g. Dynamic Testcase Error), it can be difficult to diagnose the problem, but there is no way to recover the discarded events.
+
+With emergency logging, log events which are not written to the log file can be stored in a ring buffer. In case of an error, the stored events can be recovered from the buffer and written to the log. Because the buffered events are closest in time to the error, they are most likely to be helpful in diagnosing the cause.
+
+The value of the `EmergencyLogging` option is the ring buffer size (the number of log events that are kept). The default value is zero, which turns off the emergency logging feature.
+
+=== `EmergencyLoggingBehaviour`
+
+Buffering of events can be performed in two ways:
+
+* Buffering only selected messages. This option is selected with the `BufferMasked` value of the `EmergencyLoggingBehaviour` option. This is the default behaviour. Log events are sent to the plugins to be filtered and logged. Additionally log events not included by the `FileMask` and included by the `EmergencyLoggingMask` are buffered. This method cannot guarantee that timestamps of the log events passed to the plugins are always monotonically increasing. Monotonically increasing timestamps are a requirement for ttcn3_logmerge. The LegacyLogger plugin ensures that the requirements of ttcn3_logmerge are satisfied by writing the emergency log messages to a separate log file.
+* Buffer all messages. This option is selected with the `BufferAll` value of the `EmergencyLoggingBehaviour` option. The value of the `EmergencyLoggingMask` is ignored. All events are initially placed in the buffer. If the buffer is full, the oldest buffered event is extracted and sent to the logger plugins to be filtered and logged. If an error occurs, all stored events are extracted and logged without filtering. This method guarantees that all log events passed to the plugins have their timestamps in a monotonically increasing order. In this case there is no separate emergency log file.
+
+=== `EmergencyLoggingMask`
+
+Option `EmergencyLoggingMask` determines which events will be saved in the emergency logging buffer when the value of `EmergencyLoggingBehaviour` is `BufferMasked`.
+
+=== `EmergencyLoggingForFailVerdict`
+
+Option `EmergencyLoggingForFailVerdict` controls whether `setverdict(fail)` operations trigger emergency logging or not. The possible values are `Yes` or `No`. The default is `No`, which means that emergency logging would not be triggered when the component’s verdict is set to `fail`. Emergency logging is always triggered when a dynamic test case error is reached, regardless of this option.
+
+=== BNF productions for this section
+[source]
+----
+LoggingSection ::= "[LOGGING]" {LoggingAssignment}
+LoggingAssignment ::= [ComponentId "." [PluginId "."]] LoggingParam
+	| [ComponentId "."] "LoggerPlugins" AssignmentChar "{" LoggerPluginList "}"
+LoggingParam ::= (LogFile | FileMask | ConsoleMask | AppendFile
+	| TimeStampFormat | ConsoleTimeStampFormat | LogEventTypes
+	| SourceInfoFormat | LogEntityName
+	| LogFileSize | LogFileNumber | DiskFullAction | MatchingHints
+	| PluginSpecificParameter
+	| EmergencyLogging | EmergencyLoggingBehaviour | EmergencyLoggingMask
+	| EmergencyLoggingForFailVerdict) [SemiColon]
+LoggerPluginList ::= LoggerPluginSetting ["," LoggerPluginSetting ]
+LoggerPluginSetting ::= Identifier AssignmentChar PluginLocation | Identifier
+PluginId ::= Identifier | "*"
+PluginSpecificParameter ::= Identifier AssignmentChar StringValue
+PluginLocation ::= StringValue
+LogFile ::= ("LogFile" | "FileName") AssignmentChar StringValue
+FileMask ::= "FileMask" AssignmentChar LoggingBitmask
+ConsoleMask ::= "ConsoleMask" AssignmentChar LoggingBitmask
+MatchingHints := "Compact" | "Detailed"
+ComponentId ::= Identifier | Number | MTCKeyword | "*"
+LoggingBitmask ::= LoggingBit {"|" LoggingBit}
+LoggingBit ::= ... /* defined in Table 12 to Table 23 */
+AppendFile ::= "AppendFile" AssignmentChar ("Yes" | "No")
+TimeStampFormat ::= "TimeStampFormat" AssignmentChar ("Time" | "DateTime"
+	| "Seconds")
+ConsoleTimeStampFormat ::= "ConsoleTimeStampFormat" AssignmentChar ("Time" | "DateTime"
+	| "Seconds")
+LogEventTypes ::= "LogEventTypes" AssignmentChar ("Yes" | "No" | "Detailed"
+| "Subcategories")
+SourceInfoFormat ::= ("SourceInfoFormat" | "LogSourceInfo") AssignmentChar ("None"
+| "Single" | "Stack")
+LogEntityName ::= "LogEntityName" AssignmentChar ("Yes" | "No")
+LogFileSize ::= "LogFileSize" AssignmentChar Number
+LogFileNumber ::= "LogFileNumber" AssignmentChar Number
+DiskFullAction ::= "DiskFullAction" AssignmentChar DiskFullActionValue
+DiskFullActionValue ::= ( "Error" | "Stop" | "Retry" ["(" Number ")"] | "Delete" )
+EmergencyLogging ::= "EmergencyLogging" AssignmentChar Number
+EmergencyLoggingBehaviour ::= "EmergencyLoggingBehaviour" AssignmentChar
+	( "BufferAll" | "BufferMasked" )
+EmergencyLoggingMask ::= "EmergencyLoggingMask" AssignmentChar LoggingBitMask
+EmergencyLoggingForFailVerdict ::= “EmergencyLoggingForFailVerdict” AssignmentChar (“Yes” | “No”)
+----
+
+=== *_Example 1_*
+[source]
+----
+[LOGGING]
+LogFile := "/usr/local/TTCN3/logs/%l/%e.%h-%t%r-part%i.%s"
+“Alma-Ata”.FileMask := LOG_ALL
+MyComponent.FileMask := MATCHING
+mtc.FileMask := LOG_ALL | MATCHING
+ConsoleMask := ERROR | WARNING | TESTCASE | TIMEROP_START
+AppendFile := No
+TimeStampFormat := DateTime
+ConsoleTimeStampFormat := Time
+LogEventTypes := No
+SourceInfoFormat := Single
+LogEntityName := Yes
+MatchingHints := Detailed
+EmergencyLogging := 2000
+EmergencyLoggingBehaviour := BufferAll
+#EmergencyLoggingMask := LOG_ALL
+----
+=== *_Example 2_*
+[source]
+----
+[LOGGING]
+LogFile := "logs/%e-%r.%s"
+ConsoleMask := LOG_ALL
+FileMask := TESTCASE | ERROR | EXECUTOR | VERDICTOP
+TimeStampFormat := Time
+LogEventTypes := Yes
+SourceInfoFormat := Stack
+LogEventTypes := Yes
+*.EmergencyLogging:=15
+*.EmergencyLoggingBehaviour := BufferMasked
+*.EmergencyLoggingMask := LOG_ALL | DEBUG
+----
+
+[[testport-parameters]]
+== `[TESTPORT_PARAMETERS]`
+
+In this section you can specify parameters that are passed to Test Ports. Each parameter definition consists of a component name, a port name, a parameter name and a parameter value. The component name can be either an identifier that is assigned to the component in the `create` operation (see <<4-ttcn3_language_extensions.adoc#visibility-modifiers, here>>) or an integer value, which is interpreted as component reference[31]. The port and parameter names are identifiers while the parameter value must be always a `charstring` (with quotation marks). Instead of component name or port name (or both of them) the asterisk (*) sign can be used, which means ”all components” or ”all ports of the component”.
+
+If the keyword `system` is used as a component identifier, the parameter is passed to all ports of all components that are mapped to the given port of the test system interface. In this case the port identifier refers to the port of the test system and not the port of a TTCN–3 test component. These parameters are passed to the appropriate Test Port during the execution of map operations because the future mappings are not known at test component initialization. The asterisk (”*”) sign can also be used as port name with the component identifier system. This wildcard means, of course, all ports of the Test System Interface (that is, the parameter will be passed during all `map` operations).
+
+The names and meaning of Test Port parameters depend on the Test Port that you are using; for this information please consult the user documentation of your Test Port. It is the Test Port writer’s responsibility to process the parameter names and values. For the details of Test Port API see the section "Parameter setting function" in <<13-references.adoc#_16, [16]>>.
+
+[[bnf-productions-for-this-section-0]]
+=== BNF Productions for this Section
+[source]
+----
+TestPortParametersSection ::= "[TESTPORT_PARAMETERS]" {TestPortParameter}
+TestPortParameter ::= ComponentId "." PortName "." PortParameterName AssignmentChar 	PortParameterValue [SemiColon]
+ComponentId ::= Identifier | Number | MTCKeyword | SystemKeyword | "*"
+MTCKeyword ::= "mtc"
+SystemKeyword ::= "system"
+PortName ::= Identifier {ArrayRef} | "*"
+ArrayRef ::= "[" IntegerValue "]"
+PortParameterName ::= Identifier
+PortParameterValue ::= StringValue
+----
+=== *_Example_*
+[source]
+----
+[TESTPORT_PARAMETERS]
+mtc.*.LocalIPAddress := "164.48.161.146"
+“Alma-Ata”. RemoteIPAddress := "164.48.161.147"
+mtc.RADIUS[0].LocalUDPPort := "12345"
+mtc.RADIUS[1].LocalUDPPort := "12346"
+system.MySystemInterface1.RemoteIPAddress := "10.1.1.1"
+system.MySystemInterface2.RemoteIPAddress := "10.1.1.2"
+----
+== `[DEFINE]`
+
+In this section you can create macro definitions that can be used in other configuration file sections except `[INCLUDE]`. This way if the same value must be given several times in the configuration file, you can make a definition for it and only refer to the definition later on. In case of a change, you wouldn’t need to change the values all over the configuration file, but only in the definition.
+
+This section may contain zero, one or more macro definitions (assignments). Each macro definition consists of a macro identifier, which shall be a TTCN–3 identifier, an assignment operator and the macro value. The macro value is either a simple or a structured value (see the BNF below).
+
+The simple macro value is a sequence of one or more literal values and macro references. The elements of the sequence must not be separated by anything, whitespaces or comments are not allowed.
+
+The structured macro value can be used to define instances of complex TTCN-3 data structures. The defined values can be assigned to compound module parameters. There are two restrictions regarding the syntax of this value. The first and last character of the value are '{' and '}'. The value must be well-formed regarding the curly brackets. Every value which satisfies these two rules is accepted as a macro definition.
+NOTE: macro definitions do not have a type. The defined values are copied to the place of the macro references. The semantic correctness is determined by the context of the macro reference (see the examples section).
+
+Macro references can refer to previously defined macros. The reference can be provided in the following 3 formats which have the same meaning:
+
+* `$macroname`
+* `${macroname}`
+* `${macroname,charstring}`
+
+The above 3 different notations can also be used in other sections to refer to the macro with name "macroname".
+
+The literal value can be either a word (a sequence of arbitrary characters except whitespace) or a character string value delimited by quotation marks. The latter form is useful when the macro value is an empty string or contains whitespace characters. Literal values cannot follow each other, only macro references can.
+
+The values of macros as well as environmental variables set in the shell can be expanded in the configuration file using a special syntax described below. If both a macro and an environment variable are defined with the same name the macro of the configuration file has the precedence. If neither exists an error message is reported. It is possible to assign value to the same macro identifier more than once, in this case the last assignment will determine the value of the macro. When assigning a new value to the same macro, it is also possible to use the macro’s previous value.
+
+In parallel mode, in order to ensure the consistency of the test system, all macro substitutions are performed in the Main Controller. Hence the settings of environment variables are inherited from the shell that the Main Controller was started from.
+
+Macro definitions of this section do not change the environment space maintained by the operating system in any process. Thus, the macros defined in this section are not visible by the system call `getenv(3)` issued in test ports or external functions.
+
+Macro references can have one of these two formats:
+
+* Simple reference: a dollar character followed immediately by the macro identifier. Example: `$macroName`. In this case the value of the definition will be inserted as a literal charstring value.
+* Modified reference: a dollar character followed by a pair of curly brackets containing the macro identifier and a modifier separated by a comma. Example: `${macroName, modifier}`. Whitespaces are allowed within the pair of brackets, but the opening bracket must follow the dollar character immediately. In this case the type of the substituted token is specified by the modifier. Before substitution it is verified whether the value of the referred macro or environment variable fulfills the requirements for the given modifier.
+
+The following modifiers are available for macro substitution:
+
+* `integer`
++
+Transforms the value of the macro into an integer value. The macro value may contain decimal numbers only (leading and trailing whitespaces are not allowed).
+* `float`
++
+Transforms the value of the macro into a value of type float. The substitution is possible only if the value is an integer or a floating point number.
+* `boolean`
++
+Transforms the value of the macro into a boolean value. The macro value shall contain the word true or false.
+* `bitstring`
++
+Transforms the value of the macro into a literal bitstring value. Only binary digits are allowed in the macro value.
+* `hexstring`
++
+Transform the value of the macro into a hexstring value. Only hexadecimal digits are allowed in the macro value.
+* `octetstring`
++
+Transforms the value of the macro into an octetstring. The macro value shall contain even (including zero) number of hexadecimal digits.
+* `charstring`
++
+Transforms the value of the macro into a literal value of type charstring. There is no restriction about the contents of the macro value.
++
+[NOTE]
+====
+The reference with this modifier has the same result as a simple reference.
+
+* `binaryoctet` +
+Transforms the value of the macro into an octetstring value so that the octets of the resulting string will contain the ASCII character code of the corresponding character from the macro value. The macro value to be substituted may contain any kind of character.
+* `identifier` +
+Transforms the value of the macro into a TTCN–3 identifier. This modifier is useful, for instance, for specifying values of enumerated types in section [`MODULE_PARAMETERS`]. The macro value shall contain a valid TTCN–3 identifier. Leading and trailing whitespace characters are not allowed in the macro value.
+* `hostname` +
+Transforms the value of the macro into a host name, DNS name or IPv4 or IPv6 address. The modifier can be used in sections [`GROUPS`], [`COMPONENTS`] and [`MAIN_CONTROLLER`]. The value to be substituted shall contain a valid host name, DNS name or IP address formed from alphanumerical, dash (-), underscore (_), dot (.), colon(:) or percentage (%) characters. Leading and trailing whitespace is not allowed.
+====
+
+[[bnf-productions-for-this-section-1]]
+=== BNF Productions for this Section
+[source]
+----
+DefineSection ::= "[DEFINE]" {DefinitionAssignment}
+DefinitionAssignment ::= Identifier AssignmentChar DefinitionRValue
+DefinitionRValue ::= SimpleValue | StructuredValue
+SimpleValue ::= {Word | String | IPaddress | MacroReference}
+StructuredValue ::= "{" { {SimpleValue} | StructuredValue } "}"
+		| "{" "}"
+----
+`Word` may contain numbers, letters and other non-whitespace characters mixed in any way.
+
+[[example-0]]
+=== *_Example_*
+[source]
+----
+[DEFINE]
+Localhost := 127.0.0.1
+binary_240 := 11110000
+four := 4.0
+LongString := "This is a very long string."
+x1 = “Connecting to “${Localhost}
+x2 = $LongString${Localhost,charstring}” is an IP address”
+binary_str := ${binary_240}010101
+
+/* Examples for the structured macro definitions */
+// on the left side of the arrow is the definition
+// the substituted value is on the right side
+DEF_20 := 1	// 1
+DEF_21 := "1"	// 1
+DEF_22 := "\"1\""	// "1"
+DEF_23 := a	// a
+DEF_24 := "a"	// a
+DEF_25 := "\"a\""	// "a"
+
+DEF_30 := { f1 := ${DEF20}}	// => DEF_30 := { f1 := 1}
+DEF_31 := { f1 := ${DEF21}}	// => DEF_31 := { f1 := 1}
+DEF_32 := { f1 := ${DEF22}}	// => DEF_32 := { f1 := "1"}
+DEF_33 := { f1 := ${DEF23}}	// => DEF_33 := { f1 := a}
+DEF_34 := { f1 := ${DEF24}} 	// => DEF_34 := { f1 := a}
+DEF_35 := { f1 := \"${DEF24}\"} 	// => DEF_35 := { f1 := "a"}
+DEF_36 := { f1 := ${DEF25}} 	// => DEF_36 := { f1 := "a"}
+DEF_37 := { f1 := a} 		// => DEF_37 := { f1 := a}
+DEF_38 := { f1 := "a"} 		// => DEF_38 := { f1 := "a"}
+DEF_39 := { f1 := "${DEF_20}"} 	// => DEF_39 := { f1 := "${DEF_20}"}
+// DEF_30 and DEF_31 are valid module parameter definitions for tsp_1
+// the other definitions are not valid for tsp_1
+
+
+DEF_40 := { f2 := ${DEF20}} 	// => DEF_40 := { f2 := 1}
+DEF_41 := { f2 := ${DEF21}}	// => DEF_41 := { f2 := 1}
+DEF_42 := { f2 := ${DEF22}} 	// => DEF_42 := { f2 := "1"}
+DEF_43 := { f2 := ${DEF23}} 	// => DEF_43 := { f2 := a}
+DEF_44 := { f2 := ${DEF24}}	// => DEF_44 := { f2 := a}
+DEF_45 := { f2 := \"${DEF24}\"} 	// => DEF_45 := { f2 := "a"}
+DEF_46 := { f2 := ${DEF25}} 	// => DEF_46 := { f2 := "a"}
+DEF_47 := { f2 := a} 		// => DEF_47 := { f2 := a}
+DEF_48 := { f2 := "a"} 		// => DEF_48 := { f2 := "a"}
+DEF_49 := { f2 := "${DEF_20}"} 	// => DEF_49 := { f2 := "${DEF_20}"}
+// DEF_{42|45|46|48|49} are valid module parameter definitions for tsp_1
+// the other definitions are not valid for tsp_1
+
+// complex data structures can also be referenced
+DEF_50 := { f1 := ${DEF_42}, f2 := “a”}
+----
+
+=== *_Use example:_*
+[source]
+----
+[MODULE_PARAMETERS]
+par1 := $Localhost // "127.0.0.1"
+par2 := ${binary_240, bitstring} // ’11110000’B
+par3 := ${binary_240, hexstring} // ’11110000’H
+par4 := ${four, float} // 4.0
+par5 := ${four, binaryoctet} // ’342E30’O
+par6 := ${LongString, identifier} // ERROR: invalid substitution
+par7 := "$myVariable" // substitution is not done
+[MAIN_CONTROLLER]
+LocalAddress = ${Localhost, hostname} // 127.0.0.1
+----
+
+The tokens substituted are given in comments.
+
+=== *_TTCN file example_*
+[source]
+----
+// ttcn
+module a {
+  modulepar Rec tsp_1;
+  modulepar Rec2 tsp_1;
+  type record Rec {
+    integer f1 optional, charstring f2 optional
+  }
+  type record Rec2 {
+    Rec f1 optional, charstring f2 optional
+  }
+}
+----
+
+== `[INCLUDE]`
+
+It is possible to use configuration settings (module parameters, test port parameters, etc.) given in other configuration files, the configuration files just need to be listed in this section, with their full or relative pathnames. To the host controllers it will look like as if the configuration files would have been merged together into one configuration file.
+
+Each included file shall form a valid configuration file with complete section(s). The `[INCLUDE]` directives of included files are processed recursively. Each referenced configuration file is processed exactly once even if it is included from several places. Relative pathnames are resolved based on the directory of the referring configuration file.
+
+[[bnf-productions-for-this-section-2]]
+=== BNF Productions for this Section
+[source]
+----
+IncludeSection ::= "[INCLUDE]" {IncludeFile}
+IncludeFile ::= Cstring
+----
+
+The file’s name is a character string, given between quotation marks.
+
+[[example-3]]
+*_Example_*
+[source]
+----
+[INCLUDE]
+"base_definitions.cfg"
+"../additional_parameters.cfg"
+----
+
+[[ordered-include]]
+== [`ORDERED_INCLUDE]`
+
+It is possible to include configuration files to a specific location using the `[ORDERED_INCLUDE]` section. The included file can be given with the same syntax as in the `[INCLUDE]` section. The file can be specified with an absolute path, or a path relative to the configuration file in which the `[ORDERED_INCLUDE]` section takes place. Relative pathnames are resolved based on the directory of the referring configuration file.
+
+Each included file shall form a valid configuration file with complete section(s). Circular imports are not accepted.
+
+[[bnf-productions-for-this-section-3]]
+=== BNF Productions for this Section
+[source]
+----
+OrderdIncludeSection ::= "[ORDERED_INCLUDE]" {IncludeFile}
+IncludeFile ::= Cstring
+----
+The file’s name is a character string, given between quotation marks.
+
+[[example-4]]
+*_Example_*
+[source]
+----
+// main.cfg
+[ORDERED_INCLUDE]
+"oi.cfg"
+"oi2.cfg"
+[MODULE_PARAMETERS]
+tsp_1 := 3
+
+// oi.cfg
+[MODULE_PARAMTERS]
+tsp_1 := 1
+// oi2.cfg
+[MODULE_PARAMETERS]
+tsp_1 := 2
+----
+In this example we have 3 configuration files. The names of the files are included as comments. The ETS will be started with the first one ("main.cfg"). This configuration file includes "oi.cfg" and "oi2.cfg". The included files are processed sequentially. The first included file ("oi.cfg") will set the module parameter "tsp_1" to 1. As the processing continues, the second included file ("oi2.cfg") will set it to 2. Finally when the included files are processed, the main configuration file sets it to 3. In this case, the module parameter named tsp_1 will have the final value of 3.
+
+[[external-commands]]
+== `[EXTERNAL_COMMANDS]`
+
+This section defines external commands (shell scripts) to be executed by the ETS whenever a control part or test case is started or terminated. Using this feature you can control external monitor programs (like `tcpdump` in case of IP testing) automatically during test execution. In case of parallel mode, the external command is executed on the host where the MTC runs. The name of the corresponding module or test case is passed to the external command as argument. For `BeginTestCase` and `EndTestCase` the name of the module and test case separated with a dot is passed as argument; and additionally the test case verdict for `EndTestCase`. For example, this allows you to collect the output of `tcpdump` in separate files for each test case where the file name contains the name of the test case.
+
+All commands are optional and can be set independently. The command name (or full path) must be given within double quotes. Whitespaces and special characters are treated as part of the command name and will not be interpreted by the shell. This means that additional, fixed, arguments can not be passed to the external command. If the command string is empty no command will be executed (it also clears the command that was set previously).
+
+[[bnf-productions-for-this-section-4]]
+=== BNF Productions for this Section
+[source]
+----
+ExternalCommandsSection ::= "[EXTERNAL_COMMANDS]" {ExternalCommand}
+ExternalCommand ::= CommandType AssignmentChar Command [SemiColon]
+CommandType ::= "BeginControlPart" | "EndControlPart" | "BeginTestCase" |
+	"EndTestCase"
+Command ::= StringValue
+Example
+[EXTERNAL_COMMANDS]
+BeginTestCase := "/usr/local/tester/bin/StartTcpdump"
+EndTestCase := "/usr/local/tester/bin/StopTcpdump"
+BeginControlPart := "this will be overwritten"
+EndControlPart := ""
+----
+
+=== Example: Running `tcpdump` during test execution
+
+In case of testing IP based protocols it might be useful to monitor the network during TTCN–3 test execution. The following shell scripts show an example how to start the program `tcpdump` in the background at the beginning of every test case and how to terminate it when a test case is finished.
+
+When `tcpdump` is running, its `pid` is stored in the file `/etc/tcpdump.pid` to inform the stopping script which process to kill. Of course, the command line options for tcpdump may be changed to fit your needs. The output of `tcpdump` is saved in the file `<testcase name>.dump` in the working directory of the executable test program, which is useful when `repgen` is used after test execution.
+
+To make this working, you should give the names or full pathes of these scripts as `BeginTestCase` and `EndTestCase` in section `[EXTERNAL_COMMANDS]` of the configuration file.
+
+A complete example script for starting `tcpdump`:
+[source]
+----
+#!/bin/sh
+
+PIDFILE=/tmp/tcpdump.pid
+
+if [ -e $PIDFILE ]
+then
+  kill ‘cat $PIDFILE‘
+  rm $PIDFILE
+fi
+
+/usr/local/sbin/tcpdump -e -n -s 200 -x -v -i eth1 ip6 >$1.dump \
+  2>/dev/null &
+PID=$!
+
+echo $PID >$PIDFILE
+----
+
+The script for stopping `tcpdump`:
+[source]
+----
+#!/bin/sh
+
+PIDFILE=/tmp/tcpdump.pid
+
+if [ -e $PIDFILE ]
+then
+  kill ‘cat $PIDFILE‘
+  rm $PIDFILE
+fi
+----
+
+[[execute]]
+== `[EXECUTE]`
+
+In this section you have to specify what parts of your test suite you want to execute. In single mode the configuration file is useless without this section. The section [`EXECUTE`] is optional in parallel mode. If it is missing, You shall start testcases manually from command line with the command `smtc` `[module name[.control|.testcase name|.*]]` see UG <<13-references.adoc#_17, [17]>> 4.4.2.1. In this case a parameter after smtc is mandatory. Don’t omit this section in case of using `ttcn3_start`, otherwise no testcase will be executed.
+
+You can start TTCN–3 module control parts and test cases individually. There is one limitation: only those test cases having no parameters, or only parameters with default values, can be executed from this section. Other test cases can be started from the module control part with proper actual parameters.
+
+In this section, a single identifier (or an identifier followed by the optional suffix `.control`) means the control part of that TTCN–3 module. Test case names shall be preceded by the name of module that they can be found in and a dot character. You can use the character asterisk (*) instead of test case name, which means the execution of all test cases of the corresponding module in the same order as they are defined in the TTCN–3 source code.
+
+The control parts and test cases are executed in the same order as you specified them in this section. If you define the same module or test case name more than once, that control part or test case will be executed, of course, many times.
+
+=== The BNF Specification of this Section
+[source]
+----
+ExecuteSection ::= "[EXECUTE]" {ExecuteItem}
+ExecuteItem ::= (ControlPart | TestCase) [SemiColon]
+ControlPart ::= ModuleName [ "." "control" ]
+ModuleName ::= Identifier
+TestCase ::= ModuleName "." TestCaseName
+TestCaseName ::= Identifier | "*"
+----
+
+[[example-6]]
+Example
+[source]
+----
+[EXECUTE]
+IPv6Demo.send_echo
+IPv6Demo.send_echo // run it twice
+IPv6BaseSpecification
+IPv6NeighborDiscovery.*
+----
+
+[[groups-parallel-mode]]
+== `[GROUPS]` (Parallel mode)
+
+In this section you can specify groups of hosts. These groups can be used inside the [`COMPONENTS`] section to restrict the creation of certain PTCs to a given set of hosts. See also <<components-parallel-mode, here>>.
+
+This section contains any number of group specifications in the following form: group name, assignment operator (:=) and either an asterisk (*) or a comma-separated list of host names (DNS names) or IP addresses in which you should enlist each hosts belonging to that group. The asterisk appearing on the right side denotes all hosts that take part in the test execution.
+
+Groups may overlap, that is, the same hosts can belong to several groups. Group references, however, cannot appear on the right side. It is worth mentioning that group names are case sensitive.
+
+NOTE: The groups defined in this section have nothing to do with TTCN–3 group of definitions construct!
+
+[[the-bnf-specification-of-this-section-0]]
+=== The BNF Specification of this Section
+[source]
+----
+GroupsSection ::= "[GROUPS]" {GroupItem}
+GroupItem ::= GroupName AssignmentChar (GroupMemberList | "*") [SemiColon]
+GroupName ::= Identifier
+GroupMemberList ::= GroupMember {"," GroupMember}
+GroupMember ::= HostName | IPAddress
+----
+
+[[example-7]]
+Example
+[source]
+----
+[GROUPS]
+HeintelAndPauler := heintel, pauler.eth.ericsson.se
+myGroup := 153.44.87.34, test-host.123.com
+AllHosts := *
+----
+
+[[components-parallel-mode]]
+== `[COMPONENTS]` (Parallel mode)
+
+This section consists of rules restricting the location of created PTCs. These constraints are useful when distributed tests are executed in a heterogeneous environment. The participating computers may have different hardware setup, computing capacity or operating system. Thus some physical interfaces or Test Ports might be present only on a part of the hostsfootnote:[On the remaining computers the unsupported Test Ports shall be substituted with empty stubs (i.e. generated and unmodified skeletons).].
+
+The rules are described in form of assignments. The left side contains a component identifier while the right side names a host or a group of hosts on which the given components are executed. The components can be selected by their component type or name assigned in create operations. The component identifiers are case sensitive. The assigned hosts are taken from the corresponding host group set from the section <<groups-parallel-mode, [`GROUPS`]>>.
+
+Each component type or component name can appear in at most one rule. The asterisk (*) stands for all component identifiers that do not appear in any rule. The asterisk can show in a single rule only.
+
+When a TTCN–3 parallel test component is being created it is the responsibility of the MC to choose a suitable and availablefootnote:[Only those hosts participate in the component distribution algorithm that have an active HC, which has been started by the user. MC ignores all unavailable group members silently and will not start the HC on them.] host for it. First a subset of available hosts, the set of so-called candidates, is determined based on the component distribution rules. The MC implements a load balancing algorithm so that the location of the component will be the candidate with the smallest load, that is, the least number of active TTCN–3 test componentsfootnote:[This term of load has no direct relation to the load average calculated by UNIX kernels.]. Once a component is assigned to a host it, cannot be moved to another one later during its life.
+
+If a newly created PTC matches more than one rule (because both its component type and name is found in the section) all available members of both assigned groups are considered to be candidates.
+
+If section [`COMPONENTS`] is empty or omitted from the configuration file all available hosts are considered to be candidates. If the calculated set of candidates is an empty set (i.e. there is no available host that is allowed by the rules) the `create` operation will fail and dynamic test case error will occur on the ancestor component.
+
+If the location of the PTC is explicitly specified in the `create` operation (see <<3-clarifications_to_the_ttcn-3_standard.adoc#importing-import-statement-from-ttcn-3-modules, here>> for the syntax of this language extension) the rules of this section are ignored. In this case the set of candidates is determined based on the host name or group name that was specified as location.
+
+[[the-bnf-specification-of-this-section-1]]
+=== The BNF Specification of this Section
+[source]
+----
+ComponentsSection ::= "[COMPONENTS]" {ComponentItem}
+ComponentItem ::= ComponentId AssignmentChar ComponentLocation [SemiColon]
+ComponentId ::= Identifier | "*"
+ComponentLocation ::= GroupName | HostName | IPAddress
+----
+
+[[example-8]]
+Example
+[source]
+----
+[COMPONENTS]
+MyComponentType := HeintelAndPauler
+CPComponentType := 153.44.87.34
+* := AllHosts
+----
+
+[[main-controller-parallel-mode]]
+== `[MAIN_CONTROLLER]` (Parallel mode)
+
+The options herein control the behavior of MC. The section [`MAIN_CONTROLLER`] includes four options to be set.
+
+Options `LocalAddress` and `TCPPort` determine the IP address and TCP port on which the MC application will listen for incoming HC connections. Setting `LocalAddress` can be useful on computers having multiple local IP addresses (multi-homed hosts). The value of `LocalAddress` can be either an IP address or a DNS name, which must resolve to an address that belongs to a local network interface. If this option is omitted MC will accept connections on all local IP addresses.
+
+The value of option `TCPPort` is an integer number between 0 and 65535. The recommended port number is 9034. Using a TCP port number that is less than 1024 may require super-user (root) privileges. The MC will listen on an ephemeral port chosen by the kernel when `TCPPort` is omitted or set to zero.
+
+The optional variable `NumHCs` provides support for automated (batch) execution of distributed tests. When present, the MC will not give a command prompt, but wait for `NumHCs` HCs to connect. When the specified number of HCs are connected, the MC automatically creates MTC and executes all items of the section <<execute, [`EXECUTE`]>>. When finished, the MTC is terminated and the MC quits automatically. If `NumHCs` was omitted then the MC shall be controlled interactively, that is, you have to issue the commands `cmtc` and `smtc` yourself (see also sections 12.3, 12.3.1 of the TITAN User Guide <<13-references.adoc#_13, [13]>>).
+
+The `KillTimer` option tells the MC to wait some seconds for a busy test component (MTC or PTC) to terminate when it was requested to stopfootnote:[The MTC can be terminated from the MC’s user interface or from a PTC by executing the mtc.stop operation. The termination of a PTC can be requested either explicitly (using a TTCN–3 component stop or kill operation) or implicitly (at the end of test case).]. The MC in co-operation with the local HC kills the UNIX process if the component did not terminate properly before `KillTimer` expiry. The purpose of this function is to prevent the test system from deadlocks.
+
+NOTE: When the UNIX process of MTC is killed all existing PTCs are destroyed at the same time.
+
+The value of `KillTimer` is measured in seconds and can be given in either integer or floating point notation. Setting `KillTimer` to zero disables the kill functionality, that is, busy test components will not be killed even if they do not respond within a very long time period. When omitted, the default value of `KillTimer` is 10 seconds. This value is sufficient in typical test setups, but it needs to be increased on heavily loaded computers (e.g. when running performance tests). Setting a too short `KillTimer` value may have undesired effects as the final verdict of killed PTCs, which is not known by MC, is always substituted by error.
+
+`UnixSocketsEnabled` has a default value of "yes". When at default value, Titan will use Unix domain sockets for internal communication on the same machine, and TCP sockets to communicate across the network. When set to "no", TCP sockets will be used both internally and over the network.
+
+[[the-bnf-specification-of-this-section-2]]
+=== The BNF Specification of this Section
+[source]
+----
+MainControllerSection ::= "[MAIN_CONTROLLER]" {MainControllerAssignment}
+MainControllerAssignment ::= (LocalAddress | TCPPort | NumHCs | KillTimer |
+  UnixSocketsEnabled) [SemiColon]
+LocalAddress ::= "LocalAddress" AssignmentChar (HostName | IPAddress)
+TCPPort ::= "TCPPort" AssignmentChar IntegerValue
+NumHCs ::= "NumHCs" AssignmentChar IntegerValue
+KillTimer ::= "KillTimer" AssignmentChar (IntegerValue | FloatValue)
+UnixSocketsEnabled ::= "UnixSocketsEnabled" AssignmentChar ("Yes" | "No")
+----
+
+[[example-9]]
+*_Example:_*
+[source]
+----
+[MAIN_CONTROLLER]
+LocalAddress := 192.168.1.1
+TCPPort := 9034
+NumHCs := 3
+KillTimer := 4.5
+UnixSocketsEnabled := Yes
+----
+
+[[profiler]]
+== `[PROFILER]`
+
+The settings in this section control the behavior of the TTCN-3 Profiler. These settings only affect the TTCN-3 modules specified in the file list argument of the compiler option -z. If this compiler option is not set, then the [`PROFILER`] section is ignored.
+
+=== Enabling and disabling features
+
+The following features can be enabled or disabled through the configuration file:
+
+* `DisableProfiler` – if set to `true`, the measurement of execution times is disabled and data related to execution times or average times will not be present in the statistics file. Default value: false
+* `DisableCoverage` – if set to `true`, the execution count of code lines and functions is not measured and data related to execution counts, average times or unused lines/functions will not be present in the statistics file. Default value: `false`
+* If both `DisableProfiler` and `DisableCoverage` are set to `true`, then the profiler acts as if it wasn’t activated in any of the modules (as if the compiler flag –z was not set). The database and statistics files are not generated.
+* `AggregateData` – if set to `true`, the data gathered in the previous run(s) is added to the current data, otherwise all previous data is discarded, default value: `false`
+* `DisableStatistics` – if set to `true`, the statistics file will not be generated at the end of execution, default value: `false`
+* `StartAutomatically` – if set to `true`, the profiler will start when the program execution starts, otherwise it will only start at the first @profiler.start command (it needs to be started individually for each component in parallel mode), default value: `true`
+* `NetLineTimes` – if set to `true`, the execution times of function calls will not be added to the caller lines’ total times, default value: `false`
+* `NetFunctionTimes` – if set to `true`, the execution times of function calls will not be added to the caller functions’ total times, default value: `false`
+
+[[setting-output-files]]
+=== Setting output files
+
+The DatabaseFile setting can be used to specify the name and path of the database file (as a string with double quotation marks, like a `charstring`). This is the file imported by the profiler if data aggregation is set (if this setting is changed between runs, the profiler will not find the old database).
+
+Default value: `profiler.db`
+
+Similarly the `StatisticsFile` setting can be used to specify the name and path of the statistics file.
+
+Default value: `profiler.stats`
+
+The names of both files may contain special metacharacters, which are substituted dynamically during test execution. These are helpful when there are multiple Host Controllers in the profiled test system.
+
+The table below contains the list of available metacharacters in alphabetical order. Any unsupported metacharacter sequence, that is, if the % character is followed by any character that is not listed in the table below or a single percent character stays at the end of the string, will remain unchanged.
+
+.Available metacharacters for setting profiler output file names
+[cols="m,",options="header",]
+|===
+|Meta-character |Substituted with . . .
+|%e |the name of the TTCN–3 executable. The `.exe` suffix (on Windows platforms) and the directory part of the path name (if present) are truncated.
+|%h |the name of the computer returned by the `gethostname(2)` system call. This usually does not include the domain name.
+|%l |the login name of the current user. If the login name cannot be determined (e.g. the current UNIX user ID has no associated login name) an empty string is returned.
+|%p |the process ID `(pid)` of the UNIX process that implements the current test component. The `pid` is written in decimal notation.
+|%% |a single % character.
+|===
+
+=== Statistics filters
+
+The `StatisticsFilter` setting can be used to specify which lists will be calculated and displayed in the statistics file. Its value is a list of filters separated by ampersands (`&`). Vertical lines (`|`) can also be used to separate the filters (as if they were bits added together with binary or) to the same effect.
+
+The concatenation mark (`&=`) can also be used with this setting to specify the filters in multiple commands.
+
+The filters can also be specified with hexadecimal values (similarly to `hexstrings`, but without the quotation marks and the `H` at the end).
+
+.Statistics filters, single lists
+[cols=",,",options="header",]
+|===
+|Filter |Numeric value |Represented list
+|`NumberOfLines` |`0x00000001` |Number of code lines and functions
+|`LineDataRaw` |`0x00000002` |Total time and execution count of code lines (raw)
+|`FuncDataRaw` |`0x00000004` |Total time and execution count of functions (raw)
+|`LineAvgData` |`0x00000008` |Average time of code lines (raw)
+|`FuncAvgData` |`0x00000010` |Average time of functions (raw)
+|`LineTimesSortedByMod` |`0x00000020` |Total time of code lines (sorted, per module)
+|`FuncTimesSortedByMod` |`0x00000040` |Total time of functions (sorted, per module)
+|`LineTimesSortedTotal` |`0x00000080` |Total time of code lines (sorted, total)
+|`FuncTimesSortedTotal` |`0x00000100` |Total time of functions (sorted, total)
+|`LineCountSortedByMod` |`0x00000200` |Execution count of code lines (sorted, per module)
+|`FuncCountSortedByMod` |`0x00000400` |Execution count of functions (sorted, per module)
+|`LineCountSortedTotal` |`0x00000800` |Execution count of code lines (sorted, total)
+|`FuncCountSortedTotal` |`0x00001000` |Execution count of functions (sorted, total)
+|`LineAvgSortedByMod` |`0x00002000` |Average time of code lines (sorted, per module)
+|`FuncAvgSortedByMod` |`0x00004000` |Average time of functions (sorted, per module)
+|`LineAvgSortedTotal` |`0x00008000` |Average time of code lines (sorted, total)
+|`FuncAvgSortedTotal` |`0x00010000` |Average time of functions (sorted, total)
+|`Top10LineTimes` |`0x00020000` |Total times of code lines (sorted, total, top 10 only)
+|`Top10FuncTimes` |`0x00040000` |Total times of functions (sorted, total, top 10 only)
+|`Top10LineCount` |`0x00080000` |Execution count of code lines (sorted, global, top 10 only)
+|`Top10FuncCount` |`0x00100000` |Execution count of functions (sorted, total, top 10 only)
+|`Top10LineAvg` |`0x00200000` |Average time of code lines (sorted, total, top 10 only)
+|`Top10FuncAvg` |`0x00400000` |Average time of functions (sorted, total, top 10 only)
+|`UnusedLines` |`0x00800000` |Unused code lines
+|`UnusedFunc` |`0x01000000` |Unused functions
+|===
+
+.Statistics filters, grouped lists
+[cols=",,",options="header",]
+|===
+|`AllRawData` |`0x0000001E` |Total time, execution count and average time of code lines and functions (raw)
+|`LineDataSortedByMod` |`0x00002220` |Total time, execution count and average time of code lines (sorted, per module)
+|`FuncDataSortedByMod` |`0x00004440` |Total time, execution count and average time of functions (sorted, per module)
+|`LineDataSortedTotal` |`0x00008880` |Total time, execution count and average time of code lines (sorted, total)
+|`FuncDataSortedTotal` |`0x00011100` |Total time, execution count and average time of functions (sorted, total)
+|`LineDataSorted` |`0x0000AAA0` |Total time, execution count and average time of code lines (sorted, total and per module)
+|`FuncDataSorted` |`0x00015540` |Total time, execution count and average time of functions (sorted, total and per module)
+|`AllDataSorted` |`0x0001FFE0` |Total time, execution count and average time of code lines and functions (sorted, total and per module)
+|`Top10LineData` |`0x002A0000` |Total time, execution count and average time of code lines (sorted, total, top 10 only)
+|`Top10FuncData` |`0x00540000` |Total time, execution count and average time of functions (sorted, total, top 10 only)
+|`Top10AllData` |`0x007E0000` |Total time, execution count and average time of code lines and functions (sorted, total, top 10 only)
+|`UnusedData` |`0x01800000` |Unused code lines and functions
+|`All` |`0x01FFFFFF` |All lists
+|===
+
+NOTE: the `DisableProfiler` and `DisableCoverage` settings also influence which lists are displayed in the statistics file (e.g.: if `DisableCoverage` is set to `true` and `StatisticsFilter` is set to `Top10LineData`, then the statistics file will only contain the top 10 total times list).
+
+[[the-bnf-specification-of-this-section-3]]
+=== The BNF Specification of this Section
+[source]
+----
+ProfilerSection ::= "[PROFILER]" {ProfilerSetting}
+ProfilerSetting ::= (DisableProfilerSetting | DisableCoverageSetting |
+  DatabaseFileSetting | AggregateDataSetting | StatisticsFileSetting |
+  DisableStatisticsSetting | StatisticsFilterSetting) [SemiColon]
+DisableProfilerSetting ::= “DisableProfiler” AssignmentChar BooleanValue
+DisableCoverageSetting ::= “DisableCoverage” AssignmentChar BooleanValue
+DatabaseFileSetting ::= “DatabaseFile” AssignmentChar CharstringValue
+AggregateDataSetting ::= “AggregateData” AssignmentChar BooleanValue
+StatisticsFileSetting ::= “StatisticsFile” AssignmentChar CharstringValue
+DisableStatisticsSetting ::= “DisableStatistics” AssignmentChar BooleanValue
+StatisticsFilterSetting ::= “StatisticsFilter” (AssignmentChar | ConcatChar)
+  StatisticsFilter [ { (“&” | “|”) StatisticsFilter } ]
+StatisticsFilter ::= (“NumberOfLines” | “LineDataRaw” | “FuncDataRaw” |
+  “LineAvgRaw” | “FuncAvgRaw” | “LineTimesSortedByMod” | “FuncTimesSortedByMod”
+  | “LineTimesSortedTotal” | “FuncTimesSortedTotal” | “LineCountSortedByMod” |
+  “FuncCountSortedByMod” | “LineCountSortedTotal” | “FuncCountSortedTotal” |
+  “LineAvgSortedByMod” | “FuncAvgSortedByMod” | “LineAvgSortedTotal” |
+  “FuncAvgSortedTotal” | “Top10LineTimes” | “Top10FuncTimes” | “Top10LineCount”
+  | “Top10FuncCount” | “Top10LineAvg” | “Top10FuncAvg” | “UnusedLines” |
+  “UnusedFunc” | {Hex}+)
+----
+[[example-10]]
+*_Example:_*
+[source]
+----
+[PROFILER]
+DisableProfiler := false
+DisableCoverage := false
+DatabaseFile := "data.json"
+AggregateData := false
+StatisticsFile := "prof.stats"
+DisableStatistics := false
+StatisticsFilter := Top10AllData & UnusedData
+StatisticsFilter &= AllRawData
+StatisticsFilter &= 88A0
+----
+
+== Dynamic Configuration of Logging Options
+
+Some logging options may be altered during the run of the test suite. This allows e.g. to vary the logging verbosity between testcases.
+
+The interface is contained in `$(TTCN3_DIR)/include/TitanLoggerControl.ttcn`; this file needs to be added to the project. `TitanLoggerControl.ttcn` contains definitions of various external functions which can be called from TTCN-3 code. The implementation of these external functions is built into the Titan runtime library; it will be linked automatically.
+
+The individual logging severities are contained in the "Severity" enumerated type. A logging mask is represented by a record-of:
+
+`type record of Severity Severities;`
+
+For each logging bit set, the record-of will contain an element.
+
+The TitanLoggerControl module defines several constants:
+[source]
+----
+const Severities log_nothing    := {};
+const Severities log_console_default := { … }
+const Severities log_all := { … } // LOG_ALL, without MATCHING,DEBUG
+const Severities log_everything := { … } // really everything
+----
+These constants can be used when setting logger options.
+
+Each function has a parameter named `plugin`, to specify which `plugin` is being manipulated. Currently, the value of the plugin parameter must be `"LegacyLogger"`.
+
+=== Retrieving Logging Masks
+
+The following functions can be used to retrieve the current value of the logger file mask/console mask:
+[source]
+----
+get_file_mask(in charstring plugin) return Severities;
+get_console_mask(in charstring plugin) return Severities;
+----
+
+=== Setting Logging Masks
+
+The following functions set the file mask or console mask, overwriting the previous value:
+[source]
+----
+set_file_mask(in charstring plugin, in Severities s);
+set_console_mask(in charstring plugin, in Severities s);
+----
+Logging severities present in the parameter will be switched on; severities absent from the parameter will be switched off.
+
+The following functions allow adding individual Severity values to the list of events that are logged, without affecting other severities:
+[source]
+----
+add_to_file_mask(in charstring plugin, in Severities s);
+add_to_console_mask(in charstring plugin, in Severities s);
+----
+Logging severities present in the parameter will be switched on; severities absent from the parameter will not be modified. Example: to turn on DEBUG_ENCDEC without affecting other severities:
+[source]
+----
+var Severities encdec := { DEBUG_ENCDEC }
+TitanLoggerControl.add_to_file_mask(“LegacyLogger”, encdec);
+----
+
+NOTE: Each bit is treated individually. To turn on a first level category, one needs to enumerate all subcategories. For example, to turn on all `DEBUG` messages, the value of the Severities variable should be:
+
+[source]
+----
+var Severities debug_all := { DEBUG_ENCDEC, DEBUG_TESTPORT, DEBUG_UNQUALIFIED };
+TitanLoggerControl.add_to_file_mask(“LegacyLogger”, debug_all);
+----
+
+The following functions allow removing of individual Severities:
+[source]
+----
+remove_from_file_mask(in charstring plugin, in Severities s);
+remove_from_console_mask(in charstring plugin, in Severities s);
+----
+
+Logging severities present in the parameter will be switched off; severities absent from the parameter will not be modified.
+When setting file/console masks, redundant severity values are ignored. For example, the two following values have the same effect when passed to set_file_mask.
+[source]
+----
+var Severities ptc := { PARALLEL_PTC };
+var Severities ptc3:= { PARALLEL_PTC, PARALLEL_PTC, PARALLEL_PTC };
+----
+
+=== Manipulating the Log File Name
+
+The following function allows setting the log file name skeleton. See <<lttngustlogger-plugin, here>> for possible values.
+
+[source]
+set_log_file(in charstring plugin, in charstring filename);
+
+[[enabling-disabling-the-logging-of-ttcn-3-entity-name]]
+=== Enabling/disabling the Logging of TTCN-3 Entity Name
+
+The following functions allow the reading and writing of the <<LogEntityName, `LogEntityName`>> parameter.
+
+[source]
+----
+set_log_entity_name(in charstring plugin, in boolean b);
+get_log_entity_name(in charstring plugin) return boolean;
+----

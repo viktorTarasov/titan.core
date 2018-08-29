@@ -1,0 +1,630 @@
+= The TITAN Project Descriptor File
+:toc:
+:table-number: 28
+
+Concept of the project is defined in chapter 4 of User Guide for the TITAN Designer <<13-references.adoc#_17, [17]>> because it is introduced in TITAN Designer which is the name of one of the Eclipse plugin of TITAN.
+
+The content of a project and all project specific settings are described in the TITAN project descriptor (TPD) file. The name of the TPD file is in the form `<project_name>.tpd` e.g. `HelloTitan.tpd`.
+
+The tpd file contains information about the project name, the contained files, referenced (used) projects, make, configuration and running information etc. (se later) but doesn’t contain source files at all.
+
+Tpd files are designed to produce portability for projects. Primarily it is automatically created by the Titan Designer (in Eclipse) when project settings of an existing project are exported (see Chapter 4.9.4 of <<13-references.adoc#_17, [17]>>). The created TPD file can be used to import the project into another workspace (belonging to the same or to a different user) if the files and projects referred by the TPD are available at the new place (see Chapter 4.9.5 of <<13-references.adoc#_17, [17]>>). If the project to be exported contains referenced (used) project, then the TITAN project setting of the referenced projects shall be exported previously.
+
+Tpd files can be used without TITAN Designer for example for generating hierarchical Makefiles from command line by the makefile generator (see <<6-compiling_ttcn3_and_asn1_modules.adoc#using-the-makefile-generator-to-generate-makefile-s-from-titan-project-descriptor-file-s, here>>). The files and TPD files referred by the TPD should be available.
+
+TPD files are designed to be created by the Eclipse Designer but it can be created or modified by experts.
+
+The data is stored in XML format. The schema definition of the project descriptor is delivered with the Titan package and can be found in the `${TTCN3_DIR}/etc/xsd/TPD.xsd` file. If the type of an element is a subtype of string, for example a file name or a path, the xsd file doesn’t restrict it but uses only string or NormalizedString as type. Although the compliance of a TPD file for TPD.xsd is a necessary but not sufficient statement, it is very useful to verify the tpd file against TPD.xsd for example with this command: `xmllint –noout –schema XSD_FILE XML_FILE`
+
+Each element is designed to be extendable, so for almost all elements there is a default value defined, if the element is missing this value is used.To simplify the reviews the elements are always saved in an ordered fashion thus limiting the effects of minor changes. The lists can contain from 0 to infinite elements. The O/M column in the tables describes if the element is optional or mandatory.
+
+The TPD file contains a top level element <TITAN_Project_File_Information>.
+
+This has an attribute called "version". This attribute describes the version of the TPD.xsd file which the tpd file validates to. e.g.:
+
+`<TITAN_Project_File_Information version="1.0">`. Currently this version is fixed.
+
+The elements contained in the top level element are listed below in Table.
+
+The content of these elements is discussed later in this chapter.
+
+.The sequence of elements of TITAN_Project_File_Information
+[cols=",,",options="header",]
+|===
+|*Name of the element* |*Meaning* |*O/M*
+|`ProjectName` |The name of the project. This name is used as the name of the TPD file used for export. This is also the name of the project created by TITAN Designer at import. See also <<project-name, here>> |M
+|`ReferencedProjects` |The list of projects referenced by the actual one.Not present if the actual project does not reference any other. See also <<referenced-projects, here>> |O
+|`Folders` |The list of folders present in the project.Not present if the actual project does not contain any folders to be saved. See also <<files-and-folders, here>> |O
+|`Files` |The list of files present in the project.Not present if the actual project does not contain any files to be saved. See also <<files-and-folders, here>> |O
+|`PathVariables` |The list of eclipse path variables active in the workbench.Not present if the actual workbench did not contain any path variables. See also <<path-variables, here>> |O
+|`ActiveConfiguration` |The name of the build configuration active whose parameters will be used by TITAN for building the project. See also <<ActiveConfiguration, here>> |M
+|`Configurations` |The list of configurations set on the actual project. Please note, that there is always at least one configuration, the "Default", set for every project. See also <<configuration, here>> |O
+|`PackedReferencedProjects` |PackedReferencedProjects contains not references for other TPDS but the content of the TPDs belonging to the referenced projects (without element PackedReferencedProjects). Not present if the actual project is not referencing any other, or if the saving of this data is not explicitly requested by the user. See also <<packed-referenced-projects, here>> |O
+|===
+
+[[project-name]]
+== Project Name
+
+The ProjectName element contains the name of the project.
+
+Example:
+[source]
+<ProjectName>HelloTitan2</ProjectName>
+
+[[referenced-projects]]
+== Referenced Projects
+
+The `ReferencedProjects` element contains a list of `ReferencedProject` elements, each of which describes a single project referencing relation. A referenced project is a project whose content is used by our project, e.g. its files are imported by the file of the current project.
+
+The following tags are supported:
+
+.Attributes of ReferencedProject
+[cols=",,",options="header",]
+|===
+|*Name of the attributes* |*Meaning* |*O/M*
+|`name` |The name of the project referenced. This will create the relation between the actual and the referenced project. The value of this attribute must be equal to the `ProjectName` of the referenced project. |M
+|`projectLocationURI` |The path of the project descriptor of the referenced project, relative to the actual descriptor.If the project is not already loaded in eclipse, it will be loaded from this path. |M
+|`tpdName` |The file name of the TPD file. This attribute is used with the `makefilegen’s` –I switch to provide search paths to find the referenced project if it is not found at `projectLocationURI`. |O
+|===
+
+Example:
+[source]
+----
+<ReferencedProjects>
+       <ReferencedProject name="Hello_world"
+projectLocationURI="../Hello_world/Hello_world.tpd"/>
+</ReferencedProjects>
+----
+
+[[files-and-folders]]
+== Files and Folders
+
+These elements contain some basic information on files and folders present in the project that is needed to recreate the structure of the project anytime later.
+
+The `Files` element is a list of `FileResource` elements, the `Folders` element is a list of `FolderResource` elements.
+
+Right now the contents of the `FileResource` and `FolderResource` elements are the same. All information is stored in attributes.
+
+.The attributes of `FileResource` and `FolderResource`.
+[cols=",,",options="header",]
+|===
+|*Name of the attribute* |*Meaning* |*O/M*
+|`projectRelativePath` |The path of the resource inside the resource system of eclipse. |M
+|`relativeURI` |This is the path relative to the location where the project descriptor files is being saved, in case the path of the resource does not contain any feature, that needs to be resolved, and it is possible to calculate the relative path. |O
+|`rawURI` |This is the raw path of the resource as stored by the platform. In this form the path variables, or any other feature, are not yet resolved. |O
+|===
+
+If both tags are present the `relativeURI` should be used. It is an error if neither the `relativeURI` nor the `rawURI` attribute is present.
+
+Example:
+[source]
+----
+<Folders>
+    <FolderResource projectRelativePath="src" relativeURI="file:src"/>
+    <FolderResource projectRelativePath="virtual" rawURI="virtual:/virtual"/>
+  </Folders>
+  <Files>
+    <FileResource projectRelativePath=".TITAN_properties" relativeURI="file:.TITAN_properties"/>
+    <FileResource projectRelativePath=".project" relativeURI="file:.project"/>
+  </Files>
+----
+
+[[path-variables]]
+== Path Variables
+
+The `PathVariables` element stores the list of `PathVariable` elements, each of which describes a single eclipse path variable. They are not used at Makefile generation from command line.
+
+.Attributes of PathVariable
+[cols=",,",options="header",]
+|===
+|*Name of the attribute* |*Meaning* |*O/M*
+|Name |The name of the path variable. |M
+|Value |The value of the path variable. |M
+|===
+
+Example:
+[source]
+----
+<PathVariables>
+    <PathVariable name="path_variable1" value="C:/ekrisza"/>
+    <PathVariable name="path_variable2" value="C:/Users/ekrisza/doksi-workbench-workspace/masik/masik.TITAN_Project_Format"/>
+  </PathVariables>
+----
+
+[[ActiveConfiguration]]
+== ActiveConfiguration
+
+The ActiveConfiguration element stores the name of the active build configuration whose parameters will be used by TITAN for building the project.
+
+NOTE: This can be overwritten from TITAN Designer (from Eclipse) or from command line generating Makefile(s) by ttcn3_makefilegen using the –b flag, see <<6-compiling_ttcn3_and_asn1_modules.adoc#using-the-makefile-generator-to-generate-makefile-s-from-titan-project-descriptor-file-s, here>>.
+
+See also chapter <<configurations, Configurations>>.
+
+Example:
+
+[source]
+<ActiveConfiguration>Default</ActiveConfiguration>
+
+[[configurations]]
+== Configurations
+
+The `Configurations` element stores a list of `Configuration` elements, each of which describes a single build configuration. Different build configurations can use a different file set, different makefile settings (e.g single or parallel mode, operational system specific settings etc).
+
+The `Configuration` element has a single tag called `name`, and stores the name of the configuration.
+
+.Elements of Configuration
+[cols=",,",options="header",]
+|===
+|*Name of the element* |*Meaning* |*O/M*
+|`ProjectProperties` |Stores the settings of the project required to create a Makefile, to build the project, and the project level naming conventions. See <<project-properties, here>>. |O
+|`FolderProperties` |Stores the properties of each folder contained in the project. Not present if there are no folders in the project, or all folders have all attributes on their default values. See chapter <<folder-properties, here>>. |O
+|`FileProperties` |Stores the properties of each file contained in the project. Not present if there are no files in the project, or all files have all attributes on their default values. See chapter <<file-properties, here>>. |O
+|===
+
+[[project-properties]]
+=== Project Properties
+
+This element contains all information needed to create a proper Makefile for the project to drive the build process (all information other than the list of files) and for naming convention checking. Compare this chapter with chapter "Setting Project Properties" in TITAN Designer Documentation <<13-references.adoc#_17, [17]>>.
+
+It can contain 5 elements: `MakefileSettings`, `LocalBuildSettings`,
+
+`RemoteBuildProperties`, `NamingConventions`, `ConfigurationRequirements`.
+
+[cols=",,",options="header",]
+|===
+|*Name of the element* |*Meaning* |*O/M*
+|`MakefileSettings` |Stores the settings of the project required to create a Makefile.For more information see <<makefile-settings, here>> |O
+|`LocalBuildSettings` |Stores the settings of the project required to perform the build. See <<local-build-settings, here>> |O
+|`RemoteBuildProperties` |Stores information necessary for remote build. See <<remote-build-properties, here>> |
+|`NamingConventions` |Stores the project specific naming conventions. See <<naming-conventions, here>> |O
+|`ConfigurationRequirements` |Stores the required build configurations of the referenced projects. See <<configuration-requirements, here>> |O
+|===
+
+[[makefile-settings]]
+==== Makefile Settings
+
+The flags for the TTCN3 compiler can be specified in this section. For more information please refer to section <<6-compiling_ttcn3_and_asn1_modules.adoc#complier, Compiler>>. A supplementary information is placed in brackets.
+
+Useful information can be found in TITAN Designer documentation <<13-references.adoc#_17, [17]>> as well.
+
+.The elements of MakefileSettings
+[cols=",,,,",options="header",]
+|===
+|*Name* |*Makefilegen option* |*Compiler option* |*Default value (used when not being present)* |*O/M*
+|`generateMakefile (meaningful only in Eclipse)` |- |- |true |O
+|`generateInternalMakefile (meaningful only in Eclipse)` |- |- |false |O
+|`symboliclinklessBuild` |- |- |false |O
+|`useAbsolutePath` |-a |- |false |O
+|`GNUMake` |-g |- |false |O
+|`incrementalDependencyRefresh (meaningful not only in Eclipse, necessary to apply incremental dependency via gnu Make and .d files)` |- |- |false |O
+|`dynamicLinking` |-l |- |false |O
+|`functiontestRuntime (use function test runtime (TITAN_RUNTIME_2)` |-R |-R |false |O
+|`singleMode` |-s |- |false |O
+|`codeSplitting (select code splitting mode for the generated C++ code)` |-U |-U |none |O
+|`defaultTarget ("executable" or "library", if –L applied, see 6.1.2)` |-L |- |executable |O
+|`targetExecutable` |-e |- |N/A |O
+|`TTCN3preprocessor (the name of the preprocessor meaningful only in Eclipse)` |- |- |cpp |O
+|`TTCN3preprocessorIncludes` |- |- |empty |O
+|`preprocessorIncludes` |-p |- |emtpy |O
+|`disableBER (disable BER encoder/decoder functions)` |- |-b |false |O
+|`disableRAW (disable RAW encoder/decoder functions)` |- |-r |false |O
+|`disableTEXT (disable TEXT encoder/decoder functions)` |- |-x |false |O
+|`disableXER` |- |-X |false |O
+|`disableOER` |- |-O |false |O
+|`forceXERinASN.1 (force XER in ASN.1 files)` |- |-a |false |O
+|`defaultasOmit (-d compiler option)` |- |-d |false |O
+|`gccMessageFormat (emulate GCC error/warning message format)` |- |-g |false |O
+|`lineNumbersOnlyInMessages (use only line numbers in error/warning messages)` |- |-i |false |O
+|`includeSourceInfo (include source line info in C++ code)` |- |-l |false |O
+|`addSourceLineInfo (add source line info for logging)` |- |-L |false |O
+|`suppressWarnings (suppress warnings)` |-w |-w |false |O
+|`Quietly (suppress all messages, quiet mode)` |- |-q |false |O
+|`namingRules (only in Eclipse)` |- |- |unspecified |O
+|`disableSubtypeChecking (disable subtype checking)` |- |-y |false |O
+|`forceOldFuncOutParHandling (force old function out parameter handling) Note: overwrites obsolete tag outParamBoundness` |-Y |-Y |false |O
+|`CxxCompiler (The name of the compiler, only in Eclipse)` |- |- |g++ |O
+|`optimizationLevel (only in Eclipse)`|- |- |"Common optimizations" |O
+|`otherOptimizationFlags (only in Eclipse)` |- |- |empty |O
+|`disablePredefinedExternalFolder (OPENSSL_DIR and XMLDIR)` |- |- |false |O
+|`enableLegacyEncoding` |-G |-e |false |O
+|`disableUserInformation` |- |-D |false |O
+|`buildLevel (only in Eclipse, see below and in 6.1.6 The actual building in [17])`|- |- |"Level 5 - Creating Executable Test Suite with dependency update" |O
+|`ProjectSpecificRulesGenerator` |- |- |Used to place custom rules and new targets into the generated Makefile |O
+|`profiledFileList (enables profiling and code coverage in the specified modules)` |-z |-z |empty |O
+|`omitInValueList` |-M |-M |false |O
+|`warningsForBadVariants` |-E |-E |false |O
+|`activateDebugger` |-n |-n |false |O
+|`ignoreUntaggedOnTopLevelUnion` |-N |-N |false |O
+|===
+
+The supported values of `optimizationLevel` are:
+
+* "None"
+* "Minor optimizations"
+* "Common optimizations"
+* "Optimize for speed"
+* "Optimize for size"
+* The optimization flags given as the value of otherOptimizationFlags are passed to the Cxx compiler.
+
+The support values for buildLevel are:
+
+* "Level 0 - Semantic Check"
+* "Level 1 - TTCN3 -> C++ compilation"
+* "Level 2 - Creating object files"
+* "Level 2.5 - Creating object files with heuristical dependency update"
+* "Level 3 - Creating object files with dependency update"
+* "Level 4 - Creating Executable Test Suite"
+* "Level 4.5 - Creating Executable Test Suite with heuristical dependency update"
+* "Level 5 - Creating Executable Test Suite with dependency update"
+
+NOTE: The targetExecutable path is stored either relative to the root of the project, or with full path.
+
+It is possible to reference environment variables in the following fields with the syntax `"[" VariableName "]"`:
+
+* `TTCN3preprocessorIncludes`
+* `preprocessorIncludes`
+* `SolarisSpecificLibraries`
+* `Solaris8SpecificLibraries`
+* `LinuxSpecificLibraries`
+* `FreeBSDSpecificLibraries`
+* `Win32SpecificLibraries`
+* `linkerLibraries`
+* `linkerLibrarySearchPath`
+
+The variables referenced with this syntax will be recognized by the Eclipse Designer plugin. If the tpd is used for makefile generation, the `ttcn3_makefilegen` will replace the reference with its command line equivalent in the generated makefile. (e.g. `[VariableName] => $(VariableName)` ).
+
+Contents of the `ProjectSpecificRulesGenerator` element:
+
+Exactly one `GeneratorCommand` element that specifies the external command to be run
+
+An optional Targets element that contains any number of Target elements, each element having two attributes: name – name of the target, placement – the place of where the target shall be inserted. Possible places are defined in the TPD.xsd file.
+
+The content of the `profiledFileList` element is the path to a text file, using the same path attributes as `FileResource` elements. The text file contains the list of files (TTCN-3 modules), that will be profiled, separated by new lines. This file is stored in the variable `PROFILED_FILE_LIST` in the generated makefile.
+
+TPDs of referenced projects may also contain profiled file lists, these are merged with each other and with the top-level project’s file list (a new rule is created that merges the lists). In this case the variable `PROFILED_FILE_LIST` contains the merged file list, and `PROFILED_FILE_LIST_SEGMENTS` contains the individual file lists.
+
+NOTE: A new rule is added to make target `compile` (both rules are switched to double colon rules), if the profiled file list exists, since changing the list of profiled files requires all modules to be recompiled. If the profiled file list is also a make target (in case it is merged from other lists), then a new dependency is added to make targets `check` and `compile-all` (also with the use of double colon rules).
+
+[[local-build-settings]]
+==== Local Build Settings
+
+.Elements of LocalBuildSettings
+[cols=",,",options="header",]
+|===
+|*Name of the element* |*Default value* |*O/M*
+|`MakefileFlags` |empty |O
+|`MakefileScript` |empty |O
+|`workingDirectory` |N/A |O
+|===
+
+`MakefileScript` is a script which modifies the Makefile generated by the makefilegen program or by the TITAN Designer internal makefile generator. This kind of script is widely used to automatically insert or remove flags which are not handled by the ttcn3_makefilegen. If the Makefile is generated by the TITAN Designer, this script is generally not necessary because the TITAN Designer can handle (insert or remove) them but even in this case there can be necessary modifications. Duplicated insertion of flags can cause errors.
+
+The `MakefileScript` shall be a shell script and it must have two parameters. The first parameter is the name of the generated Makefile and the second parameter is the name of the generated Makefile with the `.tmp` suffix. The `MakefileScript` should write the contents of the modified Makefile into the `.tmp` file from the second argument. The TITAN Designer and the makefilegen tool will automatically move the contents of the `.tmp` file into the Makefile and then remove the `.tmp` file.
+
+NOTE: The `MakefileScript` and `workingDirectory` paths are stored either relative to the root of the project, or with full path.
+
+[[remote-build-properties]]
+==== Remote Build Properties
+
+RemoteBuildProperties contains a sequence of elements type of "RemoteHost" and one optional ParallelExecution element which is a boolean. A RemoteHost contains 3 elements according to Table 36 Elements of `RemoteHost`.
+
+.Elements of `RemoteHost`
+[cols=",,",options="header",]
+|===
+|*Name of the element* |*Type* |*O/M*
+|`Active` |boolean |M
+|`Name` |string |M
+|`Command` |string |M
+|===
+
+[[naming-conventions]]
+==== Naming Conventions
+
+The naming conventions are given using Java regular expressions. All of the elements below are optional.
+
+.Elements of NamingConventions
+[cols=",,",options="header",]
+|===
+|*Name of the element* |*Default value* |*O/M*
+|`TTCN3ModuleName` |.* |O
+|`ASN1ModuleName` |.* |O
+|`altstep` |as_.* |O
+|`globalConstant` |cg_.* |O
+|`externalConstant` |ec_.* |O
+|`function` |f_.* |O
+|`externalFunction` |ef_.* |O
+|`moduleParameter` |m.* |O
+|`globalPort` |.*_PT |O
+|`globalTemplate` |t.* |O
+|`testcase` |tc_.* |O
+|`globalTimer` |T.* |O
+|`type` |.* |O
+|`group` |[A-Z].* |O
+|`localConstant` |cl.* |O
+|`localVariable` |vl.* |O
+|`localTemplate` |t.* |O
+|`localVariableTemplate` |vt.* |O
+|`localTimer` |TL_.* |O
+|`formalParameter` |pl_.* |O
+|`componentConstant` |c_.* |O
+|`componentVariable` |v_.* |O
+|`componentTimer` |T_.* |O
+|===
+
+Other than the above mentioned on the project level there is one more called: `enableProjectSpecificSettings` with being empty as the default value. This element makes it possible to override the global settings.
+
+On folder level the extra node is called `enableFolderSpecificSettings` with being empty as the default value. This element makes it possible to override the global settings.
+
+[[configuration-requirements]]
+==== Configuration Requirements
+
+The `ConfigurationRequirements` element stores a list of `ConfigurationRequirement` elements, each of which describes a single configuration requirement for a referenced project. For each referenced project there can be maximally one `ConfigurationRequirement` element. If there is no requirement against the actual configuration of a referenced project this element is missing.
+
+.Elements of ConfigurationRequirement
+[cols=",,",options="header",]
+|===
+|*Name of the element* |*Meaning* |*O/M*
+|`projectName` |Stores the name of the project for which the requirement applies. |M
+|`rerquiredConfiguration` |Stores the name of the required project configuration as known by the referenced project. |M
+|===
+
+[[folder-properties]]
+=== Folder Properties
+
+The `FolderProperties` element contains a list of `FolderResource` elements each of which contains all information related to the actual settings of the folders in a given build configuration. The `FolderResource` element contains a `FolderPath` and a `FolderProperties` subelement.
+
+.Elements of FolderResource
+[cols=",,",options="header",]
+|===
+|*Name of the element* |*Meaning* |*O/M*
+|`FolderPath` |The path of the folder in the eclipse resource system. |O
+|`FolderProperties` |The actual properties of the folder. |O
+|===
+
+.The optional elements of the FolderProperties sub element
+[cols=",,",options="header",]
+|===
+|*Name of the element* |*Default value* |*O/M*
+|`ExcludeFromBuild` |false |O
+|`centralStorage` |false |O
+|`NamingCoventions` |Missing if all elements are on default value |O
+|===
+
+For more information about the `NamingConventions` element please refer <<naming-conventions, here>>.
+
+[[file-properties]]
+=== File Properties
+
+The `FileProperties` element contains a list of `FileResource` elements each of which contains all information related to the actual settings of the files in a given build configuration. The `FilePath` and the `FileProperties` subelements are mandatory.
+
+.Elements of FileResource
+[cols=",,",options="header",]
+|===
+|*Name of the element* |*Meaning* |*O/M*
+|`FilePath` |The path of the file in the eclipse resource system. |M
+|`FileProperties` |The actual properties of the file. see Table 42 |M
+|===
+
+.Elements of the FileProperties sub element
+[cols=",,",options="header",]
+|===
+|*Name of the element* |*Default value* |*O/M*
+|`ExcludeFromBuild` |false |O
+|===
+
+[[packed-referenced-projects]]
+== Packed Referenced Projects
+
+The `PackedReferencedProjects` element stores a list of `PackedReferencedProject` elements, each of them describes a single project reachable from the actual one or from referenced projects via project referencing.
+
+The elements of this list are the same as TITAN_Project_File_Information but they cannot contain `PackedReferencesProjects`. All referred projects in the project chain are listed in this list.
+
+A single `PackedProjectReference` element stores the same data in the same manner as it is stored in the referenced project but it cannot store the element `PackedReferencedProjects`.
+
+Example:
+[source]
+----
+<PackedReferencedProjects>
+    <PackedReferencedProject>
+      <ProjectName>HelloTitan</ProjectName>
+      <Folders>
+        <FolderResource projectRelativePath="bin" relativeURI="../HelloTitan/bin"/>
+        <FolderResource projectRelativePath="src" relativeURI="../HelloTitan/src"/>
+      </Folders>
+      <Files>
+        <FileResource projectRelativePath=".TITAN_properties" relativeURI="../HelloTitan/.TITAN_properties"/>
+        <FileResource projectRelativePath=".project" relativeURI="../HelloTitan/.project"/>
+        <FileResource projectRelativePath="HelloTitan.tpd" relativeURI="../HelloTitan/HelloTitan.tpd"/>
+      </Files>
+      <ActiveConfiguration>Default</ActiveConfiguration>
+      <Configurations>
+        <Configuration name="Default">
+          <ProjectProperties>
+            <MakefileSettings>
+              <generateMakefile>true</generateMakefile>
+              <generateInternalMakefile>true</generateInternalMakefile>
+              <symboliclinklessBuild>false</symboliclinklessBuild>
+              <useAbsolutePath>false</useAbsolutePath>
+              <GNUMake>false</GNUMake>
+              <incrementalDependencyRefresh>false</incrementalDependencyRefresh>
+              <dynamicLinking>false</dynamicLinking>
+              <functiontestRuntime>false</functiontestRuntime>
+              <singleMode>false</singleMode>
+              <codeSplitting>none</codeSplitting>
+              <defaultTarget>executable</defaultTarget>
+              <targetExecutable>bin\HelloTitan.exe</targetExecutable>
+              <TTCN3preprocessor>cpp</TTCN3preprocessor>
+              <TTCN3preprocessorIncludes/>
+              <preprocessorIncludes/>
+              <disableBER>false</disableBER>
+              <disableRAW>false</disableRAW>
+              <disableTEXT>false</disableTEXT>
+              <disableXER>false</disableXER>
+              <disableOER>false</disableOER>
+              <forceXERinASN.1>false</forceXERinASN.1>
+              <defaultasOmit>false</defaultasOmit>
+              <enumHackProperty>false</enumHackProperty>
+              <forceOldFuncOutParHandling>false<forceOldFuncOutParHandling>
+              <gccMessageFormat>false</gccMessageFormat>
+              <lineNumbersOnlyInMessages>false</lineNumbersOnlyInMessages>
+              <includeSourceInfo>false</includeSourceInfo>
+              <addSourceLineInfo>false</addSourceLineInfo>
+              <suppressWarnings>false</suppressWarnings>
+              <quietly>false</quietly>
+              <namingRules>unspecified</namingRules>
+              <disableSubtypeChecking>false</disableSubtypeChecking>
+              <CxxCompiler>g++</CxxCompiler>
+              <optimizationLevel>Commonoptimizations</optimizationLevel>
+              <otherOptimizationFlags></otherOptimizationFlags>
+<ignoreUntaggedOnTopLevelUnion>false</ignoreUntaggedOnTopLevelUnion>
+              <enableLegacyEncoding>false</enableLegacyEncoding>
+              <disableUserInformation>false</disableUserInformation>
+<disablePredefinedExternalFolder>false</disablePredefinedExternalFolder>
+              <buildLevel>Level5-CreatingExecutableTestSuitewithdependencyupdate</buildLevel>
+            </MakefileSettings>
+            <LocalBuildSettings>
+              <MakefileFlags></MakefileFlags>
+              <MakefileScript></MakefileScript>
+              <workingDirectory>bin</workingDirectory>
+            </LocalBuildSettings>
+            <NamingCoventions>
+              <enableProjectSpecificSettings></enableProjectSpecificSettings>
+              <TTCN3ModuleName>.*</TTCN3ModuleName>
+              <ASN1ModuleName>.*</ASN1ModuleName>
+              <altstep>as_.*</altstep>
+              <globalConstant>cg_.*</globalConstant>
+              <externalConstant>ec_.*</externalConstant>
+              <function>f_.*</function>
+              <externalFunction>ef_.*</externalFunction>
+              <moduleParameter>m.*</moduleParameter>
+              <globalPort>.*_PT</globalPort>
+              <globalTemplate>t.*</globalTemplate>
+              <testcase>tc_.*</testcase>
+              <globalTimer>T.*</globalTimer>
+              <type>.*</type>
+              <group>[A-Z].*</group>
+              <localConstant>cl.*</localConstant>
+              <localVariable>vl.*</localVariable>
+              <localTemplate>t.*</localTemplate>
+              <localVariableTemplate>vt.*</localVariableTemplate>
+              <localTimer>TL_.*</localTimer>
+              <formalParameter>pl_.*</formalParameter>
+              <componentConstant>c_.*</componentConstant>
+              <componentVariable>v_.*</componentVariable>
+              <componentTimer>T_.*</componentTimer>
+            </NamingCoventions>
+          </ProjectProperties>
+          <FolderProperties>
+            <FolderResource>
+              <FolderPath>src</FolderPath>
+              <FolderProperties>
+                <ExcludeFromBuild>false</ExcludeFromBuild>
+                <centralStorage>false</centralStorage>
+                <NamingCoventions>
+                  <enableFolderSpecificSettings></enableFolderSpecificSettings>
+                  <TTCN3ModuleName>.*</TTCN3ModuleName>
+                  <ASN1ModuleName>.*</ASN1ModuleName>
+                  <altstep>as_.*</altstep>
+                  <globalConstant>cg_.*</globalConstant>
+                  <externalConstant>ec_.*</externalConstant>
+                  <function>f_.*</function>
+                  <externalFunction>ef_.*</externalFunction>
+                  <moduleParameter>m.*</moduleParameter>
+                  <globalPort>.*_PT</globalPort>
+                  <globalTemplate>t.*</globalTemplate>
+                  <testcase>tc_.*</testcase>
+                  <globalTimer>T.*</globalTimer>
+                  <type>.*</type>
+                  <group>[A-Z].*</group>
+                  <localConstant>cl.*</localConstant>
+                  <localVariable>vl.*</localVariable>
+                  <localTemplate>t.*</localTemplate>
+                  <localVariableTemplate>vt.*</localVariableTemplate>
+                  <localTimer>TL_.*</localTimer>
+                  <formalParameter>pl_.*</formalParameter>
+                  <componentConstant>c_.*</componentConstant>
+                  <componentVariable>v_.*</componentVariable>
+                  <componentTimer>T_.*</componentTimer>
+                </NamingCoventions>
+              </FolderProperties>
+            </FolderResource>
+            <FolderResource>
+              <FolderPath>bin</FolderPath>
+              <FolderProperties>
+                <ExcludeFromBuild>false</ExcludeFromBuild>
+                <centralStorage>false</centralStorage>
+                <NamingCoventions>
+                  <enableFolderSpecificSettings></enableFolderSpecificSettings>
+                  <TTCN3ModuleName>.*</TTCN3ModuleName>
+                  <ASN1ModuleName>.*</ASN1ModuleName>
+                  <altstep>as_.*</altstep>
+                  <globalConstant>cg_.*</globalConstant>
+                  <externalConstant>ec_.*</externalConstant>
+                  <function>f_.*</function>
+                  <externalFunction>ef_.*</externalFunction>
+                  <moduleParameter>m.*</moduleParameter>
+                  <globalPort>.*_PT</globalPort>
+                  <globalTemplate>t.*</globalTemplate>
+                  <testcase>tc_.*</testcase>
+                  <globalTimer>T.*</globalTimer>
+                  <type>.*</type>
+                  <group>[A-Z].*</group>
+                  <localConstant>cl.*</localConstant>
+                  <localVariable>vl.*</localVariable>
+                  <localTemplate>t.*</localTemplate>
+                  <localVariableTemplate>vt.*</localVariableTemplate>
+                  <localTimer>TL_.*</localTimer>
+                  <formalParameter>pl_.*</formalParameter>
+                  <componentConstant>c_.*</componentConstant>
+                  <componentVariable>v_.*</componentVariable>
+                  <componentTimer>T_.*</componentTimer>
+                </NamingCoventions>
+              </FolderProperties>
+            </FolderResource>
+          </FolderProperties>
+          <FileProperties>
+            <FileResource>
+              <FilePath>HelloTitan.tpd</FilePath>
+              <FileProperties>
+                <ExcludeFromBuild>false</ExcludeFromBuild>
+              </FileProperties>
+            </FileResource>
+            <FileResource>
+              <FilePath>.project</FilePath>
+              <FileProperties>
+                <ExcludeFromBuild>false</ExcludeFromBuild>
+              </FileProperties>
+            </FileResource>
+            <FileResource>
+              <FilePath>.TITAN_properties</FilePath>
+              <FileProperties>
+                <ExcludeFromBuild>false</ExcludeFromBuild>
+              </FileProperties>
+            </FileResource>
+          </FileProperties>
+        </Configuration>
+      </Configurations>
+    </PackedReferencedProject>
+----
+
+== Important Information, Limitations
+
+We can only save settings related to the TITAN Designer plug-in. The settings of other plug-ins, related to the actual project, needs to be handled by the user separately.*From our point of view data loss and corruption of any kind and magnitude is acceptable, as long as it does not involve TITAN Designer specific settings directly.*
+
+The import is recreating the structure and the content of the project, not the project as a whole. For example: if on the source side there is a resource called X.ttcn located in the file system as Y.ttcn, after saving and loading this information at another location the created project will also have a resource called X.ttcn located in the file system as Y.ttcn. However as the 2 projects are located at different locations in the file system, the reference used to point to this file will be different. In case the file was originally located in the source project, and is now linked in the loaded project, the resource will be decorated accordingly by the platform.
+
+We support eclipse path variables, by saving the location info of the resource using them in a form where this information is available. However as this is an eclipse internal feature outside of our control, command line processing might be limited, or limiting the user. If a required path variable is not defined at the loading side, the resource will be created, but later on, when the platform tries to resolve it, the user might get some kind of error message.
+
+It is also important to know, that we save the location information of all files and folders as Eclipse knows it. By default this means only local file system locations, however Eclipse can be extended with additional plug-ins to support remote operations (like FTP, HTTP, SSH connections) or virtual file systems. If such features are used it is the user’s responsibility to make sure, that the needed plug-ins are available on every machine where the project is to be used. Also when doing command line builds, their build scripts must be prepared to support such features.
+
+In order to be able to recreate the whole project structure all referenced projects have to be saved as well. Otherwise we would not be able to load a missing referenced project.
+
+However once loaded these projects can be used intermixed with other kinds of project inside Eclipse. For example it is possible to refer to them from not yet saved projects.
+
+In case of a referenced project we only store the location where it was loaded from, or where it was saved to first. If it is saved to a new location it must be loaded first, otherwise the changes will be lost. However inside eclipse the project will still contain all the changes.
+
+In the command line referenced projects are identified by the location of their descriptor, in eclipse they are identified by the name of the project. This means, that if a project to be referenced is loaded on a different name, the referencing project will not see it, and at load time will load it again. Also if a different project is loaded at an expected name, it will be used instead of the one being referenced.
+
+In eclipse all information is persisted by the platform, as such the closing and re-opening of the workspace will not change any project information, or come with data loss.
+
+This is our own project information; it can not be expected from external tool vendors to support it. As such exporting/importing a project via the ClearCase Remote Client will not be possible using this format, or might not produce the expected results.

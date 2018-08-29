@@ -1,0 +1,516 @@
+= Creating Executable Test Suites from the Command-line
+
+This section describes the elementary commands that comprise the build process. The primary audience of this section is the group of users who want to integrate TTCN–3 to a new or an existing build system.
+
+== Using `make`
+
+This section gives an example about how to create a new `Makefile` or modify an existing one manually to make it capable of handling TTCN–3 test suites. For example, if using many external libraries and program modules with TTCN–3, it can be beneficial to write an own `Makefile`.
+
+The generated skeleton is always a good starting point for a custom `Makefile`.
+
+The following lines are mandatory in the `Makefile`:
+[source]
+----
+TTCN3_MODULES = MyModule.ttcn
+
+ASN1_MODULES =
+
+GENERATED_SOURCES = MyModule.cc
+
+GENERATED_HEADERS = MyModule.hh
+
+$(GENERATED_SOURCES) $(GENERATED_HEADERS): $(TTCN3_MODULES) $(ASN1_MODULES)
+
+$(TTCN3_DIR)/bin/compiler $(TTCN3_MODULES) $(ASN1_MODULES)
+----
+
+`TTCN3_MODULES` and `ASN1_MODULES` contain the names of the TTCN–3 and ASN.1 files, respectively.
+
+The variables `GENERATED_SOURCES` and `GENERATED_HEADERS` store the name of the source and header files that the compiler will generate. This rule calls the compiler with an argument list that contains the name of all TTCN–3 and ASN.1 files. Beginning from version 1.2.pl0 the compiler does _not_ duplicate the underscore ("_") characters in output file names, so you may safely use such module and file names that contain this character.
+
+To compile the generated C++ code using `make`, the following rule in the `Makefile` is also needed:
+[source]
+----
+.cc.o:
+
+          g++ -c -I$(TTCN3_DIR)/include -Wall $<
+----
+In this case simply issue the command `*make MyModule.o*` and the two translation steps will be performed automatically in a row.
+
+=== Rules for Modular Test Suites
+
+The compiler supports modular TTCN–3 test suites as well. Each module is translated to a separate C\++ header and source file. These source files can be compiled by the C++ compiler one-by-one separately.
+
+The importing mechanisms work in the following way. For example, two TTCN-3 modules are present in files `A.ttcn` and `B.ttcn`, respectively. Definitions of module A may be used from module B, so the `import from A all`; statement must be added to module B. The modules A and B *must* be translated by the compiler in one step to `A.cc`, `A.hh`, `B.cc` and `B.hh`. During the compilation from TTCN–3 to C++ of module B, the import statement will be translated to `#include "A.hh"`. This statement will be put to the beginning of `B.hh`, so you can refer to any definitions of A in module B. But note that when compiling `B.cc`, `A.hh` must exist and it must be up to date.
+
+Thus, additional rules are needed in the `Makefile`. It is recommended adding them automatically using the utility `makedepend` footnote:[The makedepend utility is available on all supported platforms. It usually can be found in the X11 development package.]. Run the following command:
+
+[source,subs="+quotes"]
+*makedepend -I$TTCN3_DIR/include A.cc B.cc*
+
+This will add the rules to the end of the `Makefile` and they will be updated upon re-running `makedepend`. For further details please consult the manual page of `makedepend`.
+
+Multiple imports of the same module are handled correctly. For example, if importing all definitions of module C from both modules A and B in the previous example, all three C++ source files will compile correctly.
+
+== Automatically Generated `Makefile`
+
+This section describes the automatically generated `Makefile`, its structure, the supported commands and the possibilities for customization.
+
+=== `Makefile` Generation
+
+The `Makefile` for a project can be generated using the generator tool `ttcn3_Makefile gen` footnote:[Up to version 1.6pl4 Makefile generation was part of the compiler (using the -M option).]. A project usually consists of some TTCN–3 and ASN.1 modules and at least one test port and results in an executable test suite.
+
+`Makefile` generation is performed with the following command syntax:
+
+[source,subs="+quotes"]
+** $TTCN3_DIR/bin/ttcn3_Makefilegen [options] <Main module> {Module}* {Test_Port}* {Other_File}* **
+
+* `[options]` can be one or more of the options that are listed in the TITAN Programmer's Technical Reference for link:https://github.com/eclipse/titan.core/tree/master/usrguide/referenceguide[TITAN Programmer's Technical Reference for TITAN TTCN-3 Test Executor].
+
+* `<Main module>` is the main TTCN–3 Core Language module. The argument can be either a file name (with or without path) or a module name. The name of the desired executable will be derived from the name of this module unless the `-e` option is used.
+
+* `{Module}*` are additional TTCN–3 or ASN.1 modules, which are directly or indirectly referenced (imported) from the main module and thus required for building the executable test suite. Each argument should be a file name (with or without path) or a module name.
+
+* `{Test Port}*` specifies names of all test ports or other required C++ program modules. The names can be given with or without suffix.
+
+* `{Other File}*` specifies the names of other files (configuration files, shell scripts, and so on) that are used in this project.
+
+For detailed content of the generated `Makefile`, refer to <<Makefile-Structure, Makefile Structure>>.
+
+==== `Makefile` Generation Algorithm
+
+Before generating the `Makefile` the `Makefile` generator tries to figure out the file name, module type and module name for each argument automatically. It uses some heuristics which yield correct results in most cases, but not always. Typically, the algorithm works perfectly with shell wildcards. For example, if all source files reside in the same directory the following command will generate the right `Makefile`:
+
+`*$TTCN3_DIR/bin/ttcn3_Makefilegen *.ttcn *.asn *.c**`
+
+The `Makefile` generator looks for an existing file for each argument. It tries the given argument without any suffix, then the following list of suffixes are tried in this order: `.ttcn`, `.ttcn3`, `.3mp`, `.ttcnpp`, `.ttcnin`, `.asn`, `.asn1`, `.cc`, `.c`, `.hh`, `.h`, `.cfg`, `.prj`. Once a file is found, the `Makefile` generator tries to guess its type as described below. If no suitable file is found for a given argument the `Makefile` generator prints an error message and exits.
+
+In the case of TTCN–3 preprocessing (using the `-p` command line argument) the TTCN–3 files with special suffix `.ttcnpp` will be added to the list of TTCN–3 modules which need to be preprocessed before compilation. Files with the `.ttcnin` suffix will be added to the list of TTCN–3 include files (without the `-p` switch these will be added to the other files section of the `Makefile`).
+
+Then the `Makefile` generator tries to classify the file in the following categories based on the contents and/or the suffix:
+
+* TTCN–3 modules (based on contents)
+
+* ASN.1 modules (based on contents)
+
+* TTCN–3 include files (based on suffix, only with `-p`)
+
+* C/C++ source files (based on suffix)
+
+* C/C++ header files (based on suffix)
+
+* other files (the rest)
+
+The `Makefile` generator has two built-in "light" parsers that can decide whether a file is a TTCN–3 or ASN.1 module, respectively. Those parsers read only the first few lines of the input and do not check the syntactical correctness of the modules. They are capable of retrieving the module name as well.
+
+If the `Makefile` generator ensured that the file is neither a TTCN–3 nor an ASN.1 module then it checks whether the file has `.cc`, `.c`, `.hh` or `.h` suffix. The content of the file is not examined anymore.
+
+The remaining files (configuration files and so on) will be added to the other files’ section of the `Makefile`. These files do not take part in the build process, but they are added to the archive files created using the `Makefile`.
+
+After the classification, the `Makefile` generator filters out the redundant generated C\++ files. If a given C/C++ file was found to be generated from one of the given TTCN–3 or ASN.1 modules, a warning is printed and the file will be dropped from the list of C/C++ files. That is, the file will not be added to the list of user source files since it is already a member of the generated sources. This feature is useful if one wants to regenerate the `Makefile` using the shell wildcard `*.cc` while the generated files from the previous compilation are still present.
+
+In the next step the algorithm tries to complete the list of C/C\++ files by checking the pairs of header and source files. If a C/C++ source file was identified and a header file with the same name exists (only the suffix differs) too, the `Makefile` generator will add the header file automatically. This step is performed in the reverse direction too: the `Makefile` generator can find an existing source file based on the header file given to it. Of course a C++ source file can exist without a header file or vice versa.
+
+The `Makefile` generator continuously checks the uniqueness of files and module names. If the same file was given more than once in the command line the repeated argument is simply ignored and a warning message is displayed. It is not allowed to use two or more different TTCN–3 or ASN.1 files containing modules with the same name because the generated C\++ files would clash. For similar reasons the user C/C++ files cannot have identical names even if they are located in different directories.
+
+Finally the `Makefile` is generated based on the resulting data. If the `Makefile` generator finds an existing `Makefile` in its working directory, it will not be overwritten unless the option `-f` is used.
+
+It is always assumed that the working directory of the generated `Makefile` will be the same as the current working directory of the `Makefile` generator even if the `Makefile` is placed into another directory using the `-o` switch.
+
+When a path name passed to the `Makefile` generator contains a directory part the `Makefile` generator analyzes and canonizes the directory name by resolving relative directory references (such as . or ..) and symbolic links pointing to directories footnote:[Symbolic links pointing to files will not be resolved.]. If the path name does not contain any directory part or it turns out that the file is located in the current working directory the generated `Makefile` will refer to the file using a simple file name without any directory. Files located in other directories will be referenced in a uniform way using either absolute or relative path names depending on whether the command line switch -a was specified or not. Thus it is not relevant whether the file was given as relative or absolute path name in the command line.
+
+The `Makefile` is generated based on the following assumptions:
+
+* Each object and if applicable, shared object file is located in the same directory as the C/C++ source file it is derived from. This allows the use of efficient wildcard rules.
+
+* The TTCN–3 /ASN.1 compiler will place all generated C++ files in the current working directory.
+
+==== Use of `GNU make`
+
+If option `-g` is used, the resulting `Makefile` will be less redundant as it will use some suffix substitution rules. These rules are supported only by `GNU make`, other versions of the make utility will find such `Makefiles` erroneous.
+
+The more of the file naming conventions below are fulfilled, the more suffix substitution rules can be applied in the generated `Makefile`. If the rules are only partially fulfilled, the `Makefile` will be also correct, but it will be more difficult to maintain. It is recommended to follow these rules especially when starting a new project.
+
+* Unless option `-c` is used, all TTCN–3, ASN.1 and C++ modules should reside in the current working directory. If these files are stored in a different scheme (for example in a hierarchical directory tree) symbolic links can be used to collect all input files into one build directory.
+
+* The suffix should be `.ttcn` for TTCN–3 modules, `.asn` for ASN.1 modules and `.cc` for C/C++ files.
+
+* The file name (without suffix) should be identical to the module name. If the name of the ASN.1 module contains a hyphen, the corresponding file name should contain an underscore character instead. For example, the TTCN–3 module `My_Module` should be stored in `My_Module.ttcn` and the file containing ASN.1 module My-ASN1-Module should be named as `My_ASN1_Module.asn`.
+
+* Each C/C++ module should have a header file with identical name, but with the suffix `.hh`.
+
+==== Use of Central Storage
+
+Option `-c` can be used to create a `Makefile` that can use pre-compiled files from one or more central directories to save disk space and compilation time. Such `Makefiles` have different layout and more complex build rules.
+
+The central directories should contain those common modules that do not change frequently (type definitions, test ports, external functions, test configurations, and so on). The central directories should be updated and maintained by the project administrators while the individual testers are developing their test cases in their working directory based on the common files. Moreover, it is allowed to create a hierarchy of central directories, that is, to use a directory that takes files from other central directories as a central directory of another project. In such cases the files of all central directories should be passed to the compiler for `Makefile` generation.
+
+In addition to the above mentioned ones the following assumptions are used in these `Makefiles`:
+
+* The compiler will generate C\++ files only for those TTCN–3 and ASN.1 modules that are located in the current working directory. The generated C++ files of the remaining TTCN–3 and ASN.1 modules should be located in the same directory as the respective module. If a module is located in a directory other than the current working directory and it does not have pre-compiled files a symbolic link must be created in the current working directory, which should point to the file containing the module.
+
+* Object and if applicable, shared object files will be created only from those C/C++ source files that are located in the current working directory. Object and if applicable, shared object files of the remaining source files should be located in the same directory as the respective source file.
+
+* The TTCN–3 and ASN.1 modules of central directories should not import definitions from the modules of the current working directory. Importing in the reverse direction is allowed, of course.
+
+* C/C++ files of central directories should not include header files of the current working directory. Local C/C++ files can include headers from other directories.
+
+* The generated C++ files and object and if applicable, shared object files of all central directories must be up-to-date before invoking `make`. Otherwise the build process will fail immediately with an error message footnote:[If an object and if applicable, a shared object file of a central directory is not up-to-date, but make is invoked it tries to build that file instead of printing an error message. The build will usually fail due to missing access rights. This is a known limitation of this `Makefile` system that cannot be easily solved in a generic way.]. In case of multi-level hierarchy of central directories the re-compilation should be performed in bottom-up order in the central directories.
+
+* All directories must use the same environment, that is, same hardware platform, operating system, version of TTCN–3 Executor and C++ compiler, command line switches, and so on, for building. Otherwise compilation or run-time errors may occur.
+
+Note that when a pre-compiled TTCN–3 or ASN.1 module is taken from a central directory the following three files will be used from the central directory during the build process. Thus it is essential to keep all these files always consistent and up-to-date.
+
+* The module itself when performing the semantic analysis on the local modules importing it.
+
+* The generated C\++ header file when compiling the generated C++ files of the importing modules.
+
+* The object and if applicable, the shared object file when linking the executable.
+
+[[ttcn-3-preprocessing]]
+==== TTCN–3 Preprocessing
+
+Preprocessing of TTCN–3 source code is supported with the use of the option `-p`. The TTCN–3 source files to be preprocessed must have the suffix `.ttcnpp`; these files will be preprocessed with the C preprocessor before being compiled. The compiler will detect all TTCN–3 files, including the ones containing directives for the preprocessor, but only the ones with the suffix `.ttcnpp` will be preprocessed. If any other suffix is used the user has to edit the `Makefile` manually to add the file to the list of files which will be preprocessed. The output of the preprocessing will be an intermediate file with the extension `.ttcn`. Do not use the extension `.ttcn` for any TTCN–3 file that will be preprocessed; also avoid using the same name for different `.ttcn` and `.ttcnpp` files. Files included in `.ttcnpp` files with C preprocessor directive `#include` should have suffix `.ttcnin`.
+
+[[Makefile-Structure]]
+=== `Makefile` Structure
+
+This section presents the internal structure of the generated `Makefile`.
+
+For example, the following command will generate a `Makefile` for TTCN–3 test suite "Hello, world!", which can be found in binary distribution:
+
+`*$TTCN3_DIR/bin/ttcn3_`Makefile`gen -gs MyExample.ttcn PCOType.cc MyExample.cfg*`
+
+The `Makefile` generator creates the `Makefile` with the following content:
+[source]
+----
+# This Makefile was generated by the Makefile Generator
+# of the TTCN-3 Test Executor version 1.6.pl5
+# for Adam Delic (edmdeli@ehubuux110)
+# on Tue Oct 10 13:53:04 2006
+
+# Copyright Ericsson Telecom AB 2000-2014
+
+# The following make commands are available:
+# - make, make all Builds the executable test suite.
+# - make archive Archives all source files.
+# - make check Checks the semantics of TTCN-3 and ASN.1
+# modules.
+# - make port Generates port skeletons.
+# - make clean Removes all generated files.
+# - make compile Translates TTCN-3 and ASN.1 modules to
+# C++.
+# - make dep Creates/updates dependency list.
+# - make objects Builds the object files without linking
+# the executable.
+# - make tags Creates/updates tags file using ctags.
+# WARNING! This Makefile can be used with GNU make only.
+# Other versions of make may report syntax errors in it.
+#
+# Do NOT touch this line...
+#
+.PHONY: all archive check clean dep objects
+#
+# Set these variables...
+#
+# The path of your TTCN-3 Test Executor installation:
+# Uncomment this line to override the environment variable.
+# TTCN3_DIR =
+# Your platform: (SOLARIS, SOLARIS8, LINUX, FREEBSD or WIN32)
+PLATFORM = SOLARIS8
+# Your C++ compiler:
+CXX = g++
+# Flags for the C++ preprocessor (and makedepend as well):
+CPPFLAGS = -D$(PLATFORM) -I$(TTCN3_DIR)/include
+# Flags for the C++ compiler:
+CXXFLAGS = -Wall
+# Flags for the linker:
+LDFLAGS =
+# Flags for the TTCN-3 and ASN.1 compiler:
+COMPILER_FLAGS = -L
+# Execution mode: (either ttcn3 or ttcn3-parallel)
+TTCN3_LIB = ttcn3
+# The path of your OpenSSL installation:
+# If you do not have your own one, leave it unchanged.
+OPENSSL_DIR = $(TTCN3_DIR)
+# Directory to store the archived source files:
+ARCHIVE_DIR = backup
+#
+# You may change these variables. Add your files if necessary...
+#
+# TTCN-3 modules of this project:
+TTCN3_MODULES = MyExample.ttcn
+# ASN.1 modules of this project:
+ASN1_MODULES =
+# C++ source & header files generated from the TTCN-3 & ASN.1
+# modules of this project:
+GENERATED_SOURCES = $(TTCN3_MODULES:.ttcn=.cc) $(ASN1_MODULES:.asn=.cc)
+GENERATED_HEADERS = $(GENERATED_SOURCES:.cc=.hh)
+# C/C++ Source & header files of Test Ports, external functions
+# and other modules:
+USER_SOURCES = PCOType.cc
+USER_HEADERS = $(USER_SOURCES:.cc=.hh)
+# Object files of this project that are needed for the executable
+# test suite:
+OBJECTS = $(GENERATED_SOURCES:.cc=.o) $(USER_SOURCES:.cc=.o)
+# Other files of the project (Makefile, configuration files, and so on)
+# that will be added to the archived source files:
+OTHER_FILES = Makefile MyExample.cfg
+# The name of the executable test suite:
+TARGET = MyExample
+#
+# Do not modify these unless you know what you are doing...
+# Platform specific additional libraries:
+#
+SOLARIS_LIBS = -lsocket -lnsl
+SOLARIS8_LIBS = -lsocket -lnsl
+LINUX_LIBS =
+FREEBSD_LIBS =
+WIN32_LIBS =
+#
+# Rules for building the executable...
+#
+all: $(TARGET) ;
+objects: $(OBJECTS) ;
+$(TARGET): $(OBJECTS)
+$(CXX) $(LDFLAGS) -o $@ $ˆ \
+-L$(TTCN3_DIR)/lib -l$(TTCN3_LIB) \
+-L$(OPENSSL_DIR)/lib -lcrypto $($(PLATFORM)_LIBS)
+.cc.o .c.o:
+$(CXX) -c $(CPPFLAGS) $(CXXFLAGS) -o $@ $<
+$(GENERATED_SOURCES) $(GENERATED_HEADERS): compile
+@if [ ! -f $@ ]; then $(RM) compile; $(MAKE) compile; fi
+check: $(TTCN3_MODULES) $(ASN1_MODULES)
+$(TTCN3_DIR)/bin/compiler -s $(COMPILER_FLAGS) $ˆ
+port: $(TTCN3_MODULES) $(ASN1_MODULES)
+$(TTCN3_DIR)/bin/compiler -t $(COMPILER_FLAGS) $ˆ
+compile: $(TTCN3_MODULES) $(ASN1_MODULES)
+$(TTCN3_DIR)/bin/compiler $(COMPILER_FLAGS) $ˆ - $?
+touch $@
+tags: $(TTCN3_MODULES) $(ASN1_MODULES) \
+$(USER_HEADERS) $(USER_SOURCES)
+$(TTCN3_DIR)/bin/ctags_ttcn3 --line-directives=yes $ˆ
+clean:
+-$(RM) $(TARGET) $(OBJECTS) $(GENERATED_HEADERS) \
+$(GENERATED_SOURCES) compile \
+tags *.log
+dep: $(GENERATED_SOURCES) $(USER_SOURCES)
+makedepend $(CPPFLAGS) $ˆ
+archive:
+mkdir -p $(ARCHIVE_DIR)
+tar -cvhf - $(TTCN3_MODULES) $(ASN1_MODULES) \
+$(USER_HEADERS) $(USER_SOURCES) $(OTHER_FILES) \
+| gzip >$(ARCHIVE_DIR)/‘basename $(TARGET) .exe‘-\
+‘date ’+%y%m%d-%H%M’‘.tgz
+#
+# Add your rules here if necessary...
+#
+----
+[[Editing-the-Generated-Makefile]]
+=== Editing the Generated `Makefile`
+
+Assume that the TTCN–3 and ASN.1 modules together with the test ports have been written and a `Makefile` skeleton has been generated. The `Makefile` generator recognizes the operating environment and sets up some compiler/linker flags accordingly. The path to the TTCN–3 test executor installation must be set in `TTCN3_DIR` before starting to use `make`. If OpenSSL is installed and proprietary shared libraries will be used, the variable `OPENSSL_DIR` may be changed to point to the directory of the proprietary OpenSSL installation. In the above "Hello, world!" example the user also needs to change the execution mode (variable `TTCN3_LIB`) to non-parallel.
+
+Always perform the following checklist before the first build of the executable test suite from the generated `Makefile`:
+
+* Verify that the variable `TTCN3_DIR` is set to point to the root directory of the TTCN–3 test executor installation. If this variable is automatically set in the login script, this line can be removed from the `Makefile`.
+
+* Ensure that the variable PLATFORM is set to match the test execution platformfootnote:[The test suite must be translated on the same platform on which it will be executed.].
+
+* Verify that the variable `TTCN3_LIB` contains the name of the appropriate Base Library for the chosen operating mode, that is,` ttcn3` for single and `ttcn3-parallel` for parallel execution mode!
+
+* The variable `CXX` should point to the name or full path of the C++ compiler.
+
+* The variables `CPPFLAGS`, `CXXFLAGS` and `LDFLAGS` should contain the extra command line switches to be passed to the C\\++ preprocessor, compiler and linker, respectivelyfootnote:[For the detailed list and explanation of possible command line switches, refer to the manual page of the used C++ compiler]. For example, profiling or optimization is set here.
+
+* Using the variable `COMPILER_FLAGS` you can pass additional command line options to the TTCN–3 /ASN.1 compiler.
+
+* Ensure that the version of the TTCN–3 /ASN.1 compiler used is identical to the version of Base Library it is linked with. In case of version mismatch the generated C++ source files will not compile and an `#error` notification will be received. This means that changing to another version of TTCN–3 Test Executor, a full re-build of all modules using `make clean` must be performed.
+
+* Make sure to always build test ports from their source distribution. A version mismatch between the object and if applicable, shared object files may cause improper linkage or unpredictable behavior. It is thus contra-indicated to link precompiled test port objects and if applicable, shared objects into your executable (for example taken from a central repository). If the `Makefile` was generated with the option `-p` check also:
+
+* The variable `CPP` should point to the name or full path of the used C preprocessor.
+
+* Command line options for the C preprocessor can be given using the `CPPFLAGS TTCN3` variable. +
+
+WARNING: do not confuse it with the `CPPFLAGS` variable, which is used on the generated C++ code.
+
+* Specify additional files which are included (`#include` directive) into `ttcnpp` files with the variable `TTCN3_INCLUDES`. These files will be checked (modification time) at every build to determine if any dependent files need to be recompiled. Any file with extension `.ttcnin` will be added to TTCN3_INCLUDES by the `Makefile` generator.
+
+=== Available Commands
+
+The generated `Makefile` supports the following:
+
+* `*make all*`, `*make*`
++
+Creates or updates the executable test suite. Performs only those steps of compilation that are really necessary, that is, the output of which is outdated.
+
+* `*make archive*`
++
+Creates a backup copy of all source files and other files in a tar-gzip archive stored in directory set by the variable `ARCHIVE_DIR` footnote:[The value archive should not be assigned to the variable ARCHIVE_DIR otherwise the make archive command will work incorrectly. Choose other directory name, like backup.]. The command can be applied periodically: to avoid overwriting older versions, a time stamp containing the current date and time is included in the name of the archive file. The output of this command can be attached to trouble reports submitted for the TTCN–3 compiler or other parts of the TTCN–3 toolset.
+
+* `*make check*`
++
+Checks the syntax and semantics of the TTCN–3 and ASN.1 modules. This command does not create or update any generated files.
+
+* `*make clean*`
++
+Removes all generated files (generated C++ files, object and TITAN generated shared object files and the executable) and log files. This command is useful when changing to another version of the test executor or simply for saving disk space.
+
+* `*make compile*`
++
+Translates the TTCN–3 and ASN.1 modules to C\++. It is useful when the user wants to carry out the compilation of the generated C++ code later. As a result, an empty file named `compile` is created in the working directory. The attributes of this file contain the date and time of the last compilation, which helps the compiler in selective code generation. It is not recommended to change this file manually. The compiler will be invoked only if one or more of the TTCN–3 or ASN.1 modules were modified after that timestamp, otherwise the generated C++ files are up to date.
+
+* `*make diag*`
++
+Lists general information about the environment and the build. This information can be useful to fix build problem by the developers or the support team. The output contains: +
+- the compiler related information (titan version, build date, C\\++ version, license information, see command `*"compiler –v"*`), +
+- main controller related information (titan version, C++ compiler version, build date, license information, see command `*"mctr_cli –v"*`), +
+- C\++ compiler information (see command `*"g++ -v"*`), +
+- library creator info ( see command `*"ar –v"*`), +
+- values of environment variables `$TTCN3_DIR`, ``$ OPENSSL_DIR`, `$XML_DIR`, `$PLATFORM`.
+
+* `*make dep*`
++
+Obsolete. Creates or updates the dependency list between the C++ header and source files by invoking the utility `makedepend`. This command must be invoked before the first compilation or when the list of modules or test ports has changed. It is also necessary to run `make dep` if an import statement has been added or removed in a module. The command implies `make compile` and after that it modifies the `Makefile` itself. Used only with older `gcc` versions.
+
+* `*make objects*`
++
+Creates or updates the object files created from the C++ source files. This command has the same effect as `make all` except that the executable test suite is not linked in the final step.
+
+* `*make port*`
++
+Creates Test Port skeleton header and source files for all port types in the input TTCN-3 modules. Existing Test Port files will not be overwritten.
+
+* `*make shared_objects*`
+Creates the shared object files from object files, compiled with `-fPIC`. This target is present only when dynamic linking is enabled. For detailed information, refer to the link:https://github.com/eclipse/titan.core/tree/master/usrguide/referenceguide[TITAN Programmer’s Reference].
+
+* `*make run*`
++
+Creates or updates the executable test suite and then runs it. This is only recommended for simple test suites in single mode. Running requires a configuration file; its name by default is `config.cfg`. This file has to be written by the user.
+
+=== Building the Executable
+Issue the command `make dep` when finished creating and editing the `Makefile`. This command will translate all TTCN–3 and ASN.1 modules to C++ and will find the dependencies between them automatically. The `Makefile` will be modified; many lines will be appended to it.
+
+Finally, issue the `make` command, which will build the executable test suite. If any of the source files (TTCN–3 or ASN.1 modules or test port source files) has been changed, issue the `make` command to get an up-to-date binary.
+
+If TTCN–3 or ASN.1 modules or test ports are need to be added or removed to or from the project, regenerate the `Makefile` skeleton or change the variables `TTCN3_MODULES`, `ASN1_MODULES`, `GENERATED_HEADERS`, `GENERATED_SOURCES`, `OBJECTS` or `SHARED_OBJECTS` accordingly. If a new test port or other C/C++ module should be added, add it to the lines `USER_HEADERS`, `USER_SOURCES` and `OBJECTS` or `SHARED_OBJECTS`.
+
+WARNING: It is recommended to use the `makedepend` utility together with make. This ensures that all dependencies are handled correctly. Therefore, `make dep` command must be issued before the first use of `make` and whenever the module hierarchy (imports) changes! If no `make dep` command is issued then in some cases two `make` commands shall be issued for the successful compilation.
+
+Use the command `make clean` to remove all generated files.
+
+=== Modifying the Generated `Makefile`
+
+NOTE: this is a deprecated feature; whenever possible, a .tpd (Titan project descriptor) file should be used instead.
+
+When there is a `Makefile` in a project, it should be updated each time a further file is added or removed from the project.
+
+However, some manual modifications were made to the originally created `Makefile` skeleton, regeneration of the `Makefile` will cause the manually performed changes to be lost. To avoid this situation, write a shell script containing the `Makefile` updates, and configure this shell script to be automatically run after each instance of `Makefile` regeneration.
+
+This way, there is no need to perform the same manual updates upon every `Makefile` generation and file addition process.
+
+The shell script example below can be used to automate the modification of the `Makefile` with the updates every time it is regenerated.
+
+.Example Shell Script for `Makefile` Modification
+[source]
+----
+#!/bin/sh
+editcmd=’s/CPPFLAGS = -D$(PLATFORM) -I$(TTCN3_DIR)\
+/include/CPPFLAGS = -D$(PLATFORM)
+-I$(TTCN3_DIR)\/include -I$(ERLANG_DIR)\
+/include -I$(OPENSSL_DIR)\/include/g
+s/TTCN3_LIB = ttcn3-parallel/TTCN3_LIB = ttcn3/g
+s/OPENSSL_DIR = $(TTCN3_DIR)/OPENSSL_DIR = \/mnt\/TTCN\/Tools\
+/openssl-0.9.7d/g
+s/ˆ makedepend/ \/mnt\/TTCN\/Tools\/makedepend-R6.6\
+/bin\/makedepend/g
+/ARCHIVE_DIR = ./ {
+a\
+a\
+# Directory for ERLANG:
+a\
+ERLANG_DIR = /OTP/LXA_11930_R9C_6/lib/erl_interface-3.4.2
+}
+s/-lcrypto $($(PLATFORM)_LIBS)/-lcrypto \\/g
+/-lcrypto \\/ {
+a\
+-L$(ERLANG_DIR)/lib -lerl_interface -lei $($(PLATFORM)_LIBS)
+}
+’
+if [ ‘uname‘ = SunOS ]
+then
+case ‘uname -r‘ in
+5.6) editcmd="$editcmd
+s/CXX = g++/CXX = \/usr\/local\/gnu\/bin\/g++/g"
+;;
+5.7) editcmd="$editcmd
+s/CXX = g++/CXX = \/mnt\/TTCN\/Tools\/gcc-3.0.4-sol7\/bin\/g++/g"
+;;
+5.8) editcmd="$editcmd
+s/CXX = g++/CXX = \/usr\/local\/gnu\/gnu28\/gcc3.0.4_shared_sol8\
+/bin\/g++/g"
+;;
+*) echo ’Unsupported Solaris version.’; exit 1
+esac
+else echo ’This script runs on Solaris only.’; exit 1
+fi
+sed -e "$editcmd" <$1 >$2
+----
+
+== Manual Building
+This section contains information useful for the experienced users who are using a build framework other than `make` for TTCN–3 -based testing.
+
+=== Compiling the Generated C++ Code
+
+If the TTCN–3 test suite was successfully translated to C\++, it’s a good idea to check if the generated code contains any errors. The simplest way is to compile it using a C++ compiler. Since the generated code refers to the base library, run the following command:
+[source, subs="+quotes"]
+*g++ -c -I$TTCN3_DIR/include -Wall MyModule.cc*
+
+In the following, using of an GNU C\++ compiler is assumed. If the TTCN–3 /ASN.1 compiler did not report any errors in the input test suite, the generated C++ code must be correct (that is, compile without errors). After certain TTCN–3 warnings (such as unreachable statements) the generated code may trigger similar warnings in the C++ compiler.
+
+The generated code has been tested on various versions of GNU C\++ and Sun Workshop C++ compilers. However, the code should work with any standard-compliant C\++ compiler since it does not depend on hardware or compiler specific features. If the generated code fails to compile on a supported platform and C++ compiler the situation is considered as a compiler bug and a Trouble Report can be issued footnote:[The Trouble Report must include the compiler error message(s), all input files and command line switches of the TTCN–3 /ASN.1 compiler, the platform and the exact version of TITAN TTCN–3 Test Executor and the C++ compiler. It is highly appreciated if the user could minimize the input by dropping out irrelevant modules and definitions.].
+
+The switch `-c` tells the GNU C++ compiler to compile only and not to build an executable because, for example, the `main` function is missing from the generated code. The switch `-I` adds the `$TTCN3_DIR/include` directory to the compiler’s standard include path. The optional argument, `-Wall`, forces the compiler to report all warnings found in its input. This argument can be used in GCC only.
+
+The result after a successful compilation is an object file named `MyModule.o` and if applicable, a shared object file named `MyModule.so`. If compilation fails, a lot of error messages may be generated. For example, a misspelled type name in an included test port can totally confuse the C++ compiler. That’s why it is recommended to analyze the reason of the first error message only.
+
+=== Linking the Executable
+
+In order to get the executable test suite, the following files must be linked:
+
+* The object and if applicable, shared object files generated from all used TTCN–3 modules.
+
+* The object and if applicable, shared object files generated from all used ASN.1 modules.
+
+* The object and if applicable, shared object files generated from all used test ports and any libraries that are used in the test ports.
+
+* The parallel `ttcn3-parallel` or the non-parallel `ttcn3` version of the TTCN3 Base Library depending on the chosen operating mode. They reside in `$TTCN3_DIR/lib`.
+
+* The shared library of OpenSSL, that is `$TTCN3_DIR/lib/libcrypto.so`.
+
+Assuming only one TTCN–3 module (called `MyModule`) and one test port (called `MyTestPort`), the linking command will be the following for parallel operation mode:
+
+[source, subs="+quotes"]
+*g++ -o MyModule MyModule.o MyTestPort.o -L$TTCN3_DIR/lib-lttcn3-parallel -lcrypto*
+
+The linking command for single operation mode:
+
+[source, subs="+quotes"]
+*g++ -o MyModule MyModule.o MyTestPort.o -L$TTCN3_DIR/lib -lttcn3 -lcrypto*
+
+The name of the executable file will be `MyModule` in both cases.
+
+=== Dynamic Linking
+
+In order to save disk and memory space, the TTCN–3 Base Library may be dynamically linked to the executable. In this case use the following command in single mode:
+
+[source, subs="+quotes"]
+*g++ -o MyModule MyModule.o MyTestPort.o -L$TTCN3_DIR/lib -lttcn3-dynamic -lcrypto*
+
+In parallel mode use `*-lttcn3-parallel-dynamic*` instead of
+`*-lttcn3-dynamic*`.
+
+When running the executable, add the directory `$TTCN3_DIR/lib` to the system library path (which is specified in `/etc/ld.so.conf` on most of UNIX systems) or simply add it to the environment variable `LD_LIBRARY_PATH`.
+
+From version 1.8pl2, `ttcn3_Makefilegen` supports the generation of (per module) shared objects. If this option is enabled with the `-l` command line switch, the project’s working directory (together with the central storage directories, if applicable) should be added to `LD_LIBRARY_PATH` in addition to `$TTCN3_DIR/lib`. Otherwise, the resulting executable may not run. If moving the executable from one machine to another, all the generated shared object (.so) files should be copied as well. For more information about the `–l` command line switch, please consult the  link:https://github.com/eclipse/titan.core/tree/master/usrguide/referenceguide[TITAN Programmer's Technical Reference for TITAN TTCN-3 Test Executor].

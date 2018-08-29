@@ -1,0 +1,643 @@
+= The TTCN-3 Debugger
+:toc:
+:table-number: 42
+
+The TTCN-3 debugger is a feature in TITAN, which allows the user to pause (halt) the execution of a TTCN-3 program and print (or in some cases overwrite) information about the current state of the program.
+
+The compiler option `–n` activates the debugger and augments the generated C++ code to store debug information and to allow the addition of breakpoints at runtime. For convenience this option is available for `ttcn3_makefilegen` as well.
+
+== Gathered information
+
+This section details the various types of information gathered by the debugger.
+
+NOTE: The debugger refers to the following TTCN-3 entities as "functions": `functions`, `external` `functions`, `testcases`, `altsteps`, `control` parts and parameterized templates. The debugger refers to the following TTCN-3 entities as "variables": constants (including those imported from ASN.1 modules), external constants, templates, variables, template variables, module parameters, timers and function parameters.
+
+=== The call stack
+
+The debugger maintains a stack of the currently called functions. The bottom entry in the stack is the oldest (first) function call, while the top-most entry in the stack is the newest function call.
+
+A separate call stack is maintained for each component.
+
+For each entry in the call stack the debugger stores the function name (or the module name in case of control parts), function type (the TTCN-3 keywords used when defining the function) and the current values of the function’s parameters.
+
+[[variables]]
+=== Variables
+
+The debugger keeps track of all variables (that are currently alive). Each variable’s name, type, current value, module name (where the variable was declared) and scope are stored.
+
+A variable’s scope refers to which functions and code blocks the variable is visible from. Variables can be grouped into 3 categories based on their scope:
+
+* *Global variables* are the ones that are declared outside of all functions and component types. These are visible from all functions declared in the same module as the variable and from all functions declared in modules that import the variable’s module.
+* *Component variables* are the one declared in component types. The variables of a specific component type (including variables of component types that the component in question extends) are visible from all functions that run on that component type.
+* *Local variables* are the variables declared within a function, and they are only visible inside that function.
+
+NOTE: The names of variables defined in ASN.1 code are converted to TTCN-3 format before being stored (hyphens are replaced with underscores, and an additional underscore is added to the end of the name if it clashes with a TTCN-3 keyword).
+
+=== Function call data
+
+The debugger stores data about which functions were called since the beginning of the program’s execution. A snapshot is taken of each function call at the beginning and end of its execution. The amount of function calls stored can be limited by the user.
+
+These snapshots contain a time stamp, the function’s name (or the module name in case of control parts), its type (the TTCN-3 keywords used when defining the function), the value of its parameters (`in` and `inout` parameters for starting snapshots, `inout` and `out` parameters for ending snapshots) and its return value (only for ending snapshots).
+
+== Breakpoints
+
+The debugger provides several ways to halt a TTCN-3 program:
+
+* user breakpoints – breakpoints can be set by the user to any line or function in the TTCN-3 code;
+* automatic breakpoints – certain events can be set to halt the program automatically;
+* stepping – the user can step to the next line of code (when the program is already halted), or to a specific line or function;
+* manual halt – the user can halt the program manually (regardless of which line is currently being executed).
+
+When the program is halted, no further TTCN-3 code is executed, until the user manually resumes the program’s execution.
+
+User breakpoints halt the program before the associated line of code starts executing. If a breakpoint is set at a function, then it would halt the program before the first line in the function (that contains executable code) begins execution.
+
+When the program is halted in parallel mode, the execution of all components is halted, not just the component that triggered the halt. The component that triggers the breakpoint (or reaches the stepping point) is halted immediately. The other components are halted with a slight delay. If the program was halted manually, then all components are halted with a slight delay. Resuming a halted program also has a slight delay on all components.
+
+NOTE: Timers are not paused when the program is halted. They continue ticking, and may time out, if the program is halted long enough.External programs that communicate with the TTCN program (e.g. the SUT) are also not halted, and not receiving any messages from the TTCN program might cause them to behave differently than if the program wasn’t halted.
+
+== User interface and list of commands
+
+The user communicates with the debugger through a command line interface. In parallel mode this interface is the Main Controller’s user interface (details about the MC can be found in <<13-references.adoc#_13, [13]>>). In single mode a similar interface is displayed whenever the program is halted.
+
+An answer or result is displayed through the user interface for all debugger commands (even erroneous ones). In parallel mode certain debugger commands are sent to multiple components. In this case an answer is displayed from each component the command was sent to.
+
+Both user interfaces support the execution of debugger commands from a text file (batch file). Details about batch files can be found <<batch-files, here>>.
+
+The various commands available through the user interface are grouped into 4 categories, detailed in subsections <<settings, Settings>> through <<batch-files, Bacth Files>>.
+
+=== Debugging with the Main Controller
+
+Debugger commands are given to the MC’s interface the same way as regular MC commands (all debugger commands start with 'd').
+
+No special settings are needed for the MC to execute debugger commands (like the `-n` switch for the compiler). The MC always knows all debugger commands, and will redirect the commands to the appropriate HCs, PTCs and/or the MTC.
+
+If debugging was activated on an HC, then it and its test components (PTCs and/or the MTC) will process the received command and return an answer to the MC. The MC displays all answers received from the MTC and PTCs, which means that one debugger command can result in multiple answers (one from each affected test component). The HC is always silent; it never returns textual answers to the MC. The debugger on the HC only stores settings for future PTCs.
+
+If debugging is deactivated on an HC, then it and its test components will ignore all debugger commands from the MC.
+
+Example:
+
+One HC is connected to the MC with debugging activated. The MTC and 2 PTCs are running on the one HC. The MC receives the following command:
+
+[source,subs="+quotes"]
+----
+*dsetbp MyModule 123*
+----
+
+See subsection <<settings, Settings>> for details about this command.
+
+Results:
+[source]
+----
+MTC@hostname: Breakpoint added in module ‘MyModule’ at line 123 with no batch file.
+ptc1(3)@hostname: Breakpoint added in module ‘MyModule’ at line 123 with no batch file.
+ptc2(4)@hostname: Breakpoint added in module ‘MyModule’ at line 123 with no batch file.
+----
+
+=== Debugging with the single mode UI
+
+The debugger has its own command line user interface in single mode. This interface only knows debugger commands.
+
+The interface becomes active whenever the debugger halts test execution, displaying the prompt '`DEBUG>`'.
+
+NOTE: Two command line options, `-h` and `-b`, are available to initialize the debugger (otherwise it would never cause a halt) when running a TTCN-3 executable in single mode. These are described in the User Guide (<<13-references.adoc#_13, [13]>>).
+
+By default, this user interface is only capable of reading strings one line at a time. This can be upgraded to know command completion and command history, like the Main Controller’s user interface, by rebuilding the TITAN runtime libraries with the `ADVANCED_DEBUGGER_UI := yes` setting (in the personal Makefile). This requires the `libcurses` or `libncurses` (depending on platform) library to be added to the TTCN-3 executable’s linking command in the Makefile. If the Makefile was generated by the `ttcn3_makefilegen` tool, then regenerating it will update the linking command with this new library.
+
+Another solution to using command completion and command history is to build the TTCN-3 executable in parallel mode and use the Main Controller’s UI.
+
+[[settings]]
+=== Settings
+
+*On/off switch*
+
+Command syntax: `debug (on | off)`
+
+Default setting: off
+
+Description: This is a separate on/off switch for the debugger, which can be changed at runtime (and thus does not require the program to be rebuild every time it is changed).
+
+When switched off the debugger does not track local variables, does not store function call data and does not halt the program. It still maintains the current call stack and tracks global and component variables.
+
+*Global batch file*
+
+Command syntax: `dglobbatch (off | (on <batch file>))`
+
+Default setting: off
+
+Description: Activates or deactivates the global batch file, or changes the file it refers to.
+
+The global batch file is executed automatically whenever the program is halted. If the program was halted by a user or automatic breakpoint that has a batch file associated with it, then the global batch file is not executed, only the breakpoint’s own batch file.
+
+*Set breakpoint*
+
+Command syntax: `dsetbp <module> (<line> | <function>) [<batch file>]`
+
+Default setting: -
+
+Description: Creates a new user breakpoint at the specified location (module name and either line number or function name) with or without a batch file, or changes the batch file setting of an existing breakpoint.
+
+NOTE: The first argument is the name of the module, not the name of the TTCN-3 file.
+
+If the breakpoint has a batch file set, then this batch file is automatically executed when the breakpoint is triggered.
+
+If the breakpoint has no batch file of its own set, and a global batch file is set, then the global batch file is executed when the breakpoint is triggered (i.e. the local batch file overwrites the global batch file).
+
+The validity of the command’s parameters is not checked. A breakpoint set at a line, function or module that does not exist or does not contain executable code (e.g. a line containing only '}') will never be triggered.
+
+*Remove breakpoint*
+
+Command syntax: `drembp (all | (<module> (all | <line> | <function>)))`
+
+Default setting: -
+
+Description: Removes the breakpoint at the specified location (if it exists), or removes all breakpoints in the specified module, or removes all breakpoints in all modules.
+
+Examples:
+[source]
+----
+Example 1 – removing one breakpoint, from module MyModule, line 114:
+drembp MyModule 114
+
+Example 2 – removing all breakpoints from module MyModule:
+drembp MyModule all
+
+Example 3 – removing all breakpoints:
+drembp all
+----
+
+*Automatic breakpoint*
+
+Command syntax: `dautobp (error | fail) (off | (on [<batch file>]))`
+
+Default setting: all automatic breakpoints are switched off
+
+Description: Activates or deactivates an automatic breakpoint, or changes the batch file settings of an activated automatic breakpoint.
+
+Automatic breakpoints are breakpoints triggered by specific events. The first argument indicates which automatic breakpoint to change:
+
+* *error* – triggered when the component’s verdict is set to `error` by a dynamic test case error (not all dynamic test case errors trigger this breakpoint, only those that actually change the local verdict to `error`);
+* *fail* – triggered when the component’s verdict is set to `fail` (by a `setverdict` operation.
+
+If the automatic breakpoint has a batch file set, then this batch file is automatically executed when the breakpoint is triggered.
+
+If the breakpoint has no batch file of its own set, and a global batch file is set, then the global batch file is executed when the breakpoint is triggered (i.e. the local batch file overwrites the global batch file).
+
+*Set output*
+
+Command syntax: `doutput (console | ((file | both) <file name>))`
+
+Default setting: console
+
+Description: Changes the destination of the debugger’s output (notifications and results of commands). The debugger’s output can be displayed by the user interface (`console'), or it can be written to a text file ('file'). The option `both' writes the debugger’s output to both the user interface and the specified file.
+
+The file name may contain special metacharacters, which are substituted dynamically during test execution (these are a subset of the metacharacters usable in log file names).
+
+NOTE: In parallel mode output files are created in the host’s working directory (not the MC’s).
+
+.Available metacharacters for setting output file names
+[cols="m,",options="header",]
+|===
+|Meta-character |Substituted with . . .
+|%e |the name of the TTCN–3 executable. The `.exe` suffix (on Windows platforms) and the directory part of the path name (if present) are truncated.
+|%h |the name of the computer returned by the `gethostname`(2) system call. This usually does not include the domain name.
+|%l |the login name of the current user. If the login name cannot be determined (e.g. the current UNIX user ID has no associated login name) an empty string is returned.
+|%n a|* the name of the test component if the PTC has been given a name with the command `create` in the TTCN-3 `create` operation; an empty string otherwise. +
+* the string `MTC` if the component is the Main Test Component (both in parallel and in single mode)
+| %p | the process ID (`pid`) of the UNIX process that implements the current test component. The `pid` is written in decimal notation.
+| %r | the component reference or component identifier. On PTCs it is the component reference (an integer number greater or equal to 3) in decimal notation. On the Main Test Component or in single mode the strings `mtc` or `single` are substituted, respectively.
+| %% | a single % character. |
+|===
+
+*Function call data configuration*
+
+Command syntax: `dcallcfg (all | <buffer size> | (file <file name>))`
+
+Default setting: all
+
+Description: Changes the method of storing function call data. The new configuration is specified by the command’s first argument:
+
+* 'all' – In this case all function calls are stored by the debugger. This option damages the program’s performance the most (specifically its memory consumption), since two long strings are stored every time a function is called and they are not deleted until the program’s execution ends.
+* _buffer size_ – This option sets an upper limit to the amount of function call snapshots stored (equal to `<buffer size>`). The function calls are stored in a ring buffer. If the buffer is full, then storing a new snapshot will cause the oldest stored snapshot to be erased. The buffer size can also be set to zero, in which case no function call data is stored.
+* 'file' – In this case the function call data is sent directly to a file and not stored by the debugger. The file is specified by the second argument.
++
+The file name may contain special metacharacters, which are substituted dynamically during test execution.
+
+NOTE: In parallel mode output files are created in the host’s working directory (not the MC’s).
+This commands also erases all previously stored function call data (unless the new setting is exactly the same as the old one).
+
+[[commands-related-to-printing-and-overwriting-data]]
+=== Commands related to printing and overwriting data
+
+*Print settings*
+
+Command syntax: `dsettings`
+
+Prerequisites: none
+
+Description: Prints the current states of all settings listed in the previous section.
+
+*Set component*
+
+Command syntax: `dsetcomp (<component name> | <component reference>)`
+
+Prerequisites: parallel mode
+
+Description: Changes the currently active test component to the one specified by the component name or reference.
+
+The active component is the component that receives all of the debugger commands related to printing and overwriting data. Only components that are currently running code are valid candidates.
+
+The active component is automatically set to the MTC when the MC is started. If the active component was set to a PTC that is no longer running anything, then it is set back to the MTC. Whenever the debugger halts the program, the active component is set to the component that triggered the halt (halting the program manually does not change the active component).
+
+*List components*
+
+Command syntax: `dlistcomp`
+
+Prerequisites: parallel mode
+
+Description: Lists the name and reference of the MTC and the names and references of all PTCs that are currently executing a function (i.e. all test components that can be the target of the `dsetcomp' command).
+
+The active component is marked with an asterisk (*) in the resulting list.
+
+*Set stack level*
+
+Command syntax: `dstacklevel <level>`
+
+Prerequisites: call stack is not empty
+
+Description: Sets the current stack level to the specified level. The new level must be a valid index in the call stack (from 1 to the size of the call stack).
+
+The current stack level is the level where variables are listed, printed and overwritten from.
+
+The current stack level is automatically set to 1 whenever the program is halted.
+
+*Print call stack*
+
+Command syntax: `dprintstack`
+
+Prerequisites: call stack is not empty
+
+Description: Prints the current call stack. The function at the top of the call stack is printed first (with the index of '1'). For each function its index, type, name and current value of parameters are printed (together with the parameters’ names and directions).
+
+The function at the current stack level is marked with an asterisk (*).
+
+*List variables*
+
+Command syntax: `dlistvar [(local | global | comp | all)] [<pattern>]`
+
+Prerequisites: call stack is not empty
+
+Description: Lists the names of all variables visible in the function at the current stack level. The variable names are separated by spaces.
+
+The command’s two optional arguments can be used to filter the resulting list.
+
+The first argument can reduce the list to only variables of a certain type (with the values 'local', 'global' and 'comp'; their meanings are explained in section <<variables, Variables>>). Setting the argument to 'all' or omitting it does not filter the list, and displays all variables of all types.
+
+The second argument is a pattern string, which can be used to filter the list. It has the same syntax as a TTCN-3 pattern.
+
+NOTE: The names of imported global variables are prefixed with their module name.
+
+*Print variable*
+
+Command syntax: `dprintvar { (<variable name> | $) }`
+
+Prerequisites: call stack is not empty
+
+Description: Prints the types, names and values of the specified variables. Each printed line contains one variable (or a notification if the variable was not found).
+
+The variables are searched for via their name. The searched names of global variables may also be prefixed with the module name (i.e. <module>.<variable>).
+
+The printed value of a variable has the same format as when logged using the `log` function.
+
+The metacharacter `$' is automatically substituted with the result of the last executed `dlistvar' command (on the active component).
+
+*Overwrite variable*
+
+Command syntax: `dsetvar <variable name> <new value>`
+
+Prerequisites: call stack is not empty
+
+Description: Overwrites the value of the specified variable.
+
+The variable is searched for via its name. The searched name of a global variable may also be prefixed with the module name (i.e. <module>.<variable>).
+
+The syntax of the new value is the same as the syntax of a module parameter or the `text2ttcn` predefined function (this entire command is essentially a `text2ttcn` call on the specified variable with the specified new value string).
+
+If the new value is incomplete (e.g. the assignment notation is used, and not all fields of the `record`/`set` or not all elements of the `record` `of`/`set` `of` are specified), then the rest of the variable is not changed.
+
+Variables that are constant in TTCN-3 (i.e. `consts`, `templates`, `modulepars`, `modulepar` `templates` and external `consts`) cannot be overwritten by this command either.
+
+Timers, ports and signatures cannot be overwritten.
+
+*Print function call data*
+
+Command syntax: `dprintcalls [(all | <limit>)]`
+
+Prerequisites: none
+
+Description: Prints the stored function call data (detailed in section 11.1.3).
+
+The first argument (integer number) can be used to limit the amount of snapshots to print. In this case only the last (newest) function calls are printed. Setting the argument to 'all' or omitting it prints all stored function calls.
+
+Each printed line contains the called function’s type, whether it’s a starting or ending snapshot, the function’s name, parameters (including the parameter’s directionfootnote:[in, inout or out], name and value) and the returned value.
+
+[[commands-related-to-the-halted-state]]
+=== Commands related to the halted state
+
+*Halt*
+
+Command syntax: `dhalt`
+
+Prerequisites: parallel mode, program is not halted, the MTC’s call stack is not empty
+
+Description: Halts the program’s execution.
+
+This cannot be used in single mode, since the debugger’s user interface only appears if the program is already halted.
+
+*Continue*
+
+Command syntax: `dcont`
+
+Prerequisites: program is halted
+
+Description: Resumes the program’s execution.
+
+*Exit*
+
+Command syntax: `dexit (test | all)`
+
+Prerequisites: none
+
+Description: Stops the execution of the current program. If the argument is `test', then only the current test case or control part is stopped. If the argument is 'all', then the entire program is terminated.
+
+In parallel mode this does not exit the MC nor does it terminate the MTC. Test execution can be restarted after this with the 'smtc' command.
+
+*Step over*
+
+Command syntax: `dstepover`
+
+Prerequisites: program is halted
+
+Description: Steps onto the next line of code. This type of stepping does not enter functions. If the current line is the last line in the function, then this steps onto the line that called the function.
+
+NOTE: This command is interrupted if the program is halted for any reason before the next line is reached (this will not cause the program to be halted a second time, when the next line is eventually reached).
+
+*Step into*
+
+Command syntax: `dstepinto`
+
+Prerequisites: program is halted
+
+Description: Steps onto the next line of code. If there is a function call in the current line, then this steps onto the called function’s first line. If the current line is the last line in the function, then this steps onto the line that called the function.
+
+NOTE: This command is interrupted if the program is halted for any reason before the next line is reached (this will not cause the program to be halted a second time, when the next line is eventually reached).
+
+*Step out*
+
+Command syntax: `dstepout`
+
+Prerequisites: program is halted
+
+Description: Steps out of the current function and onto the line that called the function.
+
+NOTE: This command is interrupted if the program is halted for any reason before the specified line is reached (this will not cause the program to be halted a second time, when the specified line is eventually reached).
+
+*Run to cursor*
+
+Command syntax: `drunto <module> (<line> | <function>)`
+
+Prerequisites: program is halted
+
+Description: Resumes the program’s execution until the specified line or function is reached.
+
+NOTE: This command is interrupted if the program is halted for any reason before the specified location is reached (this will not cause the program to be halted a second time, when the specified location is eventually reached).
+
+[[batch-files]]
+=== Batch files
+
+Both the MC’s user interface and the debugger’s user interface in single mode support the execution of commands from a text file (batch file).
+
+Each line in the batch file is treated as one command. Empty lines are ignored. Encountering an erroneous command does not stop the batch file’s execution.
+
+Execution of batch files can be initiated manually using the `batch' command.
+
+Syntax: `batch <file name>`
+
+Batch files may contain any of the debugger commands listed in this section, including the `batch' command. In parallel mode they may also contain any of the MC’s commands.
+
+Certain debugger settings (such as breakpoints) can initiate the execution of a batch file automatically. In this case the program’s execution remains halted after the execution of the batch file, unless the batch file contains a command that ends the halted state (e.g. dcont).
+
+The entire debugging process can be automated with the use of batch files that end with the `dcont' command. An initial batch file could initialize the debugger’s settings, set all breakpoints to automatically execute a batch file, and/or set a global batch file, and start the program. This way whenever the program would be halted, the automatically executed batch file would resume it.
+
+NOTE: In parallel mode batch files are searched for in the MC’s working directory.
+
+== Example
+
+This section contains an example for some of the debugger’s features. The example contains one TTCN-3 module with one test case, executed in single mode. Two tests are run. In both cases the debugging process is fully automated with the use of batch files. The executable’s –b command line option is used to run the first batch file.
+
+The TTCN-3 module (demo.ttcn):
+[source]
+----
+module demo {
+
+type component CT {
+  // component variables
+  const integer ct_int := 4;
+  var charstring ct_str := "abc";
+}
+
+type record Rec {
+  integer num,
+  charstring str
+}
+
+type record of integer IntList;
+
+// global variable
+template integer t_int := (1..10);
+
+function f_fact(in integer n) return integer {
+  if (n == 0 or n == 1) {
+    return 1; // line 21
+  }
+  return n * f_fact(n - 1);
+}
+
+testcase tc_demo() runs on CT {
+  // local variables
+  var Rec v_rec := { num := ct_int, str := ct_str };
+  var template IntList vt_list := { [0] := 1, [2] := * };
+
+  if (match(f_fact(v_rec.num), t_int)) {
+    v_rec.str := v_rec.str & "!";
+  }
+  else {
+    v_rec.str := v_rec.str & "?";
+  }
+
+  var IntList v_list := { 1, 2, 9 };
+
+  if (match(v_list, vt_list)) { // dynamic test case error, line 40
+    action("matched");
+  }
+}
+
+} // end of module
+----
+The makefile for the example is generated with the following command:
+
+[source,subs="+quotes"]
+*ttcn3_makefilegen -sgn demo.ttcn*
+
+Both tests use the following configuration file (cfg.cfg):
+[source]
+----
+[EXECUTE]
+demo.tc_demo
+----
+
+=== Test 1
+
+Initializer batch file (start1.bat):
+[source]
+----
+debug on
+dautobp error on error.bat
+dsetbp demo 21 bp21.bat
+----
+
+Batch file for the breakpoint at line 21 (bp21.bat):
+[source]
+----
+dprintstack
+dlistvar all
+dstacklevel 5
+dlistvar comp
+dprintvar ct_int
+dlistvar local
+dprintvar $
+dcont
+----
+
+Batch file for the automatic breakpoint for error verdicts (error.bat):
+[source]
+----
+dprintss
+dlistvar local v_*
+dprintvar $
+dcont
+----
+
+Results of running `./demo -b start1.bat cfg.cfg` (debugger output highlighted in [yellow-background]#yellow#, echoed debugger commands highlighted in [aqua-background]#turquoise#):
+
+[source,subs="+quotes"]
+----
+TTCN-3 Test Executor (single mode), version CRL 113 200/5 R5A
+Using configuration file: `cfg.cfg'
+[yellow-background]#Test execution halted.
+Executing batch file 'start1.bat'.#
+[aqua-background]#debug on#
+[yellow-background]#Debugger switched on.#
+[aqua-background]#dautobp error on error.bat#
+[yellow-background]#Automatic breakpoint at error verdict switched on with batch file 'error.bat'.#
+[aqua-background]#dsetbp demo 21 bp21.bat#
+[yellow-background]#Breakpoint added in module 'demo' at line 21 with batch file 'bp21.bat'.
+Test execution resumed.#
+Test case tc_demo started.
+[yellow-background]#User breakpoint reached at line 21 in module 'demo'.
+Test execution halted.
+Executing batch file 'bp21.bat'.#
+[aqua-background]#dprintstack#
+[yellow-background]#1.	[function]	f_fact([in] n := 1)
+2.	[function]	f_fact([in] n := 2)
+3.	[function]	f_fact([in] n := 3)
+4.	[function]	f_fact([in] n := 4)
+5.	[testcase]	tc_demo()#
+[aqua-background]#dlistvar all#
+[yellow-background]#n t_int#
+[aqua-background]#dstacklevel 5#
+[yellow-background]#Stack level set to:
+5.	[testcase]	tc_demo()#
+[aqua-background]#dlistvar comp#
+[yellow-background]#ct_int ct_str#
+[aqua-background]#dprintvar ct_int#
+[yellow-background]#[integer] ct_int := 4#
+[aqua-background]#dlistvar local#
+[yellow-background]#v_rec vt_list#
+[aqua-background]#dprintvar $#
+[yellow-background]#[Rec] v_rec := { num := 4, str := "abc" }
+[IntList template] vt_list := { 1, <uninitialized template>, * }#
+[aqua-background]#dcont#
+[yellow-background]#Test execution resumed.#
+demo.ttcn:40: Dynamic test case error: Matching with an uninitialized/unsupported integer template.
+[yellow-background]#Automatic breakpoint (error verdict) reached at line 40 in module 'demo'.
+Test execution halted.
+Executing batch file 'error.bat'.#
+[aqua-background]#dprintss#
+[yellow-background]#[testcase]	started 	tc_demo()
+[function]	started 	f_fact([in] n := 4)
+[function]	started 	f_fact([in] n := 3)
+[function]	started 	f_fact([in] n := 2)
+[function]	started 	f_fact([in] n := 1)
+[function]	finished	f_fact([in] n := -) returned 1
+[function]	finished	f_fact([in] n := -) returned 2
+[function]	finished	f_fact([in] n := -) returned 6
+[function]	finished	f_fact([in] n := -) returned 24#
+[aqua-background]#dlistvar local v_*#
+[yellow-background]#v_rec v_list#
+[aqua-background]#dprintvar $#
+[yellow-background]#[Rec] v_rec := { num := 4, str := "abc?" }
+[IntList] v_list := { 1, 2, 9 }#
+[aqua-background]#dcont#
+[yellow-background]#Test execution resumed.#
+Test case tc_demo finished. Verdict: error
+Verdict statistics: 0 none (0.00 %), 0 pass (0.00 %), 0 inconc (0.00 %), 0 fail (0.00 %), 1 error (100.00 %).
+Test execution summary: 1 test case was executed. Overall verdict: error
+----
+
+=== Test 2
+
+Initializer batch file (start2.bat):
+[source]
+----
+debug on
+dsetbp demo 40 bp40.bat
+----
+
+Batch file for the breakpoint at line 40 (bp40.bat):
+[source]
+----
+dprintvar vt_list
+dsetvar vt_list { [1] := 2 }
+dcont
+----
+
+Results of running ./demo -b start2.bat cfg.cfg (debugger output highlighted in [yellow-background]#yellow#, echoed debugger commands highlighted in [aqua-background]#turquoise#):
+
+[source,subs="+quotes"]
+----
+TTCN-3 Test Executor (single mode), version CRL 113 200/5 R5A
+Using configuration file: `cfg.cfg'
+Test execution halted.
+Executing batch file 'start2.bat'.
+[aqua-background]#debug on#
+[yellow-background]#Debugger switched on.#
+[aqua-background]#dsetbp demo 40 bp40.bat#
+[yellow-background]#Breakpoint added in module 'demo' at line 40 with batch file 'bp40.bat'.
+Test execution resumed.#
+Test case tc_demo started.
+[yellow-background]#User breakpoint reached at line 40 in module 'demo'.
+Test execution halted.
+Executing batch file 'bp40.bat'.#
+[aqua-background]#dprintvar vt_list#
+[yellow-background]#[IntList template] vt_list := { 1, <uninitialized template>, * }#
+[aqua-background]#dsetvar vt_list { [1] := 2 }#
+[yellow-background]#[IntList template] vt_list := { 1, 2, * }#
+[aqua-background]#dcont#
+[yellow-background]#Test execution resumed.#
+Action: matched
+Test case tc_demo finished. Verdict: none
+Verdict statistics: 1 none (100.00 %), 0 pass (0.00 %), 0 inconc (0.00 %), 0 fail (0.00 %), 0 error (0.00 %).
+Test execution summary: 1 test case was executed. Overall verdict: none
+----

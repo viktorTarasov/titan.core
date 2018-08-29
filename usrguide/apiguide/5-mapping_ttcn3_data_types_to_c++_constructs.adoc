@@ -1,0 +1,1940 @@
+[[mapping-ttcn-3-data-types-to-c-constructs]]
+= Mapping TTCN–3 Data Types to C++ Constructs
+:table-number: 7
+:toc:
+
+The TTCN–3 language elements of the test suite are individually mapped into more or less equivalent C\++ constructs. The data types are mapped to C++ classes, the test cases become C++ functions, and so on. In order to write a Test Port, it is inevitable to be familiar with the internal representation format of TTCN–3 data types and values. This section gives an overview about the data types and their equivalent C++ constructs.
+
+[[mapping-of-names-and-identifiers]]
+== Mapping of Names and Identifiers
+
+In order to identify the TTCN–3 language elements in the generated C\++ program properly, the names of test suite are translated to C++ identifiers according to the following simple rules.
+
+If the TTCN–3 identifier does not contain any underscore (_) character, its equivalent C\++ identifier will be the same. For example, the TTCN–3 variable `MyVar` will be translated to a C++ variable called `MyVar`.
+
+If the TTCN–3 identifier contains one or more underscore characters, each underscore character will be duplicated in the C\++ identifier. So the TTCN–3 identifier `My_Long_Name` will be mapped to a C++ identifier called `My\__Long__Name`.
+
+The idea behind this name mapping is that we may freely use the C\++ identifiers containing one underscore character in the generated code and in the Test Ports as well. Otherwise name clashes can always happen because the name space of TTCN–3 and C++ is identical. Furthermore, the generated C\++ language elements fulfill the condition that the scope of a translated C++ identifier is identical as the scope of the original TTCN–3 identifier.
+
+The identifiers that are keywords of C or C\++ but not keywords in TTCN–3 are mapped to themselves, but a single underscore character is appended at the end (for example `typedef` becomes `typedef_`). The same rule applies to the all-uppercase identifiers that are used in the Base Library: identifier `INTEGER` in TTCN–3 becomes `INTEGER_` in C++, `TRUE` footnote:[The built-in `verdict` and `boolean` constants in TTCN–3 shall be written with all lowercase letters, such as true or pass. Although previous compiler versions have accepted `TRUE` or `PASS` as well, these words are treated by the compiler as regular identifiers as specified in the standard.] is mapped to `TRUE_`, etc.
+
+Here is the complete list (in alphabetical order) of the identifiers that are handled in such special way:asm, auto, bitand, bitor, bool, break, case, class, compl, continue, delete, double, enum, explicit, export, friend, inline, int, ischosen, long, main, mutable, namespace, new, operator, private, protected, public, register, short, signed, static, stderr, stdin, stdout, struct, switch, this, throw, try, typedef, typeid, typename, unsigned, using, virtual, void, volatile, ADDRESS, BITSTRING, BOOLEAN, CHAR, CHARSTRING, COMPONENT, DEFAULT, ERROR, FAIL, FALSE, FLOAT, HEXSTRING, INCONC, INTEGER, NONE, OBJID, OCTETSTRING, PASS, PORT, TIMER, TRUE, VERDICTTYPE.
+
+The identifiers that are the names of common preprocessor macros of the C library (such as `putchar`, `errno` or `NULL`) should be avoided in TTCN–3 modules. The name clashes with macros can cause mysterious compilation error messages.
+
+Note that these name mapping rules apply to *all* TTCN–3 identifiers, including module, Test Port, type, field, variable and function names.
+
+WARNING: By default, from version 1.2.pl0 the compiler does NOT duplicate the underscores in output file names and file references (for example when handling imports).
+
+== Namespaces
+
+The compiler generates a C++ namespace for every TTCN–3 and ASN.1 module. All C++ definitions that belong to the module (including Test Port classes and external functions) are placed in that namespace. The name of the namespace is derived from the module identifier according to the rules described in <<mapping-of-names-and-identifiers, Mapping of Names and Identifiers>>.
+
+The definitions of the TTCN–3 Base Library do not use any namespace.
+
+When accessing a C\++ entity that belongs to a different module than the referring Test Port or external function is in the reference has to be prefixed with the namespace of the referenced module. For example, to access the C++ class that realizes type `MyType` defined in `MyModule1` from a Test Port that belongs to module `MyModule2` the reference shall be written as `MyModule1::MyType`.
+
+[[predefined-ttcn-3-data-types]]
+== Predefined TTCN–3 Data Types
+
+There are some basic data types in TTCN–3 that have no equivalent data types in language C/C\++ (for example bitstring, verdicttype). Other types have C++ equivalent, but the TTCN–3 executor must know whether a variable has a valid value or not because sending an unbound value must result in a dynamic test case error. Thus, in the TTCN–3 Base Library all basic data types of TTCN–3 were implemented as C++ classes. This section describes the member functions of these classes.
+
+=== `Integer`
+
+The TTCN–3 type `integer` is implemented in class `INTEGER`. +
+The class `INTEGER` has the following public member functions:
+
+.Public member functions of the class `INTEGER`
+[cols=",,",]
+|==================================================
+2+^.^|*Member functions* |*Notes*
+.4+^.^|_Constructors_
+|`INTEGER()` |Initializes to unbound value.
+|`INTEGER(int)` |Initializes to a given value.
+|`INTEGER(const INTEGER&`) |Copy constructor.
+|`explicit INTEGER(const char *)` |Initializes with the (NUL terminated) string representation of an integer.
+^.^|_Destructor_
+|`˜INTEGER()` |
+.2+^.^|_Assignment operators_
+|`INTEGER()` |Initializes to unbound value.
+|`INTEGER()` |Initializes to unbound value.
+.12+^.^|_Comparison operators_
+| boolean operator==(int) const | Returns TRUE if equals
+| boolean operator==(const INTEGER&) const | and FALSE otherwise.
+| boolean operator!=(int) const  |
+| boolean operator!=(const INTEGER&) const  |
+| boolean operator<(int) const  |
+| boolean operator<(const INTEGER&) const  |
+| boolean operator<=(int) const  |
+| boolean operator<=(const INTEGER&) const  |
+| boolean operator>(int) const  |
+| boolean operator>(const INTEGER&) const  |
+| boolean operator>=(int) const  |
+| boolean operator>=(const INTEGER&) const  |
+.12+^.^|_Arithmetic operators_
+| INTEGER operator+() const |Unary plus.
+| INTEGER operator-() const |Unary minus.
+| INTEGER operator+(int) const |Addition.
+| INTEGER operator+(const INTEGER&) const |
+| INTEGER operator-(int) const |Subtraction.
+| INTEGER operator-(const INTEGER&) const |
+| INTEGER operator*(int) const |Multiplication.
+| INTEGER operator*(const INTEGER&) const |
+| INTEGER operator/(int) const |Integer division.
+| INTEGER operator/(const INTEGER&) const |
+| INTEGER& operator++() |Incrementation (prefix).
+| INTEGER& operator—() |Decrementation (prefix).
+^.^|_Casting operator_
+| operator int() const |Returns the value.
+.5+^.^|_Other member functions_
+| `void log() const` |Puts the value into log.
+| `boolean is_bound() const` |Returns whether the value is bound.
+| `void clean_up()` |Deletes the value, setting it to unbound.
+| `long long int get_long_long_val() const` |Returns the value as a long long `int`.
+| `void set_long_long_val(long long int)` |Sets the given long long `int` value.
+|==================================================
+
+The comparison, arithmetic and shifting operators are also available as global functions for that case when the left side is `int` and the right side is `INTEGER`. Using the value of an unbound variable for anything will cause dynamic test case error.
+
+The casting operator `int()` is applicable only to `INTEGER` objects holding a signed value with at most 31 useful bits, since in C/C++ the native `int` type is 32-bit large including the sign bit. Casting an `INTEGER` object holding a bigger (for example a 32-bit unsigned) value will result in run-time error.
+
+Please note that if the value stored in an `INTEGER` object is too big (that is, it cannot be represented as a `long long int`) the value returned by `get_long_long_val()` will contain only the lowest `sizeof(long long int)` bytes of the original value. Another way to obtain a value of a number having more useful bits than 31 is to convert the INTEGER object to its string representation using the `int2str()` predefined function. Then the string value can be converted to any native integer type using the `sscanf()` library function or such. The following example demonstrates a common scenario:
+[source]
+----
+unsigned int get_unsigned_int_val(const INTEGER& other_value)
+{
+  unsigned int ret_val = 0;
+  sscanf((const char *)int2str(), “%u”, &ret_val);
+  return ret_val;
+}
+----
+
+In addition, the following global functions are available for modulo division. These functions return the result of `mod` and `rem` operations according to TTCN–3 semantics.
+[source]
+----
+INTEGER mod(const INTEGER& left_operand, const INTEGER& right_operand);
+INTEGER mod(const INTEGER& left_operand, int right_operand);
+INTEGER mod(int left_operand, const INTEGER& right_operand);
+INTEGER mod(int left_operand, int right_operand);
+
+INTEGER rem(const INTEGER& left_operand, const INTEGER& right_operand);
+INTEGER rem(const INTEGER& left_operand, int right_operand);
+INTEGER rem(int left_operand, const INTEGER& right_operand);
+INTEGER rem(int left_operand, int right_operand);
+----
+
+Other operators (global functions):
+[source]
+----
+INTEGER operator+(int int_value, const INTEGER& other_value);  // Add
+INTEGER operator-(int int_value, const INTEGER& other_value);  // Subtract
+INTEGER operator*(int int_value, const INTEGER& other_value);  // Multiply
+INTEGER operator/(int int_value, const INTEGER& other_value);  // Divide
+boolean operator==(int int_value, const INTEGER& other_value); // Equal
+boolean operator!=(int int_value, const INTEGER& other_value); // Not equal
+boolean operator<(int int_value, const INTEGER& other_value);  // Less than
+boolean operator>(int int_value, const INTEGER& other_value);  // More than
+----
+
+=== `Float`
+
+The TTCN–3 type `float` is implemented in class `FLOAT`. +
+The class `FLOAT` has the following public member functions:
+
+.Public member functions of the class `FLOAT`
+
+[width="100%",cols=",,"]
+|=================================================================================================
+2+^.^|*Member functions* |*Notes*
+.3+^.^|_Constructors_
+|`FLOAT()` |Initializes to unbound value.
+|`FLOAT(double)` |Initializes to a given value.
+|`FLOAT(const FLOAT&`) |Copy constructor.
+^.^|_Destructor_
+|`˜FLOAT()` |
+.2+^.^|Assignment operators
+|`FLOAT& operator=(double)`  |Assigns the given value
+|`FLOAT& operator=(const FLOAT&)` |and sets the bound flag.
+.12+^.^|_Comparison operators_
+|boolean operator==(double) const |Returns TRUE if equals
+|boolean operator==(const FLOAT&) const  |and FALSE otherwise.
+|boolean operator!=(double) const  |
+|boolean operator!=(const FLOAT&) const  |
+|boolean operator<(double) const  |
+|boolean operator<(const FLOAT&) const  |
+|boolean operator<=(double) const  |
+|boolean operator<=(const FLOAT&) const  |
+|boolean operator>(double) const  |
+|boolean operator>(const FLOAT&) const  |
+|boolean operator>=(double) const  |
+|boolean operator>=(const FLOAT&) const  |
+.10+^.^|_Arithmetic operators_
+|double operator+() const  |Unary plus.
+|double operator-() const  |Unary minus.
+|double operator+(double) const |Addition.
+|double operator+(const FLOAT&) const  |
+|double operator-(double) const  |Subtraction.
+|double operator-(const FLOAT&) const  |
+|double operator*(double) const  |Multiplication.
+|double operator*(const FLOAT&) const  |
+|double operator/(double) const  |Division.
+|double operator/(const FLOAT&) const  |
+^.^|_Casting operator_
+|operator double() const |Returns the value.
+.3+^.^|_Other member functions_
+|`void log() const`|Puts the value into log, either in exponential or decimal dot notation.
+|`boolean is_bound() const` |Returns whether the value is bound.
+|`void clean_up()` |Deletes the value, setting it to unbound.
+
+|=================================================================================================
+
+The comparison and arithmetic operators are also available as global functions for that case when the left side is `double` and the right side is `FLOAT`. Using the value of an unbound variable for anything will cause dynamic test case error.
+
+Other operators (global functions):
+[source]
+----
+FLOAT operator+(double double_value, const FLOAT& other_value);    // Add
+FLOAT operator-(double double_value, const FLOAT& other_value);    // Subtract
+FLOAT operator*(double double_value, const FLOAT& other_value);    // Multiply
+FLOAT operator/(double double_value, const FLOAT& other_value);    // Divide
+boolean operator==(double double_value, const FLOAT& other_value); // Equal
+boolean operator!=(double double_value, const FLOAT& other_value); // Not equal
+boolean operator<(double double_value, const FLOAT& other_value);  // Less than
+boolean operator>(double double_value, const FLOAT& other_value);  // More than
+----
+
+=== `Boolean`
+
+The TTCN–3 type `boolean` is implemented in class `BOOLEAN`.We have introduced an ancillary C enumerated type called `boolean` to set and get values. It may have two predefined values: `TRUE` or `FALSE`. You may use `boolean` values in C conditions since `FALSE` equals to zero and `TRUE` is not zero. +
+The class `BOOLEAN` has the following public member functions:
+
+.Public member functions of the class `BOOLEAN`
+
+[cols=",,",,]
+|==================================================
+2+^.^|*Member functions* |*Notes*
+.3+^.^|_Constructors_
+|`BOOLEAN()` |Initializes to unbound value.
+|`BOOLEAN(boolean)` |Initializes to a given value.
+|`BOOLEAN(const BOOLEAN&)` | Copy constructor.
+^.^|_Destructor_
+|`˜BOOLEAN()` |
+.2+^.^|_Assignment operators_
+|`BOOLEAN& operator=(boolean)` |Assigns the given value
+|`BOOLEAN& operator=(const BOOLEAN&)` |and sets the bound flag.
+.4+^.^|_Comparison operators_
+|boolean operator==(boolean) const |Returns TRUE if equals
+|boolean operator==(const BOOLEAN&) const |and FALSE otherwise.
+|boolean operator!=(boolean) const |Same as XOR.
+|boolean operator!=(const BOOLEAN&) const |
+.8+^.^|_Logical operators_
+|boolean operator!() const |Negation (NOT).
+|boolean operator&&(boolean) const |Logical AND.
+|boolean operator&&(const BOOLEAN&) const |
+|boolean operator|(boolean) const |Logical OR.
+|boolean operator|(const BOOLEAN&) const |
+|boolean operatorˆ(boolean) const |Exclusive or (XOR).
+|boolean operatorˆ(const BOOLEAN&) const |
+^.^|_Casting operator_
+|operator boolean() const |Returns the value.
+.3+^.^|_Other member functions_
+|`void log() const` |Puts the value into log. Like “TRUE” or “FALSE”.
+|`boolean is_bound() const` |Returns whether the value is bound
+|`void clean_up()` |Deletes the value, setting it to unbound.
+
+|==================================================
+
+The comparison and logical operators are also available as global functions for that case when the left side is `boolean` and the right side is `BOOLEAN`. Using the value of an unbound variable for anything will cause dynamic test case error.
+
+Other operators (global functions):
+[source]
+----
+BOOLEAN operator&&(boolean bool_value, const BOOLEAN& other_value); // And
+BOOLEAN operator^(boolean bool_value, const BOOLEAN& other_value);  // Not
+BOOLEAN operator||(boolean bool_value, const BOOLEAN& other_value); // Or
+boolean operator==(boolean bool_value, const BOOLEAN& other_value); // Equal
+boolean operator!=(boolean bool_value, const BOOLEAN& other_value);// Not equal
+----
+
+=== `Verdicttype`
+
+The TTCN–3 type `verdicttype` is implemented in class `VERDICTTYPE`. We have introduced an ancillary C enumerated type called `verdicttype` to set and get values. It may have five predefined values: `NONE`, `PASS`, `INCONC`, `FAIL` or `ERROR`.
+The order of these values is `NONE < PASS < INCONC < FAIL < ERROR`. The class `VERDICTTYPE` has the following public member functions:
+
+.Public member functions of the class `VERDICTTYPE`
+
+[cols=",,",,]
+|==================================================
+2+^.^|*Member functions* |*Notes*
+.3+^.^|_Constructors_
+|`VERDICTTYPE()` |Initializes to unbound value.
+|`VERDICTTYPE(verdicttype)`  |Initializes to a given value.
+|`VERDICTTYPE(const VERDICTTYPE&)`  |Copy constructor.
+^.^|_Destructor_
+|`˜VERDICTTYPE()` |
+.2+^.^|_Assignment operators_
+|`VERDICTTYPE& operator=(verdicttype)` |Assigns the given value
+|`VERDICTTYPE& operator= (const VERDICTTYPE&)`  |and sets the bound flag.
+.4+^.^|_Comparison operators_
+|boolean operator==(verdicttype) const |Returns TRUE if equals
+|boolean operator==(const VERDICTTYPE&) const  |and FALSE otherwise.
+|boolean operator!=(verdicttype) const  |
+|boolean operator!=(const VERDICTTYPE&) const  |
+^.^|_Casting operator_ |Returns the value.
+|operator verdicttype() const  |Returns the value.
+.3+^.^|_Other member functions_ |Puts the value into log.
+|`void log() const`|Puts the value into log. |Like “pass” or “fail”.
+|`boolean is_bound() const` | Returns whether the value is bound.
+|`void clean_up()` | Deletes the value, setting it to unbound.
+|==================================================
+
+The comparison operators are also available as global functions for that case when the left side is `verdicttype` and the right side is `VERDICTTYPE`. Using the value of an unbound `VERDICTTYPE` variable for anything will cause dynamic test case error.
+
+From version 1.2.pl0 there are the following three static member functions in class `TTCN_Runtime` defined in the Base Library for getting or modifying the local verdict of the current test components:
+[source]
+----
+void TTCN_Runtime::setverdict(verdicttype);
+void TTCN_Runtime::setverdict(const VERDICTTYPE&);
+verdicttype TTCN_Runtime::getverdict();
+----
+
+These functions are the C\++ equivalents of TTCN–3 `setverdict` and `getverdict` operations. Use them only if your Test Port or C++ function encounters a low-level failure, but it can continue its normal operation (that is, error recovery is not necessary).
+
+Other operators (global functions):
+[source]
+----
+boolean operator==(verdicttype par_value,
+                     const VERDICTTYPE& other_value); // Equal
+boolean operator!=(verdicttype par_value,
+                     const VERDICTTYPE& other_value); // Not equal
+----
+
+=== `Bitstring`
+
+The equivalent C++ class of TTCN–3 type `bitstring` is called `BITSTRING`. The bits of the bit string are stored in an array of unsigned characters. In order to reduce the wasted memory space the bits are packed together, so each character contains eight bits. The first character contains the first eight bits of the bit string; the second byte contains the bits from the 9th up to the 16th, and so on. The first bit of the bit string is the LSB of the first character; the second bit is the second least significant bit of the first character, and so on. The character array is not terminated with a `NUL` character and if the length of the bit string is not a multiple of eight, the unused bits of the last character can contain any value. So the length of the bit string must be always given.
+
+The class `BITSTRING` has the following public member functions:
+
+.Public member functions of the class `BITSTRING`
+
+[width="100%",cols=",,"]
+|==============================================================================================================================
+2+^.^|*Member functions* |*Notes*
+.4+^.^|_Constructors_
+|`BITSTRING()` |Initializes to unbound value.
+|`BITSTRING(int n_bits, unsigned char *bits_ptr)` |Initializes from a given length
+and pointer to character array.
+|`BITSTRING(const BITSTRING&)` |Copy constructor.
+|`BITSTRING(const BITSTRING_ELEMENT&)` |Initializes from a single bitstring element.
+^.^|_Destructor_
+|`˜BITSTRING()` |
+.2+^.^|_Assignment operators_
+|`BITSTRING& operator=(const BITSTRING&)` |Assigns the given value and sets the bound flag.
+|`BITSTRING& operator=(const BITSTRING_ELEMENT&`) |Assigns the given single bitstring element.
+.4+^.^|_Comparison operators_
+|boolean operator==(const BITSTRING&) const |Returns TRUE if equals
+|boolean operator==(const BITSTRING_ELEMENT&) const |and FALSE otherwise.
+|boolean operator!=(const BITSTRING&) const |
+|boolean operator!=(const BITSTRING_ELEMENT&) const |
+.2+^.^|_Concatenation operator_
+|BITSTRING operator+(const BITSTRING&) const |Concatenates two bitstrings.
+|BITSTRING operator+(const BITSTRING_ELEMENT&) const |Concatenates a bitstring and a bitstring element.
+.4+^.^|_Index operator_
+|BITSTRING_ELEMENT operator[](int) |Gives access to the given element. Indexing begins from zero. Index overflow causes dynamic test case error.
+|BITSTRING_ELEMENT operator[](const INTEGER&) |
+|const BITSTRING_ELEMENT operator[](int) const |Gives read-only access to the given element.
+|const BITSTRING_ELEMENT operator[](const INTEGER&) const |
+.8+^.^|_Bitwise operators_
+|BITSTRING operator~() const |C++ equivalent of operator not4b. (bitwise negation)
+|BITSTRING operator&(const BITSTRING&) const |C++ equivalent of operator
+and4b. (bitwise and)
+|BITSTRING operator&(const BITSTRING_ELEMENT&) const |
+|BITSTRING operator|(const BITSTRING&) const |C++ equivalent of operator
+or4b. (bitwise or)
+|BITSTRING operator|(const BITSTRING_ELEMENT&) const |
+|BITSTRING operatorˆ(const BITSTRING&) const |C++ equivalent of operator
+xor4b. (bitwise xor)
+|BITSTRING operator^(const BITSTRING_ELEMENT&) const |
+.8+^.^|_Shifting and rotating operators_
+|BITSTRING operator<<(int) const |C++ equivalent of operator
+|BITSTRING operator<<(const INTEGER&) const |<<.(shift left)
+|BITSTRING operator>>(int) const |C++ equivalent of operator
+|BITSTRING operator>>(const INTEGER&) const |>>. (shift right)
+|BITSTRING operator<<=(int) const |C++ equivalent of operator
+|BITSTRING operator<<=(const INTEGER&) const |< @. (rotate left)
+|BITSTRING operator>>=(int) const |C++ equivalent of operator
+|BITSTRING operator>>=(const INTEGER&) const |@ >. (rotate right)
+^.^|_Casting operator_
+|operator const unsigned char*() const |Returns a pointer to the character array.
+.4+^.^|_Other member functions_
+|`int lengthof() const` |Returns the length measured in bits.
+|`void log() const` |Puts the value into log.
+Example: ’100011’B.
+|`boolean is_bound() const` |Deletes the value, setting it to unbound
+|`void clean_up()` |
+
+|==============================================================================================================================
+
+Using the value of an unbound `BITSTRING` variable for anything will cause dynamic test case error.
+
+==== `Bitstring element`
+
+The C++ class `BITSTRING_ELEMENT` is the equivalent of the TTCN-3 `bitstring`’s element type (the result of indexing a `bitstring` value). The class does not store the actual bit, only a reference to the original `BITSTRING` object, an index value and a bound flag.
+
+Note: changing the value of the `BITSTRING_ELEMENT` (through the assignment operator) changes the referenced bit in the original `bitstring` object.
+
+The class `BITSTRING_ELEMENT` has the following public member functions:
+
+.Public member functions of the class `BITSTRING_ELEMENT`
+
+[width="100%",cols=,,",,]
+|========================================================================================================================================================
+2+^.^|*Member functions* |*Notes*
+|_Constructor_
+|`BITSTRING_ELEMENT`(boolean par_bound_flag, BITSTRING& par_str_val, int par_bit_pos) |Initializes the object with an unbound value or a reference to a bit in an existring BITSTRING object.
+.2+^.^|_Assignment operators_
+|`BITSTRING_ELEMENT& operator=(const BITSTRING&)` |Sets the referenced bit to the given bitstring of length 1.
+|`BITSTRING_ELEMENT& operator=(const BITSTRING_ELEMENT&)` |Sets the referenced bit to the given bitstring element.
+.4+^.^|_Comparison operators_
+|boolean operator==(const BITSTRING&) const |Comparison with a bitstring or a bitstring element (the value of the referenced bits is compared, not the references and indexes).
+|boolean operator==(const BITSTRING_ELEMENT&) const |
+|boolean operator!=(const BITSTRING&) const |
+|boolean operator!=(const BITSTRING_ELEMENT&) const |
+.2+^.^|_Concatenation operator_
+|BITSTRING operator+(const BITSTRING&) const |Concatenates a bitstring element with a bitstring, or two bitstring elements.
+|BITSTRING operator+(const BITSTRING_ELEMENT&) const |
+.8+^.^|_Bitwise operators_
+|BITSTRING operator~() const |C++ equivalent of operator not4b. (bitwise negation)
+|BITSTRING operator&(const BITSTRING&) const |C++ equivalent of operator
+and4b. (bitwise and)
+|BITSTRING operator&(const BITSTRING_ELEMENT&) const  |
+|BITSTRING operator|(const BITSTRING&) const  | C++ equivalent of operator
+or4b. (bitwise or)
+|BITSTRING operator|(const BITSTRING_ELEMENT&) const  |
+|BITSTRING operatorˆ(const BITSTRING&) const | C++ equivalent of operator
+xor4b. (bitwise xor)
+|BITSTRING operatorˆ(const BITSTRING_ELEMENT&) const |
+.4+^.^|_Other member functions_
+|`boolean get_bit() const` |Returns the referenced bit.
+|`void log() const` | Puts the value into log.
+Example: '1'B.
+|`boolean is_bound() const` | Returns whether the value is bound.
+|========================================================================================================================================================
+
+Using the value of an unbound `BITSTRING_ELEMENT` variable for anything will cause dynamic test case error.
+
+=== `Hexstring`
+
+The equivalent C++ class of TTCN–3 type `hexstring` is called `HEXSTRING`. The hexadecimal digits (nibbles) are stored in an array of unsigned characters. In order to reduce the wasted memory space two nibbles are packed into one character. The first character contains the first two nibbles of the `hexstring`, the second byte contains the third and fourth nibbles, and so on. The hexadecimal digits at odd (first, third, fifth, etc.) positions occupy the lower 4 bits in the characters; the even ones use the upper 4 bits. The character array is never terminated with a `NUL` character, so the length must be always given with the pointer. If the `hexstring` has odd length the unused upper 4 bits of the last character may contain any value.
+
+The class `HEXSTRING` has the following public member functions:
+
+.Public member functions of the class `HEXSTRING`
+
+[width="100%",cols=",,",options="header",]
+|==============================================================================================================================
+2+^.^|*Member functions* |*Notes*
+.4+^.^|_Constructors_
+|`HEXSTRING()` |Initializes to unbound value.
+|`HEXSTRING(int n_nibbles, const unsigned char *nibbles_ptr)` |Initializes from a given length and pointer to the character array.
+|`HEXSTRING(const HEXSTRING&)`|
+|`HEXSTRING(const HEXSTRING_ELEMENT&)`|
+^.^|_Destructor_
+|`˜HEXSTRING()`  |
+.2+^.^|_Assignment operators_
+|`HEXSTRING& operator=(const HEXSTRING&)` |Assigns the given value
+|`HEXSTRING& operator=(const HEXSTRING_ELEMENT&)` |
+.4+^.^|_Comparison operators_
+|boolean operator==(const HEXSTRING&) const  |Returns TRUE if equals and FALSE otherwise.
+|boolean operator==(const HEXSTRING_ELEMENT&) const |
+|boolean operator!=(const HEXSTRING&) const  |
+|boolean operator!=(const HEXSTRING_ELEMENT&) const |
+.2+^.^|_Concatenation operator_
+|HEXSTRING operator+(const HEXSTRING&) const |Concatenates two hexstrings.
+|HEXSTRING operator+(const HEXSTRING_ELEMENT&) const |Concatenates a hexstring and a hexstring element.
+.4+^.^|_Index operator_
+|HEXSTRING_ELEMENT operator[](int) |Gives access to the given element. Indexing begins from zero. Index overflow causes dynamic test case error.
+|HEXSTRING_ELEMENT operator[](const INTEGER&) |
+|const HEXSTRING_ELEMENT operator[](int) const |
+|const HEXSTRING_ELEMENT operator[](const INTEGER&) const |
+.8+^.^|_Bitwise operators_
+|HEXSTRING operator~() const  |C++ equivalent of operator not4b. (bitwise negation)
+|HEXSTRING operator&(const HEXSTRING&) const  |C++ equivalent of operator
+and4b. (bitwise and)
+|HEXSTRING operator&(const HEXSTRING_ELEMENT&) const  |
+|HEXSTRING operator|(const HEXSTRING&) const  |C++ equivalent of operator
+or4b. (bitwise or)
+|HEXSTRING operator|(const HEXSTRING_ELEMENT&) const  |
+|HEXSTRING operatorˆ(const HEXSTRING&) const  |C++ equivalent of operator
+xor4b. (bitwise xor)
+|HEXSTRING operator^(const HEXSTRING_ELEMENT&) const  |
+.8+^.^|_Shifting and rotating operators_
+|HEXSTRING operator<<(int) const  |C++ equivalent of operator
+|HEXSTRING operator<<(const INTEGER&) const  |<<.(shift left)
+|HEXSTRING operator>>(int) const  |C++ equivalent of operator
+|HEXSTRING operator>>(const INTEGER&) const  |>>. (shift right)
+|HEXSTRING operator<<=(int) const  |C++ equivalent of operator
+|HEXSTRING operator<<=(const INTEGER&) const  |< @. (rotate left)
+|HEXSTRING operator>>=(int) const |C++ equivalent of operator
+|HEXSTRING operator>>=(const INTEGER&) const  |@ >. (rotate right)
+^.^|_Casting operator_
+|operator const unsigned char*() const |Returns a pointer to the character array. The pointer might be NULL if the length is 0.
+.4+^.^|_Other member functions_
+|`int lengthof() const` |Returns the length measured in nibbles.
+|`void log() const` |Puts the value into log. Example: ’5A7’H.
+|`boolean is_bound() const` |Returns whether the value is bound.
+|`void clean_up()` |Deletes the value, setting it to unbound.
+|==============================================================================================================================
+
+Using the value of an unbound `HEXSTRING` variable for anything will cause a dynamic test case error.
+
+==== `Hexstring` element
+
+The C++ class `HEXSTRING_ELEMENT` is the equivalent of the TTCN-3 `hexstring`’s element type (the result of indexing a `hexstring` value). The class does not store the actual hexadecimal digit (nibble), only a reference to the original HEXSTRING object, an index value and a bound flag.
+
+Note: changing the value of the `HEXSTRING_ELEMENT` (through the assignment operator) changes the referenced nibble in the original `hexstring` object.
+
+The class `HEXSTRING_ELEMENT` has the following public member functions:
+
+.Public member functions of the class `HEXSTRING_ELEMENT`
+
+[width="100%",cols=",,",options="",]
+|===========================================================================================================================================================
+2+^.^|*Member functions* |*Notes*
+^.^|_Constructor_
+| `HEXSTRING_ELEMENT(boolean par_bound_flag`, `HEXSTRING& par_str_val`, `int par_nibble_pos)` |Initializes the object with an unbound value or a reference to a nibble in an existring HEXSTRING object.
+.2+^.^|_Assignment operators_
+|`HEXSTRING_ELEMENT& operator=(const HEXSTRING&)` |Sets the referenced nibble to the given hexstring of length 1.
+|`HEXSTRING_ELEMENT& operator=(const HEXSTRING_ELEMENT&)` | Sets the referenced nibble to the given hexstring element.
+.4+^.^|_Comparison operators_
+|boolean operator==(const HEXSTRING&) const |Comparison with a hexstring or a hexstring element (the value of the referenced nibbles is compared, not the references and indexes).
+|boolean operator==(const HEXSTRING_ELEMENT&) const  |
+|boolean operator!=(const HEXSTRING&) const |
+|boolean operator!=(const HEXSTRING_ELEMENT&) const  |
+.2+^.^|_Concatenation operator_
+|HEXSTRING operator+(const HEXSTRING&) const  |Concatenates a hexstring element with a hexstring, or two hexstring elements.
+|HEXSTRING operator+(const HEXSTRING_ELEMENT&) const |
+.8+^.^|_Bitwise operators_
+|HEXSTRING operator~() const  |C++ equivalent of operator not4b. (bitwise negation)
+|HEXSTRING operator&(const HEXSTRING&) const |C++ equivalent of operator
+and4b. (bitwise and)
+|HEXSTRING operator&(const HEXSTRING_ELEMENT&) const  |
+|HEXSTRING operator|(const HEXSTRING&) const  |C++ equivalent of operator
+or4b. (bitwise or)
+|HEXSTRING operator|(const HEXSTRING_ELEMENT&) const  |
+|HEXSTRING operatorˆ(const HEXSTRING&) const |C++ equivalent of operator
+xor4b. (bitwise xor)
+|HEXSTRING operatorˆ(const HEXSTRING_ELEMENT&) const |
+.3+^.^|_Other member functions_
+|`unsigned char get_nibble() const` |Returns the referenced nibble (stored in the lower 4 bits of the returned character).
+|`void log() const` |Puts the value into log.
+Example: '8'H.
+|`boolean is_bound() const` |Returns whether the value is bound.
+|===========================================================================================================================================================
+
+Using the value of an unbound `HEXSTRING_ELEMENT` variable for anything will cause dynamic test case error.
+
+=== `Octetstring`
+
+The equivalent C++ class of TTCN–3 type `octetstring` is called `OCTETSTRING`. The octets are stored in an array of unsigned characters. Each character contains one octet; the first character is the first octet of the string. The character array is not terminated by a `NUL` character, so the length of the octet string must be always given.
+
+The class `OCTETSTRING` has the following public member functions:
+
+.Public member functions of the class `OCTETSTRING`
+
+[width="100%",cols=",,",options="header",]
+|==============================================================================================================================
+2+^.^|*Member functions* |*Notes*
+.4+^.^|_Constructors_
+|`OCTETSTRING()` |Initializes to unbound value.
+|`OCTETSTRING(int n_octets, const unsigned char *octets_ptr)` |Initializes from a given length and pointer to character array.
+|`OCTETSTRING(const OCTETSTRING&)` |Copy constructor.
+|`OCTETSTRING(const OCTETSTRING_ELEMENT&)` |Initializes from a single octetstring element.
+^.^|_Destructor_
+|`˜OCTETSTRING()` |
+.2+^.^|_Assignment operators_
+|`OCTETSTRING& operator=(const OCTETSTRING&)` |Assigns the given value and sets the bound flag.
+|`OCTETSTRING& operator=(const OCTETSTRING_ELEMENT&)` |Assigns the given octetstring element.
+.4+^.^|_Comparison operators_
+| boolean operator==(const OCTETSTRING&) const  |Returns TRUE if equals
+| boolean operator==(const OCTETSTRING_ELEMENT&) const  |and FALSE otherwise.
+| boolean operator!=(const OCTETSTRING&) const  |
+| boolean operator!=(const OCTETSTRING_ELEMENT&) const  |
+.4+^.^|_Concatenation operator_
+|OCTETSTRING operator+(const OCTETSTRING&) const |Concatenates two octetstrings.
+|OCTETSTRING operator+(const OCTETSTRING_ELEMENT&) const |Concatenates an octetstring and an octetstring element.
+|OCTETSTRING& operator+=(const OCTETSTRING&) const |Appends an octetstring to this one.
+|OCTETSTRING& operator+=(const OCTETSTRING_ELEMENT&) const |Appends an octetstring element to this octetstring.
+.4+^.^|_Index operator_
+|OCTETSTRING_ELEMENT operator[](int) |Gives access to the given element. Indexing begins from zero. Index overflow causes dynamic test case error.
+|OCTETSTRING_ELEMENT operator[](const INTEGER&) |
+|const OCTETSTRING_ELEMENT operator[](int) const |Gives read-only access to the given element.
+|const OCTETSTRING_ELEMENT operator[](const INTEGER&) const |
+.8+^.^|_Bitwise operators_
+|OCTETSTRING operator˜() const  |C++ equivalent of operator not4b.(bitwise negation)
+|OCTETSTRING operator&(const OCTETSTRING&) const |C++ equivalent of operator and4b.
+(bitwise and)
+|OCTETSTRING operator&(const OCTETSTRING_ELEMENT&) const |
+|OCTETSTRING operator|(const OCTETSTRING&) const  |C++ equivalent of operator or4b.
+(bitwise or)
+|OCTETSTRING operator|(const OCTETSTRING_ELEMENT&) const |
+|OCTETSTRING operatorˆ(const OCTETSTRING&) const |C++ equivalent of operator xor4b.
+(bitwise xor)
+|OCTETSTRING operator^(const OCTETSTRING_ELEMENT&) const |
+.8+^.^|_Shifting and rotating operators_
+|OCTETSTRING operator<<(int) const |C++ equivalent of operator <<.
+|OCTETSTRING operator<<(const INTEGER&) const |(shift left)
+|OCTETSTRING operator>>(int) const  |C++ equivalent of operator >>.
+|OCTETSTRING operator>>(const INTEGER&) const  |(shift right)
+|OCTETSTRING operator<<=(int) const  |C++ equivalent of operator < @.
+|OCTETSTRING operator<<=(const INTEGER&) const  |(rotate left)
+|OCTETSTRING operator>>=(int) const  |C++ equivalent of operator @ >.
+|OCTETSTRING operator>>=(const INTEGER&) const  |(rotate right)
+^.^|_Casting operator_
+|operator const unsigned char*() const |Returns a pointer to the character array. The pointer might be NULL if the length is 0.
+.4+^.^|_Other member functions_
+|`int lengthof() const`  |Returns the length measured in octets.
+|`void log() const` |Puts the value into log.
+Like ’073CF0’O.
+|`boolean is_bound() const` |Returns whether the value is bound.
+|`void clean_up()` |Deletes the value, setting it to unbound.
+
+|==============================================================================================================================
+
+Using the value of an unbound `OCTETSTRING` variable for anything will cause dynamic test case error.
+
+==== `Octetstring` element
+
+The C++ class `OCTETSTRING_ELEMENT` is the equivalent of the TTCN-3 `octetstring`’s element type (the result of indexing an `octetstring` value). The class does not store the actual octet, only a reference to the original OCTETSTRING object, an index value and a bound flag.
+
+Note: changing the value of the OCTETSTRING_ELEMENT (through the assignment operator) changes the referenced octet in the original `octetstring` object.
+
+The class `OCTETSTRING_ELEMENT` has the following public member functions:
+
+.Public member functions of the class `OCTETSTRING_ELEMENT`
+
+[width="100%",cols=",,",options="header",]
+|================================================================================================================================================================
+2+^.^|*Member functions* |*Notes*
+^.^|_Constructor_
+|`OCTETSTRING_ELEMENT(boolean par_bound_flag`, `OCTETSTRING& par_str_val`, `int par_octet_pos)` |Initializes the object with an unbound value or a reference to an octet in an existring OCTETSTRING object.
+.2+^.^|_Assignment operators_
+|`OCTETSTRING_ELEMENT& operator=(const OCTETSTRING&)` |Sets the referenced octet to the given octetstring of length 1.
+|`OCTETSTRING_ELEMENT& operator=(const OCTETSTRING_ELEMENT&)` |Sets the referenced octet to the given octetstring element.
+.4+^.^|_Comparison operators_
+|boolean operator==(const OCTETSTRING&) const |Comparison with an octetstring or an octetstring element (the value of the referenced octets is compared, not the references and indexes).
+|boolean operator==(const OCTETSTRING_ELEMENT&) const  |
+|boolean operator!=(const OCTETSTRING&) const |
+|boolean operator!=(const OCTETSTRING_ELEMENT&) const  |
+.2+^.^|_Concatenation operator_
+| OCTETSTRING operator+(const OCTETSTRING&) const |Concatenates an octetstring element with an octetstring, or two octetstring elements.
+| OCTETSTRING operator+(const OCTETSTRING_ELEMENT&) const |
+.8+^.^|_Bitwise operators_
+|OCTETSTRING operator~() const |C++ equivalent of operator (bitwise negation)
+|OCTETSTRING operator&(const OCTETSTRING&) const |C++ equivalent of operator
+and4b. (bitwise and)
+|OCTETSTRING operator&(const OCTETSTRING_ELEMENT&) const  |
+|HEXSTRING operator|(const OCTETSTRING&) const  | C++ equivalent of operator
+or4b. (bitwise or)
+|OCTETSTRING operator|(const OCTETSTRING_ELEMENT&) const  |
+|OCTETSTRING operatorˆ(const OCTETSTRING&) const |C++ equivalent of operator
+xor4b. (bitwise xor)
+|OCTETSTRING operatorˆ(const OCTETSTRING_ELEMENT&) const |
+.3+^.^|_Other member functions_
+|`unsigned char get_octet() const` |Returns the referenced octet.
+|`void log() const` |Puts the value into log.
+Example: '3C'O.
+|`boolean is_bound() const` |Returns whether the value is bound.
+
+|================================================================================================================================================================
+
+Using the value of an unbound `OCTETSTRING_ELEMENT` variable for anything will cause dynamic test case error.
+
+=== `Char`
+
+The `char` type, which has been removed from the TTCN–3 standard, is no longer supported by the run-time environment. The compiler substitutes all occurrences of `char` type with type `charstring` automatically.
+
+To provide partial backward compatibility for older Test Ports that might have used the type `char`, `CHAR` is a typedef alias to class `CHARSTRING` in C++.
+
+[[Charstring]]
+=== `Charstring`
+
+The equivalent C++ class of TTCN–3 type `charstring` is called `CHARSTRING`. The characters are stored in a `NUL` character terminated array; thus, giving the length in the constructor and other operations is optional.
+
+The class `CHARSTRING` has the following public member functions:
+
+.Public member functions of the class `CHARSTRING`
+
+[width="100%",cols=",,",,]
+|==============================================================================================================================
+2+^.^|*Member functions* |*Notes*
+.6+^.^|_Constructors_
+|`CHARSTRING()`|Initializes to unbound value.
+|`CHARSTRING(char)`|Initializes from a single character.
+|`CHARSTRING(int n_chars, const char *chars_ptr)`|Initializes from a given length and pointer to character array.
+|`CHARSTRING(const char *chars_ptr)`|Initializes from a given character array. The end is noted by a NUL character.
+|`CHARSTRING(const CHARSTRING&)`|Copy constructor.
+|`CHARSTRING(const CHARSTRING_ELEMENT&)`|Initializes from a charstring element.
+^.^|_Destructor_
+|`˜CHARSTRING()` |
+.4+^.^|_Assignment operators_
+|`CHARSTRING& operator=(const CHARSTRING&)`|Assigns the given value and sets the bound flag.
+|`CHARSTRING& operator=(const char *)`|Assigns the NUL terminated string.
+|`CHARSTRING& operator=(const CHARSTRING_ELEMENT&)`|Assigns the given charstring element.
+|`CHARSTRING& operator=(const UNIVERSAL_CHARSTRING&)`|Assigns the given universal charstring value.
+.8+^.^|_Comparison operators_
+|boolean operator==(const CHARSTRING&) const  |Returns TRUE if equals and FALSE otherwise.
+|boolean operator==(const char *) const |Compares to the NUL terminated string.
+|boolean operator==(const CHARSTRING_ELEMENT&) const |Comparison with a charstring element.
+|boolean operator==(const UNIVERSAL_CHARSTRING&) const |Comparison with a universal charstring.
+|boolean operator==(const UNIVERSAL_CHARSTRING_ELEMENT&) const |Comparison with a universal charstring element.
+|boolean operator!=(const CHARSTRING&) const  |
+|boolean operator!=(const char *) const |
+|boolean operator!=(const CHARSTRING_ELEMENT&) const |
+.9+^.^|_Concatenation operator_
+|CHARSTRING operator+(const CHARSTRING&) const  |Concatenates two charstrings.
+|CHARSTRING operator+(const char *) const |Concatenates with a NUL terminated string.
+|CHARSTRING operator+(const CHARSTRING_ELEMENT) const |Concatenates with a charstring element.
+|UNIVERSAL_CHARSTRING operator+(const UNIVERSAL_CHARSTRING&) const |Concatenates with a universal charstring.
+|UNIVERSAL_CHARSTRING operator+(const UNIVERSAL_CHARSTRING_ELEMENT&) const |Concatenates with a universal charstring element.
+|CHARSTRING operator+=(char) |Appends a character.
+|CHARSTRING operator+=(const char *) |Appends a NUL terminated string.
+|CHARSTRING operator+=(const CHARSTRING&) |Appends a charstring.
+|CHARSTRING operator+=(const CHARSTRING_ELEMENT&) |Appends a charstring element.
+.4+^.^|_Index operator_
+|CHARSTRING_ELEMENT operator[](int) |Gives access to the given element. Indexing begins from zero. Index overflow causes dynamic test case error.
+|CHARSTRING_ELEMENT operator[](const INTEGER&) |
+|const CHARSTRING_ELEMENT operator[](int) const |Gives read-only access to the given element.
+|const CHARSTRING_ELEMENT operator[](const INTEGER&) const |
+.4+^.^|_Rotating operators_
+|CHARSTRING operator<<=(int) const |C++ equivalent of operator < @.(rotate left)
+|CHARSTRING operator<<=(const INTEGER&) const |
+|CHARSTRING operator>>=(int) const  |C++ equivalent of operator @ >.
+(rotate right)
+|CHARSTRING operator>>=(const INTEGER&) const |
+^.^|_Casting operator_
+|operator const char*() const |Returns a pointer to the character array. The string is always terminated by NUL.
+.3+^.^|_Other member functions_
+|`int lengthof() const` |Returns the length measured in characters not including the terminator NUL.
+|`void log() const` |Puts the value into log.
+Example: ”abc”.
+|`boolean is_bound() const`|Returns whether the value is bound.
+|`void clean_up()`|Deletes the value, setting it to unbound.
+
+|==============================================================================================================================
+
+The comparison, concatenation and rotating operators are also available as global functions for that case when the left side is `const char*` and the right side is `CHARSTRING`.
+
+The log() member function uses single character output for regular characters, but special characters (such as the quotation mark, backslash or newline characters) are printed using the escape sequences of the C language. Non-printable control characters are printed in TTCN–3 quadruple notation, where the first three octets are always zero. The concatenation operator (`&`) is used between the fragments when necessary. Note that the output does not always conform to TTCN–3 Core Language syntax, but it is always recognized by both our compiler and the configuration file parser.
+
+Using the value of an unbound `CHARSTRING` variable for anything will cause dynamic test case error.
+
+Other operators (global functions):
+[source]
+----
+boolean operator==(const char* string_value,
+                     const CHARSTRING& other_value);            // Equal
+boolean operator==(const char* string_value,
+                     const CHARSTRING_ELEMENT& other_value);    // Equal
+boolean operator!=(const char* string_value,
+                     const CHARSTRING& other_value);            // Not equal
+boolean operator!=(const char* string_value,
+                     const CHARSTRING_ELEMENT& other_value);    // Not equal
+CHARSTRING operator+(const char* string_value,
+                       const CHARSTRING& other_value);          // Concatenation
+CHARSTRING operator+(const char* string_value,
+                       const CHARSTRING_ELEMENT& other_value);  // Concatenation
+----
+
+==== `Charstring` element
+
+The C++ class `CHARSTRING_ELEMENT` is the equivalent of the TTCN-3 `charstring`’s element type (the result of indexing a `charstring` value). The class does not store the actual character, only a reference to the original CHARSTRING object, an index value and a bound flag.
+
+Note: changing the value of the `CHARSTRING_ELEMENT` (through the assignment operator) changes the referenced character in the original `charstring` object.
+
+The class `CHARSTRING_ELEMENT` has the following public member functions:
+
+.Public member functions of the class `CHARSTRING_ELEMENT`
+
+[width="100%",cols=",,",options="",]
+|================================================================================================================================================================================================================================================================================
+2+^.^|*Member functions* |*Notes*
+^.^|_Constructor_
+|`CHARSTRING_ELEMENT(boolean par_bound_flag`, `CHARSTRING& par_str_val`, `int par_char_pos)` |Initializes the object with an unbound value or a reference to a character in an existring CHARSTRING object.
+.3+^.^|_Assignment operators_
+|`CHARSTRING_ELEMENT& operator=(const char*)` |Sets the referenced character to the given null-terminated string of length 1.
+|`CHARSTRING_ELEMENT& operator=(const CHARSTRING&)` |Sets the referenced character to the given charstring of length 1.
+|`CHARSTRING_ELEMENT& operator=(const CHARSTRING_ELEMENT&)` |Sets the referenced character to the given charstring element.
+.8+^.^|_Comparison operators_
+|boolean operator==(const char*) const |Comparison with a null-terminated string, a charstring, a universal charstring, a charstring element or a universal charstring element (when comparing element types, the value of the referenced characters is compared, not the references and indexes).
+|boolean operator==(const CHARSTRING&) const |
+|boolean operator==(const CHARSTRING_ELEMENT&) const  |
+|boolean operator==(const UNIVERSAL_CHARSTRING&) const |
+|boolean operator==(const UNIVERSAL_CHARSTRING_ELEMENT&) const |
+|boolean operator!=(const char*) const  |
+|boolean operator!=(const CHARSTRING&) const |
+|boolean operator!=(const CHARSTRING_ELEMENT&) const  |
+.5+^.^|_Concatenation operator_
+|CHARSTRING operator+(const char*) const  |Concatenates this object with a null-terminated string, a charstring, a charstring element, a universal charstring or a universal charstring element.
+|CHARSTRING operator+(const CHARSTRING&) const |
+|CHARSTRING operator+(const CHARSTRING_ELEMENT&) const |
+|UNIVERSAL_CHARSTRING operator+(const UNIVERSAL_CHARSTRING&) const |
+|UNIVERSAL_CHARSTRING operator+(const UNIVERSAL_CHARSTRING_ELEMENT&) const  |
+.3+^.^|_Other member functions_
+|`char get_char() const` |Returns the referenced character.
+|`void log() const` |Puts the value into log. Example: “a”.
+|`boolean is_bound() const` |Returns whether the value is bound.
+
+|================================================================================================================================================================================================================================================================================
+
+Using the value of an unbound `CHARSTRING_ELEMENT` variable for anything will cause dynamic test case error.
+
+=== `Universal char`
+
+This obsolete TTCN–3 type is converted automatically to `universal charstring` in the parser.
+
+=== `Universal charstring`
+
+Each character of a `universal charstring` value is represented in the following C structure defined in the Base Library:
+[source]
+----
+struct universal_char {
+  unsigned char uc_group, uc_plane, uc_row, uc_cell;
+};
+----
+
+The four components of the quadruple (that is, group, plane, row and cell) are stored in fields `uc_group`, `uc_plane`, `uc_row` and `uc_cell`, respectively. All fields are 8bit unsigned numeric values with the possible value range 0 .. 255.
+
+In case of single-octet characters, which can be also given in TTCN–3 charstring notation (between quotation marks), the fields `uc_group`, `uc_plane`, `uc_row` are set to zero. If tuple notation was used for an ASN.1 string value fields `uc_row` and `uc_cell` carry the tuple and the others are set to zero.
+
+Except when performing encoding or decoding, the run-time environment does not check whether the quadruples used in the following API represent valid character positions according to <<7-references.adoc#_8,[8]>>. Moreover, if ASN.1 multi-octet character string values are used, it is not verified whether the elements of such strings are permitted characters of the corresponding string type.
+
+The C++ equivalent of TTCN–3 type `universal charstring` is implemented in class `UNIVERSAL_CHARSTRING`. The characters of the string are stored in an array of structure `universal_char`. The array returned by the casting operator is not terminated with a special character, thus, the length of the string must be always considered when doing operations with the array. The length of the string, which can be obtained by using member function `lengthof()`, is measured in characters (quadruples) and not bytes.
+
+For the more convenient usage the strings containing only single-octet characters can also be used with class `UNIVERSAL_CHARSTRING`. Therefore some polymorphic member functions and operators have variants that take `const char*` as argument. In these member functions the characters of the `NUL` character terminated string are implicitly converted to quadruples with group, plane and row fields set to zero. `NULL` pointer as argument means the empty string for these functions.
+
+The class `UNIVERSAL_CHARSTRING` has the following public member functions:
+
+.Public member functions of the class `UNIVERSAL_CHARSTRING`
+
+[width="100%",cols=",,",options="",]
+|==============================================================================================================================
+2+^.^|*Member functions* |*Notes*
+.10+^.^|_Constructors_
+|`UNIVERSAL_CHARSTRING()`|Initializes to unbound value.
+|`UNIVERSAL_CHARSTRING (unsigned char group, unsigned char plane, unsigned char row, unsigned char cell)`| Constructs a string containing one character formed from the given quadruple.
+|`UNIVERSAL_CHARSTRING (const universal_char&)`| Constructs a string containing the given single character.
+|`UNIVERSAL_CHARSTRING (int n_uchars, const universal_char *uchars_ptr)`| Constructs a string from an array by taking the given number of single-octet characters.
+|`UNIVERSAL_CHARSTRING (const char *chars_ptr)`| Constructs a string from a NUL terminated array of single-octet characters.
+|`UNIVERSAL_CHARSTRING (int n_chars, const char *chars_ptr)`| Constructs a string from a given number of single-octet characters.
+|`UNIVERSAL_CHARSTRING (const CHARSTRING&)`| Constructs a universal charstring from a charstring value.
+|`UNIVERSAL_CHARSTRING (const CHARSTRING_ELEMENT&)`| Constructs a string containing the given singe charstring element.
+|`UNIVERSAL_CHARSTRING (const UNIVERSAL_CHARSTRING&)`| Copy constructor.
+|`UNIVERSAL_CHARSTRING (const UNIVERSAL_CHARSTRING_ELEMENT&)`| Constructs a string containing the given singe universal charstring element.
+^.^|_Destructor_
+|`˜UNIVERSAL_CHARSTRING()` |
+.6+^.^|_Assignment operators_
+|`UNIVERSAL_CHARSTRING& operator= (const UNIVERSAL_CHARSTRING&)`  |Assigns another string.
+|`UNIVERSAL_CHARSTRING& operator= (const universal_char&)` |Assigns a single character.
+|`UNIVERSAL_CHARSTRING& operator= (const char*)` |Assigns a NUL terminated
+single-octet string.
+|`UNIVERSAL_CHARSTRING& operator= (const CHARSTRING&)` |Assigns a charstring.
+|`UNIVERSAL_CHARSTRING& operator= (const CHARSTRING_ELEMENT&)` |Assigns a single charstring element.
+|`UNIVERSAL_CHARSTRING& operator= (const UNIVERSAL_CHARSTRING_ELEMENT&)` |Assigns a single universal charstring element.
+.12+^.^|_Comparison operators_
+|boolean operator==(const UNIVERSAL_CHARSTRING&) const  |Returns TRUE if the strings are identical or FALSE otherwise.
+|boolean operator==(const universal_char&) const  |Compares to a single character.
+|boolean operator==(const char*) const |Compares to a NUL terminated printable string.
+|boolean operator==(const CHARSTRING&) const |Compares to a charstring.
+|boolean operator==(const CHARSTRING_ELEMENT&) const |Compares to a charstring element.
+|boolean operator==(const UNIVERSAL_CHARSTRING_ELEMENT&) const |Compares to a universal charstring element.
+|boolean operator!=(const UNIVERSAL_CHARSTRING&) const  |
+|boolean operator!= (const universal_char&) const  |
+|boolean operator!=(const char*) const  |
+|boolean operator!=(const CHARSTRING&) |
+|boolean operator!=(const CHARSTRING_ELEMENT&) const |
+|boolean operator!=(const UNIVERSAL_CHARSTRING_ELEMENT&) const |
+.6+^.^|_Concatenation operator_
+|UNIVERSAL_CHARSTRING operator+(const UNIVERSAL_CHARSTRING&) const  |Concatenates two strings.
+|UNIVERSAL_CHARSTRING operator+(const universal_char&) const  |Concatenates a single character.
+|UNIVERSAL_CHARSTRING operator+(const char*) const  |Concatenates a NUL terminated single-octet string.
+|UNIVERSAL_CHARSTRING operator+(const CHARSTRING&) const |Concatenates a charstring.
+|UNIVERSAL_CHARSTRING operator+(const CHARSTRING_ELEMENT&) const |Concatenates a charstring element.
+|UNIVERSAL_CHARSTRING operator+(const UNIVERSAL_CHARSTRING_ELEMENT&) const  |Concatenates a universal charstring element.
+.4+^.^|_Index operator_
+|UNIVERSAL_CHARSTRING_ELEMENT operator[](int) |Gives access to the given element. Indexing begins from zero. Index overflow causes dynamic test case error.
+|UNIVERSAL_CHARSTRING_ELEMENT operator[](const INTEGER&) |
+|const UNIVERSAL_CHARSTRING_ELEMENT operator[](int) const |Gives read-only access to the given element.
+|const UNIVERSAL_CHARSTRING_ELEMENT operator[](const INTEGER&) const |
+.4+^.^|_Rotating operators_
+|UNIVERSAL_CHARSTRING operator<<=(int) const |C++ equivalent of operator < @(rotate left).
+|UNIVERSAL_CHARSTRING operator<<=(const INTEGER&) const |
+|UNIVERSAL_CHARSTRING operator>>=(int) const |C++ equivalent of operator @ >
+(rotate right).
+|UNIVERSAL_CHARSTRING operator>>=(const INTEGER&) const |
+^.^|_Casting operator_
+|operator const universal_char*() const |Returns a pointer to the array of characters. There is no terminator character at the end.
+.2+^.^|_UTF-8 encoding and decoding_
+|void encode_utf8(TTCN_Buffer& buf) const |Appends the UTF-8 representation of the string to the given buffer
+|void decode_utf8(int n_octets, const unsigned char *octets_ptr) |
+.4+^.^|_Other member functions_
+|`int lengthof() const` |Returns the length measured in characters.
+|`boolean is_bound() const ` |Returns whether the value is bound.
+|`void log() const` |Puts the value into log. See below.
+|`void clean_up()` |Deletes the value, setting it to unbound.
+
+|==============================================================================================================================
+
+The comparison and concatenation operators are also available as global functions for that case when the left operand is a single-octet string (`const char*`) or a single character (`const universal_char&`) and the right side is `UNIVERSAL_CHARSTRING` value. Using the value of an unbound `UNIVERSAL_CHARSTRING` variable for anything causes dynamic test case error.
+
+The `UNIVERSAL_CHARSTRING` variable used with the `decode_utf8()` method must be newly constructed (unbound) or `clean_up()` must have been called, otherwise a memory leak will occur.
+
+The logged printout of universal charstring values is compatible with the TTCN–3 notation for such strings. The format to be used depends on the contents of the string. Each character (quadruple) is classified whether it is directly printable or not. The string is fragmented based on this classification. Each fragment consists of either a single non-printable character or a maximal length contiguous sequence of printable characters. The fragments are logged one after another separated by an `&` character (concatenation operator). The printable fragments use the normal charstring notation; the non-printable characters are logged in the TTCN–3 quadruple notation. An empty universal charstring value is represented by a pair of quotation marks (like in case of empty charstring values).
+
+An example printout in the log can be the following. The string consists of two fragments of printable characters and a non-printable quadruple, which stands for Hungarian letter "ű":
+[source, subs="+quotes"]
+"Character " & char(0, 0, 1, 113) & " is a letter of Hungarian alphabet"
+
+Other operators (global functions):
+[source]
+----
+boolean operator==(const universal_char& left_value,
+                     const universal_char& right_value);                 // Equal
+boolean operator==(const universal_char& uchar_value,
+                     const UNIVERSAL_CHARSTRING& other_value);           // Equal
+boolean operator==(const char* string_value,
+                     const UNIVERSAL_CHARSTRING& other_value);           // Equal
+boolean operator==(const universal_char& uchar_value,
+                     const UNIVERSAL_CHARSTRING_ELEMENT& other_value);   // Equal
+boolean operator==(const char* string_value,
+                     const UNIVERSAL_CHARSTRING_ELEMENT& other_value);   // Equal
+boolean operator!=(const universal_char& left_value,
+                     const universal_char& right_value);             // Not equal
+boolean operator!=(const universal_char& uchar_value,
+                     const UNIVERSAL_CHARSTRING& other_value);       // Not equal
+boolean operator!=(const char* string_value,
+                     const UNIVERSAL_CHARSTRING& other_value);       // Not equal
+boolean operator!=(const universal_char& uchar_value,
+              const UNIVERSAL_CHARSTRING_ELEMENT& other_value);      // Not equal
+boolean operator!=(const char* string_value,
+              const UNIVERSAL_CHARSTRING_ELEMENT& other_value);      // Not equal
+boolean operator<(const universal_char& left_value,
+         const universal_char& right_value& other_value); // Character comparison
+UNIVERSAL_CHARSTRING operator+(const universal_char& uchar_value,
+             const UNIVERSAL_CHARSTRING& other_value);           // Concatenation
+UNIVERSAL_CHARSTRING operator+(const char* string_value,
+             const UNIVERSAL_CHARSTRING& other_value);           // Concatenation
+UNIVERSAL_CHARSTRING operator+(const universal_char& uchar_value,
+             const UNIVERSAL_CHARSTRING_ELEMENT& other_value);   // Concatenation
+UNIVERSAL_CHARSTRING operator+(const char* string_value,
+             const UNIVERSAL_CHARSTRING_ELEMENT& other_value);   // Concatenation
+----
+
+==== `Universal charstring` element
+
+The C++ class `UNIVERSAL_CHARSTRING_ELEMENT` is the equivalent of the TTCN-3 `universal charstring`’s element type (the result of indexing a `universal charstring` value). The class does not store the actual character, only a reference to the original `UNIVERSAL_CHARSTRING` object, an index value and a bound flag.
+
+Note: changing the value of the `UNIVERSAL_CHARSTRING_ELEMENT` (through the assignment operator) changes the referenced character in the original `universal charstring` object.
+
+The class `UNIVERSAL_CHARSTRING_ELEMENT` has the following public member functions:
+
+.Public member functions of the class `UNIVERSAL_CHARSTRING_ELEMENT`
+
+[width="100%",cols=",,",options="",]
+|=======================================================================================================================================================================================================================================================================================================
+2+^.^|*Member functions* |*Notes*
+^.^|_Constructor_
+|`UNIVERSAL_CHARSTRING_ELEMENT(boolean par_bound_flag`, `UNIVERSAL_CHARSTRING& par_str_val, int par_uchar_pos)` |Initializes the object with an unbound value or a reference to a character in an existring UNIVERSAL_CHARSTRING object.
+.6+^.^|_Assignment operators_
+|`UNIVERSAL_CHARSTRING_ELEMENT& operator=(const universal_char&)` |Sets the referenced character to the given universal character.
+|`UNIVERSAL_CHARSTRING_ELEMENT& operator=(const char*)` |
+|`UNIVERSAL_CHARSTRING_ELEMENT& operator=(const CHARSTRING&)` |
+|`UNIVERSAL_CHARSTRING_ELEMENT& operator=(const CHARSTRING_ELEMENT&)` |
+|`UNIVERSAL_CHARSTRING_ELEMENT& operator=(const UNIVERSAL_CHARSTRING&)` |
+|`UNIVERSAL_CHARSTRING_ELEMENT& operator=(const UNIVERSAL_CHARSTRING_ELEMENT&)` |
+.12+^.^|_Comparison operators_
+|boolean operator==(const universal_char&) const |Comparison with a universal character, a null-terminated string, a charstring, a universal charstring, a charstring element or a universal charstring element (when comparing element types, the value of the referenced characters is compared, not the references and indexes).
+|boolean operator==(const char*) const |
+|boolean operator==(const CHARSTRING&) const |
+|boolean operator==(const CHARSTRING_ELEMENT&) const  |
+|boolean operator==(const UNIVERSAL_CHARSTRING&) const |
+|boolean operator==(const UNIVERSAL_CHARSTRING_ELEMENT&) const |
+|boolean operator!=(const universal_char&) const |
+|boolean operator!=(const char*) const |
+|boolean operator!=(const CHARSTRING&) const |
+|boolean operator!=(const CHARSTRING_ELEMENT&) const  |
+|boolean operator!=(const UNIVERSAL_CHARSTRING&) const |
+|boolean operator!=(const UNIVERSAL_CHARSTRING_ELEMENT&) const |
+.6+^.^|_Concatenation operator_
+|CHARSTRING operator+(const universal_char&) const |Concatenates this object with a universal character, a null-terminated string, a charstring, a charstring element, a universal charstring or a universal charstring element.
+|CHARSTRING operator+(const char*) const |
+|CHARSTRING operator+(const CHARSTRING&) const |
+|CHARSTRING operator+(const CHARSTRING_ELEMENT&) const |
+|UNIVERSAL_CHARSTRING operator+(const UNIVERSAL_CHARSTRING&) const |
+|UNIVERSAL_CHARSTRING operator+(const UNIVERSAL_CHARSTRING_ELEMENT&) const  |
+.3+^.^|_Other member functions_
+|`const universal_char& get_char() const` |Returns the referenced character.
+|`void log() const` |Puts the value into log. Example: “a” or char(0, 0, 1, 113).
+|`boolean is_bound() const` |Returns whether the value is bound.
+|=======================================================================================================================================================================================================================================================================================================
+
+Using the value of an unbound `UNIVERSAL_CHARSTRING_ELEMENT` variable for anything will cause dynamic test case error.
+
+=== Object Identifier Type
+
+The object identifier type of TTCN–3 (`objid`) is implemented in class OBJID. In the run-time environment the components of object identifier values are represented in NumberForm, that is, in integer values. The values of components are stored in an array with a given length. The type of the components is specified with a `typedef`, `objid_element`. Class `OBJID` has the following member functions.
+
+.Public member functions of the class `OBJID`
+
+[width="100%",cols=",,",options="header",]
+|=====================================================================================
+2+^.^|*Member functions* |*Notes*
+.4+^.^|_Constructors_
+|`OBJID()` |Initializes to unbound value.
+|`OBJID(int n_components, const objid_element *components_ptr)` |Initializes the number of components to n components and copies all components from an array of integers starting at components_ptr.
+|`OBJID(int n_components, ...)` |Initializes the number of components to n_components. The components themselves shall be given as additional integer arguments after each other, starting with the first one.
+|OBJID(const OBJID&) |Copy constructor.
+^.^|_Destructor_
+|`˜OBJID()` |
+^.^|_Assignment operator_
+|`OBJID& operator=(const OBJID&)` |Assigns the given value and sets the bound flag.
+.2+^.^|_Comparison operators_
+|boolean operator==(const OBJID&) const |Returns TRUE if the two values are equal and FALSE otherwise.
+|boolean operator!=(const OBJID&) const |
+.2+^.^|_Indexing operators_
+|objid_element& operator[](int i)  |Returns a reference to the _i th_ component.
+|const objid_element & operator[](int i) const |Returns a read-only reference to the i th component.
+^.^|_Casting operator_
+|operator const objid_element *() const  |Returns a pointer to the read-only array of components.
+|_Other member functions_
+|`int lengthof() const` |Returns the number of components.
+|`void log() const` |Puts the value into log in NumberForm. Like this: “objid 0 4 0 ”.
+|`boolean is_bound() const` |Returns whether the value is bound.
+|`void clean_up()` |Deletes the value, setting it to unbound.
+
+|=====================================================================================
+
+NOTE: The constructor with variable number of arguments is useful in situations when the number of components is constant and known at compile time.
+
+Using the value of an unbound `OBJID` variable for anything will cause dynamic test case error.
+
+=== Component References
+
+TTCN–3 variables the types of which are defined as component types are used for storing component references to PTCs. The internal representation of component references are test tool dependent, our test executor handles them as small integer numbers.
+
+All TTCN–3 component types are mapped to the same C++ class, which is called COMPONENT, using `typedef` aliases. We also use an ancillary C type called `component`, which is defined as an alias for `int`:
+[source, subs="+quotes"]
+typedef int component;
+
+There are some predefined constants of component references in TTCN–3. These are defined as C preprocessor macros in the following way:
+
+.Predefined component references
+
+[cols=",,",options="header",]
+|===================================================
+|TTCN–3 constant |Preprocessor symbol |Numeric value
+|null |NULL |COMPREF 0
+|mtc |MTC |COMPREF 1
+|system |SYSTEM |COMPREF 2
+|===================================================
+
+The class `COMPONENT` has the following public member functions:
+
+.Public member functions of the class `COMPONENT`
+
+[width="100%",cols=",,",options="",]
+|===========================================================================================================================
+2+^.^|*Member functions* |*Notes*
+.3+^.^|_Constructors_
+|`COMPONENT()` |Initializes to unbound value.
+|`COMPONENT(component)` |Initializes to a given value.
+|`COMPONENT(const COMPONENT&)` |Copy constructor.
+^.^|_Destructor_
+|`COMPONENT()`|
+.2+^.^|_Assignment_ _operators_
+|`COMPONENT& operator=(component)`|Assigns the given value
+|`COMPONENT& operator=(const COMPONENT&)`|and sets the bound flag.
+.4+^.^|_Comparison operators_
+|boolean operator==(component) const  |Returns TRUE if equals
+|boolean operator==(const COMPONENT&) const |and FALSE otherwise.
+|boolean operator!=(component) const |
+|boolean operator!=(const COMPONENT&) const |
+^.^|_Casting operator_
+|operator component() const |Returns the value.
+.3+^.^|Other member functions
+|`void log() const` |Puts the value into log in decimal form or in symbolic format for special constants. Like 3 or mtc.
+|`boolean is_bound() const` |Returns whether the value is bound.
+|`void clean_up()` |Deletes the value, setting it to unbound.
+
+|===========================================================================================================================
+
+Component references are managed by MC. All new test components are given a unique reference that was never used in the test campaign before (not even in a previous test case). The new numbers are increasing monotonously. The reference of the firstly created component is 3; the next one will be 4, and so on.
+
+Using the value of an unbound component reference for anything will cause dynamic test case error.
+
+Other operators (global functions):
+[source]
+----
+boolean operator==(component component_value,
+                     const COMPONENT& other_value); // Equal
+boolean operator!=(component component_value,
+                     const COMPONENT& other_value); // Not equal
+----
+[[empty-types]]
+=== Empty Types
+
+Empty `record` and `set` types are not real built-in types in TTCN–3, but the C++ realization of these types also differs from regular records or sets. The empty types are almost identical to each other, only their names are different. That is why we treat them as predefined types.
+
+Each empty type is defined in a C\++ class, which is generated by the compiler. Using separate classes enables us to differentiate among them in C++ type polymorphism. For example, several empty types can be defined as incoming or outgoing types on the same TTCN–3 port type.
+
+Let us consider the following TTCN–3 type definition as an example:
+[source, subs="+quotes"]
+type record Dummy {};
+
+The generated class will rely on an enumerated C type null_type, which is defined as follows:
+[source, subs="+quotes"]
+enum null type {NULL VALUE };
+
+The only possible value stands for the TTCN–3 empty record or array value (that is for "{}"), which is the only possible value of TTCN–3 type `Dummy`. Note that this type and value is also used in the definition of `record` of and `set of` type construct.
+
+The generated C++ class `Dummy` will have the following member functions:
+
+.Public member functions of the class `Dummy`
+
+[width="100%",cols=",,",options="header",]
+|================================================================================
+2+^.^|*Member functions* |*Notes*
+.3+^.^|_Constructors_
+|`Dummy()` |Initializes to unbound value.
+|`Dummy(null type)` |Initializes to the only possible value.
+|`Dummy(const Dummy&)` |Copy constructor.
+^.^|_Destructor_
+|`˜Dummy()` |
+.2+^.^|_Assignment operators_
+|`Dummy& operator=(null type)` |Assigns the only possible value and sets the bound flag.
+|`Dummy& operator=(const Dummy&)` |
+.4+^.^|_Comparison operators_
+|boolean operator==(Dummy) const  |Returns TRUE if both arguments are bound.
+|boolean operator==(const Dummy&) const |
+|boolean operator!=(address) const | Returns FALSE if both arguments are bound.
+|boolean operator!=(const Dummy&) const |
+.3+^.^|_Other member functions_
+|`void log() const` |Puts the value, that is, {}, into log.
+|`boolean is_bound() const` |Returns whether the value is bound.
+|`void clean_up()` |Deletes the value, setting it to unbound.
+
+|================================================================================
+
+Setting the only possible value is important, because using the value of an unbound variable for anything will cause dynamic test case error.
+
+Other operators (global functions):
+[source]
+----
+boolean operator==(null_type null_value, const Dummy& other_value);// Equal
+boolean operator!=(null_type null_value, const Dummy& other_value);// Not equal
+----
+
+== Compound Data Types
+
+The user-defined compound data types are implemented in C++ classes. These classes are generated by the compiler according to type definitions. In contrast with the basic types, these classes can be found in the generated code.
+
+=== Record and Set Type Constructs
+
+The TTCN–3 type constructs `record` and `set` are mapped in an identical way to C\++. There will be a C++ class for each record type in the generated code. This class builds up the record from its fields.footnote:[This section deals with the record and set types that have at least one field. See <<empty-types, Empty Types>> for the C++ mapping of empty record and set types.] The fields can be either basic or compound types.
+
+Let us consider the following example type definition. The types `t1` and `t2` can be arbitrary.
+[source]
+----
+type record t3 {
+  t1 f1,
+  t2 f2
+}
+----
+
+The generated class `t3` will have the following public member functions:
+
+.Public member functions of the class `t3`
+
+[width="100%",cols=",,",options="",]
+|=====================================================================================
+2+^.^|*Member functions* |*Notes*
+.3+^.^|_Constructors_
+|`t3()` |Initializes all fields to unbound value.
+|`t3(const t1& par_f1, const t2& par_f2)` |Initializes from given field values. The number of arguments equals to the number of fields.
+|`t3(const t3&)` |Copy constructor.
+^.^|_Destructor_
+|`˜t3()` |
+^.^|_Assignment operator_
+|`t3& operator=(const t3&)`  |Assigns the given value and setsthe bound flag for each field.
+.2+^.^|_Comparison operators_
+|boolean operator==(const t3&) const |Returns TRUE if all fields are equal and FALSE otherwise.
+|boolean operator!=(const t3&) const |
+.2+^.^|_Field access functions_
+|t1& f1();                     t2& f2(); |Gives access to the first/second field.
+|const t1& f1() const; const t2& f2() const; |The same, but it gives read-only access.
+.4+^.^|_Other member functions_
+|`int size_of() const` |Returns the size (number of fields).
+|`void log() const` |Puts the value into log. Like { f1 := 5, f2 := ”abc”}.
+|`boolean is_bound() const` |Returns whether the value is bound.
+|`void clean_up()` |Deletes the value, setting it to unbound.
+|=====================================================================================
+
+The record value is unbound if one or more fields of it are unbound. Using the value of an unbound variable for anything (even for comparison) will cause dynamic test case error.
+
+==== Optional Fields in Records and Sets
+
+TTCN–3 permits optional fields in record and set type definitions. An optional field does not have to be always present, it can be omitted. But the omission must be explicitly denoted. Let us change our last example to this.
+[source]
+----
+type record t3 {
+  t1 f1,
+  t2 f2 optional
+}
+----
+
+The optional fields are implemented using a C++ template class called `OPTIONAL` that creates an optional value from any type. In the definition of the generated class `t3` the type `t2` will be replaced by `OPTIONAL<t2>` everywhere and anything else will not be changed.
+
+The instantiated template class `OPTIONAL<t2>` will have the following member functions:
+
+.Table Public member functions of the class `OPTIONAL<t2>`
+
+[width="100%",cols=",,",options="",]
+|================================================================================================================================================================================
+2+^.^|*Member functions* |*Notes*
+.8+^.^|_Constructors_
+|`OPTIONAL()` |Initializes to unbound value.
+|`OPTIONAL(template_sel init_val)` |Initializes to omit value, if the argument is OMIT VALUE.
+|`OPTIONAL(const t2& init_val)`  |Initializes to given value.
+|`OPTIONAL(const OPTIONAL& init_val)`  |Copy constructor.
+|`template <typename T_tmp> `|Initializes to given value of different (compatible) type.
+|`OPTIONAL(const OPTIONAL<T_tmp>&)` |
+|`template <typename T_tmp>` |Initializes to given optional value of different (compatible) type.
+|`OPTIONAL(const T_tmp&)` |
+^.^|_Destructor_
+|`˜OPTIONAL()` |
+.6+^.^|_Assignment operators_
+|`OPTIONAL& operator=(template_sel)` |Assigns omit value, if the right value is OMIT VALUE.
+|`OPTIONAL& operator=(const OPTIONAL&)` |Assigns the given optional value.
+|`template <typename T_tmp>`|Assigns the given optional value of different (compatible) type.
+|`OPTIONAL& operator=(const OPTIONAL<T_tmp>&)`|
+|`template <typename T_tmp>` |Assigns the given value of different (compatible) type.
+|`OPTIONAL& operator=(const T_tmp&)` |
+.7+^.^|_Comparison operators_
+|boolean operator==(template_sel) const |Returns TRUE if the value is omit and the right side is OMIT VALUE or FALSE otherwise.
+|boolean operator==(const OPTIONAL&) const |Returns TRUE if the two values are equal or FALSE otherwise.
+|template <typename T_tmp> |Returns TRUE if the two values of different (compatible) types are equal or FALSE otherwise.
+|boolean operator!=(template_sel) const  |
+|boolean operator!=(const OPTIONAL&) const |
+|template <typename T_tmp> |
+|boolean operator!=(const OPTIONAL<T_tmp>&) const |
+.2+^.^|_Casting operators_
+|operator t2&() |Gives read-write access to the value. If the value was not previously present, sets the bound flag true and the value will be initialized to unbound.
+|operator const t2&() const |Gives read-only access to the value. If the value is not present, causes a dynamic test case error.
+.2+^.^|_Function call operators_
+|t2& operator()() |Gives read-write access to the value. If the value was not previously present, sets the bound flag true and the value will be initialized to unbound.
+|const t2& operator()() const |Gives read-only access to the value. If the value is not present, causes a dynamic test case error.
+.4+^.^|_Other member functions_
+|`boolean ispresent() const` |Returns TRUE if the value is present, FALSE if the value is omit or causes dynamic test case error if the value is unbound.
+|`void log() const` |Puts the optional value into log. Either ”omit” or the value of t2.
+|`boolean is_bound() const` |Returns whether the value is bound.
+|`void clean_up()` |Deletes the value, setting it to unbound.
+|================================================================================================================================================================================
+
+In some member functions of the template class `OPTIONAL` the enumerated C type `template_sel` is used. It has many possible values, but in the optional class only `OMIT_VALUE` can be used, which stands for the TTCN–3 omit. Usage of other predefined values of `template_sel` will cause dynamic test case error.
+
+Using the value of an unbound optional field for anything will also cause dynamic test case error.
+
+=== Union Type Construct
+
+The TTCN–3 type construct union is implemented in a C++ class for each union type in the generated code. This class may contain any, but exactly one of its fields. The fields can be either basic or compound types or even identical types.
+
+Let us consider the following example type definition. The types `t1` and `t2` can be arbitrary.
+[source]
+----
+type union t3 {
+  t1 f1,
+  t2 f2
+}
+----
+
+An ancillary enumerated type is created in the generated class `t3`, which represents the selection:
+[source, subs="+quotes"]
+enum union_selection_type { UNBOUND_VALUE = 0, ALT_f1 = 1, ALT_f2 = 2 };
+
+The type `t3::union_selection_type` is used to distinguish the fields of the union. The predefined constant values are generated as `t3::ALT_`<field name>.
+
+The generated class `t3` will have the following public member functions:
+
+.Public member functions of the class `t3`
+
+[width="100%",cols=",,",options="header",]
+|=========================================================================================================================================================================
+2+^.^|*Member functions* |*Notes*
+.2+^.^|_Constructors_
+|`t3()` |Initializes to unbound value.
+|`t3(const t3&)` |Copy constructor.
+^.^|_Destructor_
+|`˜t3()` |
+^.^|_Assignment operator_
+|`t3& operator=(const t3&)` |Assigns the given value.
+.2+^.^|_Comparison operators_
+|boolean operator==(const t3&) const |Returns TRUE if the selections and field values are equal and FALSE otherwise.
+|boolean operator!=(const t3&) const |
+.4+^.^|_Field access functions_
+|const t1& f1() const  |Selects and gives access to the first field. If other field was previously selected, its value will be destroyed.
+|t1& f1() |Gives read-only access to the first field. If other field is selected, this function will cause a dynamic test case error. So use get_selection() first.
+|t2& f2() |
+|const t2& f2() const |
+.4+^.^|_Other member functions_
+|`union_selection_type get_selection() const` |Returns the current selection. It will return t3::UNBOUND VALUE if the value is unbound, t3::ALT_f1 if the first field was selected, and so on.
+|`void log() const` |Puts the value into log. Example: { f1 := 5 } or { f2 := "abc" }.
+|`boolean is_bound() const` |Returns whether the value is bound.
+|`void clean_up()` |Deletes the value, setting it to unbound.
+|=========================================================================================================================================================================
+
+Using the value of an unbound `union` variable for anything will cause dynamic test case error.
+
+==== The anytype
+
+The TTCN-3 anytype is implemented as a C\++ class named anytype. The class is generated only if an actual anytype access is present in the module. It has the same interface as any other C++ class generated for a union, with a few differences:
+
+If a field is a built-in type or the address type, the name used in `union_selection_type` is the name of the runtime class implementing the type (usually the name of the type in all uppercase).
+
+If a field is a user-defined type, the mapping rules in <<mapping-of-names-and-identifiers, Mapping of Names and Identifiers>> above apply.
+
+The names of field accessor functions are prefixed with AT_. This is necessary, because otherwise the accessor function looks like a constructor to C++.
+
+For example, for the following module
+[source]
+----
+module anyuser {
+  type record myrec {}
+
+  control {
+    var anytype v_at;
+  }
+}
+with {
+  extension “anytype integer, myrec, charstring”
+}
+----
+
+The generated class name will be "anytype". The union_selection_type enumerated type will be:
+[source, subs="+quotes"]
+enum union_selection_type { UNBOUND_VALUE = 0, ALT_INTEGER = 1, ALT_myrec = 2, ALT_CHARSTRING = 3 };
+
+The field accessor methods will be:
+[source]
+----
+INTEGER&    AT_INTEGER();
+myrec&      AT_myrec();
+CHARSTRING& AT_CHARSTRING();
+----
+
+=== Record of Type Construct
+
+The TTCN–3 type construct `record` of makes a variable length sequence from one given type. This construct is implemented as a C++ class.
+
+Let us consider the following example type definition. The type t1 can be arbitrary.
+[source, subs=+quotes]
+type record of t1 t2;
+
+This definition will be translated to a C++ class that will be called t2.
+
+There is an `enum` type called `null_type` defined in the Base Library that has only one possible value. NULL_VALUE stands for the empty `"record of"` value, that is, for {}.
+
+Class `t2` will have the following public member functions:
+
+.Public member functions of the class `t2`
+
+[width="100%",cols=",,",options="",]
+|==================================================================================================================================================================================================================
+2+^.^|*Member functions* |*Notes*
+.3+^.^|_Constructors_
+|`t2()` |Initializes to unbound value.
+|`t2(null type)` |Initializes to the empty value.
+|`t2(const t2&)` |Copy constructor.
+^.^|_Destructor_
+|`˜t2()` |
+.2+^.^|_Assignment operator_
+|`t2& operator=(null type)` |Assigns the empty value.
+|`t2& operator=(const t2&)` |Assigns the given value.
+.4+^.^|_Comparison operators_
+|boolean operator==(null type) const  |Returns TRUE if the two values are equal and FALSE otherwise.
+|boolean operator==(const t2&) const |
+|boolean operator!=(null type) const |
+|boolean operator!=(const t2&) const |
+.4+^.^|_Index operators_
+|t1& operator[](int) |Gives access to the given element. Indexing begins from zero. If this element of the variable was never used before, new (unbound) elements will be allocated up to (and including) this index.
+|t1& opetator[](const INTEGER&) |
+|const t1& operator[](int) const |Gives read-only access to the given element. Index overflow causes dynamic test case error.
+|const t1& opetator[](const INTEGER&) const |
+.4+^.^|_Rotating operators_
+|t2 operator<<=(int) |C++ equivalent of operator <@. (rotate left)
+|t2 operator<<=(const INTEGER&) |
+|t2 operator>>=(int) |C++ equivalent of operator @>. (rotate right)
+|t2 operator>>=(const INTEGER&) |
+^.^|_Concatenation operator_
+|t2 operator+(const t2&) const |Concatenates two arrays.
+.7+^.^|_Other member functions_
+|`int size_of() const` |Returns the number of elements, that is, the largest used index plus one and zero for the empty value.
+|`void set_size(int new_size)` |Sets the number of elements to the given value. If the value has fewer elements new (unbound) elements are allocated at the end. The excess elements at the end are erased if the value has more elements than necessary.
+|`t2 substr(int index, int returncount) const` |Returns the section of the array specified by the given start index and length.
+|`t2 replace(int index, int len, const t2& repl) const` |Returns a copy of the array, where the section indicated by the given start index and length is replaced by the given array.
+|`void log() const` |Puts the value into log. Like {1, 2, 3 }.
+|`boolean is_bound() const` |Returns whether the value is bound.
+|`void clean_up()` |Deletes the value, setting it to unbound.
+|==================================================================================================================================================================================================================
+
+A `record of` value is unbound if no value has been assigned to it or it has at least one unbound element. Using the value of an unbound `record of` variable for anything will cause dynamic test case error.
+
+Starting with the largest index improves performance when filling a `record of value`.
+
+Other operators (global functions):
+[source]
+----
+boolean operator==(null_type null_value, const t2& other_value); // Equal
+boolean operator!=(null_type null_value, const t2& other_value); // Not equal
+----
+
+==== Pre-generated `record of` and `set of` constructs
+
+The C\++ classes for the `record of` and `set of` constructs of most predefined TTCN-3 types are pre-generated and part of the TITAN runtime. Only a type alias (C++ `typedef`) is generated for instances of these types declared in TTCN-3 and ASN.1 modules. There is a class with regular memory allocation and one with optimized memory allocation pre-generated for each type. These classes are located in the `PreGenRecordOf` namespace.
+
+.Pre-generated classes for `record of`/`set of` predefined types
+
+[width="100%",cols="50%,50%",options="header",]
+|====================================================================================================================================
+|C++ class name |Equivalent type in TTCN-3
+|`PREGEN\__RECORD__OF__BOOLEAN` |`record of boolean`
+|`PREGEN\__RECORD__OF__INTEGER` |`record of integer`
+|`PREGEN\__RECORD__OF__FLOAT` |`record of float`
+|`PREGEN\__RECORD__OF__BITSTRING` |`record of bitstring`
+|`PREGEN\__RECORD__OF__HEXSTRING` |`record of hexstring`
+|`PREGEN\__RECORD__OF__OCTETSTRING` |`record of octetstring`
+|`PREGEN\__RECORD__OF__CHARSTRING` |`record of charstring`
+|`PREGEN\__RECORD__OF\__UNIVERSAL__CHARSTRING` |`record of universal charstring`
+|`PREGEN\__RECORD__OF\__BOOLEAN__OPTIMIZED` |`record of boolean with { extension "optimize:memalloc" }`
+|`PREGEN\__RECORD__OF\__INTEGER__OPTIMIZED` |`record of integer with { extension "optimize:memalloc" }`
+|`PREGEN\__RECORD__OF\__FLOAT__OPTIMIZED` |`record of float with { extension "optimize:memalloc" }`
+|`PREGEN\__RECORD__OF\__BITSTRING__OPTIMIZED` |`record of bitstring with { extension "optimize:memalloc" }`
+|`PREGEN\__RECORD__OF\__HEXSTRING__OPTIMIZED` |`record of hexstring with { extension "optimize:memalloc" }`
+|`PREGEN\__RECORD__OF\__OCTETSTRING__OPTIMIZED` |`record of octetstring with { extension "optimize:memalloc" }`
+|`PREGEN\__RECORD__OF\__CHARSTRING__OPTIMIZED` |`record of charstring with { extension "optimize:memalloc" }`
+|`PREGEN\__RECORD__OF\__UNIVERSAL__CHARSTRING__OPTIMIZED` |`record of universal charstring with { extension "optimize:memalloc" }`
+|`PREGEN\__SET__OF__BOOLEAN` |`set of boolean`
+|`PREGEN\__SET__OF__INTEGER` |`set of integer`
+|`PREGEN\__SET__OF__FLOAT` |`set of float`
+|`PREGEN\__SET__OF__BITSTRING` |`set of bitstring`
+|`PREGEN\__SET__OF__HEXSTRING` |`set of hexstring`
+|`PREGEN\__SET__OF__OCTETSTRING` |`set of octetstring`
+|`PREGEN\__SET__OF__CHARSTRING` |`set of charstring`
+|`PREGEN\__SET__OF\__UNIVERSAL__CHARSTRING` |`set of universal charstring`
+|`PREGEN\__SET__OF\__BOOLEAN__OPTIMIZED` |`set of boolean with { extension "optimize:memalloc" }`
+|`PREGEN\__SET__OF\__INTEGER__OPTIMIZED` |`set of integer with { extension "optimize:memalloc" }`
+|`PREGEN\__SET__OF\__FLOAT__OPTIMIZED` |`set of float with { extension "optimize:memalloc" }`
+|`PREGEN\__SET__OF\__BITSTRING__OPTIMIZED` |`set of bitstring with { extension "optimize:memalloc" }`
+|`PREGEN\__SET__OF\__HEXSTRING__OPTIMIZED` |`set of hexstring with { extension "optimize:memalloc" }`
+|`PREGEN\__SET__OF\__OCTETSTRING__OPTIMIZED` |`set of octetstring with { extension "optimize:memalloc" }`
+|`PREGEN\__SET__OF\__CHARSTRING__OPTIMIZED` |`set of charstring with { extension "optimize:memalloc" }`
+|`PREGEN\__SET__OF\__UNIVERSAL__CHARSTRING__OPTIMIZED` |`set OF\ universal charstring with { extension "optimize:memalloc" }`
+|====================================================================================================================================
+
+=== `Set of` Type Construct
+
+The `set of` construct of TTCN–3 is implemented similarly to `record of`. The external interface of this class is exactly the same as in case of `record of`. For more details please see the previous section.
+
+In the internal implementation only the equality operator differs. Unlike in `record of`, it considers the unordered property of the `set of` type construct, that is, it returns `TRUE` if it is able to find exactly one pair for each element.
+
+The index is a unique identifier for a `set of` element because the C++ class does not reorder the elements when a new element is added or an element is modified. The copy constructor also keeps the original order of elements.
+
+=== Enumerated Types
+
+The TTCN–3 `enumerated` type construct is implemented as a C++ class with an embedded enum type.
+[source, subs="+quotes"]
+type enumerated Day { Monday (1), Tuesday, Wednesday (3) };
+
+The example above will result in the following, very similar C `enum` type definition which is embedded in the C++ class `Day`:
+[source, subs="+quotes"]
+
+enum enum_type { Monday = 1, Tuesday = 0, Wednesday = 3,
+       UNKNOWN_VALUE = 2, UNBOUND_VALUE = 4 };
+
+The automatic assignment of numeric values is done according to the standard. Note that there are two extra enumerated values in C, which stand for the unknown and unbound values. They are used in the conversion functions described below. The compiler assigns the smallest two non-negative integer numbers that are not used by the user-defined enumerated values to the unknown and unbound values.
+
+When using the C `enum` type and its values from user code the names must be prefixed with the C++ class name. The `enum` type in the above example can be referenced with `Day::enum_type`, its values can be accessed as `Day::Monday, Day::Tuesday`, and so on.
+
+The class `Day` will have the following public member functions:
+
+.Public member functions of the class `Day`
+
+[width="100%",cols=",,",options="",]
+|=========================================================================================================================
+2+^.^|*Member functions* |*Notes*
+.4+^.^|_Constructors_
+|`Day()` |Initializes to unbound value.
+|`Day(int)` |Converts the given numeric value to Day::enum_type and initializes to it.
+Only valid values are accepted.
+|`Day(enum_type)` |Initializes to a given value.
+|`Day(const Day&)`  |Copy constructor.
+^.^|_Destructor_
+|`˜Day()` |
+.3+^.^|_Assignment operator_
+|`Day& operator=(int)` |Converts the given numeric value to Day::enum_type and assigns it. Only valid values are accepted.
+|`Day& operator=(enum_type)` |Assigns the given value.
+|`Day& operator=(const Day&)` |
+.12+^.^|_Comparison operators_
+|boolean operator==(enum_type) const |Returns TRUE if the two values are equal and FALSE otherwise.
+|boolean operator==(const Day&) const |
+|boolean operator!=(enum_type) const |
+|boolean operator!=(const Day&) const |
+|boolean operator<(enum_type) const |
+|boolean operator<(const Day&) const |
+|boolean operator<=(enum_type) const |
+|boolean operator<=(const Day&) const |
+|boolean operator>(enum_type) const |
+|boolean operator>(const Day&) const |
+|boolean operator>=(enum_type) const |
+|boolean operator>=(const Day&) const |
+^.^|_Casting operator_
+|operator enum_type() const |Returns the enum_value.
+.5+^.^|_Static conversion functions_
+|static const char *enum_to_str(enum_type) |See below.
+|static enum_type str_to_enum(const char *)  |
+|static boolean is_valid_enum(int) |
+|static int enum2int(enum_type); |
+|static int enum2int(const Day&); |
+.3+^.^|_Non-static conversion functions_
+|int as_int() const; |See below
+|void from_int(int); |
+|void int2enum(int); |
+.3+^.^|_Other member functions_
+|`void log() const` |Puts the value into log. Like this: Monday
+|`boolean is_bound() const` |Returns whether the value is bound.
+|`void clean_up()` |Deletes the value, setting it to unbound.
+|=========================================================================================================================
+
+The static member function `Day::enum_to_str` converts the given parameter of type `Day::enum_type` to a NULL terminated C character string. It returns the string "<unknown>", if the input is not a valid value of the TTCN–3 enumerated type. The returned string is read-only, it must not be modified.
+
+The function `Day::str_to_enum` does the conversion in the reverse direction. It converts the symbolic enumerated identifier represented by a C character string back to the `Day::enum_type` equivalent. It returns the value `Day::UNKNOWN_VALUE` if the input string is not the equivalent of any of the possible values in the enumerated type. The behavior of this function is undefined if the input parameter does not point to an addressable memory area.
+
+In the above two functions the strings are treated case sensitive and they shall not contain any whitespace or other characters that are not part of the enumerated value. In case of ASN.1 `ENUMERATED` types the strings used by `enum_to_str`, `str_to_enum` and log represent the TTCN–3 view of the enumerated value, that is, the hyphenation characters are mapped to a single underscore character. For example, if an ASN.1 enumerated type has a value with name `my-enum-value` and numeric value 2, the function `enum_to_str` will return the string `"my_enum_value"` if the input parameter equals to 2. Of course, its C++ equivalent will be `my_enum_value` with numeric value 2.
+
+Static member function `Day::is_valid_enum` returns the Boolean value `TRUE` if there is a defined enumerated value having numeric value equal to the `int` parameter and `FALSE` otherwise.
+
+The static member function `Day::enum_to_int` converts the given parameter of type Day or `Day::enum_type` to its numeric value. The member function `as_int` does the same thing for the enumerated instance.
+
+The member function `int_to_enum` initializes the enumerated instance with the enumerated value having numeric value equal to the given `int` parameter. A dynamic test case error is displayed if there is no such enumerated value. The member function `from_int` does the same thing.
+
+If a value of type `int` is passed to the constructor or assignment operator the value is accepted only if it is a numerical representation of a valid enumerated value, that is, the function `is_valid_enum` returns `TRUE`. A dynamic test case error occurs otherwise.
+
+To avoid run-time errors at the decoding of invalid messages the Test Port writer should use the constructor or assignment operator in this way:
+[source]
+----
+Day myDayVar;
+int myIntVar = buffer[position];
+if (Day::is_valid_enum(myIntVar)) myDayVar = myIntVar;
+else myDayVar = Day::UNKNOWN_VALUE;
+----
+
+Using the value of an unbound enumerated variable for anything will cause dynamic test case error.
+
+=== The `address` Type
+
+The special TTCN–3 data type `address` is represented in C\++ as if it was a regular data type. The name of the equivalent C++ class is `ADDRESS`. If it is an alias to another (either built-in or user-defined) type then a C++ `typedef` is used.
+
+== Predefined Functions
+
+Annex C of link:https://www.etsi.org/deliver/etsi_es/201800_201899/20187301/04.05.01_60/es_20187301v040501p.pdf[Methods for Testing and Specification (MTS); The Testing and Test Control Notation version 3. Part 1: Core Language European Telecommunications Standards] and Annex B of link:https://pdfs.semanticscholar.org/33b5/877c85f7fd4f35c7f58c39121358c3652966.pdf[Methods for Testing and Specification (MTS); The Testing and Test Control Notation version 3. Part 7: Using ASN.1 with TTCN–3 European Telecommunications] define a couple of predefined functions. Most of them perform conversion between the built-in types of TTCN–3. In our test executor these functions are implemented in the Base Library in C++ language. They are available not only in TTCN–3 , but they can be called directly from Test Ports as well.
+
+The prototypes for these functions can be found in `*$TTCN3_DIR/include/Addfunc.hh*`, but for easier navigation we list them also in the present document.
+
+The majority of these functions have more than one polymorphic version: when appropriate, one of them takes literal (built-in) C\++ types as arguments instead of the objects of equivalent C++ classes. For instance, if the incoming argument is stored in an `int` variable in your C++ code, you should not construct a temporary object of class `INTEGER` because passing an `int` is faster and produces smaller binary code. Similarly, the returned type is also literal when it is possible.
+
+=== `Integer` to character
+
+[source]
+----
+extern CHARSTRING int2char(int value);
+extern CHARSTRING int2char(const INTEGER& value);
+----
+=== Character to `integer`
+
+[source]
+----
+extern int char2int(char value);
+extern int char2int(const char *value);
+extern int char2int(const CHARSTRING& value);
+----
+=== `Integer` to universal character
+
+[source]
+----
+extern UNIVERSAL_CHARSTRING int2unichar(int value);
+extern UNIVERSAL_CHARSTRING int2unichar(const INTEGER& value);
+----
+=== Universal character to `integer`
+
+[source]
+----
+extern int unichar2int(const universal_char& value);
+extern int unichar2int(const UNIVERSAL_CHARSTRING& value);
+----
+=== `Bitstring` to `integer`
+
+[source]
+----
+extern INTEGER bit2int(const BITSTRING& value);
+----
+=== `Hexstring` to `integer`
+
+[source]
+----
+extern INTEGER hex2int(const HEXSTRING& value);
+----
+=== `Octetstring` to `integer`
+
+[source]
+----
+extern INTEGER oct2int(const OCTETSTRING& value);
+----
+=== `Charstring` to `integer`
+
+[source]
+----
+extern INTEGER str2int(const char *value);
+extern INTEGER str2int(const CHARSTRING& value);
+----
+=== `Integer` to `bitstring`
+
+[source]
+----
+extern BITSTRING int2bit(const INTEGER& value, const INTEGER& length);
+----
+=== `Integer` to `hexstring`
+
+[source]
+----
+extern HEXSTRING int2hex(const INTEGER& value, const INTEGER& length);
+----
+=== `Integer` to `octetstring`
+
+[source]
+----
+extern OCTETSTRING int2oct(const INTEGER& value, const INTEGER& length);
+----
+=== `Integer` to `charstring`
+
+[source]
+----
+extern CHARSTRING int2str(int value);
+extern CHARSTRING int2str(const INTEGER& value);
+----
+=== Length of string Type
+
+This function is built into the equivalent C++ classes of all TTCN–3 string types:
+[source]
+----
+int <any_string_type>::lengthof() const;
+----
+=== Number of elements in a structured type
+
+This function is built into the C++ template classes of `record of` and `set of` types:
+[source]
+----
+int <any_record_of_or_set_of_type>::size_of() const;
+----
+This function is currently not implemented for `record` and `set` types.
+
+=== The `IsPresent` Function
+
+This function is built into the wrapper C++ template class `OPTIONAL`:
+[source]
+----
+boolean <any_optional_field>::ispresent() const;
+----
+=== The `IsChosen` Function
+
+These functions are built into the equivalent C++ classes of TTCN–3 union types:
+[source]
+----
+boolean <union_type>::ischosen(
+<union_type>::union_selection_type checked_selection) const;
+----
+=== The `regexp` Function
+
+[source]
+----
+extern CHARSTRING regexp(const CHARSTRING& instr,
+const CHARSTRING& expression, const INTEGER& groupno);
+----
+=== `Bitstring` to `charstring`
+
+[source]
+----
+extern CHARSTRING bit2str(const BITSTRING& value);
+----
+=== `Hexstring` to `charstring`
+
+[source]
+----
+extern CHARSTRING hex2str(const HEXSTRING& value);
+----
+=== `Octetstring` to character string
+
+[source]
+----
+extern CHARSTRING oct2str(const OCTETSTRING& value);
+----
+=== Character string to `octetstring`
+
+[source]
+----
+extern OCTETSTRING str2oct(const char *value);
+extern OCTETSTRING str2oct(const CHARSTRING& value);
+----
+=== `Bitstring` to `hexstring`
+
+[source]
+----
+extern HEXSTRING bit2hex(const BITSTRING& value);
+----
+=== `Hexstring` to `octetstring`
+
+[source]
+----
+extern OCTETSTRING hex2oct(const HEXSTRING& value);
+----
+=== `Bitstring` to `octetstring`
+
+[source]
+----
+extern OCTETSTRING bit2oct(const BITSTRING& value);
+----
+=== `Hexstring` to `bitstring`
+
+[source]
+----
+extern BITSTRING hex2bit(const HEXSTRING& value);
+----
+=== `Octetstring` to `hexstring`
+
+[source]
+----
+extern HEXSTRING oct2hex(const OCTETSTRING& value);
+----
+=== `Octetstring` to `bitstring`
+
+[source]
+----
+extern BITSTRING oct2bit(const OCTETSTRING& value);
+----
+=== `Integer` to `float`
+
+[source]
+----
+extern double int2float(int value);
+extern double int2float(const INTEGER& value);
+----
+=== `Float` to `integer`
+
+[source]
+----
+extern INTEGER float2int(double value);
+extern INTEGER float2int(const FLOAT& value);
+----
+=== The Random Number Generator Function
+
+The implementation is based on functions `srand48` and `drand48` of `libc`.
+[source]
+----
+extern double rnd();
+extern double rnd(double seed);
+extern double rnd(const FLOAT& seed);
+----
+=== The Substring Function
+
+Implemented for all string types.
+[source]
+----
+extern BITSTRING substr(const BITSTRING& value, const INTEGER& index,
+  const INTEGER& returncount);
+extern HEXSTRING substr(const HEXSTRING& value, const INTEGER& index,
+  const INTEGER& returncount);
+extern OCTETSTRING substr(const OCTETSTRING& value, const INTEGER& index,
+  const INTEGER& returncount);
+extern CHARSTRING substr(const CHARSTRING& value, const INTEGER& index,
+  const INTEGER& returncount);
+extern UNIVERSAL_CHARSTRING substr(const UNIVERSAL_CHARSTRING& value,
+  const INTEGER& index, const INTEGER& returncount);
+----
+
+=== Character string to `float`
+
+[source]
+----
+extern double str2float(const char *value);
+extern double str2float(const CHARSTRING& value);
+----
+=== The Replace Function
+
+Implemented for all string types.
+[source]
+----
+extern BITSTRING replace(const BITSTRING& value, const INTEGER& index,
+  const INTEGER& len, const BITSTRING& repl);
+extern HEXSTRING replace(const HEXSTRING& value, const INTEGER& index,
+  const INTEGER& len, const HEXSTRING& repl);
+extern OCTETSTRING replace(const OCTETSTRING& value, const INTEGER& index,
+  const INTEGER& len, const OCTETSTRING& repl);
+extern CHARSTRING replace(const CHARSTRING& value, const INTEGER& index,
+  const INTEGER& len, const CHARSTRING& repl);
+extern UNIVERSAL_CHARSTRING replace(const UNIVERSAL_CHARSTRING& value,
+  const INTEGER& index, const INTEGER& len, const UNIVERSAL_CHARSTRING& repl);
+----
+
+[[octetstring-to-character-string-0]]
+=== Octetstring to character string
+
+[source]
+----
+extern CHARSTRING oct2char(const OCTETSTRING& value);
+----
+[[character-string-to-octetstring-0]]
+=== Character string to octetstring
+
+[source]
+----
+extern OCTETSTRING char2oct(const char *value);
+extern OCTETSTRING char2oct(const CHARSTRING& value);
+----
+=== The `Decompose` Function
+
+Not implemented yet.
+
+[[additional-non-standard-functions]]
+=== Additional Non-Standard Functions
+
+[source]
+----
+extern BITSTRING str2bit(const char *value);
+extern BITSTRING str2bit(const CHARSTRING& value);
+extern HEXSTRING str2hex(const char *value);
+extern HEXSTRING str2hex(const CHARSTRING& value);
+extern CHARSTRING float2str(double value);
+extern CHARSTRING float2str(const FLOAT& value);
+
+template<typename TTCN_TYPE>
+CHARSTRING ttcn_to_string(const TTCN_TYPE& ttcn_data)
+
+template<typename TTCN_TYPE>
+void string_to_ttcn(const CHARSTRING& ttcn_string, TTCN_TYPE& ttcn_value)
+
+extern UNIVERSAL_CHARSTRING oct2unichar(const OCTETSTRING& invalue);
+extern UNIVERSAL_CHARSTRING oct2unichar(const OCTETSTRING& invalue,
+  const CHARSTRING& string_encoding);
+
+extern OCTETSTRING unichar2oct(const UNIVERSAL_CHARSTRING& invalue);
+extern OCTETSTRING unichar2oct(const UNIVERSAL_CHARSTRING& invalue,
+  const CHARSTRING& string_encoding);
+
+extern CHARSTRING get_stringencoding(const OCTETSTRING& encoded__value);
+extern OCTETSTRING remove_bom(const OCTETSTRING& encoded__value);
+
+extern CHARSTRING encode_base64(const OCTETSTRING& msg, bool use_linebreaks);
+extern CHARSTRING encode_base64(const OCTETSTRING& msg);
+extern OCTETSTRING decode_base64(const CHARSTRING& b64);
+----
+
+See the section "Additional predefined functions" in the link:https://github.com/eclipse/titan.core/tree/master/usrguide/referenceguide[ Programmer"s Technical Reference] for more details.
+
+[[using-the-signature-classes]]
+== Using the Signature Classes
+
+A Test Port has three outgoing and three incoming types of operation that require the usage of signatures. These are `call` (`getcall`), `reply` (`getreply`) and `raise` (`catch`). Because of this, there are three representation formats (classes generated by the compiler) of a signature the Test Port writer should be familiar with. This section describes these classes using an example.
+
+Let us suppose the following signature definition:
+[source]
+----
+signature MyProc(in integer inPar, out float outPar,
+	inout bitstring inoutPar)
+		return hexstring
+		exception(charstring, integer, boolean);
+----
+
+The classes generated and needed to write a Test Port using this signature are `MyProc_call`, `MyProc_reply` and `MyProc_exception`. These represent the parameters, the return value and the exception type and value of the signature needed by a call, reply or raise.
+
+For example, if a port uses the signature `MyProc` as an output remote procedure, the Test Port gets the outgoing parameters for a call operation towards the system in an instance of the class `MyProc_call`. In this case the classes `MyProc_reply` and `MyProc_exception` are used for placing an incoming reply or raise operation in the queue of the port (using the functions `incoming_reply` and `incoming_exception` of the port class).
+
+=== The Representation of the Input Parameters
+
+The class `MyProc_call` (using the above example) represents all incoming parameters of the signature `MyProc`. It temporary stores the parameters inPar and inoutPar.
+
+The generated class `MyProc_call` will have the following public member functions:
+
+.Public member functions of the class `MyProc_call`
+
+[cols=",,",options="",]
+|==============================================================
+2+^.^|*Member functions* |*Notes*
+.4+^.^|_Parameter access functions_
+|INTEGER& inPar() |Gives access to parameter inPar.
+|const INTEGER& inPar() const  |
+|BITSTRING& inoutPar() |The same, but it gives read-only access.
+|const BITSTRING& inoutPar() const  |
+^.^|_Other member functions_
+|`void log() const` |Puts the parameters into log.
+|==============================================================
+
+The parameters can be accessed via their access functions that have the same names as the parameters (name mapping also applies to these functions).
+
+=== The Output Parameters and Return Value
+
+The output parameters and return value (if defined) are represented by the class `MyProc_reply` that has the following public member functions:
+
+.Public member functions of the class `MyProc_reply`
+
+[cols=",,",options="",]
+|=====================================================================
+2+^.^|*Member functions* |*Notes*
+.2+^.^|_Parameter access functions_
+|FLOAT& outPar()const FLOAT& outPar() const |Gives access to parameter outPar.
+|BITSTRING& inoutPar() const BITSTRING& inoutPar() const |The same, but it gives read-only access.
+.2+^.^|_Access function for return value_
+|HEXSTRING& return value() |Gives access to the return value.
+|const HEXSTRING& return value() const |
+^.^|_Other member functions_
+|`void log() const` |Puts the parameters into log.
+|=====================================================================
+
+The parameters can be accessed by their access functions, and the return value can be accessed via the function `return_value()`.
+
+=== Representation of Signature Exceptions
+
+The class representing the exceptions of a signature (remote procedure) is similar to the representation of the union data type. Using the above example this class is called `MyProc_exception`. This class is generated only if the signature has at least one exception type.
+
+.Public member functions of the class `MyProc_exception`
+
+[width="100%",cols=",,",options="",]
+|===================================================================================================================================================================================================================================
+2+^.^|*Member functions* |*Notes*
+.2+^.^|_Constructors_
+|`MyProc_exception()` |Initializes to unbound value.
+|`MyProc_exception(const MyProc_exception&)` |Copy constructor.
+^.^|_Destructor_
+|`˜MyProc_exception()` |
+^.^|_Assignment_ _operator_
+|`MyProc_exception& operator=(const MyProc_exception&)` |Assigns the given value.
+.4+^.^|_Field access functions_
+|CHARSTRING& CHARSTRING_field() |Selects and gives access to the CHARSTRING field. If other field was previously selected, its value will be destroyed.
+|const CHARSTRING&CHARSTRING_field() cons |Gives read-only access to the CHARSTRING field. If other field is selected, this function will cause dynamic test case error. So use get selection() first.
+|INTEGER& INTEGER_field() const INTEGER& INTEGER_field() const |
+|BOOLEAN& BOOLEAN_field()const BOOLEAN& BOOLEAN_field() const  |
+.2+^.^|_Other member functions_
+|`MyProc_exception::exception_selection_type 	get_selection() const` |Returns the current selection. It will return MyProc exception::UNBOUND VALUE if the exception is unbound, MyProc exception::ALT CHARSTRING if a charstring value is present in the exception, and so on.
+|`void log() const` |Puts the contents of the exception into the log.
+|===================================================================================================================================================================================================================================
+
+If an exception type is a user-defined type the field name will be constructed from the C\++ namespace name of the module that the exception type resides in and the name of the C++ class that realizes the exception type. The two identifiers are glued together using a single underscore character. Please note that the namespace name is always present in the identifiers, even if the exception type is defined in the same module as the signature.
+
+For example, if exception type `My_Record` is defined in module `My_Module` the respective field access functions will be named as `My\__Module_My__Record_field` and the associated enum value will be `MyProc_exception::ALT_My__Module_My__Record`.

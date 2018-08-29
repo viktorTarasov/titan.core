@@ -1,0 +1,210 @@
+= Clarifications to the TTCN-3 Standard
+:toc:
+
+The TTCN–3 Core Language standard (<<13-references.adoc#_1, [1]>>) and its Operational Semantics (<<13-references.adoc#_1, [1]>>) give ambiguous description for some language constructs. This section specifies our resolution for these ambiguities that was followed during the implementation of our compiler and run-time environment.
+
+== Predefined Function Identifiers
+
+The standard does not clarify the status of predefined function identifiers, that is, the names of functions defined in Annex C of <<13-references.adoc#_1, [1]>>. In our interpretation these words cannot be used to identify userdefined TTCN3 entities because such a definition would hide the predefined function completely. Thus our compiler treats these identifiers in the same way as the normal keywords of the language. Therefore the inappropriate use of predefined functions, for example wrong number of arguments, will result in syntax errors rather than semantic errors.
+
+== Meaning of any and all
+
+The meaning of the keywords is only loosely defined in the standard. The resulting equivocality concerns timer, port and component operations.
+
+=== Timer and Port Operations
+
+The meaning of keywords `any` and `all` in timer and port operations is unclear. These constructs might be resolved statically at compilation time by applying the operation on all visible timers and ports of the given scope unit. Our run-time environment, however, implements a dynamic resolution, that is, it walks through the list of active timers and ports and applies the respective operation. As a consequence of this, such operations are also applicable in scope units without visible timers and ports, for example in functions without `runs on` clause. Because of the run-time evaluation there is one limitation, which is verified by our semantic analyzer: the receiving port operations, that is, `receive`, `trigger`, `getcall`, `getreply`, `catch` and `check`) that refer to any port cannot have template parameter and `value` or `param` redirect. To avoid incompatibilities with future versions it is not recommended to use `any` or `all` in timer and port operations.
+
+=== Component Operations
+
+The standard does not specify explicitly the behavior of the component operations that refer to `all component` when only the MTC exists, that is, no PTC had been created during the testcase. In our implementation both `all component.running` and `all component.alive` return `true` and the operations `all component.done` and `all component.killed` succeed immediately in this situation. Operations `all component.stop` and `all component.kill` do nothing; instead, a warning is issued. The same rules are applied in single mode, when it is impossible to create PTCs, as well.
+
+== Response and Exception Handling Parts
+
+The behavior of the response and exception handling part of a `call` operation is not clearly specified in the standard. The allowed `getreply` and `catch` operations can handle only the possible responses and exceptions of the previous signature call. In our implementation if any other event arrives into the port queue during the execution of the response and exception handling part it may block the execution forever. The runtime environment generates a dynamic test case error in such a situation. If the test suite writer expects any other event on the same port during the outstanding call, for example a simultaneous incoming call initiated by the other side, a non-blocking call operation with the keyword `nowait` should be used. The response and the possible incoming calls should be handled in a forthcoming regular alt construct using the appropriate `getreply` and `getcall` operations.
+
+== Variable Lists in param Redirect
+
+In the standard, it is not clear that the `VariableList` notation in the `param` redirect of `getcall` and `getreply` operations should refer to *all* parameters of the respective signature or to the *relevant* parametersfootnote:[Relevant parameters are the in and inout parameters in case of getcall operation as well as out and inout ones in case of getreply.] only. Our compiler expects variable entries only for the relevant parameters and ignores the irrelevant ones. This is because otherwise the test writer should use `NotUsedSymbols` for all irrelevant parameters, which would be a redundant notation. For example, if a signature has one `in`, one `out` and one `inout` parameter the compiler expects two variable entries in both `getcall` and `getreply` operations.
+
+== References between Language Elements
+
+The TTCN–3 standard does not specify clearly the permitted references between different kinds of language elements. The following table shows our interpretation.
+
+.References between TTCN-3 elements
+[cols=",,,,,",options="header",]
+|===
+|Referred element Referring element |Literal value |Constant |External constant |Module parameter |Template
+|Constant |Y |Y* |N |N |N
+|Array size |Y |Y |N |N |N
+|Subtype constraint |Y |Y |N |N |N
+|Default value of module parameter |Y |Y |Y |N |N
+|Actual value of module parameter (in configuration file) |Y |N |N |N |N
+|Default duration of timer |Y |Y |Y |Y |N
+|Template (non-parameterized) |Y |Y |Y |Y |Y*
+|===
+
+Legend:
+
+* N Not allowed by the TTCN–3 language.
+
+* Y Allowed and fully supported by the current version of this TTCN–3 tool.
+
+* Y* Allowed and fully supported, but circular reference chains must be avoided.
+
+[NOTE]
+====
+* The above table implies that the value of all constants and the attributes of all type constructs (type constraints, array sizes, etc.) shall be known at compilation time.
+* ASN.1 value assignments are treated as TTCN–3 constants.
+* The value of constants shall refer only to built-in operators or additional predefined functions.
+* The body of non-parameterized templates and the default duration of timers shall be known at test startup (load) time when all module parameters are known.
+* The actual parameters of templates or the actual duration of timers shall be determined run-time because the actual value of variables may be referred.
+* The rules for a language element do not depend on its scope unit. For example the same rules apply on module, component and local (function, testcase, altstep) constants.
+====
+
+== Encoding Rules
+
+The standard does not specify clearly some of the encoding rules.
+
+* The encoding of fields in `record`, `set` and `union` types is supported.
+* The order of attributes of the same type in a `with` statement is important. The second variant might override the first, or an overriding attribute will override all the following attributes of the same type.
+* Encode attributes are an exception to this as they are not really attributes, but "contexts". It cannot be determined to which encode "contexts" the variants of the same `with` statement should belong if there are several. As having several encode "contexts" in the same `with` statement would be a bad coding practice, a warning is generated and the last encode is used as the statement’s encode "contexts".
+* As encodes are contexts, an encode is only overridden if the overriding context is not the same.
+* The order of attributes of different type in a `with` statement is not important, they do not affect each other.
+* In case of structured types, the encode context of the type is the encode context of its fields too, if the fields do not override this attribute. The other attribute types are handled separately for the structured type and its fields. Attributes inherited from higher level (module/group/structured type) might change the encoding of a record and that of its fields.
+* Attributes with qualifiers referring to the same field are handled as if they were separate `with` statements. The same rules apply to them. For example, the last encode from the ones referring to the same field is taken as the encoding context of the field.
+* Attributes belonging to a field of a structured type or a type alias have the following overwriting rules. A new `variant` attribute together with the directive `override` clears all current attributes defined for the type of the field. A new `variant` attribute without the directive override overwrites only the current `variant` attribute, all other attributes remain unchanged.
+
+== Address Type
+
+The standard does not specify clearly the status of special TTCN–3 type `address`. Our implementation is based on the rules below.
+
+The test suite writer can assign the name `address` to a regular data type. There can be at most one type named `address` in each TTCN–3 module. It is allowed that different modules of the test suite assign the name `address` to different types.
+
+The name `address` cannot be assigned to the following TTCN–3 types:
+
+* port types
+* component typesfootnote:[If component types were allowed for addressing the compiler would not be able to decide whether a component reference in the to or from clause of a communication operation denotes a test component, which is reachable through a port connection or an address inside the SUT, which is reachable through a port mapping.]
+* signatures
+* the built-in type defaultfootnote:[The values of type default (i.e. the TTCN–3 default references) cannot be passed outside the test component by any means.]
+
+Whenever the word `address` is used as a type, it is assumed to be a reference to the type named `address` in the current module. The type named `address` cannot be imported into another TTCN–3 module, that is, it can be referenced using the name `address` only within its own module. If one wants to use this type in other modules a regular alternate name must be assigned to it with type aliasing.
+
+Addressing the SUT in communication operations is allowed only if the `address` type is defined in the same module as the corresponding port type. In addition, the port type must have a special `extension` attribute to support `address` values (See section "Support of address type" in <<13-references.adoc#_16, [16]>> for more details).
+
+Note that it is possible to use different address types on different ports in the same TTCN–3 module if the respective port types are imported from different modules, but neither address type may be referenced with name `address` by the importing module.
+
+[[importing-import-statement-from-ttcn-3-modules]]
+== Importing import Statement from TTCN-3 Modules
+
+See <<13-references.adoc#_18, [18]>> standard for detailed description. Additional information for better understanding:
+
+* Import (see following chapters of the <<13-references.adoc#_18, [18]>> standard 8.2.3.1-8.2.3.6, and 8.2.5, only applies for global definitions (see <<13-references.adoc#_18, [18]>> table 8. in 8.2.3.1), therefore import functionality is not interfered by import of import statement.
+* Import statement can be imported by only import of import statement (chapter 8.2.5 and 8.2.3.7).
+* Import statements are by default private, importing of import statement with public or friend visibility is recursively resolved, and thus importing of importing of import statement is possible.
+* Importing of import statement - in case of friend visibility -recursive resolving is broken, if the import chain has a member that is not friend of the exporting module.
+* Importing of import statement circular import chain causes error.
+* Example for friend type and importing of import statement
++
+----
+B.ttcn // friend template
+friend module C, E;
+
+friend template integer t_B_i_fr := 0;
+
+C.ttcn // public import and importing of import statement, friend of B
+public import from B all;
+public import from B {import all};
+
+D.ttcn // public import and importing of import statement, NOT friend of B
+public import from C all;
+public import from C { import all };
+
+E.ttcn // public import and importing of import statement, friend of B
+public import from D { import all };
+public import from D all;
+
+testcase tc_B() runs on MTC {
+var integer i:=valueof(t_B_i_fr); //Visible!
+setverdict(pass);
+}
+----
+
+== Description of Behavior Types Syntax
+
+TITAN supports the behaviour type package of the TTCN-3 standard,but with a different syntax. For details of the behaviour types see <<13-references.adoc#_5, [5]>>.
+
+.Behaviour types - refers shows the different syntax of the function behaviour type.
+[cols=",",options="header",]
+|===
+|*Standard (6.2.13.2 in <<13-references.adoc#_5, [5])* |*Titan specific syntax*
+|type function MyFunc3 ( in integer p1 ) return charstring; |var MyFunc3 myVar1 := refers(int2char);
+|===
+
+NOTE: The functionality is same as in the standard, only the syntax is different.
+
+The syntax of the apply operation is different,  Table 3 Behaviour types - apply and derefers
+
+Standard:
+
+.Behaviour types - apply and derefers
+[cols=",",options="header",]
+|===
+|*Standard (6.2.13.2 in <<13-references.adoc#_5, [5])* |*Titan specific syntax*
+|type function MyFuncType (); |v_func.apply(MyVar2)
+|type function t_functionstartTests(); |vl_comp.start(derefers(vl_function2)());
+|===
+
+== Partially initialized structure values
+
+According to the standard TTCN-3 variables and module parameters (of structured types) can be in 3 different states during their initialization:
+
+* _uninitialized_ (or unbound) - none of the value's fields or elements has been initialized - values in this state cannot be copied or used on the right hand side of an operation;
+* _partially initialized_ - some of the value's fields or elements have been initialized, but not all of them (or at least not enough to meet the minimum type restrictions) - these values can be copied, but cannot be used on the right hand side of an operation;
+* _fully initialized_ (or bound) - all of the value's fields or elements have been initialized - these values are ready to be used on the right hand side of an operation.
+
+The `isbound` operation should only return `true` if the value is in the 3rd (fully initialized) state.
+
+This isn't the case in the TITAN runtime. Values only have 2 states: _bound_ and _unbound_, which is what the `isbound` operation returns. This can be any combination of the previously mentioned 3 states, depending on the type:
+
+* `record` / `set`: unbound = uninitialized, bound = at least partially initialized, meaning that a `record` / `set` is bound if at least one of its fields is boundfootnote:[The bound state of fields or elements is also determined by using the isbound operation on the field or element.];
+* `record of` / `set of`: unbound = uninitialized, bound = at least partially initialized, meaning that the record of is only unbound if it has never received an initial value (even initializing with {} creates a bound `record of` / `set of` value);
+* `array`: unbound = uninitialized or partially initialized, bound = fully initialized, meaning that the array is only bound if all of its elements are bound;
+* `unions` can't be partially initialized, so TITAN stores their bound state correctly (although it’s still possible to create `union` values, where the selected alternative is unbound, with the legacy command line option `–B`; these values would be considered bound by TITAN).
+
+There is a workaround in TITAN’s implementation of `records` / `sets` to allow the copying of partially initialized values (`union` values with unbound selected alternatives can also be copied when the compiler option `–B` is set). In all other cases the user is responsible for making sure the value is usable on the right hand side of an operation. The `isbound` function is usually not enough to ensure, that the value is usable.
+
+== Concatenation of templates
+
+TITAN supports the concatenation of templates and template variables of string types (`bitstring`, `hexstring`, `octetstring`, `charstring`, `universal charstring`) and list types (`record of`, `set of`) with the following limitations:
+
+* templates can only be concatenated in the Function Test runtime;
+* valid concatenation operands (for binary string and list types):
+** specific values (i.e. literal values),
+** any value ("?"") with no length restriction or with a fixedfootnote:[In this case a range length restriction, whose upper and lower bounds are equal, is also considered as a `fixed' length restrictione.g.: ? length(2..2) is a valid operand, but ? length(2..3) is not] length restriction,
+** any value or none ("*") with a fixed length restriction,
+** references to constants, templates, variables, or template variables;
+* operands of `charstring` and `universal charstring` template concatenation cannot contain matching mechanisms (not even patterns), only specific values and references;
+* reference operands of binary string (`bitstring`, `hexstring`, `octetstring`) template concatenation can also refer to binary string templates with wildcards in addition to the template types listed as valid operands (these cannot be used in template concatenations directly, because of parser limitations);
+* similarly, reference operands of `record of` or `set of` template concatenation can also refer to template lists containing matching mechanisms (but these cannot appear in template concatenations directly due to parser limitations);
+* the first operand of a `record of` or `set of` template concatenation can only be a reference (because of parser limitations);
+* template module parameters cannot be concatenated in the configuration file.
+
+== The predefined function replace
+
+In TITAN the predefined function `replace` cannot be used on arrays.
+
+If the fourth parameter of `replace` is an empty string or sequence, then it acts as a delete function (the specified substring or subsequence is simply removed from the input value and nothing is inserted in its stead).
+
+Example:
+
+[source]
+----
+type record of integer IntList;
+...
+var IntList vl_myList := { 1, 2, 3 };
+var IntList vl_emptyList := {};
+replace(vl_myList, 1, 2, vl_emptyList); // returns { 1 }
+replace("abcdef", 2, 1, ""); // returns "abdef"
+replace(‘12FFF’H, 3, 2, ‘’H); // returns ‘12F’H
+----

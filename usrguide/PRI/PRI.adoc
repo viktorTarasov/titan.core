@@ -1,0 +1,86 @@
+---
+Author: Jenő Balaskó
+Version: 109 21-CRL 113 200/6-4, Rev. A
+Date: 2018-05-16
+
+---
+= Product Revision Information for TITAN
+:author: Jenő Balaskó
+:revnumber: 109 21-CRL 113 200/6-4, Rev. A
+:revdate: 2018-05-16
+:toc:
+
+= Product Revision
+
+== Product
+
+[cols=",,,",options="header",]
+|===
+|Product number |Old Rev |New Rev |Function designation
+|CRL 113 200/6 |R3B |R4A |TTCN-3 Executor
+|===
+
+This release is done to deliver updated and improved TTCN related products to all customers within and outside Ericsson.
+
+== Subordinate product release
+
+Legend: R = Revised, N = New, C = Cancelled, E = Equal
+
+[cols=",,,,",options="header",]
+|===
+|Name |Product |Old R-State |New R-State |Status
+|*Titan* |*CRL 113 200/6* |*R3B* |*R4A* |N
+|Editline Library (libedit) |2/CAX 105 4373 | |R1A |E
+|GNU C Library (glibc) |7/CAX 105 3195 | |R1A |E
+|LibXML2 |8/CAX 105 3282 | |R1A |E
+|OpenSSL |4/CAX 105 3048 | |R1A |E
+|Cygwin |1/CAX 105 3757 | |R1A |E
+|===
+
+== Affected documents
+
+Important note: *The documents are available via the hyperlinks.*
+
+Legend: R = Revised, N = New, C = Cancelled, E = Equal
+
+[width="100%",cols="25%,25%,25%,25%",options="header",]
+|===
+|Name |Old Revision |New Revision |
+|link:https://github.com/eclipse/titan.core/blob/master/usrguide/releasenotes.adoc[Release Notes for TITAN TTCN-3 Test Executor 109 47-CRL 113 200/6] |B |Cloud stored |R
+|link:https://github.com/eclipse/titan.core/blob/master/usrguide/installationguide.adoc[Installation guide for TITAN TTCN-3 Test Executor 1/1531-CRL 113 200/6] |B |Cloud stored |R
+|link:https://github.com/eclipse/titan.EclipsePlug-ins/blob/master/Eclipse_installationguide.adoc[Installation Guide for TITAN Designer and TITAN Executor for the Eclipse IDE 3/1531-CRL 113 200/6] |B |Cloud stored |R
+|link:https://github.com/eclipse/titan.core/blob/master/usrguide/userguide/README.adoc[User Guide for TITAN 1/198 17-CRL 113 200/6] |B |Cloud stored |R
+|link:https://github.com/eclipse/titan.core/blob/master/usrguide/referenceguide/README.adoc[Programmers Technical Reference for TITAN TTCN-3 Test Executor 2/198 17-CRL 113 200/6] |B |Cloud stored |R
+|link:https://github.com/eclipse/titan.EclipsePlug-ins/blob/master/Eclipse_Designer_userguide/README.doc[User Guide for the TITAN Designer for the Eclipse IDE 4/198 17-CRL 113 200/6] |B |Cloud stored |R
+|link:https://github.com/eclipse/titan.EclipsePlug-ins/blob/master/Eclipse_Executor_userguide/README.doc[User Guide for the TITAN Executor for the Eclipse IDE 5/198 17-CRL 113 200/6] |B |Cloud stored |R
+|link:https://github.com/eclipse/titan.core/blob/master/usrguide/apiguide/README.doc[API Technical Reference for TITAN TTCN-3 Test Executor 6/198 17-CRL 113 200/6] |B |Cloud stored |R
+|link:https://github.com/eclipse/titan.core/blob/master/titan_executor_api/doc/Titan_Executor_API_User_Guide.doc[Titan Executor Java API user guide 8/198 17-CRL 113 200/6] |B |Cloud stored |R
+|Programmers Tech. Reference Guide for Titanium |B |Cloud stored |R
+|Titanium Description |B |Cloud stored |R
+|Statement of Compliance for Eclipse Titan |B |Cloud stored |R
+|Statement of Compliance for use of XML schema in Eclipse Titan |B |Cloud stored |R
+|===
+
+= Reason for revision
+
+== Implementations Proposals
+
+See embedded document for details.
+
+== Change Requests
+
+See embedded document for details.
+
+== Exemption Requests
+
+== Trouble Reports
+
+=== Implemented Trouble Reports
+
+See embedded document for details.
+
+=== Not Implemented Trouble Reports
+
+=== Embedded slide with details
+
+

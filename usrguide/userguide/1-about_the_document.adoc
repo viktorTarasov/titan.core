@@ -1,0 +1,23 @@
+= About the Document
+
+== Purpose
+
+The purpose of this document is to provide detailed information on using the TITAN toolset, that is, creating test suites from TTCN-3, ASN.1 modules, and test port files, by modifying a `Makefile` and using `make` to build executables.
+
+== Target Groups
+
+This document is intended for users of the TITAN TTCN–3 Test Toolset. In addition to this document, readers requiring additional information on creating and building test suites or writing test ports are referred to the link:https://github.com/eclipse/titan.core/tree/master/usrguide/referenceguide[TITAN Programmer's Technical Reference for TITAN TTCN-3 Test Executor].
+
+NOTE: Test port writing requires a sound knowledge of C++ programming.
+
+== Typographical Conventions
+
+This document uses the following typographical conventions:
+
+* *Bold* is used to represent graphical user interface (GUI) components such as buttons, menus, menu items, dialog box options, fields and keywords, as well as menu commands. Bold is also used with '+' to represent key combinations. For example, *Ctrl+Click*
+
+* The character '*/*' is used to denote a menu and sub-menu sequence. For example, *File / Open*.
+
+* `Monospaced` font is used represent system elements such as command and parameter names, program names, path names, URLs, directory names and code examples.
+
+* `*Bold monospaced*` font is used for commands that must be entered at the Command Line Interface (CLI).

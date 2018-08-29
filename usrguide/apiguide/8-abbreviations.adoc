@@ -1,0 +1,74 @@
+= Abbreviations
+
+API:: Application Programming Interface
+
+ASN.1:: Abstract Syntax Notation One
+
+ATS:: Abstract Test Suite
+
+BER:: Basic Encoding Rules (of ASN.1)
+
+BXER:: Basic XER
+
+BNF:: Backus–Naur Formalism
+
+CER:: Canonical Encoding Rules (of ASN.1)
+
+CXER:: Canonical XER
+
+DER:: Distinguished Encoding Rules (of ASN.1)
+
+ETS:: Executable Test Suite
+
+ETSI:: European Telecommunications Standards Institute
+
+EXER:: Extended XER
+
+GUI:: Graphical User Interface
+
+HC:: Host Controller
+
+HTML:: Hypertext Markup Language
+
+HTTP:: HyperText Transfer Protocol
+
+IP:: Internet Protocol
+
+LSB:: Least Significant Byte
+
+MC:: Main Controller
+
+MTC:: Main (or Master) Test Component
+
+PDU:: Protocol Data Unit
+
+pl:: Patch Level
+
+PTC:: Parallel Test Component
+
+PT:: Port Type
+
+SO:: Shared Object
+
+SUT:: System Under Test
+
+TC:: Test Component (either MTC or PTC)
+
+TCC:: Test Competence Center
+
+TCP:: Transmission Control Protocol
+
+TLV:: Tag, Length, Value
+
+TTCN:: Tree and Tabular Combined Notation
+
+TTCN–2:: Tree and Tabular Combined Notation
+
+TTCN–3:: Tree and Tabular Combined Notation version 3 (formerly) +
+Testing and Test Control Notation (new resolution)
+
+URL:: Universal Resource Locator
+
+XER:: XML Encoding Rules for ASN.1
+
+XML:: Extensible Markup Language

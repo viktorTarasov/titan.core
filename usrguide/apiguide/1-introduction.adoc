@@ -1,0 +1,31 @@
+= Introduction
+
+== Overview
+
+This document describes the TITAN API on C\++ level. It is intended for users who write test port implementation, external function implementation in language C++ and want to use the available resources of TITAN.
+
+Detailed information can be found on the following topics:
+
+* test ports, the communication link between the TITAN Executor and System Under Test (SUT);
+
+* built-in encoding and decoding functions;
+
+* TTCN-3 data mapping to C++ constructs;
+
+* troubleshooting for common TTCN-3 related issues and problems.
+
+== Target Groups
+
+This document is intended for advanced users of the TITAN API on C++ level.
+
+== Typographical Conventions
+
+This document uses the following typographical conventions:
+
+*Bold* is used to represent graphical user interface (GUI) components such as buttons, menus, menu items, dialog box options, fields and keywords, as well as menu commands. Bold is also used with ’+’ to represent key combinations. For example, *Ctrl+Click*
+
+The '*/*' character is used to denote a menu and sub-menu sequence. For example, *File / Open*.
+
+`Monospaced` font is used represent system elements such as command and parameter names, program names, path names, URLs, directory names and code examples.
+
+`*Bold monospaced*` font is used for commands that must be entered at the Command Line Interface (CLI), For example, `*ttcn3_start*`

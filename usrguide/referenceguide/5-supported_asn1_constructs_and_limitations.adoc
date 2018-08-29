@@ -1,0 +1,54 @@
+[[supported-asn-1-constructs-and-limitations]]
+= Supported ASN.1 Constructs and Limitations
+:toc:
+:table-number: 10
+
+All kind of comments defined in X.680 clause 11.6 can be used (<<13-references.adoc#_6, [6]>>).
+
+All tagging environment is supported: `IMPLICIT`, `EXPLICIT` and also `AUTOMATIC`.
+
+The type constraints are ignored. The BER (de)coding is not influenced by the constraints, except for the table constraints. For details, see section <<6-compiling_ttcn3_and_asn1_modules.adoc#using-component-relation-constraints-from-ttcn-3, Using Component Relation Constraints from TTCN–3>>.
+
+Table 11 summarizes how the different ASN.1 types are supported.
+
+There is a special type: `ANY`. It has the same interface as the `OCTET` `STRING`, but during the decoding, it accepts any valid encoded message, and its value will be the complete TLV. This type is very useful if the protocol carries an encoded message.
+
+Value sets are not supported as they are closely related to type constraints. Value set assignments in modules are parsed, but silently ignored. However, value set fields of information object classes (both fixed and variable type ones) cannot even be parsed, syntax errors are reported when processing such fields. As a consequence of this the information objects governed by such classes cannot be parsed either.
+
+Variable type value fields of information object classes are not supported. Processing of the class definition results in syntax error.
+
+A missing `IMPORTS` keyword implies an implicit import of all symbols from all modules according to the ASN.1 recommendation X.680 [4]. However, the missing `IMPORTS` keyword is interpreted by TITAN as an empty `IMPORTS`; keyword, thus, no symbols at all will be imported from any of the modules.
+
+.Supported ASN.1 types
+[cols=",,,,,,,",options="header",]
+|===
+|ASN.1 type |syntactic check| |semantic analyzing ||code generation ||(de)coding
+||type definition |value definition |typechecking |valuechecking|type definition |value assignment |
+|NULL |● |● |● |● |● |● |●
+|BOOLEAN |● |● |● |● |● |● |●
+|INTEGER |● |● |● |● |● |● |●
+|ENUMERATED |● |● |● |● |● |● |●
+|REAL |● |● |● |● |● |● |●^4^
+|BIT STRING |● |● |● |● |● |● |●
+|OCTET STRING |● |● |● |● |● |● |●
+|OBJECT IDENTIFIER |● |● |● |● |● |● |●
+|RELATIVE-OID |● |● |● |● |● |● |●
+|string^1^ |● |● |● |●^6^ |● |● |●
+|string^2^ |● |● |● |●^6^ |● |● |●^7^
+|string^3^ |● |● |● |●^6^ |● |● |●
+|CHOICE |● |● |● |● |● |● |●^5^
+|SEQUENCE |● |● |● |● |● |● |●^5^
+|SET |● |● |● |● |● |● |●
+|SEQUENCE OF |● |● |● |● |● |● |●
+|SET OF |● |● |● |● |● |● |●
+|===
+
+● supported +
+○ not supported +
+1 IA5String, NumericString, PrintableString, VisibleString (ISO646String) +
+2 GeneralString, GraphicString, TeletexString (T61String), VideotexString +
+3 BMPString, UniversalString, UTF8String +
+4 only base 10 coding is supported +
+5 the ellipsis can be a problem during the decoding +
+6 the character repertoire is not checked +
+7 the conversion between ISO-10646 and ISO-2022 character stream is not fully implemented but can be overridden to meet the user’s needs

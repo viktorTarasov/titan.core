@@ -1,0 +1,81 @@
+---
+Author: Arpad Lovassy
+Version: 8/198 17-CRL 113 200/6, Rev. PE1
+Date: 2018-06-19
+
+---
+= Titan Executor API User Guide
+:author: Arpad Lovassy
+:revnumber: 8/198 17-CRL 113 200/6, Rev. PE1
+:revdate: 2018-06-19
+:title-logo-image: images/titan_logo.png
+:toc:
+
+ifdef::env-github,backend-html5[]
+image::images/titan_logo.png[alt]
+endif::[]
+
+*Abstract*
+
+This document describes detailed information of using the TITAN Executor API.
+
+*Copyright*
+
+Copyright (c) 2000-2018 Ericsson Telecom AB +
+All rights reserved. This program and the accompanying materials are made available under the terms of the Eclipse Public License v2.0 that accompanies this distribution and is available at +
+https://www.eclipse.org/org/documents/epl-2.0/EPL-2.0.html.
+
+*Disclaimer*
+
+The contents of this document are subject to revision without notice due to continued progress in methodology, design and manufacturing. Ericsson shall have no liability for any error or damage of any kind resulting from the use of this document.
+
+= Overview
+
+The Titan Executor API provides the following functionalities:
+
+* execution control as in mctr_gui
+* callback for host controller connecting events
+* console log callback
+
+It is implemented in Java using JNI calls to the C++ side, which is based on the implementation of titan_eclipse JNI executor. The Titan Executor API is independent from Eclipse.
+
+= Titan Executor API
+
+== Prerequisites
+
+* TITAN installed (_libmctrjninative.so_ library file is in _TTCN3_DIR/lib_, and library path is in `LD_LIBRARY_PATH`)
+* Java JRE 1.7 installed
+
+== Install
+
+Copy _lib/TITAN_Executor_API.jar_ to your classpath.
+
+== Usage
+
+The entry point of the API is the `com.ericsson.titan.executor.api.JniExecutor`, and the client must implement `com.ericsson.titan.executor.api.IJniExecutorObserver` interface for the callbacks.
+
+For further details see the Javadoc embedded in the project.
+
+= Titan Executor API Demo
+
+== Install
+
+Copy _TITAN_Executor_API_Demo.jar_ and _lib/TITAN_Executor_API.jar_ to any selected directory, so keep the directory structure, make sure, that _TITAN_Executor_API.jar_ is in _lib/_, so it means, that Titan Executor API is in the classpath, which is defined in the manifest file of _TITAN_Executor_API_Demo.jar_.
+
+== Usage
+
+To start the demo the following command must be used:
+
+[source]
+java -jar <install directory>/TITAN_Executor_API_Demo.jar
+
+= Javadoc
+
+== Install
+
+Extract javadoc directory from the zip file
+
+== Usage
+
+Open _javadoc/index.html_ from a browser.
+

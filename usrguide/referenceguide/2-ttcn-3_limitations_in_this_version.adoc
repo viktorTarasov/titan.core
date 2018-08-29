@@ -1,0 +1,80 @@
+= TTCN-3 Limitations in this Version
+:toc:
+
+The present Test Executor is an implementation of TTCN–3 Core Language standard (<<13-references.adoc#_1, [1]>>) with support of ASN.1 (<<13-references.adoc#_3, [3]>>). However, the following TTCN–3 language constructs are not supported in the current version of the Test Executor. When applicable, the relevant clause of the standard text (<<13-references.adoc#_1, [1]>>) is given within parentheses after each limitation. The list of ASN.1 related limitations can be found in chapter *4.25*.
+
+* C++ code generation for parameterized local templates is not supported.footnote:[The semantic analyzer is able to verify modules with such definitions, but the generated C++ code will be incomplete or erroneous.] (5.0, relevant cells of Table 1)
+* Parameterized TTCN–3 `record`, `set` and `union types`. (5.4 in <<13-references.adoc#_1, [1]>>))
+* TTCN–3 sub-typing constraints are checked only at compilation time. In the run-time environment the restricted types are substituted with the corresponding base type and no run-time error is produced if the assigned value violates the subtype constraint.
+* The special TTCN–3 type `anytype` is supported with restrictions. (6.2.6 in <<13-references.adoc#_1, [1]>>)
+* Type compatibility of structured types.footnote:[Type compatibility for structured types is enabled only in the function test run-time due to performance considerations (except record of/set of types for certain element types, see section 4.32.2). In the load test run-time aliased types and sub-types are treated to be equivalent to their unrestricted root types. Different structured types are incompatible to each other. Two array types are compatible if both have the same size and index offset and the element types are compatible according to the rules above.] (6.3 in <<13-references.adoc#_1, [1]>>)
+* Two (non-empty) component types are considered to be compatible only if the compatibility relation is explicitly specified by the test suite writer. Details can be found in section 4.21. (6.3.3 and 9.3 in <<13-references.adoc#_1, [1]>>)
+* Selective import statements. All TTCN–3 imports are treated as `import all`.footnote:[Recursive and non-recursive import means exactly the same when importing all definitions from a module.] (8.2.3 and F.2 in <<13-references.adoc#_1, [1]>>)
+* Type `address` must not be an external type specified outside TTCN–3. The special value `null` cannot be assigned to variables of type `address`. (9.6 in <<13-references.adoc#_1, [1]>>)
+* The compiler does not check whether a TTCN–3 function invoked from within a `template`, Boolean guard expression of an alt construct, local variable initializer of an `altstep` or an `interleave` statement has side-effects. The run-time behavior is undefined if a function with side-effects (e.g. communication operations) is called while one of the above statements is being executed. (20 in <<13-references.adoc#_1, [1]>>)
+* The `disconnect` and `unmap` operations cannot refer to multiple connections or mappings. (21.1.2, relevant parts in <<13-references.adoc#_1, [1]>>)
+* The `send` and `call` operations cannot be used for multicast or broadcast communication. (22.2.1 and 22.3.1 in <<13-references.adoc#_1, [1]>>)
+* Attributes of type definitions cannot be changed when they are being imported. (27.1.2.1 in <<13-references.adoc#_1, [1]>>)
+* Template instances cannot be used in the to clause of communication operations. Only values of `component` and `address` types are allowed. (stated only in BNF)
+* The additional predefined function `decomp` is not implemented. (D.2 of <<13-references.adoc#_3, [3]>>)
+* In `port type` definitions the list of incoming and outgoing message types or signatures must be explicitly specified, the `all` keyword is ignored by the compiler. (G.3 in <<13-references.adoc#_1, [1]>>)
+* The TTCN–3 and ASN.1 modules are identified only by their names. Object identifiers in module headers are ignored. Module object identifiers in `import` statements and references are skipped without any checking, the semantic analyzer uses the module identifier only. (7.2.3 of <<13-references.adoc#_3, [3]>>, 8.1 in <<13-references.adoc#_1, [1]>>)
+* The comparison operators do not work on `objid` values. Only the equality (==) and non-equality (!=) operators are allowed. (7.2.5.2 of <<13-references.adoc#_3, [3]>>, 7.1.3 in <<13-references.adoc#_1, [1]>>)
+* Templates can not be used in the parameter of `encvalue` built-in function. (C.38 in <<13-references.adoc#_1, [1]>>)
+* The declaration of object identifiers can only point to constant values and integer variables, references to `objid` variables are not supported.
+* The Configuration and Deployment Support and the Advanced Parameterization packages of the TTCN-3 standard are not supported yet, except the Port with translation capability clause. ([21]).
+* In contrast to the standard, TITAN does not allow applying the same name to a structured type and to an element of the same type.
+* From version 1.8.pl3 (or R8D) the logging machinery uses an internal TTCN-3 module, named `TitanLoggerApi`, hence using this module name in user code is not allowed.
+* Referencing into an omitted field of any non-const variable/template of record/set type is allowed and it will expand the structure to the level of reference. All the expanded fields under `omit` will be unbound. This behavior is TITAN specific. According to the TTCN-3 standard (15.6.2 of <<13-references.adoc#_1, [1]>>), the proper behavior would be a dynamic test case error in this situation.In case of variable templates referencing into a matching mechanism will change the template regardless of it being a left hand side or a right hand side value.In case of non-variable templates referencing into a matching mechanism will cause an error. According to the TTCN-3 standard the proper behavior for right hand side templates would be to return an expanded value but not change it’s own value in case of AnyValue matching mechanism or stop with an error in case of other matching mechanisms.
+* According to the standard, before matching the tools have to make sure that the template being used is completely initialized, with no fields or elements left unbound. For performance reasons this check is not done before the matching is done. Instead the matching will report the error, when it tries to use an unbound field or elements.
+* In case the compiler is not able to decide at compile time, if all possible execution branches contain a return statement, that is, in cases of alt statements, loops and branching statement like if-else, select case, and so on, it will report an error without generating code. For example:
++
+....
+function f_check() return boolean {
+  for (var integer i:=0; i < some_variable; i := i + 1) {
+    return true;
+    }
+  }
+....
++
+In this case the compiler will report an error as it can not evaluate, if the loop will be executed at least once, and if the loop is not executed, the end of the function would be reached without a return statement. The workaround for this kind of problem is easy, the user needs to insert an extra return statement at the end of the function, like:
++
+....
+function f_check() return boolean {
+  for (var integer i:=0; i < some_variable; i := i + 1) {
+    return true;
+    } return false
+  }
+....
+* The language specification, after the "language" keyword, is ignored by the compiler.
+* For record of/set of types of fixed size, which have a length restriction of one concrete value, and arrays the `sizeof()` and `lengthof()` predefined functions are not standard compliant: `sizeof()` returns the number of elements, `lengthof()` returns the index of the last initialized element plus one.
+* IPv6 networking between the MC, HC and Parallel Test Components is supported only on Linux and Cygwin 1.7.
+* The `optional "implicit omit"` attribute is not applied recursively.
+* Templates using the `decmatch` (decoded content match, B.1.2.9 in <<13-references.adoc#_1, [1]>>) matching mechanism cannot be sent through test ports (doing so will result in a dynamic test case error). Template module parameters using `decmatch` are also not supported.
+* Since TITAN version R5B the matching symbol "*" (AnyValueOrNone, B.1.2.4 in <<13-references.adoc#_1, [1]>>) causes a compile time error when assigned to a mandatory field of a record or set template, as it is stated in the standard. This breaks backwards compatibility because in the older versions of TITAN only a warning was emitted.
+* When assigning a value to a structure using the value list notation, assignment notation or index notation (but not when assigning values to fields or elements one at a time), if the structure’s old value (or part of it) is referenced on the right hand side, the structure’s new value will only contain the fields or elements set in that assignment. All other fields or elements that may have been initialized in prior assignments will be set to unbound.
++
+If the structure’s old value is not referenced on the right hand side of the assignment, then only the fields or elements mentioned in the assignment will be overwritten. All other fields or elements will retain their previous values. Example:
++
+[source]
+----
+type record R {
+  integer i1,
+  integer i2,
+  integer i3
+}
+
+…
+
+var R x := { 1, 2, 3 };
+
+x := { i2 := 3 }; // assignment notation with no self-reference (OK)
+// result: x := { i1 := 1, i2 := 3, i3 := 3 }
+
+x := { i1 := x.i2 }; // assignment notation with self-reference (not OK)
+// result: x := { i1 := 3, i2 := <unbound>, i3 := <unbound> }
+
+x.i3 := x.i1; // individual field assignment with self-reference (OK)
+// result: x := { i1 := 3, i2 := <unbound>, i3 := 3 }
+----
+

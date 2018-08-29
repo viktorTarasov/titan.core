@@ -1,0 +1,87 @@
+= Logger Plug-ins
+:toc:
+
+== Implementing Logger Plug-ins
+
+All logger plug-ins must implement the `ILoggerPlugin` interface class in `ILoggerPlugin.hh` in `${TTCN3_DIR}/include`. Each plug-in should provide some essential information on itself and should implement some basic functions:
+
+The name `(name_, plugin_name())` of the plugin. To be able to reference the plugin (for example for configuration). Additional information about the plug-in `(help_, plugin_help())`.
+
+The minimum API version number the plug-in is compatible with `(major_version_, major_version()`, `minor_version_, minor_version())`.
+
+Each plug-in must have an initialization `(init())` and deinitialization `(fini())` routine, which are called at the begin and end of the plug-in’s lifecycle. The same functionality can be implemented in the plug-in’s constructor and destructor as well.
+
+The plug-in could be asked, whether it’s configured or not `(is_configured())`. For example the file is already opened, the database connection is set up etc. Depending on this information event buffering can be enabled or disabled.
+
+One plug-in should provide `log2str()` functionality. The `is_log2str_capable()` function should be overridden to return true. At the moment it’s not possible to change the default behavior and returning true will not have an effect except a warning.
+
+The logger plug-ins receive the log events via the `log()` function. The details about event handling can be found in 3.3.
+
+The generated, runtime specific (load-test or function-test) header file `TitanLoggerApi.hh` needs to be included by every logger plug-in depending on the runtime it is compiled for. These header files can be found in `${TTCN3_DIR}/include/{RT1/RT2}`. An example to handle these include files in a logger plug-in’s code:
+[source]
+----
+#ifndef TITAN_RUNTIME_2
+
+#include ``RT1/TitanLoggerApi.hh''
+
+#else
+
+#include ``RT2/TitanLoggerApi.hh''
+
+#endif
+----
+Unfortunately, the `dlopen()` API is a C API, not a C\++ API, but each logger plug-in is a class, which needs to be instantiated. To resolve this, the logger plug-ins are always instantiated and destroyed through C factory functions. These functions are mandatory for all logger plug-ins and they must follow C-style linkage rules. Otherwise, the function names would be mangled by the C++ compiler, using its own, implementation dependent mangling mechanism, and `dlsym()` and such functions would not be able to locate the correct symbol in the SOs of the logger plug-ins. These functions look pretty simple:
+[source]
+----
+#ifdef __cplusplus
+extern "C"
+{
+  ILoggerPlugin *create_plugin()
+    { return new MyPlugin(); }
+  void destroy_plugin(ILoggerPlugin *plugin)
+    { delete plugin; plugin = NULL; }
+}
+#endif
+----
+
+== Building Logger Plug-ins
+
+The generated, runtime specific (load-test or function-test) header file `TitanLoggerApi.hh` needs to be included by every logger plug-in depending on the runtime it is compiled for. These header files can be found in `${TTCN3_DIR}/include/{RT1/RT2}` and this directory must be present (for example as part of `CPPFLAGS` in the `Makefile`) while compiling the logger plug-ins.
+
+To make logger plug-ins dynamically loadable at runtime the logger plug-ins need to be built as shared libraries. Physically SOs `(.so)` on Unix and Linux platforms, DLLs `(.dll)` on Cygwin and Windows platforms. A HOWTO on building shared libraries can be found at http://tldp.org/HOWTO/Program-Library-HOWTO/index.html[David A. Wheeler, Program Library HOWTO]. A quick summary:
+
+All the sources of the logger plug-ins need to be compiled with `–fPIC`, for example add `CXXFLAGS += -fPIC` into the `Makefile` or command line.
+
+The linker should be instructed to create a shared library instead of an executable with the `–shared` flag. `–fPIC` is necessary here as well, for example add `LDFLAGS += -fPIC –shared` in the `Makefile` or command line.
+
+Another thing to keep in mind is that logger plug-ins need to be linked with the dynamically linked TITAN runtime libraries (for example `libttcn3-dynamic.so/libttcn3-parallel-dynamic.so` or `libttcn3-rt2-dynamic.so/libttcn3-rt2-parallel-dynamic.so`) instead of the static ones (for example `libttcn3.a/libttcn3-parallel.a` or `libttcn3-rt2.a/libttcn3-rt2-parallel.a`). So, if all possible combinations need to be supported by a logger plug-in, all of the four versions need to be built, additionally there are naming rules to simplify making a distinction between them:
+
+* Single mode, load test runtime. File name must end with ".so".
+
+* Single mode, function test runtime. File name must end with "-rt2.so".
+
+* Parallel mode, load test runtime. File name must end with "-parallel.so".
+
+* Parallel mode, function test runtime. File name must end with "-parallel-rt2.so".
+
+The runtime library linked with a logger plug-in must be selected to match the runtime linked with the test executable that loads it: if the test executable is linked to `libttcn3-dynamic.so`, then any logger plug-ins must also be linked to `libttcn3-dynamic.so` and not `libttcn3-parallel-dynamic.so` or `libttcn3-rt2-dynamic.so`. To ensure consistency, only a dynamic runtime library will load a logger plug-in (because a plug-in is always linked to a dynamic runtime library). If a non-dynamic runtime library is configured to load a logger plug-in, it will cause a runtime error.
+
+Please note that linking a plug-in or any TTCN-3 project with the object files generated from the `TitanLoggerApi` or `TitanLoggerControl` internal modules and using the dynamic libraries of TITAN at the same time is not recommended and it can lead to various runtime errors.
+
+== Event Handling
+
+The log events are distributed to all active logger plug-ins via a four-parameter callback function with the following signature:
+[source]
+----
+void log(const TitanLoggerApi::TitanLogEvent& event, bool
+  log_buffered, bool separate_file, bool use_emergency_mask);
+----
+
+The first parameter event is the event itself, the second parameter `log_buffered` indicates, whether the event is coming from an internal buffer or not, `separate_file` and `use_emergency_mask` are configuration options for emergency logging. The `use_emergency_mask` flag indicates that the given event is an emergency event and should be handled in a special way by the plug-ins, the `separate_file` flag indicates that all the emergency events should be handled separately (for example written into a separate file). For more details on emergency logging please check link:https://github.com/eclipse/titan.core/tree/master/usrguide/referenceguide[Programmer's Technical Reference]. In this function, the plug-in can handle the log events individually depending on the event’s type (that is, the alternative selected in the union `event.logEvent().choice()).`
+
+`TitanLoggerApi::TitanLogEvent` is a generated type defined in TitanLoggerApi.xsd, which can be found in `${TTCN3_DIR}/include`. This file contains all the necessary type definitions a logger plug-in should be aware of. The corresponding header files generated from this XSD file can be found in `${TTCN3_DIR}/include/{RT1/RT2}`. The mapping between TTCN-3 types and C\++ types is defined in link:5-mapping_ttcn3_data_types_to_c+\+_constructs.adoc[Mapping TTCN–3 Data Types to C++ Constructs].
+//The mapping between XSD and TTCN-3 types is defined in *Error! Reference source not found.*
+
+== Execution
+
+When a logger plug-in is compiled (the SO is ready) it should be configured in the configuration file. For details check link:https://github.com/eclipse/titan.core/tree/master/usrguide/referenceguide[Programmer's Technical Reference]. Additionally, `LD_LIBRARY_PATH` should contain the directory of the plug-in and `${TTCN3_DIR}/lib` as well. If the runtime linker (the loader) is unable to find any of the given logger plug-ins an error will be given.
