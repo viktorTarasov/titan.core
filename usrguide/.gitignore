@@ -7,7 +7,6 @@
 *.log
 *.lot
 *.out
-*.pdf
 *.ps
 *.toc
 *.labels
