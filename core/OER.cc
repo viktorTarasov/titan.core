@@ -24,10 +24,11 @@ void encode_oer_length(size_t num_bytes, TTCN_Buffer& buf, boolean seof) {
     size_t bytes = num_bytes;
     // Encode length in maybe more than 1 byte
     size_t needed_bytes = 0;
-    while (bytes != 0) {
+    do {
       bytes >>= 8;
       needed_bytes++;
     }
+    while (bytes != 0);
     char c = 0;
     if (seof == FALSE) {
       c |= 1 << 7;

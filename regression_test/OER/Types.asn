@@ -549,5 +549,11 @@ RecWithDefault ::= SEQUENCE
   field2 INTEGER
 }
 
+EmptyExtendableSequence ::= SEQUENCE {
+  ...
+}
+
+SequenceOfInteger ::= SEQUENCE OF INTEGER
+
 
 END

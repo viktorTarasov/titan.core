@@ -7011,6 +7011,7 @@ int Record_Type::OER_decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_bu
         act_pos = 0;
       }
     }
+    // TODO: handle extra extension fields
   }
   else if (p_td.oer->extendable) {
     // Set the optional fields after the extension to 'omit'
@@ -7442,17 +7443,30 @@ int Empty_Record_Type::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Token
   return (int)dec_len;
 }
 
-int Empty_Record_Type::OER_encode(const TTCN_Typedescriptor_t&, TTCN_Buffer&) const {
+int Empty_Record_Type::OER_encode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf) const {
   if (!is_bound()) {
     TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_UNBOUND,
       "Encoding an unbound empty %s value.", is_set() ? "set" : "record");
     return -1;
   }
+  if (p_td.oer->extendable) {
+    p_buf.put_c(0);
+  }
   return 0;
 }
   
-int Empty_Record_Type::OER_decode(const TTCN_Typedescriptor_t&, TTCN_Buffer&, OER_struct&) {
+int Empty_Record_Type::OER_decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf, OER_struct&) {
   bound_flag = TRUE;
+  if (p_td.oer->extendable) {
+    const unsigned char* uc = p_buf.get_read_data();
+    boolean has_extension = (uc[0] & 0x80) != 0;
+    p_buf.increase_pos(1);
+    if (has_extension) {
+      size_t bytes = decode_oer_length(p_buf, FALSE);
+      p_buf.increase_pos(bytes);
+      // TODO: handle extension fields
+    }
+  }
   return 0;
 }
 

@@ -3252,6 +3252,44 @@
 
  		setverdict(pass);
  	}
+ 	
+ 	external function enc_EmptySeq(in EmptyExtendableSequence os) return octetstring
+    with { extension "prototype(convert) encode(OER)" }
+  
+  external function dec_EmptySeq(in octetstring os) return EmptyExtendableSequence
+    with { extension "prototype(convert) decode(OER)" }
+ 	
+ 	testcase tc_sequence_empty() runs on EmptyCT {
+ 	  var EmptyExtendableSequence x := {};
+ 	  var octetstring os := enc_EmptySeq(x);
+ 	  if (os != '00'O) {
+ 	    setverdict(fail, "tc_sequence_empty: ", match('00'O, os));
+ 	  }
+ 	  var EmptyExtendableSequence y := dec_EmptySeq(os);
+ 	  if (y != x) {
+ 	    setverdict(fail, "tc_sequence_empty: ", match(x, y));
+ 	  }
+ 	  setverdict(pass);
+ 	}
+ 	
+ 	external function enc_SeqOfInt(in SequenceOfInteger os) return octetstring
+    with { extension "prototype(convert) encode(OER)" }
+  
+  external function dec_SeqOfInt(in octetstring os) return SequenceOfInteger
+    with { extension "prototype(convert) decode(OER)" }
+  
+  testcase tc_sequence_of_empty() runs on EmptyCT {
+ 	  var SequenceOfInteger x := {};
+ 	  var octetstring os := enc_SeqOfInt(x);
+ 	  if (os != '0100'O) {
+ 	    setverdict(fail, "tc_sequence_of_empty: ", match('0100'O, os));
+ 	  }
+ 	  var SequenceOfInteger y := dec_SeqOfInt(os);
+ 	  if (y != x) {
+ 	    setverdict(fail, "tc_sequence_of_empty: ", match(x, y));
+ 	  }
+ 	  setverdict(pass);
+ 	}
 
  	external function enc_MySet(in MySet pdu) return octetstring
      with { extension "prototype (convert) encode(OER)" }
@@ -3685,6 +3723,8 @@
  		execute(tc_universal_charstring());
  		execute(tc_objid());
  		execute(tc_sequence());
+ 		execute(tc_sequence_empty());
+ 		execute(tc_sequence_of_empty());
  		execute(tc_pdv());
  		execute(tc_union());
  		execute(tc_set());

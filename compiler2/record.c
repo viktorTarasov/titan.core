@@ -6792,25 +6792,39 @@ static void defEmptyRecordClass(const struct_def *sdef,
   if (oer_needed) {
     // OER encode, RT1
     src = mputprintf(src,
-      "int %s::OER_encode(const TTCN_Typedescriptor_t&, TTCN_Buffer&) const\n"
+      "int %s::OER_encode(const TTCN_Typedescriptor_t&, TTCN_Buffer&%s) const\n"
       "{\n"
       "  if (!is_bound()) {\n"
       "    TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_UNBOUND,\n"
       "      \"Encoding an unbound value of type %s.\");\n"
       "    return -1;\n"
       "  }\n\n"
+      "%s"
       "  return 0;\n"
       "}\n\n"
-      , name, dispname);
+      , name, sdef->oerExtendable ? " p_buf" : "", dispname
+      , sdef->oerExtendable ? "  p_buf.put_c(0);\n" : "");
     
     // OER decode, RT1
     src = mputprintf(src,
-      "int %s::OER_decode(const TTCN_Typedescriptor_t&, TTCN_Buffer&, OER_struct&)\n"
+      "int %s::OER_decode(const TTCN_Typedescriptor_t&, TTCN_Buffer&%s, OER_struct&)\n"
       "{\n"
       "  bound_flag = TRUE;\n"
+      , name, sdef->oerExtendable ? " p_buf" : "");
+    if (sdef->oerExtendable) {
+      src = mputstr(src,
+        "  const unsigned char* uc = p_buf.get_read_data();\n"
+        "  boolean has_extension = (uc[0] & 0x80) != 0;\n"
+        "  p_buf.increase_pos(1);\n"
+        "  if (has_extension) {\n"
+        "    size_t bytes = decode_oer_length(p_buf, FALSE);\n"
+        "    p_buf.increase_pos(bytes);\n"
+        // TODO: handle extension fields
+        "  }\n");
+    }
+    src = mputstr(src,
       "  return 0;\n"
-      "}\n\n"
-      , name);
+      "}\n\n");      
   }
 
     /* closing class definition */
