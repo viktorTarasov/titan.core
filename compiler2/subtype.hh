@@ -245,7 +245,6 @@ public:
  * class for semantic analysis of subtypes
  */
 class SubType : public SubtypeConstraint {
-
   Type *my_owner; ///< Pointer to the type, object not owned
   SubType* parent_subtype; ///< pointer to the inherited subtype, not owned
   vector<SubTypeParse> *parsed; ///< TTCN-3 parsed subtype data, not owned
@@ -276,6 +275,7 @@ public:
   SubtypeConstraint* get_root() { return root ? root : this; }
   bool is_extendable() { return extendable; }
   SubtypeConstraint* get_extension() { return extension; }
+  Constraints* get_asn_constraints() { return asn_constraints; }
 
   string to_string() const;
   
