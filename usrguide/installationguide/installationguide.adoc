@@ -9,9 +9,14 @@ Date: 2018-06-18
 :revnumber: 1/1531-CRL 113 200/6, Rev. PE1
 :revdate: 2018-06-18
 :title-logo-image: images/titan_logo.png
+:sectnums:
+:doctype: book
+:leveloffset: +1
 :toc:
 
+ifdef::env-github,backend-html5[]
 image::images/titan_logo.png[alt]
+endif::[]
 
 *Abstract*
 
@@ -345,6 +350,6 @@ If a host-limited key is needed, perform it in the same way but do it as system 
 
 = References
 
-* link:https://github.com/eclipse/titan.core/blob/master/usrguide/userguide/README.adoc[User Guide for TITAN TTCN-3 Test Executor]
+* link:https://github.com/eclipse/titan.core/blob/master/usrguide/userguide/[User Guide for TITAN TTCN-3 Test Executor]
 
-* link:https://github.com/eclipse/titan.core/blob/master/usrguide/referenceguide/README.adoc[Programmers Technical Reference for TITAN TTCN-3 Test Executor]
+* link:https://github.com/eclipse/titan.core/blob/master/usrguide/referenceguide/[Programmers Technical Reference for TITAN TTCN-3 Test Executor]

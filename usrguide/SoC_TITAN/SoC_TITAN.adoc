@@ -9,6 +9,9 @@ Date: 2018-06-18
 :revnumber: 1/174 02- CRL 113 200/6, Rev. PE1
 :revdate: 2018-06-18
 :title-logo-image: images/titan_logo.png
+:sectnums:
+:doctype: book
+:leveloffset: +1
 :toc:
 
 ifdef::env-github,backend-html5[]

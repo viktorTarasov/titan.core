@@ -9,28 +9,30 @@ Date: 2018-06-18
 :revnumber: 1/198 17-CRL 113 200/6, Rev. PE1
 :revdate: 2018-06-18
 :title-logo-image: images/titan_logo.png
+:sectnums:
+:doctype: book
 :toc:
 
 ifdef::env-github,backend-html5[]
 image::images/titan_logo.png[alt]
 endif::[]
 
-== Abstract
+*Abstract*
 
 This document describes detailed information on using the TITAN TTCN-3 Toolset, creating, compiling and executing test suites.
 
-== Copyright
+*Copyright*
 
 Copyright (c) 2000-2018 Ericsson Telecom AB +
 All rights reserved. This program and the accompanying materials are made available under the terms of the Eclipse Public License v2.0 that accompanies this distribution, and
 
 https://www.eclipse.org/org/documents/epl-2.0/EPL-2.0.html
 
-== Disclaimer
+*Disclaimer*
 
 The contents of this document are subject to revision without notice due to continued progress in methodology, design and manufacturing. Ericsson should have no liability for any error or damage of any kind resulting from the use of this document.
 
-== Contents
+*Contents*
 
 ifdef::env-github,backend-html5[]
 * link:1-about_the_document.adoc[About the Document]
@@ -42,10 +44,10 @@ ifdef::env-github,backend-html5[]
 endif::[]
 
 ifndef::env-github,backend-html5[]
-include::1-about_the_document.adoc[]
-include::2-overview_of_titan.adoc[]
-include::3-creating_executable_test_suites_from_the_command-l.adoc[]
-include::4-executing_test_suites.adoc[]
-include::5-log_processing.adoc[]
-include::6-references.adoc[]
+include::1-about_the_document.adoc[leveloffset=+1]
+include::2-overview_of_titan.adoc[leveloffset=+1]
+include::3-creating_executable_test_suites_from_the_command-l.adoc[leveloffset=+1]
+include::4-executing_test_suites.adoc[leveloffset=+1]
+include::5-log_processing.adoc[leveloffset=+1]
+include::6-references.adoc[leveloffset=+1]
 endif::[]

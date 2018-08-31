@@ -9,6 +9,9 @@ Date: 2018-05-24
 :revnumber: 109 47-CRL 113 200/6 Uen, Rev. D
 :revdate: 2018-05-24
 :title-logo-image: images/titan_logo.png
+:sectnums:
+:doctype: book
+:leveloffset: +1
 :toc:
 
 ifdef::env-github,backend-html5[]
@@ -3783,9 +3786,9 @@ No changes.
 
 5. link:https://www.itu.int/rec/T-REC-X.682-200207-S[ITU-T, X.682, Information TechnologyAbstract Syntax Notation One (ASN.1): Constraint specificationInternational Telecommunication Union, July 2002]
 
-6. link:https://github.com/eclipse/titan.core/blob/master/usrguide/installationguide.adoc[Installation guide for TITAN TTCN-3 Test Executor]
+6. link:https://github.com/eclipse/titan.core/blob/master/usrguide/installationguide/[Installation guide for TITAN TTCN-3 Test Executor]
 
 7. link:https://github.com/eclipse/titan.core/tree/master/usrguide/referenceguide[Programmer’s Technical Reference for TITAN TTCN-3 Executor]
 
 
-8. link:https://github.com/eclipse/titan.core/blob/master/usrguide/userguide/README.adoc[User Guide for TITAN TTCN-3 Test Executor]
+8. link:https://github.com/eclipse/titan.core/blob/master/usrguide/userguide/[User Guide for TITAN TTCN-3 Test Executor]
