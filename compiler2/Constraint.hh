@@ -16,6 +16,7 @@
 #ifndef _Common_Constraint_HH
 #define _Common_Constraint_HH
 
+#include "datatypes.h"
 #include "Setting.hh"
 
 namespace Asn {
@@ -121,6 +122,11 @@ namespace Common {
     virtual const Constraint* get_tableconstraint() const;
     
     virtual bool is_all_except_constraint() const { return false; }
+
+    virtual bool get_constraints_def(struct_constraints *) {
+	    printf("\n%s +%i: ###### default get_constraints_def() for '%s'\n\n", __FILE__, __LINE__, get_name());
+	    return false;
+    }
   };
 
   /**
@@ -153,6 +159,7 @@ namespace Common {
     SubtypeConstraint* get_subtype() const { return subtype; }
     bool is_extendable() const { return extendable; }
     SubtypeConstraint* get_extension() const { return extension; }
+    bool get_constraints_def(struct_constraints *);
   };
 
   /** @} end of Constraint group */
@@ -216,6 +223,7 @@ namespace Common {
     void chk();
     const char* get_name() const { return "single value constraint"; }
     void set_fullname(const string& p_fullname);
+    bool get_constraints_def(struct_constraints *);
   };
 
   // =================================
@@ -237,6 +245,7 @@ namespace Common {
     void chk();
     const char* get_name() const { return "contained subtype constraint"; }
     void set_fullname(const string& p_fullname);
+    bool get_constraints_def(struct_constraints *);
   };
 
   // =================================
@@ -270,6 +279,7 @@ namespace Common {
     RangeEndpoint* clone() const { return new RangeEndpoint(*this); }
     void chk(Type* my_type, ValueRangeConstraint* constraint);
     void set_fullname(const string& p_fullname);
+    bool get_constraints_def(struct_constraints *);
   };
 
   // =================================
@@ -290,6 +300,7 @@ namespace Common {
     void chk();
     const char* get_name() const { return "value range constraint"; }
     void set_fullname(const string& p_fullname);
+    bool get_constraints_def(struct_constraints *);
   };
 
   // =================================
@@ -309,6 +320,7 @@ namespace Common {
     void chk();
     const char* get_name() const { return "size constraint"; }
     void set_fullname(const string& p_fullname);
+    bool get_constraints_def(struct_constraints *);
   };
 
   // =================================
@@ -359,6 +371,7 @@ namespace Common {
     const char* get_name() const { return get_operationtype_str(); }
     void set_fullname(const string& p_fullname);
     bool is_all_except_constraint() const;
+    bool get_constraints_def(struct_constraints *);
   };
   
   // =================================
@@ -375,6 +388,7 @@ namespace Common {
     FullSetConstraint* clone() const { return new FullSetConstraint(*this); }
     void chk();
     const char* get_name() const { return "ALL"; }
+    bool get_constraints_def(struct_constraints *);
   };
 
   // =================================
@@ -415,6 +429,7 @@ namespace Common {
     void set_fullname(const string& p_fullname);
     const char* get_name() const { return "inner type constraint"; }
     bool is_ignored() const { return true; }
+    bool get_constraints_def(struct_constraints *);
   };
 
   // =================================
@@ -449,6 +464,8 @@ namespace Common {
     void set_fullname(const string& p_fullname);
     const char* get_name() const { return "named constraint"; }
     bool is_ignored() const { return true; }
+    void set_presence_constraint_attr();
+    bool get_constraints_def(struct_constraints *);
   };
 
   // =================================
@@ -476,6 +493,7 @@ namespace Common {
     void set_fullname(const string& p_fullname);
     const char* get_name() const { return "inner type constraint"; }
     bool is_ignored() const { return true; }
+    bool get_constraints_def(struct_constraints *);
   };
 
   // =================================
@@ -497,6 +515,7 @@ namespace Common {
     void set_fullname(const string& p_fullname);
     const char* get_name() const { return "inner type constraint"; }
     bool is_ignored() const { return true; }
+    bool get_constraints_def(struct_constraints *);
   };
   
   

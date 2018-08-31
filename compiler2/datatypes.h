@@ -64,6 +64,24 @@ typedef enum {
 /* record, set, union */
 
 /** Structure field descriptor for code generation */
+
+typedef struct {
+  int refd;
+  const char *type;
+  const char *scope;
+  const char *id;
+} struct_named_constraint;
+
+typedef struct {
+    char *con_chain;
+    char *con_str;
+    char **strs;
+    size_t strs_num;
+    struct_named_constraint parent_nc;
+    int in_op_or;
+    int in_op_or_head;
+} struct_constraints;
+
 typedef struct {
   const char *type; /**< The C++ type name of the field */
   const char *typegen; /**< XER descriptor name */
