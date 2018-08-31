@@ -628,3 +628,4 @@ In the command line referenced projects are identified by the location of their 
 In eclipse all information is persisted by the platform, as such the closing and re-opening of the workspace will not change any project information, or come with data loss.
 
 This is our own project information; it can not be expected from external tool vendors to support it. As such exporting/importing a project via the ClearCase Remote Client will not be possible using this format, or might not produce the expected results.
+

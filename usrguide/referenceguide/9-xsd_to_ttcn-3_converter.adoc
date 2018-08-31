@@ -30,7 +30,7 @@ An XML Schema is represented by a set of schema documents forming a complete spe
 The command line syntax of the converter is the following:
 
 [source]
-xsd2ttcn [-ceghmpstVwx] [-f file] [-J file] schema.xsd [-schema.xsd…]
+xsd2ttcn [-ceghmopstVwx] [-f file] [-J file] schema.xsd [-schema.xsd…]
 
 or
 
@@ -68,6 +68,10 @@ Instructs the converter to generate TTCN-3 code allowing type substitution.
 * `-m`
 +
 Instructs the converter to only generate the `UsefulTtcn3Types` and `XSD` predefined modules.
+
+* `-o`
++
+Generates all definitions into one module, called `XSD_Definitions`, instead of generating separate modules for each target namespace. The module contains one group for each target namespace.
 
 * `-p`
 +

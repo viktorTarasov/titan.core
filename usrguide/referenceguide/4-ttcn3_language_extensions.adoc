@@ -3353,6 +3353,89 @@ with {variant (field3) "REPEATABLE(no)"}
 //the elements of the field3 must be groupped together.
 ----
 
+*FORCEOMIT*
+
+Attribute syntax: `FORCEOMIT(<parameter>)`
+
+Parameters allowed: list of TTCN-3 field identifiers (can also be nested)
+
+Default value: none
+
+Can be used with: fields of a `record`/`set`.
+
+Description: Forces the lower-level optional field(s) specified by the parameters to always be omitted.
+
+NOTE: It has no effect during encoding. It only affects the specified fields (which are probably in a different type definition) if they are decoded as part of the type this instruction is applied to.
+
+Examples:
+[source]
+----
+type record InnerRec {
+  integer opt1 optional,
+  integer opt2 optional,
+  integer opt3 optional,
+  integer mand
+}
+
+// Note: decoding a value of type InnerRec alone does not force any of the
+// fields mentioned in the variants below to be omitted 
+
+type record OuterRec1 {
+  integer f1,
+  InnerRec f2,
+  integer f3
+}
+with {
+  variant (f2) "FORCEOMIT(opt1)"
+}
+
+// Decoding ‘0102030405’O into a value of type OuterRec1 results in:
+// {
+//   f1 := 1,
+//   f2 := { opt1 := omit, opt2 := 2, opt3 := 3, mand := 4 },
+//   f3 := 5
+// }
+
+type record OuterRec2 {
+  OuterRec1 f
+}
+with {
+  variant (f) "FORCEOMIT(f2.opt2)"
+}
+
+// Decoding ‘01020304’O into a value of type OuterRec2 results in:
+// {
+//   f := {
+//     f1 := 1,
+//     f2 := { opt1 := omit, opt2 := omit, opt3 := 2, mand := 3 },
+//     f3 := 4
+//   }
+// }
+
+type record OuterRec3 {
+  OuterRec1 f1,
+  OuterRec1 f2
+}
+with {
+  variant (f1) "FORCEOMIT(f2.opt2, f2.opt3)"
+  variant (f2) "FORCEOMIT(f2.opt2), FORCEOMIT(f2.opt3)"
+}
+
+// Decoding ‘010203040506’O into a value of type OuterRec3 results in:
+// {
+//   f1 := {
+//     f1 := 1,
+//     f2 := { opt1 := omit, opt2 := omit, opt3 := omit, mand := 2 },
+//     f3 := 3
+//   },
+//   f2 := {
+//     f1 := 4,
+//     f2 := { opt1 := omit, opt2 := omit, opt3 := omit, mand := 5 },
+//     f3 := 6
+//   }
+// }
+----
+
 ==== Type-specific attributes
 
 *IntX*
