@@ -8,6 +8,9 @@ Date: 2018-05-16
 :author: Jenő Balaskó
 :revnumber: 109 21-CRL 113 200/6-4, Rev. A
 :revdate: 2018-05-16
+:sectnums:
+:doctype: book
+:leveloffset: +1
 :toc:
 
 = Product Revision
@@ -46,19 +49,19 @@ Legend: R = Revised, N = New, C = Cancelled, E = Equal
 [width="100%",cols="25%,25%,25%,25%",options="header",]
 |===
 |Name |Old Revision |New Revision |
-|link:https://github.com/eclipse/titan.core/blob/master/usrguide/releasenotes.adoc[Release Notes for TITAN TTCN-3 Test Executor 109 47-CRL 113 200/6] |B |Cloud stored |R
-|link:https://github.com/eclipse/titan.core/blob/master/usrguide/installationguide.adoc[Installation guide for TITAN TTCN-3 Test Executor 1/1531-CRL 113 200/6] |B |Cloud stored |R
-|link:https://github.com/eclipse/titan.EclipsePlug-ins/blob/master/Eclipse_installationguide.adoc[Installation Guide for TITAN Designer and TITAN Executor for the Eclipse IDE 3/1531-CRL 113 200/6] |B |Cloud stored |R
-|link:https://github.com/eclipse/titan.core/blob/master/usrguide/userguide/README.adoc[User Guide for TITAN 1/198 17-CRL 113 200/6] |B |Cloud stored |R
-|link:https://github.com/eclipse/titan.core/blob/master/usrguide/referenceguide/README.adoc[Programmers Technical Reference for TITAN TTCN-3 Test Executor 2/198 17-CRL 113 200/6] |B |Cloud stored |R
-|link:https://github.com/eclipse/titan.EclipsePlug-ins/blob/master/Eclipse_Designer_userguide/README.doc[User Guide for the TITAN Designer for the Eclipse IDE 4/198 17-CRL 113 200/6] |B |Cloud stored |R
-|link:https://github.com/eclipse/titan.EclipsePlug-ins/blob/master/Eclipse_Executor_userguide/README.doc[User Guide for the TITAN Executor for the Eclipse IDE 5/198 17-CRL 113 200/6] |B |Cloud stored |R
-|link:https://github.com/eclipse/titan.core/blob/master/usrguide/apiguide/README.doc[API Technical Reference for TITAN TTCN-3 Test Executor 6/198 17-CRL 113 200/6] |B |Cloud stored |R
+|link:https://github.com/eclipse/titan.core/blob/master/usrguide/releasenotes/[Release Notes for TITAN TTCN-3 Test Executor 109 47-CRL 113 200/6] |B |Cloud stored |R
+|link:https://github.com/eclipse/titan.core/blob/master/usrguide/installationguide/[Installation guide for TITAN TTCN-3 Test Executor 1/1531-CRL 113 200/6] |B |Cloud stored |R
+|link:https://github.com/eclipse/titan.EclipsePlug-ins/blob/master/org.eclipse.titan.help/docs/Eclipse_installationguide/Eclipse_installationguide.adoc[Installation Guide for TITAN Designer and TITAN Executor for the Eclipse IDE 3/1531-CRL 113 200/6] |B |Cloud stored |R
+|link:https://github.com/eclipse/titan.core/blob/master/usrguide/userguide/[User Guide for TITAN 1/198 17-CRL 113 200/6] |B |Cloud stored |R
+|link:https://github.com/eclipse/titan.core/blob/master/usrguide/referenceguide/[Programmers Technical Reference for TITAN TTCN-3 Test Executor 2/198 17-CRL 113 200/6] |B |Cloud stored |R
+|link:https://github.com/eclipse/titan.EclipsePlug-ins/tree/master/org.eclipse.titan.designer/docs/Eclipse_Designer_userguide/[User Guide for the TITAN Designer for the Eclipse IDE 4/198 17-CRL 113 200/6] |B |Cloud stored |R
+|link:https://github.com/eclipse/titan.EclipsePlug-ins/tree/master/org.eclipse.titan.executor/docs/Eclipse_Executor_userguide[User Guide for the TITAN Executor for the Eclipse IDE 5/198 17-CRL 113 200/6] |B |Cloud stored |R
+|link:https://github.com/eclipse/titan.core/blob/master/usrguide/apiguide/[API Technical Reference for TITAN TTCN-3 Test Executor 6/198 17-CRL 113 200/6] |B |Cloud stored |R
 |link:https://github.com/eclipse/titan.core/blob/master/titan_executor_api/doc/Titan_Executor_API_User_Guide.doc[Titan Executor Java API user guide 8/198 17-CRL 113 200/6] |B |Cloud stored |R
-|Programmers Tech. Reference Guide for Titanium |B |Cloud stored |R
-|Titanium Description |B |Cloud stored |R
-|Statement of Compliance for Eclipse Titan |B |Cloud stored |R
-|Statement of Compliance for use of XML schema in Eclipse Titan |B |Cloud stored |R
+|link:https://github.com/eclipse/titan.EclipsePlug-ins/blob/master/org.eclipse.titanium/docs/Titanium_referenceguide/Titanium_referenceguide.adoc[Programmers Tech. Reference Guide for Titanium] |B |Cloud stored |R
+|link:https://github.com/eclipse/titan.EclipsePlug-ins/blob/master/org.eclipse.titanium/docs/Titanium_Description/Titanium_Description/Titanium_Description.adoc[Titanium Description] |B |Cloud stored |R
+|link:https://github.com/eclipse/titan.core/blob/master/usrguide/SoC_TITAN/SoC_TITAN.adoc[Statement of Compliance for Eclipse Titan] |B |Cloud stored |R
+|link:https://github.com/eclipse/titan.core/blob/master/usrguide/SoC_XML_TITAN/SoC_XML_TITAN.adoc[Statement of Compliance for use of XML schema in Eclipse Titan] |B |Cloud stored |R
 |===
 
 = Reason for revision
