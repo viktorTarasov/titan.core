@@ -95,7 +95,15 @@ void def_encdec(const char *p_classname,
      "void %s::encode(const TTCN_Typedescriptor_t& p_td,"
      " TTCN_Buffer& p_buf, TTCN_EncDec::coding_t p_coding, ...) const\n"
      "{\n"
-     "  va_list pvar;\n"
+     "  va_list pvar;\n\n"
+     "  if (p_td.value_validator)\n"
+     "    if ((*p_td.value_validator)(this) == false)\n"
+     "      TTCN_error(\"Cannot validate value of type '%%s'\", p_td.name);\n\n"
+    , p_classname
+  );
+
+
+  src=mputprintf(src,
      "  va_start(pvar, p_coding);\n"
      "  switch(p_coding) {\n"
      "  case TTCN_EncDec::CT_BER: {\n"
@@ -165,7 +173,7 @@ void def_encdec(const char *p_classname,
      "  va_end(pvar);\n"
      "}\n"
      "\n"
-    , p_classname, is_leaf?"TRUE":"FALSE"
+    , is_leaf?"TRUE":"FALSE"
     );
 
   src=mputprintf(src,
@@ -275,7 +283,10 @@ void def_encdec(const char *p_classname,
      "  default:\n"
      "    TTCN_error(\"Unknown coding method requested to decode"
      " type '%%s'\", p_td.name);\n"
-     "  }\n"
+     "  }\n\n"
+     "  if (p_td.value_validator)\n"
+     "    if ((*p_td.value_validator)(this) == false)\n"
+     "      TTCN_error(\"Cannot validate value of type '%%s'\", p_td.name);\n\n"
      "  va_end(pvar);\n"
      "}\n\n"
 #ifndef NDEBUG

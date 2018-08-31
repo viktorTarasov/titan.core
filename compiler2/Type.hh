@@ -1269,6 +1269,9 @@ namespace Common {
     /** Returns true if the C++ class for this type has already been pre-generated
       * or false if it still needs to be generated */
     bool is_pregenerated();
+
+    /** Returns 'PRESENCE' constraints generated code used in value validators */
+    char *constraints_defs();
   public:
     
     /** Returns true if the type supports at least one built-in encoding.

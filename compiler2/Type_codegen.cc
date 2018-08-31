@@ -56,6 +56,7 @@ using Ttcn::SingleWithAttrib;
 void Type::generate_code(output_struct *target)
 {
   if (code_generated) return;
+
   generate_code_embedded_before(target);
   CodeGenHelper::update_intervals(target);  // TODO: class and template separate everywhere?
   // escape from recursion loops
@@ -277,7 +278,7 @@ void Type::generate_code_typedescriptor(output_struct *target)
   const char *gennameown_str = gennameown.c_str();
   const string& gennametypedescriptor = get_genname_typedescriptor(my_scope);
 //printf("generate_code_typedescriptor(%s)\n", gennameown_str);
-
+  
   // FIXME: force_xer should be elminated. if a type needs a descriptor,
   // it should say so via get_genname_typedescriptor()
 
@@ -439,11 +440,24 @@ void Type::generate_code_typedescriptor(output_struct *target)
     }
 
     target->source.global_vars=mputprintf(target->source.global_vars,
-      "TTCN_Typedescriptor_t::%s };\n"
+      "TTCN_Typedescriptor_t::%s, "
+      , get_genname_typedescr_asnbasetype());
+
+    char *constr_defs = constraints_defs();
+    if (constr_defs != NULL)  {
+      target->source.global_vars=mputprintf(target->source.global_vars,
+        "%s_validate_value };\n"
 #ifndef NDEBUG
       "\n"
 #endif
-      , get_genname_typedescr_asnbasetype());
+      , gennameoerdescriptor.c_str());
+
+      Free(constr_defs);
+    }
+    else   {
+      target->source.global_vars = mputstr(target->source.global_vars,
+        "NULL };\n");
+    }
   } else {
     // the type uses the type descriptor of another type
     if (needs_alias()) {
@@ -1118,7 +1132,7 @@ void Type::generate_code_oerdescriptor(output_struct *target)
 {
   target->header.global_vars = mputprintf(target->header.global_vars,
     "extern const TTCN_OERdescriptor_t %s_oer_;\n", get_genname_own().c_str());
-  
+ 
   if (NULL == oerattrib) {
     target->source.global_vars = mputprintf(target->source.global_vars,
       "const TTCN_OERdescriptor_t %s_oer_ = { -1, FALSE, -1, FALSE, 0, 0, NULL, 0, NULL };\n"
@@ -1689,6 +1703,7 @@ void Type::generate_code_Se(output_struct *target)
   default:
     FATAL_ERROR("Type::generate_code_Se()");
   } // switch
+
   sdef.hasRaw = legacy_codec_handling ? rawattrib != NULL :
     get_gen_coder_functions(CT_RAW);
   sdef.hasText = legacy_codec_handling ? textattrib != NULL :
@@ -1700,198 +1715,199 @@ void Type::generate_code_Se(output_struct *target)
   sdef.hasXer = legacy_codec_handling ? has_encoding(CT_XER) :
     get_gen_coder_functions(CT_XER);
   sdef.hasJson = get_gen_coder_functions(CT_JSON);
-  sdef.hasOer = get_gen_coder_functions(CT_OER);
-  if (oerattrib) {
-    sdef.oerExtendable = oerattrib->extendable;
-    sdef.oerNrOrRootcomps = oerattrib->nr_of_root_comps;
-    sdef.oerEagNum = oerattrib->ext_attr_groups.size();
-    sdef.oerEag = (int*)Malloc(sdef.oerEagNum*sizeof(int));
-    for (int i = 0; i < sdef.oerEagNum; i++) {
-      sdef.oerEag[i] = *(oerattrib->ext_attr_groups[i]);
-    }
-    sdef.oerPNum = oerattrib->p.size();
-    sdef.oerP = (int*)Malloc(sdef.oerPNum*sizeof(int));
-    for (int i = 0; i < sdef.oerPNum; i++) {
-      sdef.oerP[i] = *(oerattrib->p[i]);
-    }
-  }
-  if (xerattrib){
-    Module *my_module = get_my_scope()->get_scope_mod();
-    sdef.xerHasNamespaces = my_module->get_nof_ns() != 0;
-    const char *ns, *prefix;
-    my_module->get_controlns(ns, prefix);
-    sdef.control_ns_prefix = prefix;
-    sdef.xerUntagged = xerattrib->untagged_;
-    sdef.xerUntaggedOne = u.secho.has_single_charenc;
-    sdef.xerUseNilPossible   = use_nil_possible;
-    sdef.xerEmbedValuesPossible = embed_values_possible;
-    sdef.xerUseOrderPossible = use_order_possible;
-    if (xerattrib->useOrder_ && xerattrib->useNil_) {
-      // We need information about the fields of the USE-NIL component
-      const CompField *cf = get_comp_byIndex(sdef.totalElements-1);
-      last_field_type = cf->get_type()->get_type_refd_last();
-      sdef.totalElements += last_field_type->get_nof_comps();
-    }
-    sdef.xerUseQName = xerattrib->useQName_;
-    if (xerattrib->useType_ || xerattrib->useUnion_) {
-      FATAL_ERROR("Type::generate_code_Se()"); // union only, not for record
-    }
-  }
-  sdef.elements = (struct_field*)
-    Malloc(sdef.totalElements*sizeof(*sdef.elements));
-  memset(sdef.elements, 0, sdef.totalElements * sizeof(*sdef.elements));
+ sdef.hasOer = get_gen_coder_functions(CT_OER);
+ if (oerattrib) {
+   sdef.oerExtendable = oerattrib->extendable;
+   sdef.oerNrOrRootcomps = oerattrib->nr_of_root_comps;
+   sdef.oerEagNum = oerattrib->ext_attr_groups.size();
+   sdef.oerEag = (int*)Malloc(sdef.oerEagNum*sizeof(int));
+   for (int i = 0; i < sdef.oerEagNum; i++) {
+     sdef.oerEag[i] = *(oerattrib->ext_attr_groups[i]);
+   }
+   sdef.oerPNum = oerattrib->p.size();
+   sdef.oerP = (int*)Malloc(sdef.oerPNum*sizeof(int));
+   for (int i = 0; i < sdef.oerPNum; i++) {
+     sdef.oerP[i] = *(oerattrib->p[i]);
+   }
+ }
+ if (xerattrib){
+   Module *my_module = get_my_scope()->get_scope_mod();
+   sdef.xerHasNamespaces = my_module->get_nof_ns() != 0;
+   const char *ns, *prefix;
+   my_module->get_controlns(ns, prefix);
+   sdef.control_ns_prefix = prefix;
+   sdef.xerUntagged = xerattrib->untagged_;
+   sdef.xerUntaggedOne = u.secho.has_single_charenc;
+   sdef.xerUseNilPossible   = use_nil_possible;
+   sdef.xerEmbedValuesPossible = embed_values_possible;
+   sdef.xerUseOrderPossible = use_order_possible;
+   if (xerattrib->useOrder_ && xerattrib->useNil_) {
+     // We need information about the fields of the USE-NIL component
+     const CompField *cf = get_comp_byIndex(sdef.totalElements-1);
+     last_field_type = cf->get_type()->get_type_refd_last();
+     sdef.totalElements += last_field_type->get_nof_comps();
+   }
+   sdef.xerUseQName = xerattrib->useQName_;
+   if (xerattrib->useType_ || xerattrib->useUnion_) {
+     FATAL_ERROR("Type::generate_code_Se()"); // union only, not for record
+   }
+ }
+ sdef.elements = (struct_field*)
+   Malloc(sdef.totalElements*sizeof(*sdef.elements));
+ memset(sdef.elements, 0, sdef.totalElements * sizeof(*sdef.elements));
 
-  /* This sorting is because of CER coding of SET types, see X.690
-     9.3. */
-  vector<CompField> se_comps;
-  if(typetype==T_SET_A) {
-    map<Tag, CompField> se_comps_map;
-    for(size_t i=0; i<sdef.nElements; i++) {
-      CompField* cf=get_comp_byIndex(i);
-      Tag *tag = cf->get_type()->get_smallest_tag();
-      se_comps_map.add(*tag, cf);
-      delete tag;
-    }
-    for(size_t i=0; i<sdef.nElements; i++)
-      se_comps.add(se_comps_map.get_nth_elem(i));
-    se_comps_map.clear();
-  }
-  else {
-    for(size_t i=0; i<sdef.nElements; i++)
-      se_comps.add(get_comp_byIndex(i));
-  }
+ /* This sorting is because of CER coding of SET types, see X.690
+    9.3. */
+ vector<CompField> se_comps;
+ if(typetype==T_SET_A) {
+   map<Tag, CompField> se_comps_map;
+   for(size_t i=0; i<sdef.nElements; i++) {
+     CompField* cf=get_comp_byIndex(i);
+     Tag *tag = cf->get_type()->get_smallest_tag();
+     se_comps_map.add(*tag, cf);
+     delete tag;
+   }
+   for(size_t i=0; i<sdef.nElements; i++)
+     se_comps.add(se_comps_map.get_nth_elem(i));
+   se_comps_map.clear();
+ }
+ else {
+   for(size_t i=0; i<sdef.nElements; i++)
+     se_comps.add(get_comp_byIndex(i));
+ }
 
-  for(size_t i = 0; i < sdef.nElements; i++) {
-    struct_field &cur = sdef.elements[i];
-    CompField *cf = se_comps[i];
-    const Identifier& id = cf->get_name();
-    Type *type = cf->get_type();
-    string type_name = type->get_genname_value(my_scope);
-    if (type->get_my_scope()->get_scope_mod_gen() == my_scope->get_scope_mod_gen()) {
-      for (size_t j = 0; j < sdef.nElements; ++j) {
-        if (se_comps[j]->get_name().get_name() == type_name) {
-          // the field's type name clashes with the name of a field in this record/set,
-          // which would cause a C++ compilation error
-          // always prefix the type with the namespace in this case
-          type_name = my_scope->get_scope_mod_gen()->get_modid().get_name() +
-            string("::") + type_name;
-          break;
-        }
-      }
-    }
-    cur.type    = pool.add(type_name);
-    cur.typegen = pool.add(type->get_genname_own());
-    cur.of_type = type->get_type_refd_last()->is_seof();
-    cur.typedescrname =
-      pool.add(type->get_genname_typedescriptor(my_scope));
-    cur.name = id.get_name().c_str();
-    cur.dispname = id.get_ttcnname().c_str();
-    cur.isOptional = cf->get_is_optional();
-    cur.isDefault = cf->has_default();
-    cur.optimizedMemAlloc = cur.of_type && (type->get_optimize_attribute() == "memalloc");
-    if (cur.isDefault) {
-      Value *defval = cf->get_defval();
-      const_def cdef;
-      Code::init_cdef(&cdef);
-      type->generate_code_object(&cdef, defval);
-      cdef.init = defval->generate_code_init
-        (cdef.init, defval->get_lhs_name().c_str());
-      Code::merge_cdef(target, &cdef);
-      Code::free_cdef(&cdef);
-      cur.defvalname = defval->get_genname_own().c_str();
-    }
+ for(size_t i = 0; i < sdef.nElements; i++) {
+   struct_field &cur = sdef.elements[i];
+   CompField *cf = se_comps[i];
+   const Identifier& id = cf->get_name();
+   Type *type = cf->get_type();
+   string type_name = type->get_genname_value(my_scope);
+   if (type->get_my_scope()->get_scope_mod_gen() == my_scope->get_scope_mod_gen()) {
+     for (size_t j = 0; j < sdef.nElements; ++j) {
+       if (se_comps[j]->get_name().get_name() == type_name) {
+         // the field's type name clashes with the name of a field in this record/set,
+         // which would cause a C++ compilation error
+         // always prefix the type with the namespace in this case
+         type_name = my_scope->get_scope_mod_gen()->get_modid().get_name() +
+           string("::") + type_name;
+         break;
+       }
+     }
+   }
+   cur.type    = pool.add(type_name);
+   cur.typegen = pool.add(type->get_genname_own());
+   cur.of_type = type->get_type_refd_last()->is_seof();
+   cur.typedescrname =
+     pool.add(type->get_genname_typedescriptor(my_scope));
+   cur.name = id.get_name().c_str();
+   cur.dispname = id.get_ttcnname().c_str();
+   cur.isOptional = cf->get_is_optional();
+   cur.isDefault = cf->has_default();
+   cur.optimizedMemAlloc = cur.of_type && (type->get_optimize_attribute() == "memalloc");
+   if (cur.isDefault) {
+     Value *defval = cf->get_defval();
+     const_def cdef;
+     Code::init_cdef(&cdef);
+     type->generate_code_object(&cdef, defval);
+     cdef.init = defval->generate_code_init
+       (cdef.init, defval->get_lhs_name().c_str());
+     Code::merge_cdef(target, &cdef);
+     Code::free_cdef(&cdef);
+     cur.defvalname = defval->get_genname_own().c_str();
+   }
 
-    if (type->xerattrib) {
-      cur.xerAttribute = type->xerattrib->attribute_;
+   if (type->xerattrib) {
+     cur.xerAttribute = type->xerattrib->attribute_;
 
-      if (has_aa(type->xerattrib)) {
-        cur.xerAnyNum  = type->xerattrib->anyAttributes_.nElements_;
-        cur.xerAnyKind = ANY_ATTRIB_BIT |
-          (type->xerattrib->anyAttributes_.type_ == NamespaceRestriction::FROM ?
-            ANY_FROM_BIT : ANY_EXCEPT_BIT);
-        if (cur.xerAnyNum > 0)
-          cur.xerAnyUris = (char**)Malloc(cur.xerAnyNum * sizeof(char*));
-        for (size_t uu=0; uu<cur.xerAnyNum; ++uu)
-          cur.xerAnyUris[uu] = type->xerattrib->anyAttributes_.uris_[uu];
-      }
-      else if(has_ae(type->xerattrib)) {
-        cur.xerAnyNum  = type->xerattrib->anyElement_.nElements_;
-        cur.xerAnyKind = ANY_ELEM_BIT |
-          (type->xerattrib->anyElement_.type_ == NamespaceRestriction::FROM ?
-            ANY_FROM_BIT : ANY_EXCEPT_BIT);
-        if (cur.xerAnyNum > 0)
-          cur.xerAnyUris = (char**)Malloc(cur.xerAnyNum* sizeof(char*));
-        for (size_t uu=0; uu<cur.xerAnyNum; ++uu)
-          cur.xerAnyUris[uu] = type->xerattrib->anyElement_.uris_[uu];
-      }
-    } // if xerattrib
-    if (type->jsonattrib) {
-      cur.jsonOmitAsNull = type->jsonattrib->omit_as_null;
-      cur.jsonAlias = type->jsonattrib->alias;
-      cur.jsonDefaultValue = type->jsonattrib->default_value;
-      cur.jsonMetainfoUnbound = type->jsonattrib->metainfo_unbound;
-      if (type->jsonattrib->tag_list != NULL) {
-        rawAST_tag_list* tag_list = type->jsonattrib->tag_list;
-        sdef.elements[i].jsonChosen = (rawAST_coding_taglist_list*)
-          Malloc(sizeof(rawAST_coding_taglist_list));
-        sdef.elements[i].jsonChosen->nElements = tag_list->nElements;
-        sdef.elements[i].jsonChosen->list = (rawAST_coding_taglist*)
-          Malloc(tag_list->nElements * sizeof(rawAST_coding_taglist));
-        for (int c = 0; c < tag_list->nElements; ++c) {
-          if (tag_list->tag[c].nElements != 0) {
-            sdef.elements[i].jsonChosen->list[c].fields =
-              (rawAST_coding_field_list*)Malloc(tag_list->tag[c].nElements *
-              sizeof(rawAST_coding_field_list));
-          }
-          else {
-            sdef.elements[i].jsonChosen->list[c].fields = NULL;
-          }
-          sdef.elements[i].jsonChosen->list[c].nElements =
-            tag_list->tag[c].nElements;
-          Identifier* union_field_id = tag_list->tag[c].fieldName;
-          sdef.elements[i].jsonChosen->list[c].fieldName = union_field_id != NULL ?
-            union_field_id->get_name().c_str() : NULL; // TODO: currently unused
-          sdef.elements[i].jsonChosen->list[c].fieldnum = union_field_id != NULL ?
-            type->get_type_refd_last()->get_comp_index_byName(
-            *tag_list->tag[c].fieldName) : -2;
-          for (int a = 0; a <tag_list->tag[c].nElements; ++a) {
-            rawAST_coding_field_list* key =
-              sdef.elements[i].jsonChosen->list[c].fields + a;
-            key->nElements = tag_list->tag[c].keyList[a].keyField->nElements;
-            key->value = tag_list->tag[c].keyList[a].value;
-            key->fields = (rawAST_coding_fields*)
-              Malloc(key->nElements * sizeof(rawAST_coding_fields));
-            Type *t = this;
-            for (int b = 0; b < key->nElements; ++b) {
-              Identifier* current_field_id =
-                tag_list->tag[c].keyList[a].keyField->names[b];
-              size_t current_field_index = t->get_comp_index_byName(*current_field_id);
-              CompField* current_field = t->get_comp_byIndex(current_field_index);
-              key->fields[b].nthfield = current_field_index;
-              key->fields[b].nthfieldname = current_field_id->get_name().c_str();
-              if (t->typetype == T_CHOICE_T) {
-                key->fields[b].fieldtype = UNION_FIELD;
-              }
-              else if (current_field->get_is_optional()) {
-                key->fields[b].fieldtype = OPTIONAL_FIELD;
-              }
-              else {
-                key->fields[b].fieldtype = MANDATORY_FIELD;
-              }
-              Type *field_type = current_field->get_type();
-              key->fields[b].type =
-                pool.add(field_type->get_genname_value(my_scope));
-              key->fields[b].typedescr =
-                pool.add(field_type->get_genname_typedescriptor(my_scope));
-              t = field_type->get_type_refd_last();
-            }
-          }
-        }
-      }
-      else {
-        sdef.elements[i].jsonChosen = NULL;
+     if (has_aa(type->xerattrib)) {
+       cur.xerAnyNum  = type->xerattrib->anyAttributes_.nElements_;
+       cur.xerAnyKind = ANY_ATTRIB_BIT |
+         (type->xerattrib->anyAttributes_.type_ == NamespaceRestriction::FROM ?
+           ANY_FROM_BIT : ANY_EXCEPT_BIT);
+       if (cur.xerAnyNum > 0)
+         cur.xerAnyUris = (char**)Malloc(cur.xerAnyNum * sizeof(char*));
+       for (size_t uu=0; uu<cur.xerAnyNum; ++uu)
+         cur.xerAnyUris[uu] = type->xerattrib->anyAttributes_.uris_[uu];
+     }
+     else if(has_ae(type->xerattrib)) {
+       cur.xerAnyNum  = type->xerattrib->anyElement_.nElements_;
+       cur.xerAnyKind = ANY_ELEM_BIT |
+         (type->xerattrib->anyElement_.type_ == NamespaceRestriction::FROM ?
+           ANY_FROM_BIT : ANY_EXCEPT_BIT);
+       if (cur.xerAnyNum > 0)
+         cur.xerAnyUris = (char**)Malloc(cur.xerAnyNum* sizeof(char*));
+       for (size_t uu=0; uu<cur.xerAnyNum; ++uu)
+         cur.xerAnyUris[uu] = type->xerattrib->anyElement_.uris_[uu];
+     }
+   } // if xerattrib
+   if (type->jsonattrib) {
+     cur.jsonOmitAsNull = type->jsonattrib->omit_as_null;
+     cur.jsonAlias = type->jsonattrib->alias;
+     cur.jsonDefaultValue = type->jsonattrib->default_value;
+     cur.jsonMetainfoUnbound = type->jsonattrib->metainfo_unbound;
+     if (type->jsonattrib->tag_list != NULL) {
+       rawAST_tag_list* tag_list = type->jsonattrib->tag_list;
+       sdef.elements[i].jsonChosen = (rawAST_coding_taglist_list*)
+         Malloc(sizeof(rawAST_coding_taglist_list));
+       sdef.elements[i].jsonChosen->nElements = tag_list->nElements;
+       sdef.elements[i].jsonChosen->list = (rawAST_coding_taglist*)
+         Malloc(tag_list->nElements * sizeof(rawAST_coding_taglist));
+       for (int c = 0; c < tag_list->nElements; ++c) {
+         if (tag_list->tag[c].nElements != 0) {
+           sdef.elements[i].jsonChosen->list[c].fields =
+             (rawAST_coding_field_list*)Malloc(tag_list->tag[c].nElements *
+             sizeof(rawAST_coding_field_list));
+         }
+         else {
+           sdef.elements[i].jsonChosen->list[c].fields = NULL;
+         }
+         sdef.elements[i].jsonChosen->list[c].nElements =
+           tag_list->tag[c].nElements;
+         Identifier* union_field_id = tag_list->tag[c].fieldName;
+         sdef.elements[i].jsonChosen->list[c].fieldName = union_field_id != NULL ?
+           union_field_id->get_name().c_str() : NULL; // TODO: currently unused
+         sdef.elements[i].jsonChosen->list[c].fieldnum = union_field_id != NULL ?
+           type->get_type_refd_last()->get_comp_index_byName(
+           *tag_list->tag[c].fieldName) : -2;
+         for (int a = 0; a <tag_list->tag[c].nElements; ++a) {
+           rawAST_coding_field_list* key =
+             sdef.elements[i].jsonChosen->list[c].fields + a;
+           key->nElements = tag_list->tag[c].keyList[a].keyField->nElements;
+           key->value = tag_list->tag[c].keyList[a].value;
+           key->fields = (rawAST_coding_fields*)
+             Malloc(key->nElements * sizeof(rawAST_coding_fields));
+           Type *t = this;
+           for (int b = 0; b < key->nElements; ++b) {
+             Identifier* current_field_id =
+               tag_list->tag[c].keyList[a].keyField->names[b];
+             size_t current_field_index = t->get_comp_index_byName(*current_field_id);
+             CompField* current_field = t->get_comp_byIndex(current_field_index);
+             key->fields[b].nthfield = current_field_index;
+             key->fields[b].nthfieldname = current_field_id->get_name().c_str();
+             if (t->typetype == T_CHOICE_T) {
+               key->fields[b].fieldtype = UNION_FIELD;
+             }
+             else if (current_field->get_is_optional()) {
+               key->fields[b].fieldtype = OPTIONAL_FIELD;
+             }
+             else {
+               key->fields[b].fieldtype = MANDATORY_FIELD;
+             }
+             Type *field_type = current_field->get_type();
+             key->fields[b].type =
+               pool.add(field_type->get_genname_value(my_scope));
+             key->fields[b].typedescr =
+               pool.add(field_type->get_genname_typedescriptor(my_scope));
+             t = field_type->get_type_refd_last();
+           }
+         }
+       }
+     }
+     else {
+       sdef.elements[i].jsonChosen = NULL;
       }
     } // if jsonattrib
+    i = i;
   } // next element
 
   if (last_field_type)
@@ -2528,7 +2544,7 @@ void Type::generate_code_coding_handlers(output_struct* target)
   if (t == NULL || get_genname_default_coding(my_scope) != get_genname_own()) {
     return;
   }
-  
+
   // default coding (global variable)
   string default_coding;
   if (t->coding_table.size() == 1) {
@@ -2559,14 +2575,41 @@ void Type::generate_code_coding_handlers(output_struct* target)
     "const UNIVERSAL_CHARSTRING& coding_name);\n",
     get_genname_own().c_str(), get_genname_value(my_scope).c_str(),
     get_genname_own().c_str(), get_genname_value(my_scope).c_str());
-  
+
   char* enc_str = mprintf("void %s_encoder(const %s& input_value, "
     "OCTETSTRING& output_stream, const UNIVERSAL_CHARSTRING& coding_name)\n"
     "{\n", get_genname_own().c_str(), get_genname_value(my_scope).c_str());
   char* dec_str = mprintf("INTEGER %s_decoder(OCTETSTRING& input_stream, "
     "%s& output_value, const UNIVERSAL_CHARSTRING& coding_name)\n"
     "{\n", get_genname_own().c_str(), get_genname_value(my_scope).c_str());
-  
+
+  char* validate_constraints = NULL;
+  char* constr_defs = constraints_defs();
+  if (constr_defs != NULL)  {
+    target->header.function_prototypes = mputprintf( target->header.function_prototypes,
+      "extern bool %s_validate_constraints(const %s& value);\n",
+      get_genname_own().c_str(), get_genname_value(my_scope).c_str());
+
+    target->header.function_prototypes = mputprintf( target->header.function_prototypes,
+      "extern bool %s_validate_value(const void *value);\n", get_genname_own().c_str());
+
+    validate_constraints = mprintf(
+      "bool %s_validate_constraints(const %s& value)\n"
+      "{\n"
+      "bool field_present = FALSE;%sreturn TRUE;\n"
+      "}\n\n",
+      get_genname_own().c_str(), get_genname_value(my_scope).c_str(), constr_defs);
+
+    validate_constraints = mputprintf(validate_constraints,
+      "bool %s_validate_value(const void *value)\n"
+      "{\n"
+      "if(value == NULL)  return FALSE;\n"
+      "const %s *typed_value = (%s *)value;\n"
+      "return %s_validate_constraints(*typed_value);\n"
+      "}\n\n",
+      get_genname_own().c_str(), get_genname_value(my_scope).c_str(), get_genname_value(my_scope).c_str(), get_genname_own().c_str());
+  }
+
   // user defined codecs
   for (size_t i = 0; i < t->coding_table.size(); ++i) {
     if (!t->coding_table[i]->built_in) {
@@ -2623,7 +2666,14 @@ void Type::generate_code_coding_handlers(output_struct* target)
       dec_str = mputstr(dec_str, "}\n");
     }
   }
-  
+
+  if(constr_defs)  {
+    enc_str = mputprintf(enc_str,
+      "if (%s_validate_constraints(input_value) == FALSE)\n"
+      "  TTCN_error(\"Failed to validate presence constraints for type '%s'\");\n",
+      get_genname_own().c_str(), get_typename().c_str());
+  }
+
   // built-in codecs
   enc_str = mputstr(enc_str,
     "TTCN_EncDec::coding_t coding_type;\n"
@@ -2669,7 +2719,15 @@ void Type::generate_code_coding_handlers(output_struct* target)
     dec_str = mputprintf(dec_str, 
       "}\n"
       "TTCN_Buffer ttcn_buf(input_stream);\n"
-      "output_value.decode(%s_descr_, ttcn_buf, coding_type, extra_options);\n"
+      "output_value.decode(%s_descr_, ttcn_buf, coding_type, extra_options);\n",
+      get_genname_typedescriptor(my_scope).c_str());
+    if(constr_defs)  {
+      dec_str = mputprintf(dec_str,
+        "if (%s_validate_constraints(output_value) == FALSE)\n"
+        "  TTCN_error(\"Failed to validate presence constraints for type '%s'\");\n",
+        get_genname_own().c_str(), get_typename().c_str());
+    }
+    dec_str = mputstr(dec_str,
       "switch (TTCN_EncDec::get_last_error_type()) {\n"
       "case TTCN_EncDec::ET_NONE:\n"
       "ttcn_buf.cut();\n"
@@ -2680,14 +2738,48 @@ void Type::generate_code_coding_handlers(output_struct* target)
       "return 2;\n"
       "default:\n"
       "return 1;\n"
-      "}\n", get_genname_typedescriptor(my_scope).c_str());
+      "}\n");
   }
   enc_str = mputstr(enc_str, "}\n\n");
   dec_str = mputstr(dec_str, "}\n\n");
+  if (constr_defs)
+    target->source.function_bodies = mputstr(target->source.function_bodies, validate_constraints);
   target->source.function_bodies = mputstr(target->source.function_bodies, enc_str);
   target->source.function_bodies = mputstr(target->source.function_bodies, dec_str);
   Free(enc_str);
   Free(dec_str);
+  Free(validate_constraints);
+  Free(constr_defs);
+}
+
+char *Type::constraints_defs()
+{
+  if (sub_type == NULL)
+    return NULL;
+
+  Constraints *asn_constraints = sub_type->get_asn_constraints();
+  if (asn_constraints == NULL)
+    return NULL;
+
+  struct_constraints *cons_def = (struct_constraints *)Malloc(sizeof(struct_constraints));
+  memset(cons_def, 0, sizeof(struct_constraints));
+
+  char *ret = NULL;
+  if (asn_constraints->get_constraints_def(cons_def))   {
+    if (cons_def->strs_num)   {
+      for (size_t i=0; i < cons_def->strs_num; i++)   {
+        ret = mputstr(ret, *(cons_def->strs + i));
+        Free(*(cons_def->strs + i));
+      }
+    }
+  }
+
+  Free(cons_def->con_str);
+  Free(cons_def->con_chain);
+  Free(cons_def->strs);
+  Free(cons_def);
+
+  return ret;
 }
 
 bool Type::has_built_in_encoding()

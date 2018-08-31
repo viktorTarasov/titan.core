@@ -80,6 +80,8 @@ struct TTCN_Typedescriptor_t {
     TELETEXSTRING, VIDEOTEXSTRING, GRAPHICSTRING, GENERALSTRING,
     OBJID, ROID
   } const asnbasetype;
+
+  bool (*value_validator)(const void *value);
 };
 
 #ifdef TITAN_RUNTIME_2

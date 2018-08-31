@@ -151,6 +151,20 @@ namespace Common {
     }
   }
 
+  bool Constraints::get_constraints_def(struct_constraints *cons_def)
+  {
+    if (cons_def == NULL)
+      return FALSE;
+
+    size_t i = 0;
+    for (i = 0; i < cons.size(); i++)
+      if (cons[i]->get_constrtype() != Constraint::CT_TABLE)
+        if (cons[i]->get_constraints_def(cons_def) == FALSE)
+	  break;
+
+    return (i == cons.size());
+  }
+
   // =================================
   // ===== Constraint
   // =================================
@@ -227,7 +241,7 @@ namespace Common {
   {
     FATAL_ERROR("Constraint::get_tableconstraint()");
   }
-  
+
   // =================================
   // ===== ElementSetSpecsConstraint
   // =================================
@@ -379,6 +393,13 @@ namespace Common {
     value->set_fullname(p_fullname+".<value>");
   }
 
+
+  bool SingleValueConstraint::get_constraints_def(struct_constraints *cons_def)
+  {
+    if (!checked) FATAL_ERROR("SingleValueConstraint::get_constraints_def()");
+    return FALSE;
+  }
+
   // =================================
   // ===== ContainedSubtypeConstraint
   // =================================
@@ -445,6 +466,51 @@ namespace Common {
     type->set_fullname(p_fullname+".<type>");
   }
 
+  bool ContainedSubtypeConstraint::get_constraints_def(struct_constraints *cons_def)
+  {
+    if (!checked) FATAL_ERROR("ContainedSubtypeConstraint::get_constraints_def()");
+
+    if (!type || !my_type) FATAL_ERROR("ContainedSubtypeConstraint::get_constraints_def()");
+    Error_Context cntxt(this, "While getting the constraint data to generate the code");
+
+    if (type->get_typetype()==Type::T_ERROR)
+      return FALSE;
+
+    if (cons_def == NULL)
+      return FALSE;
+
+    if (cons_def->con_str == NULL && cons_def->con_chain == NULL)
+      return TRUE;
+
+    if (cons_def->con_str == NULL)
+      cons_def->con_str = mputstr(cons_def->con_str, "\nfield_present = FALSE;\n");
+    cons_def->con_str = mputprintf(cons_def->con_str, "if(%s.is_bound()) field_present = TRUE;\n", cons_def->con_chain);
+
+    if (cons_def->parent_nc.refd == (int)(Type::T_SEQOF))   {
+      cons_def->con_str = mputprintf(cons_def->con_str,"for(int ii=0;ii<%s.size_of();ii++) {\n", cons_def->con_chain);
+      cons_def->con_str = mputprintf(cons_def->con_str,"  if (%s_validate_constraints(%s[ii]) == FALSE)\n",
+		      type->get_type_refd()->get_genname_own().c_str(), cons_def->con_chain);
+      cons_def->con_str = mputstr(cons_def->con_str,   "    return FALSE;\n");
+      cons_def->con_str = mputstr(cons_def->con_str, "}\n");
+    }
+    else    {
+      cons_def->con_str = mputprintf(cons_def->con_str,"  if (%s_validate_constraints(%s) == FALSE)\n",
+		      type->get_type_refd()->get_genname_own().c_str(), cons_def->con_chain);
+      cons_def->con_str = mputstr(cons_def->con_str,   "    return FALSE;\n");
+    }
+
+    cons_def->con_str = mputstr(cons_def->con_str, "if(!field_present) return FALSE;\n");
+    Free(cons_def->con_chain);
+    cons_def->con_chain = NULL;
+
+    cons_def->strs = (char **)Realloc(cons_def->strs, sizeof(char **) * (cons_def->strs_num + 1));
+    *(cons_def->strs + cons_def->strs_num) = cons_def->con_str;
+    cons_def->strs_num++;
+    cons_def->con_str = NULL;
+
+    return TRUE;
+  }
+
   // =================================
   // ===== RangeEndpoint
   // =================================
@@ -486,6 +552,12 @@ namespace Common {
   {
     Node::set_fullname(p_fullname);
     if (value) value->set_fullname(p_fullname+".<value>");
+  }
+
+  bool RangeEndpoint::get_constraints_def(struct_constraints *cons_def)
+  {
+    // TODO: do we ever need this?
+    return FALSE;
   }
 
   // =================================
@@ -576,6 +648,12 @@ namespace Common {
     upper_endpoint->set_fullname(p_fullname+".<upper_endpoint>");
   }
 
+  bool ValueRangeConstraint::get_constraints_def(struct_constraints *cons_def)
+  {
+    // TODO: do we ever need this?
+    return FALSE;
+  }
+
   // =================================
   // ===== SizeConstraint
   // =================================
@@ -615,6 +693,12 @@ namespace Common {
   {
     Node::set_fullname(p_fullname);
     constraint->set_fullname(p_fullname+".<"+string(constraint->get_name())+">");
+  }
+
+  bool SizeConstraint::get_constraints_def(struct_constraints *cons_def)
+  {
+    // TODO: SIZE in 'SEQUENCE OF' or 'SET OF'
+    return TRUE;
   }
 
   // =================================
@@ -792,6 +876,30 @@ namespace Common {
     return operationtype == EXCEPT && operand_a->get_constrtype() == CT_FULLSET;
   }
 
+  bool SetOperationConstraint::get_constraints_def(struct_constraints *cons_def)
+  {
+    if (cons_def == NULL)
+      return FALSE;
+
+    if (cons_def->in_op_or == 0)   {
+      cons_def->in_op_or_head = TRUE;
+      cons_def->in_op_or++;
+    }
+    cons_def->in_op_or++;
+
+    if (operand_a->get_constraints_def(cons_def) == FALSE)
+      return FALSE;
+    if (operand_a->get_constrtype() != CT_SETOPERATION)
+      cons_def->in_op_or--;
+
+    if (operand_b->get_constraints_def(cons_def) == FALSE)
+      return FALSE;
+    if (operand_b->get_constrtype() != CT_SETOPERATION)
+      cons_def->in_op_or--;
+
+    return TRUE;
+  }
+
   // =================================
   // ===== FullSetConstraint
   // =================================
@@ -800,6 +908,12 @@ namespace Common {
   {
     SubtypeConstraint::subtype_t my_subtype_type = my_type->get_subtype_type();
     subtype = new SubtypeConstraint(my_subtype_type);
+  }
+
+  bool FullSetConstraint::get_constraints_def(struct_constraints *cons_def)
+  {
+    // TODO: ??
+    return FALSE;
   }
 
   // =================================
@@ -907,6 +1021,17 @@ namespace Common {
     constraint->set_fullname(p_fullname+".<"+string(constraint->get_name())+">");
   }
 
+  bool SingleInnerTypeConstraint::get_constraints_def(struct_constraints *cons_def)
+  {
+    if (constraint == NULL)
+      return FALSE;
+
+    if (constraint->get_constraints_def(cons_def) == FALSE)
+      return FALSE;
+
+    return TRUE;
+  }
+
   // =================================
   // ===== NamedConstraint
   // =================================
@@ -948,6 +1073,7 @@ namespace Common {
     checked = true;
     if (!my_type) FATAL_ERROR("NamedConstraint::chk()");
     Error_Context cntxt(this, "While checking named constraint");
+
     if (value_constraint) {
       value_constraint->set_my_type(my_type);
       value_constraint->set_my_scope(get_my_scope());
@@ -963,6 +1089,78 @@ namespace Common {
     if (value_constraint) {
       value_constraint->set_fullname(p_fullname+".<"+string(value_constraint->get_name())+">");
     }
+  }
+
+  bool NamedConstraint::get_constraints_def(struct_constraints *cons_def)
+  {
+    const char *id_str = get_id().get_dispname().c_str();
+    int parent_refd = cons_def->parent_nc.refd;
+
+    if (cons_def == NULL)
+      return FALSE;
+
+    if (cons_def->in_op_or_head)
+        cons_def->con_str = mputstr(cons_def->con_str, "\nfield_present = FALSE;\n");
+    cons_def->in_op_or_head = FALSE;
+
+    if (parent_refd == Type::T_CHOICE_A)   {
+      if (cons_def->con_str == NULL)
+        cons_def->con_str = mputstr(cons_def->con_str, "\nfield_present = FALSE;\n");
+
+      cons_def->con_str = mputprintf(cons_def->con_str,"if(%s.ischosen(%s::%s::ALT_%s))\n",
+		      cons_def->con_chain, cons_def->parent_nc.scope, cons_def->parent_nc.type, id_str);
+    }
+    else if (parent_refd == (int)(Type::T_SEQOF))   {
+      if (cons_def->con_str == NULL)
+        cons_def->con_str = mputstr(cons_def->con_str, "\nfield_present = FALSE;\n");
+
+      cons_def->con_str = mputprintf(cons_def->con_str,"for(int ii=0;ii<%s.size_of();ii++)\n", cons_def->con_chain);
+      cons_def->con_chain = mputstr(cons_def->con_chain, "[ii]");
+    }
+    else if(parent_refd == Type::T_ENUM_A)   {
+      printf("######################### Type::T_ENUM_A TODO !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
+    }
+
+    cons_def->con_chain = mputprintf(cons_def->con_chain, "%s%s()", (cons_def->parent_nc.id != NULL ? "." : "value."), id_str);
+
+    if (presence_constraint == PC_NONE)   {
+      if (value_constraint == NULL)
+        FATAL_ERROR("NamedConstraint::get_constraints_def() missing constraint value");
+
+      Type *t = my_type->get_type_refd_last();
+      cons_def->parent_nc.refd = t->get_typetype();
+      cons_def->parent_nc.type = t->get_dispname().c_str();
+      cons_def->parent_nc.scope = t->get_my_scope()->get_scope_mod_gen()->get_modid().get_name().c_str();
+      cons_def->parent_nc.id = get_id().get_name().c_str();
+
+      if (value_constraint->get_constraints_def(cons_def) == FALSE)
+        return FALSE;
+    }
+    else if (presence_constraint == PC_PRESENT || presence_constraint == PC_ABSENT)   {
+      if ((cons_def->con_str == NULL || cons_def->in_op_or_head) && cons_def->in_op_or == 0)
+        cons_def->con_str = mputstr(cons_def->con_str, "\nfield_present = FALSE;\n");
+
+      cons_def->con_str = mputprintf(cons_def->con_str, "if(%s.is_bound()) field_present = TRUE;\n", cons_def->con_chain);
+
+      if (presence_constraint == PC_PRESENT)   {
+        if (cons_def->in_op_or == 0 || cons_def->in_op_or == 1)
+	  cons_def->con_str = mputstr(cons_def->con_str, "if(!field_present) return FALSE;\n");
+      }
+      else  {
+        if (cons_def->in_op_or == 0 || cons_def->in_op_or == 1)
+          cons_def->con_str = mputstr(cons_def->con_str, "if(field_present) return FALSE;\n");
+      }
+
+      Free(cons_def->con_chain);
+      cons_def->con_chain = NULL;
+
+      cons_def->strs = (char **)Realloc(cons_def->strs, sizeof(char **) * (cons_def->strs_num + 1));
+      *(cons_def->strs + cons_def->strs_num) = cons_def->con_str;
+      cons_def->strs_num++;
+      cons_def->con_str = NULL;
+    }
+
+    return TRUE;
   }
 
   // =================================
@@ -1025,10 +1223,8 @@ namespace Common {
       const Identifier& id = named_con_vec[i]->get_id();
       if (t->has_comp_withName(id)) {
         if (named_con_map.has_key(id)) {
-          named_con_vec[i]->error("Duplicate reference to field `%s' of type `%s'",
-            id.get_dispname().c_str(), my_type->get_typename().c_str());
-          named_con_map[id]->note("Previous reference to field `%s' is here",
-            id.get_dispname().c_str());
+          named_con_vec[i]->error("Duplicate reference to field `%s' of type `%s'", id.get_dispname().c_str(), my_type->get_typename().c_str());
+          named_con_map[id]->note("Previous reference to field `%s' is here", id.get_dispname().c_str());
         } else {
           named_con_map.add(id, named_con_vec[i]);
           if (t->get_typetype()==Type::T_SEQ_A) {
@@ -1036,6 +1232,7 @@ namespace Common {
             if (curr_idx<max_idx) invalid_order = true;
             else max_idx = curr_idx;
           }
+
 	  switch (named_con_vec[i]->get_presence_constraint()) {
 	  case NamedConstraint::PC_PRESENT:
 	    present_count++;
@@ -1079,6 +1276,7 @@ namespace Common {
       }
       // in FullSpecification all not listed fields that can be absent are implicitly ABSENT
       size_t real_absent_count = absent_count + ((!get_partial())?(t->get_nof_comps()-named_con_map.size()):0);
+
       if (real_absent_count>=t->get_nof_comps()) {
         error("All fields of CHOICE type `%s' are `ABSENT'", my_type->get_typename().c_str());
 	if (real_absent_count>absent_count) {
@@ -1098,6 +1296,48 @@ namespace Common {
     for (size_t i=0; i<named_con_vec.size(); i++) {
       named_con_vec[i]->set_fullname(p_fullname+".<"+string(named_con_vec[i]->get_name())+" "+Int2string(i)+">");
     }
+  }
+
+  bool MultipleInnerTypeConstraint::get_constraints_def(struct_constraints *cons_def)
+  {
+    size_t nof_cons = named_con_vec.size();
+
+    if (cons_def == NULL || nof_cons < 1)
+      return FALSE;
+
+    if (nof_cons < 1)
+      return FALSE;
+    if (nof_cons == 1)   {
+      if (named_con_vec[0]->get_constraints_def(cons_def) == FALSE)
+        return FALSE;
+    }
+    else   {
+      char *base_chain = NULL, *base_str = NULL;
+      struct_named_constraint nc = cons_def->parent_nc;
+
+      if (cons_def->con_chain)
+        base_chain = mputstr(base_chain, cons_def->con_chain);
+      if (cons_def->con_str)
+        base_str = mputstr(base_str, cons_def->con_str);
+
+      for (size_t i=0; i<nof_cons; i++) {
+        if (named_con_vec[i]->get_constraints_def(cons_def) == FALSE)
+          return FALSE;
+	if (i == nof_cons - 1)
+	  break;
+
+        if (base_chain)
+          cons_def->con_chain = mputstr(cons_def->con_chain, base_chain);
+        if (base_str)
+          cons_def->con_str = mputstr(cons_def->con_str, base_str);
+	cons_def->parent_nc = nc;
+      }
+
+      if (base_chain) Free(base_chain);
+      if (base_str) Free(base_str);
+    }
+
+    return TRUE;
   }
 
   // =================================
@@ -1160,6 +1400,20 @@ namespace Common {
     if (constraint) constraint->set_fullname(p_fullname);
   }
   
+  bool UnparsedMultipleInnerTypeConstraint::get_constraints_def(struct_constraints *cons_def)
+  {
+    if (cons_def == NULL)
+      return FALSE;
+    if (constraint == NULL)
+      return FALSE;
+    if (constraint->get_constraints_def(cons_def) == FALSE)
+      return FALSE;
+
+    return TRUE;
+  }
+
+  // =================================
+  // ===== MultipleInnerTypeConstraint
   // =================================
   // ===== UndefinedBlockConstraint
   // =================================
