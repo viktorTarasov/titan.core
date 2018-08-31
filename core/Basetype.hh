@@ -80,6 +80,12 @@ struct TTCN_Typedescriptor_t {
     TELETEXSTRING, VIDEOTEXSTRING, GRAPHICSTRING, GENERALSTRING,
     OBJID, ROID
   } const asnbasetype;
+
+  /**< Validate value handler.
+   * Value to be encoded, or value beeing decoded, is checked for conformity
+   * with the presence constraints.
+   */
+  bool (*value_validator)(const void *value, TTCN_EncDec_ErrorContext *ec);
 };
 
 #ifdef TITAN_RUNTIME_2

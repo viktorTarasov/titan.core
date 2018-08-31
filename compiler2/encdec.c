@@ -96,6 +96,17 @@ void def_encdec(const char *p_classname,
      " TTCN_Buffer& p_buf, TTCN_EncDec::coding_t p_coding, ...) const\n"
      "{\n"
      "  va_list pvar;\n"
+     "  if (p_td.value_validator)   {\n"
+     "    TTCN_EncDec_ErrorContext ec(\": Validate constraints of %%s value to be encoded :\",  p_td.name);\n"
+     "    if ((*p_td.value_validator)(this, &ec) == FALSE)  {\n"
+     "      TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_CONSTRAINT, \": Invalid '%%s' value\", p_td.name);\n"
+     "      return;"
+     "    }\n"
+     "  }\n"
+    , p_classname
+  );
+
+  src=mputprintf(src,
      "  va_start(pvar, p_coding);\n"
      "  switch(p_coding) {\n"
      "  case TTCN_EncDec::CT_BER: {\n"
@@ -165,7 +176,7 @@ void def_encdec(const char *p_classname,
      "  va_end(pvar);\n"
      "}\n"
      "\n"
-    , p_classname, is_leaf?"TRUE":"FALSE"
+    , is_leaf?"TRUE":"FALSE"
     );
 
   src=mputprintf(src,
@@ -275,6 +286,11 @@ void def_encdec(const char *p_classname,
      "  default:\n"
      "    TTCN_error(\"Unknown coding method requested to decode"
      " type '%%s'\", p_td.name);\n"
+     "  }\n"
+     "  if (p_td.value_validator)  {\n"
+     "    TTCN_EncDec_ErrorContext ec(\": Check ASN1 constraints of decoded %%s value :\", p_td.name);\n" 
+     "    if ((*p_td.value_validator)(this, &ec) == FALSE)\n"
+     "      TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_INVAL_MSG, \": Invalid '%%s' value\", p_td.name);\n"
      "  }\n"
      "  va_end(pvar);\n"
      "}\n\n"

@@ -3545,6 +3545,11 @@ void EXTERNAL::decode_text(Text_Buf& text_buf)
 void EXTERNAL::encode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf, TTCN_EncDec::coding_t p_coding, ...) const
 {
   va_list pvar;
+  if (p_td.value_validator)   {
+    TTCN_EncDec_ErrorContext ec(": While validating to encode %s value :", p_td.name);
+    if ((*p_td.value_validator)(this, &ec) == FALSE)
+      TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_CONSTRAINT, ": Invalid '%s' value :", p_td.name);
+  }
   va_start(pvar, p_coding);
   switch(p_coding) {
   case TTCN_EncDec::CT_BER: {
@@ -3638,6 +3643,11 @@ void EXTERNAL::decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf, TTC
     break;}
   default:
     TTCN_error("Unknown coding method requested to decode type '%s'", p_td.name);
+  }
+  if (p_td.value_validator)   {
+    TTCN_EncDec_ErrorContext ec(": While validating decoded %s value :", p_td.name);
+    if ((*p_td.value_validator)(this, &ec) == FALSE)
+      TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_CONSTRAINT, ": Invalid '%s' value :", p_td.name);
   }
   va_end(pvar);
 }
