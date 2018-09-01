@@ -716,7 +716,7 @@ It is also possible to apply the filtering on selected logger plugins of a compo
 .First level (coarse) log filtering
 [cols=",",options="header",]
 |===
-|Logging categories |Symbolic constantfootnote:[In order to be compatible with older configuration files, the following symbolic constants are also recognized: TTCN_ERROR, TTCN_WARNING, TTCN_PORTEVENT, TTCN_TIMEROP, TTCN_VERDICTOP, TTCN_DEFAULTOP, TTCN_TESTCASE, TTCN_ACTION, TTCN_USER, TTCN_FUNCTION, TTCN_STATISTICS, TTCN_PARALLEL, TTCN_EXECUTOR, TTCN_MATCHING and TTCN_DEBUG.These constants have the same meaning as their counterparts without the prefix TTCN_.]
+|Logging categories |Symbolic constantfootnote:[In order to be compatible with older configuration files, the following symbolic constants are also recognized: TTCN_ERROR, TTCN_WARNING, TTCN_PORTEVENT, TTCN_TIMEROP, TTCN_VERDICTOP, TTCN_DEFAULTOP, TTCN_TESTCASE, TTCN_ACTION, TTCN_USER, TTCN_FUNCTION, TTCN_STATISTICS, TTCN_PARALLEL, TTCN_EXECUTOR, TTCN_MATCHING and TTCN_DEBUG. These constants have the same meaning as their counterparts without the prefix TTCN_.]
 |TTCN–3 action(…) statements(No subcategory is implemented) |`ACTION`
 |Debug messages in Test Ports and external functions(For subcategories see Table 15) |`DEBUG`
 |Default operations (`activate`, `deactivate`, `return`)(For subcategories see Table 16) |`DEFAULTOP`
@@ -895,9 +895,9 @@ In both single and parallel modes some log events are created before processing 
 
 === `SourceInfoFormat`
 
-Option `SourceInfoFormat` controls the appearance of the location information for the test events. The location information refers to a position in theTTCN–3 source code. It consists of the name of the TTCN–3 file and the line number separated by a colon character (:). Optionally, it may contain the name of the TTCN–3 entity (function, testcase, etc.) in parentheses that the source line belongs to. See also the option <<LogEntityName, `LogEntityName`>> below.
+Option `SourceInfoFormat` controls the appearance of the location information for the test events. The location information refers to a position in the TTCN–3 source code. It consists of the name of the TTCN–3 file and the line number separated by a colon character (:). Optionally, it may contain the name of the TTCN–3 entity (function, testcase, etc.) in parentheses that the source line belongs to. See also the option <<LogEntityName, `LogEntityName`>> below.
 
-The option can take one of the three possible values: `None`, `Single` and `Stack`. In case of `Single`, the location information of the TTCN–3 statement is logged that is currently being executed. When `Stack` is used the entire TTCN–3 call stack is logged. The logged information starts from the outermost control part or testcase and ends with the innermost TTCN–3 statement. An arrow (that is, the character sequence ->) is used as separator between the stack frames. The value `None` disables the printing of location information.The default value for `SourceInfoFormat` is `None`.
+The option can take one of the three possible values: `None`, `Single` and `Stack`. In case of `Single`, the location information of the TTCN–3 statement is logged that is currently being executed. When `Stack` is used the entire TTCN–3 call stack is logged. The logged information starts from the outermost control part or testcase and ends with the innermost TTCN–3 statement. An arrow (that is, the character sequence ->) is used as separator between the stack frames. The value `None` disables the printing of location information. The default value for `SourceInfoFormat` is `None`.
 
 The location information is placed in each line of the log file between the event type or timestamp and the textual description of the event.
 

@@ -148,7 +148,7 @@ Instructs the compiler to generate source file and line information (that is, #l
 
 * `-L`
 +
-Instructs the compiler to add source file and line number information into the generated code to be included in the log during execution. This option is only a prerequisite for logging the source code information. The run-time configuration file parameters `OptionsSourceInfoFormat` and `LogEntityName` in <<7-the_run-time_configuration_file.adoc#logging, `[LOGGING]`>> have also to be set appropriately.This feature can be useful for finding the cause of dynamic test case errors in fresh TTCN3 code. Using this option enlarges the size of the generated code a bit and reduces execution speed slightly; therefore it is not recommended when the TTCN3 test suite is used for load generation.
+Instructs the compiler to add source file and line number information into the generated code to be included in the log during execution. This option is only a prerequisite for logging the source code information. The run-time configuration file parameters `OptionsSourceInfoFormat` and `LogEntityName` in <<7-the_run-time_configuration_file.adoc#logging, `[LOGGING]`>> have also to be set appropriately. This feature can be useful for finding the cause of dynamic test case errors in fresh TTCN3 code. Using this option enlarges the size of the generated code a bit and reduces execution speed slightly; therefore it is not recommended when the TTCN3 test suite is used for load generation.
 
 * `-M`
 +
@@ -172,7 +172,7 @@ Disable the generation of OER encoding and decoding functions.
 
 * `-p`
 +
-Instructs the compiler only to parse the given TTCN–3 and ASN.1 modules. This will detect only the syntax errors in them because semantic checks are not performed. The presence of all imported modules is not necessary, thus, it is allowed (and recommended) to parse the modules one-by-one.All options that influence the code generation are silently ignored when used together with `-p`.
+Instructs the compiler only to parse the given TTCN–3 and ASN.1 modules. This will detect only the syntax errors in them because semantic checks are not performed. The presence of all imported modules is not necessary, thus, it is allowed (and recommended) to parse the modules one-by-one. All options that influence the code generation are silently ignored when used together with `-p`.
 +
 NOTE: This option includes complete syntax checks for TTCN–3 modules, but in ASN.1 there are some special constructs (e.g. the user-defined syntaxes) that cannot be parsed without semantic analysis. So there is no guarantee that an ASN.1 module is free of syntax errors if it was analyzed with compiler using the -p flag.
 
@@ -329,7 +329,7 @@ The switches denoted by square brackets are optional. More than one option may b
 
 * `-a`
 +
-The flag refers to files using absolute path names in the generated Makefile. Makefile uses by default relative path names to access files located outside the current working directory of the compiler. Files from the current working directory are always referenced using only the file name without any directory.The flag generates a Makefile that is capable of using pre-compiled C++ and object files from central directories in order to save disk space and compilation time.WARNING! This feature works only if the generated files of the central directory is kept up-to-date and all directories use exactly the same environment (platform, TTCN–3 Executor and C++ compiler version, etc.).
+The flag refers to files using absolute path names in the generated Makefile. Makefile uses by default relative path names to access files located outside the current working directory of the compiler. Files from the current working directory are always referenced using only the file name without any directory. The flag generates a Makefile that is capable of using pre-compiled C++ and object files from central directories in order to save disk space and compilation time. WARNING! This feature works only if the generated files of the central directory is kept up-to-date and all directories use exactly the same environment (platform, TTCN–3 Executor and C++ compiler version, etc.).
 
 * `-c`
 +
@@ -513,7 +513,7 @@ NOTE: This flag overrides the working directory coming from the TPD. In case of 
 
 * `-W`
 +
-Prefix working directories with project name. This is needed if more than one TPD file is in the same directory, because this directory will then be the root of more than one project. The working directories (usually `bin') wil conflict, by using –W the working directory name will be prefixed by the project name, for example `MyProject_bin'.
+Prefix working directories with project name. This is needed if more than one TPD file is in the same directory, because this directory will then be the root of more than one project. The working directories (usually `bin') will conflict, by using –W the working directory name will be prefixed by the project name, for example `MyProject_bin'.
 +
 NOTE: In case of incorrect TPD files, the errors are displayed multiple times if the faulty TPD is included more than once in the project structure.
 
@@ -547,7 +547,7 @@ makefilegen –FWrZH –t MyTopLevelProj.tpd
 [source]
 makefilegen –V –P $(pwd) –t TopLevelProj.tpd
 
-. Create archive file of all files in all hierarchical projects:Go to the root directory of your projects then use the following bash command:
+. Create archive file of all files in all hierarchical projects: Go to the root directory of your projects then use the following bash command:
 +
 [source]
 makefilegen –V –P $(pwd) –t path/to/your/TopLevelProj.tpd | xargs tar cfz YourArchive.tgz
@@ -601,7 +601,7 @@ If the `<defaultTarget>` is library and `<dynamicLinking>` is true, the followin
 
 Position dependent code cannot be linked with position independent code. This is a known limitation of the GNU linker. The third party libraries shall be added to LD_LIBRARY_PATH, or be copied to a directory contained by the LD_LIBRARY_PATH
 
-If the <defaultTarget> is library and and <dynamicLinking> is false, the following aspects are to be considered:
+If the <defaultTarget> is library and <dynamicLinking> is false, the following aspects are to be considered:
 
 * it can be linked together with another static library
 * it cannot be linked together with a dynamic library

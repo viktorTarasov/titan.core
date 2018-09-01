@@ -132,7 +132,7 @@ setverdict(pass);
 
 == Description of Behavior Types Syntax
 
-TITAN supports the behaviour type package of the TTCN-3 standard,but with a different syntax. For details of the behaviour types see <<13-references.adoc#_5, [5]>>.
+TITAN supports the behaviour type package of the TTCN-3 standard, but with a different syntax. For details of the behaviour types see <<13-references.adoc#_5, [5]>>.
 
 .Behaviour types - refers shows the different syntax of the function behaviour type.
 [cols=",",options="header",]
