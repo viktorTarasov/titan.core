@@ -12,6 +12,7 @@ Date: 2018-06-18
 :sectnums:
 :doctype: book
 :toc:
+:toclevels: 3
 
 ifdef::env-github,backend-html5[]
 image::images/titan_logo.png[alt]
@@ -32,7 +33,6 @@ https://www.eclipse.org/org/documents/epl-2.0/EPL-2.0.html.
 
 The contents of this document are subject to revision without notice due to continued progress in methodology, design and manufacturing. Ericsson shall have no liability for any error or damage of any kind resulting from the use of this document.
 
-*Contents*
 
 ifdef::env-github,backend-html5[]
 * link:1-introduction.adoc[Introduction]
