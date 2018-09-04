@@ -2,7 +2,7 @@
 
 == Overview
 
-This document describes the TITAN API on C\++ level. It is intended for users who write test port implementation, external function implementation in language {cpp} and want to use the available resources of TITAN.
+This document describes the TITAN API on {cpp} level. It is intended for users who write test port implementation, external function implementation in language {cpp} and want to use the available resources of TITAN.
 
 Detailed information can be found on the following topics:
 

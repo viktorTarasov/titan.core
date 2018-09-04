@@ -7,7 +7,7 @@ Information not fitting in any of the previous chapters is given in this chapter
 [[migrating-existing-c-code-to-the-naming-rules-of-version-1-7]]
 == Migrating Existing {cpp} Code to the Naming Rules of Version 1.7
 
-When using the new naming rulesfootnote:[The new naming rules are used by default; the naming rules can be changed using the compiler command line switch -N.] the compiler generates a C\++ namespace for each TTCN–3 and ASN.1 module. The name of the namespace corresponds to the module. The generated {cpp} entities of a module are all placed in its namespace; therefore all the test port or protocol module code must use these namespaces.
+When using the new naming rulesfootnote:[The new naming rules are used by default; the naming rules can be changed using the compiler command line switch -N.] the compiler generates a {cpp} namespace for each TTCN–3 and ASN.1 module. The name of the namespace corresponds to the module. The generated {cpp} entities of a module are all placed in its namespace; therefore all the test port or protocol module code must use these namespaces.
 
 Rules to follow when writing {cpp} code:
 
@@ -17,7 +17,7 @@ Rules to follow when writing {cpp} code:
 
 * Encoding and decoding functions must be placed into the namespace of the TTCN–3 module in which the external function was defined.
 
-* All C\++ entities have to be placed into namespace. An exception to this may be {cpp} entities used only locally; these are defined with the keyword `static`.
+* All {cpp} entities have to be placed into namespace. An exception to this may be {cpp} entities used only locally; these are defined with the keyword `static`.
 
 * For convenience the `using namespace` directive can be used in {cpp} source files. It is forbidden to use this directive in header files!
 
@@ -59,7 +59,7 @@ The compiler will translate those external function definitions to {cpp} functio
 [...]
 ----
 
-Both pre-defined and user-defined TTCN–3 data types can be used as parameters and/or return types of the C\++ functions. The detailed description of the equivalent {cpp} classes as well as the name mapping rules are described in chapter <<4-encoding_and_decoding.adoc#xml-encoding-xer,XML Encoding (XER)>>.
+Both pre-defined and user-defined TTCN–3 data types can be used as parameters and/or return types of the {cpp} functions. The detailed description of the equivalent {cpp} classes as well as the name mapping rules are described in chapter <<4-encoding_and_decoding.adoc#xml-encoding-xer,XML Encoding (XER)>>.
 
 Using templates as formal parameters in external functions is possible, but not recommended because the API of the classes realizing templates is not documented and subject to change without notice.
 
@@ -80,7 +80,7 @@ NOTE: In versions 1.6.pl3 and earlier the in keyword had an extra meaning in for
 
 Due to the strictness of the TTCN–3 semantic analyzer one cannot use C/{cpp} data types with external functions as formal parameters or return types, only TTCN–3 and ASN.1 data types are allowed. Similarly, one cannot use pointers as parameters or return values because they have no equivalents in TTCN–3 .
 
-The external functions can be implemented in one or more C\++ source files. The generated header file that contains the prototypes of the external functions shall be included into each {cpp} source file. This file makes accessible all built-in data types, the user-defined types of the corresponding TTCN–3 module and all available services of the run-time environment (logging, error handling, etc.).
+The external functions can be implemented in one or more {cpp} source files. The generated header file that contains the prototypes of the external functions shall be included into each {cpp} source file. This file makes accessible all built-in data types, the user-defined types of the corresponding TTCN–3 module and all available services of the run-time environment (logging, error handling, etc.).
 
 The name, return type and the parameters of the implemented {cpp} functions must match exactly the generated function prototypes or the compilation will fail. The generated function prototype is in the namespace of the module, therefore the implementation of the function has to be placed in that namespace, too.
 [[logging-in-test-ports-or-external-functions]]
@@ -273,7 +273,7 @@ In the executable test program there are system calls not only in the Base Libra
 
 == Mixing C and {cpp} Modules
 
-Modules written in C language may be used in the Test Ports. In this case the C header files must be included into the Test Port source code and the object files of the C module must be linked to the executable. Using a C compiler to compile the C modules may lead to errors when linking the modules together. This is because the C and C\++ compilers use different rules for mapping function names to symbol names of the object file to avoid name clashes caused by the {cpp} polymorphism. There are two possible solutions to solve this problem:
+Modules written in C language may be used in the Test Ports. In this case the C header files must be included into the Test Port source code and the object files of the C module must be linked to the executable. Using a C compiler to compile the C modules may lead to errors when linking the modules together. This is because the C and {cpp} compilers use different rules for mapping function names to symbol names of the object file to avoid name clashes caused by the {cpp} polymorphism. There are two possible solutions to solve this problem:
 
 1.  Use the same {cpp} compiler to compile all of your source code (including C modules).
 2.  If the first one is impossible (when using a third party software that is available in binary format only), the definitions of the C header file must be put into an `extern "C"` block like this.
@@ -290,4 +290,4 @@ extern "C" {
 #endif
 ----
 
-The latter solution does not work with all C\++ compilers; it was tested on GNU {cpp} compiler only.
+The latter solution does not work with all {cpp} compilers; it was tested on GNU {cpp} compiler only.

@@ -144,7 +144,7 @@ Because of the `-T` flag the `Third.ttcn` will be treated as a TTCN-3 file, and 
 
 * `-l`
 +
-Instructs the compiler to generate source file and line information (that is, #line directives) into the output code so that the error messages of the C\++ compiler refer back to the lines of the original TTCN–3 input module. This makes finding the reason of {cpp} error messages easier. This option has effect only in the equivalent {cpp} code of TTCN–3 functions, test cases and control parts and this feature is not provided in other TTCN–3 definitions such as types, constants or templates.WARNING! This is an experimental feature and the {cpp} compiler may report misleading error messages that refer to totally wrong (e.g. non-existent) TTCN–3 line numbers. In these cases please turn off this flag, repeat the compilation and analyze the generated code manually. Without this flag, the compiler also inserts the source code information for the better understanding of {cpp} error messages, but only as {cpp} comments. This option has no impact on the run-time performance of the generated code. The compiler performs full semantic analysis on its entire input; it normally does not generate erroneous {cpp} code. So this option became obsolete and will be removed in future versions.
+Instructs the compiler to generate source file and line information (that is, #line directives) into the output code so that the error messages of the {cpp} compiler refer back to the lines of the original TTCN–3 input module. This makes finding the reason of {cpp} error messages easier. This option has effect only in the equivalent {cpp} code of TTCN–3 functions, test cases and control parts and this feature is not provided in other TTCN–3 definitions such as types, constants or templates.WARNING! This is an experimental feature and the {cpp} compiler may report misleading error messages that refer to totally wrong (e.g. non-existent) TTCN–3 line numbers. In these cases please turn off this flag, repeat the compilation and analyze the generated code manually. Without this flag, the compiler also inserts the source code information for the better understanding of {cpp} error messages, but only as {cpp} comments. This option has no impact on the run-time performance of the generated code. The compiler performs full semantic analysis on its entire input; it normally does not generate erroneous {cpp} code. So this option became obsolete and will be removed in future versions.
 
 * `-L`
 +
@@ -762,7 +762,7 @@ The `makefilegen` tool allows the usage of code splitting mechanisms when genera
 
 Let "number" be equal to 4 for this example. We want to split the files into four pieces.
 
-Firstly, TITAN finds the TTCN3 module whose C\++ generated code will be the largest. In this example, it will be 10000 characters (let’s call it MAX). So the largest generated {cpp} module contains 10000 characters.
+Firstly, TITAN finds the TTCN3 module whose {cpp} generated code will be the largest. In this example, it will be 10000 characters (let’s call it MAX). So the largest generated {cpp} module contains 10000 characters.
 
 Secondly TITAN calculates the splitting threshold by dividing MAX with "number", so it will be 10000 / 4 = 2500 in this case. TITAN will only split the generated c++ files which are larger than 2500 characters.
 

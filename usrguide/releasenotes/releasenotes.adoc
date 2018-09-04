@@ -423,7 +423,7 @@ Version 1.8 has the following new features:
 
 Version 1.7 has the following new features:
 
-* The naming convention of the generated C\++ code has been revised to avoid potential name clashes between definitions. The definitions of each TTCN–3 and ASN.1 module is put into a separate {cpp} namespace that corresponds to the module name. This eliminates all problems caused by definitions with identical names in different modules. The scope of {cpp} enum values that represent the values of TTCN–3 and ASN.1 enumerated types became narrower to avoid conflicts if the same element name appears in two different enumerated types.
+* The naming convention of the generated {cpp} code has been revised to avoid potential name clashes between definitions. The definitions of each TTCN–3 and ASN.1 module is put into a separate {cpp} namespace that corresponds to the module name. This eliminates all problems caused by definitions with identical names in different modules. The scope of {cpp} enum values that represent the values of TTCN–3 and ASN.1 enumerated types became narrower to avoid conflicts if the same element name appears in two different enumerated types.
 
 * Extension (inheritance) of TTCN–3 component types and compatibility between different component types is now supported by the compiler.
 
@@ -502,7 +502,7 @@ Version 1.4 has the following new features:
 
 * The compiler supports the full semantic analysis of ASN.1 modules and semantic analysis of TTCN–3 type definitions. The output for other TTCN–3 definitions is still generated on the fly without checks.
 
-* The compiler performs automatic reordering in the generated code for TTCN–3 types as well. This means, the generated C\++ code will be always valid even if the type definitions use forward referencing. +
+* The compiler performs automatic reordering in the generated code for TTCN–3 types as well. This means, the generated {cpp} code will be always valid even if the type definitions use forward referencing. +
 
 NOTE: The forward referencing problem between TTCN–3 constants and templates is still unsolved. They must be declared in bottom-up order to get a working {cpp} code.
 
@@ -544,7 +544,7 @@ Version 1.2 has the following new features:
 
 * The compiler supports the new, Edition 2 syntax of the TTCN–3 Core Language. The obsolete language elements that were supported in version 1.1 (e.g. named alternatives) are still accepted for backward compatibility, but a warning message is printed.
 
-* The toolset contains a new ASN.1 compiler, which allows the importing of ASN.1 modules into TTCN–3 test suites. Like the TTCN–3 compiler, the ASN.1 compiler translates ASN.1 definitions to C\++ code, which shall be used together with {cpp} output of TTCN–3 modules.
+* The toolset contains a new ASN.1 compiler, which allows the importing of ASN.1 modules into TTCN–3 test suites. Like the TTCN–3 compiler, the ASN.1 compiler translates ASN.1 definitions to {cpp} code, which shall be used together with {cpp} output of TTCN–3 modules.
 
 * The ASN.1 compiler performs a semantic analysis on its input and reports errors instead of generating invalid {cpp} code.
 
@@ -1429,23 +1429,23 @@ New features added to the Eclipse plugins:
 
 *Fixed bugs*
 
-* The generated C\++ equivalent of enumerated types could not be compiled with GCC 2.95.x if the new naming rules were in effect. The problem was caused by the {cpp} enum type that was declared within the scope of the {cpp} class representing the values of the enumerated type. The old version of GCC accepts the casting operator only if the name of the embedded enum type is prefixed with the name of the {cpp} class.
+* The generated {cpp} equivalent of enumerated types could not be compiled with GCC 2.95.x if the new naming rules were in effect. The problem was caused by the {cpp} enum type that was declared within the scope of the {cpp} class representing the values of the enumerated type. The old version of GCC accepts the casting operator only if the name of the embedded enum type is prefixed with the name of the {cpp} class.
 
 * When logging the matching procedure of optional fields in record and set types the field of the value and the template was printed in the wrong order if the field of the value was set to omit. Always the value must be printed first during matching, which corresponds to the order of arguments in built-in operation `match()`.
 
-* The compiler generated wrong C\++ code for repeat statements found within the response and exception handling parts of call statements. If the call statement was embedded into an altstep the generated code assumed that the repeat statement refers to the whole altstep. Otherwise the generated {cpp} code was erroneous, it could not be compiled.
+* The compiler generated wrong {cpp} code for repeat statements found within the response and exception handling parts of call statements. If the call statement was embedded into an altstep the generated code assumed that the repeat statement refers to the whole altstep. Otherwise the generated {cpp} code was erroneous, it could not be compiled.
 
 * The copy constructor of class TTCN Buffer did not work properly in the Base Library. This class is used by the common API for encoding and decoding. The defective copy constructor did not copy the length indicator field of the buffer to the newly created object thus some manually written codec functions and Test Ports reported mysterious internal error messages.
 
 * The semantic analyzer of the compiler reported false error messages while checking procedure-based operations `catch(timeout)`. Although this operation is applicable after calling any blocking signature the compiler accepted `catch(timeout)` only if the regular catch operation was allowed (i.e. the corresponding signature had at least one exception type). Of course, the operation `catch(timeout)` is allowed within the response and exception handling parts of call operations and only if the respective operation has a call timer.
 
-* The compiler generated erroneous C\++ code for the construct _value returning done_ if the new naming rules were in effect. The invoked {cpp} function was not prefixed with the appropriate namespace if the done statement and the return type of the PTC behavior function (having attribute with _{extension "done" }_) were defined in different modules.
+* The compiler generated erroneous {cpp} code for the construct _value returning done_ if the new naming rules were in effect. The invoked {cpp} function was not prefixed with the appropriate namespace if the done statement and the return type of the PTC behavior function (having attribute with _{extension "done" }_) were defined in different modules.
 
 * Erroneous circular TTCN–3 type references pointing back to themselves with field or array sub-references (like type T[0].f1 T;) caused infinite recursion in the semantic analyzer and consequently the compiler crashed with segmentation fault.
 
 * The utility `*ttcn3 logbrowser*` mis-interpreted some log entries. If the text of the log entry contained only a small integer number (like 1 or 2) the log browser presented the number as an erroneous component reference and left the field for the event text empty.
 
-* The generated C\++ code related to TTCN–3 expressions comparing optional fields of record and set types was erroneous in some cases. If two optional fields were tested for inequality the generated code could not be compiled with GCC 4.0.x or later. GCC complained about ambiguous overloading of operators. Furthermore, if an optional field containing a value of type charstring was compared with an optional field containing universal charstring the {cpp} code caused infinite recursion at runtime. All these errors were related to the instantiation of template member functions of {cpp} template classes.
+* The generated {cpp} code related to TTCN–3 expressions comparing optional fields of record and set types was erroneous in some cases. If two optional fields were tested for inequality the generated code could not be compiled with GCC 4.0.x or later. GCC complained about ambiguous overloading of operators. Furthermore, if an optional field containing a value of type charstring was compared with an optional field containing universal charstring the {cpp} code caused infinite recursion at runtime. All these errors were related to the instantiation of template member functions of {cpp} template classes.
 
 * The semantic analyzer of the compiler did not check properly the value list and value range (i.e. character range) type restrictions of type universal charstring. Even some basic checks, such as the verification of range boundaries and overlapping, were skipped in previous versions.
 
@@ -1467,7 +1467,7 @@ New features added to the Eclipse plugins:
 
 * The decode type mapping rules of dual-faced port types did not consider the associated `errorbehavior` attribute. The reason was that the {cpp} equivalents of the errorbehavior settings were left out from the generated code by mistake.
 
-* The default argument of the constructor (NULL pointer) was missing from the generated C\++ classes implementing TTCN–3 ports if the respective TTCN–3 port type had attribute provider or user. Because of this the compilation of the generated {cpp} code failed when a TTCN–3 port array was created from the above port types. The {cpp} template class that realizes port arrays tried to instantiate its elements using the default constructor (i.e. without parameters).
+* The default argument of the constructor (NULL pointer) was missing from the generated {cpp} classes implementing TTCN–3 ports if the respective TTCN–3 port type had attribute provider or user. Because of this the compilation of the generated {cpp} code failed when a TTCN–3 port array was created from the above port types. The {cpp} template class that realizes port arrays tried to instantiate its elements using the default constructor (i.e. without parameters).
 
 * The command line version of the Main Controller (i.e. `mctr cli`) crashed with a segmentation fault after encountering the expansion of an invalid macro to a host name (e.g. $_{NonExistentMacro, hostname}_) in the configuration file. The crash occurred after reporting the appropriate error message. The reason was an uninitialized variable.
 
@@ -1475,7 +1475,7 @@ New features added to the Eclipse plugins:
 
 * The error message of the compiler pointed to the wrong location in the source file if a (named) TTCN–3 constant was assigned to a variable and the actual value of the constant violated the subtype restrictions in the type of the variable. In this case the error message pointed to the literal value of the constant (which was apparently correct) rather than the faulty variable assignment.
 
-* The Base Library lacked the C\++ functions and operators that can implicitly convert a template (or template variable) of type charstring to a template of type universal charstring by translating the embedded matching mechanisms character-by-character. TTCN–3 modules using such constructs were accepted by the compiler, but the generated {cpp} code could not be compiled due to ambiguous overloads of operators. To resolve the problem a new constructor and assignment operator have been added to class UNIVERSAL CHARSTRING template, both taking CHARSTRING template as argument.
+* The Base Library lacked the {cpp} functions and operators that can implicitly convert a template (or template variable) of type charstring to a template of type universal charstring by translating the embedded matching mechanisms character-by-character. TTCN–3 modules using such constructs were accepted by the compiler, but the generated {cpp} code could not be compiled due to ambiguous overloads of operators. To resolve the problem a new constructor and assignment operator have been added to class UNIVERSAL CHARSTRING template, both taking CHARSTRING template as argument.
 
 * Although the ASN.1 front-end of the compiler ignores all type constraints except the table and component relation constraints of open types, some valid type constraints were rejected by the parser. False syntax errors were generated, for instance, if a single value constraint contained values within brackets (such as `SEQUENCE` or `SET` values) or a permitted alphabet constraint (denoted by keyword FROM) contained single characters using the quadruple notation.
 
@@ -1498,11 +1498,11 @@ Released on March 9, 2007.
 
 *New features*
 
-* The naming convention of the generated C\++ code has been revised to avoid name clashes between different definitions. The use of a {cpp} namespace for each module eliminates all compilation problems caused by definitions with the same identifier in different modules. The proper scoping of enumerated values excludes the name conflict between two enumerated types and makes the enum-hack option unnecessary and obsolete.
+* The naming convention of the generated {cpp} code has been revised to avoid name clashes between different definitions. The use of a {cpp} namespace for each module eliminates all compilation problems caused by definitions with the same identifier in different modules. The proper scoping of enumerated values excludes the name conflict between two enumerated types and makes the enum-hack option unnecessary and obsolete.
 
 * Extensibility (inheritance) of TTCN–3 component types and type compatibility between different component types is now supported by the compiler.
 
-* The compiler can generate TTCN–3 external functions automatically in C\++ to perform encoding and decoding of message types using the built-in codecs of the runtime environments. {cpp} programming is no longer necessary to create a complete and working protocol module. All options of the encoding shall be given in TTCN–3 as attributes of the external functions.
+* The compiler can generate TTCN–3 external functions automatically in {cpp} to perform encoding and decoding of message types using the built-in codecs of the runtime environments. {cpp} programming is no longer necessary to create a complete and working protocol module. All options of the encoding shall be given in TTCN–3 as attributes of the external functions.
 
 * Dual-faced TTCN–3 ports are now supported. Such ports have two different interfaces: internal (used when sending and receiving messages) and external (used when connecting the port to another test component or mapping to a system port). The handling of incoming and outgoing messages shall be specified using type mapping rules in the attributes of port types.
 
@@ -1609,7 +1609,7 @@ Released on November 27, 2006.
 
 * In some cases the GUI did not load the user-defined test sets that were stored in the project.
 
-* The compiler generated wrong (uncompilable) C\++ code for the location information when the name of the input file contained special characters (like the backslash) that require escaping in {cpp} string literals.
+* The compiler generated wrong (uncompilable) {cpp} code for the location information when the name of the input file contained special characters (like the backslash) that require escaping in {cpp} string literals.
 
 * The compiler aborted with an internal fatal error during semantic analysis if a RAW attribute POINTERTO referred to a non-existent field. The abort occurred after printing the relevant error message.
 
@@ -1621,7 +1621,7 @@ Released on November 27, 2006.
 
 * The semantic analyzer of the compiler verified the arguments of built-in TTCN–3 conversion functions int2hex and int2oct incorrectly. In some cases when the arguments were constants and the given value did not fit in the given length the semantic analyzer did not report any error, but the compiler aborted with an internal fatal error during constant folding while doing the conversion.
 
-* The compiler generated incorrect C\++ code for TTCN–3 for loops if the boolean guard expression was constant false. In this case the entire loop was substituted with an empty {cpp} statement although the initial variable assignment had to be executed exactly once in all cases. The wrong code could cause problems if the initial assignment had side effects (e.g. it called a function or modified a variable defined outside the for loop).
+* The compiler generated incorrect {cpp} code for TTCN–3 for loops if the boolean guard expression was constant false. In this case the entire loop was substituted with an empty {cpp} statement although the initial variable assignment had to be executed exactly once in all cases. The wrong code could cause problems if the initial assignment had side effects (e.g. it called a function or modified a variable defined outside the for loop).
 
 * The compiler and the run-time environment supports the short-circuit evaluation of logical `and` and `or` operations as it is required by the TTCN–3 standard. If the result of the operation can be determined based on the first (left) operand (i.e. the first operand is false in case of and or true in case of or) the second (right) operand will not be evaluated at all. The writer of the TTCN–3 code can exploit this behavior if the right operand may have side-effects or cause a dynamic test case error.
 
@@ -1722,9 +1722,9 @@ NOTE: The only possible value of these types is _{}_.
 
 NOTE: The array indices in type references are handled in a special way in the compiler: it is verified that the value in square brackets should be of type integer, but the number itself is not used for anything.
 
-* The compiler generated wrong (uncompilable) C\++ code for ASN.1 open types in some cases. The {cpp} equivalents of some types and values were missing if an unnamed information object set was used in the open type’s table constraint. This was the case, for instance, if the open type was embedded into a parameterized type assignment and the object set was defined in-line in the actual parameter list of the type reference.
+* The compiler generated wrong (uncompilable) {cpp} code for ASN.1 open types in some cases. The {cpp} equivalents of some types and values were missing if an unnamed information object set was used in the open type’s table constraint. This was the case, for instance, if the open type was embedded into a parameterized type assignment and the object set was defined in-line in the actual parameter list of the type reference.
 
-* Incremental compilation of ASN.1 modules did not work properly if the instantiation of some parameterized type assignments changed since the last full re-compilation of all modules. Changing the order of files in the compiler’s command line could cause similar problems. Module-based incremental compilation uses the concept that the C\++ equivalent of a module shall only depend on the module itself and the imported modules. Importing modules that use some definitions from the module must not influence the generated code. The {cpp} equivalents of parameterized assignments are generated when the assignment is instantiated by a parameterized reference (because only these instances can be visible from TTCN–3 ). The instances are created in the module where the parameterized reference is because the actual parameters might be visible only from that module. Different instantiations of the same parameterized assignment are identified by instance counters. Earlier versions of the compiler used one instance counter for each parameterized assignment. This can cause problems when there is a parameterized assignment in module A and it is instantiated from B and C. If the number of instantiations in B changes this would change the instance counters of C. Thus the generated files of C became outdated although C does not import from B. Starting from this version the instance counters are associated with target modules. In the above example the parameterized assignment in A has two counters: one for B and another for C. This change required a new naming convention for the C\++ classes of instantiated types: the identifier of the target module became part of the name, which resulted in longer {cpp} identifiers.
+* Incremental compilation of ASN.1 modules did not work properly if the instantiation of some parameterized type assignments changed since the last full re-compilation of all modules. Changing the order of files in the compiler’s command line could cause similar problems. Module-based incremental compilation uses the concept that the {cpp} equivalent of a module shall only depend on the module itself and the imported modules. Importing modules that use some definitions from the module must not influence the generated code. The {cpp} equivalents of parameterized assignments are generated when the assignment is instantiated by a parameterized reference (because only these instances can be visible from TTCN–3 ). The instances are created in the module where the parameterized reference is because the actual parameters might be visible only from that module. Different instantiations of the same parameterized assignment are identified by instance counters. Earlier versions of the compiler used one instance counter for each parameterized assignment. This can cause problems when there is a parameterized assignment in module A and it is instantiated from B and C. If the number of instantiations in B changes this would change the instance counters of C. Thus the generated files of C became outdated although C does not import from B. Starting from this version the instance counters are associated with target modules. In the above example the parameterized assignment in A has two counters: one for B and another for C. This change required a new naming convention for the {cpp} classes of instantiated types: the identifier of the target module became part of the name, which resulted in longer {cpp} identifiers.
 
 * The compiler assigned wrong identifiers to some ASN.1 open type members. Open types are mapped to implicit CHOICE types and the alternatives are the distinct types from the table constraint’s object set. The alternative identifiers of the CHOICE are derived from each type’s name by changing the first letter (which must always be a capital letter) to lower case. This mapping of names did not work properly if the elements of the object set were the instances of a parameterized information object assignment. For instance, different types got the same identifier (and therefore the generated {cpp} code was invalid) if the respective object field was a dummy reference pointing to the object’s formal parameter. When constructing open types the compiler generates a warning message if a member type has a complicated constructed name and thus the alternative will get a strange identifier. These warnings were missing too from the instances of parameterized types.
 
@@ -1829,7 +1829,7 @@ Released on December 16, 2005.
 
 * The run-time location information of else if statements pointed to the wrong line of the TTCN–3 code. For example, if an error occurred in the boolean expression of an else if statement the dynamic test case error message of the log file contained the line number of the first if statement. This made difficult to find the reason of the error since the first boolean expression, which the error message referred to, was correct.
 
-* The compiler generated faulty C\++ code if the last statement of a TTCN–3 statement block was a select-case statement. The {cpp} compiler complained about that the last label of the block was not followed by a statement. The syntaxerror was corrected by adding an empty {cpp} statement (i.e. a semi-colon) after the corresponding label.
+* The compiler generated faulty {cpp} code if the last statement of a TTCN–3 statement block was a select-case statement. The {cpp} compiler complained about that the last label of the block was not followed by a statement. The syntaxerror was corrected by adding an empty {cpp} statement (i.e. a semi-colon) after the corresponding label.
 
 * The compiler crashed with a segmentation fault during code generation if the boolean expression of a TTCN–3 if, for or while statement contained an in-line compound expression that could not be mapped directly to a {cpp} expression.
 
@@ -1865,7 +1865,7 @@ Released on December 16, 2005.
 
 * Utility `*ttcn3 logmerge*` could cause segmentation fault if one of its arguments was a path name containing . or .., but its file name part did not contain dash (i.e. -) character.
 
-* The compiler generated invalid C\++ code if the first operand of predefined function `substr` was a charstring element. The {cpp} compiler complained about an ambiguous function overload.
+* The compiler generated invalid {cpp} code if the first operand of predefined function `substr` was a charstring element. The {cpp} compiler complained about an ambiguous function overload.
 
 * The following bug fixes have been made on the GUI:
 
@@ -1979,7 +1979,7 @@ Released on June 30, 2005.
 
 * The compiler aborted with an internal fatal error when checking a TTCN–3 expression (or sub-expression) if all operands of an arithmetic or logical operation were available at compilation timefootnote:[The operands were literal values or references pointing to constants.] and one of the operands was a referenced value pointing to a TTCN–3 constant of type float or ASN.1 value of type REAL.
 
-* The generated C\++ code was uncompilable if the name of an ASN.1 built-in string type (e.g. UTF8String) was used as identifier in a TTCN–3 module or the name of a TTCN–3 built-in conversion function (e.g. bit2int) was used as ASN.1 identifier. Now the compiler appends a single underscore character to the {cpp} equivalents of these identifiers to avoid name clashes with the definitions of the Base Library.
+* The generated {cpp} code was uncompilable if the name of an ASN.1 built-in string type (e.g. UTF8String) was used as identifier in a TTCN–3 module or the name of a TTCN–3 built-in conversion function (e.g. bit2int) was used as ASN.1 identifier. Now the compiler appends a single underscore character to the {cpp} equivalents of these identifiers to avoid name clashes with the definitions of the Base Library.
 
 * The compiler caused segmentation fault during semantic analysis if the type of a constant or module parameter was erroneous (e.g. the referenced type was not imported) and the value of the constant or the default value of the module parameter contained an embedded record or set value (i.e. a value with TTCN–3 assignment notation). The problem occurred after reporting the relevant error message and only if when {cpp} code generation was requested (i.e. the command line switch `-s` was not used).
 
@@ -2064,7 +2064,7 @@ Released on April 1, 2005.
 
 * In some cases the compiler aborted with an internal fatal error when checking modified templates for record of or set of types. This was the case, for instance, if the base template contained a generic wildcard like ? or *.
 
-* The compiler generated invalid (uncompilable) C\++ code for `getcall` operations if the corresponding signature was imported from another module. This was because the default arguments of the {cpp} function that handles `param` redirects for the respective signature were generated into the source file instead of the header file and thus remained invisible for other modules.
+* The compiler generated invalid (uncompilable) {cpp} code for `getcall` operations if the corresponding signature was imported from another module. This was because the default arguments of the {cpp} function that handles `param` redirects for the respective signature were generated into the source file instead of the header file and thus remained invisible for other modules.
 
 * The code generator of the compiler ignored the `NotUsedSymbol` characters in `param` redirect of `getcall` and `getreply` operations if the `VariableList` notation was used. Thus the run-time environment assigned the wrong parameters to the given variables.
 
@@ -2114,7 +2114,7 @@ Released on April 1, 2005.
 
 * The run-time environment did not handle the variable assignments for record of and set of types properly. If the newly assigned value had fewer elements than the previous value of the variable the extra elements at the end were not erased from the variable. For example, if a variable contained three elements and the newly assigned value had only two, the new value of the variable had incorrectly three elements: the first two from the new value and the third one from the old value. This problem was present regardless whether the embedded type was a built-in or a user defined type or the extra values were bound or not. The effects of this bug were the most strange if a component variable of the MTC was initialized in the component type definition and several test cases were executed after each other.
 
-* The run-time environment caused dynamic test case error if an optional component of an ASN.1 `SEQUENCE` or `SET` type, the type of which was the ANY type, was assigned to an optional octetstring field of a TTCN–3 `record` or `set` type and the source field contained omit value. The appropriate C\++ member function was missing and the {cpp} compiler performed an implicit conversion, which assumed that the value of the source field is present.
+* The run-time environment caused dynamic test case error if an optional component of an ASN.1 `SEQUENCE` or `SET` type, the type of which was the ANY type, was assigned to an optional octetstring field of a TTCN–3 `record` or `set` type and the source field contained omit value. The appropriate {cpp} member function was missing and the {cpp} compiler performed an implicit conversion, which assumed that the value of the source field is present.
 
 * In case of some valid, but sophisticated TTCN–3 or ASN.1 type recursion loops the compiler did not produce the equivalent {cpp} classes in the right bottom-up order. Thus the generated code was uncompilable because of forward referencing of incomplete types.
 
@@ -2124,9 +2124,9 @@ Released on April 1, 2005.
 
 * The compiler aborted with an internal fatal error during semantic analysis if the base template of a modified union template did not contain a specific value (e.g. it was a generic wildcard like "?").
 
-* The generated C\++ code was uncompilable if an indexed element of a string value was assigned to a template. The {cpp} compiler complained about ambiguous function overloads in case of all string types (i.e. bitstring, hexstring, octetstring, charstring and universal charstring).
+* The generated {cpp} code was uncompilable if an indexed element of a string value was assigned to a template. The {cpp} compiler complained about ambiguous function overloads in case of all string types (i.e. bitstring, hexstring, octetstring, charstring and universal charstring).
 
-* The generated C\++ code was uncompilable if an operand of a built-in TTCN–3 arithmetic, logical or string operation was a reference pointing to an optional field of a record or set value. The problem was present in case of all TTCN–3 operations that are mapped to infix {cpp} operators.
+* The generated {cpp} code was uncompilable if an operand of a built-in TTCN–3 arithmetic, logical or string operation was a reference pointing to an optional field of a record or set value. The problem was present in case of all TTCN–3 operations that are mapped to infix {cpp} operators.
 
 * The HC logs contained incorrect information about the exit status of the test component if the corresponding UNIX process was terminated by a signal. In this case the log file showed a successful (zero) exit status although the process was aborted by a fatal error. Now the HC distinguishes between normal and abnormal process termination and reports the signal number instead of exit status in the latter case.
 
@@ -2278,9 +2278,9 @@ Released on September 20, 2004.
 
 * The compiler reported memory leak at termination if it encountered a `self.stop` or `mtc.stop` statement in its input module(s). A small memory block was not deallocated during the parsing of these constructs. This mistake had no other harmful side-effects.
 
-* The compiler generated invalid C\++ code if a TTCN–3 `activate` operation was used as a function statement. This construct was introduced in the most recent BNF and the newly written code generator forgot to put a semi-colon at the end of the equivalent {cpp} statement.
+* The compiler generated invalid {cpp} code if a TTCN–3 `activate` operation was used as a function statement. This construct was introduced in the most recent BNF and the newly written code generator forgot to put a semi-colon at the end of the equivalent {cpp} statement.
 
-* If a TTCN–3 or ASN.1 module contained an enumerated type and it was imported into another TTCN–3 module using the undocumented `"light" extension` attribute the C\++ equivalent of the importing module was uncompilable. This option disables the processing of some sections of the imported {cpp} header file from the importing module by using the C preprocessor to reduce the compilation time for large projects. The masked section contains mainly the C\++ equivalent classes of data types and in this case some in-line enumerated conversion functions in another (active) section referred to class members, which were invisible from the {cpp} translation unit of the importing module.
+* If a TTCN–3 or ASN.1 module contained an enumerated type and it was imported into another TTCN–3 module using the undocumented `"light" extension` attribute the {cpp} equivalent of the importing module was uncompilable. This option disables the processing of some sections of the imported {cpp} header file from the importing module by using the C preprocessor to reduce the compilation time for large projects. The masked section contains mainly the {cpp} equivalent classes of data types and in this case some in-line enumerated conversion functions in another (active) section referred to class members, which were invisible from the {cpp} translation unit of the importing module.
 
 * The compiler did not accept the hexadecimal string notation in ASN.1 modules for the values of the ANY type.
 
@@ -2300,7 +2300,7 @@ Released on September 20, 2004.
 
 * The compiler aborted with an internal fatal error during error recovery (i.e. after reporting the error) if an invalid `SEQUENCE` notation was used for an ASN.1 REAL value.
 
-* The generated C\++ code could be uncompilable due to ambiguous function overloads in the class that implements TTCN–3 port types if the support of address type was turned on (i.e. the extension attribute `address` was used in the port type). The problem appeared only if the port type had outgoing messages or signatures and the address type was aliased to a built-in type the {cpp} equivalent class of which had a constructor with `int` parameter (e.g.` integer`, objid and all string types). The reason was a missing explicit cast in a generated function and the {cpp} compiler could not distinguish between component references and address values.
+* The generated {cpp} code could be uncompilable due to ambiguous function overloads in the class that implements TTCN–3 port types if the support of address type was turned on (i.e. the extension attribute `address` was used in the port type). The problem appeared only if the port type had outgoing messages or signatures and the address type was aliased to a built-in type the {cpp} equivalent class of which had a constructor with `int` parameter (e.g.` integer`, objid and all string types). The reason was a missing explicit cast in a generated function and the {cpp} compiler could not distinguish between component references and address values.
 
 * The compiler produced invalid {cpp} code if the to clause was present in a TTCN–3 `raise` port operation. The generated code contained an unnecessary extra closing parenthesis.
 
@@ -2355,7 +2355,7 @@ Released on September 20, 2004.
 
 * The type descriptor needed for the RAW encoding of the boolean type was missing from the run-time environment. This resulted in segmentation fault if a message containing a boolean field was encoded or decoded.
 
-* The compiler accepted an invalid syntax for catching timeout on procedure based ports. The string `catch timeout` was interpreted as a `catch` operation in addition to the standard `PortReference.catch(timeout)` notation. Moreover, the standard syntax produced invalid C\++ output, only the irregular variant resulted in working code. Only the standard syntax is accepted from now, and it is translated to a valid {cpp} code.
+* The compiler accepted an invalid syntax for catching timeout on procedure based ports. The string `catch timeout` was interpreted as a `catch` operation in addition to the standard `PortReference.catch(timeout)` notation. Moreover, the standard syntax produced invalid {cpp} output, only the irregular variant resulted in working code. Only the standard syntax is accepted from now, and it is translated to a valid {cpp} code.
 
 * The compiler returned a misleading successful (zero) exit status if it encountered a general problem with an input file (e.g. the file could not be opened or classified as a TTCN–3 or ASN.1 module).
 
@@ -2485,7 +2485,7 @@ NOTE: Although it is trivial to show a possible successful matching, it is very 
 
 *Fixed bugs*
 
-* If the `-E` (enum-hack) switch was used the compiler generated invalid C\++ code for those ASN.1 enumerated values that are keywords in both TTCN–3 and {cpp} languages (e.g. true).
+* If the `-E` (enum-hack) switch was used the compiler generated invalid {cpp} code for those ASN.1 enumerated values that are keywords in both TTCN–3 and {cpp} languages (e.g. true).
 
 * If an ASN.1 `SEQUENCE`, `SET` or `CHOICE` type definition contained a syntax error the error recovery routines of the compiler did not work properly. Thus the compiler could fail with internal error messages or produce memory leaks later during the semantic analysis.
 
@@ -2532,11 +2532,11 @@ Released on January 23, 2004.
 
 * The compiler issued irrelevant error messages for modified templates if the base template had formal parameter list. The error message complained about missing actual parameter lists, but the actual parameters of the base template shall not be specified according to TTCN–3 syntax.
 
-* The compiler aborted with an internal fatal error if the base template reference of a modified template pointed to a definition other than a template. _•_ The compiler generated invalid C\++ code for some ASN.1 constructs if the enumhack (`-E`) option was used. If an ASN.1 type contained an embedded (unnamed) ENUMERATED type the {cpp} `enum` values were incorrectly prefixed in value assignments for such types.
+* The compiler aborted with an internal fatal error if the base template reference of a modified template pointed to a definition other than a template. _•_ The compiler generated invalid {cpp} code for some ASN.1 constructs if the enumhack (`-E`) option was used. If an ASN.1 type contained an embedded (unnamed) ENUMERATED type the {cpp} `enum` values were incorrectly prefixed in value assignments for such types.
 
-* The compiler crashed with a segmentation fault if an actual parameter of an altstep invocation contained an in-line compound expression. The C\++ mapping of such constructs is still unsolved due to the lack of full semantic analysis. The compiler now continues the parsing and substitutes the unsupported parameter with the comment /* NOT SUPPORTED */ in the output code, which will cause a {cpp} compilation error.
+* The compiler crashed with a segmentation fault if an actual parameter of an altstep invocation contained an in-line compound expression. The {cpp} mapping of such constructs is still unsolved due to the lack of full semantic analysis. The compiler now continues the parsing and substitutes the unsupported parameter with the comment /* NOT SUPPORTED */ in the output code, which will cause a {cpp} compilation error.
 
-* The compiler generated erroneous C\++ code for certain legal TTCN–3 constructs. Let us assume that the name P was used to identify a component variable in component type A. If a function, altstep or testcase had a runs on clause other than A and a formal parameter named `P` the resulting {cpp} code did not compile if parameter `P` was used in the function body. The reason is that the TTCN–3 component type scoping is solved using tricky C preprocessor macros in the generated code. Due to the wrong placement of preprocessor statements different name substitution rules were applied on formal parameter list and function body.
+* The compiler generated erroneous {cpp} code for certain legal TTCN–3 constructs. Let us assume that the name P was used to identify a component variable in component type A. If a function, altstep or testcase had a runs on clause other than A and a formal parameter named `P` the resulting {cpp} code did not compile if parameter `P` was used in the function body. The reason is that the TTCN–3 component type scoping is solved using tricky C preprocessor macros in the generated code. Due to the wrong placement of preprocessor statements different name substitution rules were applied on formal parameter list and function body.
 
 * If the user `unmap` function of a Test Port called Install Handler the event handler could remain active after the deactivation of the port. This could result in unexpected Event Handler calls and warnings when the test component terminated.
 
@@ -2789,7 +2789,7 @@ Released on June 13, 2003.
 
 * The `Makefile` generated by the compiler behaved incorrectly in case of incremental compilation because of a missing empty rule. The build process stopped immediately after the translation of TTCN–3 and ASN.1 modules and the {cpp} compiler was not invoked. The `make` command had to be issued again for the complete build. Moreover, in case of the non-GNU version the build procedure did not stop if the TTCN–3 /ASN.1 compiler returned unsuccessful exit status.
 
-* The `-E` (enum-hack) option generated invalid C\++ identifiers if the enumeration was a C/{cpp} keyword (e.g.`class`).
+* The `-E` (enum-hack) option generated invalid {cpp} identifiers if the enumeration was a C/{cpp} keyword (e.g.`class`).
 
 * The default syntax (i.e. when `WITH SYNTAX` is not defined) of object classes was implemented incorrectly.
 
@@ -3002,7 +3002,7 @@ Released on October 11, 2002.
 
 * The internal string handling routines were rewritten in both TTCN–3 and ASN.1 compilers. The old functions were inefficient, especially when generating large {cpp} output files. The improved TTCN–3 compiler runs significantly (about 4 times, the ASN.1 compiler 2 times) faster on a typical input module.
 
-* The C\++ header and source files generated from TTCN–3 and ASN.1 type definitions were restructured so that the header files became smaller. This means faster compilation (with lower memory usage) from {cpp} to object module in case of the importing modules of those type definitions.
+* The {cpp} header and source files generated from TTCN–3 and ASN.1 type definitions were restructured so that the header files became smaller. This means faster compilation (with lower memory usage) from {cpp} to object module in case of the importing modules of those type definitions.
 
 * The error messages related to templates became more talkative for record/set/SEQUENCE and union/CHOICE types. This helps locating the error when debugging faulty template definitions. The type and field names are incorporated into the error strings.
 
@@ -3059,7 +3059,7 @@ Released on August 16, 2002.
 
 * Event severity TTCN DEBUG was introduced in logger.
 
-* String literals (constants) are translated to static C\++ objects, that is, they are listed in the source file only. In previous version when a string constant was added to or removed from the source TTCN–3 module, the compiler re-generated the {cpp} header file as well and therefore it was necessary to re-compile several {cpp} files.
+* String literals (constants) are translated to static {cpp} objects, that is, they are listed in the source file only. In previous version when a string constant was added to or removed from the source TTCN–3 module, the compiler re-generated the {cpp} header file as well and therefore it was necessary to re-compile several {cpp} files.
 
 *Fixed bugs*
 
@@ -3161,7 +3161,7 @@ Released on February 11 2002.
 
 * The built-in TTCN–3 type verdicttype was not recognized by the compiler. The compiler supported the older syntax that called this type as verdict.
 
-* The compiler generated invalid C\++ code if you used an enumerated type in a record of type construct (within the same module). The resulting {cpp} definitions were in the wrong order.
+* The compiler generated invalid {cpp} code if you used an enumerated type in a record of type construct (within the same module). The resulting {cpp} definitions were in the wrong order.
 
 * The octetstring values that contained ASCII control characters (e.g. newlines or tabulators) were incorrectly logged in ASCII format.
 
@@ -3182,7 +3182,7 @@ Released on December 21 2001.
 
 * The compiler inserts source code information (i.e. the name and line number of TTCN–3 source code) as comments into the equivalent {cpp} code of TTCN–3 functions, test cases and control parts. This feature hopefully can help when locating syntax errors in TTCN–3 code. It still does not work for other definitions (such as constants or templates), but it will be extended in future versions.
 
-* The `-l` command line switch instructs the compiler to include this line information as #line directives instead of C\++ comments. Using this the error messages of the {cpp} compiler will point to the lines of the original TTCN–3 source code. However, be extremely careful with this option because sometimes the error messages can refer to invalid line numbers. In such cases turn this switch off and analyze the {cpp} code manually.
+* The `-l` command line switch instructs the compiler to include this line information as #line directives instead of {cpp} comments. Using this the error messages of the {cpp} compiler will point to the lines of the original TTCN–3 source code. However, be extremely careful with this option because sometimes the error messages can refer to invalid line numbers. In such cases turn this switch off and analyze the {cpp} code manually.
 
 * The TTCN–3 `rem` operator is now supported. In the Test Port API it is mapped to global function `rem`, which takes two arguments, either `INTEGER` or `int` in any combinations.
 
@@ -3288,7 +3288,7 @@ Released on September 17 2001.
 
 *New features*
 
-* The compiler does not overwrite the target C\++ header or source file if its content does not change. This can speed up incremental compilation because the header files usually do not change if the user only modifies a TTCN–3 definition and therefore only one {cpp} module shall be re-compiled. This feature can be disabled by passing the `-f` switch to the compiler.
+* The compiler does not overwrite the target {cpp} header or source file if its content does not change. This can speed up incremental compilation because the header files usually do not change if the user only modifies a TTCN–3 definition and therefore only one {cpp} module shall be re-compiled. This feature can be disabled by passing the `-f` switch to the compiler.
 
 * Non-standard conversion functions `oct2char` and `char2oct` were introduced.
 
@@ -3352,11 +3352,11 @@ Released on August 1 2001.
 
 *Fixed bugs*
 
-* Some C\++ templates of Base Library generated erroneous {cpp} code.
+* Some {cpp} templates of Base Library generated erroneous {cpp} code.
 
 * The bug in Main Controller that caused some map operations to fail was fixed.
 
-* C/C\++ keywords that are not keywords in TTCN–3 are now translated to valid {cpp} identifiers, i.e. the compiler appends a trailing underscore character to them.
+* C/{cpp} keywords that are not keywords in TTCN–3 are now translated to valid {cpp} identifiers, i.e. the compiler appends a trailing underscore character to them.
 
 * C style comments longer than 16 kbytes in TTCN–3 modules caused the compiler to fail during translation.
 
@@ -3537,9 +3537,9 @@ Log event subtypes were introduced and the generated codes were updated to use t
 [[version-1-7-pl0]]
 == Version 1.7.pl0
 
-* Test Port classes as well as C\++ classes of user defined data types are put into a {cpp} namespace that corresponds to the TTCN–3 module. (INCOMPATIBLE)
+* Test Port classes as well as {cpp} classes of user defined data types are put into a {cpp} namespace that corresponds to the TTCN–3 module. (INCOMPATIBLE)
 
-* The C\++ equivalents of TTCN–3 and ASN.1 enumerated values were moved into the scope of the {cpp} class that implements the enumerated type. The enum-hack option became obsolete. (INCOMPATIBLE)
+* The {cpp} equivalents of TTCN–3 and ASN.1 enumerated values were moved into the scope of the {cpp} class that implements the enumerated type. The enum-hack option became obsolete. (INCOMPATIBLE)
 
 * The {cpp} enumerated type that describes the selected field of a TTCN–3 union or ASN.1 CHOICE type was moved into the scope of the value class. The naming rules of the possible enumerated values have changed too. (INCOMPATIBLE)
 
@@ -3640,7 +3640,7 @@ No changes.
 
 * The procedure based ports are now supported with an enhanced Test Port API. (ADDITION)
 
-* The C\++ code generated by the compiler has changed for record of, set of and enumerated types. These are not realized as {cpp} template classes any more, but as regular {cpp} classes. These changes should not cause any incompatibilities in properly written test ports.
+* The {cpp} code generated by the compiler has changed for record of, set of and enumerated types. These are not realized as {cpp} template classes any more, but as regular {cpp} classes. These changes should not cause any incompatibilities in properly written test ports.
 
 * The parameter type and/or return type of some helper functions used for enumerated types has been changed from `int` to `enum`. This may require explicit casting in some Test Ports. (INCOMPATIBLE)
 

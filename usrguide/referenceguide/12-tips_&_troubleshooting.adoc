@@ -13,7 +13,7 @@ The type aliasing is implemented in the test executor, but it translates this TT
 
 `typedef MyType MyAlternativeName;`
 
-The limitation of the C typedef is that the C\++ compiler cannot distinguish between the original and alias name in polymorphism (i.e. the identically named functions with parameter type `MyType` and `MyAlternativeName` are treated as same). That is, if you define a port type that allows the sending or receiving both of the original and aliased type, the generated {cpp} code cannot be compiled because the Test Port class contains two identical send/receive function.
+The limitation of the C typedef is that the {cpp} compiler cannot distinguish between the original and alias name in polymorphism (i.e. the identically named functions with parameter type `MyType` and `MyAlternativeName` are treated as same). That is, if you define a port type that allows the sending or receiving both of the original and aliased type, the generated {cpp} code cannot be compiled because the Test Port class contains two identical send/receive function.
 
 As a work-around to this problem you can repeat the definition of the original type using the alternative name instead of type aliasing. In this case two differently named, but identical classes will be generated and the polymorphism problem will not occur.
 
