@@ -2986,19 +2986,19 @@ OCTETSTRING unichar2oct(const UNIVERSAL_CHARSTRING& invalue)
 CHARSTRING get_stringencoding(const OCTETSTRING& encoded_value)
 {
   if (!encoded_value.lengthof()) return CHARSTRING("<unknown>");
-  unsigned int i, j, length = encoded_value.lengthof();
+  unsigned int i, length = encoded_value.lengthof();
   const unsigned char* strptr = (const unsigned char*)encoded_value;
-  for (i = 0, j = 0; UTF8_BOM[i++] == strptr[j++] && i < sizeof (UTF8_BOM););
+  for (i = 0; i < sizeof (UTF8_BOM) && i < length && UTF8_BOM[i] == strptr[i] ; i++);
   if (i == sizeof (UTF8_BOM) && sizeof(UTF8_BOM) <= length) return "UTF-8";
   //UTF-32 shall be tested before UTF-16 !!!
-  for (i = 0, j = 0; UTF32BE_BOM[i++] == strptr[j++] && i < sizeof (UTF32BE_BOM););
+  for (i = 0; i < sizeof (UTF32BE_BOM) && i < length && UTF32BE_BOM[i] == strptr[i]; i++);
   if (i == sizeof (UTF32BE_BOM) && sizeof (UTF32BE_BOM) <= length ) return "UTF-32BE";
-  for (i = 0, j = 0; UTF32LE_BOM[i++] == strptr[j++] && i < sizeof (UTF32LE_BOM););
+  for (i = 0; i < sizeof (UTF32LE_BOM) && i < length && UTF32LE_BOM[i] == strptr[i]; i++);
   if (i == sizeof (UTF32LE_BOM) && sizeof (UTF32LE_BOM) <= length) return "UTF-32LE";
   //UTF-32 shall be tested before UTF-16 !!!
-  for (i = 0, j = 0; UTF16BE_BOM[i++] == strptr[j++] && i < sizeof (UTF16BE_BOM););
+  for (i = 0; i < sizeof (UTF16BE_BOM) && i < length && UTF16BE_BOM[i] == strptr[i];  i++);
   if (i == sizeof (UTF16BE_BOM) && sizeof (UTF16BE_BOM) <= length) return "UTF-16BE";
-  for (i = 0, j = 0; UTF16LE_BOM[i++] == strptr[j++] && i < sizeof (UTF16LE_BOM););
+  for (i = 0; i < sizeof (UTF16LE_BOM) && i < length && UTF16LE_BOM[i] == strptr[i]; i++);
   if (i == sizeof (UTF16LE_BOM) && sizeof (UTF16LE_BOM) <= length) return "UTF-16LE";
   if (is_ascii (encoded_value) == CharCoding::ASCII) {
     return "ASCII";
