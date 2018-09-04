@@ -266,7 +266,7 @@ The compiler accepts `altsteps` containing only an `[else]` branch. This is not 
 
 The compiler realizes TTCN–3 `interleave` statements using a different approach than it is described in section 7.5 of <<13-references.adoc#_1, [1]>>. The externally visible behavior of the generated code is equivalent to that of the canonical mapping, but our algorithm has the following advantages:
 
-* Loop constructs `for`, `while` and `do-whil`e loops are accepted and supported without any restriction in `interleave` statements. The transformation of statements is done in a lower level than the TTCN–3 language, which does not restrict the embedded loops.
+* Loop constructs `for`, `while` and `do-while` loops are accepted and supported without any restriction in `interleave` statements. The transformation of statements is done in a lower level than the TTCN–3 language, which does not restrict the embedded loops.
 * Statements `activate`, `deactivate` and `stop` can also be used within `interleave`. The execution of these statements is atomic so we did not see the reason why the standard forbids them.
 * The size of our generated code is linear in contrast to the exponential code growth of the canonical algorithm. In other words, the C++ equivalent of every embedded statement appears exactly once in the output.
 * The run-time realization does not require any extra operating system resources, such as multi-threading.
@@ -718,7 +718,7 @@ Syntax:
 decode_base64(in charstring str) return octetstring
 ----
 
-The function `decode_base64 (in charstring str) return octetstring` converts a chartstring `str` encoded in Base64 to an octetrstring. The octetstring will contain the decoded Base64 string of `str`.
+The function `decode_base64 (in charstring str) return octetstring` converts a charstring `str` encoded in Base64 to an octetstring. The octetstring will contain the decoded Base64 string of `str`.
 
 Example:
 
@@ -1172,7 +1172,7 @@ Mappings are given for each source type separately. Several mapping targets may 
 
 The following transformation rules may apply to the automatic conversion between the messages of the external and internal interfaces of a dual-faced port:
 
-* No conversion. Applicable to any message type, this is a type preserving mapping, no value conversion is performed. Source and target types must be identical. This mapping does not have any options. For example, control or status indication massages may transparently be conveyed between the external and the internal interfaces.Keyword used in attribute `user` of port type definition: `simple`.
+* No conversion. Applicable to any message type, this is a type preserving mapping, no value conversion is performed. Source and target types must be identical. This mapping does not have any options. For example, control or status indication massages may transparently be conveyed between the external and the internal interfaces. Keyword used in attribute `user` of port type definition: `simple`.
 * Message discarding. This rule means that messages of the given source type will not be forwarded to the opposite interface. Thus, there is no destination type, which must be indicated by the not used symbol (-). This mapping does not have any options. For example, incoming status indication massages of the external interface may be omitted on the internal interface. Keyword used in attribute `user` of port type definition: `discard`.
 * Conversion using the built-in codecs. Here, a corresponding encoding or decoding subroutine of the built-in codecs (for example RAW, TEXT or BER) is invoked. The conversion and error handling options are specified with the same syntax as used for the encoding/decoding functions, see section <<attribute-syntax, Attribute Syntax>>. Here, source type corresponds to input type and target type corresponds to output type of the encoding. Keyword used in attribute `user` of port type definition: `encode` or `decode`; either followed by an optional `errorbehavior`.
 * Function or external function. The transformation rule may be described by an (external) function referenced by the mapping. The function must have the attribute `extension` specifying one of the prototypes given in section <<encoder-decoder-function-prototypes, Encoder/decoder Function Prototypes>>. The incoming and the outgoing type of the function must be equal to the source and target type of the mapping, respectively. The function may be written in TTCN-3, C++ or generated automatically by the compiler. This mapping does not have any options. Keyword used in attribute `user` of port type definition: `function`.
@@ -1206,7 +1206,7 @@ The following rules may be used with more than one target when there is a slidin
 * an (external) function with prototype `sliding` is invoked;
 * decoding a structured message (keyword `decode`)
 
-Above rules imply that the source type of this mapping be either `octetstring` or `charstring`. The run-time environment maintains a separate buffer for each connection of the dual-faced port. Whenever data arrives to the buffer, the conversion rules are applied on the buffer in the same order as given in the attribute. If one of the rules succeeds (that is, the function returns `0` or decoding is completed without any error) the outcome of the conversion will appear on the destination side. If the buffer still contains data after successful decoding, the conversion is attempted again to get the next message.If one of the rules indicates that the data in the buffer is insufficient to get an entire message (the function returns `2 INCOMPLETE_MESSAGE` or decoding fails with error code `ET_INCOMPL_MSG`), then the decoding is interrupted until the next fragment arrives in the buffer.If all conversion rules fail (the function returns `1 NOT_MY_TYPE` or decoding fails with any other error code than `ET_INCOMPL_MSG`), dynamic test case error occurs.
+Above rules imply that the source type of this mapping be either `octetstring` or `charstring`. The run-time environment maintains a separate buffer for each connection of the dual-faced port. Whenever data arrives to the buffer, the conversion rules are applied on the buffer in the same order as given in the attribute. If one of the rules succeeds (that is, the function returns `0` or decoding is completed without any error) the outcome of the conversion will appear on the destination side. If the buffer still contains data after successful decoding, the conversion is attempted again to get the next message. If one of the rules indicates that the data in the buffer is insufficient to get an entire message (the function returns `2 INCOMPLETE_MESSAGE` or decoding fails with error code `ET_INCOMPL_MSG`), then the decoding is interrupted until the next fragment arrives in the buffer. If all conversion rules fail (the function returns `1 NOT_MY_TYPE` or decoding fails with any other error code than `ET_INCOMPL_MSG`), dynamic test case error occurs.
 
 [[encoder-decoder-function-prototypes]]
 === Encoder/decoder Function Prototypes
@@ -1396,7 +1396,7 @@ Differences from the new method:
 
 * each codec has its own rules for defining `encode` and `variant` attributes;
 * a type can only have one `encode` attribute (if more than one is defined, then only the last one is considered), however, it can have `variant` attributes that belong to other codecs (this can make determining the default codec tricky);
-* ASN.1 types automatically have `BER`, `JSON`, `PER` (see section <<PER-encoding, PER encoding and decoding through user defined functions>>), and `XML` (if the compiler option -a is set) encoding, however the method of setting a default codec (for the predefined functions `encvalue`, `decvalue`, encvalue_unichar, `decvalue_unichar`, for `decmatch` templates, and for the `@decoded` modifier) is different (see section <<setting-the-default-codec-for-asn-1-types, Setting the default codec for ASN.1 types>>);
+* ASN.1 types automatically have `BER`, `JSON`, `PER` (see section <<PER-encoding, PER encoding and decoding through user defined functions>>), and `XML` (if the compiler option -a is set) encoding, however the method of setting a default codec (for the predefined functions `encvalue`, `decvalue`, `encvalue_unichar`, `decvalue_unichar`, for `decmatch` templates, and for the `@decoded` modifier) is different (see section <<setting-the-default-codec-for-asn-1-types, Setting the default codec for ASN.1 types>>);
 * encoding-specific `variant` attributes are not supported(e.g.: `variant "XML"."untagged"`);
 * the parameters `encoding_info/decoding_info` and `dynamic_encoding` of predefined functions `encvalue`, `decvalue`, `encvalue_unichar` and `decvalue_unichar` are ignored;
 * the `setencode` operation is not supported;
@@ -2840,7 +2840,7 @@ Description: The encoder is able to calculate the encoded length of one or sever
 
 If the offset is present, it is added to or subtracted from (the operation specified in the attribute is performed) the calculated length during encoding. During decoding, the offset is subtracted from or added to (the opposite operation to the one specified in the attribute is performed) the decoded value of the length field.
 
-NOTE: The length is expressed in units defined by the attribute UNIT The default unit is octet. The length field should be a TTCN–3 `integer` or `union` type. Special union containing only integer fields can be used for variable length field. It must not be used with `LENGTHINDEX`. The length field can be included in to the sum of the lengths of multiple fields (e.g.` lengthField` + `field2` + `field3`). The `union` field is NOT selected by the encoder. So the suitable field must be selected before encoding! The fields included in the length computing need not be continuous.
+NOTE: The length is expressed in units defined by the attribute UNIT The default unit is octet. The length field should be a TTCN–3 `integer` or `union` type. Special union containing only integer fields can be used for variable length field. It must not be used with `LENGTHINDEX`. The length field can be included in to the sum of the lengths of multiple fields (e.g. `lengthField` + `field2` + `field3`). The `union` field is NOT selected by the encoder. So the suitable field must be selected before encoding! The fields included in the length computing need not be continuous.
 
 Examples:
 [source]
@@ -3182,7 +3182,7 @@ Can be used with: `record` or `set`.
 
 Description: The purpose of the attribute `TAG` is to identify specific values in certain fields of the `set`, `record` elements or `union` choices. When the `TAG` is specified to a `record` or a `set`, the presence of the given element can be identified at decoding. When the `TAG` belongs to a `union`, the union member can be identified at decoding. The attribute is a list of `field_identifications`. Each `field_identification` consists of a record, set or union field name and a `presence_indicator` expression separated by a comma (,). `Presence_indicators` are of form `<key> = <constant>` or `{ <key1> = <constant1>, <key2> = <constant2>, … <keyN> = <constantN> }` where each key is a field(.nestedField) of the `record`, `set` or `union` and each constant is a TTCN–3 constant expression (e.g.` 22`, `’25’O` or `’1001101’B`).There is a special presence_indicator: `OTHERWISE`. This indicates the default union member in a union when the TAG belongs to union.
 
-NOTE: `TAG` works on non-optional fields of a record as well.It is recommended to use the attributes `CROSSTAG` or `PRESENCE` leading to more effective decoding.
+NOTE: `TAG` works on non-optional fields of a record as well. It is recommended to use the attributes `CROSSTAG` or `PRESENCE` leading to more effective decoding.
 
 Examples:
 [source]
@@ -3378,7 +3378,7 @@ type record InnerRec {
 }
 
 // Note: decoding a value of type InnerRec alone does not force any of the
-// fields mentioned in the variants below to be omitted 
+// fields mentioned in the variants below to be omitted
 
 type record OuterRec1 {
   integer f1,
@@ -3590,7 +3590,7 @@ const BIT7align c_yourstring:=’0101’B
 
 *BOOLEAN*
 
-Coding: The `boolean` value `true` coded as ’1’B,the `boolean` value `false` coded as ’0’B.If `FIELDLENGTH` is specified, the given number of ones (`true`) or zeros (`false`) is coded. If the decoded bitfield is zero the decoded value will be false otherwise true.The default `FIELDLENGTH` for `boolean` type is 1.
+Coding: The `boolean` value `true` coded as ’1’B,the `boolean` value `false` coded as ’0’B.If `FIELDLENGTH` is specified, the given number of ones (`true`) or zeros (`false`) is coded. If the decoded bitfield is zero the decoded value will be false otherwise true. The default `FIELDLENGTH` for `boolean` type is 1.
 
 Attributes allowed: `FIELDLENGTH (0)`, `N bit` (0).
 
@@ -3978,7 +3978,7 @@ Coding: The characters are first converted to UTF-8 format, and the resulting oc
 
 The RAW encoding of a `universal` `charstring` value with no non-ASCII characters is equal to the RAW encoding of a `charstring` containing the same characters (with the same attributes).
 
-If the length of the UTF-8 encoded `universal` `charstring` is shorter than the specified `FIELDLENGTH`, aligning is governed by the attribute `ALIGN`.The default `FIELDLENGTH` for the `universal` `charstring` type is `variable`. The `FIELDLENGTH` is measured in UTF-8 octets.
+If the length of the UTF-8 encoded `universal` `charstring` is shorter than the specified `FIELDLENGTH`, aligning is governed by the attribute `ALIGN`. The default `FIELDLENGTH` for the `universal` `charstring` type is `variable`. The `FIELDLENGTH` is measured in UTF-8 octets.
 
 Attributes allowed:
 
@@ -4714,7 +4714,7 @@ The "name as "" (i.e. freetext is empty) form designates that the TTCN-3 field 
 
 The "name as capitalized" and "name as uncapitalized" forms identify that only the first character of the related TTCN3 type or field name shall be changed to lower case or upper case respectively.
 
-The "name as lowercased“ and"name as uppercased" forms identify that each character of the related TTCN3 type or field name shall be changed to lower case or upper case respectively.
+The "name as lowercased“ and "name as uppercased" forms identify that each character of the related TTCN3 type or field name shall be changed to lower case or upper case respectively.
 
 The "name all as capitalized", "name all as uncapitalized", "name as lowercased" and "name as uppercased" forms has effect on all direct fields of the TTCN-3 definition to which the encoding instruction is applied (e.g. in case of a structured type definition to the names of its fields in a non-recursive way but not to the name of the definition itself and not to the name of fields embedded to other fields).
 
@@ -4852,7 +4852,7 @@ where `changeCase` has been defined as seen <<changeCase, here>>.
 
 Applicable to (TTCN-3) Enumeration types generated for XSD enumeration facets where the enumeration base is a string type, and the name(s) of one or more TTCN-3 enumeration values are different from the related XSD enumeration item. Also applies to XSD.Boolean types, instances of XSD.Boolean types.
 
-Description When _name_ is used, it shall be generated for the differing enumerated values only. The _name_ shall be the identifier of the TTCN-3 enumerated value the given instruction relates to. If the difference is that the first character of the XSD enumeration item value is a capital letter while the identifier of the related TTCN-3 enumeration value starts with a small letter, the "text `__name__' as capitalized" form shall be used. Otherwise, _freetext_ shall contain the value of the related XSD enumeration item.If the first characters of all XSD enumeration items are capital letters, while the names of all related TTCN-3 enumeration values are identical to them except the case of their first characters, the "text all as capitalized" form shall be used.The encoding instruction designates that the encoder shall use _freetext_ or the capitalized name(s) when encoding the TTCN-3 enumeration value(s) and vice versa.When the text encoding attribute is used with XSD.Boolean types, the decoder shall accept all four possible XSD boolean values and map the received value 1 to the TTCN-3 boolean value *true* and the received value 0 to the TTCN-3 boolean value *false*. When the text encoding attribute is used on the instances of the XSD.Boolean type, the encoder shall encode the TTCN3 values according to the encoding attribute (i.e. *true* as 1 and *false* as 0).
+Description When _name_ is used, it shall be generated for the differing enumerated values only. The _name_ shall be the identifier of the TTCN-3 enumerated value the given instruction relates to. If the difference is that the first character of the XSD enumeration item value is a capital letter while the identifier of the related TTCN-3 enumeration value starts with a small letter, the "text `__name__' as capitalized" form shall be used. Otherwise, _freetext_ shall contain the value of the related XSD enumeration item. If the first characters of all XSD enumeration items are capital letters, while the names of all related TTCN-3 enumeration values are identical to them except the case of their first characters, the "text all as capitalized" form shall be used. The encoding instruction designates that the encoder shall use _freetext_ or the capitalized name(s) when encoding the TTCN-3 enumeration value(s) and vice versa. When the text encoding attribute is used with XSD.Boolean types, the decoder shall accept all four possible XSD boolean values and map the received value 1 to the TTCN-3 boolean value *true* and the received value 0 to the TTCN-3 boolean value *false*. When the text encoding attribute is used on the instances of the XSD.Boolean type, the encoder shall encode the TTCN3 values according to the encoding attribute (i.e. *true* as 1 and *false* as 0).
 
 Comment For XSD.Boolean types, either of the forms "text 'true' as "1" and "text 'false' as '0' implies the other, i.e. Titan considers that both have been specified. Together, these two forms have the same effect as "text" (detailed in the last paragraph of Description).
 
@@ -7239,7 +7239,7 @@ A number of checks are performed during the build to ensure consistency of the T
 #endif
 ----
 * There is a preprocessor macro defined in the makefile which identifies the platform (operating system). It can be one of SOLARIS (for Solaris 6), SOLARIS8 (for Solaris 8 and above), LINUX, WIN32. Platform-dependent code can be isolated using conditional compilation based on these macro definitions.
-* If the TITAN runtime was compiled with the GNU Compiler Collection (GCC), the macro GCC_VERSION is defined by the TITAN runtime headers. Its value is 10000 * (GCC major version) + 100 * (GCC minor version). For example, for GCC 3.4.6, GCC_VERSION will be defined to the value 30400; for GCC 4.1.2 it will be 40100. The value of this macro is compared during C++ compilation to the version of the compiler that was used to build TITAN itself to ensure consistency of the build. The GCC patch level is ignored for this comparison; code generated by a compiler with the same major and minor version is considered compatible.User-written code can use this value if it requires a certain version of the compiler. Alternatively, the predefined macros of the GNU compiler (*GNUC* and *GNUC_MINOR*) can be used for this purpose.
+* If the TITAN runtime was compiled with the GNU Compiler Collection (GCC), the macro GCC_VERSION is defined by the TITAN runtime headers. Its value is 10000 * (GCC major version) + 100 * (GCC minor version). For example, for GCC 3.4.6, GCC_VERSION will be defined to the value 30400; for GCC 4.1.2 it will be 40100. The value of this macro is compared during C++ compilation to the version of the compiler that was used to build TITAN itself to ensure consistency of the build. The GCC patch level is ignored for this comparison; code generated by a compiler with the same major and minor version is considered compatible. User-written code can use this value if it requires a certain version of the compiler. Alternatively, the predefined macros of the GNU compiler (*GNUC* and *GNUC_MINOR*) can be used for this purpose.
 * If the TITAN runtime was built with the SunPro compiler, the compiler itself defines the __SUNPRO_CC macro. Please consult the compiler documentation for the possible values.
 
 == Negative Testing
@@ -7937,7 +7937,7 @@ UpdateKeyword ::= "@update"
 
 The `@update` statement can be used in functions, altsteps, testcases and control parts. Per the BNF productions in the TTCN-3 standard, the `UpdateStatement' defined here would be in the FunctionStatement and ControlStatement productions.
 
-The @update statement replaces the erroneous attributes of the value or template referenced by ExtendedIdentifier with the erroneous attributes specified in WithAttribList. The statement overwrites any erroneous attributes the value or template may have had before. If the `with' attributes are omitted, then the statement removes all the value’s or template’s erroneous attributes.
+The `@update` statement replaces the erroneous attributes of the value or template referenced by ExtendedIdentifier with the erroneous attributes specified in WithAttribList. The statement overwrites any erroneous attributes the value or template may have had before. If the `with' attributes are omitted, then the statement removes all the value’s or template’s erroneous attributes.
 
 Example:
 [source]
@@ -8618,7 +8618,7 @@ Limitations of implementation in TITAN:
 
 * The `connect to` port clause is unsupported
 * Translation of `address` types is unsupported
-* `address`, `map param` and `unmap para`m clauses are unsupported
+* `address`, `map param` and `unmap param` clauses are unsupported
 * The elements of the list of `form` and `to` clauses of the `in` and `out` messages are separated with a colon (:) instead of a comma (,)
 
 Restrictions:

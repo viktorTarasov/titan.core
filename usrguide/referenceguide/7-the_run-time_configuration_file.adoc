@@ -479,7 +479,7 @@ LoggerPlugins := { JUnitLogger := "libjunitlogger2" }
 *.JUnitLogger.filename_stem := "MyJunitLogFile"
 *.JUnitLogger.testsuite_name := "myJUnitTest"
 ----
-* The results are included in testcases (between <testcase> tags) within a testsuite (between <testsuite> tags) like the JUnitLogger butthe testsuite has attributes other than "name" which contains the name of the testsuite.
+* The results are included in testcases (between <testcase> tags) within a testsuite (between <testsuite> tags) like the JUnitLogger but the testsuite has attributes other than "name" which contains the name of the testsuite.
 +
 New attributes:
 +
@@ -657,7 +657,7 @@ The table below contains the list of available metacharacters in alphabetical or
 
 The outcome of substitution will result in the name of the log file. It may resolve either to a simple file name or to an absolute or relative path. The relative pathnames are always related to the current working directory of the executable tests in single mode or that of the Host Controller in parallel mode, respectively. If the pathname contains one or more nonexistent directories, those directories (and/or subdirectories) will be automatically created with permissions `0755` before the log file is opened.
 
-If the given string or the result of substitution is empty, no log file will be created and only console logging will be performed regardless the setting of `FileMask`. Empty log files will not be created when logging to files is completely disabled (i.e.` FileMask` is set to `LOG_NOTHING`) even if the value of `LogFile` would yield a valid file name.
+If the given string or the result of substitution is empty, no log file will be created and only console logging will be performed regardless the setting of `FileMask`. Empty log files will not be created when logging to files is completely disabled (i.e. `FileMask` is set to `LOG_NOTHING`) even if the value of `LogFile` would yield a valid file name.
 
 In parallel mode the user must ensure that the resulting log file names are unique for every component. Otherwise, if several components try to write into the same log file, the contents of the log will be unpredictable. The uniqueness is automatically provided if the host name (`%h`) and the component reference (`%r`) or the process ID (`%p`) is included in the file name.
 
@@ -716,7 +716,7 @@ It is also possible to apply the filtering on selected logger plugins of a compo
 .First level (coarse) log filtering
 [cols=",",options="header",]
 |===
-|Logging categories |Symbolic constantfootnote:[In order to be compatible with older configuration files, the following symbolic constants are also recognized: TTCN_ERROR, TTCN_WARNING, TTCN_PORTEVENT, TTCN_TIMEROP, TTCN_VERDICTOP, TTCN_DEFAULTOP, TTCN_TESTCASE, TTCN_ACTION, TTCN_USER, TTCN_FUNCTION, TTCN_STATISTICS, TTCN_PARALLEL, TTCN_EXECUTOR, TTCN_MATCHING and TTCN_DEBUG.These constants have the same meaning as their counterparts without the prefix TTCN_.]
+|Logging categories |Symbolic constantfootnote:[In order to be compatible with older configuration files, the following symbolic constants are also recognized: TTCN_ERROR, TTCN_WARNING, TTCN_PORTEVENT, TTCN_TIMEROP, TTCN_VERDICTOP, TTCN_DEFAULTOP, TTCN_TESTCASE, TTCN_ACTION, TTCN_USER, TTCN_FUNCTION, TTCN_STATISTICS, TTCN_PARALLEL, TTCN_EXECUTOR, TTCN_MATCHING and TTCN_DEBUG. These constants have the same meaning as their counterparts without the prefix TTCN_.]
 |TTCN–3 action(…) statements(No subcategory is implemented) |`ACTION`
 |Debug messages in Test Ports and external functions(For subcategories see Table 15) |`DEBUG`
 |Default operations (`activate`, `deactivate`, `return`)(For subcategories see Table 16) |`DEFAULTOP`
@@ -895,9 +895,9 @@ In both single and parallel modes some log events are created before processing 
 
 === `SourceInfoFormat`
 
-Option `SourceInfoFormat` controls the appearance of the location information for the test events. The location information refers to a position in theTTCN–3 source code. It consists of the name of the TTCN–3 file and the line number separated by a colon character (:). Optionally, it may contain the name of the TTCN–3 entity (function, testcase, etc.) in parentheses that the source line belongs to. See also the option <<LogEntityName, `LogEntityName`>> below.
+Option `SourceInfoFormat` controls the appearance of the location information for the test events. The location information refers to a position in the TTCN–3 source code. It consists of the name of the TTCN–3 file and the line number separated by a colon character (:). Optionally, it may contain the name of the TTCN–3 entity (function, testcase, etc.) in parentheses that the source line belongs to. See also the option <<LogEntityName, `LogEntityName`>> below.
 
-The option can take one of the three possible values: `None`, `Single` and `Stack`. In case of `Single`, the location information of the TTCN–3 statement is logged that is currently being executed. When `Stack` is used the entire TTCN–3 call stack is logged. The logged information starts from the outermost control part or testcase and ends with the innermost TTCN–3 statement. An arrow (that is, the character sequence ->) is used as separator between the stack frames. The value `None` disables the printing of location information.The default value for `SourceInfoFormat` is `None`.
+The option can take one of the three possible values: `None`, `Single` and `Stack`. In case of `Single`, the location information of the TTCN–3 statement is logged that is currently being executed. When `Stack` is used the entire TTCN–3 call stack is logged. The logged information starts from the outermost control part or testcase and ends with the innermost TTCN–3 statement. An arrow (that is, the character sequence ->) is used as separator between the stack frames. The value `None` disables the printing of location information. The default value for `SourceInfoFormat` is `None`.
 
 The location information is placed in each line of the log file between the event type or timestamp and the textual description of the event.
 
@@ -935,7 +935,7 @@ It is also possible to limit the file size on selected logger plugins of a compo
 [[LogFileNumber]]
 === `LogFileNumber`
 
-Option `LogFileNumber`, a positive integer, sets the the maximum number of log files (fragments) kept. If the log file number limit is reached, the oldest log file of the component will be deleted and logging continues in the next log fragment file.
+Option `LogFileNumber`, a positive integer, sets the maximum number of log files (fragments) kept. If the log file number limit is reached, the oldest log file of the component will be deleted and logging continues in the next log fragment file.
 
 The default value is 1, meaning that the number of log files equals one.
 
