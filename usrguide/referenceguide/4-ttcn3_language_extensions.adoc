@@ -266,7 +266,7 @@ The compiler accepts `altsteps` containing only an `[else]` branch. This is not 
 
 The compiler realizes TTCN–3 `interleave` statements using a different approach than it is described in section 7.5 of <<13-references.adoc#_1, [1]>>. The externally visible behavior of the generated code is equivalent to that of the canonical mapping, but our algorithm has the following advantages:
 
-* Loop constructs `for`, `while` and `do-whil`e loops are accepted and supported without any restriction in `interleave` statements. The transformation of statements is done in a lower level than the TTCN–3 language, which does not restrict the embedded loops.
+* Loop constructs `for`, `while` and `do-while` loops are accepted and supported without any restriction in `interleave` statements. The transformation of statements is done in a lower level than the TTCN–3 language, which does not restrict the embedded loops.
 * Statements `activate`, `deactivate` and `stop` can also be used within `interleave`. The execution of these statements is atomic so we did not see the reason why the standard forbids them.
 * The size of our generated code is linear in contrast to the exponential code growth of the canonical algorithm. In other words, the C++ equivalent of every embedded statement appears exactly once in the output.
 * The run-time realization does not require any extra operating system resources, such as multi-threading.
@@ -718,7 +718,7 @@ Syntax:
 decode_base64(in charstring str) return octetstring
 ----
 
-The function `decode_base64 (in charstring str) return octetstring` converts a chartstring `str` encoded in Base64 to an octetrstring. The octetstring will contain the decoded Base64 string of `str`.
+The function `decode_base64 (in charstring str) return octetstring` converts a charstring `str` encoded in Base64 to an octetstring. The octetstring will contain the decoded Base64 string of `str`.
 
 Example:
 
@@ -1396,7 +1396,7 @@ Differences from the new method:
 
 * each codec has its own rules for defining `encode` and `variant` attributes;
 * a type can only have one `encode` attribute (if more than one is defined, then only the last one is considered), however, it can have `variant` attributes that belong to other codecs (this can make determining the default codec tricky);
-* ASN.1 types automatically have `BER`, `JSON`, `PER` (see section <<PER-encoding, PER encoding and decoding through user defined functions>>), and `XML` (if the compiler option -a is set) encoding, however the method of setting a default codec (for the predefined functions `encvalue`, `decvalue`, encvalue_unichar, `decvalue_unichar`, for `decmatch` templates, and for the `@decoded` modifier) is different (see section <<setting-the-default-codec-for-asn-1-types, Setting the default codec for ASN.1 types>>);
+* ASN.1 types automatically have `BER`, `JSON`, `PER` (see section <<PER-encoding, PER encoding and decoding through user defined functions>>), and `XML` (if the compiler option -a is set) encoding, however the method of setting a default codec (for the predefined functions `encvalue`, `decvalue`, `encvalue_unichar`, `decvalue_unichar`, for `decmatch` templates, and for the `@decoded` modifier) is different (see section <<setting-the-default-codec-for-asn-1-types, Setting the default codec for ASN.1 types>>);
 * encoding-specific `variant` attributes are not supported(e.g.: `variant "XML"."untagged"`);
 * the parameters `encoding_info/decoding_info` and `dynamic_encoding` of predefined functions `encvalue`, `decvalue`, `encvalue_unichar` and `decvalue_unichar` are ignored;
 * the `setencode` operation is not supported;
@@ -7937,7 +7937,7 @@ UpdateKeyword ::= "@update"
 
 The `@update` statement can be used in functions, altsteps, testcases and control parts. Per the BNF productions in the TTCN-3 standard, the `UpdateStatement' defined here would be in the FunctionStatement and ControlStatement productions.
 
-The @update statement replaces the erroneous attributes of the value or template referenced by ExtendedIdentifier with the erroneous attributes specified in WithAttribList. The statement overwrites any erroneous attributes the value or template may have had before. If the `with' attributes are omitted, then the statement removes all the value’s or template’s erroneous attributes.
+The `@update` statement replaces the erroneous attributes of the value or template referenced by ExtendedIdentifier with the erroneous attributes specified in WithAttribList. The statement overwrites any erroneous attributes the value or template may have had before. If the `with' attributes are omitted, then the statement removes all the value’s or template’s erroneous attributes.
 
 Example:
 [source]

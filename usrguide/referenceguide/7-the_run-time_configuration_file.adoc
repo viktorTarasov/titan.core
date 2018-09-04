@@ -479,7 +479,7 @@ LoggerPlugins := { JUnitLogger := "libjunitlogger2" }
 *.JUnitLogger.filename_stem := "MyJunitLogFile"
 *.JUnitLogger.testsuite_name := "myJUnitTest"
 ----
-* The results are included in testcases (between <testcase> tags) within a testsuite (between <testsuite> tags) like the JUnitLogger butthe testsuite has attributes other than "name" which contains the name of the testsuite.
+* The results are included in testcases (between <testcase> tags) within a testsuite (between <testsuite> tags) like the JUnitLogger but the testsuite has attributes other than "name" which contains the name of the testsuite.
 +
 New attributes:
 +
@@ -657,7 +657,7 @@ The table below contains the list of available metacharacters in alphabetical or
 
 The outcome of substitution will result in the name of the log file. It may resolve either to a simple file name or to an absolute or relative path. The relative pathnames are always related to the current working directory of the executable tests in single mode or that of the Host Controller in parallel mode, respectively. If the pathname contains one or more nonexistent directories, those directories (and/or subdirectories) will be automatically created with permissions `0755` before the log file is opened.
 
-If the given string or the result of substitution is empty, no log file will be created and only console logging will be performed regardless the setting of `FileMask`. Empty log files will not be created when logging to files is completely disabled (i.e.` FileMask` is set to `LOG_NOTHING`) even if the value of `LogFile` would yield a valid file name.
+If the given string or the result of substitution is empty, no log file will be created and only console logging will be performed regardless the setting of `FileMask`. Empty log files will not be created when logging to files is completely disabled (i.e. `FileMask` is set to `LOG_NOTHING`) even if the value of `LogFile` would yield a valid file name.
 
 In parallel mode the user must ensure that the resulting log file names are unique for every component. Otherwise, if several components try to write into the same log file, the contents of the log will be unpredictable. The uniqueness is automatically provided if the host name (`%h`) and the component reference (`%r`) or the process ID (`%p`) is included in the file name.
 
@@ -935,7 +935,7 @@ It is also possible to limit the file size on selected logger plugins of a compo
 [[LogFileNumber]]
 === `LogFileNumber`
 
-Option `LogFileNumber`, a positive integer, sets the the maximum number of log files (fragments) kept. If the log file number limit is reached, the oldest log file of the component will be deleted and logging continues in the next log fragment file.
+Option `LogFileNumber`, a positive integer, sets the maximum number of log files (fragments) kept. If the log file number limit is reached, the oldest log file of the component will be deleted and logging continues in the next log fragment file.
 
 The default value is 1, meaning that the number of log files equals one.
 
