@@ -2988,18 +2988,31 @@ CHARSTRING get_stringencoding(const OCTETSTRING& encoded_value)
   if (!encoded_value.lengthof()) return CHARSTRING("<unknown>");
   unsigned int i, length = encoded_value.lengthof();
   const unsigned char* strptr = (const unsigned char*)encoded_value;
-  for (i = 0; i < sizeof (UTF8_BOM) && i < length && UTF8_BOM[i] == strptr[i] ; i++);
-  if (i == sizeof (UTF8_BOM) && sizeof(UTF8_BOM) <= length) return "UTF-8";
-  //UTF-32 shall be tested before UTF-16 !!!
-  for (i = 0; i < sizeof (UTF32BE_BOM) && i < length && UTF32BE_BOM[i] == strptr[i]; i++);
-  if (i == sizeof (UTF32BE_BOM) && sizeof (UTF32BE_BOM) <= length ) return "UTF-32BE";
-  for (i = 0; i < sizeof (UTF32LE_BOM) && i < length && UTF32LE_BOM[i] == strptr[i]; i++);
-  if (i == sizeof (UTF32LE_BOM) && sizeof (UTF32LE_BOM) <= length) return "UTF-32LE";
-  //UTF-32 shall be tested before UTF-16 !!!
-  for (i = 0; i < sizeof (UTF16BE_BOM) && i < length && UTF16BE_BOM[i] == strptr[i];  i++);
-  if (i == sizeof (UTF16BE_BOM) && sizeof (UTF16BE_BOM) <= length) return "UTF-16BE";
-  for (i = 0; i < sizeof (UTF16LE_BOM) && i < length && UTF16LE_BOM[i] == strptr[i]; i++);
-  if (i == sizeof (UTF16LE_BOM) && sizeof (UTF16LE_BOM) <= length) return "UTF-16LE";
+  if (length >= 1) {
+    switch (strptr[0]) {
+    case 0xef:
+      for (i = 1; i < sizeof (UTF8_BOM) && i < length && UTF8_BOM[i] == strptr[i] ; i++);
+      if (i == sizeof (UTF8_BOM) && sizeof(UTF8_BOM) <= length) return "UTF-8";
+      break;
+    case 0xfe:
+      for (i = 1; i < sizeof (UTF16BE_BOM) && i < length && UTF16BE_BOM[i] == strptr[i];  i++);
+      if (i == sizeof (UTF16BE_BOM) && sizeof (UTF16BE_BOM) <= length) return "UTF-16BE";
+      break;
+    case 0xff:
+      for (i = 1; i < sizeof (UTF32LE_BOM) && i < length && UTF32LE_BOM[i] == strptr[i]; i++);
+      if (i == sizeof (UTF32LE_BOM) && sizeof (UTF32LE_BOM) <= length) return "UTF-32LE";
+      for (i = 1; i < sizeof (UTF16LE_BOM) && i < length && UTF16LE_BOM[i] == strptr[i]; i++);
+      if (i == sizeof (UTF16LE_BOM) && sizeof (UTF16LE_BOM) <= length) return "UTF-16LE";
+      break;
+    case 0x00:
+      for (i = 1; i < sizeof (UTF32BE_BOM) && i < length && UTF32BE_BOM[i] == strptr[i]; i++);
+      if (i == sizeof (UTF32BE_BOM) && sizeof (UTF32BE_BOM) <= length ) return "UTF-32BE";
+      break;
+    default:
+      break;
+    }
+  }
+  
   if (is_ascii (encoded_value) == CharCoding::ASCII) {
     return "ASCII";
   }  
