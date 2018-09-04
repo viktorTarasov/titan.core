@@ -310,6 +310,7 @@ namespace Ttcn {
     virtual bool has_single_expr();
     virtual void set_code_section(
       GovernedSimple::code_section_t p_code_section);
+    void chk_immutability();
     /** Generates the C++ equivalent of the reference (including the parameter
      * list and sub-references) as an access to a constant resource.
      */

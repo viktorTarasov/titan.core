@@ -414,55 +414,9 @@ namespace Common {
   void Value::chk_expr_immutability() {
     switch (valuetype) {
       case V_REFD: {/**< referenced */
-        int asstype = get_reference()->get_refd_assignment()->get_asstype();
-        switch (asstype) {
-          case Assignment::A_TYPE:           /**< type */
-          case Assignment::A_CONST:          /**< value (const) */
-          case Assignment::A_UNDEF:          /**< undefined/undecided (ASN.1) */
-          case Assignment::A_ERROR:          /**< erroneous; the kind cannot be deduced (ASN.1) */
-          case Assignment::A_OC:             /**< information object class (ASN.1) */
-          case Assignment::A_OBJECT:         /**< information object (ASN.1) */
-          case Assignment::A_OS:             /**< information object set (ASN.1) */
-          case Assignment::A_VS:             /**< value set (ASN.1) */
-          case Assignment::A_EXT_CONST:      /**< external constant (TTCN-3) */
-          case Assignment::A_MODULEPAR:      /**< module parameter (TTCN-3) */
-          case Assignment::A_MODULEPAR_TEMP: /**< template module parameter */
-          case Assignment::A_VAR:            /**< variable (TTCN-3) */
-          case Assignment::A_VAR_TEMPLATE:   /**< template variable: dynamic template (TTCN-3) */
-          case Assignment::A_TIMER:          /**< timer (TTCN-3) */
-          case Assignment::A_PORT:           /**< port (TTCN-3) */
-          case Assignment::A_ALTSTEP:        /**< altstep (TTCN-3) */
-          case Assignment::A_TESTCASE:       /**< testcase Assignment::(TTCN-3) */
-          case Assignment::A_PAR_TIMER:      /**< formal parameter (timer) (TTCN-3) */
-          case Assignment::A_PAR_PORT:        /**< formal parameter (port) (TTCN-3) */
-            break;
-          case Assignment::A_TEMPLATE:
-            if(get_reference()->get_parlist())
-              get_reference()->get_parlist()->chk_immutability();
-            break;
-          case Assignment::A_FUNCTION:       /**< function without return type (TTCN-3) */
-          case Assignment::A_FUNCTION_RVAL:  /**< function that returns a value (TTCN-3) */
-          case Assignment::A_FUNCTION_RTEMP: /**< function that returns a template (TTCN-3) */
-          case Assignment::A_EXT_FUNCTION:   /**< external function without return type (TTCN-3) */
-          case Assignment::A_EXT_FUNCTION_RVAL:  /**< ext. func that returns a value (TTCN-3) */
-          case Assignment::A_EXT_FUNCTION_RTEMP: /**< ext. func that returns a template (TTCN-3) */
-            warning("Function invocation '%s' may change the actual snapshot.",
-              get_reference()->get_dispname().c_str());
-            break;
-          case Assignment::A_PAR_VAL:        /**< formal parameter (value) (TTCN-3) */
-          case Assignment::A_PAR_VAL_IN:     /**< formal parameter (in value) (TTCN-3) */
-          case Assignment::A_PAR_VAL_OUT:    /**< formal parameter (out value) (TTCN-3) */
-            // TODO: @fuzzy INOUT parameter is not valid
-          case Assignment::A_PAR_VAL_INOUT:  /**< formal parameter (inout value) (TTCN-3) */
-          case Assignment::A_PAR_TEMPL_IN:   /**< formal parameter ([in] template) (TTCN-3) */
-          case Assignment::A_PAR_TEMPL_OUT:  /**< formal parameter (out template) (TTCN-3) */
-          case Assignment::A_PAR_TEMPL_INOUT:/**< formal parameter (inout template) (TTCN-3) */
-            if (get_reference()->get_refd_assignment()->get_eval_type() == FUZZY_EVAL)
-              warning("Fuzzy parameter '%s' may change (during) the actual snapshot.",
-                get_reference()->get_dispname().c_str());
-            break;
-          default:
-            FATAL_ERROR("Value::chk_expr_immutability()");
+        Ttcn::Ref_base* ttcn_ref = dynamic_cast<Ttcn::Ref_base*>(u.ref.ref);
+        if (ttcn_ref != NULL) {
+          ttcn_ref->chk_immutability();
         }
         break;}
       case V_EXPR: /**< expressions */
