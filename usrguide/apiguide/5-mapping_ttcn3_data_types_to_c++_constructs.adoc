@@ -3,20 +3,20 @@
 :table-number: 7
 :toc:
 
-The TTCN–3 language elements of the test suite are individually mapped into more or less equivalent C\++ constructs. The data types are mapped to {cpp} classes, the test cases become {cpp} functions, and so on. In order to write a Test Port, it is inevitable to be familiar with the internal representation format of TTCN–3 data types and values. This section gives an overview about the data types and their equivalent {cpp} constructs.
+The TTCN–3 language elements of the test suite are individually mapped into more or less equivalent {cpp} constructs. The data types are mapped to {cpp} classes, the test cases become {cpp} functions, and so on. In order to write a Test Port, it is inevitable to be familiar with the internal representation format of TTCN–3 data types and values. This section gives an overview about the data types and their equivalent {cpp} constructs.
 
 [[mapping-of-names-and-identifiers]]
 == Mapping of Names and Identifiers
 
-In order to identify the TTCN–3 language elements in the generated C\++ program properly, the names of test suite are translated to {cpp} identifiers according to the following simple rules.
+In order to identify the TTCN–3 language elements in the generated {cpp} program properly, the names of test suite are translated to {cpp} identifiers according to the following simple rules.
 
-If the TTCN–3 identifier does not contain any underscore (_) character, its equivalent C\++ identifier will be the same. For example, the TTCN–3 variable `MyVar` will be translated to a {cpp} variable called `MyVar`.
+If the TTCN–3 identifier does not contain any underscore (_) character, its equivalent {cpp} identifier will be the same. For example, the TTCN–3 variable `MyVar` will be translated to a {cpp} variable called `MyVar`.
 
-If the TTCN–3 identifier contains one or more underscore characters, each underscore character will be duplicated in the C\++ identifier. So the TTCN–3 identifier `My_Long_Name` will be mapped to a {cpp} identifier called `My\__Long__Name`.
+If the TTCN–3 identifier contains one or more underscore characters, each underscore character will be duplicated in the {cpp} identifier. So the TTCN–3 identifier `My_Long_Name` will be mapped to a {cpp} identifier called `My\__Long__Name`.
 
-The idea behind this name mapping is that we may freely use the C\++ identifiers containing one underscore character in the generated code and in the Test Ports as well. Otherwise name clashes can always happen because the name space of TTCN–3 and {cpp} is identical. Furthermore, the generated C\++ language elements fulfill the condition that the scope of a translated {cpp} identifier is identical as the scope of the original TTCN–3 identifier.
+The idea behind this name mapping is that we may freely use the {cpp} identifiers containing one underscore character in the generated code and in the Test Ports as well. Otherwise name clashes can always happen because the name space of TTCN–3 and {cpp} is identical. Furthermore, the generated {cpp} language elements fulfill the condition that the scope of a translated {cpp} identifier is identical as the scope of the original TTCN–3 identifier.
 
-The identifiers that are keywords of C or C\++ but not keywords in TTCN–3 are mapped to themselves, but a single underscore character is appended at the end (for example `typedef` becomes `typedef_`). The same rule applies to the all-uppercase identifiers that are used in the Base Library: identifier `INTEGER` in TTCN–3 becomes `INTEGER_` in {cpp}, `TRUE` footnote:[The built-in `verdict` and `boolean` constants in TTCN–3 shall be written with all lowercase letters, such as true or pass. Although previous compiler versions have accepted `TRUE` or `PASS` as well, these words are treated by the compiler as regular identifiers as specified in the standard.] is mapped to `TRUE_`, etc.
+The identifiers that are keywords of C or {cpp} but not keywords in TTCN–3 are mapped to themselves, but a single underscore character is appended at the end (for example `typedef` becomes `typedef_`). The same rule applies to the all-uppercase identifiers that are used in the Base Library: identifier `INTEGER` in TTCN–3 becomes `INTEGER_` in {cpp}, `TRUE` footnote:[The built-in `verdict` and `boolean` constants in TTCN–3 shall be written with all lowercase letters, such as true or pass. Although previous compiler versions have accepted `TRUE` or `PASS` as well, these words are treated by the compiler as regular identifiers as specified in the standard.] is mapped to `TRUE_`, etc.
 
 Here is the complete list (in alphabetical order) of the identifiers that are handled in such special way:asm, auto, bitand, bitor, bool, break, case, class, compl, continue, delete, double, enum, explicit, export, friend, inline, int, ischosen, long, main, mutable, namespace, new, operator, private, protected, public, register, short, signed, static, stderr, stdin, stdout, struct, switch, this, throw, try, typedef, typeid, typename, unsigned, using, virtual, void, volatile, ADDRESS, BITSTRING, BOOLEAN, CHAR, CHARSTRING, COMPONENT, DEFAULT, ERROR, FAIL, FALSE, FLOAT, HEXSTRING, INCONC, INTEGER, NONE, OBJID, OCTETSTRING, PASS, PORT, TIMER, TRUE, VERDICTTYPE.
 
@@ -32,12 +32,12 @@ The compiler generates a {cpp} namespace for every TTCN–3 and ASN.1 module. Al
 
 The definitions of the TTCN–3 Base Library do not use any namespace.
 
-When accessing a C\++ entity that belongs to a different module than the referring Test Port or external function is in the reference has to be prefixed with the namespace of the referenced module. For example, to access the {cpp} class that realizes type `MyType` defined in `MyModule1` from a Test Port that belongs to module `MyModule2` the reference shall be written as `MyModule1::MyType`.
+When accessing a {cpp} entity that belongs to a different module than the referring Test Port or external function is in the reference has to be prefixed with the namespace of the referenced module. For example, to access the {cpp} class that realizes type `MyType` defined in `MyModule1` from a Test Port that belongs to module `MyModule2` the reference shall be written as `MyModule1::MyType`.
 
 [[predefined-ttcn-3-data-types]]
 == Predefined TTCN–3 Data Types
 
-There are some basic data types in TTCN–3 that have no equivalent data types in language C/C\++ (for example bitstring, verdicttype). Other types have {cpp} equivalent, but the TTCN–3 executor must know whether a variable has a valid value or not because sending an unbound value must result in a dynamic test case error. Thus, in the TTCN–3 Base Library all basic data types of TTCN–3 were implemented as {cpp} classes. This section describes the member functions of these classes.
+There are some basic data types in TTCN–3 that have no equivalent data types in language C/{cpp} (for example bitstring, verdicttype). Other types have {cpp} equivalent, but the TTCN–3 executor must know whether a variable has a valid value or not because sending an unbound value must result in a dynamic test case error. Thus, in the TTCN–3 Base Library all basic data types of TTCN–3 were implemented as {cpp} classes. This section describes the member functions of these classes.
 
 === `Integer`
 
@@ -298,7 +298,7 @@ void TTCN_Runtime::setverdict(const VERDICTTYPE&);
 verdicttype TTCN_Runtime::getverdict();
 ----
 
-These functions are the C\++ equivalents of TTCN–3 `setverdict` and `getverdict` operations. Use them only if your Test Port or {cpp} function encounters a low-level failure, but it can continue its normal operation (that is, error recovery is not necessary).
+These functions are the {cpp} equivalents of TTCN–3 `setverdict` and `getverdict` operations. Use them only if your Test Port or {cpp} function encounters a low-level failure, but it can continue its normal operation (that is, error recovery is not necessary).
 
 Other operators (global functions):
 [source]
@@ -1085,7 +1085,7 @@ boolean operator!=(component component_value,
 
 Empty `record` and `set` types are not real built-in types in TTCN–3, but the {cpp} realization of these types also differs from regular records or sets. The empty types are almost identical to each other, only their names are different. That is why we treat them as predefined types.
 
-Each empty type is defined in a C\++ class, which is generated by the compiler. Using separate classes enables us to differentiate among them in {cpp} type polymorphism. For example, several empty types can be defined as incoming or outgoing types on the same TTCN–3 port type.
+Each empty type is defined in a {cpp} class, which is generated by the compiler. Using separate classes enables us to differentiate among them in {cpp} type polymorphism. For example, several empty types can be defined as incoming or outgoing types on the same TTCN–3 port type.
 
 Let us consider the following TTCN–3 type definition as an example:
 [source, subs="+quotes"]
@@ -1140,7 +1140,7 @@ The user-defined compound data types are implemented in {cpp} classes. These cla
 
 === Record and Set Type Constructs
 
-The TTCN–3 type constructs `record` and `set` are mapped in an identical way to C\++. There will be a {cpp} class for each record type in the generated code. This class builds up the record from its fields.footnote:[This section deals with the record and set types that have at least one field. See <<empty-types, Empty Types>> for the {cpp} mapping of empty record and set types.] The fields can be either basic or compound types.
+The TTCN–3 type constructs `record` and `set` are mapped in an identical way to {cpp}. There will be a {cpp} class for each record type in the generated code. This class builds up the record from its fields.footnote:[This section deals with the record and set types that have at least one field. See <<empty-types, Empty Types>> for the {cpp} mapping of empty record and set types.] The fields can be either basic or compound types.
 
 Let us consider the following example type definition. The types `t1` and `t2` can be arbitrary.
 [source]
@@ -1296,7 +1296,7 @@ Using the value of an unbound `union` variable for anything will cause dynamic t
 
 ==== The anytype
 
-The TTCN-3 anytype is implemented as a C\++ class named anytype. The class is generated only if an actual anytype access is present in the module. It has the same interface as any other {cpp} class generated for a union, with a few differences:
+The TTCN-3 anytype is implemented as a {cpp} class named anytype. The class is generated only if an actual anytype access is present in the module. It has the same interface as any other {cpp} class generated for a union, with a few differences:
 
 If a field is a built-in type or the address type, the name used in `union_selection_type` is the name of the runtime class implementing the type (usually the name of the type in all uppercase).
 
@@ -1399,7 +1399,7 @@ boolean operator!=(null_type null_value, const t2& other_value); // Not equal
 
 ==== Pre-generated `record of` and `set of` constructs
 
-The C\++ classes for the `record of` and `set of` constructs of most predefined TTCN-3 types are pre-generated and part of the TITAN runtime. Only a type alias ({cpp} `typedef`) is generated for instances of these types declared in TTCN-3 and ASN.1 modules. There is a class with regular memory allocation and one with optimized memory allocation pre-generated for each type. These classes are located in the `PreGenRecordOf` namespace.
+The {cpp} classes for the `record of` and `set of` constructs of most predefined TTCN-3 types are pre-generated and part of the TITAN runtime. Only a type alias ({cpp} `typedef`) is generated for instances of these types declared in TTCN-3 and ASN.1 modules. There is a class with regular memory allocation and one with optimized memory allocation pre-generated for each type. These classes are located in the `PreGenRecordOf` namespace.
 
 .Pre-generated classes for `record of`/`set of` predefined types
 
@@ -1541,7 +1541,7 @@ Using the value of an unbound enumerated variable for anything will cause dynami
 
 === The `address` Type
 
-The special TTCN–3 data type `address` is represented in C\++ as if it was a regular data type. The name of the equivalent {cpp} class is `ADDRESS`. If it is an alias to another (either built-in or user-defined) type then a {cpp} `typedef` is used.
+The special TTCN–3 data type `address` is represented in {cpp} as if it was a regular data type. The name of the equivalent {cpp} class is `ADDRESS`. If it is an alias to another (either built-in or user-defined) type then a {cpp} `typedef` is used.
 
 == Predefined Functions
 
@@ -1549,7 +1549,7 @@ Annex C of link:https://www.etsi.org/deliver/etsi_es/201800_201899/20187301/04.0
 
 The prototypes for these functions can be found in `*$TTCN3_DIR/include/Addfunc.hh*`, but for easier navigation we list them also in the present document.
 
-The majority of these functions have more than one polymorphic version: when appropriate, one of them takes literal (built-in) C\++ types as arguments instead of the objects of equivalent {cpp} classes. For instance, if the incoming argument is stored in an `int` variable in your {cpp} code, you should not construct a temporary object of class `INTEGER` because passing an `int` is faster and produces smaller binary code. Similarly, the returned type is also literal when it is possible.
+The majority of these functions have more than one polymorphic version: when appropriate, one of them takes literal (built-in) {cpp} types as arguments instead of the objects of equivalent {cpp} classes. For instance, if the incoming argument is stored in an `int` variable in your {cpp} code, you should not construct a temporary object of class `INTEGER` because passing an `int` is faster and produces smaller binary code. Similarly, the returned type is also literal when it is possible.
 
 === `Integer` to character
 
@@ -1935,6 +1935,6 @@ The class representing the exceptions of a signature (remote procedure) is simil
 |`void log() const` |Puts the contents of the exception into the log.
 |===================================================================================================================================================================================================================================
 
-If an exception type is a user-defined type the field name will be constructed from the C\++ namespace name of the module that the exception type resides in and the name of the {cpp} class that realizes the exception type. The two identifiers are glued together using a single underscore character. Please note that the namespace name is always present in the identifiers, even if the exception type is defined in the same module as the signature.
+If an exception type is a user-defined type the field name will be constructed from the {cpp} namespace name of the module that the exception type resides in and the name of the {cpp} class that realizes the exception type. The two identifiers are glued together using a single underscore character. Please note that the namespace name is always present in the identifiers, even if the exception type is defined in the same module as the signature.
 
 For example, if exception type `My_Record` is defined in module `My_Module` the respective field access functions will be named as `My\__Module_My__Record_field` and the associated enum value will be `MyProc_exception::ALT_My__Module_My__Record`.

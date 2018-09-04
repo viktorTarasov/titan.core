@@ -13,9 +13,9 @@ The main components are the following:
 
 * The *Test Port(s)*, which facilitate the communication between the TTCN–3 Test System and the System Under Test (SUT).
 
-The generated C\++ modules as well as the Test Ports should be compiled to binary object code and linked together with the Base Library using a traditional {cpp} compiler.
+The generated {cpp} modules as well as the Test Ports should be compiled to binary object code and linked together with the Base Library using a traditional {cpp} compiler.
 
-All parts, except the protocol specific Test Ports, are included in the binary package of the Test Executor. The Test Executor is a protocol and platform independent tool that can be easily adapted to any kind of protocols by writing the appropriate Test Port. The generated C\++ code is exactly the same on all platforms, provided that the pre-compiled Base Library that matches the operating system and {cpp} compiler is used. The Test Port may use operating system calls or external library functions for sending or receiving messages towards System Under Test so it may become platform dependent.
+All parts, except the protocol specific Test Ports, are included in the binary package of the Test Executor. The Test Executor is a protocol and platform independent tool that can be easily adapted to any kind of protocols by writing the appropriate Test Port. The generated {cpp} code is exactly the same on all platforms, provided that the pre-compiled Base Library that matches the operating system and {cpp} compiler is used. The Test Port may use operating system calls or external library functions for sending or receiving messages towards System Under Test so it may become platform dependent.
 
 Writing a Test Port is not an easy task for the first time, but the Compiler alleviates it by generating an empty skeleton for each function to be written. This skeleton is also useful for checking the correctness of an existing test suite because the Executable Test Program can be linked with this empty Test Port. In this case the resulting program actually does nothing, but the successful linking means that no modules or functions are missing from the test suite.
 
