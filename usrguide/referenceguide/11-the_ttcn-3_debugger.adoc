@@ -4,7 +4,7 @@
 
 The TTCN-3 debugger is a feature in TITAN, which allows the user to pause (halt) the execution of a TTCN-3 program and print (or in some cases overwrite) information about the current state of the program.
 
-The compiler option `–n` activates the debugger and augments the generated C++ code to store debug information and to allow the addition of breakpoints at runtime. For convenience this option is available for `ttcn3_makefilegen` as well.
+The compiler option `–n` activates the debugger and augments the generated {cpp} code to store debug information and to allow the addition of breakpoints at runtime. For convenience this option is available for `ttcn3_makefilegen` as well.
 
 == Gathered information
 

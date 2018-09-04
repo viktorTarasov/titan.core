@@ -901,7 +901,7 @@ The option can take one of the three possible values: `None`, `Single` and `Stac
 
 The location information is placed in each line of the log file between the event type or timestamp and the textual description of the event.
 
-This option works only if the command line option `–L` is passed to the compiler (see <<6-compiling_ttcn3_and_asn1_modules.adoc#command-line-syntax, here>>). This feature is useful for debugging new TTCN–3 code or for understanding the traces of complex control constructs. If the location information is not generated into the C++ code the executable tests run faster, which can be more important when doing performance tests.
+This option works only if the command line option `–L` is passed to the compiler (see <<6-compiling_ttcn3_and_asn1_modules.adoc#command-line-syntax, here>>). This feature is useful for debugging new TTCN–3 code or for understanding the traces of complex control constructs. If the location information is not generated into the {cpp} code the executable tests run faster, which can be more important when doing performance tests.
 
 NOTE: The reception of messages or procedure calls can only occur while the run-time environment is taking a new snapshot. A new snapshot is taken when the testcomponent is evaluating a stand-alone receiving operation, an `alt` construct or a standalone `altstep` invocation. Thus, the location information of the incoming messages or calls points to the first line of the above statements. The log event belonging to a TTCN–3 operation can be the extraction of a message from the port queue and not the reception of an incoming message.
 

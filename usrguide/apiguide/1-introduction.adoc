@@ -2,7 +2,7 @@
 
 == Overview
 
-This document describes the TITAN API on C\++ level. It is intended for users who write test port implementation, external function implementation in language C++ and want to use the available resources of TITAN.
+This document describes the TITAN API on C\++ level. It is intended for users who write test port implementation, external function implementation in language {cpp} and want to use the available resources of TITAN.
 
 Detailed information can be found on the following topics:
 
@@ -10,13 +10,13 @@ Detailed information can be found on the following topics:
 
 * built-in encoding and decoding functions;
 
-* TTCN-3 data mapping to C++ constructs;
+* TTCN-3 data mapping to {cpp} constructs;
 
 * troubleshooting for common TTCN-3 related issues and problems.
 
 == Target Groups
 
-This document is intended for advanced users of the TITAN API on C++ level.
+This document is intended for advanced users of the TITAN API on {cpp} level.
 
 == Typographical Conventions
 

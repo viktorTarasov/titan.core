@@ -13,7 +13,7 @@ The type aliasing is implemented in the test executor, but it translates this TT
 
 `typedef MyType MyAlternativeName;`
 
-The limitation of the C typedef is that the C\++ compiler cannot distinguish between the original and alias name in polymorphism (i.e. the identically named functions with parameter type `MyType` and `MyAlternativeName` are treated as same). That is, if you define a port type that allows the sending or receiving both of the original and aliased type, the generated C++ code cannot be compiled because the Test Port class contains two identical send/receive function.
+The limitation of the C typedef is that the C\++ compiler cannot distinguish between the original and alias name in polymorphism (i.e. the identically named functions with parameter type `MyType` and `MyAlternativeName` are treated as same). That is, if you define a port type that allows the sending or receiving both of the original and aliased type, the generated {cpp} code cannot be compiled because the Test Port class contains two identical send/receive function.
 
 As a work-around to this problem you can repeat the definition of the original type using the alternative name instead of type aliasing. In this case two differently named, but identical classes will be generated and the polymorphism problem will not occur.
 
@@ -42,7 +42,7 @@ NOTE: This feature, as preprocessors in general, should be avoided if not absolu
 
 Tips for the `Makefile` generated using the option `-p:`
 
-* All the options for the C precompiler can be specified using the variable `CPPFLAGS_TTCN3`. Do not confuse it with the variable `CPPFLAGS`, which is used on the generated C++ code. If standard TTCN-3 output is needed the flag `-P` has to be added manually to the variable `CPPFLAGS_TTCN3`. The resulting `ttcn` files can be compiled with any TTCN-3 compiler (if other special language extensions are not used). Globally used preprocessor symbols can be defined here with the option `-D`. For example to compile the debug version of a project a `DEBUG` symbol can be specified with `-DDEBUG`.
+* All the options for the C precompiler can be specified using the variable `CPPFLAGS_TTCN3`. Do not confuse it with the variable `CPPFLAGS`, which is used on the generated {cpp} code. If standard TTCN-3 output is needed the flag `-P` has to be added manually to the variable `CPPFLAGS_TTCN3`. The resulting `ttcn` files can be compiled with any TTCN-3 compiler (if other special language extensions are not used). Globally used preprocessor symbols can be defined here with the option `-D`. For example to compile the debug version of a project a `DEBUG` symbol can be specified with `-DDEBUG`.
 
 * Files which are included in the `.ttcnpp` source files (with `#include`) and do not need to be translated can be specified in the `TTCN3_INCLUDES` variable. These files will be checked for modification when the `.ttcnpp` files are processed by `make`; any modification will trigger preprocessing of all the `.ttcnpp` files and the recompilation of the affected modules. If the suffix of a file is `.ttcnin` the Makefile Generator will add it to `TTCN3_INCLUDES`; in all other cases the file has to be added manually.
 
@@ -251,9 +251,9 @@ with { extension "prototype (convert) decode(XER:XER_EXTENDED)" }
 }
 ----
 
-The "prototype (convert)" attribute instructs the compiler to generate a C++ implementation for each of the external functions (see section 4.22.4 above). This permits the use of the encoding/decoding functions directly from TTCN-3 code.
+The "prototype (convert)" attribute instructs the compiler to generate a {cpp} implementation for each of the external functions (see section 4.22.4 above). This permits the use of the encoding/decoding functions directly from TTCN-3 code.
 
-In case more sophisticated processing is required (or some form of pre/postprocessing), the encoder/decoder functions can be reimplemented in C++. The basic functionality provided by the compiler can be used as a starting point.
+In case more sophisticated processing is required (or some form of pre/postprocessing), the encoder/decoder functions can be reimplemented in {cpp}. The basic functionality provided by the compiler can be used as a starting point.
 
 NOTE: In this case all the ``with'' attributes in the example above must be removed from the external function declaration (otherwise the compiler will generate the functions again with the same signature and duplicate symbol errors will appear at link time).
 

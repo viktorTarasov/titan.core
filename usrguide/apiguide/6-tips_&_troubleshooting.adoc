@@ -5,34 +5,34 @@
 Information not fitting in any of the previous chapters is given in this chapter.
 
 [[migrating-existing-c-code-to-the-naming-rules-of-version-1-7]]
-== Migrating Existing C++ Code to the Naming Rules of Version 1.7
+== Migrating Existing {cpp} Code to the Naming Rules of Version 1.7
 
-When using the new naming rulesfootnote:[The new naming rules are used by default; the naming rules can be changed using the compiler command line switch -N.] the compiler generates a C\++ namespace for each TTCN–3 and ASN.1 module. The name of the namespace corresponds to the module. The generated C++ entities of a module are all placed in its namespace; therefore all the test port or protocol module code must use these namespaces.
+When using the new naming rulesfootnote:[The new naming rules are used by default; the naming rules can be changed using the compiler command line switch -N.] the compiler generates a C\++ namespace for each TTCN–3 and ASN.1 module. The name of the namespace corresponds to the module. The generated {cpp} entities of a module are all placed in its namespace; therefore all the test port or protocol module code must use these namespaces.
 
-Rules to follow when writing C++ code:
+Rules to follow when writing {cpp} code:
 
-* When referencing an entity located in a different module its C++ name has to be prefixed with the namespace name of that module.
+* When referencing an entity located in a different module its {cpp} name has to be prefixed with the namespace name of that module.
 
 * A test port class must be placed into the namespace of its module.
 
 * Encoding and decoding functions must be placed into the namespace of the TTCN–3 module in which the external function was defined.
 
-* All C\++ entities have to be placed into namespace. An exception to this may be C++ entities used only locally; these are defined with the keyword `static`.
+* All C\++ entities have to be placed into namespace. An exception to this may be {cpp} entities used only locally; these are defined with the keyword `static`.
 
-* For convenience the `using namespace` directive can be used in C++ source files. It is forbidden to use this directive in header files!
+* For convenience the `using namespace` directive can be used in {cpp} source files. It is forbidden to use this directive in header files!
 
-* C++ enum types are placed in the scope of their value class; enum types have to be prefixed by the C++ name of the value class.footnote:[The enum hack option has become obsolete with the new naming rules.]
+* {cpp} enum types are placed in the scope of their value class; enum types have to be prefixed by the {cpp} name of the value class.footnote:[The enum hack option has become obsolete with the new naming rules.]
 
 [[using-external-c-functions-in-ttcn-3-test-suites]]
-== Using External C++ Functions in TTCN–3 Test Suites
+== Using External {cpp} Functions in TTCN–3 Test Suites
 
-Sometimes standard library functionsfootnote:[C language functions cannot be called directly from TTCN–3; you need at least a wrapper function for them.] are called in the test suite or there is a need for efficiently implemented "bit-crunching" functions in the TTCN–3 ATS. In these cases functions to be called from the test suite can be developed in C++.
+Sometimes standard library functionsfootnote:[C language functions cannot be called directly from TTCN–3; you need at least a wrapper function for them.] are called in the test suite or there is a need for efficiently implemented "bit-crunching" functions in the TTCN–3 ATS. In these cases functions to be called from the test suite can be developed in {cpp}.
 
-There are the standard library functions as well as other libraries in the C++ functions. The logging and error handling facilities of the run-time environment are also available as in case of Test Ports.
+There are the standard library functions as well as other libraries in the {cpp} functions. The logging and error handling facilities of the run-time environment are also available as in case of Test Ports.
 
-Since version 1.4.pl1 the semantic analyzer of the compiler checks the import statements thoroughly. Therefore one cannot use the virtual C++ modules as before: C++ functions must be defined as external functions to be accessible from TTCN–3 modules.
+Since version 1.4.pl1 the semantic analyzer of the compiler checks the import statements thoroughly. Therefore one cannot use the virtual {cpp} modules as before: {cpp} functions must be defined as external functions to be accessible from TTCN–3 modules.
 
-For example, the following definitions make two C++ functions accessible from TTCN–3 module `MyModule` and from any other module that imports `MyModule`.
+For example, the following definitions make two {cpp} functions accessible from TTCN–3 module `MyModule` and from any other module that imports `MyModule`.
 
 [[example-ttcn-3-module-mymodule-ttcn]]
 === Example TTCN–3 Module (MyModule.ttcn)
@@ -49,7 +49,7 @@ module MyModule {
 }
 ----
 
-The compiler will translate those external function definitions to C++ function prototypes in the generated header file `MyModule.hh`:
+The compiler will translate those external function definitions to {cpp} function prototypes in the generated header file `MyModule.hh`:
 
 [source]
 ----
@@ -59,17 +59,17 @@ The compiler will translate those external function definitions to C++ function 
 [...]
 ----
 
-Both pre-defined and user-defined TTCN–3 data types can be used as parameters and/or return types of the C\++ functions. The detailed description of the equivalent C++ classes as well as the name mapping rules are described in chapter <<4-encoding_and_decoding.adoc#xml-encoding-xer,XML Encoding (XER)>>.
+Both pre-defined and user-defined TTCN–3 data types can be used as parameters and/or return types of the C\++ functions. The detailed description of the equivalent {cpp} classes as well as the name mapping rules are described in chapter <<4-encoding_and_decoding.adoc#xml-encoding-xer,XML Encoding (XER)>>.
 
 Using templates as formal parameters in external functions is possible, but not recommended because the API of the classes realizing templates is not documented and subject to change without notice.
 
-The formal parameters of external TTCN–3 functions are mapped to C++ function parameters according to the following table:
+The formal parameters of external TTCN–3 functions are mapped to {cpp} function parameters according to the following table:
 
-.TTCN–3 formal parameters and their C++ equivalents
+.TTCN–3 formal parameters and their {cpp} equivalents
 
 [cols=",",options="header",]
 |==============================================
-|TTCN–3 formal parameter |Its C++ equivalent
+|TTCN–3 formal parameter |Its {cpp} equivalent
 |`[in] MyType myPar` |`const MyType& myPar`
 |`out MyType myPar` |`MyType& myPar`
 |`inout MyType myPar` |`MyType& myPar`
@@ -78,11 +78,11 @@ The formal parameters of external TTCN–3 functions are mapped to C++ function 
 
 NOTE: In versions 1.6.pl3 and earlier the in keyword had an extra meaning in formal parameter lists. According to the TTCN–3 standard the parameter definitions `MyType myPar` and in `MyType myPar` are totally equivalent, but the earlier versions of the compiler distinguished them. Unless the keyword `in` was present the compiler passed the parameter by value (involving a copy constructor call) instead of using a const reference. That is why it was recommended to use an explicit in keyword in parameter lists of external functions.
 
-Due to the strictness of the TTCN–3 semantic analyzer one cannot use C/C++ data types with external functions as formal parameters or return types, only TTCN–3 and ASN.1 data types are allowed. Similarly, one cannot use pointers as parameters or return values because they have no equivalents in TTCN–3 .
+Due to the strictness of the TTCN–3 semantic analyzer one cannot use C/{cpp} data types with external functions as formal parameters or return types, only TTCN–3 and ASN.1 data types are allowed. Similarly, one cannot use pointers as parameters or return values because they have no equivalents in TTCN–3 .
 
-The external functions can be implemented in one or more C\++ source files. The generated header file that contains the prototypes of the external functions shall be included into each C++ source file. This file makes accessible all built-in data types, the user-defined types of the corresponding TTCN–3 module and all available services of the run-time environment (logging, error handling, etc.).
+The external functions can be implemented in one or more C\++ source files. The generated header file that contains the prototypes of the external functions shall be included into each {cpp} source file. This file makes accessible all built-in data types, the user-defined types of the corresponding TTCN–3 module and all available services of the run-time environment (logging, error handling, etc.).
 
-The name, return type and the parameters of the implemented C++ functions must match exactly the generated function prototypes or the compilation will fail. The generated function prototype is in the namespace of the module, therefore the implementation of the function has to be placed in that namespace, too.
+The name, return type and the parameters of the implemented {cpp} functions must match exactly the generated function prototypes or the compilation will fail. The generated function prototype is in the namespace of the module, therefore the implementation of the function has to be placed in that namespace, too.
 [[logging-in-test-ports-or-external-functions]]
 == Logging in Test Ports or External Functions
 
@@ -168,7 +168,7 @@ static void TTCN_Logger::OS_error();
 
 ==== log
 
-The C++ classes of predefined and compound data types are equipped with a member function called `log`. This function puts the actual value of the variable at the end of current buffer. Unbound variables and fields are denoted by the symbol `<unbound>`. The contents of TTCN–3 value objects can be logged only in buffered mode.
+The {cpp} classes of predefined and compound data types are equipped with a member function called `log`. This function puts the actual value of the variable at the end of current buffer. Unbound variables and fields are denoted by the symbol `<unbound>`. The contents of TTCN–3 value objects can be logged only in buffered mode.
 [source, subs="+quotes"]
 void <any TTCN-3 type>::log() const;
 
@@ -201,7 +201,7 @@ Differences between the formats:
 
 The "-" symbol is the NotUsedSymbol which can be used inside compound values, but when logging an unbound value which is not inside a record or record of the TTCN-3 output format of the logger is actually not a legal TTCN-3 value/template because a value or template cannot be set to be unbound. Thus this output format can be copy-pasted from a log file into a ttcn-3 file or to a module parameter value in a configuration file only if it semantically makes sense.
 
-The C++ API extensions to change the logging format: +
+The {cpp} API extensions to change the logging format: +
 A new enum type for the format in TTCN_Logger class:+
 `enum data_log_format_t { LF_LEGACY, LF_TTCN }`; +
 Static functions to get/set the format globally: +
@@ -238,7 +238,7 @@ The above code fragment will produce three lines in the log in the following ord
 `second message`
 `first message`
 
-If the code calls a C++ function that might throw an exception while the logger has an active event buffer care must be taken that event is properly finished during stack unwinding. Otherwise the stack of the logger and the call stack of the program will get out of sync. The following example illustrates the proper usage of buffered mode with exceptions:
+If the code calls a {cpp} function that might throw an exception while the logger has an active event buffer care must be taken that event is properly finished during stack unwinding. Otherwise the stack of the logger and the call stack of the program will get out of sync. The following example illustrates the proper usage of buffered mode with exceptions:
 [source]
 ----
 TTCN_Logger::begin_event(TTCN_DEBUG);
@@ -261,7 +261,7 @@ If a fatal error is encountered in the Test Port, you should call the function `
 [source, subs="+quotes"]
 void TTCN_error(const char *fmt, …);
 
-The parameter `fmt` contains the reason of the error in a NUL terminated character string in the format of a `printf` format string. If necessary, additional values should be passed to `TTCN_error` as specified in the format string. The error handling in the executable test program is implemented using C++ exceptions so the function `TTCN_error` never returns; instead, it throws an exception. The exception value contains an instance of the empty class called `TC_Error`. This exception is normally caught at the end of each test case and module control part. After logging the reason `TTCN_Logger::OS error()` is called. Finally, the verdict is set to error and the test executor performs an error recovery, so it continues the execution with the next test case.
+The parameter `fmt` contains the reason of the error in a NUL terminated character string in the format of a `printf` format string. If necessary, additional values should be passed to `TTCN_error` as specified in the format string. The error handling in the executable test program is implemented using {cpp} exceptions so the function `TTCN_error` never returns; instead, it throws an exception. The exception value contains an instance of the empty class called `TC_Error`. This exception is normally caught at the end of each test case and module control part. After logging the reason `TTCN_Logger::OS error()` is called. Finally, the verdict is set to error and the test executor performs an error recovery, so it continues the execution with the next test case.
 
 It is not recommended to use own error recovery combined with the default method (that is, catching this exception).
 
@@ -271,11 +271,11 @@ The UNIX signals may interrupt the normal execution of programs. This may happen
 
 In the executable test program there are system calls not only in the Base Library, but in Test Ports as well. Since the other Test Ports that you are using may have been written by many developers, one cannot be sure that they are prepared to the effects of signals. So it is recommended to avoid using signals in Test Ports.
 
-== Mixing C and C++ Modules
+== Mixing C and {cpp} Modules
 
-Modules written in C language may be used in the Test Ports. In this case the C header files must be included into the Test Port source code and the object files of the C module must be linked to the executable. Using a C compiler to compile the C modules may lead to errors when linking the modules together. This is because the C and C\++ compilers use different rules for mapping function names to symbol names of the object file to avoid name clashes caused by the C++ polymorphism. There are two possible solutions to solve this problem:
+Modules written in C language may be used in the Test Ports. In this case the C header files must be included into the Test Port source code and the object files of the C module must be linked to the executable. Using a C compiler to compile the C modules may lead to errors when linking the modules together. This is because the C and C\++ compilers use different rules for mapping function names to symbol names of the object file to avoid name clashes caused by the {cpp} polymorphism. There are two possible solutions to solve this problem:
 
-1.  Use the same C++ compiler to compile all of your source code (including C modules).
+1.  Use the same {cpp} compiler to compile all of your source code (including C modules).
 2.  If the first one is impossible (when using a third party software that is available in binary format only), the definitions of the C header file must be put into an `extern "C"` block like this.
 [source]
 ----
@@ -290,4 +290,4 @@ extern "C" {
 #endif
 ----
 
-The latter solution does not work with all C\++ compilers; it was tested on GNU C++ compiler only.
+The latter solution does not work with all C\++ compilers; it was tested on GNU {cpp} compiler only.

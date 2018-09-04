@@ -351,7 +351,7 @@ When a compound type is only used internally or it is never RAW encoded/decoded 
 [[api-0]]
 === API
 
-The C++ Application Programming Interface for RAW encoding and decoding is described in the following. It can be used for example in test port implementation, in external function implementation.
+The {cpp} Application Programming Interface for RAW encoding and decoding is described in the following. It can be used for example in test port implementation, in external function implementation.
 
 [[encoding-0]]
 ==== Encoding

@@ -1,22 +1,22 @@
 [[mapping-ttcn-3-data-types-to-c-constructs]]
-= Mapping TTCN–3 Data Types to C++ Constructs
+= Mapping TTCN–3 Data Types to {cpp} Constructs
 :table-number: 7
 :toc:
 
-The TTCN–3 language elements of the test suite are individually mapped into more or less equivalent C\++ constructs. The data types are mapped to C++ classes, the test cases become C++ functions, and so on. In order to write a Test Port, it is inevitable to be familiar with the internal representation format of TTCN–3 data types and values. This section gives an overview about the data types and their equivalent C++ constructs.
+The TTCN–3 language elements of the test suite are individually mapped into more or less equivalent C\++ constructs. The data types are mapped to {cpp} classes, the test cases become {cpp} functions, and so on. In order to write a Test Port, it is inevitable to be familiar with the internal representation format of TTCN–3 data types and values. This section gives an overview about the data types and their equivalent {cpp} constructs.
 
 [[mapping-of-names-and-identifiers]]
 == Mapping of Names and Identifiers
 
-In order to identify the TTCN–3 language elements in the generated C\++ program properly, the names of test suite are translated to C++ identifiers according to the following simple rules.
+In order to identify the TTCN–3 language elements in the generated C\++ program properly, the names of test suite are translated to {cpp} identifiers according to the following simple rules.
 
-If the TTCN–3 identifier does not contain any underscore (_) character, its equivalent C\++ identifier will be the same. For example, the TTCN–3 variable `MyVar` will be translated to a C++ variable called `MyVar`.
+If the TTCN–3 identifier does not contain any underscore (_) character, its equivalent C\++ identifier will be the same. For example, the TTCN–3 variable `MyVar` will be translated to a {cpp} variable called `MyVar`.
 
-If the TTCN–3 identifier contains one or more underscore characters, each underscore character will be duplicated in the C\++ identifier. So the TTCN–3 identifier `My_Long_Name` will be mapped to a C++ identifier called `My\__Long__Name`.
+If the TTCN–3 identifier contains one or more underscore characters, each underscore character will be duplicated in the C\++ identifier. So the TTCN–3 identifier `My_Long_Name` will be mapped to a {cpp} identifier called `My\__Long__Name`.
 
-The idea behind this name mapping is that we may freely use the C\++ identifiers containing one underscore character in the generated code and in the Test Ports as well. Otherwise name clashes can always happen because the name space of TTCN–3 and C++ is identical. Furthermore, the generated C\++ language elements fulfill the condition that the scope of a translated C++ identifier is identical as the scope of the original TTCN–3 identifier.
+The idea behind this name mapping is that we may freely use the C\++ identifiers containing one underscore character in the generated code and in the Test Ports as well. Otherwise name clashes can always happen because the name space of TTCN–3 and {cpp} is identical. Furthermore, the generated C\++ language elements fulfill the condition that the scope of a translated {cpp} identifier is identical as the scope of the original TTCN–3 identifier.
 
-The identifiers that are keywords of C or C\++ but not keywords in TTCN–3 are mapped to themselves, but a single underscore character is appended at the end (for example `typedef` becomes `typedef_`). The same rule applies to the all-uppercase identifiers that are used in the Base Library: identifier `INTEGER` in TTCN–3 becomes `INTEGER_` in C++, `TRUE` footnote:[The built-in `verdict` and `boolean` constants in TTCN–3 shall be written with all lowercase letters, such as true or pass. Although previous compiler versions have accepted `TRUE` or `PASS` as well, these words are treated by the compiler as regular identifiers as specified in the standard.] is mapped to `TRUE_`, etc.
+The identifiers that are keywords of C or C\++ but not keywords in TTCN–3 are mapped to themselves, but a single underscore character is appended at the end (for example `typedef` becomes `typedef_`). The same rule applies to the all-uppercase identifiers that are used in the Base Library: identifier `INTEGER` in TTCN–3 becomes `INTEGER_` in {cpp}, `TRUE` footnote:[The built-in `verdict` and `boolean` constants in TTCN–3 shall be written with all lowercase letters, such as true or pass. Although previous compiler versions have accepted `TRUE` or `PASS` as well, these words are treated by the compiler as regular identifiers as specified in the standard.] is mapped to `TRUE_`, etc.
 
 Here is the complete list (in alphabetical order) of the identifiers that are handled in such special way:asm, auto, bitand, bitor, bool, break, case, class, compl, continue, delete, double, enum, explicit, export, friend, inline, int, ischosen, long, main, mutable, namespace, new, operator, private, protected, public, register, short, signed, static, stderr, stdin, stdout, struct, switch, this, throw, try, typedef, typeid, typename, unsigned, using, virtual, void, volatile, ADDRESS, BITSTRING, BOOLEAN, CHAR, CHARSTRING, COMPONENT, DEFAULT, ERROR, FAIL, FALSE, FLOAT, HEXSTRING, INCONC, INTEGER, NONE, OBJID, OCTETSTRING, PASS, PORT, TIMER, TRUE, VERDICTTYPE.
 
@@ -28,16 +28,16 @@ WARNING: By default, from version 1.2.pl0 the compiler does NOT duplicate the un
 
 == Namespaces
 
-The compiler generates a C++ namespace for every TTCN–3 and ASN.1 module. All C++ definitions that belong to the module (including Test Port classes and external functions) are placed in that namespace. The name of the namespace is derived from the module identifier according to the rules described in <<mapping-of-names-and-identifiers, Mapping of Names and Identifiers>>.
+The compiler generates a {cpp} namespace for every TTCN–3 and ASN.1 module. All {cpp} definitions that belong to the module (including Test Port classes and external functions) are placed in that namespace. The name of the namespace is derived from the module identifier according to the rules described in <<mapping-of-names-and-identifiers, Mapping of Names and Identifiers>>.
 
 The definitions of the TTCN–3 Base Library do not use any namespace.
 
-When accessing a C\++ entity that belongs to a different module than the referring Test Port or external function is in the reference has to be prefixed with the namespace of the referenced module. For example, to access the C++ class that realizes type `MyType` defined in `MyModule1` from a Test Port that belongs to module `MyModule2` the reference shall be written as `MyModule1::MyType`.
+When accessing a C\++ entity that belongs to a different module than the referring Test Port or external function is in the reference has to be prefixed with the namespace of the referenced module. For example, to access the {cpp} class that realizes type `MyType` defined in `MyModule1` from a Test Port that belongs to module `MyModule2` the reference shall be written as `MyModule1::MyType`.
 
 [[predefined-ttcn-3-data-types]]
 == Predefined TTCN–3 Data Types
 
-There are some basic data types in TTCN–3 that have no equivalent data types in language C/C\++ (for example bitstring, verdicttype). Other types have C++ equivalent, but the TTCN–3 executor must know whether a variable has a valid value or not because sending an unbound value must result in a dynamic test case error. Thus, in the TTCN–3 Base Library all basic data types of TTCN–3 were implemented as C++ classes. This section describes the member functions of these classes.
+There are some basic data types in TTCN–3 that have no equivalent data types in language C/C\++ (for example bitstring, verdicttype). Other types have {cpp} equivalent, but the TTCN–3 executor must know whether a variable has a valid value or not because sending an unbound value must result in a dynamic test case error. Thus, in the TTCN–3 Base Library all basic data types of TTCN–3 were implemented as {cpp} classes. This section describes the member functions of these classes.
 
 === `Integer`
 
@@ -96,7 +96,7 @@ The class `INTEGER` has the following public member functions:
 
 The comparison, arithmetic and shifting operators are also available as global functions for that case when the left side is `int` and the right side is `INTEGER`. Using the value of an unbound variable for anything will cause dynamic test case error.
 
-The casting operator `int()` is applicable only to `INTEGER` objects holding a signed value with at most 31 useful bits, since in C/C++ the native `int` type is 32-bit large including the sign bit. Casting an `INTEGER` object holding a bigger (for example a 32-bit unsigned) value will result in run-time error.
+The casting operator `int()` is applicable only to `INTEGER` objects holding a signed value with at most 31 useful bits, since in C/{cpp} the native `int` type is 32-bit large including the sign bit. Casting an `INTEGER` object holding a bigger (for example a 32-bit unsigned) value will result in run-time error.
 
 Please note that if the value stored in an `INTEGER` object is too big (that is, it cannot be represented as a `long long int`) the value returned by `get_long_long_val()` will contain only the lowest `sizeof(long long int)` bytes of the original value. Another way to obtain a value of a number having more useful bits than 31 is to convert the INTEGER object to its string representation using the `int2str()` predefined function. Then the string value can be converted to any native integer type using the `sscanf()` library function or such. The following example demonstrates a common scenario:
 [source]
@@ -298,7 +298,7 @@ void TTCN_Runtime::setverdict(const VERDICTTYPE&);
 verdicttype TTCN_Runtime::getverdict();
 ----
 
-These functions are the C\++ equivalents of TTCN–3 `setverdict` and `getverdict` operations. Use them only if your Test Port or C++ function encounters a low-level failure, but it can continue its normal operation (that is, error recovery is not necessary).
+These functions are the C\++ equivalents of TTCN–3 `setverdict` and `getverdict` operations. Use them only if your Test Port or {cpp} function encounters a low-level failure, but it can continue its normal operation (that is, error recovery is not necessary).
 
 Other operators (global functions):
 [source]
@@ -311,7 +311,7 @@ boolean operator!=(verdicttype par_value,
 
 === `Bitstring`
 
-The equivalent C++ class of TTCN–3 type `bitstring` is called `BITSTRING`. The bits of the bit string are stored in an array of unsigned characters. In order to reduce the wasted memory space the bits are packed together, so each character contains eight bits. The first character contains the first eight bits of the bit string; the second byte contains the bits from the 9th up to the 16th, and so on. The first bit of the bit string is the LSB of the first character; the second bit is the second least significant bit of the first character, and so on. The character array is not terminated with a `NUL` character and if the length of the bit string is not a multiple of eight, the unused bits of the last character can contain any value. So the length of the bit string must be always given.
+The equivalent {cpp} class of TTCN–3 type `bitstring` is called `BITSTRING`. The bits of the bit string are stored in an array of unsigned characters. In order to reduce the wasted memory space the bits are packed together, so each character contains eight bits. The first character contains the first eight bits of the bit string; the second byte contains the bits from the 9th up to the 16th, and so on. The first bit of the bit string is the LSB of the first character; the second bit is the second least significant bit of the first character, and so on. The character array is not terminated with a `NUL` character and if the length of the bit string is not a multiple of eight, the unused bits of the last character can contain any value. So the length of the bit string must be always given.
 
 The class `BITSTRING` has the following public member functions:
 
@@ -345,24 +345,24 @@ and pointer to character array.
 |const BITSTRING_ELEMENT operator[](int) const |Gives read-only access to the given element.
 |const BITSTRING_ELEMENT operator[](const INTEGER&) const |
 .8+^.^|_Bitwise operators_
-|BITSTRING operator~() const |C++ equivalent of operator not4b. (bitwise negation)
-|BITSTRING operator&(const BITSTRING&) const |C++ equivalent of operator
+|BITSTRING operator~() const |{cpp} equivalent of operator not4b. (bitwise negation)
+|BITSTRING operator&(const BITSTRING&) const |{cpp} equivalent of operator
 and4b. (bitwise and)
 |BITSTRING operator&(const BITSTRING_ELEMENT&) const |
-|BITSTRING operator|(const BITSTRING&) const |C++ equivalent of operator
+|BITSTRING operator|(const BITSTRING&) const |{cpp} equivalent of operator
 or4b. (bitwise or)
 |BITSTRING operator|(const BITSTRING_ELEMENT&) const |
-|BITSTRING operatorˆ(const BITSTRING&) const |C++ equivalent of operator
+|BITSTRING operatorˆ(const BITSTRING&) const |{cpp} equivalent of operator
 xor4b. (bitwise xor)
 |BITSTRING operator^(const BITSTRING_ELEMENT&) const |
 .8+^.^|_Shifting and rotating operators_
-|BITSTRING operator<<(int) const |C++ equivalent of operator
+|BITSTRING operator<<(int) const |{cpp} equivalent of operator
 |BITSTRING operator<<(const INTEGER&) const |<<.(shift left)
-|BITSTRING operator>>(int) const |C++ equivalent of operator
+|BITSTRING operator>>(int) const |{cpp} equivalent of operator
 |BITSTRING operator>>(const INTEGER&) const |>>. (shift right)
-|BITSTRING operator<<=(int) const |C++ equivalent of operator
+|BITSTRING operator<<=(int) const |{cpp} equivalent of operator
 |BITSTRING operator<<=(const INTEGER&) const |< @. (rotate left)
-|BITSTRING operator>>=(int) const |C++ equivalent of operator
+|BITSTRING operator>>=(int) const |{cpp} equivalent of operator
 |BITSTRING operator>>=(const INTEGER&) const |@ >. (rotate right)
 ^.^|_Casting operator_
 |operator const unsigned char*() const |Returns a pointer to the character array.
@@ -379,7 +379,7 @@ Using the value of an unbound `BITSTRING` variable for anything will cause dynam
 
 ==== `Bitstring element`
 
-The C++ class `BITSTRING_ELEMENT` is the equivalent of the TTCN-3 `bitstring`’s element type (the result of indexing a `bitstring` value). The class does not store the actual bit, only a reference to the original `BITSTRING` object, an index value and a bound flag.
+The {cpp} class `BITSTRING_ELEMENT` is the equivalent of the TTCN-3 `bitstring`’s element type (the result of indexing a `bitstring` value). The class does not store the actual bit, only a reference to the original `BITSTRING` object, an index value and a bound flag.
 
 Note: changing the value of the `BITSTRING_ELEMENT` (through the assignment operator) changes the referenced bit in the original `bitstring` object.
 
@@ -404,14 +404,14 @@ The class `BITSTRING_ELEMENT` has the following public member functions:
 |BITSTRING operator+(const BITSTRING&) const |Concatenates a bitstring element with a bitstring, or two bitstring elements.
 |BITSTRING operator+(const BITSTRING_ELEMENT&) const |
 .8+^.^|_Bitwise operators_
-|BITSTRING operator~() const |C++ equivalent of operator not4b. (bitwise negation)
-|BITSTRING operator&(const BITSTRING&) const |C++ equivalent of operator
+|BITSTRING operator~() const |{cpp} equivalent of operator not4b. (bitwise negation)
+|BITSTRING operator&(const BITSTRING&) const |{cpp} equivalent of operator
 and4b. (bitwise and)
 |BITSTRING operator&(const BITSTRING_ELEMENT&) const  |
-|BITSTRING operator|(const BITSTRING&) const  | C++ equivalent of operator
+|BITSTRING operator|(const BITSTRING&) const  | {cpp} equivalent of operator
 or4b. (bitwise or)
 |BITSTRING operator|(const BITSTRING_ELEMENT&) const  |
-|BITSTRING operatorˆ(const BITSTRING&) const | C++ equivalent of operator
+|BITSTRING operatorˆ(const BITSTRING&) const | {cpp} equivalent of operator
 xor4b. (bitwise xor)
 |BITSTRING operatorˆ(const BITSTRING_ELEMENT&) const |
 .4+^.^|_Other member functions_
@@ -425,7 +425,7 @@ Using the value of an unbound `BITSTRING_ELEMENT` variable for anything will cau
 
 === `Hexstring`
 
-The equivalent C++ class of TTCN–3 type `hexstring` is called `HEXSTRING`. The hexadecimal digits (nibbles) are stored in an array of unsigned characters. In order to reduce the wasted memory space two nibbles are packed into one character. The first character contains the first two nibbles of the `hexstring`, the second byte contains the third and fourth nibbles, and so on. The hexadecimal digits at odd (first, third, fifth, etc.) positions occupy the lower 4 bits in the characters; the even ones use the upper 4 bits. The character array is never terminated with a `NUL` character, so the length must be always given with the pointer. If the `hexstring` has odd length the unused upper 4 bits of the last character may contain any value.
+The equivalent {cpp} class of TTCN–3 type `hexstring` is called `HEXSTRING`. The hexadecimal digits (nibbles) are stored in an array of unsigned characters. In order to reduce the wasted memory space two nibbles are packed into one character. The first character contains the first two nibbles of the `hexstring`, the second byte contains the third and fourth nibbles, and so on. The hexadecimal digits at odd (first, third, fifth, etc.) positions occupy the lower 4 bits in the characters; the even ones use the upper 4 bits. The character array is never terminated with a `NUL` character, so the length must be always given with the pointer. If the `hexstring` has odd length the unused upper 4 bits of the last character may contain any value.
 
 The class `HEXSTRING` has the following public member functions:
 
@@ -458,24 +458,24 @@ The class `HEXSTRING` has the following public member functions:
 |const HEXSTRING_ELEMENT operator[](int) const |
 |const HEXSTRING_ELEMENT operator[](const INTEGER&) const |
 .8+^.^|_Bitwise operators_
-|HEXSTRING operator~() const  |C++ equivalent of operator not4b. (bitwise negation)
-|HEXSTRING operator&(const HEXSTRING&) const  |C++ equivalent of operator
+|HEXSTRING operator~() const  |{cpp} equivalent of operator not4b. (bitwise negation)
+|HEXSTRING operator&(const HEXSTRING&) const  |{cpp} equivalent of operator
 and4b. (bitwise and)
 |HEXSTRING operator&(const HEXSTRING_ELEMENT&) const  |
-|HEXSTRING operator|(const HEXSTRING&) const  |C++ equivalent of operator
+|HEXSTRING operator|(const HEXSTRING&) const  |{cpp} equivalent of operator
 or4b. (bitwise or)
 |HEXSTRING operator|(const HEXSTRING_ELEMENT&) const  |
-|HEXSTRING operatorˆ(const HEXSTRING&) const  |C++ equivalent of operator
+|HEXSTRING operatorˆ(const HEXSTRING&) const  |{cpp} equivalent of operator
 xor4b. (bitwise xor)
 |HEXSTRING operator^(const HEXSTRING_ELEMENT&) const  |
 .8+^.^|_Shifting and rotating operators_
-|HEXSTRING operator<<(int) const  |C++ equivalent of operator
+|HEXSTRING operator<<(int) const  |{cpp} equivalent of operator
 |HEXSTRING operator<<(const INTEGER&) const  |<<.(shift left)
-|HEXSTRING operator>>(int) const  |C++ equivalent of operator
+|HEXSTRING operator>>(int) const  |{cpp} equivalent of operator
 |HEXSTRING operator>>(const INTEGER&) const  |>>. (shift right)
-|HEXSTRING operator<<=(int) const  |C++ equivalent of operator
+|HEXSTRING operator<<=(int) const  |{cpp} equivalent of operator
 |HEXSTRING operator<<=(const INTEGER&) const  |< @. (rotate left)
-|HEXSTRING operator>>=(int) const |C++ equivalent of operator
+|HEXSTRING operator>>=(int) const |{cpp} equivalent of operator
 |HEXSTRING operator>>=(const INTEGER&) const  |@ >. (rotate right)
 ^.^|_Casting operator_
 |operator const unsigned char*() const |Returns a pointer to the character array. The pointer might be NULL if the length is 0.
@@ -490,7 +490,7 @@ Using the value of an unbound `HEXSTRING` variable for anything will cause a dyn
 
 ==== `Hexstring` element
 
-The C++ class `HEXSTRING_ELEMENT` is the equivalent of the TTCN-3 `hexstring`’s element type (the result of indexing a `hexstring` value). The class does not store the actual hexadecimal digit (nibble), only a reference to the original HEXSTRING object, an index value and a bound flag.
+The {cpp} class `HEXSTRING_ELEMENT` is the equivalent of the TTCN-3 `hexstring`’s element type (the result of indexing a `hexstring` value). The class does not store the actual hexadecimal digit (nibble), only a reference to the original HEXSTRING object, an index value and a bound flag.
 
 Note: changing the value of the `HEXSTRING_ELEMENT` (through the assignment operator) changes the referenced nibble in the original `hexstring` object.
 
@@ -515,14 +515,14 @@ The class `HEXSTRING_ELEMENT` has the following public member functions:
 |HEXSTRING operator+(const HEXSTRING&) const  |Concatenates a hexstring element with a hexstring, or two hexstring elements.
 |HEXSTRING operator+(const HEXSTRING_ELEMENT&) const |
 .8+^.^|_Bitwise operators_
-|HEXSTRING operator~() const  |C++ equivalent of operator not4b. (bitwise negation)
-|HEXSTRING operator&(const HEXSTRING&) const |C++ equivalent of operator
+|HEXSTRING operator~() const  |{cpp} equivalent of operator not4b. (bitwise negation)
+|HEXSTRING operator&(const HEXSTRING&) const |{cpp} equivalent of operator
 and4b. (bitwise and)
 |HEXSTRING operator&(const HEXSTRING_ELEMENT&) const  |
-|HEXSTRING operator|(const HEXSTRING&) const  |C++ equivalent of operator
+|HEXSTRING operator|(const HEXSTRING&) const  |{cpp} equivalent of operator
 or4b. (bitwise or)
 |HEXSTRING operator|(const HEXSTRING_ELEMENT&) const  |
-|HEXSTRING operatorˆ(const HEXSTRING&) const |C++ equivalent of operator
+|HEXSTRING operatorˆ(const HEXSTRING&) const |{cpp} equivalent of operator
 xor4b. (bitwise xor)
 |HEXSTRING operatorˆ(const HEXSTRING_ELEMENT&) const |
 .3+^.^|_Other member functions_
@@ -536,7 +536,7 @@ Using the value of an unbound `HEXSTRING_ELEMENT` variable for anything will cau
 
 === `Octetstring`
 
-The equivalent C++ class of TTCN–3 type `octetstring` is called `OCTETSTRING`. The octets are stored in an array of unsigned characters. Each character contains one octet; the first character is the first octet of the string. The character array is not terminated by a `NUL` character, so the length of the octet string must be always given.
+The equivalent {cpp} class of TTCN–3 type `octetstring` is called `OCTETSTRING`. The octets are stored in an array of unsigned characters. Each character contains one octet; the first character is the first octet of the string. The character array is not terminated by a `NUL` character, so the length of the octet string must be always given.
 
 The class `OCTETSTRING` has the following public member functions:
 
@@ -571,24 +571,24 @@ The class `OCTETSTRING` has the following public member functions:
 |const OCTETSTRING_ELEMENT operator[](int) const |Gives read-only access to the given element.
 |const OCTETSTRING_ELEMENT operator[](const INTEGER&) const |
 .8+^.^|_Bitwise operators_
-|OCTETSTRING operator˜() const  |C++ equivalent of operator not4b.(bitwise negation)
-|OCTETSTRING operator&(const OCTETSTRING&) const |C++ equivalent of operator and4b.
+|OCTETSTRING operator˜() const  |{cpp} equivalent of operator not4b.(bitwise negation)
+|OCTETSTRING operator&(const OCTETSTRING&) const |{cpp} equivalent of operator and4b.
 (bitwise and)
 |OCTETSTRING operator&(const OCTETSTRING_ELEMENT&) const |
-|OCTETSTRING operator|(const OCTETSTRING&) const  |C++ equivalent of operator or4b.
+|OCTETSTRING operator|(const OCTETSTRING&) const  |{cpp} equivalent of operator or4b.
 (bitwise or)
 |OCTETSTRING operator|(const OCTETSTRING_ELEMENT&) const |
-|OCTETSTRING operatorˆ(const OCTETSTRING&) const |C++ equivalent of operator xor4b.
+|OCTETSTRING operatorˆ(const OCTETSTRING&) const |{cpp} equivalent of operator xor4b.
 (bitwise xor)
 |OCTETSTRING operator^(const OCTETSTRING_ELEMENT&) const |
 .8+^.^|_Shifting and rotating operators_
-|OCTETSTRING operator<<(int) const |C++ equivalent of operator <<.
+|OCTETSTRING operator<<(int) const |{cpp} equivalent of operator <<.
 |OCTETSTRING operator<<(const INTEGER&) const |(shift left)
-|OCTETSTRING operator>>(int) const  |C++ equivalent of operator >>.
+|OCTETSTRING operator>>(int) const  |{cpp} equivalent of operator >>.
 |OCTETSTRING operator>>(const INTEGER&) const  |(shift right)
-|OCTETSTRING operator<<=(int) const  |C++ equivalent of operator < @.
+|OCTETSTRING operator<<=(int) const  |{cpp} equivalent of operator < @.
 |OCTETSTRING operator<<=(const INTEGER&) const  |(rotate left)
-|OCTETSTRING operator>>=(int) const  |C++ equivalent of operator @ >.
+|OCTETSTRING operator>>=(int) const  |{cpp} equivalent of operator @ >.
 |OCTETSTRING operator>>=(const INTEGER&) const  |(rotate right)
 ^.^|_Casting operator_
 |operator const unsigned char*() const |Returns a pointer to the character array. The pointer might be NULL if the length is 0.
@@ -605,7 +605,7 @@ Using the value of an unbound `OCTETSTRING` variable for anything will cause dyn
 
 ==== `Octetstring` element
 
-The C++ class `OCTETSTRING_ELEMENT` is the equivalent of the TTCN-3 `octetstring`’s element type (the result of indexing an `octetstring` value). The class does not store the actual octet, only a reference to the original OCTETSTRING object, an index value and a bound flag.
+The {cpp} class `OCTETSTRING_ELEMENT` is the equivalent of the TTCN-3 `octetstring`’s element type (the result of indexing an `octetstring` value). The class does not store the actual octet, only a reference to the original OCTETSTRING object, an index value and a bound flag.
 
 Note: changing the value of the OCTETSTRING_ELEMENT (through the assignment operator) changes the referenced octet in the original `octetstring` object.
 
@@ -630,14 +630,14 @@ The class `OCTETSTRING_ELEMENT` has the following public member functions:
 | OCTETSTRING operator+(const OCTETSTRING&) const |Concatenates an octetstring element with an octetstring, or two octetstring elements.
 | OCTETSTRING operator+(const OCTETSTRING_ELEMENT&) const |
 .8+^.^|_Bitwise operators_
-|OCTETSTRING operator~() const |C++ equivalent of operator (bitwise negation)
-|OCTETSTRING operator&(const OCTETSTRING&) const |C++ equivalent of operator
+|OCTETSTRING operator~() const |{cpp} equivalent of operator (bitwise negation)
+|OCTETSTRING operator&(const OCTETSTRING&) const |{cpp} equivalent of operator
 and4b. (bitwise and)
 |OCTETSTRING operator&(const OCTETSTRING_ELEMENT&) const  |
-|HEXSTRING operator|(const OCTETSTRING&) const  | C++ equivalent of operator
+|HEXSTRING operator|(const OCTETSTRING&) const  | {cpp} equivalent of operator
 or4b. (bitwise or)
 |OCTETSTRING operator|(const OCTETSTRING_ELEMENT&) const  |
-|OCTETSTRING operatorˆ(const OCTETSTRING&) const |C++ equivalent of operator
+|OCTETSTRING operatorˆ(const OCTETSTRING&) const |{cpp} equivalent of operator
 xor4b. (bitwise xor)
 |OCTETSTRING operatorˆ(const OCTETSTRING_ELEMENT&) const |
 .3+^.^|_Other member functions_
@@ -654,12 +654,12 @@ Using the value of an unbound `OCTETSTRING_ELEMENT` variable for anything will c
 
 The `char` type, which has been removed from the TTCN–3 standard, is no longer supported by the run-time environment. The compiler substitutes all occurrences of `char` type with type `charstring` automatically.
 
-To provide partial backward compatibility for older Test Ports that might have used the type `char`, `CHAR` is a typedef alias to class `CHARSTRING` in C++.
+To provide partial backward compatibility for older Test Ports that might have used the type `char`, `CHAR` is a typedef alias to class `CHARSTRING` in {cpp}.
 
 [[Charstring]]
 === `Charstring`
 
-The equivalent C++ class of TTCN–3 type `charstring` is called `CHARSTRING`. The characters are stored in a `NUL` character terminated array; thus, giving the length in the constructor and other operations is optional.
+The equivalent {cpp} class of TTCN–3 type `charstring` is called `CHARSTRING`. The characters are stored in a `NUL` character terminated array; thus, giving the length in the constructor and other operations is optional.
 
 The class `CHARSTRING` has the following public member functions:
 
@@ -707,9 +707,9 @@ The class `CHARSTRING` has the following public member functions:
 |const CHARSTRING_ELEMENT operator[](int) const |Gives read-only access to the given element.
 |const CHARSTRING_ELEMENT operator[](const INTEGER&) const |
 .4+^.^|_Rotating operators_
-|CHARSTRING operator<<=(int) const |C++ equivalent of operator < @.(rotate left)
+|CHARSTRING operator<<=(int) const |{cpp} equivalent of operator < @.(rotate left)
 |CHARSTRING operator<<=(const INTEGER&) const |
-|CHARSTRING operator>>=(int) const  |C++ equivalent of operator @ >.
+|CHARSTRING operator>>=(int) const  |{cpp} equivalent of operator @ >.
 (rotate right)
 |CHARSTRING operator>>=(const INTEGER&) const |
 ^.^|_Casting operator_
@@ -748,7 +748,7 @@ CHARSTRING operator+(const char* string_value,
 
 ==== `Charstring` element
 
-The C++ class `CHARSTRING_ELEMENT` is the equivalent of the TTCN-3 `charstring`’s element type (the result of indexing a `charstring` value). The class does not store the actual character, only a reference to the original CHARSTRING object, an index value and a bound flag.
+The {cpp} class `CHARSTRING_ELEMENT` is the equivalent of the TTCN-3 `charstring`’s element type (the result of indexing a `charstring` value). The class does not store the actual character, only a reference to the original CHARSTRING object, an index value and a bound flag.
 
 Note: changing the value of the `CHARSTRING_ELEMENT` (through the assignment operator) changes the referenced character in the original `charstring` object.
 
@@ -809,7 +809,7 @@ In case of single-octet characters, which can be also given in TTCN–3 charstri
 
 Except when performing encoding or decoding, the run-time environment does not check whether the quadruples used in the following API represent valid character positions according to <<7-references.adoc#_8,[8]>>. Moreover, if ASN.1 multi-octet character string values are used, it is not verified whether the elements of such strings are permitted characters of the corresponding string type.
 
-The C++ equivalent of TTCN–3 type `universal charstring` is implemented in class `UNIVERSAL_CHARSTRING`. The characters of the string are stored in an array of structure `universal_char`. The array returned by the casting operator is not terminated with a special character, thus, the length of the string must be always considered when doing operations with the array. The length of the string, which can be obtained by using member function `lengthof()`, is measured in characters (quadruples) and not bytes.
+The {cpp} equivalent of TTCN–3 type `universal charstring` is implemented in class `UNIVERSAL_CHARSTRING`. The characters of the string are stored in an array of structure `universal_char`. The array returned by the casting operator is not terminated with a special character, thus, the length of the string must be always considered when doing operations with the array. The length of the string, which can be obtained by using member function `lengthof()`, is measured in characters (quadruples) and not bytes.
 
 For the more convenient usage the strings containing only single-octet characters can also be used with class `UNIVERSAL_CHARSTRING`. Therefore some polymorphic member functions and operators have variants that take `const char*` as argument. In these member functions the characters of the `NUL` character terminated string are implicitly converted to quadruples with group, plane and row fields set to zero. `NULL` pointer as argument means the empty string for these functions.
 
@@ -867,9 +867,9 @@ single-octet string.
 |const UNIVERSAL_CHARSTRING_ELEMENT operator[](int) const |Gives read-only access to the given element.
 |const UNIVERSAL_CHARSTRING_ELEMENT operator[](const INTEGER&) const |
 .4+^.^|_Rotating operators_
-|UNIVERSAL_CHARSTRING operator<<=(int) const |C++ equivalent of operator < @(rotate left).
+|UNIVERSAL_CHARSTRING operator<<=(int) const |{cpp} equivalent of operator < @(rotate left).
 |UNIVERSAL_CHARSTRING operator<<=(const INTEGER&) const |
-|UNIVERSAL_CHARSTRING operator>>=(int) const |C++ equivalent of operator @ >
+|UNIVERSAL_CHARSTRING operator>>=(int) const |{cpp} equivalent of operator @ >
 (rotate right).
 |UNIVERSAL_CHARSTRING operator>>=(const INTEGER&) const |
 ^.^|_Casting operator_
@@ -932,7 +932,7 @@ UNIVERSAL_CHARSTRING operator+(const char* string_value,
 
 ==== `Universal charstring` element
 
-The C++ class `UNIVERSAL_CHARSTRING_ELEMENT` is the equivalent of the TTCN-3 `universal charstring`’s element type (the result of indexing a `universal charstring` value). The class does not store the actual character, only a reference to the original `UNIVERSAL_CHARSTRING` object, an index value and a bound flag.
+The {cpp} class `UNIVERSAL_CHARSTRING_ELEMENT` is the equivalent of the TTCN-3 `universal charstring`’s element type (the result of indexing a `universal charstring` value). The class does not store the actual character, only a reference to the original `UNIVERSAL_CHARSTRING` object, an index value and a bound flag.
 
 Note: changing the value of the `UNIVERSAL_CHARSTRING_ELEMENT` (through the assignment operator) changes the referenced character in the original `universal charstring` object.
 
@@ -1022,7 +1022,7 @@ Using the value of an unbound `OBJID` variable for anything will cause dynamic t
 
 TTCN–3 variables the types of which are defined as component types are used for storing component references to PTCs. The internal representation of component references are test tool dependent, our test executor handles them as small integer numbers.
 
-All TTCN–3 component types are mapped to the same C++ class, which is called COMPONENT, using `typedef` aliases. We also use an ancillary C type called `component`, which is defined as an alias for `int`:
+All TTCN–3 component types are mapped to the same {cpp} class, which is called COMPONENT, using `typedef` aliases. We also use an ancillary C type called `component`, which is defined as an alias for `int`:
 [source, subs="+quotes"]
 typedef int component;
 
@@ -1083,9 +1083,9 @@ boolean operator!=(component component_value,
 [[empty-types]]
 === Empty Types
 
-Empty `record` and `set` types are not real built-in types in TTCN–3, but the C++ realization of these types also differs from regular records or sets. The empty types are almost identical to each other, only their names are different. That is why we treat them as predefined types.
+Empty `record` and `set` types are not real built-in types in TTCN–3, but the {cpp} realization of these types also differs from regular records or sets. The empty types are almost identical to each other, only their names are different. That is why we treat them as predefined types.
 
-Each empty type is defined in a C\++ class, which is generated by the compiler. Using separate classes enables us to differentiate among them in C++ type polymorphism. For example, several empty types can be defined as incoming or outgoing types on the same TTCN–3 port type.
+Each empty type is defined in a C\++ class, which is generated by the compiler. Using separate classes enables us to differentiate among them in {cpp} type polymorphism. For example, several empty types can be defined as incoming or outgoing types on the same TTCN–3 port type.
 
 Let us consider the following TTCN–3 type definition as an example:
 [source, subs="+quotes"]
@@ -1097,7 +1097,7 @@ enum null type {NULL VALUE };
 
 The only possible value stands for the TTCN–3 empty record or array value (that is for "{}"), which is the only possible value of TTCN–3 type `Dummy`. Note that this type and value is also used in the definition of `record` of and `set of` type construct.
 
-The generated C++ class `Dummy` will have the following member functions:
+The generated {cpp} class `Dummy` will have the following member functions:
 
 .Public member functions of the class `Dummy`
 
@@ -1136,11 +1136,11 @@ boolean operator!=(null_type null_value, const Dummy& other_value);// Not equal
 
 == Compound Data Types
 
-The user-defined compound data types are implemented in C++ classes. These classes are generated by the compiler according to type definitions. In contrast with the basic types, these classes can be found in the generated code.
+The user-defined compound data types are implemented in {cpp} classes. These classes are generated by the compiler according to type definitions. In contrast with the basic types, these classes can be found in the generated code.
 
 === Record and Set Type Constructs
 
-The TTCN–3 type constructs `record` and `set` are mapped in an identical way to C\++. There will be a C++ class for each record type in the generated code. This class builds up the record from its fields.footnote:[This section deals with the record and set types that have at least one field. See <<empty-types, Empty Types>> for the C++ mapping of empty record and set types.] The fields can be either basic or compound types.
+The TTCN–3 type constructs `record` and `set` are mapped in an identical way to C\++. There will be a {cpp} class for each record type in the generated code. This class builds up the record from its fields.footnote:[This section deals with the record and set types that have at least one field. See <<empty-types, Empty Types>> for the {cpp} mapping of empty record and set types.] The fields can be either basic or compound types.
 
 Let us consider the following example type definition. The types `t1` and `t2` can be arbitrary.
 [source]
@@ -1192,7 +1192,7 @@ type record t3 {
 }
 ----
 
-The optional fields are implemented using a C++ template class called `OPTIONAL` that creates an optional value from any type. In the definition of the generated class `t3` the type `t2` will be replaced by `OPTIONAL<t2>` everywhere and anything else will not be changed.
+The optional fields are implemented using a {cpp} template class called `OPTIONAL` that creates an optional value from any type. In the definition of the generated class `t3` the type `t2` will be replaced by `OPTIONAL<t2>` everywhere and anything else will not be changed.
 
 The instantiated template class `OPTIONAL<t2>` will have the following member functions:
 
@@ -1246,7 +1246,7 @@ Using the value of an unbound optional field for anything will also cause dynami
 
 === Union Type Construct
 
-The TTCN–3 type construct union is implemented in a C++ class for each union type in the generated code. This class may contain any, but exactly one of its fields. The fields can be either basic or compound types or even identical types.
+The TTCN–3 type construct union is implemented in a {cpp} class for each union type in the generated code. This class may contain any, but exactly one of its fields. The fields can be either basic or compound types or even identical types.
 
 Let us consider the following example type definition. The types `t1` and `t2` can be arbitrary.
 [source]
@@ -1296,13 +1296,13 @@ Using the value of an unbound `union` variable for anything will cause dynamic t
 
 ==== The anytype
 
-The TTCN-3 anytype is implemented as a C\++ class named anytype. The class is generated only if an actual anytype access is present in the module. It has the same interface as any other C++ class generated for a union, with a few differences:
+The TTCN-3 anytype is implemented as a C\++ class named anytype. The class is generated only if an actual anytype access is present in the module. It has the same interface as any other {cpp} class generated for a union, with a few differences:
 
 If a field is a built-in type or the address type, the name used in `union_selection_type` is the name of the runtime class implementing the type (usually the name of the type in all uppercase).
 
 If a field is a user-defined type, the mapping rules in <<mapping-of-names-and-identifiers, Mapping of Names and Identifiers>> above apply.
 
-The names of field accessor functions are prefixed with AT_. This is necessary, because otherwise the accessor function looks like a constructor to C++.
+The names of field accessor functions are prefixed with AT_. This is necessary, because otherwise the accessor function looks like a constructor to {cpp}.
 
 For example, for the following module
 [source]
@@ -1333,13 +1333,13 @@ CHARSTRING& AT_CHARSTRING();
 
 === Record of Type Construct
 
-The TTCN–3 type construct `record` of makes a variable length sequence from one given type. This construct is implemented as a C++ class.
+The TTCN–3 type construct `record` of makes a variable length sequence from one given type. This construct is implemented as a {cpp} class.
 
 Let us consider the following example type definition. The type t1 can be arbitrary.
 [source, subs=+quotes]
 type record of t1 t2;
 
-This definition will be translated to a C++ class that will be called t2.
+This definition will be translated to a {cpp} class that will be called t2.
 
 There is an `enum` type called `null_type` defined in the Base Library that has only one possible value. NULL_VALUE stands for the empty `"record of"` value, that is, for {}.
 
@@ -1370,9 +1370,9 @@ Class `t2` will have the following public member functions:
 |const t1& operator[](int) const |Gives read-only access to the given element. Index overflow causes dynamic test case error.
 |const t1& opetator[](const INTEGER&) const |
 .4+^.^|_Rotating operators_
-|t2 operator<<=(int) |C++ equivalent of operator <@. (rotate left)
+|t2 operator<<=(int) |{cpp} equivalent of operator <@. (rotate left)
 |t2 operator<<=(const INTEGER&) |
-|t2 operator>>=(int) |C++ equivalent of operator @>. (rotate right)
+|t2 operator>>=(int) |{cpp} equivalent of operator @>. (rotate right)
 |t2 operator>>=(const INTEGER&) |
 ^.^|_Concatenation operator_
 |t2 operator+(const t2&) const |Concatenates two arrays.
@@ -1399,13 +1399,13 @@ boolean operator!=(null_type null_value, const t2& other_value); // Not equal
 
 ==== Pre-generated `record of` and `set of` constructs
 
-The C\++ classes for the `record of` and `set of` constructs of most predefined TTCN-3 types are pre-generated and part of the TITAN runtime. Only a type alias (C++ `typedef`) is generated for instances of these types declared in TTCN-3 and ASN.1 modules. There is a class with regular memory allocation and one with optimized memory allocation pre-generated for each type. These classes are located in the `PreGenRecordOf` namespace.
+The C\++ classes for the `record of` and `set of` constructs of most predefined TTCN-3 types are pre-generated and part of the TITAN runtime. Only a type alias ({cpp} `typedef`) is generated for instances of these types declared in TTCN-3 and ASN.1 modules. There is a class with regular memory allocation and one with optimized memory allocation pre-generated for each type. These classes are located in the `PreGenRecordOf` namespace.
 
 .Pre-generated classes for `record of`/`set of` predefined types
 
 [width="100%",cols="50%,50%",options="header",]
 |====================================================================================================================================
-|C++ class name |Equivalent type in TTCN-3
+|{cpp} class name |Equivalent type in TTCN-3
 |`PREGEN\__RECORD__OF__BOOLEAN` |`record of boolean`
 |`PREGEN\__RECORD__OF__INTEGER` |`record of integer`
 |`PREGEN\__RECORD__OF__FLOAT` |`record of float`
@@ -1446,15 +1446,15 @@ The `set of` construct of TTCN–3 is implemented similarly to `record of`. The 
 
 In the internal implementation only the equality operator differs. Unlike in `record of`, it considers the unordered property of the `set of` type construct, that is, it returns `TRUE` if it is able to find exactly one pair for each element.
 
-The index is a unique identifier for a `set of` element because the C++ class does not reorder the elements when a new element is added or an element is modified. The copy constructor also keeps the original order of elements.
+The index is a unique identifier for a `set of` element because the {cpp} class does not reorder the elements when a new element is added or an element is modified. The copy constructor also keeps the original order of elements.
 
 === Enumerated Types
 
-The TTCN–3 `enumerated` type construct is implemented as a C++ class with an embedded enum type.
+The TTCN–3 `enumerated` type construct is implemented as a {cpp} class with an embedded enum type.
 [source, subs="+quotes"]
 type enumerated Day { Monday (1), Tuesday, Wednesday (3) };
 
-The example above will result in the following, very similar C `enum` type definition which is embedded in the C++ class `Day`:
+The example above will result in the following, very similar C `enum` type definition which is embedded in the {cpp} class `Day`:
 [source, subs="+quotes"]
 
 enum enum_type { Monday = 1, Tuesday = 0, Wednesday = 3,
@@ -1462,7 +1462,7 @@ enum enum_type { Monday = 1, Tuesday = 0, Wednesday = 3,
 
 The automatic assignment of numeric values is done according to the standard. Note that there are two extra enumerated values in C, which stand for the unknown and unbound values. They are used in the conversion functions described below. The compiler assigns the smallest two non-negative integer numbers that are not used by the user-defined enumerated values to the unknown and unbound values.
 
-When using the C `enum` type and its values from user code the names must be prefixed with the C++ class name. The `enum` type in the above example can be referenced with `Day::enum_type`, its values can be accessed as `Day::Monday, Day::Tuesday`, and so on.
+When using the C `enum` type and its values from user code the names must be prefixed with the {cpp} class name. The `enum` type in the above example can be referenced with `Day::enum_type`, its values can be accessed as `Day::Monday, Day::Tuesday`, and so on.
 
 The class `Day` will have the following public member functions:
 
@@ -1518,7 +1518,7 @@ The static member function `Day::enum_to_str` converts the given parameter of ty
 
 The function `Day::str_to_enum` does the conversion in the reverse direction. It converts the symbolic enumerated identifier represented by a C character string back to the `Day::enum_type` equivalent. It returns the value `Day::UNKNOWN_VALUE` if the input string is not the equivalent of any of the possible values in the enumerated type. The behavior of this function is undefined if the input parameter does not point to an addressable memory area.
 
-In the above two functions the strings are treated case sensitive and they shall not contain any whitespace or other characters that are not part of the enumerated value. In case of ASN.1 `ENUMERATED` types the strings used by `enum_to_str`, `str_to_enum` and log represent the TTCN–3 view of the enumerated value, that is, the hyphenation characters are mapped to a single underscore character. For example, if an ASN.1 enumerated type has a value with name `my-enum-value` and numeric value 2, the function `enum_to_str` will return the string `"my_enum_value"` if the input parameter equals to 2. Of course, its C++ equivalent will be `my_enum_value` with numeric value 2.
+In the above two functions the strings are treated case sensitive and they shall not contain any whitespace or other characters that are not part of the enumerated value. In case of ASN.1 `ENUMERATED` types the strings used by `enum_to_str`, `str_to_enum` and log represent the TTCN–3 view of the enumerated value, that is, the hyphenation characters are mapped to a single underscore character. For example, if an ASN.1 enumerated type has a value with name `my-enum-value` and numeric value 2, the function `enum_to_str` will return the string `"my_enum_value"` if the input parameter equals to 2. Of course, its {cpp} equivalent will be `my_enum_value` with numeric value 2.
 
 Static member function `Day::is_valid_enum` returns the Boolean value `TRUE` if there is a defined enumerated value having numeric value equal to the `int` parameter and `FALSE` otherwise.
 
@@ -1541,15 +1541,15 @@ Using the value of an unbound enumerated variable for anything will cause dynami
 
 === The `address` Type
 
-The special TTCN–3 data type `address` is represented in C\++ as if it was a regular data type. The name of the equivalent C++ class is `ADDRESS`. If it is an alias to another (either built-in or user-defined) type then a C++ `typedef` is used.
+The special TTCN–3 data type `address` is represented in C\++ as if it was a regular data type. The name of the equivalent {cpp} class is `ADDRESS`. If it is an alias to another (either built-in or user-defined) type then a {cpp} `typedef` is used.
 
 == Predefined Functions
 
-Annex C of link:https://www.etsi.org/deliver/etsi_es/201800_201899/20187301/04.05.01_60/es_20187301v040501p.pdf[Methods for Testing and Specification (MTS); The Testing and Test Control Notation version 3. Part 1: Core Language European Telecommunications Standards] and Annex B of link:https://pdfs.semanticscholar.org/33b5/877c85f7fd4f35c7f58c39121358c3652966.pdf[Methods for Testing and Specification (MTS); The Testing and Test Control Notation version 3. Part 7: Using ASN.1 with TTCN–3 European Telecommunications] define a couple of predefined functions. Most of them perform conversion between the built-in types of TTCN–3. In our test executor these functions are implemented in the Base Library in C++ language. They are available not only in TTCN–3 , but they can be called directly from Test Ports as well.
+Annex C of link:https://www.etsi.org/deliver/etsi_es/201800_201899/20187301/04.05.01_60/es_20187301v040501p.pdf[Methods for Testing and Specification (MTS); The Testing and Test Control Notation version 3. Part 1: Core Language European Telecommunications Standards] and Annex B of link:https://pdfs.semanticscholar.org/33b5/877c85f7fd4f35c7f58c39121358c3652966.pdf[Methods for Testing and Specification (MTS); The Testing and Test Control Notation version 3. Part 7: Using ASN.1 with TTCN–3 European Telecommunications] define a couple of predefined functions. Most of them perform conversion between the built-in types of TTCN–3. In our test executor these functions are implemented in the Base Library in {cpp} language. They are available not only in TTCN–3 , but they can be called directly from Test Ports as well.
 
 The prototypes for these functions can be found in `*$TTCN3_DIR/include/Addfunc.hh*`, but for easier navigation we list them also in the present document.
 
-The majority of these functions have more than one polymorphic version: when appropriate, one of them takes literal (built-in) C\++ types as arguments instead of the objects of equivalent C++ classes. For instance, if the incoming argument is stored in an `int` variable in your C++ code, you should not construct a temporary object of class `INTEGER` because passing an `int` is faster and produces smaller binary code. Similarly, the returned type is also literal when it is possible.
+The majority of these functions have more than one polymorphic version: when appropriate, one of them takes literal (built-in) C\++ types as arguments instead of the objects of equivalent {cpp} classes. For instance, if the incoming argument is stored in an `int` variable in your {cpp} code, you should not construct a temporary object of class `INTEGER` because passing an `int` is faster and produces smaller binary code. Similarly, the returned type is also literal when it is possible.
 
 === `Integer` to character
 
@@ -1632,14 +1632,14 @@ extern CHARSTRING int2str(const INTEGER& value);
 ----
 === Length of string Type
 
-This function is built into the equivalent C++ classes of all TTCN–3 string types:
+This function is built into the equivalent {cpp} classes of all TTCN–3 string types:
 [source]
 ----
 int <any_string_type>::lengthof() const;
 ----
 === Number of elements in a structured type
 
-This function is built into the C++ template classes of `record of` and `set of` types:
+This function is built into the {cpp} template classes of `record of` and `set of` types:
 [source]
 ----
 int <any_record_of_or_set_of_type>::size_of() const;
@@ -1648,14 +1648,14 @@ This function is currently not implemented for `record` and `set` types.
 
 === The `IsPresent` Function
 
-This function is built into the wrapper C++ template class `OPTIONAL`:
+This function is built into the wrapper {cpp} template class `OPTIONAL`:
 [source]
 ----
 boolean <any_optional_field>::ispresent() const;
 ----
 === The `IsChosen` Function
 
-These functions are built into the equivalent C++ classes of TTCN–3 union types:
+These functions are built into the equivalent {cpp} classes of TTCN–3 union types:
 [source]
 ----
 boolean <union_type>::ischosen(
@@ -1935,6 +1935,6 @@ The class representing the exceptions of a signature (remote procedure) is simil
 |`void log() const` |Puts the contents of the exception into the log.
 |===================================================================================================================================================================================================================================
 
-If an exception type is a user-defined type the field name will be constructed from the C\++ namespace name of the module that the exception type resides in and the name of the C++ class that realizes the exception type. The two identifiers are glued together using a single underscore character. Please note that the namespace name is always present in the identifiers, even if the exception type is defined in the same module as the signature.
+If an exception type is a user-defined type the field name will be constructed from the C\++ namespace name of the module that the exception type resides in and the name of the {cpp} class that realizes the exception type. The two identifiers are glued together using a single underscore character. Please note that the namespace name is always present in the identifiers, even if the exception type is defined in the same module as the signature.
 
 For example, if exception type `My_Record` is defined in module `My_Module` the respective field access functions will be named as `My\__Module_My__Record_field` and the associated enum value will be `MyProc_exception::ALT_My__Module_My__Record`.

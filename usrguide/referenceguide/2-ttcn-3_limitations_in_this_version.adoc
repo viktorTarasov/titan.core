@@ -3,7 +3,7 @@
 
 The present Test Executor is an implementation of TTCN–3 Core Language standard (<<13-references.adoc#_1, [1]>>) with support of ASN.1 (<<13-references.adoc#_3, [3]>>). However, the following TTCN–3 language constructs are not supported in the current version of the Test Executor. When applicable, the relevant clause of the standard text (<<13-references.adoc#_1, [1]>>) is given within parentheses after each limitation. The list of ASN.1 related limitations can be found in chapter *4.25*.
 
-* C++ code generation for parameterized local templates is not supported.footnote:[The semantic analyzer is able to verify modules with such definitions, but the generated C++ code will be incomplete or erroneous.] (5.0, relevant cells of Table 1)
+* {cpp} code generation for parameterized local templates is not supported.footnote:[The semantic analyzer is able to verify modules with such definitions, but the generated {cpp} code will be incomplete or erroneous.] (5.0, relevant cells of Table 1)
 * Parameterized TTCN–3 `record`, `set` and `union types`. (5.4 in <<13-references.adoc#_1, [1]>>))
 * TTCN–3 sub-typing constraints are checked only at compilation time. In the run-time environment the restricted types are substituted with the corresponding base type and no run-time error is produced if the assigned value violates the subtype constraint.
 * The special TTCN–3 type `anytype` is supported with restrictions. (6.2.6 in <<13-references.adoc#_1, [1]>>)

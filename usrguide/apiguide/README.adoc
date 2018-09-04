@@ -20,7 +20,7 @@ endif::[]
 
 *Abstract*
 
-This document describes detailed information on the TITAN Application Programming Interface (API) on C++ level, advanced TTCN–3 programming, and background information on the TITAN TTCN–3 Test Executor project.
+This document describes detailed information on the TITAN Application Programming Interface (API) on {cpp} level, advanced TTCN–3 programming, and background information on the TITAN TTCN–3 Test Executor project.
 
 *Copyright*
 
@@ -39,7 +39,7 @@ ifdef::env-github,backend-html5[]
 * link:2-test_ports.adoc[Test Ports]
 * link:3-logger_plug-ins.adoc[Logger Plug-ins]
 * link:4-encoding_and_decoding.adoc[Encoding and Decoding]
-* link:5-mapping_ttcn3_data_types_to_c+\+_constructs.adoc[Mapping TTCN–3 Data Types to C++ Constructs]
+* link:5-mapping_ttcn3_data_types_to_c+\+_constructs.adoc[Mapping TTCN–3 Data Types to {cpp} Constructs]
 * link:6-tips_&_troubleshooting.adoc[Tips & Troubleshooting]
 * link:7-references.adoc[References]
 * link:8-abbreviations.adoc[Abbreviations]

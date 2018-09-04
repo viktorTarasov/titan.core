@@ -200,7 +200,7 @@ Useful information can be found in TITAN Designer documentation <<13-references.
 |`dynamicLinking` |-l |- |false |O
 |`functiontestRuntime (use function test runtime (TITAN_RUNTIME_2)` |-R |-R |false |O
 |`singleMode` |-s |- |false |O
-|`codeSplitting (select code splitting mode for the generated C++ code)` |-U |-U |none |O
+|`codeSplitting (select code splitting mode for the generated {cpp} code)` |-U |-U |none |O
 |`defaultTarget ("executable" or "library", if –L applied, see 6.1.2)` |-L |- |executable |O
 |`targetExecutable` |-e |- |N/A |O
 |`TTCN3preprocessor (the name of the preprocessor meaningful only in Eclipse)` |- |- |cpp |O
@@ -215,7 +215,7 @@ Useful information can be found in TITAN Designer documentation <<13-references.
 |`defaultasOmit (-d compiler option)` |- |-d |false |O
 |`gccMessageFormat (emulate GCC error/warning message format)` |- |-g |false |O
 |`lineNumbersOnlyInMessages (use only line numbers in error/warning messages)` |- |-i |false |O
-|`includeSourceInfo (include source line info in C++ code)` |- |-l |false |O
+|`includeSourceInfo (include source line info in {cpp} code)` |- |-l |false |O
 |`addSourceLineInfo (add source line info for logging)` |- |-L |false |O
 |`suppressWarnings (suppress warnings)` |-w |-w |false |O
 |`Quietly (suppress all messages, quiet mode)` |- |-q |false |O
@@ -249,7 +249,7 @@ The supported values of `optimizationLevel` are:
 The support values for buildLevel are:
 
 * "Level 0 - Semantic Check"
-* "Level 1 - TTCN3 -> C++ compilation"
+* "Level 1 - TTCN3 -> {cpp} compilation"
 * "Level 2 - Creating object files"
 * "Level 2.5 - Creating object files with heuristical dependency update"
 * "Level 3 - Creating object files with dependency update"

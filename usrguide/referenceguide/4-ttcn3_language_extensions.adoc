@@ -11,7 +11,7 @@ The compiler does not report an error or warning if the semi-colon is missing at
 
 The statement block is optional after the guard operations of `altsteps`, `alt` and `interleave` constructs and in the response and exception handling part of `call` statements. A missing statement block has the same meaning as an empty statement block. If the statement block is omitted, a terminating semi-colon must be present after the guard statement.
 
-The standard escape sequences of C/C++ programming languages are recognized and accepted in TTCN–3 character string values, that is, in literal values of `charstring` and `universal` `charstring` types, as well as in the arguments of built-in operations `log()` and `action()`.
+The standard escape sequences of C/{cpp} programming languages are recognized and accepted in TTCN–3 character string values, that is, in literal values of `charstring` and `universal` `charstring` types, as well as in the arguments of built-in operations `log()` and `action()`.
 
 NOTE: As a consequence of the extended escape sequences and in contrast with the TTCN–3 standard, the backslash character itself has to be always duplicated within character string values.
 
@@ -205,9 +205,9 @@ Types imported from another module (elsewhere) can be added to the anytype of th
 
 == Ports and Test Configurations
 
-If all instances of a TTCN–3 port type are intended to be used for internal communication only (i.e. between two TTCN–3 test components) the generation and linking of an empty Test Port skeleton can be avoided. If the attribute `with { extension "internal" }` is appended to the port type definition, all C++ code that is needed for this port will be included in the output modules.<<13-references.adoc#_9, [9]>>
+If all instances of a TTCN–3 port type are intended to be used for internal communication only (i.e. between two TTCN–3 test components) the generation and linking of an empty Test Port skeleton can be avoided. If the attribute `with { extension "internal" }` is appended to the port type definition, all {cpp} code that is needed for this port will be included in the output modules.<<13-references.adoc#_9, [9]>>
 
-If the user wants to use `address` values in `to` and `from` clause and sender redirect of TTCN–3 port operations the `with { extension "address" }` attribute shall be used in the corresponding port type definition(s) to generate proper C++ code.
+If the user wants to use `address` values in `to` and `from` clause and sender redirect of TTCN–3 port operations the `with { extension "address" }` attribute shall be used in the corresponding port type definition(s) to generate proper {cpp} code.
 
 NOTE: When address is used in port operations the corresponding port must have an active mapping to a port of the test system interface, otherwise the operation will fail at runtime. Using of address values in to and from clauses implicitly means system as component reference. (See section "Support of address type" in <<13-references.adoc#_16, [16]>> for more details).<<13-references.adoc#_10, [10]>>
 
@@ -268,7 +268,7 @@ The compiler realizes TTCN–3 `interleave` statements using a different approac
 
 * Loop constructs `for`, `while` and `do-while` loops are accepted and supported without any restriction in `interleave` statements. The transformation of statements is done in a lower level than the TTCN–3 language, which does not restrict the embedded loops.
 * Statements `activate`, `deactivate` and `stop` can also be used within `interleave`. The execution of these statements is atomic so we did not see the reason why the standard forbids them.
-* The size of our generated code is linear in contrast to the exponential code growth of the canonical algorithm. In other words, the C++ equivalent of every embedded statement appears exactly once in the output.
+* The size of our generated code is linear in contrast to the exponential code growth of the canonical algorithm. In other words, the {cpp} equivalent of every embedded statement appears exactly once in the output.
 * The run-time realization does not require any extra operating system resources, such as multi-threading.
 
 == Logging Disambiguation
@@ -1129,7 +1129,7 @@ All component types are compatible with each empty component type. Empty compone
 
 == Implicit Message Encoding
 
-The TTCN–3 standard <<13-references.adoc#_1, [1]>> does not specify a standard way of data encoding/decoding. TITAN has a common C\++ API for encoding/decoding; to use this API external functions are usually needed. The common solution is to define a TTCN–3 external function and write the C++ code containing the API calls. In most cases the C++ code explicitly written to an auxiliary C++ file contains only simple code patterns which call the encoding/decoding API functions on the specified data. In TITAN there is a TTCN–3 language extension which automatically generates such external functions.
+The TTCN–3 standard <<13-references.adoc#_1, [1]>> does not specify a standard way of data encoding/decoding. TITAN has a common C\++ API for encoding/decoding; to use this API external functions are usually needed. The common solution is to define a TTCN–3 external function and write the {cpp} code containing the API calls. In most cases the {cpp} code explicitly written to an auxiliary {cpp} file contains only simple code patterns which call the encoding/decoding API functions on the specified data. In TITAN there is a TTCN–3 language extension which automatically generates such external functions.
 
 Based on this automatic encoding/decoding mechanism, dual-faced ports are introduced. Dual-faced ports have an external and an internal interface and can automatically transform messages passed through them based on mapping rules defined in TTCN–3 source files. These dual-faced ports eliminate the need for simple port mapping components and thus simplify the test configuration.
 
@@ -1175,7 +1175,7 @@ The following transformation rules may apply to the automatic conversion between
 * No conversion. Applicable to any message type, this is a type preserving mapping, no value conversion is performed. Source and target types must be identical. This mapping does not have any options. For example, control or status indication massages may transparently be conveyed between the external and the internal interfaces. Keyword used in attribute `user` of port type definition: `simple`.
 * Message discarding. This rule means that messages of the given source type will not be forwarded to the opposite interface. Thus, there is no destination type, which must be indicated by the not used symbol (-). This mapping does not have any options. For example, incoming status indication massages of the external interface may be omitted on the internal interface. Keyword used in attribute `user` of port type definition: `discard`.
 * Conversion using the built-in codecs. Here, a corresponding encoding or decoding subroutine of the built-in codecs (for example RAW, TEXT or BER) is invoked. The conversion and error handling options are specified with the same syntax as used for the encoding/decoding functions, see section <<attribute-syntax, Attribute Syntax>>. Here, source type corresponds to input type and target type corresponds to output type of the encoding. Keyword used in attribute `user` of port type definition: `encode` or `decode`; either followed by an optional `errorbehavior`.
-* Function or external function. The transformation rule may be described by an (external) function referenced by the mapping. The function must have the attribute `extension` specifying one of the prototypes given in section <<encoder-decoder-function-prototypes, Encoder/decoder Function Prototypes>>. The incoming and the outgoing type of the function must be equal to the source and target type of the mapping, respectively. The function may be written in TTCN-3, C++ or generated automatically by the compiler. This mapping does not have any options. Keyword used in attribute `user` of port type definition: `function`.
+* Function or external function. The transformation rule may be described by an (external) function referenced by the mapping. The function must have the attribute `extension` specifying one of the prototypes given in section <<encoder-decoder-function-prototypes, Encoder/decoder Function Prototypes>>. The incoming and the outgoing type of the function must be equal to the source and target type of the mapping, respectively. The function may be written in TTCN-3, {cpp} or generated automatically by the compiler. This mapping does not have any options. Keyword used in attribute `user` of port type definition: `function`.
 
 ==== Mapping with One Target
 
@@ -1284,7 +1284,7 @@ The first portion of the input data received in the parameter `param_1` of type 
 [[automatic-generation-of-encoder-decoder-functions]]
 === Automatic Generation of Encoder/decoder Functions
 
-Encoding and decoding is performed by C++ external functions using the built-in codecs. These functions can be generated automatically by the complier. The present section deals with attributes governing the function generation.
+Encoding and decoding is performed by {cpp} external functions using the built-in codecs. These functions can be generated automatically by the complier. The present section deals with attributes governing the function generation.
 
 ==== Input and Output Types
 
@@ -1302,7 +1302,7 @@ The syntax of the `encode` and `decode` attributes is the following:
 
 BER encoding can be applied only for ASN.1 types.
 
-The <`codec_options`> part specifies extra options for the particular codec. Currently it is applicable only in case of BER and XML encoding/decoding. The `codec_options` are copied transparently to the parameter list of the C++ encoder/decoder function call in the generated function body without checking the existence or correctness of the referenced symbols.
+The <`codec_options`> part specifies extra options for the particular codec. Currently it is applicable only in case of BER and XML encoding/decoding. The `codec_options` are copied transparently to the parameter list of the {cpp} encoder/decoder function call in the generated function body without checking the existence or correctness of the referenced symbols.
 
 Example of prototype `convert`, BER encoding and decoding (the PDU is an ASN.1 type):
 [source]
@@ -1335,7 +1335,7 @@ The TITAN codec API has some well defined function calls that control the behavi
 
 Possible error types and error handlings are defined in <<13-references.adoc#\_16, [16]>>, section "The common API". The value of `<error_type>` shall be a value of type `error_type_t` without the prefix `ET_`. The value of `<error_handling>` shall be a value of type `error_behavior_t` without the prefix `EB_`.
 
-The TTCN–3 attribute `errorbehavior(INCOMPL_ANY:ERROR)`, for example, will be mapped to the following C++ statement:
+The TTCN–3 attribute `errorbehavior(INCOMPL_ANY:ERROR)`, for example, will be mapped to the following {cpp} statement:
 [source]
 ----
 TTCN_EncDec::set_error_behavior(TTCN_EncDec::ET_INCOMPL_ANY,
@@ -1453,7 +1453,7 @@ Restrictions:
 * the stream type of custom encoding and decoding functions is `bitstring`
 
 NOTE: Although theoretically variant attributes can be added for custom encoding types, their coding functions would not receive any information about them, so they would essentially be regarded as comments. If custom variant attributes are used, the variant attribute parser’s error level must be lowered to warnings with the compiler option `-E`. +
-The compiler searches all modules when attempting to find the coder functions needed for a type (including those that are not imported to the module where the `encvalue`, `decvalue`, `decmatch` or `@decoded` is located; if this is the case, then an extra include statement is added in the generated C++ code to the header generated for the coder function’s module).
+The compiler searches all modules when attempting to find the coder functions needed for a type (including those that are not imported to the module where the `encvalue`, `decvalue`, `decmatch` or `@decoded` is located; if this is the case, then an extra include statement is added in the generated {cpp} code to the header generated for the coder function’s module).
 
 Example:
 [source]
@@ -1490,7 +1490,7 @@ This can be achieved the same way as the custom encoder and decoder functions de
 
 This can only be done for ASN.1 types, and has the same restrictions as the custom encoder and decoder functions. There is one extra restriction when using legacy codec handling (see section <<setting-the-default-codec-for-asn-1-types, Setting the default codec for ASN.1 types>>): an ASN.1 type cannot have both a PER encoder/decoder function and an encoder/decoder function of a built-in type set (this is checked separately for encoding and decoding).
 
-NOTE: The compiler searches all modules when attempting to find the coder functions needed for a type (including those that are not imported to the module where the `encvalue`, `decvalue`, `decmatch` or `@decoded` is located; if this is the case, then an extra include statement is added in the generated C++ code to the header generated for the coder function’s module).
+NOTE: The compiler searches all modules when attempting to find the coder functions needed for a type (including those that are not imported to the module where the `encvalue`, `decvalue`, `decmatch` or `@decoded` is located; if this is the case, then an extra include statement is added in the generated {cpp} code to the header generated for the coder function’s module).
 
 Example:
 [source]
@@ -1537,7 +1537,7 @@ Example: the attribute +
 
 === API describing External Interfaces
 
-Since the default class hierarchy of test ports does not allow sharing of C++ code with other port types, an alternate internal API is introduced for port types describing external interfaces. This alternate internal API is selected by giving the appropriate TTCN–3 extension attribute to the port. The following extension attributes or attribute combinations can be used:
+Since the default class hierarchy of test ports does not allow sharing of {cpp} code with other port types, an alternate internal API is introduced for port types describing external interfaces. This alternate internal API is selected by giving the appropriate TTCN–3 extension attribute to the port. The following extension attributes or attribute combinations can be used:
 
 .Port extension attributes
 [cols=",,,,,",options="header",]
@@ -1619,7 +1619,7 @@ type record ControlRequest { }
 type record ControlResponse { }
 type record PDUType1 { }
 type record PDUType2 { }
-// the encoder/decoder functions are written in C++
+// the encoder/decoder functions are written in {cpp}
 external function enc_PDUType1(in PDUType1 par) return octetstring
 with { extension "prototype(convert)" }
 external function dec_PDUType1(in octetstring stream,
@@ -7224,13 +7224,13 @@ In general, a module should require the full version of another module or TITAN 
 
 === Consistency Check in the Generated Code
 
-A number of checks are performed during the build to ensure consistency of the TITAN compiler, TITAN runtime, C++ compiler used during the build. The compiler generates checking code that verifies:
+A number of checks are performed during the build to ensure consistency of the TITAN compiler, TITAN runtime, {cpp} compiler used during the build. The compiler generates checking code that verifies:
 
 * The version of the TITAN compiler matches the version of the TITAN runtime
 * The platform on which the build is being performed matches the platform of the TITAN compiler
 * The compiler used to build the TITAN compiler matches the compiler used to build the TITAN runtime
-* Some of this information (in form of C\++ preprocessor macros definitions and instructions) is available to test port writers to express dependency on a particular TITAN version. When a C++ file includes a header generated by the TITAN compiler, that header includes the definitions for the TITAN runtime, including version information. These macro dependencies can be used in user-written C++ code.
-* TTCN3_VERSION is a C/C\++ macro defined by the TITAN runtime headers. It contains an aggregated value of the TITAN major version, minor version and patch level. So, to express that a certain C++ file must be compiled together with TITAN R8C, the following code can be used:
+* Some of this information (in form of C\++ preprocessor macros definitions and instructions) is available to test port writers to express dependency on a particular TITAN version. When a {cpp} file includes a header generated by the TITAN compiler, that header includes the definitions for the TITAN runtime, including version information. These macro dependencies can be used in user-written {cpp} code.
+* TTCN3_VERSION is a C/C\++ macro defined by the TITAN runtime headers. It contains an aggregated value of the TITAN major version, minor version and patch level. So, to express that a certain {cpp} file must be compiled together with TITAN R8C, the following code can be used:
 +
 [source]
 ----
@@ -7239,7 +7239,7 @@ A number of checks are performed during the build to ensure consistency of the T
 #endif
 ----
 * There is a preprocessor macro defined in the makefile which identifies the platform (operating system). It can be one of SOLARIS (for Solaris 6), SOLARIS8 (for Solaris 8 and above), LINUX, WIN32. Platform-dependent code can be isolated using conditional compilation based on these macro definitions.
-* If the TITAN runtime was compiled with the GNU Compiler Collection (GCC), the macro GCC_VERSION is defined by the TITAN runtime headers. Its value is 10000 * (GCC major version) + 100 * (GCC minor version). For example, for GCC 3.4.6, GCC_VERSION will be defined to the value 30400; for GCC 4.1.2 it will be 40100. The value of this macro is compared during C++ compilation to the version of the compiler that was used to build TITAN itself to ensure consistency of the build. The GCC patch level is ignored for this comparison; code generated by a compiler with the same major and minor version is considered compatible. User-written code can use this value if it requires a certain version of the compiler. Alternatively, the predefined macros of the GNU compiler (*GNUC* and *GNUC_MINOR*) can be used for this purpose.
+* If the TITAN runtime was compiled with the GNU Compiler Collection (GCC), the macro GCC_VERSION is defined by the TITAN runtime headers. Its value is 10000 * (GCC major version) + 100 * (GCC minor version). For example, for GCC 3.4.6, GCC_VERSION will be defined to the value 30400; for GCC 4.1.2 it will be 40100. The value of this macro is compared during {cpp} compilation to the version of the compiler that was used to build TITAN itself to ensure consistency of the build. The GCC patch level is ignored for this comparison; code generated by a compiler with the same major and minor version is considered compatible. User-written code can use this value if it requires a certain version of the compiler. Alternatively, the predefined macros of the GNU compiler (*GNUC* and *GNUC_MINOR*) can be used for this purpose.
 * If the TITAN runtime was built with the SunPro compiler, the compiler itself defines the __SUNPRO_CC macro. Please consult the compiler documentation for the possible values.
 
 == Negative Testing
@@ -8089,7 +8089,7 @@ testcase TC(in integer i) runs on MyComp {
 }
 
 // external function can be used to re-throw the error in the catch block with a
-// modified or original (as in the example above) error message, the C++
+// modified or original (as in the example above) error message, the {cpp}
 // implementation:
 void throw_(const CHARSTRING& msg) {
   TTCN_error("%s", (const char*)msg);

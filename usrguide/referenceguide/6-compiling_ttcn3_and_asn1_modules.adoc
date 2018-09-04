@@ -3,7 +3,7 @@
 :toc:
 :table-number: 11
 
-You can translate your TTCN–3 and ASN.1 modules to C++ source code using the program compiler.
+You can translate your TTCN–3 and ASN.1 modules to {cpp} source code using the program compiler.
 
 [[command-line-syntax]]
 == Command Line Syntax
@@ -102,7 +102,7 @@ Instructs the variant attribute parser to display warnings instead of errors for
 
 * `-f`
 +
-Forces the compiler to overwrite (update) the output files even if they exist or the contents of them will be identical. Without this flag the output C++ header and source files will be overwritten only if their contents change compared to the previous version.
+Forces the compiler to overwrite (update) the output files even if they exist or the contents of them will be identical. Without this flag the output {cpp} header and source files will be overwritten only if their contents change compared to the previous version.
 
 * `-g`
 +
@@ -144,7 +144,7 @@ Because of the `-T` flag the `Third.ttcn` will be treated as a TTCN-3 file, and 
 
 * `-l`
 +
-Instructs the compiler to generate source file and line information (that is, #line directives) into the output code so that the error messages of the C\++ compiler refer back to the lines of the original TTCN–3 input module. This makes finding the reason of C++ error messages easier. This option has effect only in the equivalent C++ code of TTCN–3 functions, test cases and control parts and this feature is not provided in other TTCN–3 definitions such as types, constants or templates.WARNING! This is an experimental feature and the C++ compiler may report misleading error messages that refer to totally wrong (e.g. non-existent) TTCN–3 line numbers. In these cases please turn off this flag, repeat the compilation and analyze the generated code manually. Without this flag, the compiler also inserts the source code information for the better understanding of C++ error messages, but only as C++ comments. This option has no impact on the run-time performance of the generated code. The compiler performs full semantic analysis on its entire input; it normally does not generate erroneous C++ code. So this option became obsolete and will be removed in future versions.
+Instructs the compiler to generate source file and line information (that is, #line directives) into the output code so that the error messages of the C\++ compiler refer back to the lines of the original TTCN–3 input module. This makes finding the reason of {cpp} error messages easier. This option has effect only in the equivalent {cpp} code of TTCN–3 functions, test cases and control parts and this feature is not provided in other TTCN–3 definitions such as types, constants or templates.WARNING! This is an experimental feature and the {cpp} compiler may report misleading error messages that refer to totally wrong (e.g. non-existent) TTCN–3 line numbers. In these cases please turn off this flag, repeat the compilation and analyze the generated code manually. Without this flag, the compiler also inserts the source code information for the better understanding of {cpp} error messages, but only as {cpp} comments. This option has no impact on the run-time performance of the generated code. The compiler performs full semantic analysis on its entire input; it normally does not generate erroneous {cpp} code. So this option became obsolete and will be removed in future versions.
 
 * `-L`
 +
@@ -196,11 +196,11 @@ Disables the generation of RAW encoder/decoder routines for all TTCN–3 types.
 
 * `-R`
 +
-Instructs the compiler to generate code for use with the function test runtime. The size of the generated code is significantly reduced, much of the functionality was migrated to the runtime. The generated C++ code has to be compiled using the TITAN_RUNTIME_2 symbol and has to be linked with the function test version of the runtime library. For example instead of the library file libttcn3.a the alternative libttcn3-rt2.a file must be used. The included c++ header files are the same.
+Instructs the compiler to generate code for use with the function test runtime. The size of the generated code is significantly reduced, much of the functionality was migrated to the runtime. The generated {cpp} code has to be compiled using the TITAN_RUNTIME_2 symbol and has to be linked with the function test version of the runtime library. For example instead of the library file libttcn3.a the alternative libttcn3-rt2.a file must be used. The included c++ header files are the same.
 
 * `-s`
 +
-Instructs the compiler to parse the given TTCN–3 and ASN.1 modules and perform semantic analysis on them, but not to generate C++ output. The list of given modules shall be complete so it is not allowed to import from a module that is not in the list. All options that influence the code generation are silently ignored when used together with `-s`.
+Instructs the compiler to parse the given TTCN–3 and ASN.1 modules and perform semantic analysis on them, but not to generate {cpp} output. The list of given modules shall be complete so it is not allowed to import from a module that is not in the list. All options that influence the code generation are silently ignored when used together with `-s`.
 +
 NOTE: The TTCN–3 semantic analyzer of the compiler is still under development, thus, it is not capable of detecting every kind of semantic error.
 
@@ -286,7 +286,7 @@ The single dash character as command line argument has a special meaning: it con
 
 * `–ttcn2json`
 +
-Changes the purpose of the compiler to generate a JSON schema from the types defined in the specified TTCN-3 and ASN.1 modules. The parsing and semantic check of the input modules is still executed, but a JSON schema is generated instead of the C++ files. This must always be the first compiler option, and the previously listed options don’t apply (apart from options `–A` and `–T`), instead the following options are available:
+Changes the purpose of the compiler to generate a JSON schema from the types defined in the specified TTCN-3 and ASN.1 modules. The parsing and semantic check of the input modules is still executed, but a JSON schema is generated instead of the {cpp} files. This must always be the first compiler option, and the previously listed options don’t apply (apart from options `–A` and `–T`), instead the following options are available:
 
 * `-j`
 +
@@ -329,7 +329,7 @@ The switches denoted by square brackets are optional. More than one option may b
 
 * `-a`
 +
-The flag refers to files using absolute path names in the generated Makefile. Makefile uses by default relative path names to access files located outside the current working directory of the compiler. Files from the current working directory are always referenced using only the file name without any directory. The flag generates a Makefile that is capable of using pre-compiled C++ and object files from central directories in order to save disk space and compilation time. WARNING! This feature works only if the generated files of the central directory is kept up-to-date and all directories use exactly the same environment (platform, TTCN–3 Executor and C++ compiler version, etc.).
+The flag refers to files using absolute path names in the generated Makefile. Makefile uses by default relative path names to access files located outside the current working directory of the compiler. Files from the current working directory are always referenced using only the file name without any directory. The flag generates a Makefile that is capable of using pre-compiled {cpp} and object files from central directories in order to save disk space and compilation time. WARNING! This feature works only if the generated files of the central directory is kept up-to-date and all directories use exactly the same environment (platform, TTCN–3 Executor and {cpp} compiler version, etc.).
 
 * `-c`
 +
@@ -401,7 +401,7 @@ Writes the Makefile to the given directory or file. If the given argument is an 
 
 * `-O <file>`
 +
-Add file to the list of other files in the generated `Makefile` without analyzing the file contents and suffix. This option can be used to temporarily exclude some TTCN-3, ASN.1 modules ASN.1 or C++ files from the build process, but add them to the archive created by the command make archive.
+Add file to the list of other files in the generated `Makefile` without analyzing the file contents and suffix. This option can be used to temporarily exclude some TTCN-3, ASN.1 modules ASN.1 or {cpp} files from the build process, but add them to the archive created by the command make archive.
 
 * `-p`
 +
@@ -439,7 +439,7 @@ Enforces legacy behaviour of the "out" function parameters (the "out" parameter 
 +
 Enables code coverage and profiling in the TTCN-3 files listed in the `file` argument. The TTCN-3 files in the list must be separated by new lines and must also appear among the makefile generator’s arguments (this switch is ignored if the –t option is present).
 +
-If any of the source (TTCN-3, ASN.1, user-written C++) files does not exist or cannot be accessed, `ttcn3_makefilegen` exits with an error.
+If any of the source (TTCN-3, ASN.1, user-written {cpp}) files does not exist or cannot be accessed, `ttcn3_makefilegen` exits with an error.
 +
 Other options are discussed in the next chapters.
 
@@ -762,7 +762,7 @@ The `makefilegen` tool allows the usage of code splitting mechanisms when genera
 
 Let "number" be equal to 4 for this example. We want to split the files into four pieces.
 
-Firstly, TITAN finds the TTCN3 module whose C\++ generated code will be the largest. In this example, it will be 10000 characters (let’s call it MAX). So the largest generated C++ module contains 10000 characters.
+Firstly, TITAN finds the TTCN3 module whose C\++ generated code will be the largest. In this example, it will be 10000 characters (let’s call it MAX). So the largest generated {cpp} module contains 10000 characters.
 
 Secondly TITAN calculates the splitting threshold by dividing MAX with "number", so it will be 10000 / 4 = 2500 in this case. TITAN will only split the generated c++ files which are larger than 2500 characters.
 
@@ -816,11 +816,11 @@ NOTE: Error recovery is not always successful and it might result in additional 
 
 After the syntax check the compiler performs semantic analysis on TTCN–3 /ASN.1 module(s) and verifies whether the various definitions and language elements are used in the appropriate way according to the static semantics of TTCN–3 and ASN.1 languages. In addition to error messages the compiler reports a warning when the corresponding definition is correct, but it might have unwanted effects.
 
-If both syntax and semantic checks were successful, the compiler generates a C++ header and source file that contains the translated module. If the name of the input module is `MyModule` (i.e. it begins with module `MyModule`), the name of the generated header and source file will be `MyModule.hh` and `MyModule.cc`, respectively. Note that the name of the output file does NOT depend on the name of input file. In ASN.1 module names the hyphens are converted to underscore characters (e.g. the C++ code for `My-Asn-Module` will be placed into `My_Asn_Module.hh` and `My_Asn_Module.cc`).
+If both syntax and semantic checks were successful, the compiler generates a {cpp} header and source file that contains the translated module. If the name of the input module is `MyModule` (i.e. it begins with module `MyModule`), the name of the generated header and source file will be `MyModule.hh` and `MyModule.cc`, respectively. Note that the name of the output file does NOT depend on the name of input file. In ASN.1 module names the hyphens are converted to underscore characters (e.g. the {cpp} code for `My-Asn-Module` will be placed into `My_Asn_Module.hh` and `My_Asn_Module.cc`).
 
-By default, the compiler generates the C++ code for all input modules. This can be unnecessarily time-consuming when doing incremental builds for large projects. The build process can be significantly speed up if the compiler option - (single dash) is used. In this case the C++ code will be generated only for those modules that have changed since last build of the ASN.1 modules. With selective code generation it can be exploited that the make utility can easily tell which source files were changed since the last compilation.
+By default, the compiler generates the {cpp} code for all input modules. This can be unnecessarily time-consuming when doing incremental builds for large projects. The build process can be significantly speed up if the compiler option - (single dash) is used. In this case the {cpp} code will be generated only for those modules that have changed since last build of the ASN.1 modules. With selective code generation it can be exploited that the make utility can easily tell which source files were changed since the last compilation.
 
-This sophisticated command line syntax is necessary because in general case it is impossible to perform the semantic analysis on a subset of the modules because those may import from modules outside the list. Moreover, to avoid undesirable side-effects of the code optimization techniques implemented in the compiler (e.g. type and value folding) the C++ code is generated not only for the modified modules, but for all modules that import definitions (either directly or indirectly) from the modified ones.
+This sophisticated command line syntax is necessary because in general case it is impossible to perform the semantic analysis on a subset of the modules because those may import from modules outside the list. Moreover, to avoid undesirable side-effects of the code optimization techniques implemented in the compiler (e.g. type and value folding) the {cpp} code is generated not only for the modified modules, but for all modules that import definitions (either directly or indirectly) from the modified ones.
 
 When the compiler translates an ASN.1 module, the different ASN.1 types are mapped to TTCN–3 types as described in the table below.
 
