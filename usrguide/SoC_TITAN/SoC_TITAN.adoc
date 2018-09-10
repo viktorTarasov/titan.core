@@ -3063,9 +3063,9 @@ NOTE: Nonsupported mandatory capabilities are to be identified in the ICS, with 
 |=====================================================================================================================================================================================================================================
 |Item |TC/TP reference |purpose |Reference in ES 201 873-1 |Status |Support
 |1 |NegSem_160104_invoking_functions_from_specific_places_001 |The IUT recognizes restrictions described in section 16.1.4. STF409 assumes that the list given in section 16.1.4 describes mandatory restrictions |Clause 16.1.4 |m |n
-|2 |NegSem_160104_invoking_functions_from_specific_places_002 |The IUT recognizes restrictions described in section 16.1.4. STF409 assumes that the list given in section 16.1.4 describes mandatory restrictions |Clause 16.1.4 |m |n
-|3 |NegSem_160104_invoking_functions_from_specific_places_003 |The IUT recognizes restrictions described in section 16.1.4. STF409 assumes that the list given in section 16.1.4 describes mandatory restrictions |Clause 16.1.4 |m |n
-|4 |NegSem_160104_invoking_functions_from_specific_places_004 |The IUT recognizes restrictions described in section 16.1.4. STF409 assumes that the list given in section 16.1.4 describes mandatory restrictions |Clause 16.1.4 |m |n
+|2 |NegSem_160104_invoking_functions_from_specific_places_002 |The IUT recognizes restrictions described in section 16.1.4. STF409 assumes that the list given in section 16.1.4 describes mandatory restrictions |Clause 16.1.4 |m |y
+|3 |NegSem_160104_invoking_functions_from_specific_places_003 |The IUT recognizes restrictions described in section 16.1.4. STF409 assumes that the list given in section 16.1.4 describes mandatory restrictions |Clause 16.1.4 |m |y
+|4 |NegSem_160104_invoking_functions_from_specific_places_004 |The IUT recognizes restrictions described in section 16.1.4. STF409 assumes that the list given in section 16.1.4 describes mandatory restrictions |Clause 16.1.4 |m |y
 |5 |NegSem_160104_invoking_functions_from_specific_places_005 |verify that the `create` operation cannot be used in a function called during receiving operation (in templates) |Clause 16.1.4 |m |n
 |6 |NegSem_160104_invoking_functions_from_specific_places_006 |verify that the `component.start` operation cannot be used in a function called during receiving operation (in templates) |Clause 16.1.4 |m |n
 |7 |NegSem_160104_invoking_functions_from_specific_places_007 |verify that the `component.stop` operation cannot be used in a function called during receiving operation (in templates) |Clause 16.1.4 |m |n
@@ -3148,174 +3148,174 @@ NOTE: Nonsupported mandatory capabilities are to be identified in the ICS, with 
 |84 |NegSem_160104_invoking_functions_from_specific_places_084 |verify that the `setverdict` operation cannot be used in a function called during receiving operation (in template fields) |Clause 16.1.4 |m |n
 |85 |NegSem_160104_invoking_functions_from_specific_places_085 |verify that the `activate` operation cannot be used in a function called during receiving operation (in template fields) |Clause 16.1.4 |m |n
 |86 |NegSem_160104_invoking_functions_from_specific_places_086 |verify that the `deactivate` operation cannot be used in a function called during receiving operation (in template fields) |Clause 16.1.4 |m |n
-|87 |NegSem_160104_invoking_functions_from_specific_places_087 |verify that the `create` operation cannot be used in a function called during receiving operation (in in-line templates) |Clause 16.1.4 |m |n
-|88 |NegSem_160104_invoking_functions_from_specific_places_089 |verify that the `component.start` operation cannot be used in a function called during receiving operation (in in-line templates) |Clause 16.1.4 |m |n
-|89 |NegSem_160104_invoking_functions_from_specific_places_089 |verify that the `component.stop` operation cannot be used in a function called during receiving operation (in in-line templates) |Clause 16.1.4 |m |n
-|90 |NegSem_160104_invoking_functions_from_specific_places_090 |verify that the `kill` operation cannot be used in a function called during receiving operation (in in-line templates) |Clause 16.1.4 |m |n
-|91 |NegSem_160104_invoking_functions_from_specific_places_091 |verify that the `component.running` operation cannot be used in a function called during receiving operation (in in-line templates) |Clause 16.1.4 |m |n
-|92 |NegSem_160104_invoking_functions_from_specific_places_092 |verify that the `alive` operation cannot be used in a function called during receiving operation (in in-line templates) |Clause 16.1.4 |m |n
-|93 |NegSem_160104_invoking_functions_from_specific_places_093 |verify that the `done` operation cannot be used in a function called during receiving operation (in in-line templates) |Clause 16.1.4 |m |n
-|94 |NegSem_160104_invoking_functions_from_specific_places_094 |verify that the `killed` operation cannot be used in a function called during receiving operation (in in-line templates) |Clause 16.1.4 |m |n
-|95 |NegSem_160104_invoking_functions_from_specific_places_095 |verify that the `port.start` operation cannot be used in a function called during receiving operation (in in-line templates) |Clause 16.1.4 |m |n
-|96 |NegSem_160104_invoking_functions_from_specific_places_096 |verify that the `port.stop` operation cannot be used in a function called during receiving operation (in in-line templates) |Clause 16.1.4 |m |n
-|97 |NegSem_160104_invoking_functions_from_specific_places_097 |verify that the `halt` operation cannot be used in a function called during receiving operation (in in-line templates) |Clause 16.1.4 |m |n
-|98 |NegSem_160104_invoking_functions_from_specific_places_098 |verify that the `clear` operation cannot be used in a function called during receiving operation (in in-line templates) |Clause 16.1.4 |m |n
-|99 |NegSem_160104_invoking_functions_from_specific_places_099 |verify that the `checkstate` operation cannot be used in a function called during receiving operation (in in-line templates) |Clause 16.1.4 |m |n
-|100 |NegSem_160104_invoking_functions_from_specific_places_100 |verify that the `send` operation cannot be used in a function called during receiving operation (in in-line templates) |Clause 16.1.4 |m |n
-|101 |NegSem_160104_invoking_functions_from_specific_places_101 |verify that the `receive` operation cannot be used in a function called during receiving operation (in in-line templates) |Clause 16.1.4 |m |n
-|102 |NegSem_160104_invoking_functions_from_specific_places_102 |verify that the `trigger` operation cannot be used in a function called during receiving operation (in in-line templates) |Clause 16.1.4 |m |n
-|103 |NegSem_160104_invoking_functions_from_specific_places_103 |verify that the `call` operation cannot be used in a function called during receiving operation (in in-line templates) |Clause 16.1.4 |m |n
-|104 |NegSem_160104_invoking_functions_from_specific_places_104 |verify that the `getcall` operation cannot be used in a function called during receiving operation (in in-line templates) |Clause 16.1.4 |m |n
-|105 |NegSem_160104_invoking_functions_from_specific_places_105 |verify that the `reply` operation cannot be used in a function called during receiving operation (in in-line templates) |Clause 16.1.4 |m |n
-|106 |NegSem_160104_invoking_functions_from_specific_places_106 |verify that the `getreply` operation cannot be used in a function called during receiving operation (in in-line templates) |Clause 16.1.4 |m |n
-|107 |NegSem_160104_invoking_functions_from_specific_places_107 |verify that the `raise` operation cannot be used in a function called during receiving operation (in in-line templates) |Clause 16.1.4 |m |n
-|108 |NegSem_160104_invoking_functions_from_specific_places_108 |verify that the `catch` operation cannot be used in a function called during receiving operation (in in-line templates) |Clause 16.1.4 |m |n
-|109 |NegSem_160104_invoking_functions_from_specific_places_109 |verify that the `check` operation cannot be used in a function called during receiving operation (in in-line templates) |Clause 16.1.4 |m |n
-|110 |NegSem_160104_invoking_functions_from_specific_places_110 |verify that the `connect` operation cannot be used in a function called during receiving operation (in in-line templates) |Clause 16.1.4 |m |n
-|111 |NegSem_160104_invoking_functions_from_specific_places_111 |verify that the `disconnect` operation cannot be used in a function called during receiving operation (in in-line templates) |Clause 16.1.4 |m |n
-|112 |NegSem_160104_invoking_functions_from_specific_places_112 |verify that the `map` operation cannot be used in a function called during receiving operation (in in-line templates) |Clause 16.1.4 |m |n
-|113 |NegSem_160104_invoking_functions_from_specific_places_113 |verify that the `unmap` operation cannot be used in a function called during receiving operation (in in-line templates) |Clause 16.1.4 |m |n
-|114 |NegSem_160104_invoking_functions_from_specific_places_114 |verify that the `action` operation cannot be used in a function called during receiving operation (in in-line templates) |Clause 16.1.4 |m |n
-|115 |NegSem_160104_invoking_functions_from_specific_places_115 |verify that the `timer.start` operation cannot be used in a function called during receiving operation (in in-line templates) |Clause 16.1.4 |m |n
-|116 |NegSem_160104_invoking_functions_from_specific_places_116 |verify that the `timer.stop` operation cannot be used in a function called during receiving operation (in in-line templates) |Clause 16.1.4 |m |n
-|117 |NegSem_160104_invoking_functions_from_specific_places_117 |verify that the `timer.running` operation cannot be used in a function called during receiving operation (in in-line templates) |Clause 16.1.4 |m |n
-|118 |NegSem_160104_invoking_functions_from_specific_places_118 |verify that the `read` operation cannot be used in a function called during receiving operation (in in-line templates) |Clause 16.1.4 |m |n
-|119 |NegSem_160104_invoking_functions_from_specific_places_119 |verify that the `timeout` operation cannot be used in a function called during receiving operation (in in-line templates) |Clause 16.1.4 |m |n
-|120 |NegSem_160104_invoking_functions_from_specific_places_120 |verify that a non-deterministic external function call cannot be used in a function called during receiving operation (in in-line templates) |Clause 16.1.4 |m |n
-|121 |NegSem_160104_invoking_functions_from_specific_places_121 |verify that the predefined `rnd` function cannot be used in a function called during receiving operation (in in-line templates) |Clause 16.1.4 |m |n
-|122 |NegSem_160104_invoking_functions_from_specific_places_122 |verify a function called during receiving operation cannot contain an assignment of a component variable (in in-line templates) |Clause 16.1.4 |m |n
-|123 |NegSem_160104_invoking_functions_from_specific_places_123 |verify a function called during receiving operation cannot contain a component variable used as an actual `out` parameter (in in-line templates) |Clause 16.1.4 |m |n
-|124 |NegSem_160104_invoking_functions_from_specific_places_124 |verify a function called during receiving operation cannot contain a component variable used as an actual `inout` parameter (in in-line templates) |Clause 16.1.4 |m |n
-|125 |NegSem_160104_invoking_functions_from_specific_places_125 |verify that the `setverdict` operation cannot be used in a function called during receiving operation (in in-line templates) |Clause 16.1.4 |m |n
-|126 |NegSem_160104_invoking_functions_from_specific_places_126 |verify that the `activate` operation cannot be used in a function called during receiving operation (in in-line templates) |Clause 16.1.4 |m |n
-|127 |NegSem_160104_invoking_functions_from_specific_places_127 |verify that the `deactivate` operation cannot be used in a function called during receiving operation (in in-line templates) |Clause 16.1.4 |m |n
-|128 |NegSem_160104_invoking_functions_from_specific_places_128 |verify a function called during receiving operation cannot contain an `out` parameter (in in-line templates) |Clause 16.1.4 |m |n
-|129 |NegSem_160104_invoking_functions_from_specific_places_129 |verify a function called during receiving operation cannot contain an `inout` parameter (in in-line templates) |Clause 16.1.4 |m |n
-|130 |NegSem_160104_invoking_functions_from_specific_places_130 |verify that the `create` operation cannot be used in a function called during receiving operation (as actual parameters) |Clause 16.1.4 |m |n
-|131 |NegSem_160104_invoking_functions_from_specific_places_131 |verify that the `component.start` operation cannot be used in a function called during receiving operation (as actual parameters) |Clause 16.1.4 |m |n
-|132 |NegSem_160104_invoking_functions_from_specific_places_132 |verify that the `component.stop` operation cannot be used in a function called during receiving operation (as actual parameters) |Clause 16.1.4 |m |n
-|133 |NegSem_160104_invoking_functions_from_specific_places_133 |verify that the `kill` operation cannot be used in a function called during receiving operation (as actual parameters) |Clause 16.1.4 |m |n
-|134 |NegSem_160104_invoking_functions_from_specific_places_134 |verify that the `component.running` operation cannot be used in a function called during receiving operation (as actual parameters) |Clause 16.1.4 |m |n
-|135 |NegSem_160104_invoking_functions_from_specific_places_135 |verify that the `alive` operation cannot be used in a function called during receiving operation (as actual parameters) |Clause 16.1.4 |m |n
-|136 |NegSem_160104_invoking_functions_from_specific_places_136 |verify that the `done` operation cannot be used in a function called during receiving operation (as actual parameters) |Clause 16.1.4 |m |n
-|137 |NegSem_160104_invoking_functions_from_specific_places_137 |verify that the `killed` operation cannot be used in a function called during receiving operation (as actual parameters) |Clause 16.1.4 |m |n
-|138 |NegSem_160104_invoking_functions_from_specific_places_138 |verify that the `port.start` operation cannot be used in a function called during receiving operation (as actual parameters) |Clause 16.1.4 |m |n
-|139 |NegSem_160104_invoking_functions_from_specific_places_139 |verify that the `port.stop` operation cannot be used in a function called during receiving operation (as actual parameters) |Clause 16.1.4 |m |n
-|140 |NegSem_160104_invoking_functions_from_specific_places_140 |verify that the `halt` operation cannot be used in a function called during receiving operation (as actual parameters) |Clause 16.1.4 |m |n
-|141 |NegSem_160104_invoking_functions_from_specific_places_141 |verify that the `clear` operation cannot be used in a function called during receiving operation (as actual parameters) |Clause 16.1.4 |m |n
-|142 |NegSem_160104_invoking_functions_from_specific_places_142 |verify that the `checkstate` operation cannot be used in a function called during receiving operation (as actual parameters) |Clause 16.1.4 |m |n
-|143 |NegSem_160104_invoking_functions_from_specific_places_143 |verify that the `send` operation cannot be used in a function called during receiving operation (as actual parameters) |Clause 16.1.4 |m |n
-|144 |NegSem_160104_invoking_functions_from_specific_places_144 |verify that the `receive` operation cannot be used in a function called during receiving operation (as actual parameters) |Clause 16.1.4 |m |n
-|145 |NegSem_160104_invoking_functions_from_specific_places_145 |verify that the `trigger` operation cannot be used in a function called during receiving operation (as actual parameters) |Clause 16.1.4 |m |n
-|146 |NegSem_160104_invoking_functions_from_specific_places_146 |verify that the `call` operation cannot be used in a function called during receiving operation (as actual parameters) |Clause 16.1.4 |m |n
-|147 |NegSem_160104_invoking_functions_from_specific_places_147 |verify that the `getcall` operation cannot be used in a function called during receiving operation (as actual parameters) |Clause 16.1.4 |m |n
-|148 |NegSem_160104_invoking_functions_from_specific_places_148 |verify that the `reply` operation cannot be used in a function called during receiving operation (as actual parameters) |Clause 16.1.4 |m |n
-|149 |NegSem_160104_invoking_functions_from_specific_places_149 |verify that the `getreply` operation cannot be used in a function called during receiving operation (as actual parameters) |Clause 16.1.4 |m |n
-|150 |NegSem_160104_invoking_functions_from_specific_places_150 |verify that the `raise` operation cannot be used in a function called during receiving operation (as actual parameters) |Clause 16.1.4 |m |n
-|151 |NegSem_160104_invoking_functions_from_specific_places_151 |verify that the `catch` operation cannot be used in a function called during receiving operation (as actual parameters) |Clause 16.1.4 |m |n
-|152 |NegSem_160104_invoking_functions_from_specific_places_152 |verify that the `check` operation cannot be used in a function called during receiving operation (as actual parameters) |Clause 16.1.4 |m |n
-|153 |NegSem_160104_invoking_functions_from_specific_places_153 |verify that the `connect` operation cannot be used in a function called during receiving operation (as actual parameters) |Clause 16.1.4 |m |n
-|154 |NegSem_160104_invoking_functions_from_specific_places_154 |verify that the `disconnect` operation cannot be used in a function called during receiving operation (as actual parameters) |Clause 16.1.4 |m |n
-|155 |NegSem_160104_invoking_functions_from_specific_places_155 |verify that the `map` operation cannot be used in a function called during receiving operation (as actual parameters) |Clause 16.1.4 |m |n
-|156 |NegSem_160104_invoking_functions_from_specific_places_156 |verify that the `unmap` operation cannot be used in a function called during receiving operation (as actual parameters) |Clause 16.1.4 |m |n
-|157 |NegSem_160104_invoking_functions_from_specific_places_157 |verify that the `action` operation cannot be used in a function called during receiving operation (as actual parameters) |Clause 16.1.4 |m |n
-|158 |NegSem_160104_invoking_functions_from_specific_places_158 |verify that the `timer.start` operation cannot be used in a function called during receiving operation (as actual parameters) |Clause 16.1.4 |m |n
-|159 |NegSem_160104_invoking_functions_from_specific_places_159 |verify that the `timer.stop` operation cannot be used in a function called during receiving operation (as actual parameters) |Clause 16.1.4 |m |n
-|160 |NegSem_160104_invoking_functions_from_specific_places_160 |verify that the `timer.running` operation cannot be used in a function called during receiving operation (as actual parameters) |Clause 16.1.4 |m |n
-|161 |NegSem_160104_invoking_functions_from_specific_places_161 |verify that the `read` operation cannot be used in a function called during receiving operation (as actual parameters) |Clause 16.1.4 |m |n
-|162 |NegSem_160104_invoking_functions_from_specific_places_162 |verify that the `timeout` operation cannot be used in a function called during receiving operation (as actual parameters) |Clause 16.1.4 |m |n
-|163 |NegSem_160104_invoking_functions_from_specific_places_163 |verify that a non-deterministic external function call cannot be used in a function called during receiving operation (as actual parameters) |Clause 16.1.4 |m |n
-|164 |NegSem_160104_invoking_functions_from_specific_places_164 |verify that the predefined `rnd` function cannot be used in a function called during receiving operation (as actual parameters) |Clause 16.1.4 |m |n
-|165 |NegSem_160104_invoking_functions_from_specific_places_165 |verify a function called during receiving operation cannot contain an assignment of a component variable (as actual parameters) |Clause 16.1.4 |m |n
-|166 |NegSem_160104_invoking_functions_from_specific_places_166 |verify a function called during receiving operation cannot contain a component variable used as an actual out parameter (as actual parameters) |Clause 16.1.4 |m |n
-|167 |NegSem_160104_invoking_functions_from_specific_places_167 |verify a function called during receiving operation cannot contain a component variable used as an actual `inout` parameter (as actual parameters) |Clause 16.1.4 |m |n
-|168 |NegSem_160104_invoking_functions_from_specific_places_168 |verify that the `setverdict` operation cannot be used in a function called during receiving operation (as actual parameters) |Clause 16.1.4 |m |n
-|169 |NegSem_160104_invoking_functions_from_specific_places_169 |verify that the `activate` operation cannot be used in a function called during receiving operation (as actual parameters) |Clause 16.1.4 |m |n
-|170 |NegSem_160104_invoking_functions_from_specific_places_170 |verify that the `deactivate` operation cannot be used in a function called during receiving operation (as actual parameters) |Clause 16.1.4 |m |n
-|171 |NegSem_160104_invoking_functions_from_specific_places_171 |verify a function called during receiving operation cannot contain an out parameter (as actual parameters) |Clause 16.1.4 |m |n
-|172 |NegSem_160104_invoking_functions_from_specific_places_172 |verify a function called during receiving operation cannot contain an `inout` parameter (as actual parameters) |Clause 16.1.4 |m |n
-|173 |NegSem_160104_invoking_functions_from_specific_places_173 |verify that the `create` operation cannot be used in guards of `alt` statements |Clause 16.1.4 |m |n
-|174 |NegSem_160104_invoking_functions_from_specific_places_174 |verify that the `component.start` operation cannot be used in guards of `alt` statements |Clause 16.1.4 |m |n
-|175 |NegSem_160104_invoking_functions_from_specific_places_175 |verify that the `component.stop` operation cannot be used in guards of `alt` statements |Clause 16.1.4 |m |n
-|176 |NegSem_160104_invoking_functions_from_specific_places_176 |verify that the `kill` operation cannot be used in guards of `alt` statements |Clause 16.1.4 |m |n
-|177 |NegSem_160104_invoking_functions_from_specific_places_177 |verify that the `component.running` operation cannot be used in guards of `alt` statements |Clause 16.1.4 |m |n
-|178 |NegSem_160104_invoking_functions_from_specific_places_178 |verify that the `alive` operation cannot be used in guards of `alt` statements |Clause 16.1.4 |m |n
-|179 |NegSem_160104_invoking_functions_from_specific_places_179 |verify that the `done` operation cannot be used in guards of `alt` statements |Clause 16.1.4 |m |n
-|180 |NegSem_160104_invoking_functions_from_specific_places_180 |verify that the `killed` operation cannot be used in guards of `alt` statements |Clause 16.1.4 |m |n
-|181 |NegSem_160104_invoking_functions_from_specific_places_181 |verify that the `port.start` operation cannot be used in guards of `alt` statements |Clause 16.1.4 |m |n
-|182 |NegSem_160104_invoking_functions_from_specific_places_182 |verify that the `port.stop` operation cannot be used in guards of `alt` statements |Clause 16.1.4 |m |n
-|183 |NegSem_160104_invoking_functions_from_specific_places_183 |verify that the `halt` operation cannot be used in guards of `alt` statements |Clause 16.1.4 |m |n
-|184 |NegSem_160104_invoking_functions_from_specific_places_184 |verify that the `clear` operation cannot be used in guards of `alt` statements |Clause 16.1.4 |m |n
-|185 |NegSem_160104_invoking_functions_from_specific_places_185 |verify that the `checkstate` operation cannot be used in guards of `alt` statements |Clause 16.1.4 |m |n
-|186 |NegSem_160104_invoking_functions_from_specific_places_186 |verify that the `send` operation cannot be used in guards of `alt` statements |Clause 16.1.4 |m |n
-|187 |NegSem_160104_invoking_functions_from_specific_places_187 |verify that the `receive` operation cannot be used in guards of `alt` statements |Clause 16.1.4 |m |n
-|188 |NegSem_160104_invoking_functions_from_specific_places_188 |verify that the `trigger` operation cannot be used in guards of `alt` statements |Clause 16.1.4 |m |n
-|189 |NegSem_160104_invoking_functions_from_specific_places_189 |verify that the `call` operation cannot be used in guards of `alt` statements |Clause 16.1.4 |m |n
-|190 |NegSem_160104_invoking_functions_from_specific_places_190 |verify that the `getcall` operation cannot be used in guards of `alt` statements |Clause 16.1.4 |m |n
-|191 |NegSem_160104_invoking_functions_from_specific_places_191 |verify that the `reply` operation cannot be used in guards of `alt` statements |Clause 16.1.4 |m |n
-|192 |NegSem_160104_invoking_functions_from_specific_places_192 |verify that the `getreply` operation cannot be used in guards of `alt` statements |Clause 16.1.4 |m |n
-|193 |NegSem_160104_invoking_functions_from_specific_places_193 |verify that the `raise` operation cannot be used in guards of `alt` statements |Clause 16.1.4 |m |n
-|194 |NegSem_160104_invoking_functions_from_specific_places_194 |verify that the `catch` operation cannot be used in guards of `alt` statements |Clause 16.1.4 |m |n
-|195 |NegSem_160104_invoking_functions_from_specific_places_195 |verify that the `check` operation cannot be used in guards of `alt` statements |Clause 16.1.4 |m |n
-|196 |NegSem_160104_invoking_functions_from_specific_places_196 |verify that the `connect` operation cannot be used in guards of `alt` statements |Clause 16.1.4 |m |n
-|197 |NegSem_160104_invoking_functions_from_specific_places_197 |verify that the `disconnect` operation cannot be used in guards of `alt` statements |Clause 16.1.4 |m |n
-|198 |NegSem_160104_invoking_functions_from_specific_places_198 |verify that the `map` operation cannot be used in guards of `alt` statements |Clause 16.1.4 |m |n
-|199 |NegSem_160104_invoking_functions_from_specific_places_199 |verify that the `unmap` operation cannot be used in guards of `alt` statements |Clause 16.1.4 |m |n
-|200 |NegSem_160104_invoking_functions_from_specific_places_200 |verify that the `action` operation cannot be used in guards of `alt` statements |Clause 16.1.4 |m |n
-|201 |NegSem_160104_invoking_functions_from_specific_places_201 |verify that the `timer.start` operation cannot be used in guards of `alt` statements |Clause 16.1.4 |m |n
-|202 |NegSem_160104_invoking_functions_from_specific_places_202 |verify that the `timer.stop` operation cannot be used in guards of `alt` statements |Clause 16.1.4 |m |n
-|203 |NegSem_160104_invoking_functions_from_specific_places_203 |verify that the `timer.running` operation cannot be used in guards of `alt` statements |Clause 16.1.4 |m |n
-|204 |NegSem_160104_invoking_functions_from_specific_places_204 |verify that the `read` operation cannot be used in guards of `alt` statements |Clause 16.1.4 |m |n
-|205 |NegSem_160104_invoking_functions_from_specific_places_205 |verify that the `timeout` operation cannot be used in guards of `alt` statements |Clause 16.1.4 |m |n
-|206 |NegSem_160104_invoking_functions_from_specific_places_206 |verify a function called in a guard of an `alt` statement cannot contain an assignment of a component variable |Clause 16.1.4 |m |n
-|207 |NegSem_160104_invoking_functions_from_specific_places_207 |verify a function called in a guard of an `alt` statement cannot contain a component variable used as an actual `out` parameter |Clause 16.1.4 |m |n
-|208 |NegSem_160104_invoking_functions_from_specific_places_208 |verify a function called in a guard of an `alt` statement cannot contain a component variable used as an actual `inout` parameter |Clause 16.1.4 |m |n
-|209 |NegSem_160104_invoking_functions_from_specific_places_209 |verify that the `activate` operation cannot be used in guards of `alt` statements |Clause 16.1.4 |m |n
-|210 |NegSem_160104_invoking_functions_from_specific_places_210 |verify that the `deactivate` operation cannot be used in guards of `alt` statements |Clause 16.1.4 |m |n
-|211 |NegSem_160104_invoking_functions_from_specific_places_211 |verify that a function called from a `guard` statement of an `alt` operation cannot contain `out` parameters |Clause 16.1.4 |m |n
-|212 |NegSem_160104_invoking_functions_from_specific_places_212 |verify that the `create` operation cannot be used in guards of altsteps |Clause 16.1.4 |m |n
-|213 |NegSem_160104_invoking_functions_from_specific_places_213 |verify that the `component.start` operation cannot be used in guards of altsteps |Clause 16.1.4 |m |n
-|214 |NegSem_160104_invoking_functions_from_specific_places_214 |verify that the `component.stop` operation cannot be used in guards of altsteps |Clause 16.1.4 |m |n
-|215 |NegSem_160104_invoking_functions_from_specific_places_215 |verify that the `kill` operation cannot be used in guards of altsteps |Clause 16.1.4 |m |n
-|216 |NegSem_160104_invoking_functions_from_specific_places_216 |verify that the `component.running` operation cannot be used in guards of altsteps |Clause 16.1.4 |m |n
-|217 |NegSem_160104_invoking_functions_from_specific_places_217 |verify that the `alive` operation cannot be used in guards of altsteps |Clause 16.1.4 |m |n
-|218 |NegSem_160104_invoking_functions_from_specific_places_218 |verify that the `done` operation cannot be used in guards of altsteps |Clause 16.1.4 |m |n
-|219 |NegSem_160104_invoking_functions_from_specific_places_219 |verify that the `killed` operation cannot be used in guards of altsteps |Clause 16.1.4 |m |n
-|220 |NegSem_160104_invoking_functions_from_specific_places_220 |verify that the `port.start` operation cannot be used in guards of altsteps |Clause 16.1.4 |m |n
-|221 |NegSem_160104_invoking_functions_from_specific_places_221 |verify that the `port.stop` operation cannot be used in guards of altsteps |Clause 16.1.4 |m |n
-|222 |NegSem_160104_invoking_functions_from_specific_places_222 |verify that the `halt` operation cannot be used in guards of altsteps |Clause 16.1.4 |m |n
-|223 |NegSem_160104_invoking_functions_from_specific_places_223 |verify that the `clear` operation cannot be used in guards of altsteps |Clause 16.1.4 |m |n
-|224 |NegSem_160104_invoking_functions_from_specific_places_224 |verify that the `checkstate` operation cannot be used in guards of altsteps |Clause 16.1.4 |m |n
-|225 |NegSem_160104_invoking_functions_from_specific_places_225 |verify that the `send` operation cannot be used in guards of altsteps |Clause 16.1.4 |m |n
-|226 |NegSem_160104_invoking_functions_from_specific_places_226 |verify that the `receive` operation cannot be used in guards of altsteps |Clause 16.1.4 |m |n
-|227 |NegSem_160104_invoking_functions_from_specific_places_227 |verify that the `trigger` operation cannot be used in guards of altsteps |Clause 16.1.4 |m |n
-|228 |NegSem_160104_invoking_functions_from_specific_places_228 |verify that the `call` operation cannot be used in guards of altsteps |Clause 16.1.4 |m |n
-|229 |NegSem_160104_invoking_functions_from_specific_places_229 |verify that the `getcall` operation cannot be used in guards of altsteps |Clause 16.1.4 |m |n
-|230 |NegSem_160104_invoking_functions_from_specific_places_230 |verify that the `reply` operation cannot be used in guards of altsteps |Clause 16.1.4 |m |n
-|231 |NegSem_160104_invoking_functions_from_specific_places_231 |verify that the `getreply` operation cannot be used in guards of altsteps |Clause 16.1.4 |m |n
-|232 |NegSem_160104_invoking_functions_from_specific_places_232 |verify that the `raise` operation cannot be used in guards of altsteps |Clause 16.1.4 |m |n
-|233 |NegSem_160104_invoking_functions_from_specific_places_233 |verify that the `catch` operation cannot be used in guards of altsteps |Clause 16.1.4 |m |n
-|234 |NegSem_160104_invoking_functions_from_specific_places_234 |verify that the `check` operation cannot be used in guards of altsteps |Clause 16.1.4 |m |n
-|235 |NegSem_160104_invoking_functions_from_specific_places_235 |verify that the `connect` operation cannot be used in guards of altsteps |Clause 16.1.4 |m |n
-|236 |NegSem_160104_invoking_functions_from_specific_places_236 |verify that the `disconnect` operation cannot be used in guards of altsteps |Clause 16.1.4 |m |n
-|237 |NegSem_160104_invoking_functions_from_specific_places_237 |verify that the `map` operation cannot be used in guards of altsteps |Clause 16.1.4 |m |n
-|238 |NegSem_160104_invoking_functions_from_specific_places_238 |verify that the `unmap` operation cannot be used in guards of altsteps |Clause 16.1.4 |m |n
-|239 |NegSem_160104_invoking_functions_from_specific_places_239 |verify that the `action` operation cannot be used in guards of altsteps |Clause 16.1.4 |m |n
-|240 |NegSem_160104_invoking_functions_from_specific_places_240 |verify that the `timer.start` operation cannot be used in guards of altsteps |Clause 16.1.4 |m |n
-|241 |NegSem_160104_invoking_functions_from_specific_places_241 |verify that the `timer.stop` operation cannot be used in guards of altsteps |Clause 16.1.4 |m |n
-|242 |NegSem_160104_invoking_functions_from_specific_places_242 |verify that the `timer.running` operation cannot be used in guards of altsteps |Clause 16.1.4 |m |n
-|243 |NegSem_160104_invoking_functions_from_specific_places_243 |verify that the `read` operation cannot be used in guards of altsteps |Clause 16.1.4 |m |n
-|244 |NegSem_160104_invoking_functions_from_specific_places_244 |verify that the `timeout` operation cannot be used in guards of altsteps |Clause 16.1.4 |m |n
-|245 |NegSem_160104_invoking_functions_from_specific_places_245 |verify that a non-deterministic external function call cannot be used in guards of altsteps |Clause 16.1.4 |m |n
-|246 |NegSem_160104_invoking_functions_from_specific_places_246 |verify that the predefined `rnd` function cannot be used in guards of altsteps |Clause 16.1.4 |m |n
-|247 |NegSem_160104_invoking_functions_from_specific_places_247 |verify a function called in a guard of an `altstep` cannot contain an assignment of a component variable |Clause 16.1.4 |m |n
-|248 |NegSem_160104_invoking_functions_from_specific_places_248 |verify a function called in a guard of an `altstep` cannot contain a component variable used as an actual `out` parameter |Clause 16.1.4 |m |n
-|249 |NegSem_160104_invoking_functions_from_specific_places_249 |verify a function called in a guard of an `altstep` cannot contain a component variable used as an actual `inout` parameter |Clause 16.1.4 |m |n
-|250 |NegSem_160104_invoking_functions_from_specific_places_250 |verify that the `setverdict` operation cannot be used in guards of altsteps |Clause 16.1.4 |m |n
-|251 |NegSem_160104_invoking_functions_from_specific_places_251 |verify that the `activate` operation cannot be used in guards of altsteps |Clause 16.1.4 |m |n
-|252 |NegSem_160104_invoking_functions_from_specific_places_252 |verify that the `deactivate` operation cannot be used in guards of altsteps |Clause 16.1.4 |m |n
-|253 |NegSem_160104_invoking_functions_from_specific_places_253 |verify that a function called from a `guard` statement of an altstep cannot contain `out` parameters |Clause 16.1.4 |m |n
-|254 |NegSem_160104_invoking_functions_from_specific_places_254 |verify that a function called from a `guard` statement of an altstep cannot contain `inout` parameters |Clause 16.1.4 |m |n
+|87 |NegSem_160104_invoking_functions_from_specific_places_087 |verify that the `create` operation cannot be used in a function called during receiving operation (in in-line templates) |Clause 16.1.4 |m |y
+|88 |NegSem_160104_invoking_functions_from_specific_places_088 |verify that the `component.start` operation cannot be used in a function called during receiving operation (in in-line templates) |Clause 16.1.4 |m |y
+|89 |NegSem_160104_invoking_functions_from_specific_places_089 |verify that the `component.stop` operation cannot be used in a function called during receiving operation (in in-line templates) |Clause 16.1.4 |m |y
+|90 |NegSem_160104_invoking_functions_from_specific_places_090 |verify that the `kill` operation cannot be used in a function called during receiving operation (in in-line templates) |Clause 16.1.4 |m |y
+|91 |NegSem_160104_invoking_functions_from_specific_places_091 |verify that the `component.running` operation cannot be used in a function called during receiving operation (in in-line templates) |Clause 16.1.4 |m |y
+|92 |NegSem_160104_invoking_functions_from_specific_places_092 |verify that the `alive` operation cannot be used in a function called during receiving operation (in in-line templates) |Clause 16.1.4 |m |y
+|93 |NegSem_160104_invoking_functions_from_specific_places_093 |verify that the `done` operation cannot be used in a function called during receiving operation (in in-line templates) |Clause 16.1.4 |m |y
+|94 |NegSem_160104_invoking_functions_from_specific_places_094 |verify that the `killed` operation cannot be used in a function called during receiving operation (in in-line templates) |Clause 16.1.4 |m |y
+|95 |NegSem_160104_invoking_functions_from_specific_places_095 |verify that the `port.start` operation cannot be used in a function called during receiving operation (in in-line templates) |Clause 16.1.4 |m |y
+|96 |NegSem_160104_invoking_functions_from_specific_places_096 |verify that the `port.stop` operation cannot be used in a function called during receiving operation (in in-line templates) |Clause 16.1.4 |m |y
+|97 |NegSem_160104_invoking_functions_from_specific_places_097 |verify that the `halt` operation cannot be used in a function called during receiving operation (in in-line templates) |Clause 16.1.4 |m |y
+|98 |NegSem_160104_invoking_functions_from_specific_places_098 |verify that the `clear` operation cannot be used in a function called during receiving operation (in in-line templates) |Clause 16.1.4 |m |y
+|99 |NegSem_160104_invoking_functions_from_specific_places_099 |verify that the `checkstate` operation cannot be used in a function called during receiving operation (in in-line templates) |Clause 16.1.4 |m |y
+|100 |NegSem_160104_invoking_functions_from_specific_places_100 |verify that the `send` operation cannot be used in a function called during receiving operation (in in-line templates) |Clause 16.1.4 |m |y
+|101 |NegSem_160104_invoking_functions_from_specific_places_101 |verify that the `receive` operation cannot be used in a function called during receiving operation (in in-line templates) |Clause 16.1.4 |m |y
+|102 |NegSem_160104_invoking_functions_from_specific_places_102 |verify that the `trigger` operation cannot be used in a function called during receiving operation (in in-line templates) |Clause 16.1.4 |m |y
+|103 |NegSem_160104_invoking_functions_from_specific_places_103 |verify that the `call` operation cannot be used in a function called during receiving operation (in in-line templates) |Clause 16.1.4 |m |y
+|104 |NegSem_160104_invoking_functions_from_specific_places_104 |verify that the `getcall` operation cannot be used in a function called during receiving operation (in in-line templates) |Clause 16.1.4 |m |y
+|105 |NegSem_160104_invoking_functions_from_specific_places_105 |verify that the `reply` operation cannot be used in a function called during receiving operation (in in-line templates) |Clause 16.1.4 |m |y
+|106 |NegSem_160104_invoking_functions_from_specific_places_106 |verify that the `getreply` operation cannot be used in a function called during receiving operation (in in-line templates) |Clause 16.1.4 |m |y
+|107 |NegSem_160104_invoking_functions_from_specific_places_107 |verify that the `raise` operation cannot be used in a function called during receiving operation (in in-line templates) |Clause 16.1.4 |m |y
+|108 |NegSem_160104_invoking_functions_from_specific_places_108 |verify that the `catch` operation cannot be used in a function called during receiving operation (in in-line templates) |Clause 16.1.4 |m |y
+|109 |NegSem_160104_invoking_functions_from_specific_places_109 |verify that the `check` operation cannot be used in a function called during receiving operation (in in-line templates) |Clause 16.1.4 |m |y
+|110 |NegSem_160104_invoking_functions_from_specific_places_110 |verify that the `connect` operation cannot be used in a function called during receiving operation (in in-line templates) |Clause 16.1.4 |m |y
+|111 |NegSem_160104_invoking_functions_from_specific_places_111 |verify that the `disconnect` operation cannot be used in a function called during receiving operation (in in-line templates) |Clause 16.1.4 |m |y
+|112 |NegSem_160104_invoking_functions_from_specific_places_112 |verify that the `map` operation cannot be used in a function called during receiving operation (in in-line templates) |Clause 16.1.4 |m |y
+|113 |NegSem_160104_invoking_functions_from_specific_places_113 |verify that the `unmap` operation cannot be used in a function called during receiving operation (in in-line templates) |Clause 16.1.4 |m |y
+|114 |NegSem_160104_invoking_functions_from_specific_places_114 |verify that the `action` operation cannot be used in a function called during receiving operation (in in-line templates) |Clause 16.1.4 |m |y
+|115 |NegSem_160104_invoking_functions_from_specific_places_115 |verify that the `timer.start` operation cannot be used in a function called during receiving operation (in in-line templates) |Clause 16.1.4 |m |y
+|116 |NegSem_160104_invoking_functions_from_specific_places_116 |verify that the `timer.stop` operation cannot be used in a function called during receiving operation (in in-line templates) |Clause 16.1.4 |m |y
+|117 |NegSem_160104_invoking_functions_from_specific_places_117 |verify that the `timer.running` operation cannot be used in a function called during receiving operation (in in-line templates) |Clause 16.1.4 |m |y
+|118 |NegSem_160104_invoking_functions_from_specific_places_118 |verify that the `read` operation cannot be used in a function called during receiving operation (in in-line templates) |Clause 16.1.4 |m |y
+|119 |NegSem_160104_invoking_functions_from_specific_places_119 |verify that the `timeout` operation cannot be used in a function called during receiving operation (in in-line templates) |Clause 16.1.4 |m |y
+|120 |NegSem_160104_invoking_functions_from_specific_places_120 |verify that a non-deterministic external function call cannot be used in a function called during receiving operation (in in-line templates) |Clause 16.1.4 |m |y
+|121 |NegSem_160104_invoking_functions_from_specific_places_121 |verify that the predefined `rnd` function cannot be used in a function called during receiving operation (in in-line templates) |Clause 16.1.4 |m |y
+|122 |NegSem_160104_invoking_functions_from_specific_places_122 |verify a function called during receiving operation cannot contain an assignment of a component variable (in in-line templates) |Clause 16.1.4 |m |y
+|123 |NegSem_160104_invoking_functions_from_specific_places_123 |verify a function called during receiving operation cannot contain a component variable used as an actual `out` parameter (in in-line templates) |Clause 16.1.4 |m |y
+|124 |NegSem_160104_invoking_functions_from_specific_places_124 |verify a function called during receiving operation cannot contain a component variable used as an actual `inout` parameter (in in-line templates) |Clause 16.1.4 |m |y
+|125 |NegSem_160104_invoking_functions_from_specific_places_125 |verify that the `setverdict` operation cannot be used in a function called during receiving operation (in in-line templates) |Clause 16.1.4 |m |y
+|126 |NegSem_160104_invoking_functions_from_specific_places_126 |verify that the `activate` operation cannot be used in a function called during receiving operation (in in-line templates) |Clause 16.1.4 |m |y
+|127 |NegSem_160104_invoking_functions_from_specific_places_127 |verify that the `deactivate` operation cannot be used in a function called during receiving operation (in in-line templates) |Clause 16.1.4 |m |y
+|128 |NegSem_160104_invoking_functions_from_specific_places_128 |verify a function called during receiving operation cannot contain an `out` parameter (in in-line templates) |Clause 16.1.4 |m |y
+|129 |NegSem_160104_invoking_functions_from_specific_places_129 |verify a function called during receiving operation cannot contain an `inout` parameter (in in-line templates) |Clause 16.1.4 |m |y
+|130 |NegSem_160104_invoking_functions_from_specific_places_130 |verify that the `create` operation cannot be used in a function called during receiving operation (as actual parameters) |Clause 16.1.4 |m |y
+|131 |NegSem_160104_invoking_functions_from_specific_places_131 |verify that the `component.start` operation cannot be used in a function called during receiving operation (as actual parameters) |Clause 16.1.4 |m |y
+|132 |NegSem_160104_invoking_functions_from_specific_places_132 |verify that the `component.stop` operation cannot be used in a function called during receiving operation (as actual parameters) |Clause 16.1.4 |m |y
+|133 |NegSem_160104_invoking_functions_from_specific_places_133 |verify that the `kill` operation cannot be used in a function called during receiving operation (as actual parameters) |Clause 16.1.4 |m |y
+|134 |NegSem_160104_invoking_functions_from_specific_places_134 |verify that the `component.running` operation cannot be used in a function called during receiving operation (as actual parameters) |Clause 16.1.4 |m |y
+|135 |NegSem_160104_invoking_functions_from_specific_places_135 |verify that the `alive` operation cannot be used in a function called during receiving operation (as actual parameters) |Clause 16.1.4 |m |y
+|136 |NegSem_160104_invoking_functions_from_specific_places_136 |verify that the `done` operation cannot be used in a function called during receiving operation (as actual parameters) |Clause 16.1.4 |m |y
+|137 |NegSem_160104_invoking_functions_from_specific_places_137 |verify that the `killed` operation cannot be used in a function called during receiving operation (as actual parameters) |Clause 16.1.4 |m |y
+|138 |NegSem_160104_invoking_functions_from_specific_places_138 |verify that the `port.start` operation cannot be used in a function called during receiving operation (as actual parameters) |Clause 16.1.4 |m |y
+|139 |NegSem_160104_invoking_functions_from_specific_places_139 |verify that the `port.stop` operation cannot be used in a function called during receiving operation (as actual parameters) |Clause 16.1.4 |m |y
+|140 |NegSem_160104_invoking_functions_from_specific_places_140 |verify that the `halt` operation cannot be used in a function called during receiving operation (as actual parameters) |Clause 16.1.4 |m |y
+|141 |NegSem_160104_invoking_functions_from_specific_places_141 |verify that the `clear` operation cannot be used in a function called during receiving operation (as actual parameters) |Clause 16.1.4 |m |y
+|142 |NegSem_160104_invoking_functions_from_specific_places_142 |verify that the `checkstate` operation cannot be used in a function called during receiving operation (as actual parameters) |Clause 16.1.4 |m |y
+|143 |NegSem_160104_invoking_functions_from_specific_places_143 |verify that the `send` operation cannot be used in a function called during receiving operation (as actual parameters) |Clause 16.1.4 |m |y
+|144 |NegSem_160104_invoking_functions_from_specific_places_144 |verify that the `receive` operation cannot be used in a function called during receiving operation (as actual parameters) |Clause 16.1.4 |m |y
+|145 |NegSem_160104_invoking_functions_from_specific_places_145 |verify that the `trigger` operation cannot be used in a function called during receiving operation (as actual parameters) |Clause 16.1.4 |m |y
+|146 |NegSem_160104_invoking_functions_from_specific_places_146 |verify that the `call` operation cannot be used in a function called during receiving operation (as actual parameters) |Clause 16.1.4 |m |y
+|147 |NegSem_160104_invoking_functions_from_specific_places_147 |verify that the `getcall` operation cannot be used in a function called during receiving operation (as actual parameters) |Clause 16.1.4 |m |y
+|148 |NegSem_160104_invoking_functions_from_specific_places_148 |verify that the `reply` operation cannot be used in a function called during receiving operation (as actual parameters) |Clause 16.1.4 |m |y
+|149 |NegSem_160104_invoking_functions_from_specific_places_149 |verify that the `getreply` operation cannot be used in a function called during receiving operation (as actual parameters) |Clause 16.1.4 |m |y
+|150 |NegSem_160104_invoking_functions_from_specific_places_150 |verify that the `raise` operation cannot be used in a function called during receiving operation (as actual parameters) |Clause 16.1.4 |m |y
+|151 |NegSem_160104_invoking_functions_from_specific_places_151 |verify that the `catch` operation cannot be used in a function called during receiving operation (as actual parameters) |Clause 16.1.4 |m |y
+|152 |NegSem_160104_invoking_functions_from_specific_places_152 |verify that the `check` operation cannot be used in a function called during receiving operation (as actual parameters) |Clause 16.1.4 |m |y
+|153 |NegSem_160104_invoking_functions_from_specific_places_153 |verify that the `connect` operation cannot be used in a function called during receiving operation (as actual parameters) |Clause 16.1.4 |m |y
+|154 |NegSem_160104_invoking_functions_from_specific_places_154 |verify that the `disconnect` operation cannot be used in a function called during receiving operation (as actual parameters) |Clause 16.1.4 |m |y
+|155 |NegSem_160104_invoking_functions_from_specific_places_155 |verify that the `map` operation cannot be used in a function called during receiving operation (as actual parameters) |Clause 16.1.4 |m |y
+|156 |NegSem_160104_invoking_functions_from_specific_places_156 |verify that the `unmap` operation cannot be used in a function called during receiving operation (as actual parameters) |Clause 16.1.4 |m |y
+|157 |NegSem_160104_invoking_functions_from_specific_places_157 |verify that the `action` operation cannot be used in a function called during receiving operation (as actual parameters) |Clause 16.1.4 |m |y
+|158 |NegSem_160104_invoking_functions_from_specific_places_158 |verify that the `timer.start` operation cannot be used in a function called during receiving operation (as actual parameters) |Clause 16.1.4 |m |y
+|159 |NegSem_160104_invoking_functions_from_specific_places_159 |verify that the `timer.stop` operation cannot be used in a function called during receiving operation (as actual parameters) |Clause 16.1.4 |m |y
+|160 |NegSem_160104_invoking_functions_from_specific_places_160 |verify that the `timer.running` operation cannot be used in a function called during receiving operation (as actual parameters) |Clause 16.1.4 |m |y
+|161 |NegSem_160104_invoking_functions_from_specific_places_161 |verify that the `read` operation cannot be used in a function called during receiving operation (as actual parameters) |Clause 16.1.4 |m |y
+|162 |NegSem_160104_invoking_functions_from_specific_places_162 |verify that the `timeout` operation cannot be used in a function called during receiving operation (as actual parameters) |Clause 16.1.4 |m |y
+|163 |NegSem_160104_invoking_functions_from_specific_places_163 |verify that a non-deterministic external function call cannot be used in a function called during receiving operation (as actual parameters) |Clause 16.1.4 |m |y
+|164 |NegSem_160104_invoking_functions_from_specific_places_164 |verify that the predefined `rnd` function cannot be used in a function called during receiving operation (as actual parameters) |Clause 16.1.4 |m |y
+|165 |NegSem_160104_invoking_functions_from_specific_places_165 |verify a function called during receiving operation cannot contain an assignment of a component variable (as actual parameters) |Clause 16.1.4 |m |y
+|166 |NegSem_160104_invoking_functions_from_specific_places_166 |verify a function called during receiving operation cannot contain a component variable used as an actual out parameter (as actual parameters) |Clause 16.1.4 |m |y
+|167 |NegSem_160104_invoking_functions_from_specific_places_167 |verify a function called during receiving operation cannot contain a component variable used as an actual `inout` parameter (as actual parameters) |Clause 16.1.4 |m |y
+|168 |NegSem_160104_invoking_functions_from_specific_places_168 |verify that the `setverdict` operation cannot be used in a function called during receiving operation (as actual parameters) |Clause 16.1.4 |m |y
+|169 |NegSem_160104_invoking_functions_from_specific_places_169 |verify that the `activate` operation cannot be used in a function called during receiving operation (as actual parameters) |Clause 16.1.4 |m |y
+|170 |NegSem_160104_invoking_functions_from_specific_places_170 |verify that the `deactivate` operation cannot be used in a function called during receiving operation (as actual parameters) |Clause 16.1.4 |m |y
+|171 |NegSem_160104_invoking_functions_from_specific_places_171 |verify a function called during receiving operation cannot contain an out parameter (as actual parameters) |Clause 16.1.4 |m |y
+|172 |NegSem_160104_invoking_functions_from_specific_places_172 |verify a function called during receiving operation cannot contain an `inout` parameter (as actual parameters) |Clause 16.1.4 |m |y
+|173 |NegSem_160104_invoking_functions_from_specific_places_173 |verify that the `create` operation cannot be used in guards of `alt` statements |Clause 16.1.4 |m |y
+|174 |NegSem_160104_invoking_functions_from_specific_places_174 |verify that the `component.start` operation cannot be used in guards of `alt` statements |Clause 16.1.4 |m |y
+|175 |NegSem_160104_invoking_functions_from_specific_places_175 |verify that the `component.stop` operation cannot be used in guards of `alt` statements |Clause 16.1.4 |m |y
+|176 |NegSem_160104_invoking_functions_from_specific_places_176 |verify that the `kill` operation cannot be used in guards of `alt` statements |Clause 16.1.4 |m |y
+|177 |NegSem_160104_invoking_functions_from_specific_places_177 |verify that the `component.running` operation cannot be used in guards of `alt` statements |Clause 16.1.4 |m |y
+|178 |NegSem_160104_invoking_functions_from_specific_places_178 |verify that the `alive` operation cannot be used in guards of `alt` statements |Clause 16.1.4 |m |y
+|179 |NegSem_160104_invoking_functions_from_specific_places_179 |verify that the `done` operation cannot be used in guards of `alt` statements |Clause 16.1.4 |m |y
+|180 |NegSem_160104_invoking_functions_from_specific_places_180 |verify that the `killed` operation cannot be used in guards of `alt` statements |Clause 16.1.4 |m |y
+|181 |NegSem_160104_invoking_functions_from_specific_places_181 |verify that the `port.start` operation cannot be used in guards of `alt` statements |Clause 16.1.4 |m |y
+|182 |NegSem_160104_invoking_functions_from_specific_places_182 |verify that the `port.stop` operation cannot be used in guards of `alt` statements |Clause 16.1.4 |m |y
+|183 |NegSem_160104_invoking_functions_from_specific_places_183 |verify that the `halt` operation cannot be used in guards of `alt` statements |Clause 16.1.4 |m |y
+|184 |NegSem_160104_invoking_functions_from_specific_places_184 |verify that the `clear` operation cannot be used in guards of `alt` statements |Clause 16.1.4 |m |y
+|185 |NegSem_160104_invoking_functions_from_specific_places_185 |verify that the `checkstate` operation cannot be used in guards of `alt` statements |Clause 16.1.4 |m |y
+|186 |NegSem_160104_invoking_functions_from_specific_places_186 |verify that the `send` operation cannot be used in guards of `alt` statements |Clause 16.1.4 |m |y
+|187 |NegSem_160104_invoking_functions_from_specific_places_187 |verify that the `receive` operation cannot be used in guards of `alt` statements |Clause 16.1.4 |m |y
+|188 |NegSem_160104_invoking_functions_from_specific_places_188 |verify that the `trigger` operation cannot be used in guards of `alt` statements |Clause 16.1.4 |m |y
+|189 |NegSem_160104_invoking_functions_from_specific_places_189 |verify that the `call` operation cannot be used in guards of `alt` statements |Clause 16.1.4 |m |y
+|190 |NegSem_160104_invoking_functions_from_specific_places_190 |verify that the `getcall` operation cannot be used in guards of `alt` statements |Clause 16.1.4 |m |y
+|191 |NegSem_160104_invoking_functions_from_specific_places_191 |verify that the `reply` operation cannot be used in guards of `alt` statements |Clause 16.1.4 |m |y
+|192 |NegSem_160104_invoking_functions_from_specific_places_192 |verify that the `getreply` operation cannot be used in guards of `alt` statements |Clause 16.1.4 |m |y
+|193 |NegSem_160104_invoking_functions_from_specific_places_193 |verify that the `raise` operation cannot be used in guards of `alt` statements |Clause 16.1.4 |m |y
+|194 |NegSem_160104_invoking_functions_from_specific_places_194 |verify that the `catch` operation cannot be used in guards of `alt` statements |Clause 16.1.4 |m |y
+|195 |NegSem_160104_invoking_functions_from_specific_places_195 |verify that the `check` operation cannot be used in guards of `alt` statements |Clause 16.1.4 |m |y
+|196 |NegSem_160104_invoking_functions_from_specific_places_196 |verify that the `connect` operation cannot be used in guards of `alt` statements |Clause 16.1.4 |m |y
+|197 |NegSem_160104_invoking_functions_from_specific_places_197 |verify that the `disconnect` operation cannot be used in guards of `alt` statements |Clause 16.1.4 |m |y
+|198 |NegSem_160104_invoking_functions_from_specific_places_198 |verify that the `map` operation cannot be used in guards of `alt` statements |Clause 16.1.4 |m |y
+|199 |NegSem_160104_invoking_functions_from_specific_places_199 |verify that the `unmap` operation cannot be used in guards of `alt` statements |Clause 16.1.4 |m |y
+|200 |NegSem_160104_invoking_functions_from_specific_places_200 |verify that the `action` operation cannot be used in guards of `alt` statements |Clause 16.1.4 |m |y
+|201 |NegSem_160104_invoking_functions_from_specific_places_201 |verify that the `timer.start` operation cannot be used in guards of `alt` statements |Clause 16.1.4 |m |y
+|202 |NegSem_160104_invoking_functions_from_specific_places_202 |verify that the `timer.stop` operation cannot be used in guards of `alt` statements |Clause 16.1.4 |m |y
+|203 |NegSem_160104_invoking_functions_from_specific_places_203 |verify that the `timer.running` operation cannot be used in guards of `alt` statements |Clause 16.1.4 |m |y
+|204 |NegSem_160104_invoking_functions_from_specific_places_204 |verify that the `read` operation cannot be used in guards of `alt` statements |Clause 16.1.4 |m |y
+|205 |NegSem_160104_invoking_functions_from_specific_places_205 |verify that the `timeout` operation cannot be used in guards of `alt` statements |Clause 16.1.4 |m |y
+|206 |NegSem_160104_invoking_functions_from_specific_places_206 |verify a function called in a guard of an `alt` statement cannot contain an assignment of a component variable |Clause 16.1.4 |m |y
+|207 |NegSem_160104_invoking_functions_from_specific_places_207 |verify a function called in a guard of an `alt` statement cannot contain a component variable used as an actual `out` parameter |Clause 16.1.4 |m |y
+|208 |NegSem_160104_invoking_functions_from_specific_places_208 |verify a function called in a guard of an `alt` statement cannot contain a component variable used as an actual `inout` parameter |Clause 16.1.4 |m |y
+|209 |NegSem_160104_invoking_functions_from_specific_places_209 |verify that the `activate` operation cannot be used in guards of `alt` statements |Clause 16.1.4 |m |y
+|210 |NegSem_160104_invoking_functions_from_specific_places_210 |verify that the `deactivate` operation cannot be used in guards of `alt` statements |Clause 16.1.4 |m |y
+|211 |NegSem_160104_invoking_functions_from_specific_places_211 |verify that a function called from a `guard` statement of an `alt` operation cannot contain `out` parameters |Clause 16.1.4 |m |y
+|212 |NegSem_160104_invoking_functions_from_specific_places_212 |verify that the `create` operation cannot be used in guards of altsteps |Clause 16.1.4 |m |y
+|213 |NegSem_160104_invoking_functions_from_specific_places_213 |verify that the `component.start` operation cannot be used in guards of altsteps |Clause 16.1.4 |m |y
+|214 |NegSem_160104_invoking_functions_from_specific_places_214 |verify that the `component.stop` operation cannot be used in guards of altsteps |Clause 16.1.4 |m |y
+|215 |NegSem_160104_invoking_functions_from_specific_places_215 |verify that the `kill` operation cannot be used in guards of altsteps |Clause 16.1.4 |m |y
+|216 |NegSem_160104_invoking_functions_from_specific_places_216 |verify that the `component.running` operation cannot be used in guards of altsteps |Clause 16.1.4 |m |y
+|217 |NegSem_160104_invoking_functions_from_specific_places_217 |verify that the `alive` operation cannot be used in guards of altsteps |Clause 16.1.4 |m |y
+|218 |NegSem_160104_invoking_functions_from_specific_places_218 |verify that the `done` operation cannot be used in guards of altsteps |Clause 16.1.4 |m |y
+|219 |NegSem_160104_invoking_functions_from_specific_places_219 |verify that the `killed` operation cannot be used in guards of altsteps |Clause 16.1.4 |m |y
+|220 |NegSem_160104_invoking_functions_from_specific_places_220 |verify that the `port.start` operation cannot be used in guards of altsteps |Clause 16.1.4 |m |y
+|221 |NegSem_160104_invoking_functions_from_specific_places_221 |verify that the `port.stop` operation cannot be used in guards of altsteps |Clause 16.1.4 |m |y
+|222 |NegSem_160104_invoking_functions_from_specific_places_222 |verify that the `halt` operation cannot be used in guards of altsteps |Clause 16.1.4 |m |y
+|223 |NegSem_160104_invoking_functions_from_specific_places_223 |verify that the `clear` operation cannot be used in guards of altsteps |Clause 16.1.4 |m |y
+|224 |NegSem_160104_invoking_functions_from_specific_places_224 |verify that the `checkstate` operation cannot be used in guards of altsteps |Clause 16.1.4 |m |y
+|225 |NegSem_160104_invoking_functions_from_specific_places_225 |verify that the `send` operation cannot be used in guards of altsteps |Clause 16.1.4 |m |y
+|226 |NegSem_160104_invoking_functions_from_specific_places_226 |verify that the `receive` operation cannot be used in guards of altsteps |Clause 16.1.4 |m |y
+|227 |NegSem_160104_invoking_functions_from_specific_places_227 |verify that the `trigger` operation cannot be used in guards of altsteps |Clause 16.1.4 |m |y
+|228 |NegSem_160104_invoking_functions_from_specific_places_228 |verify that the `call` operation cannot be used in guards of altsteps |Clause 16.1.4 |m |y
+|229 |NegSem_160104_invoking_functions_from_specific_places_229 |verify that the `getcall` operation cannot be used in guards of altsteps |Clause 16.1.4 |m |y
+|230 |NegSem_160104_invoking_functions_from_specific_places_230 |verify that the `reply` operation cannot be used in guards of altsteps |Clause 16.1.4 |m |y
+|231 |NegSem_160104_invoking_functions_from_specific_places_231 |verify that the `getreply` operation cannot be used in guards of altsteps |Clause 16.1.4 |m |y
+|232 |NegSem_160104_invoking_functions_from_specific_places_232 |verify that the `raise` operation cannot be used in guards of altsteps |Clause 16.1.4 |m |y
+|233 |NegSem_160104_invoking_functions_from_specific_places_233 |verify that the `catch` operation cannot be used in guards of altsteps |Clause 16.1.4 |m |y
+|234 |NegSem_160104_invoking_functions_from_specific_places_234 |verify that the `check` operation cannot be used in guards of altsteps |Clause 16.1.4 |m |y
+|235 |NegSem_160104_invoking_functions_from_specific_places_235 |verify that the `connect` operation cannot be used in guards of altsteps |Clause 16.1.4 |m |y
+|236 |NegSem_160104_invoking_functions_from_specific_places_236 |verify that the `disconnect` operation cannot be used in guards of altsteps |Clause 16.1.4 |m |y
+|237 |NegSem_160104_invoking_functions_from_specific_places_237 |verify that the `map` operation cannot be used in guards of altsteps |Clause 16.1.4 |m |y
+|238 |NegSem_160104_invoking_functions_from_specific_places_238 |verify that the `unmap` operation cannot be used in guards of altsteps |Clause 16.1.4 |m |y
+|239 |NegSem_160104_invoking_functions_from_specific_places_239 |verify that the `action` operation cannot be used in guards of altsteps |Clause 16.1.4 |m |y
+|240 |NegSem_160104_invoking_functions_from_specific_places_240 |verify that the `timer.start` operation cannot be used in guards of altsteps |Clause 16.1.4 |m |y
+|241 |NegSem_160104_invoking_functions_from_specific_places_241 |verify that the `timer.stop` operation cannot be used in guards of altsteps |Clause 16.1.4 |m |y
+|242 |NegSem_160104_invoking_functions_from_specific_places_242 |verify that the `timer.running` operation cannot be used in guards of altsteps |Clause 16.1.4 |m |y
+|243 |NegSem_160104_invoking_functions_from_specific_places_243 |verify that the `read` operation cannot be used in guards of altsteps |Clause 16.1.4 |m |y
+|244 |NegSem_160104_invoking_functions_from_specific_places_244 |verify that the `timeout` operation cannot be used in guards of altsteps |Clause 16.1.4 |m |y
+|245 |NegSem_160104_invoking_functions_from_specific_places_245 |verify that a non-deterministic external function call cannot be used in guards of altsteps |Clause 16.1.4 |m |y
+|246 |NegSem_160104_invoking_functions_from_specific_places_246 |verify that the predefined `rnd` function cannot be used in guards of altsteps |Clause 16.1.4 |m |y
+|247 |NegSem_160104_invoking_functions_from_specific_places_247 |verify a function called in a guard of an `altstep` cannot contain an assignment of a component variable |Clause 16.1.4 |m |y
+|248 |NegSem_160104_invoking_functions_from_specific_places_248 |verify a function called in a guard of an `altstep` cannot contain a component variable used as an actual `out` parameter |Clause 16.1.4 |m |y
+|249 |NegSem_160104_invoking_functions_from_specific_places_249 |verify a function called in a guard of an `altstep` cannot contain a component variable used as an actual `inout` parameter |Clause 16.1.4 |m |y
+|250 |NegSem_160104_invoking_functions_from_specific_places_250 |verify that the `setverdict` operation cannot be used in guards of altsteps |Clause 16.1.4 |m |y
+|251 |NegSem_160104_invoking_functions_from_specific_places_251 |verify that the `activate` operation cannot be used in guards of altsteps |Clause 16.1.4 |m |y
+|252 |NegSem_160104_invoking_functions_from_specific_places_252 |verify that the `deactivate` operation cannot be used in guards of altsteps |Clause 16.1.4 |m |y
+|253 |NegSem_160104_invoking_functions_from_specific_places_253 |verify that a function called from a `guard` statement of an altstep cannot contain `out` parameters |Clause 16.1.4 |m |y
+|254 |NegSem_160104_invoking_functions_from_specific_places_254 |verify that a function called from a `guard` statement of an altstep cannot contain `inout` parameters |Clause 16.1.4 |m |y
 |255 |NegSem_160104_invoking_functions_from_specific_places_255 |verify that the `create` operation cannot be used in altstep local definitions |Clause 16.1.4 |m |n
 |256 |NegSem_160104_invoking_functions_from_specific_places_256 |verify that the `component.start` operation cannot be used in altstep local definitions |Clause 16.1.4 |m |n
 |257 |NegSem_160104_invoking_functions_from_specific_places_257 |verify that the `component.stop` operation cannot be used in altstep local definitions |Clause 16.1.4 |m |n
