@@ -3282,7 +3282,7 @@ NOTE: Nonsupported mandatory capabilities are to be identified in the ICS, with 
 |218 |NegSem_160104_invoking_functions_from_specific_places_218 |verify that the `done` operation cannot be used in guards of altsteps |Clause 16.1.4 |m |y
 |219 |NegSem_160104_invoking_functions_from_specific_places_219 |verify that the `killed` operation cannot be used in guards of altsteps |Clause 16.1.4 |m |y
 |220 |NegSem_160104_invoking_functions_from_specific_places_220 |verify that the `port.start` operation cannot be used in guards of altsteps |Clause 16.1.4 |m |y
-|221 |NegSem_160104_invoking_functions_from_specific_places_221 |verify that the `port.stop` operation cannot be used in guards of altsteps |Clause 16.1.4 |m |n
+|221 |NegSem_160104_invoking_functions_from_specific_places_221 |verify that the `port.stop` operation cannot be used in guards of altsteps |Clause 16.1.4 |m |y
 |222 |NegSem_160104_invoking_functions_from_specific_places_222 |verify that the `halt` operation cannot be used in guards of altsteps |Clause 16.1.4 |m |y
 |223 |NegSem_160104_invoking_functions_from_specific_places_223 |verify that the `clear` operation cannot be used in guards of altsteps |Clause 16.1.4 |m |y
 |224 |NegSem_160104_invoking_functions_from_specific_places_224 |verify that the `checkstate` operation cannot be used in guards of altsteps |Clause 16.1.4 |m |y
