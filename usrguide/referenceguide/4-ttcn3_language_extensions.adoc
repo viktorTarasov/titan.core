@@ -2211,6 +2211,8 @@ Fields are always concatenated in increasing octet number direction. +
 `FIELDORDER` has a slightly different effect than order attributes. While the `FIELDORDER` shifts the location of coded bitfields inside octets, the order attributes describes the order of the bits within a bitfield. +
 There is NO connection between the effect of the `FIELDORDER` and the effects of the other order attributes.
 
+NOTE: The attribute does not extend to lower level structures. If the same field order is desired for the fields of a lower level `record`/`set`, then that `record`/`set` also needs a `FIELDORDER` attribute.
+
 Examples:
 [source]
 ----
