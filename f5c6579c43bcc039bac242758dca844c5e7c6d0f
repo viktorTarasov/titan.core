@@ -1,0 +1,188 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "11a31ebb_d062dba1",
+        "filename": "compiler2/Constraint.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 1121,
+      "author": {
+        "id": 1007689
+      },
+      "writtenOn": "2018-09-25T15:44:37Z",
+      "side": 1,
+      "message": "there\u0027s no need to print this out...",
+      "range": {
+        "startLine": 1121,
+        "startChar": 6,
+        "endLine": 1121,
+        "endChar": 96
+      },
+      "revId": "f5c6579c43bcc039bac242758dca844c5e7c6d0f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4916e609_dfb4f9e7",
+        "filename": "compiler2/Constraint.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 1416,
+      "author": {
+        "id": 1007689
+      },
+      "writtenOn": "2018-09-25T15:44:37Z",
+      "side": 1,
+      "message": "copy-paste error?",
+      "range": {
+        "startLine": 1415,
+        "startChar": 2,
+        "endLine": 1416,
+        "endChar": 38
+      },
+      "revId": "f5c6579c43bcc039bac242758dca844c5e7c6d0f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "38c31daa_d4423bb8",
+        "filename": "compiler2/Constraint.hh",
+        "patchSetId": 2
+      },
+      "lineNbr": 127,
+      "author": {
+        "id": 1007689
+      },
+      "writtenOn": "2018-09-25T15:44:37Z",
+      "side": 1,
+      "message": "there shouldn\u0027t be any debugging code in the final version",
+      "range": {
+        "startLine": 127,
+        "startChar": 5,
+        "endLine": 127,
+        "endChar": 107
+      },
+      "revId": "f5c6579c43bcc039bac242758dca844c5e7c6d0f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "135b4b53_3d4ba4da",
+        "filename": "compiler2/Type_codegen.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 1910,
+      "author": {
+        "id": 1007689
+      },
+      "writtenOn": "2018-09-25T15:44:37Z",
+      "side": 1,
+      "message": "seems pointless",
+      "range": {
+        "startLine": 1910,
+        "startChar": 4,
+        "endLine": 1910,
+        "endChar": 10
+      },
+      "revId": "f5c6579c43bcc039bac242758dca844c5e7c6d0f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "aad1b74d_bff3fdf0",
+        "filename": "compiler2/Type_codegen.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 2675,
+      "author": {
+        "id": 1007689
+      },
+      "writtenOn": "2018-09-25T15:44:37Z",
+      "side": 1,
+      "message": "there\u0027s no need for this here, if the same check is already done in the \u0027encode\u0027 function",
+      "range": {
+        "startLine": 2670,
+        "startChar": 2,
+        "endLine": 2675,
+        "endChar": 3
+      },
+      "revId": "f5c6579c43bcc039bac242758dca844c5e7c6d0f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6388e081_30dc2c51",
+        "filename": "compiler2/Type_codegen.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 2730,
+      "author": {
+        "id": 1007689
+      },
+      "writtenOn": "2018-09-25T15:44:37Z",
+      "side": 1,
+      "message": "there\u0027s no need for this here, if the same check is already done in the \u0027decode\u0027 function",
+      "range": {
+        "startLine": 2723,
+        "startChar": 6,
+        "endLine": 2730,
+        "endChar": 30
+      },
+      "revId": "f5c6579c43bcc039bac242758dca844c5e7c6d0f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b3f9786a_ce1187bf",
+        "filename": "compiler2/encdec.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 102,
+      "author": {
+        "id": 1007689
+      },
+      "writtenOn": "2018-09-25T15:44:37Z",
+      "side": 1,
+      "message": "this should also be done in all the other \u0027encode\u0027 functions (that are not generated)\n\nfor example:\nBOOLEAN::encode in core/Boolean.cc\nCHARSTRING::encode in core/Charstring.cc\netc.",
+      "range": {
+        "startLine": 99,
+        "startChar": 8,
+        "endLine": 102,
+        "endChar": 17
+      },
+      "revId": "f5c6579c43bcc039bac242758dca844c5e7c6d0f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f1b3d476_b27a8977",
+        "filename": "compiler2/encdec.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 289,
+      "author": {
+        "id": 1007689
+      },
+      "writtenOn": "2018-09-25T15:44:37Z",
+      "side": 1,
+      "message": "this should also be done in all the other \u0027decode\u0027 functions (that are not generated)",
+      "range": {
+        "startLine": 287,
+        "startChar": 8,
+        "endLine": 289,
+        "endChar": 80
+      },
+      "revId": "f5c6579c43bcc039bac242758dca844c5e7c6d0f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
