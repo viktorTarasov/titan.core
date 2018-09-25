@@ -57,7 +57,7 @@ The supported platforms are Solaris, Linux and Cygwin (on Windows platforms).
 
 The following are required for proper operation of the TITAN:
 
-* Openssl-devel 0.9.8k or higher
+* Openssl-devel 0.9.8k or higher (on Ubuntu: libssl-dev)
 * Libxml2-devel 2.7.1 or higher
 * JDK 1.5.0_10 or later (only required if the JNI-based executor in the Executor plug-in is used. JNI cannot be used on Cygwin.)
 
