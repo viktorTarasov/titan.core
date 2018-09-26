@@ -451,6 +451,7 @@ none		RETURN(NoneKeyword);
 not		RETURN(NotKeyword);
 not_a_number  RETURN(NaNKeyword);
 not4b		RETURN(Not4bKeyword);
+now		RETURN(NowKeyword);
 nowait		RETURN(NowaitKeyword);
 null		RETURN(NullKeyword);
 objid		RETURN(ObjectIdentifierKeyword);

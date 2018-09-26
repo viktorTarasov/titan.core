@@ -1,0 +1,36 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v2.0
+ * which accompanies this distribution, and is available at
+ * https://www.eclipse.org/org/documents/epl-2.0/EPL-2.0.html
+ *
+ * Contributors:
+ *   Baranyi, Botond
+ *
+ ******************************************************************************/
+
+/* This module tests the keyword 'now', which querries the current test system time. */
+module realtimeNow_SE { //^In TTCN-3 module//
+
+const float c := now; //^In constant definition// //error\: Operation `now' can only be used in testcases, functions or altsteps//
+
+template float t := now; //^In template definition// //error\: Operation `now' can only be used in testcases, functions or altsteps//
+
+type component CT { //^In type definition// //^In component element definitions//
+  var float cv := now; //^In variable definition// //error\: Operation `now' can only be used in testcases, functions or altsteps//
+}
+
+function f(in float p := now) { //^In function definition// //^In formal parameter list// //^In parameter// //^In default value// //error\: Operation `now' can only be used in testcases, functions or altsteps//
+  timer tmr;
+  tmr.start(1.0);
+  alt { //^In alt construct//
+    [now > 0.0] tmr.timeout {} //^In guard expression// //error\: Operation 'now' cannot be used in alt guards//
+  }
+}
+
+control { //^In control part//
+  log(now); //^In log statement// //error\: Operation `now' can only be used in testcases, functions or altsteps//
+}
+
+}

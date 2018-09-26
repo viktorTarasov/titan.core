@@ -29,6 +29,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <netdb.h>
+#include <time.h>
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -850,7 +851,7 @@ void TTCN_Communication::send_hc_ready()
 
 void TTCN_Communication::send_create_req(const char *component_type_module,
   const char *component_type_name, const char *component_name,
-  const char *component_location, boolean is_alive)
+  const char *component_location, boolean is_alive, timeval testcase_start_time)
 {
   Text_Buf text_buf;
   text_buf.push_int(MSG_CREATE_REQ);
@@ -859,6 +860,8 @@ void TTCN_Communication::send_create_req(const char *component_type_module,
   text_buf.push_string(component_name);
   text_buf.push_string(component_location);
   text_buf.push_int(is_alive ? 1 : 0);
+  text_buf.push_int(testcase_start_time.tv_sec);
+  text_buf.push_int(testcase_start_time.tv_usec);
   send_message(text_buf);
 }
 
@@ -1377,6 +1380,9 @@ void TTCN_Communication::process_create_ptc()
   boolean is_alive = incoming_buf.pull_int().get_val();
   qualified_name current_testcase;
   incoming_buf.pull_qualified_name(current_testcase);
+  timeval testcase_start_time;
+  testcase_start_time.tv_sec = incoming_buf.pull_int().get_val();
+  testcase_start_time.tv_usec = incoming_buf.pull_int().get_val();
   incoming_buf.cut_message();
 
   try {
@@ -1384,7 +1390,7 @@ void TTCN_Communication::process_create_ptc()
       component_type.module_name, component_type.definition_name,
       system_type.module_name, system_type.definition_name,
       component_name, is_alive, current_testcase.module_name,
-      current_testcase.definition_name);
+      current_testcase.definition_name, testcase_start_time);
   } catch (...) {
     // to prevent from memory leaks
     delete [] component_type.module_name;

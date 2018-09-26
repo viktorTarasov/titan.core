@@ -23,6 +23,7 @@
 #define RUNTIME_HH
 
 #include <sys/types.h>
+#include <time.h>
 #include "Types.h"
 
 class Text_Buf;
@@ -30,6 +31,7 @@ class COMPONENT;
 class VERDICTTYPE;
 class CHARSTRING;
 class INTEGER;
+class FLOAT;
 class PORT;
 
 extern "C" {
@@ -68,6 +70,8 @@ private:
 
   static const char *control_module_name;
   static qualified_name testcase_name;
+  
+  static timeval start_time;
 
   static char *host_name;
 
@@ -176,6 +180,8 @@ public:
 
   static CHARSTRING get_testcase_id_macro();
   static CHARSTRING get_testcasename();
+  
+  static FLOAT now();
 
   static void load_logger_plugins();
   static void set_logger_parameters();
@@ -313,7 +319,8 @@ public:
     const char *component_type_module, const char *component_type_name,
     const char *system_type_module, const char *system_type_name,
     const char *par_component_name, boolean par_is_alive,
-    const char *current_testcase_module, const char *current_testcase_name);
+    const char *current_testcase_module, const char *current_testcase_name,
+    timeval testcase_start_time);
 
   static void process_create_ack(component new_component);
   static void process_running(boolean result_value);

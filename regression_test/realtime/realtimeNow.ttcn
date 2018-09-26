@@ -1,0 +1,53 @@
+/******************************************************************************
+ * Copyright (c) 2000-2018 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v2.0
+ * which accompanies this distribution, and is available at
+ * https://www.eclipse.org/org/documents/epl-2.0/EPL-2.0.html
+ *
+ * Contributors:
+ *   Baranyi, Botond
+ *
+ ******************************************************************************/
+
+// This module tests the keyword 'now', which querries the current test system time.
+module realtimeNow {
+
+type component CT {}
+
+type record of float FloatList;
+
+function f_test_now(in float p_caller_time) runs on CT {
+  var float time_now := now;
+  if (p_caller_time > time_now) {
+    setverdict(fail, "Comparison with caller time failed. Caller: ", p_caller_time, ", now: ", time_now);
+  }
+  var FloatList times := {};
+  for (var integer i := 0; i < 100; i := i + 1) {
+    timer t := 0.01;
+    t.start;
+    t.timeout;
+    times[i] := now;
+    if (i > 0 and times[i] < times[i - 1]) {
+      setverdict(fail, "Measured times are not ascending: ", times);
+    }
+  }
+  setverdict(pass);
+}
+
+testcase tc_now_mtc() runs on CT {
+  f_test_now(now);
+}
+
+testcase tc_now_ptc() runs on CT {
+  var CT ct := CT.create;
+  ct.start(f_test_now(now));
+  ct.done;
+}
+
+control {
+  execute(tc_now_mtc());
+  execute(tc_now_ptc());
+}
+
+}

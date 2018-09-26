@@ -35,6 +35,7 @@
 #include <pthread.h>
 #include <sys/types.h>
 #include <netinet/in.h>
+#include <time.h>
 
 #include "../../core/Types.h"
 #include "../../common/NetworkHandler.hh"
@@ -364,6 +365,7 @@ class MainController {
   static boolean any_component_done_requested, any_component_done_sent,
   all_component_done_requested, any_component_killed_requested,
   all_component_killed_requested;
+  static timeval testcase_start_time;
   static void add_component(component_struct *comp);
   static component_struct *lookup_component(component comp_ref);
   static void destroy_all_components();

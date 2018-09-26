@@ -144,17 +144,18 @@ namespace Common {
     enum operationtype_t {
       OPTYPE_RND, // -
       OPTYPE_TESTCASENAME, // -
+      OPTYPE_NOW, // -
 
       OPTYPE_UNARYPLUS, // v1
       OPTYPE_UNARYMINUS, // v1
       OPTYPE_NOT, // v1
       OPTYPE_NOT4B, // v1
 
-      OPTYPE_BIT2HEX, // v1  6
+      OPTYPE_BIT2HEX, // v1  7
       OPTYPE_BIT2INT, // v1
       OPTYPE_BIT2OCT, // v1
-      OPTYPE_BIT2STR, // v1
-      OPTYPE_CHAR2INT, // v1  10
+      OPTYPE_BIT2STR, // v1  10
+      OPTYPE_CHAR2INT, // v1
       OPTYPE_CHAR2OCT, // v1
       OPTYPE_FLOAT2INT, // v1
       OPTYPE_FLOAT2STR, // v1
@@ -163,8 +164,8 @@ namespace Common {
       OPTYPE_HEX2OCT, // v1
       OPTYPE_HEX2STR, // v1
       OPTYPE_INT2CHAR, // v1
-      OPTYPE_INT2FLOAT, // v1
-      OPTYPE_INT2STR, // v1   20
+      OPTYPE_INT2FLOAT, // v1   20
+      OPTYPE_INT2STR, // v1
       OPTYPE_INT2UNICHAR, // v1
       OPTYPE_OCT2BIT, // v1
       OPTYPE_OCT2CHAR, // v1
@@ -173,56 +174,56 @@ namespace Common {
       OPTYPE_OCT2STR, // v1
       OPTYPE_OCT2UNICHAR, // v1 [v2]
       OPTYPE_STR2BIT, // v1
-      OPTYPE_STR2FLOAT, // v1
+      OPTYPE_STR2FLOAT, // v1    30
       OPTYPE_STR2HEX, // v1
-      OPTYPE_STR2INT, // v1    30
+      OPTYPE_STR2INT, // v1
       OPTYPE_STR2OCT, // v1
       OPTYPE_UNICHAR2INT, // v1
       OPTYPE_UNICHAR2CHAR, // v1
       OPTYPE_UNICHAR2OCT, // v1 [v2]
       OPTYPE_ENUM2INT, // v1
 
-      OPTYPE_ENCODE, // ti1 [v2] [v3] 35
+      OPTYPE_ENCODE, // ti1 [v2] [v3] 38
 
       OPTYPE_RNDWITHVAL, /** \todo -> SEED */ // v1
 
-      OPTYPE_ADD, // v1 v2
+      OPTYPE_ADD, // v1 v2      40
       OPTYPE_SUBTRACT, // v1 v2
       OPTYPE_MULTIPLY, // v1 v2
-      OPTYPE_DIVIDE, // v1 v2      40
+      OPTYPE_DIVIDE, // v1 v2
       OPTYPE_MOD, // v1 v2
       OPTYPE_REM, // v1 v2
       OPTYPE_CONCAT, // v1 v2
       OPTYPE_EQ, // v1 v2
       OPTYPE_LT, // v1 v2
       OPTYPE_GT, // v1 v2
-      OPTYPE_NE, // v1 v2
+      OPTYPE_NE, // v1 v2    50
       OPTYPE_GE, // v1 v2
       OPTYPE_LE, // v1 v2
-      OPTYPE_AND, // v1 v2    50
+      OPTYPE_AND, // v1 v2
       OPTYPE_OR, // v1 v2
       OPTYPE_XOR, // v1 v2
       OPTYPE_AND4B, // v1 v2
       OPTYPE_OR4B, // v1 v2
       OPTYPE_XOR4B, // v1 v2
       OPTYPE_SHL, // v1 v2
-      OPTYPE_SHR, // v1 v2
+      OPTYPE_SHR, // v1 v2    60
       OPTYPE_ROTL, // v1 v2
       OPTYPE_ROTR, // v1 v2
 
-      OPTYPE_INT2BIT, // v1 v2    60
+      OPTYPE_INT2BIT, // v1 v2
       OPTYPE_INT2HEX, // v1 v2
       OPTYPE_INT2OCT, // v1 v2
 
-      OPTYPE_DECODE, // r1 r2 [v3] [v4]
+      OPTYPE_DECODE, // r1 r2 [v3] [v4]   66
 
       OPTYPE_SUBSTR, // ti1 v2 v3
       OPTYPE_REGEXP, // ti1 t2 v3 b4
-      OPTYPE_DECOMP, // v1 v2 v3     66
+      OPTYPE_DECOMP, // v1 v2 v3
 
-      OPTYPE_REPLACE, // ti1 v2 v3 ti4
+      OPTYPE_REPLACE, // ti1 v2 v3 ti4    70
 
-      OPTYPE_ISVALUE, // ti1   68
+      OPTYPE_ISVALUE, // ti1
       OPTYPE_ISBOUND, // ti1
       OPTYPE_ISPRESENT, // ti1
       OPTYPE_ISCHOSEN, // r1 i2
@@ -232,7 +233,7 @@ namespace Common {
       OPTYPE_LENGTHOF, // ti1
       OPTYPE_SIZEOF, // ti1 
       OPTYPE_VALUEOF, // ti1
-      OPTYPE_MATCH, // v1 t2
+      OPTYPE_MATCH, // v1 t2    80
 
       OPTYPE_TTCN2STRING, // ti1
       OPTYPE_REMOVE_BOM, //v1
@@ -241,11 +242,11 @@ namespace Common {
       OPTYPE_DECODE_BASE64, //v1
 
       /** cannot distinguish during parsing; can be COMP or TMR */
-      OPTYPE_UNDEF_RUNNING, // r1 [r2] b4                   78
+      OPTYPE_UNDEF_RUNNING, // r1 [r2] b4                   86
       OPTYPE_COMP_NULL, // - (from V_TTCN3_NULL)
       OPTYPE_COMP_MTC, // -
       OPTYPE_COMP_SYSTEM, // -
-      OPTYPE_COMP_SELF, // -
+      OPTYPE_COMP_SELF, // -                    90
       OPTYPE_COMP_CREATE, // r1 [v2] [v3] b4
       OPTYPE_COMP_RUNNING, // v1 [r2] b4
       OPTYPE_COMP_RUNNING_ANY, // -
@@ -253,9 +254,9 @@ namespace Common {
       OPTYPE_COMP_ALIVE, // v1
       OPTYPE_COMP_ALIVE_ANY, // -
       OPTYPE_COMP_ALIVE_ALL, // -
-      OPTYPE_TMR_READ, // r1     90
+      OPTYPE_TMR_READ, // r1
       OPTYPE_TMR_RUNNING, // r1 [r2] b4
-      OPTYPE_TMR_RUNNING_ANY, // -
+      OPTYPE_TMR_RUNNING_ANY, // -     100
       OPTYPE_GETVERDICT, // -
       OPTYPE_ACTIVATE, // r1
       OPTYPE_ACTIVATE_REFD, //v1 t_list2
@@ -263,12 +264,12 @@ namespace Common {
       OPTYPE_EXECUTE_REFD, // v1 t_list2 [v3]
 
       OPTYPE_LOG2STR, // logargs
-      OPTYPE_PROF_RUNNING, // -     99
+      OPTYPE_PROF_RUNNING, // -     107
       
       OPTYPE_ENCVALUE_UNICHAR, // ti1 [v2] [v3] [v4]
       OPTYPE_DECVALUE_UNICHAR, // r1 r2 [v3] [v4] [v5]
       
-      OPTYPE_ANY2UNISTR, // logarg, length = 1
+      OPTYPE_ANY2UNISTR, // logarg, length = 1       110
       OPTYPE_CHECKSTATE_ANY, // [r1] v2, port or any
       OPTYPE_CHECKSTATE_ALL, // [r1] v2, port or all
       OPTYPE_HOSTID, // [v1]
@@ -281,7 +282,7 @@ namespace Common {
       
       OPTYPE_GET_PORT_REF, // -
 
-      NUMBER_OF_OPTYPES // must be last
+      NUMBER_OF_OPTYPES // must be last              120
     };
 
     enum macrotype_t {

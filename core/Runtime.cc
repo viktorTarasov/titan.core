@@ -60,6 +60,7 @@
 #include <TitanLoggerApi.hh>
 #include "Profiler.hh"
 #include "Integer.hh"
+#include "Float.hh"
 #include "Port.hh"
 
 namespace API = TitanLoggerApi;
@@ -80,6 +81,7 @@ boolean TTCN_Runtime::is_alive = FALSE;
 
 const char *TTCN_Runtime::control_module_name = NULL;
 qualified_name TTCN_Runtime::testcase_name = { NULL, NULL };
+timeval TTCN_Runtime::start_time = { 0, 0 };
 
 char *TTCN_Runtime::host_name = NULL;
 
@@ -397,6 +399,20 @@ CHARSTRING TTCN_Runtime::get_testcasename()
   return CHARSTRING(testcase_name.definition_name);
 }
 
+FLOAT TTCN_Runtime::now()
+{
+  if (start_time.tv_sec == 0 && start_time.tv_usec == 0) {
+    TTCN_error("Accessing the test system time while no test case is running.");
+  }
+  
+  struct timeval current_time;
+  if (gettimeofday(&current_time, NULL) == -1) {
+    TTCN_error("gettimeofday() system call failed.");
+  }
+  return FLOAT((double)(current_time.tv_sec - start_time.tv_sec) +
+    1e-6 * (double)(current_time.tv_usec - start_time.tv_usec));
+}
+
 void TTCN_Runtime::load_logger_plugins()
 {
   TTCN_Logger::load_plugins((component)self, component_name);
@@ -694,7 +710,7 @@ component TTCN_Runtime::create_component(
   }
   TTCN_Communication::send_create_req(created_component_type_module,
     created_component_type_name, created_component_name,
-    created_component_location, created_component_alive);
+    created_component_location, created_component_alive, start_time);
   if (is_mtc()) {
     // updating the component status flags
     // 'any component.done' and 'any component.killed' might be successful
@@ -2077,6 +2093,9 @@ void TTCN_Runtime::begin_testcase(
   all_component_done_status = ALT_YES;
   any_component_killed_status = ALT_NO;
   all_component_killed_status = ALT_YES;
+  if (gettimeofday(&start_time, NULL) == -1) {
+    TTCN_error("gettimeofday() system call failed.");
+  }
 }
 
 verdicttype TTCN_Runtime::end_testcase()
@@ -2134,6 +2153,8 @@ verdicttype TTCN_Runtime::end_testcase()
   // restore the control part timers and defaults
   TTCN_Default::restore_control_defaults();
   TIMER::restore_control_timers();
+  start_time.tv_sec = 0;
+  start_time.tv_usec = 0;
   if (executor_state == MTC_PAUSED) {
     TTCN_Logger::log_executor_runtime(
       API::ExecutorRuntime_reason::user__paused__waiting__to__resume);
@@ -2446,7 +2467,8 @@ void TTCN_Runtime::process_create_ptc(component component_reference,
   const char *component_type_module, const char *component_type_name,
   const char *system_type_module, const char *system_type_name,
   const char *par_component_name, boolean par_is_alive,
-  const char *current_testcase_module, const char *current_testcase_name)
+  const char *current_testcase_module, const char *current_testcase_name,
+  timeval testcase_start_time)
 {
   switch (executor_state) {
   case HC_ACTIVE:
@@ -2495,6 +2517,7 @@ void TTCN_Runtime::process_create_ptc(component component_reference,
     set_component_name(par_component_name);
     is_alive = par_is_alive;
     set_testcase_name(current_testcase_module, current_testcase_name);
+    start_time = testcase_start_time;
     executor_state = PTC_INITIAL;
   }
 }

@@ -85,7 +85,8 @@ public:
   static void send_create_req(const char *component_type_module,
     const char *component_type_name,
     const char *component_name,
-    const char *component_location, boolean is_alive);
+    const char *component_location, boolean is_alive,
+    timeval testcase_start_time);
   static void prepare_start_req(Text_Buf& text_buf,
     component component_reference, const char *module_name,
     const char *function_name);

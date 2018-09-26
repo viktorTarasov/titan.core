@@ -171,6 +171,7 @@ namespace Common {
       case OPTYPE_GETVERDICT:
       case OPTYPE_TESTCASENAME:
       case OPTYPE_PROF_RUNNING:
+      case OPTYPE_NOW:
         break;
       case OPTYPE_GET_PORT_REF:
         u.expr.type = p.u.expr.type; // the type is not owned, don't copy it
@@ -422,6 +423,9 @@ namespace Common {
       case V_EXPR: /**< expressions */
         switch (u.expr.v_optype) {
           case OPTYPE_TESTCASENAME: // -
+            break;
+          case OPTYPE_NOW: // -
+            error("Operation 'now' cannot be used in alt guards.");
             break;
           case OPTYPE_RND: // -
           case OPTYPE_RNDWITHVAL: /** \todo -> SEED */ // v1
@@ -764,6 +768,7 @@ namespace Common {
     case OPTYPE_TESTCASENAME:
     case OPTYPE_PROF_RUNNING:
     case OPTYPE_GET_PORT_REF: // type (not owned)
+    case OPTYPE_NOW:
       break;
     case OPTYPE_COMP_RUNNING: // v1 [r2] b4
     case OPTYPE_COMP_ALIVE:
@@ -1165,6 +1170,7 @@ namespace Common {
     case OPTYPE_GETVERDICT:
     case OPTYPE_TESTCASENAME:
     case OPTYPE_PROF_RUNNING:
+    case OPTYPE_NOW:
       break;
     case OPTYPE_GET_PORT_REF:
       u.expr.type = NULL; // will be set during semantic analysis
@@ -1993,6 +1999,7 @@ namespace Common {
     case OPTYPE_TESTCASENAME:
     case OPTYPE_PROF_RUNNING:
     case OPTYPE_GET_PORT_REF:
+    case OPTYPE_NOW:
       break;
     case OPTYPE_UNARYPLUS: // v1
     case OPTYPE_UNARYMINUS:
@@ -2241,6 +2248,7 @@ namespace Common {
     case OPTYPE_TESTCASENAME:
     case OPTYPE_PROF_RUNNING:
     case OPTYPE_GET_PORT_REF:
+    case OPTYPE_NOW:
       break;
     case OPTYPE_COMP_RUNNING: // v1 [r2] b4
     case OPTYPE_COMP_ALIVE:
@@ -2617,6 +2625,7 @@ namespace Common {
       case OPTYPE_TESTCASENAME:
       case OPTYPE_PROF_RUNNING:
       case OPTYPE_GET_PORT_REF:
+      case OPTYPE_NOW:
         break;
       case OPTYPE_COMP_RUNNING: // v1 [r2] b4
       case OPTYPE_COMP_ALIVE:
@@ -3610,6 +3619,7 @@ namespace Common {
       case OPTYPE_STR2FLOAT:
       case OPTYPE_RND:
       case OPTYPE_RNDWITHVAL:
+      case OPTYPE_NOW:
         return Type::T_REAL;
       case OPTYPE_ACTIVATE:
         return Type::T_DEFAULT;
@@ -4111,6 +4121,8 @@ namespace Common {
       return "getverdict()";
     case OPTYPE_TESTCASENAME:
       return "testcasename()";
+    case OPTYPE_NOW:
+      return "now";
     case OPTYPE_CHECKSTATE_ANY:
       if (u.expr.r1) {
         return "port.checkstate()";
@@ -7127,6 +7139,13 @@ void Value::chk_expr_operand_execute_refd(Value *v1,
     case OPTYPE_TESTCASENAME:
     case OPTYPE_PROF_RUNNING:
       break;
+    case OPTYPE_NOW: {
+      Ttcn::StatementBlock* sb = my_scope->get_statementblock_scope();
+      if (sb == NULL || sb->get_my_def() == NULL) {
+        error("Operation `%s' can only be used in testcases, functions or "
+          "altsteps", opname);
+      }
+      break; }
     case OPTYPE_GET_PORT_REF:
       if (u.expr.type == NULL) {
         Ttcn::PortScope* port_scope = my_scope->get_scope_port();
@@ -8256,6 +8275,7 @@ void Value::chk_expr_operand_execute_refd(Value *v1,
     case OPTYPE_JSON2CBOR: // v1
     case OPTYPE_BSON2JSON: // v1
     case OPTYPE_JSON2BSON: // v1
+    case OPTYPE_NOW:
       break;
     case OPTYPE_TESTCASENAME: { // -
       if (!my_scope) FATAL_ERROR("Value::evaluate_value()");
@@ -9579,6 +9599,7 @@ void Value::chk_expr_operand_execute_refd(Value *v1,
       case OPTYPE_JSON2CBOR:
       case OPTYPE_BSON2JSON:
       case OPTYPE_JSON2BSON:
+      case OPTYPE_NOW:
         return true;
       case OPTYPE_COMP_NULL: // -
         return false;
@@ -11225,6 +11246,7 @@ void Value::chk_expr_operand_execute_refd(Value *v1,
     case OPTYPE_GET_PORT_REF: // -
     case OPTYPE_CHECKSTATE_ANY:
     case OPTYPE_CHECKSTATE_ALL:
+    case OPTYPE_NOW: // -
       break; // nothing to do
 
     case OPTYPE_MATCH: // v1 t2
@@ -11637,6 +11659,8 @@ void Value::chk_expr_operand_execute_refd(Value *v1,
         return string("rnd()");
       case OPTYPE_TESTCASENAME:
         return string("testcasename()");
+      case OPTYPE_NOW:
+        return string("now");
       case OPTYPE_UNARYPLUS:
         return create_stringRepr_unary("+");
       case OPTYPE_UNARYMINUS:
@@ -13648,6 +13672,9 @@ void Value::chk_expr_operand_execute_refd(Value *v1,
     case OPTYPE_TESTCASENAME: // -
       expr->expr = mputstr(expr->expr, "TTCN_Runtime::get_testcasename()");
       break;
+    case OPTYPE_NOW:
+      expr->expr = mputstr(expr->expr, "TTCN_Runtime::now()");
+      break;
     case OPTYPE_ACTIVATE: // r1
       generate_code_expr_activate(expr);
       break;
@@ -15376,6 +15403,7 @@ void Value::chk_expr_operand_execute_refd(Value *v1,
     case OPTYPE_CHECKSTATE_ANY:
     case OPTYPE_CHECKSTATE_ALL:
     case OPTYPE_HOSTID:
+    case OPTYPE_NOW:
       return true;
     case OPTYPE_ENCODE:
     case OPTYPE_DECODE:

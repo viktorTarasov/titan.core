@@ -719,6 +719,7 @@ static const string anyname("anytype");
 %token NoneKeyword
 %token NotKeyword
 %token Not4bKeyword
+%token NowKeyword
 %token NowaitKeyword
 %token NullKeyword
 %token ObjectIdentifierKeyword
@@ -9442,6 +9443,11 @@ OpCall: // 611
 | PortKeyword DotGetRefKeyword '(' ')'
   {
     $$ = new Value(Value::OPTYPE_GET_PORT_REF);
+    $$->set_location(infile, @$);
+  }
+| NowKeyword
+  {
+    $$ = new Value(Value::OPTYPE_NOW);
     $$->set_location(infile, @$);
   }
 ;

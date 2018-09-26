@@ -874,6 +874,7 @@ boolean MainController::any_component_done_requested,
         MainController::all_component_done_requested,
         MainController::any_component_killed_requested,
         MainController::all_component_killed_requested;
+timeval MainController::testcase_start_time;
 
 void MainController::add_component(component_struct *comp)
 {
@@ -3243,6 +3244,8 @@ void MainController::send_create_ptc(host_struct *hc,
   text_buf.push_string(component_name);
   text_buf.push_int(is_alive ? 1 : 0);
   text_buf.push_qualified_name(current_testcase);
+  text_buf.push_int(testcase_start_time.tv_sec);
+  text_buf.push_int(testcase_start_time.tv_usec);
   send_message(hc->hc_fd, text_buf);
 }
 
@@ -4119,6 +4122,8 @@ void MainController::process_create_req(component_struct *tc)
     component_location = NULL;
   }
   boolean is_alive = text_buf.pull_int().get_val();
+  testcase_start_time.tv_sec = text_buf.pull_int().get_val();
+  testcase_start_time.tv_usec = text_buf.pull_int().get_val();
 
   host_struct *host = choose_ptc_location(component_type.definition_name,
     component_name, component_location);
