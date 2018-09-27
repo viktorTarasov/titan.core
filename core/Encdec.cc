@@ -256,6 +256,14 @@ void TTCN_EncDec_ErrorContext::set_msg(const char *fmt, ...)
   va_end(args);
 }
 
+void TTCN_EncDec_ErrorContext::add_msg(const char *fmt, ...)
+{
+  va_list args;
+  va_start(args, fmt);
+  msg=mputprintf_va_list(msg, fmt, args);
+  va_end(args);
+}
+
 void TTCN_EncDec_ErrorContext::error(TTCN_EncDec::error_type_t p_et,
                                      const char *fmt, ...)
 {
