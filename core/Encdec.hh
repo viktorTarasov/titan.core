@@ -242,6 +242,16 @@ public:
   void set_msg(const char *fmt, ...)
     __attribute__ ((__format__ (__printf__, 2, 3))); // 'this' is at index 1
 
+  /** @brief Add string to msg
+   *
+   *  Calls Free, then mprintf_va_list
+   *
+   *  @param fmt printf-like format string
+   *  @param ... printf-like parameters
+   */
+  void add_msg(const char *fmt, ...)
+    __attribute__ ((__format__ (__printf__, 2, 3))); // 'this' is at index 1
+
   /** @brief Collects error strings from all active error contexts and logs an error
    *
    * If the error behaviour for \p p_et is not TTCN_EncDec::EB_IGNORE, then
