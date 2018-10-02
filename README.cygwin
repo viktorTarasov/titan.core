@@ -98,6 +98,9 @@ Cygwin setup
        "/cygdrive/c/Users/<yourUserId>/Documents/My_Home"
        WARNING: The path of your "unix" home directory shall not contain
                 any space!
+       NOTE: If /etc/passwd does not exist, edit the /etc/nsswitch.conf file. Insert the line
+       db_home:  /cygdrive/c/Users/<yourUserId>/Documents/My_Home
+	   into that file (or edit that line).
 
     (I1)If you are working with Titan plugins for Eclipse or any Windows based program 
         using cygwin commands, insert the Windows equivalent path of cygwin folders "/bin" or/and "/usr/bin" 
@@ -130,7 +133,7 @@ Cygwin setup
     Compile Titan with Cygwin:
     Edit the <your home directory>/.bashrc, as above in (J), add these lines to it: 
       export TTCN3_DIR=${HOME}/git/titan.core/Install
-      export PATH=${TTCN3_DIR}/bin:${PATH}
+      export PATH=.:${TTCN3_DIR}/bin:${PATH}
       export LD_LIBRARY_PATH=${TTCN3_DIR}/lib:${LD_LIBRARY_PATH}
     Create titan.core/Makefile.personal with the following content:    
             TTCN3_DIR := <your home directory>/git/titan.core/Install
