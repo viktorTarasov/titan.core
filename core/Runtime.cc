@@ -2665,7 +2665,7 @@ void TTCN_Runtime::process_kill()
     terminate_component_type();
     // Send a KILLED message so that the value returned by previous behaviour
     // function remains active.
-    TTCN_Communication::send_killed(local_verdict);
+    TTCN_Communication::send_killed(local_verdict, (const char *)verdict_reason);
     TTCN_Logger::log_final_verdict(TRUE, local_verdict, local_verdict,
                                    local_verdict, (const char *)verdict_reason);
     executor_state = PTC_EXIT;
