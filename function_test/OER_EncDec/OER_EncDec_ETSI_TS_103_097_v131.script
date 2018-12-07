@@ -336,6 +336,45 @@ testcase tc_EtsiTs103097Certificate() runs on Test_CT {
 
   if (enc_EtsiTs103097Certificate(data) == encoded) {setverdict(pass);} else {setverdict(fail);}
   if (dec_EtsiTs103097Certificate(encoded) == decoded) {setverdict(pass);} else {setverdict(fail);}
+
+  const octetstring encoded_bis := '80030080616263646566676879810774657374696E6700000000000002C63A81008C80FFFFF2FB0000115C001200010280012480072122232425262780012480072122232425262701020081008100808031323334353637383132333435363738313233343536373831323334353637388080803132333435363738313233343536373831323334353637383132333435363738808031323334353637383132333435363738313233343536373831323334353637383132333435363738313233343536373831323334353637383132333435363738'O;
+
+  const EtsiTs103097Certificate decoded_bis := {
+    version := 3,
+    type_ := explicit,
+    issuer := { sha256AndDigest := '6162636465666768'O },
+    toBeSigned := {
+      id := { name := "testing"},
+      cracaId := '000000'O,
+      crlSeries := 0,
+      validityPeriod := { start_ := 181818, duration := { milliseconds := 140 } },
+      region := { circularRegion := { center := { latitude := -3333, longitude := 4444}, radius := 18 } },
+      assuranceLevel := '00'O,
+      appPermissions := {
+        { psid := 36, ssp := { opaque := '21222324252627'O } },
+        { psid := 36, ssp := { opaque := '21222324252627'O } }
+      },
+      certIssuePermissions := {
+        {subjectPermissions := { all_ := NULL }, minChainLength := 1, chainLengthRange := 0, eeType := '10000000'B},
+        {subjectPermissions := { all_ := NULL }, minChainLength := 1, chainLengthRange := 0, eeType := '10000000'B}
+      },
+      certRequestPermissions := omit,
+      canRequestRollover := omit,
+      encryptionKey := {
+        supportedSymmAlg := aes128Ccm,
+        publicKey := { eciesNistP256 := { x_only := '3132333435363738313233343536373831323334353637383132333435363738'O } }
+      },
+      verifyKeyIndicator := { verificationKey := { ecdsaNistP256 := { x_only := '3132333435363738313233343536373831323334353637383132333435363738'O } } }
+    },
+    signature_ := {
+      ecdsaNistP256Signature := {
+        rSig := { x_only := '3132333435363738313233343536373831323334353637383132333435363738'O },
+        sSig := '3132333435363738313233343536373831323334353637383132333435363738'O } 
+    }
+  };
+
+  if (enc_EtsiTs103097Certificate(decoded_bis) == encoded_bis) {setverdict(pass);} else {setverdict(fail);}
+  if (dec_EtsiTs103097Certificate(encoded_bis) == decoded_bis) {setverdict(pass);} else {setverdict(fail);}
 }
 
 //*********************************************
