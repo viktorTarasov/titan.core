@@ -15,9 +15,8 @@ proc _delete_files {filelist} {
 }
 
 proc _cleanup {} {
-	_delete_files [list Temp.log Temp.exe Temp \
-		Temp.o TempA.o EncRAW.o EncBER.o \
-		Temp.cc Temp.hh TempA.cc TempA.hh compile]
+	# _delete_files [list Temp.log Temp.exe Temp Temp.o TempA.o EncRAW.o EncBER.o Temp.cc Temp.hh TempA.cc TempA.hh compile]
+	_delete_files [list Temp.log Temp.exe Temp Temp.o TempA.o EncRAW.o EncBER.o compile]
 }
 
 
