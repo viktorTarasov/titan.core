@@ -1,0 +1,11 @@
+prefix=/home/vtarasov/projects/idnomic/innovation/its-pki-lib/gerrithub.titan.core/function_test/OER_EncDec/PKI_TS102941
+exec_prefix=${prefix}
+libdir=${exec_prefix}
+includedir=${prefix}
+
+Name: Eclipse-Titan-ASN1
+Description: Eclipse Titan.Core OER encoder
+Version: 0.0.1v
+Requires: 
+Libs: -L${libdir} -lEtsiTs102941
+Cflags: -I${includedir} -I${includedir}/../../../Install/include -DLINUX 

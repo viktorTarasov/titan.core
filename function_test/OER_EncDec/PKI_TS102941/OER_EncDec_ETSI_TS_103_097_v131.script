@@ -1,0 +1,394 @@
+.******************************************************************************
+.* Copyright (c) 2000-2018 Ericsson Telecom AB
+.* All rights reserved. This program and the accompanying materials
+.* are made available under the terms of the Eclipse Public License v2.0
+.* which accompanies this distribution, and is available at
+.* https://www.eclipse.org/org/documents/epl-2.0/EPL-2.0.html
+.*
+.* Contributors:
+.*   Balasko, Jeno
+.*   Beres, Szabolcs
+.*   Delic, Adam
+.*   Kovacs, Ferenc
+.*   Szabados, Kristof
+.*
+.******************************************************************************/
+:text.
+:lang eng.
+.*
+:docname.Test Description
+:docno.8/152 91-CRL 113 200/5 Uen
+:rev.C
+:date.2015-04-27
+.*
+:prep.ETH/XZR Kristof Szabados (+36 1 437 7256)
+:appr.ETH/XZ (Roland Gecse)
+:checked.ETHBAAT
+.*
+:title.Test Description - OER coder
+:contents level=3.
+.*---------------------------------------------------------------------*
+:h1.PREREQUISITES AND PREPARATIONS
+.*---------------------------------------------------------------------*
+.*---------------------------------------------------------------------*
+:h2.Scope of the Test Object
+.*---------------------------------------------------------------------*
+:xmp tab=1 nokeep.
+
+This TD contains unified test cases related to TTCN3 Executor's OER coder function.
+
+The target of these test cases are the basic data types from specification
+'ISO/IEC 8825-7:2015 -- Information technology – ASN.1 encoding rules:
+Specification of Octet Encoding Rules'
+
+The target data types are used in the following technical specification:
+ 'ETSI TS 103 097 V1.3.1 (2017-10)'
+Intelligent Transport Systems (ITS); Security;
+Security header and certificate formats and certificate formats 
+
+ 'IEEE Std 1609.2-2016 IEEE Standard'
+Wireless Access in Vehicular Environments—Security Services for
+Applications and Management Messages
+
+:exmp.
+
+:p.:us.Revision Information:eus.
+
+:xmp nokeep.
+:us.History:eus.
+
+REV   DATE         PREPARED   CHANGE
+===   ==========   ========   ======
+A     2003-10-31   ETHEKR     New document
+B     2007-03-06   EDMDELI    Implicit message encoding
+C     2007-03-21   EJNOSZA    Bugfix in a testcase for implicit msg. enc.
+D     2008-10-01   EFERKOV    Big integers
+E     2010-01-18   EKRISZA    Updated for TITAN R8C
+F     2011-06-18   EKRISZA    Added tests for errors
+A     2011-12-12   EKRISZA     Updated for release
+PB1   2011-01-30   ETHBAAT    Editorial changes
+
+:exmp.
+
+
+.*---------------------------------------------------------------------*
+:h2.Test Tools
+.*---------------------------------------------------------------------*
+:p.:us.Software Tools:eus.
+:xmp tab=2 nokeep.
+
+	SAtester
+
+:exmp.
+:np.
+.*---------------------------------------------------------------------*
+:h1.REQUIREMENT-BASED TESTS
+.*---------------------------------------------------------------------*
+.*---------------------------------------------------------------------*
+:h2.Testing OER encoding of the basic types
+.*---------------------------------------------------------------------*
+.*---------------------------------------------------------------------*
+:h3. OER encoding
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - OER encoding (unified tests)>
+
+<STATIC:ASN>
+
+TempA
+
+DEFINITIONS ::=
+
+BEGIN
+
+IMPORTS
+  Certificate, Ieee1609Dot2Data FROM IEEE1609dot2 {
+    iso(1) identified-organization(3) ieee(111)
+    standards-association-numbered-series-standards(2) wave-stds(1609)
+    dot2(2) base(1) schema(1) major-version-2(2)
+  };
+
+  TestCertificate ::= Certificate
+
+END
+
+<STATIC>
+
+
+type component Test_CT {}
+
+<TTCN_TC:PURE_EXEC>
+
+// import from IEEE1609dot2 all;
+import from EtsiTs103097Module all;
+
+external function enc_EtsiTs103097Data(in EtsiTs103097Data pdu) return octetstring with { extension "prototype(convert) encode(OER)" }
+external function dec_EtsiTs103097Data(in octetstring stream) return EtsiTs103097Data with { extension "prototype(convert) decode(OER)" }
+
+external function enc_EtsiTs103097Certificate(in EtsiTs103097Certificate pdu) return octetstring with { extension "prototype(convert) encode(OER)" }
+external function dec_EtsiTs103097Certificate(in octetstring stream) return EtsiTs103097Certificate with { extension "prototype(convert) decode(OER)" }
+
+//*********************************************
+// TESTCASES
+//*********************************************
+
+testcase tc_EtsiTs103097Data() runs on Test_CT {
+  const octetstring encoded :=
+    '0381004003800F5468697320697320612042534D0D0A4001201112131415161718810101000300802122232425262728508118737963616D6F72652E696E742E69646E6F6D69632E636F6D616263004604E09A208400A983010380007C8001E4800348010200012000012681829192939495969798919293949596979891929394959697989192939495969798808231323334353637383132333435363738313233343536373831323334353637384142434445464748414243444546474841424344454647484142434445464748'O;
+
+  const octetstring encoded_ko_with_missingCrlID :=
+    '0381004003800F5468697320697320612042534D0D0A440120111213141516171800A5A5A50063810101000300802122232425262728508118737963616D6F72652E696E742E69646E6F6D69632E636F6D616263004604E09A208400A983010380007C8001E4800348010200012000012681829192939495969798919293949596979891929394959697989192939495969798808231323334353637383132333435363738313233343536373831323334353637384142434445464748414243444546474841424344454647484142434445464748'O;
+
+  const EtsiTs103097Data data_ok := {
+    protocolVersion := 3,
+    content := {
+      signedData := {
+        hashId := sha256,
+        tbsData := {
+          payload := {
+            data := {
+              protocolVersion := 3,
+              content := { unsecuredData := '5468697320697320612042534D0D0A'O }
+            }
+          },
+          // headerInfo := { psid := 32, generationTime := 1230066625199609624, missingCrlIdentifier := { cracaId := 'A5A5A5'O, crlSeries := 99 } }
+          headerInfo := { psid := 32, generationTime := 1230066625199609624 }
+        },
+        signer := {
+          certificate := {
+            {
+              version := 3,
+              type_ := explicit,
+              issuer := { sha256AndDigest := '2122232425262728'O },
+              toBeSigned := {
+                id := { name := "sycamore.int.idnomic.com" },
+                cracaId := '616263'O,
+                crlSeries := 70,
+                validityPeriod := { start_ := 81828384, duration := { hours := 169 } },
+                region := { identifiedRegion := { { countryOnly := 124 }, { countryOnly := 484 }, { countryOnly := 840 } } },
+                appPermissions := { { psid := 32}, { psid := 38} },
+                verifyKeyIndicator := { reconstructionValue := { compressed_y_0 := '9192939495969798919293949596979891929394959697989192939495969798'O } }
+              }
+            }
+          }
+        },
+        signature_ := {
+          ecdsaNistP256Signature := {
+            rSig := { compressed_y_0 := '3132333435363738313233343536373831323334353637383132333435363738'O},
+            sSig := '4142434445464748414243444546474841424344454647484142434445464748'O
+          }
+        }
+      }
+    }
+  };
+
+  var EtsiTs103097Data data_ko := data_ok;
+  data_ko.content.signedData.signer.certificate[0].toBeSigned.id := {
+    linkageData := { iCert := 100, linkage_value := '313233343536373839'O, group_linkage_value := { jValue := '41424344'O, value_ := '515253545556575859'O } }
+  };
+
+  const EtsiTs103097Data decoded := {
+    protocolVersion := 3,
+    content := {
+      signedData := {
+        hashId := sha256,
+        tbsData := {
+          payload := {
+            data := {
+              protocolVersion := 3,
+              content := { unsecuredData := '5468697320697320612042534D0D0A'O } 
+            },
+            extDataHash := omit
+          },
+          headerInfo := {
+            psid := 32,
+            generationTime := 1230066625199609624,
+            expiryTime := omit,
+            generationLocation := omit,
+            p2pcdLearningRequest := omit,
+            missingCrlIdentifier := omit,
+            encryptionKey := omit,
+            inlineP2pcdRequest := omit,
+            requestedCertificate := omit
+          }
+        },
+        signer := {
+          certificate := { 
+            {
+              version := 3,
+              type_ := explicit,
+              issuer := { sha256AndDigest := '2122232425262728'O },
+              toBeSigned := {
+                id := { name := "sycamore.int.idnomic.com" },
+                cracaId := '616263'O,
+                crlSeries := 70,
+                validityPeriod := { start_ := 81828384, duration := { hours := 169 } },
+                region := {
+                  identifiedRegion := {
+                    { countryOnly := 124 },
+                    { countryOnly := 484 },
+                    { countryOnly := 840 }
+                  }
+                },
+                assuranceLevel := omit,
+                appPermissions := {
+                  { psid := 32, ssp := omit },
+                  { psid := 38, ssp := omit }
+                },
+                certIssuePermissions := omit,
+                certRequestPermissions := omit,
+                canRequestRollover := omit,
+                encryptionKey := omit,
+                verifyKeyIndicator := { reconstructionValue := { compressed_y_0 := '9192939495969798919293949596979891929394959697989192939495969798'O } } 
+              },
+              signature_ := omit
+            }
+          }
+        },
+        signature_ := {
+          ecdsaNistP256Signature := {
+            rSig := { compressed_y_0 := '3132333435363738313233343536373831323334353637383132333435363738'O },
+            sSig := '4142434445464748414243444546474841424344454647484142434445464748'O 
+          }
+        }
+      }
+    }
+  };
+
+  if (enc_EtsiTs103097Data(data_ok) == encoded) {setverdict(pass);} else {setverdict(fail);}
+  if (enc_EtsiTs103097Data(data_ko) == ''O) {setverdict(pass);} else {setverdict(fail);}
+  if (dec_EtsiTs103097Data(encoded) == decoded) {setverdict(pass);} else {setverdict(fail);}
+
+  @try {
+    dec_EtsiTs103097Data(encoded_ko_with_missingCrlID);
+    setverdict(fail, "exception was expected");
+  }
+  @catch(e) {
+    setverdict(pass, "exception catched", e);
+  }
+}
+
+testcase tc_EtsiTs103097Certificate() runs on Test_CT {
+
+  const octetstring encoded := '80030080404142434445464779810F54657374436572746966696361746500000000000165E7B284000C80000000170000001800015001028001248107066061626364658001248107066061626364650101008100808270717273747576777071727374757677707172737475767770717273747576778080827071727374757677707172737475767770717273747576777071727374757677818270717273747576777071727374757677707172737475767770717273747576777071727374757677707172737475767770717273747576777071727374757677'O;
+
+  const EtsiTs103097Certificate data := {
+    version := 3,
+    type_ := explicit,
+    issuer := { sha256AndDigest := '4041424344454647'O },
+    toBeSigned := {
+      id := { name := "TestCertificate" },
+      cracaId := '000000'O,
+      crlSeries := 0,
+      validityPeriod := { start_ := 23455666, duration := { hours := 12 } },
+      region := { circularRegion := { center := { latitude := 23, longitude := 24 }, radius := 1 } },
+      assuranceLevel := '50'O,
+      appPermissions := {
+        { psid := 36, ssp := { bitmapSsp := '606162636465'O } },
+        { psid := 36, ssp := { bitmapSsp := '606162636465'O } }
+      },
+      certIssuePermissions := { { subjectPermissions := { all_ := NULL } } },
+      encryptionKey := {
+        supportedSymmAlg := aes128Ccm,
+        publicKey := { eciesNistP256 := { compressed_y_0 := '7071727374757677707172737475767770717273747576777071727374757677'O } }
+      },
+      verifyKeyIndicator := { verificationKey := { ecdsaNistP256 := { compressed_y_0 := '7071727374757677707172737475767770717273747576777071727374757677'O } } }
+    },
+    signature_ := {
+      ecdsaBrainpoolP256r1Signature := {
+        rSig := { compressed_y_0 := '7071727374757677707172737475767770717273747576777071727374757677'O },
+        sSig := '7071727374757677707172737475767770717273747576777071727374757677'O }
+    }
+  };
+
+  const EtsiTs103097Certificate decoded := {
+    version := 3,
+    type_ := explicit,
+    issuer := { sha256AndDigest := '4041424344454647'O },
+    toBeSigned := {
+      id := { name := "TestCertificate" },
+      cracaId := '000000'O,
+      crlSeries := 0,
+      validityPeriod := { start_ := 23455666, duration := { hours := 12 } },
+      region := { circularRegion := { center := { latitude := 23, longitude := 24 }, radius := 1 } },
+      assuranceLevel := '50'O,
+      appPermissions := {
+        { psid := 36, ssp := { bitmapSsp := '606162636465'O } },
+        { psid := 36, ssp := { bitmapSsp := '606162636465'O } }
+      },
+      certIssuePermissions := {
+        { subjectPermissions := { all_ := NULL }, minChainLength := 1, chainLengthRange := 0, eeType := '10000000'B }
+      },
+      certRequestPermissions := omit,
+      canRequestRollover := omit,
+      encryptionKey := {
+        supportedSymmAlg := aes128Ccm,
+        publicKey := { eciesNistP256 := { compressed_y_0 := '7071727374757677707172737475767770717273747576777071727374757677'O } }
+      },
+      verifyKeyIndicator := { verificationKey := { ecdsaNistP256 := { compressed_y_0 := '7071727374757677707172737475767770717273747576777071727374757677'O } } } },
+      signature_ := {
+        ecdsaBrainpoolP256r1Signature := {
+          rSig := { compressed_y_0 := '7071727374757677707172737475767770717273747576777071727374757677'O },
+          sSig := '7071727374757677707172737475767770717273747576777071727374757677'O }
+      } 
+  };
+
+  if (enc_EtsiTs103097Certificate(data) == encoded) {setverdict(pass);} else {setverdict(fail);}
+  if (dec_EtsiTs103097Certificate(encoded) == decoded) {setverdict(pass);} else {setverdict(fail);}
+
+  const octetstring encoded_bis := '80030080616263646566676879810774657374696E6700000000000002C63A81008C80FFFFF2FB0000115C001200010280012480072122232425262780012480072122232425262701020081008100808031323334353637383132333435363738313233343536373831323334353637388080803132333435363738313233343536373831323334353637383132333435363738808031323334353637383132333435363738313233343536373831323334353637383132333435363738313233343536373831323334353637383132333435363738'O;
+
+  const EtsiTs103097Certificate decoded_bis := {
+    version := 3,
+    type_ := explicit,
+    issuer := { sha256AndDigest := '6162636465666768'O },
+    toBeSigned := {
+      id := { name := "testing"},
+      cracaId := '000000'O,
+      crlSeries := 0,
+      validityPeriod := { start_ := 181818, duration := { milliseconds := 140 } },
+      region := { circularRegion := { center := { latitude := -3333, longitude := 4444}, radius := 18 } },
+      assuranceLevel := '00'O,
+      appPermissions := {
+        { psid := 36, ssp := { opaque := '21222324252627'O } },
+        { psid := 36, ssp := { opaque := '21222324252627'O } }
+      },
+      certIssuePermissions := {
+        {subjectPermissions := { all_ := NULL }, minChainLength := 1, chainLengthRange := 0, eeType := '10000000'B},
+        {subjectPermissions := { all_ := NULL }, minChainLength := 1, chainLengthRange := 0, eeType := '10000000'B}
+      },
+      certRequestPermissions := omit,
+      canRequestRollover := omit,
+      encryptionKey := {
+        supportedSymmAlg := aes128Ccm,
+        publicKey := { eciesNistP256 := { x_only := '3132333435363738313233343536373831323334353637383132333435363738'O } }
+      },
+      verifyKeyIndicator := { verificationKey := { ecdsaNistP256 := { x_only := '3132333435363738313233343536373831323334353637383132333435363738'O } } }
+    },
+    signature_ := {
+      ecdsaNistP256Signature := {
+        rSig := { x_only := '3132333435363738313233343536373831323334353637383132333435363738'O },
+        sSig := '3132333435363738313233343536373831323334353637383132333435363738'O } 
+    }
+  };
+
+  if (enc_EtsiTs103097Certificate(decoded_bis) == encoded_bis) {setverdict(pass);} else {setverdict(fail);}
+  if (dec_EtsiTs103097Certificate(encoded_bis) == decoded_bis) {setverdict(pass);} else {setverdict(fail);}
+}
+
+//*********************************************
+// CONTROL PART
+//*********************************************
+
+control {
+  execute(tc_EtsiTs103097Data());
+  execute(tc_EtsiTs103097Certificate());
+}
+
+<RESULT>
+
+Overall verdict: pass
+
+<END_TC>
+
