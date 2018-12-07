@@ -22,6 +22,13 @@ TOP := $(shell cd .. && pwd)
 
 include ../Makefile.cfg
 
+ifeq ($(YAML_CPP_EMITTER), yes)
+  YAML_CFLAGS := $(shell pkg-config --cflags yaml-cpp)
+  YAML_LDFLAGS := $(shell pkg-config --libs yaml-cpp)
+  CPPFLAGS += -DYAML_CPP_EMITTER $(YAML_CFLAGS)
+  LDFLAGS  += $(YAML_LDFLAGS)
+endif
+
 DEMOFILES := MyExample.ttcn PCOType.hh PCOType.cc hello_world.ttcn MyExample.cfg
 
 MAKEFILEGENFLAGS := -g

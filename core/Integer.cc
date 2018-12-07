@@ -1961,6 +1961,23 @@ int INTEGER::OER_decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf, O
   return 0;
 }
 
+#ifdef YAML_CPP_EMITTER
+void INTEGER::YAML_emitter_write(YAML::Emitter &yaml)
+{
+  if (likely(bound_flag)) {
+    if (likely(native_flag)) {
+      yaml << val.native;
+    } else {
+      char *tmp = BN_bn2dec(val.openssl);
+      yaml << tmp;
+      OPENSSL_free(tmp);
+    }
+  } else {
+    yaml << "unbound";
+  }
+}
+#endif
+
 // Global functions.
 
 INTEGER operator+(int int_value, const INTEGER& other_value)

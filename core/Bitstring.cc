@@ -559,6 +559,22 @@ void BITSTRING::log() const
   } else TTCN_Logger::log_event_unbound();
 }
 
+#ifdef YAML_CPP_EMITTER
+void BITSTRING::YAML_emitter_write(YAML::Emitter &yaml)
+{
+  if (val_ptr != NULL) {
+    std::string val("B'");
+    for (int bit_count = 0; bit_count < val_ptr->n_bits; bit_count++)
+      val += get_bit(bit_count) ? '1' : '0';
+    val += "'";
+    yaml << val;
+  }
+  else   {
+    yaml << "unbounded";
+  }
+}
+#endif
+
 void BITSTRING::set_param(Module_Param& param) {
   param.basic_check(Module_Param::BC_VALUE|Module_Param::BC_LIST, "bitstring value");
   Module_Param_Ptr mp = &param;

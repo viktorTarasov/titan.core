@@ -37,6 +37,10 @@
 #include "Vector.hh"
 #include "RefdIndex.hh"
 #endif
+#ifdef YAML_CPP_EMITTER
+#include <iostream>
+#include "yaml-cpp/yaml.h"
+#endif
 
 struct ASN_BERdescriptor_t;
 struct ASN_BER_TLV_t;
@@ -648,6 +652,10 @@ public:
   
   /** not a component by default (components will return true) */
   inline boolean is_component() { return FALSE; }
+
+#ifdef YAML_CPP_EMITTER
+  void YAML_emitter_write(YAML::Emitter &yaml) { yaml << "base-object"; }
+#endif
 };
 
 /**

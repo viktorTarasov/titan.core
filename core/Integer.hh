@@ -202,6 +202,10 @@ public:
   /** Decodes accordingly to the OER encoding rules.
     * Returns the length of the decoded data. */
   int OER_decode(const TTCN_Typedescriptor_t&, TTCN_Buffer& p_buf, OER_struct& p_oer);
+
+#ifdef YAML_CPP_EMITTER
+    void YAML_emitter_write(YAML::Emitter &yaml);
+#endif
 };
 
 extern INTEGER operator+(int int_value, const INTEGER& other_value);

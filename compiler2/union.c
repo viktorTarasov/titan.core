@@ -27,6 +27,7 @@
  *
  ******************************************************************************/
 #include <string.h>
+#include <stdlib.h>
 
 #include "../common/memory.h"
 #include "datatypes.h"
@@ -177,7 +178,7 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
     unbound_value);
 
   /* copy constructor */
-  def = mputprintf(def, "%s(const %s& other_value);\n", name, name);
+  def = mputprintf(def, "  %s(const %s& other_value);\n", name, name);
   src = mputprintf(src, "%s::%s(const %s& other_value)\n"
     ": Base_Type()" /* call the *default* constructor as before */
     "{\n"
@@ -185,14 +186,14 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
     "}\n\n", name, name, name);
 
   /* destructor */
-  def = mputprintf(def, "~%s();\n", name);
+  def = mputprintf(def, "  ~%s();\n", name);
   src = mputprintf(src, "%s::~%s()\n"
     "{\n"
     "clean_up();\n"
     "}\n\n", name, name);
 
   /* assignment operator */
-  def = mputprintf(def, "%s& operator=(const %s& other_value);\n", name, name);
+  def = mputprintf(def, "  %s& operator=(const %s& other_value);\n", name, name);
   src = mputprintf(src, "%s& %s::operator=(const %s& other_value)\n"
     "{\n"
     "if (this != &other_value) {\n"
@@ -203,7 +204,7 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
     "}\n\n", name, name, name);
 
   /* comparison operator */
-  def = mputprintf(def, "boolean operator==(const %s& other_value) const;\n",
+  def = mputprintf(def, "  boolean operator==(const %s& other_value) const;\n",
     name);
   src = mputprintf(src, "boolean %s::operator==(const %s& other_value) const\n"
     "{\n"
@@ -225,12 +226,12 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
     "}\n\n");
 
   /* != and () operator */
-  def = mputprintf(def, "inline boolean operator!=(const %s& other_value) "
+  def = mputprintf(def, "  inline boolean operator!=(const %s& other_value) "
     "const { return !(*this == other_value); }\n", name);
 
   /* field access functions */
   for (i = 0; i < sdef->nElements; i++) {
-    def = mputprintf(def, "%s& %s%s();\n", sdef->elements[i].type,
+    def = mputprintf(def, "  %s& %s%s();\n", sdef->elements[i].type,
       at_field, sdef->elements[i].name);
     src = mputprintf(src, "%s& %s::%s%s()\n"
       "{\n"
@@ -245,7 +246,7 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
       sdef->elements[i].type, selection_prefix, sdef->elements[i].name,
       sdef->elements[i].name);
 
-    def = mputprintf(def, "const %s& %s%s() const;\n", sdef->elements[i].type,
+    def = mputprintf(def, "  const %s& %s%s() const;\n", sdef->elements[i].type,
       at_field, sdef->elements[i].name);
     src = mputprintf(src, "const %s& %s::%s%s() const\n"
       "{\n"
@@ -259,11 +260,11 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
   }
 
   /* get_selection function */
-  def = mputprintf(def, "inline %s get_selection() const "
+  def = mputprintf(def, "  inline %s get_selection() const "
     "{ return union_selection; }\n", selection_type);
 
   /* ischosen function */
-  def = mputprintf(def, "boolean ischosen(%s checked_selection) const;\n",
+  def = mputprintf(def, "  boolean ischosen(%s checked_selection) const;\n",
     selection_type);
   src = mputprintf(src, "boolean %s::ischosen(%s checked_selection) const\n"
     "{\n"
@@ -273,14 +274,14 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
     "}\n\n", name, selection_type, unbound_value, dispname);
 
   /* is_bound function */
-  def = mputstr   (def, "boolean is_bound() const;\n");
+  def = mputstr   (def, "  boolean is_bound() const;\n");
   src = mputprintf(src, "boolean %s::is_bound() const\n"
     "{\n"
     "  return union_selection != %s;\n"
     "}\n\n", name, unbound_value);
 
   /* is_value function */
-  def = mputstr   (def, "boolean is_value() const;\n");
+  def = mputstr   (def, "  boolean is_value() const;\n");
   src = mputprintf(src, "boolean %s::is_value() const\n"
     "{\n"
     "switch (union_selection) {\n"
@@ -295,7 +296,7 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
     "}\n\n");
 
     /* clean_up function */
-  def = mputstr   (def, "void clean_up();\n");
+  def = mputstr   (def, "  void clean_up();\n");
   src = mputprintf(src, "void %s::clean_up()\n"
     "{\n"
     "switch (union_selection) {\n",
@@ -314,12 +315,12 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
 
   if (use_runtime_2) {
     def = mputstr(def,
-      "boolean is_equal(const Base_Type* other_value) const;\n"
-      "void set_value(const Base_Type* other_value);\n"
-      "Base_Type* clone() const;\n"
-      "const TTCN_Typedescriptor_t* get_descriptor() const;\n"
-      "void set_err_descr(Erroneous_descriptor_t* p_err_descr) { err_descr=p_err_descr; }\n"
-      "Erroneous_descriptor_t* get_err_descr() const { return err_descr; }\n");
+      "  boolean is_equal(const Base_Type* other_value) const;\n"
+      "  void set_value(const Base_Type* other_value);\n"
+      "  Base_Type* clone() const;\n"
+      "  const TTCN_Typedescriptor_t* get_descriptor() const;\n"
+      "  void set_err_descr(Erroneous_descriptor_t* p_err_descr) { err_descr=p_err_descr; }\n"
+      "  Erroneous_descriptor_t* get_err_descr() const { return err_descr; }\n");
     src = mputprintf(src,
       "boolean %s::is_equal(const Base_Type* other_value) const "
         "{ return *this == *(static_cast<const %s*>(other_value)); }\n"
@@ -334,11 +335,11 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
       name, name);
   } else {
     def = mputstr(def,
-      "inline boolean is_present() const { return is_bound(); }\n");
+      "  inline boolean is_present() const { return is_bound(); }\n");
   }
 
   /* log function */
-  def = mputstr(def, "void log() const;\n");
+  def = mputstr(def, "  void log() const;\n");
   src = mputprintf(src, "void %s::log() const\n"
     "{\n"
     "switch (union_selection) {\n", name);
@@ -359,7 +360,7 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
   src = mputstr(src, "}\n\n");
 
   /* set_param function */
-  def = mputstr(def, "void set_param(Module_Param& param);\n");
+  def = mputstr(def, "  void set_param(Module_Param& param);\n");
   src = mputprintf(src, "void %s::set_param(Module_Param& param)\n"
      "{\n", name);
   if (use_runtime_2) {
@@ -429,7 +430,7 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
   
   /* get param function, RT2 only */
   if (use_runtime_2) {
-    def = mputstr(def, "Module_Param* get_param(Module_Param_Name& param_name) const;\n");
+    def = mputstr(def, "  Module_Param* get_param(Module_Param_Name& param_name) const;\n");
     src = mputprintf(src,
       "Module_Param* %s::get_param(Module_Param_Name& param_name) const\n"
       "{\n"
@@ -491,7 +492,7 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
   src = mputstr(src, "default: break;\n}\n}\n\n");
 
   /* encode_text function */
-  def = mputstr(def, "void encode_text(Text_Buf& text_buf) const;\n");
+  def = mputstr(def, "  void encode_text(Text_Buf& text_buf) const;\n");
   src = mputprintf(src, "void %s::encode_text(Text_Buf& text_buf) const\n"
     "{\n"
     "text_buf.push_int(union_selection);\n"
@@ -509,7 +510,7 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
     "}\n\n", dispname);
 
   /* decode_text function */
-  def = mputstr(def, "void decode_text(Text_Buf& text_buf);\n");
+  def = mputstr(def, "  void decode_text(Text_Buf& text_buf);\n");
   src = mputprintf(src, "void %s::decode_text(Text_Buf& text_buf)\n"
     "{\n"
     "switch ((%s)text_buf.pull_int().get_val()) {\n", name, selection_type);
@@ -534,9 +535,9 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
   /* BER functions */
   if(ber_needed) {
     def = mputstr(def, "private:\n"
-      "boolean BER_decode_set_selection(const ASN_BER_TLV_t& p_tlv);\n"
+      "  boolean BER_decode_set_selection(const ASN_BER_TLV_t& p_tlv);\n"
       "public:\n"
-      "boolean BER_decode_isMyMsg(const TTCN_Typedescriptor_t& p_td, "
+      "  boolean BER_decode_isMyMsg(const TTCN_Typedescriptor_t& p_td, "
 	"const ASN_BER_TLV_t& p_tlv);\n");
 
     /* BER_encode_TLV() */
@@ -581,7 +582,7 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
 
     if (use_runtime_2) { /* BER_encode_TLV_negtest() */
       def = mputstr(def,
-        "ASN_BER_TLV_t* BER_encode_TLV_negtest(const Erroneous_descriptor_t* p_err_descr, const TTCN_Typedescriptor_t& p_td, unsigned p_coding) const;\n");
+        "  ASN_BER_TLV_t* BER_encode_TLV_negtest(const Erroneous_descriptor_t* p_err_descr, const TTCN_Typedescriptor_t& p_td, unsigned p_coding) const;\n");
       src = mputprintf(src,
         "ASN_BER_TLV_t *%s::BER_encode_TLV_negtest(const Erroneous_descriptor_t* p_err_descr, "
           "const TTCN_Typedescriptor_t& p_td, unsigned p_coding) const\n"
@@ -710,7 +711,7 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
     if (sdef->ot || sdef->has_opentypes) { /* theoretically, these are
                                              mutually exlusive */
       /* BER_decode_opentypes() */
-      def = mputstr(def, "void BER_decode_opentypes("
+      def = mputstr(def, "  void BER_decode_opentypes("
 	  "TTCN_Type_list& p_typelist, unsigned L_form);\n");
       src = mputprintf(src, "void %s::BER_decode_opentypes("
 	  "TTCN_Type_list& p_typelist, unsigned L_form)\n"
@@ -1104,7 +1105,7 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
       "  return encoded_length;\n"
       "}\n\n");
     if (use_runtime_2) {
-      def = mputstr(def, "int RAW_encode_negtest(const Erroneous_descriptor_t *, "
+      def = mputstr(def, "  int RAW_encode_negtest(const Erroneous_descriptor_t *, "
         "const TTCN_Typedescriptor_t&, RAW_enc_tree&) const;\n");
       src = mputprintf(src, "int %s::RAW_encode_negtest(const Erroneous_descriptor_t *p_err_descr, "
         "const TTCN_Typedescriptor_t& /*p_td*/, RAW_enc_tree& myleaf) const\n"
@@ -1232,7 +1233,7 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
       "}\n\n");
     if (use_runtime_2) {/*TEXT_encde_negtest()*/
       def = mputstr(def,
-        "int TEXT_encode_negtest(const Erroneous_descriptor_t* p_err_descr, const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf) const;\n");
+        "  int TEXT_encode_negtest(const Erroneous_descriptor_t* p_err_descr, const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf) const;\n");
       src = mputprintf(src, "int %s::TEXT_encode_negtest("
         "const Erroneous_descriptor_t* p_err_descr, const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf) const\n"
             "{\n"
@@ -1343,7 +1344,7 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
 
   if (xer_needed) { /* XERSTUFF encoder functions for union */
     def = mputstr(def,
-      "char **collect_ns(const XERdescriptor_t& p_td, size_t& num, boolean& def_ns, unsigned int flavor = 0) const;\n");
+      "  char **collect_ns(const XERdescriptor_t& p_td, size_t& num, boolean& def_ns, unsigned int flavor = 0) const;\n");
     src=mputprintf(src,
       "boolean %s::can_start(const char *name, const char *uri,"
       " const XERdescriptor_t& xd, unsigned int flavor, unsigned int flavor2) {\n"
@@ -1583,9 +1584,9 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
       
     if (use_runtime_2) {
       def = mputstr(def,
-        "int XER_encode_negtest(const Erroneous_descriptor_t* p_err_descr, "
-        "const XERdescriptor_t& p_td, TTCN_Buffer& p_buf, "
-        "unsigned int p_flavor, unsigned int p_flavor2, int p_indent, embed_values_enc_struct_t*) const;\n");
+        "  int XER_encode_negtest(const Erroneous_descriptor_t* p_err_descr, "
+        "    const XERdescriptor_t& p_td, TTCN_Buffer& p_buf, "
+        "    unsigned int p_flavor, unsigned int p_flavor2, int p_indent, embed_values_enc_struct_t*) const;\n");
       src = mputprintf(src, /* XERSTUFF XER_encode for union */
         "int %s::XER_encode_negtest(const Erroneous_descriptor_t* p_err_descr, "
         "const XERdescriptor_t& p_td, TTCN_Buffer& p_buf, "
@@ -2099,8 +2100,8 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
     if (use_runtime_2) {
       // JSON encode for negative testing
       def = mputstr(def,
-        "int JSON_encode_negtest(const Erroneous_descriptor_t*, "
-        "const TTCN_Typedescriptor_t&, JSON_Tokenizer&) const;\n");
+        "  int JSON_encode_negtest(const Erroneous_descriptor_t*, "
+        "    const TTCN_Typedescriptor_t&, JSON_Tokenizer&) const;\n");
       src = mputprintf(src,
         "int %s::JSON_encode_negtest(const Erroneous_descriptor_t*%s, "
         "const TTCN_Typedescriptor_t&%s, JSON_Tokenizer& p_tok) const\n"
@@ -2451,8 +2452,8 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
     if (use_runtime_2) {
       // OER encode for negative testing
       def = mputstr(def,
-        "int OER_encode_negtest(const Erroneous_descriptor_t*, "
-        "const TTCN_Typedescriptor_t&, TTCN_Buffer&) const;\n");
+        "  int OER_encode_negtest(const Erroneous_descriptor_t*, "
+        "    const TTCN_Typedescriptor_t&, TTCN_Buffer&) const;\n");
       src = mputprintf(src,
         "int %s::OER_encode_negtest(const Erroneous_descriptor_t* p_err_descr, "
         "const TTCN_Typedescriptor_t&, TTCN_Buffer& p_buf) const {\n"
@@ -2558,9 +2559,9 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
     if (sdef->ot || sdef->has_opentypes) { /* theoretically, these are
                                              mutually exlusive */
       /* OER_decode_opentypes() */
-      def = mputstr(def, "void OER_decode_opentypes("
+      def = mputstr(def, "  void OER_decode_opentypes("
 	  "TTCN_Type_list& p_typelist, TTCN_Buffer& p_buf, OER_struct& p_oer);\n");
-      src = mputprintf(src, "void %s::OER_decode_opentypes("
+      src = mputprintf(src, "  void %s::OER_decode_opentypes("
 	  "TTCN_Type_list& p_typelist, TTCN_Buffer& p_buf, OER_struct& p_oer)\n"
 	"{\n", name);
       if (sdef->ot) {
@@ -2666,6 +2667,44 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
 	"\n");
     } /* if sdef->ot || sdef->has_opentypes */
   }
+
+#ifdef YAML_CPP_EMITTER
+  def = mputstr (def, "  void YAML_emitter_write(YAML::Emitter &yaml);\n");
+  src = mputprintf (src, "void %s::YAML_emitter_write(YAML::Emitter &yaml)\n{\n", name );
+  src = mputstr(src,      "  switch(union_selection)   {\n");
+  src = mputstr(src,      "  case UNBOUND_VALUE:\n");
+  src = mputstr    (src,  "    yaml << YAML::Value;\n");
+  src = mputstr(src,      "    yaml << \"unbounded-value\";\n");
+  src = mputstr(src,      "    break;\n");
+  for (i = 0; i < sdef->nElements; i++) {
+    char *dname = strdup(sdef->elements[i].name);
+    while (*(dname + strlen(dname) - 1) == '_')
+      *(dname + strlen(dname) - 1) = '\0';
+
+    char *needle = strstr(dname, "__");
+    while (needle)   {
+      *needle = '-';
+      strcpy(needle + 1, needle + 2);
+      needle = strstr(dname, "__");
+    }
+    src = mputprintf(src, "  case ALT_%s:\n", sdef->elements[i].name);
+    src = mputstr   (src, "    yaml << YAML::BeginMap;\n");
+    src = mputprintf(src, "    yaml << YAML::Key << \"%s\";\n", dname);
+    src = mputstr   (src, "    yaml << YAML::Value;\n");
+    src = mputprintf(src, "    field_%s->YAML_emitter_write(yaml);\n", sdef->elements[i].name);
+    src = mputstr   (src, "    yaml << YAML::EndMap;\n");
+    src = mputprintf(src, "    break;\n");
+    free(dname);
+  }
+  src = mputstr(src,      "  default:\n");
+  src = mputstr    (src,  "    yaml << YAML::Value;\n");
+  src = mputstr(src,      "    yaml << \"fatal-error\";\n");
+  src = mputstr(src,      "    break;\n");
+  src = mputstr (src,     "  }\n" );
+    
+
+  src = mputstr (src, "}\n\n" );
+#endif
 
   /* end of class definition */
   def = mputstr(def, "};\n\n");

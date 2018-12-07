@@ -357,6 +357,16 @@ int ASN_NULL::OER_decode(const TTCN_Typedescriptor_t&, TTCN_Buffer&, OER_struct&
   return 0;
 }
 
+#ifdef YAML_CPP_EMITTER
+void ASN_NULL::YAML_emitter_write(YAML::Emitter &yaml)
+{
+  if (bound_flag)
+    yaml << YAML::Null;
+  else
+    yaml << std::string("unbounded");
+}
+#endif
+
 boolean operator==(asn_null_type, const ASN_NULL& other_value)
 {
   if (!other_value.is_bound()) TTCN_error("The right operand of comparison "

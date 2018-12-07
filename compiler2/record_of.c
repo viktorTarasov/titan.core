@@ -68,29 +68,29 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
     "// written by %s in " __FILE__ " at %d\n"
 #endif
     "class %s : public Base_Type {\n"
-    "struct recordof_setof_struct {\n"
-    "int ref_count;\n"
-    "int n_elements;\n"
-    "%s **value_elements;\n"
-    "} *val_ptr;\n"
+    "  struct recordof_setof_struct {\n"
+    "    int ref_count;\n"
+    "    int n_elements;\n"
+    "    %s **value_elements;\n"
+    "  } *val_ptr;\n"
 #ifndef NDEBUG
       , __FUNCTION__, __LINE__
 #endif
     , name, type);
 
   /* constant unbound element */
-  def = mputprintf(def, "\nstatic const %s UNBOUND_ELEM;\n", type);
+  def = mputprintf(def, "\n  static const %s UNBOUND_ELEM;\n", type);
   src = mputprintf(src, "\nconst %s %s::UNBOUND_ELEM;\n", type, name);
 
   /* private member functions */
   def = mputprintf(def,
     "private:\n"
-    "friend boolean operator==(null_type null_value, "
-	  "const %s& other_value);\n", name);
+    "  friend boolean operator==(null_type null_value, "
+	"const %s& other_value);\n", name);
 
   if (sdef->kind == SET_OF) {
     /* callback function for comparison */
-    def = mputstr(def, "static boolean compare_function("
+    def = mputstr(def, "  static boolean compare_function("
 	"const Base_Type *left_ptr, int left_index, "
         "const Base_Type *right_ptr, int right_index);\n");
     src = mputprintf(src, "boolean %s::compare_function("
@@ -126,7 +126,7 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
     "val_ptr = NULL;\n"
     "}\n\n", name, name);
 
-  def = mputprintf(def, "%s(null_type other_value);\n", name);
+  def = mputprintf(def, "  %s(null_type other_value);\n", name);
   src = mputprintf(src,
     "%s::%s(null_type)\n"
     "{\n"
@@ -137,7 +137,7 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
     "}\n\n", name, name);
 
   /* copy constructor */
-  def = mputprintf(def, "%s(const %s& other_value);\n", name, name);
+  def = mputprintf(def, "  %s(const %s& other_value);\n", name, name);
   src = mputprintf(src,
      "%s::%s(const %s& other_value)\n"
      "{\n"
@@ -148,7 +148,7 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
      "}\n\n", name, name, name, dispname);
 
   /* destructor */
-  def = mputprintf(def, "~%s();\n\n", name);
+  def = mputprintf(def, "  ~%s();\n\n", name);
   src = mputprintf(src,
     "%s::~%s()\n"
     "{\n"
@@ -157,7 +157,7 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
     "}\n\n", name, name);
 
   /* clean_up function */
-  def = mputstr(def, "void clean_up();\n");
+  def = mputstr(def, "  void clean_up();\n");
   src = mputprintf
     (src,
      "void %s::clean_up()\n"
@@ -183,7 +183,7 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
      "}\n\n", name);
 
   /* assignment operators */
-  def = mputprintf(def, "%s& operator=(null_type other_value);\n", name);
+  def = mputprintf(def, "  %s& operator=(null_type other_value);\n", name);
   src = mputprintf(src,
     "%s& %s::operator=(null_type)\n"
     "{\n"
@@ -195,7 +195,7 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
     "return *this;\n"
     "}\n\n", name, name);
 
-  def = mputprintf(def, "%s& operator=(const %s& other_value);\n\n",
+  def = mputprintf(def, "  %s& operator=(const %s& other_value);\n\n",
                    name, name);
   src = mputprintf(src,
     "%s& %s::operator=(const %s& other_value)\n"
@@ -211,7 +211,7 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
     "}\n\n", name, name, name, dispname);
 
   /* comparison operators */
-  def = mputstr(def, "boolean operator==(null_type other_value) const;\n");
+  def = mputstr(def, "  boolean operator==(null_type other_value) const;\n");
   src = mputprintf(src,
     "boolean %s::operator==(null_type) const\n"
     "{\n"
@@ -221,7 +221,7 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
     "return val_ptr->n_elements == 0 ;\n"
     "}\n\n", name, dispname);
 
-  def = mputprintf(def, "boolean operator==(const %s& other_value) const;\n",
+  def = mputprintf(def, "  boolean operator==(const %s& other_value) const;\n",
                    name);
   src = mputprintf(src,
     "boolean %s::operator==(const %s& other_value) const\n"
@@ -259,14 +259,14 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
   }
   src = mputstr(src, "}\n\n");
 
-  def = mputstr(def, "inline boolean operator!=(null_type other_value) const "
+  def = mputstr(def, "  inline boolean operator!=(null_type other_value) const "
                 "{ return !(*this == other_value); }\n");
   def = mputprintf(def, "inline boolean operator!=(const %s& other_value) "
                    "const { return !(*this == other_value); }\n\n", name);
 
   /* indexing operators */
   /* Non-const operator[] is allowed to extend the record-of */
-  def = mputprintf(def, "%s& operator[](int index_value);\n", type);
+  def = mputprintf(def, "  %s& operator[](int index_value);\n", type);
   src = mputprintf(src,
     "%s& %s::operator[](int index_value)\n"
     "{\n"
@@ -301,7 +301,7 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
     "return *val_ptr->value_elements[index_value];\n"
     "}\n\n", type, name, dispname, type, type, type);
 
-  def = mputprintf(def, "%s& operator[](const INTEGER& index_value);\n",
+  def = mputprintf(def, "  %s& operator[](const INTEGER& index_value);\n",
                    type);
   src = mputprintf(src,
     "%s& %s::operator[](const INTEGER& index_value)\n"
@@ -312,7 +312,7 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
     "}\n\n", type, name, dispname);
 
   /* Const operator[] throws an error if over-indexing */
-  def = mputprintf(def, "const %s& operator[](int index_value) const;\n",
+  def = mputprintf(def, "  const %s& operator[](int index_value) const;\n",
                    type);
   src = mputprintf(src,
     "const %s& %s::operator[](int index_value) const\n"
@@ -328,7 +328,7 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
     "*val_ptr->value_elements[index_value] : UNBOUND_ELEM;\n"
     "}\n\n", type, name, dispname, dispname, dispname);
 
-  def = mputprintf(def, "const %s& operator[](const INTEGER& index_value) "
+  def = mputprintf(def, "  const %s& operator[](const INTEGER& index_value) "
                    "const;\n\n", type);
   src = mputprintf(src,
     "const %s& %s::operator[](const INTEGER& index_value) const\n"
@@ -340,10 +340,10 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
 
   /* rotation operators */
   def = mputprintf(def,
-    "%s operator<<=(int rotate_count) const;\n"
-    "%s operator<<=(const INTEGER& rotate_count) const;\n"
-    "%s operator>>=(int rotate_count) const;\n"
-    "%s operator>>=(const INTEGER& rotate_count) const;\n\n",
+    "  %s operator<<=(int rotate_count) const;\n"
+    "  %s operator<<=(const INTEGER& rotate_count) const;\n"
+    "  %s operator>>=(int rotate_count) const;\n"
+    "  %s operator>>=(const INTEGER& rotate_count) const;\n\n",
     name, name, name, name);
   src = mputprintf(src,
     "%s %s::operator<<=(int rotate_count) const\n"
@@ -386,7 +386,7 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
 
   /* concatenation */
   def = mputprintf(def,
-    "%s operator+(const %s& other_value) const;\n\n", name, name);
+    "  %s operator+(const %s& other_value) const;\n\n", name, name);
   src = mputprintf(src,
     "%s %s::operator+(const %s& other_value) const\n"
     "{\n"
@@ -412,7 +412,7 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
 
   /* substr() */
   def = mputprintf(def,
-    "%s substr(int index, int returncount) const;\n\n", name);
+    "  %s substr(int index, int returncount) const;\n\n", name);
   src = mputprintf(src,
     "%s %s::substr(int index, int returncount) const\n"
     "{\n"
@@ -434,7 +434,7 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
 
   /* replace() */
   def = mputprintf(def,
-    "%s replace(int index, int len, const %s& repl) const;\n\n", name, name);
+    "  %s replace(int index, int len, const %s& repl) const;\n\n", name, name);
   src = mputprintf(src,
     "%s %s::replace(int index, int len, const %s& repl) const\n"
     "{\n"
@@ -468,7 +468,7 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
     "return ret_val;\n"
   "}\n\n", name, name, name, dispname, dispname, dispname, name, type, type, type);
   def = mputprintf(def,
-    "%s replace(int index, int len, const %s_template& repl) const;\n\n",
+    "  %s replace(int index, int len, const %s_template& repl) const;\n\n",
     name, name);
   src = mputprintf(src,
     "%s %s::replace(int index, int len, const %s_template& repl) const\n"
@@ -479,7 +479,7 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
     "}\n\n", name, name, name);
 
   /* set_size function */
-  def = mputstr(def, "void set_size(int new_size);\n");
+  def = mputstr(def, "  void set_size(int new_size);\n");
   src = mputprintf(src, "void %s::set_size(int new_size)\n"
     "{\n"
     "if (new_size < 0) TTCN_error(\"Internal error: Setting a negative size "
@@ -529,15 +529,15 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
 
   /* is_bound function */
   def = mputstr(def,
-    "inline boolean is_bound() const {return val_ptr != NULL; }\n");
+    "  inline boolean is_bound() const {return val_ptr != NULL; }\n");
 
   /* is_present function */
   def = mputstr(def,
-    "inline boolean is_present() const { return is_bound(); }\n");
+    "  inline boolean is_present() const { return is_bound(); }\n");
 
   /* is_value function */
   def = mputstr(def,
-    "boolean is_value() const;\n");
+    "  boolean is_value() const;\n");
   src = mputprintf(src,
     "boolean %s::is_value() const\n"
     "{\n"
@@ -551,8 +551,8 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
 
   /* sizeof operation */
   def = mputstr(def,
-    "int size_of() const;\n"
-    "int n_elem() const { return size_of(); }\n");
+    "  int size_of() const;\n"
+    "  int n_elem() const { return size_of(); }\n");
   src = mputprintf(src,
     "int %s::size_of() const\n"
     "{\n"
@@ -563,7 +563,7 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
     "}\n\n", name, dispname);
 
   /* lengthof operation */
-  def = mputstr(def, "int lengthof() const;\n");
+  def = mputstr(def, "  int lengthof() const;\n");
   src = mputprintf(src,
     "int %s::lengthof() const\n"
     "{\n"
@@ -576,7 +576,7 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
     "}\n\n", name, dispname);
 
   /* log function */
-  def = mputstr(def, "void log() const;\n");
+  def = mputstr(def, "  void log() const;\n");
   src = mputprintf
     (src,
      "void %s::log() const\n"
@@ -601,7 +601,7 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
      "}\n\n", name);
 
   /* set_param function */
-  def = mputstr(def, "void set_param(Module_Param& param);\n");
+  def = mputstr(def, "  void set_param(Module_Param& param);\n");
   src = mputprintf(src,
     "void %s::set_param(Module_Param& param)\n"
     "{\n"
@@ -676,7 +676,7 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
     "}\n}\n\n", name);
 
   /* encoding / decoding functions */
-  def = mputstr(def, "void encode_text(Text_Buf& text_buf) const;\n");
+  def = mputstr(def, "  void encode_text(Text_Buf& text_buf) const;\n");
   src = mputprintf(src,
     "void %s::encode_text(Text_Buf& text_buf) const\n"
     "{\n"
@@ -688,7 +688,7 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
     "(*this)[elem_count].encode_text(text_buf);\n"
     "}\n\n", name, dispname);
 
-  def = mputstr(def, "void decode_text(Text_Buf& text_buf);\n");
+  def = mputstr(def, "  void decode_text(Text_Buf& text_buf);\n");
   src = mputprintf(src,
     "void %s::decode_text(Text_Buf& text_buf)\n"
     "{\n"
@@ -933,8 +933,7 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
       /* BER_decode_opentypes() */
       def=mputstr
         (def,
-         "void BER_decode_opentypes(TTCN_Type_list& p_typelist,"
-         " unsigned L_form);\n");
+         "  void BER_decode_opentypes(TTCN_Type_list& p_typelist, unsigned L_form);\n");
       src=mputprintf
         (src,
          "void %s::BER_decode_opentypes(TTCN_Type_list& p_typelist,"
@@ -1049,7 +1048,7 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
 
   if (xer_needed) { /* XERSTUFF encoder codegen for record-of, RT1 */
     def = mputstr(def,
-      "char **collect_ns(const XERdescriptor_t& p_td, size_t& num, bool& def_ns, unsigned int flavor = 0) const;\n");
+      "  char **collect_ns(const XERdescriptor_t& p_td, size_t& num, bool& def_ns, unsigned int flavor = 0) const;\n");
 
     /* Write the body of the XER encoder/decoder functions. The declaration
      * is written by def_encdec() in encdec.c */
@@ -1678,7 +1677,7 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
       /* OER_decode_opentypes() */
       def=mputstr
         (def,
-         "void OER_decode_opentypes(TTCN_Type_list& p_typelist, TTCN_Buffer& p_buf, OER_struct& p_oer);\n");
+         "  void OER_decode_opentypes(TTCN_Type_list& p_typelist, TTCN_Buffer& p_buf, OER_struct& p_oer);\n");
       src=mputprintf
         (src,
          "void %s::OER_decode_opentypes(TTCN_Type_list& p_typelist, TTCN_Buffer& p_buf, OER_struct& p_oer)\n"
@@ -1698,6 +1697,23 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
          );
     }
   }
+
+#ifdef YAML_CPP_EMITTER
+  def = mputstr (def, "  void YAML_emitter_write(YAML::Emitter &yaml);\n");
+  src = mputprintf (src, "void %s::YAML_emitter_write(YAML::Emitter &yaml)\n{\n", name );
+  src = mputstr    (src, "  if (val_ptr == NULL) {\n");
+  src = mputstr    (src, "    yaml << \"unbounded\";\n");
+  src = mputstr    (src, "  }\n");
+  src = mputstr    (src, "  else   {\n");
+  src = mputstr    (src, "    yaml << YAML::BeginSeq;\n");
+  src = mputstr    (src, "    for (int elem_count = 0; elem_count < val_ptr->n_elements; elem_count++) {\n");
+  src = mputstr    (src, "      (*this)[elem_count].YAML_emitter_write(yaml);\n");
+  src = mputstr    (src, "    }\n");
+  src = mputstr    (src, "    yaml << YAML::EndSeq;\n");
+  src = mputstr    (src, "  }\n");
+  src = mputstr (src, "}\n\n" );
+#endif
+
   /* end of class */
   def = mputstr(def, "};\n\n");
 

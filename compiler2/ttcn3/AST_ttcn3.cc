@@ -1904,6 +1904,12 @@ namespace Ttcn {
   {
     target->header.includes = mputstr(target->header.includes,
       "#include <TTCN3.hh>\n");
+#ifdef YAML_CPP_EMITTER
+    target->header.includes = mputstr(target->header.includes,
+      "#include <iostream>\n"
+      "#include <yaml-cpp/yaml.h>\n");
+#endif
+
     for (size_t i = 0; i < impmods_v.size(); i++) {
       ImpMod *im = impmods_v[i];
       Common::Module *m = im->get_mod();

@@ -951,6 +951,16 @@ void UNIVERSAL_CHARSTRING::log() const
   }
 }
 
+#ifdef YAML_CPP_EMITTER
+void UNIVERSAL_CHARSTRING::YAML_emitter_write(YAML::Emitter &yaml)
+{
+  if (!this->is_bound())
+    yaml << "unbounded";
+  else
+    yaml << this->get_stringRepr_for_pattern(); 
+}
+#endif
+
 UNIVERSAL_CHARSTRING UNIVERSAL_CHARSTRING::from_UTF8_buffer(TTCN_Buffer& p_buff)
 {
   OCTETSTRING os;

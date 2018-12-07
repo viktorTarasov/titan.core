@@ -930,6 +930,14 @@ void defEnumClass(const enum_def *edef, output_struct *output)
       "}\n\n"
       , name, enum_type, unknown_value, enum_type, unknown_value);
   }
+
+#ifdef YAML_CPP_EMITTER
+    def = mputstr (def, "  void YAML_emitter_write(YAML::Emitter &yaml);\n");
+    src = mputprintf (src, "void %s::YAML_emitter_write(YAML::Emitter &yaml)\n{\n", name );
+    src = mputstr    (src, "  yaml << YAML::Value << this->enum_to_str(this->enum_value);\n");
+    src = mputstr (src, "}\n\n" );
+#endif
+
   /* end of class */
   def = mputstr(def, "};\n\n");
 
@@ -937,7 +945,6 @@ void defEnumClass(const enum_def *edef, output_struct *output)
   Free(def);
   output->source.methods = mputstr(output->source.methods, src);
   Free(src);
-
 
   Free(enum_type);
   Free(qualified_enum_type);

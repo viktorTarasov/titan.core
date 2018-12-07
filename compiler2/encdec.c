@@ -34,43 +34,43 @@ void def_encdec(const char *p_classname,
 
   def=mputstr
     (def,
-     "void encode(const TTCN_Typedescriptor_t&, TTCN_Buffer&,"
-     " TTCN_EncDec::coding_t, ...) const;\n"
-     "void decode(const TTCN_Typedescriptor_t&, TTCN_Buffer&,"
-     " TTCN_EncDec::coding_t, ...);\n");
+     "  void encode(const TTCN_Typedescriptor_t&, TTCN_Buffer&,"
+     "    TTCN_EncDec::coding_t, ...) const;\n"
+     "  void decode(const TTCN_Typedescriptor_t&, TTCN_Buffer&,"
+     "    TTCN_EncDec::coding_t, ...);\n");
   if(ber)
     def=mputstr(def,
-     "ASN_BER_TLV_t* BER_encode_TLV(const TTCN_Typedescriptor_t& p_td,"
-     " unsigned p_coding) const;\n"
-     "boolean BER_decode_TLV(const TTCN_Typedescriptor_t& p_td, const"
-     " ASN_BER_TLV_t& p_tlv, unsigned L_form);\n"
+     "  ASN_BER_TLV_t* BER_encode_TLV(const TTCN_Typedescriptor_t& p_td,"
+     "    unsigned p_coding) const;\n"
+     "  boolean BER_decode_TLV(const TTCN_Typedescriptor_t& p_td, const"
+     "    ASN_BER_TLV_t& p_tlv, unsigned L_form);\n"
      );
   if(raw)
     def=mputprintf(def,
-     "int RAW_encode(const TTCN_Typedescriptor_t&, RAW_enc_tree&) const;\n"
-     "int RAW_decode(const TTCN_Typedescriptor_t&, TTCN_Buffer&,"
-     " int, raw_order_t, boolean no_err=FALSE,"
-     "int sel_field=-1, boolean first_call=TRUE, "
-     "const RAW_Force_Omit* force_omit = NULL);\n"
+     "  int RAW_encode(const TTCN_Typedescriptor_t&, RAW_enc_tree&) const;\n"
+     "  int RAW_decode(const TTCN_Typedescriptor_t&, TTCN_Buffer&,"
+     "    int, raw_order_t, boolean no_err=FALSE,"
+     "    int sel_field=-1, boolean first_call=TRUE, "
+     "    const RAW_Force_Omit* force_omit = NULL);\n"
      );
   if(text)
     def=mputprintf(def,
-     "int TEXT_encode(const TTCN_Typedescriptor_t&, TTCN_Buffer&) const;\n"
-     "int TEXT_decode(const TTCN_Typedescriptor_t&,"
-     "TTCN_Buffer&, Limit_Token_List&, boolean no_err=FALSE,"
-     "boolean first_call=TRUE);\n"
+     "  int TEXT_encode(const TTCN_Typedescriptor_t&, TTCN_Buffer&) const;\n"
+     "  int TEXT_decode(const TTCN_Typedescriptor_t&,"
+     "    TTCN_Buffer&, Limit_Token_List&, boolean no_err=FALSE,"
+     "    boolean first_call=TRUE);\n"
      );
   if (xer) /* XERSTUFF encdec function headers */
     def=mputprintf(def,
 #ifndef NDEBUG
-      "// written by %s in " __FILE__ " at %d\n"
+      "  // written by %s in " __FILE__ " at %d\n"
 #endif
-      "int XER_encode(const XERdescriptor_t&, TTCN_Buffer&, unsigned int,"
-      "unsigned int, int, embed_values_enc_struct_t*) const;\n"
-      "int XER_decode(const XERdescriptor_t&, XmlReaderWrap&, unsigned int, "
-      "unsigned int, embed_values_dec_struct_t*);\n"
-      "static boolean can_start(const char *name, const char *uri, "
-      "XERdescriptor_t const& xd, unsigned int, unsigned int);\n"
+      "  int XER_encode(const XERdescriptor_t&, TTCN_Buffer&, unsigned int,"
+      "    unsigned int, int, embed_values_enc_struct_t*) const;\n"
+      "  int XER_decode(const XERdescriptor_t&, XmlReaderWrap&, unsigned int, "
+      "    unsigned int, embed_values_dec_struct_t*);\n"
+      "  static boolean can_start(const char *name, const char *uri, "
+      "    XERdescriptor_t const& xd, unsigned int, unsigned int);\n"
       "%s"
 #ifndef NDEBUG
       , __FUNCTION__, __LINE__
@@ -81,14 +81,14 @@ void def_encdec(const char *p_classname,
     );
   if(json) {
     def = mputprintf(def,
-      "int JSON_encode(const TTCN_Typedescriptor_t&, JSON_Tokenizer&) const;\n"
-      "int JSON_decode(const TTCN_Typedescriptor_t&, JSON_Tokenizer&, boolean, "
-      "int p_chosen_field = CHOSEN_FIELD_UNSET);\n");
+      "  int JSON_encode(const TTCN_Typedescriptor_t&, JSON_Tokenizer&) const;\n"
+      "  int JSON_decode(const TTCN_Typedescriptor_t&, JSON_Tokenizer&, boolean, "
+      "    int p_chosen_field = CHOSEN_FIELD_UNSET);\n");
   }
   if(oer) {
     def = mputprintf(def,
-      "int OER_encode(const TTCN_Typedescriptor_t&, TTCN_Buffer&) const;\n"
-      "int OER_decode(const TTCN_Typedescriptor_t&, TTCN_Buffer&, OER_struct&);\n");
+      "  int OER_encode(const TTCN_Typedescriptor_t&, TTCN_Buffer&) const;\n"
+      "  int OER_decode(const TTCN_Typedescriptor_t&, TTCN_Buffer&, OER_struct&);\n");
   }
 
   src=mputprintf(src,

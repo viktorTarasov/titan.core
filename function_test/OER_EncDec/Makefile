@@ -81,6 +81,13 @@ else
 TTCN3_LIB = ttcn3-rt2
 endif
 
+ifeq ($(YAML_CPP_EMITTER), yes)
+  YAML_CFLAGS := $(shell pkg-config --cflags yaml-cpp)
+  YAML_LDFLAGS := $(shell pkg-config --libs yaml-cpp)
+  CPPFLAGS += -DYAML_CPP_EMITTER $(YAML_CFLAGS) 
+  LDFLAGS  += $(YAML_LDFLAGS)
+endif
+
 
 # The path of your OpenSSL installation:
 # If you do not have your own one, leave it unchanged.

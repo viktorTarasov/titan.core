@@ -364,6 +364,17 @@ public:
     * Redirects the call to the optional value. */
   virtual void remove_refd_index(int index);
 #endif
+
+#ifdef YAML_CPP_EMITTER
+  void YAML_emitter_write(YAML::Emitter &yaml)  {
+    if (is_present())   {
+      optional_value->YAML_emitter_write(yaml);
+    }
+    else   {
+      // yaml << "omit";
+    }
+  }
+#endif
 };
 
 #if HAVE_GCC(4,6)

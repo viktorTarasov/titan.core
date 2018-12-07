@@ -102,6 +102,10 @@ public:
   /** Decodes accordingly to the OER decoding rules.
     * Returns the length of the encoded data. */
   int OER_decode(const TTCN_Typedescriptor_t&, TTCN_Buffer&, OER_struct&);
+
+#ifdef YAML_CPP_EMITTER
+    void YAML_emitter_write(YAML::Emitter &yaml);
+#endif
 };
 
 extern boolean operator==(asn_null_type par_value, const ASN_NULL& other_value);

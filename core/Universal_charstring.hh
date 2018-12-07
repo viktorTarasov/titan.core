@@ -412,6 +412,10 @@ public:
   static CharCoding::CharCodingType get_character_coding(const char* coding_str,
     const char* context_str);
 
+#ifdef YAML_CPP_EMITTER
+  void YAML_emitter_write(YAML::Emitter &yaml);
+#endif
+
 private:
 #ifdef TITAN_RUNTIME_2
   virtual int encode_raw(TTCN_Buffer& p_buf) const;

@@ -517,6 +517,17 @@ void OCTETSTRING::log() const
   } else TTCN_Logger::log_event_unbound();
 }
 
+#ifdef YAML_CPP_EMITTER
+void OCTETSTRING::YAML_emitter_write(YAML::Emitter &yaml)
+{
+  if (val_ptr != NULL) {
+    yaml << oct2str(*this);
+  } else {
+    yaml << "unbound";
+  }
+}
+#endif
+
 void OCTETSTRING::set_param(Module_Param& param) {
   param.basic_check(Module_Param::BC_VALUE|Module_Param::BC_LIST, "octetstring value");
   Module_Param_Ptr mp = &param;

@@ -338,6 +338,13 @@ namespace Asn {
       // do not generate the #include if a covering module is found
       if (!covered) im->generate_code(target);
     }
+
+#ifdef YAML_CPP_EMITTER
+    target->header.includes = mputstr(target->header.includes,
+      "#include <iostream>\n"
+      "#include <yaml-cpp/yaml.h>\n"
+      );
+#endif
   }
 
   // =================================

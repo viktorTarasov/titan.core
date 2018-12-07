@@ -25,6 +25,7 @@
  *
  ******************************************************************************/
 #include <string.h>
+#include <stdlib.h>
 #include "datatypes.h"
 #include "../common/memory.h"
 #include "record.h"
@@ -5234,7 +5235,40 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
        "\n"
        );
     } /* if sdef->has_opentypes */
-  
+ 
+#ifdef YAML_CPP_EMITTER
+    def = mputstr (def, "  void YAML_emitter_write(YAML::Emitter &yaml);\n");
+    src = mputprintf (src, "void %s::YAML_emitter_write(YAML::Emitter &yaml)\n{\n", name );
+#if 1
+    src = mputstr (src, "/*\n" );
+    for(i=0; i<sdef->nElements; i++)
+      src = mputprintf (src, "\"%s : %s : %s : %s : %s\"\n", sdef->elements[i].dispname, sdef->elements[i].name, sdef->elements[i].type, sdef->elements[i].typegen, sdef->elements[i].typedescrname);
+    src = mputstr (src, "*/\n" );
+#endif
+
+    src = mputstr    (src, "  yaml << YAML::Value;\n");
+    src = mputstr    (src, "  yaml << YAML::BeginSeq;\n");
+    for(i=0; i<sdef->nElements; i++)   {
+      char *dname = strdup(sdef->elements[i].name);
+      while (*(dname + strlen(dname) - 1) == '_')
+          *(dname + strlen(dname) - 1) = '\0';
+
+      char *needle = strstr(dname, "__");
+      while (needle)   {
+        *needle = '-';
+        strcpy(needle + 1, needle + 2);
+        needle = strstr(dname, "__");
+      }
+
+      src = mputprintf (src, "  yaml << YAML::BeginMap << YAML::Key << \"%s\" << YAML::Value;\n", dname);
+      src = mputprintf (src, "  field_%s.YAML_emitter_write(yaml);\n", sdef->elements[i].name);
+      src = mputstr    (src, "  yaml << YAML::EndMap;\n");
+      free(dname);
+    }
+    src = mputstr    (src, "  yaml << YAML::EndSeq;\n");
+    src = mputstr (src, "}\n\n" );
+#endif
+
   /* end of class definition */
   def = mputstr(def, "};\n\n");
 
