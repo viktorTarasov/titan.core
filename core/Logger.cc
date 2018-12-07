@@ -563,6 +563,8 @@ void TTCN_Logger::terminate_logger()
 
   Free(logmatch_buffer);
   logmatch_buffer = NULL;
+
+  TCov::close_file();
 }
 
 boolean TTCN_Logger::is_logger_up()
