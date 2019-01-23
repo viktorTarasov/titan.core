@@ -483,7 +483,9 @@ namespace Common {
       return TRUE;
 
     if (cons_def->con_str == NULL)
-      cons_def->con_str = mputstr(cons_def->con_str, "\nfield_present = FALSE;\n");
+      cons_def->con_str = mputstr(cons_def->con_str, "\nfield_present = FALSE; /* ContainedSubtypeConstraint: init begin */\n");
+
+    cons_def->con_str = mputstr(cons_def->con_str, "{  /* ContainedSubtypeConstraint begin */\n");
     cons_def->con_str = mputprintf(cons_def->con_str, "if(%s.is_present()) field_present = TRUE;\n", cons_def->con_chain);
 
     char *ec_core = NULL;
@@ -500,10 +502,12 @@ namespace Common {
       cons_def->con_str = mputstr(cons_def->con_str, "  }\n");
     }
     else    {
-      cons_def->con_str = mputprintf(cons_def->con_str,"  if (%s_validate_constraints(%s, ec) == FALSE)  {\n%s  }\n",
+      cons_def->con_str = mputprintf(cons_def->con_str,
+		      "  if (%s_validate_constraints(%s, ec) == FALSE)  {\n%s}\n",
 		      type->get_type_refd()->get_genname_own().c_str(), cons_def->con_chain, ec_core);
     }
     cons_def->con_str = mputprintf(cons_def->con_str, "if(!field_present)  {\n%s}\n", ec_core);
+    cons_def->con_str = mputstr(cons_def->con_str, "}  /* ContainedSubtypeConstraint fin */\n");
 
     Free(ec_core);
     Free(cons_def->con_chain);
@@ -1106,19 +1110,19 @@ namespace Common {
       return FALSE;
 
     if (cons_def->in_op_or_head)
-        cons_def->con_str = mputstr(cons_def->con_str, "\nfield_present = FALSE;\n");
+        cons_def->con_str = mputstr(cons_def->con_str, "\nfield_present = FALSE; /* NamedConstraint: begin: OP or HEAD */\n");
     cons_def->in_op_or_head = FALSE;
 
     if (parent_refd == Type::T_CHOICE_A)   {
       if (cons_def->con_str == NULL)
-        cons_def->con_str = mputstr(cons_def->con_str, "\nfield_present = FALSE;\n");
+        cons_def->con_str = mputstr(cons_def->con_str, "\nfield_present = FALSE; /* NamedConstraint: begin: parent T_CHOICE_A */\n");
 
-      cons_def->con_str = mputprintf(cons_def->con_str,"if(%s.ischosen(%s::%s::ALT_%s))\n",
+      cons_def->con_str = mputprintf(cons_def->con_str,"if(%s.ischosen(%s::%s::ALT_%s))  /* NamedConstraint: parent T_CHOICE_A */\n",
 		      cons_def->con_chain, cons_def->parent_nc.scope, cons_def->parent_nc.type, id_str);
     }
     else if (parent_refd == (int)(Type::T_SEQOF))   {
       if (cons_def->con_str == NULL)
-        cons_def->con_str = mputstr(cons_def->con_str, "\nfield_present = FALSE;\n");
+        cons_def->con_str = mputstr(cons_def->con_str, "\nfield_present = FALSE;  /* NamedConstraint: begin: parent T_SEQOF */\n");
 
       cons_def->con_str = mputprintf(cons_def->con_str,"for(int ii=0;ii<%s.size_of();ii++)\n", cons_def->con_chain);
       cons_def->con_chain = mputstr(cons_def->con_chain, "[ii]");
