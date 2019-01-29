@@ -70,6 +70,8 @@ protected: // for ASN_ANY which is derived from OCTETSTRING
   void init_struct(int n_octets);
   void copy_value();
   OCTETSTRING(int n_octets);
+  Base_Type *opaque_object = NULL;
+
 
 public:
   OCTETSTRING();
@@ -204,6 +206,9 @@ public:
 #ifdef YAML_CPP_EMITTER
   void YAML_emitter_write(YAML::Emitter &yaml);
 #endif
+
+  void set_opaque(Base_Type *);
+  void unset_opaque(Base_Type *);
 };
 
 

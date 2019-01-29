@@ -160,7 +160,8 @@ public:
    */
   VIRTUAL_IF_RUNTIME_2 boolean ispresent() const;
 
-  VIRTUAL_IF_RUNTIME_2 void log() const;
+  // VIRTUAL_IF_RUNTIME_2 void log() const;
+  virtual void log() const;
 
   /** Check whether the XML encoding of the type can begin with an XML element
    * having the specified name and namespace.
@@ -253,10 +254,11 @@ public:
   virtual void set_to_present();
   /** @} */
   
-  virtual ~Base_Type() { }
+//  virtual ~Base_Type() { }
 
 #endif
 
+  virtual ~Base_Type() { }
   /** Do nothing for non-structured types. */
   VIRTUAL_IF_RUNTIME_2 void set_implicit_omit() { }
 

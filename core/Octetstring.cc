@@ -66,6 +66,8 @@ void OCTETSTRING::init_struct(int n_octets)
     val_ptr->ref_count = 1;
     val_ptr->n_octets = n_octets;
   }
+
+  opaque_object = NULL;
 }
 
 void OCTETSTRING::copy_value()
@@ -79,6 +81,7 @@ void OCTETSTRING::copy_value()
     init_struct(old_ptr->n_octets);
     memcpy(val_ptr->octets_ptr, old_ptr->octets_ptr, old_ptr->n_octets);
   }
+
 }
 
 // Called by operator+, operator~, operator&, operator|
@@ -106,6 +109,7 @@ OCTETSTRING::OCTETSTRING(const OCTETSTRING& other_value)
   other_value.must_bound("Copying an unbound octetstring value.");
   val_ptr = other_value.val_ptr;
   val_ptr->ref_count++;
+  opaque_object = other_value.opaque_object;
 }
 
 OCTETSTRING::OCTETSTRING(const OCTETSTRING_ELEMENT& other_value)
@@ -127,6 +131,7 @@ OCTETSTRING& OCTETSTRING::operator=(const OCTETSTRING& other_value)
     clean_up();
     val_ptr = other_value.val_ptr;
     val_ptr->ref_count++;
+    opaque_object = other_value.opaque_object;
   }
   return *this;
 }
@@ -498,7 +503,10 @@ OCTETSTRING::operator const unsigned char*() const
 
 void OCTETSTRING::log() const
 {
-  if (val_ptr != NULL) {
+  if (opaque_object !=  NULL)   {
+	  opaque_object->log();
+  }
+  else if (val_ptr != NULL) {
     boolean only_printable = TTCN_Logger::get_log_format() == TTCN_Logger::LF_LEGACY;
     TTCN_Logger::log_char('\'');
     for (int i = 0; i < val_ptr->n_octets; i++) {
@@ -1451,6 +1459,14 @@ int OCTETSTRING::OER_decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_bu
   }
   p_buf.increase_pos(bytes);
   return 0;
+}
+
+void OCTETSTRING::set_opaque(Base_Type *opaque) {
+	this->opaque_object = opaque;
+}
+
+void OCTETSTRING::unset_opaque(Base_Type *opaque) {
+	this->opaque_object = NULL;
 }
 
 // octetstring element class
