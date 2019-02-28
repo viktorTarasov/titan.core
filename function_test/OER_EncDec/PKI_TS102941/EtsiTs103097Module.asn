@@ -114,6 +114,18 @@ EtsiTs103097Data-Encrypted {ToBeEncryptedDataContent} ::= EtsiTs103097Data (WITH
 	})
 })
 
+EtsiTs103097DataEncryptedBis ::= EtsiTs103097Data (WITH COMPONENTS {...,
+	content (WITH COMPONENTS {
+		encryptedData (WITH COMPONENTS {...,
+			ciphertext (WITH COMPONENTS {...,
+				aes128ccm (WITH COMPONENTS {
+					ccmCiphertext (SIZE(16..MAX))
+				})
+			})
+		}) PRESENT
+	})
+})
+
 EtsiTs103097Data-SignedAndEncrypted {ToBesignedAndEncryptedDataContent} ::= EtsiTs103097DataEncrypted {EtsiTs103097Data-Signed {ToBesignedAndEncryptedDataContent}}
 
 END

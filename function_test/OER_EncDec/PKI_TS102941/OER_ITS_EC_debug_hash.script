@@ -1,0 +1,196 @@
+.******************************************************************************
+.* Copyright (c) 2000-2018 Ericsson Telecom AB
+.* All rights reserved. This program and the accompanying materials
+.* are made available under the terms of the Eclipse Public License v2.0
+.* which accompanies this distribution, and is available at
+.* https://www.eclipse.org/org/documents/epl-2.0/EPL-2.0.html
+.*
+.* Contributors:
+.*   Balasko, Jeno
+.*   Beres, Szabolcs
+.*   Delic, Adam
+.*   Kovacs, Ferenc
+.*   Szabados, Kristof
+.*
+.******************************************************************************/
+:text.
+:lang eng.
+.*
+:docname.Test Description
+:docno.8/152 91-CRL 113 200/5 Uen
+:rev.C
+:date.2015-04-27
+.*
+:prep.ETH/XZR Kristof Szabados (+36 1 437 7256)
+:appr.ETH/XZ (Roland Gecse)
+:checked.ETHBAAT
+.*
+:title.Test Description - OER coder
+:contents level=3.
+.*---------------------------------------------------------------------*
+:h1.PREREQUISITES AND PREPARATIONS
+.*---------------------------------------------------------------------*
+.*---------------------------------------------------------------------*
+:h2.Scope of the Test Object
+.*---------------------------------------------------------------------*
+:xmp tab=1 nokeep.
+
+This TD contains unified test cases related to TTCN3 Executor's OER coder function.
+
+The target of these test cases are the basic data types from specification
+'ISO/IEC 8825-7:2015 -- Information technology – ASN.1 encoding rules:
+Specification of Octet Encoding Rules'
+
+The target data types are used in the following technical specification:
+ 'ETSI TS 103 097 V1.3.1 (2017-10)'
+Intelligent Transport Systems (ITS); Security;
+Security header and certificate formats and certificate formats 
+
+ 'IEEE Std 1609.2-2016 IEEE Standard'
+Wireless Access in Vehicular Environments—Security Services for
+Applications and Management Messages
+
+:exmp.
+
+:p.:us.Revision Information:eus.
+
+:xmp nokeep.
+:us.History:eus.
+
+REV   DATE         PREPARED   CHANGE
+===   ==========   ========   ======
+A     2003-10-31   ETHEKR     New document
+B     2007-03-06   EDMDELI    Implicit message encoding
+C     2007-03-21   EJNOSZA    Bugfix in a testcase for implicit msg. enc.
+D     2008-10-01   EFERKOV    Big integers
+E     2010-01-18   EKRISZA    Updated for TITAN R8C
+F     2011-06-18   EKRISZA    Added tests for errors
+A     2011-12-12   EKRISZA     Updated for release
+PB1   2011-01-30   ETHBAAT    Editorial changes
+
+:exmp.
+
+
+.*---------------------------------------------------------------------*
+:h2.Test Tools
+.*---------------------------------------------------------------------*
+:p.:us.Software Tools:eus.
+:xmp tab=2 nokeep.
+
+	SAtester
+
+:exmp.
+:np.
+.*---------------------------------------------------------------------*
+:h1.REQUIREMENT-BASED TESTS
+.*---------------------------------------------------------------------*
+.*---------------------------------------------------------------------*
+:h2.Testing OER encoding of the basic types
+.*---------------------------------------------------------------------*
+.*---------------------------------------------------------------------*
+:h3. OER encoding
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - OER encoding (unified tests)>
+
+<STATIC:ASN>
+
+TempA
+
+DEFINITIONS ::=
+
+BEGIN
+
+IMPORTS
+  Certificate, Ieee1609Dot2Data FROM IEEE1609dot2 {
+    iso(1) identified-organization(3) ieee(111)
+    standards-association-numbered-series-standards(2) wave-stds(1609)
+    dot2(2) base(1) schema(1) major-version-2(2)
+  }
+
+  EtsiTs102941Data, EtsiTs102941DataContent FROM EtsiTs102941MessagesCa {
+    itu-t(0) identified-organization(4) etsi(0)
+    itsDomain(5) wg5(5) ts(102941) messagesCa(0) version1(1)
+  };
+
+  TestCertificate ::= Certificate
+
+END
+
+<STATIC>
+
+
+type component Test_CT {}
+
+<TTCN_TC:PURE_EXEC>
+
+import from IEEE1609dot2 all;
+import from EtsiTs103097Module all;
+import from EtsiTs102941MessagesCa all;
+
+
+external function enc_EtsiTs103097Data(in EtsiTs103097Data pdu) return octetstring with { extension "prototype(convert) encode(OER)" }
+external function dec_EtsiTs103097Data(in octetstring stream) return EtsiTs103097Data with { extension "prototype(convert) decode(OER)" }
+
+//*********************************************
+// TESTCASES
+//*********************************************
+
+testcase tc_Ieee1609Dot2Data() runs on Test_CT {
+
+  const Ieee1609Dot2Data data_signer_hash := {
+	protocolVersion := 3,
+	content := {
+		signedData := {
+			hashId := sha256,
+			tbsData := {
+				payload := {
+					data := {
+						protocolVersion := 3,
+						content := { unsecuredData := '010185000101200D69F5FF0201038080008003008100188106726F6F74434100000000001C4076F586000A01018001248002FFFF010200810081808082B508635B64345D0AC96EA586D58F07ACF83476C0AF8A2B95D1FE9CF341D96AFE80802662D8B62BD76DDA2FF971E0B9DC89314FF0BDCFB5C9449620D284D1F1DD8128E46BB852338118A866150F0FA69D8733F4A77FD6119B94B9917D43AA9022BBC0808480800300810070810774657374544C4D00000000001C1A3B7586000A83010282002101020B0102001600150B01010016820021010101010100010001028001228004456732118001238104032671218080826C928A195ACA74A2294A7C1B80E8D3C45DD2FA681C268E8730859C70166B1A16808051F06569167A9EDAFCBA8C87AE167CD3C84D8D5AC98EEFDD842F798998FF3A235A526F5513610563F9F214422DF7F971CB947B00210B0662D5EA946A64AD9DCD800300810070810774657374544C4D00000000001C1A3B7586000A83010282002101020B0102001600150B01010016820021010101010100010001028001228004456732118001238104032671218080826C928A195ACA74A2294A7C1B80E8D3C45DD2FA681C268E8730859C70166B1A1680802758B32076D0B239A0B272331A7FC7D5DC8D9FF6FBB6CE27EB06EA2C4367C4C05733316F5179FBDEBDF23B5AE458033B42DCEC5F59D2F1FD29706C71C0A2512B15687474703A2F2F6C6F63616C686F73743A3830383080808080030081007981077465737452434100000000001C1A3B7586000A83010282002101020B0102001600150B010100168200210101010101000100010280012280044567321180012381040326712101020081008100808251434D2BFF68CDF5EB0DF83E33196A2FBCD3A61B6BA188FA760BF7E566569CDB8080826C928A195ACA74A2294A7C1B80E8D3C45DD2FA681C268E8730859C70166B1A168080E26927CEADA6536F35208CE62D49AE31DAEA301817695CFE3CCDBBA819AFAAC0D1E774354C365546B69510FE9E5130FD9C9EE16CE19A07BEB9E3B7F7858A025B80030081007981077465737452434100000000001C1A3B7586000A83010282002101020B0102001600150B010100168200210101010101000100010280012280044567321180012381040326712101020081008100808251434D2BFF68CDF5EB0DF83E33196A2FBCD3A61B6BA188FA760BF7E566569CDB8080826C928A195ACA74A2294A7C1B80E8D3C45DD2FA681C268E8730859C70166B1A1680809A3AB569C50771A5566B3FDDB2329D9BA45AAFF42D8C7479527064411025D869B18585F724CF4E80F340662D8C4BF6EBD49D2C3F84B9E2AD9EE067F2EFA8C5C3'O } 
+					},
+					extDataHash := omit
+				},
+				headerInfo := {
+					psid := 624,
+					generationTime := 475259357096000,
+					expiryTime := omit,
+					generationLocation := omit,
+					p2pcdLearningRequest := omit,
+					missingCrlIdentifier := omit,
+					encryptionKey := omit,
+					inlineP2pcdRequest := omit,
+					requestedCertificate := omit
+				}
+			},
+			signer := {
+				digest := '3132333435363738'O
+			},
+			signature_ := {
+				ecdsaNistP256Signature := {
+					rSig := { x_only := 'E4B07C162E6953CBD2FDEFFA2E66AC7B6831C31B4EB3171947BCCDBD6534E045'O },
+					sSig := '14EDC5EA06A9A647CC7FCC80B566A77982CB0CED5BDA231975A1A7284E78B355'O }
+			}
+		}
+	}
+  };
+   
+ 
+   enc_EtsiTs103097Data(data_signer_hash);
+}
+
+//*********************************************
+// CONTROL PART
+//*********************************************
+
+control {
+  execute(tc_Ieee1609Dot2Data());
+}
+
+<RESULT>
+
+Overall verdict: pass
+
+<END_TC>
+

@@ -40,7 +40,11 @@ EtsiTs103097Data::=Ieee1609Dot2Data (WITH COMPONENTS {...,
 			}),
 			signer (WITH COMPONENTS {..., --constraints on the certificate
 --				certificate (WITH COMPONENT (SingleEtsiTs103097Certificate))
-				certificate (WITH COMPONENT (EtsiTs103097Certificate))
+				certificate (
+                                  SIZE(1) 
+                                          ^
+                                             WITH COMPONENT 
+                                                          (EtsiTs103097Certificate))
 			})
 		}),
 		encryptedData (WITH COMPONENTS {..., -- constraints on encrypted data headers

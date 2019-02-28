@@ -55,7 +55,7 @@ endif
 
 # Flags for the C++ preprocessor (and makedepend as well):
 # CPPFLAGS = -D$(PLATFORM) -I$(TTCN3_DIR)/include -I$(XMLDIR)/include/libxml2
-CPPFLAGS = -fPIC -D$(PLATFORM) -I$(TTCN3_DIR)/include -I$(XMLDIR)/include/libxml2
+CPPFLAGS = -fPIC -D$(PLATFORM) -I$(TTCN3_DIR)/include -I$(XMLDIR)/include/libxml2 -I/home/vtarasov/projects/idnomic/innovation/its-pki-lib/gerrithub.titan.core/core
 ifdef RT2
 CPPFLAGS += -DTITAN_RUNTIME_2
 endif
@@ -64,7 +64,7 @@ CPPFLAGS += -DMEMORY_DEBUG
 endif
 
 # Flags for the C++ compiler:
-CXXFLAGS = -Wall -O0
+CXXFLAGS = -Wall -O0 -g
 
 # Flags for the linker:
 LDFLAGS =
@@ -105,6 +105,11 @@ ASN1_MODULES = TempA.asn IEEE1609dot2BaseTypes.asn IEEE1609dot2.asn EtsiTs103097
 GENERATED_SOURCES = Temp.cc $(ASN1_MODULES:.asn=.cc)
 GENERATED_HEADERS = Temp.hh $(ASN1_MODULES:.asn=.hh)
 
+REDUCED_ASN1_MODULES = IEEE1609dot2BaseTypes.asn IEEE1609dot2.asn EtsiTs103097Module.asn EtsiTs102941BaseTypes.asn   EtsiTs102941MessagesItss.asn EtsiTs102941TrustLists.asn EtsiTs102941TypesAuthorizationValidation.asn  EtsiTs102941TypesEnrolment.asn EtsiTs102941MessagesCa.asn  EtsiTs102941MessagesItss_OptionalPrivacy.asn  EtsiTs102941TypesAuthorization.asn  EtsiTs102941TypesCaManagement.asn
+REDUCED_GENERATED_SOURCES = $(REDUCED_ASN1_MODULES:.asn=.cc)
+REDUCED_GENERATED_HEADERS = $(REDUCED_ASN1_MODULES:.asn=.hh)
+REDUCED_OBJECTS = $(REDUCED_GENERATED_SOURCES:.cc=.o)
+
 # Source & header files of Test Ports and your other modules:
 USER_SOURCES =
 USER_HEADERS =
@@ -117,12 +122,6 @@ OBJECTS = $(GENERATED_SOURCES:.cc=.o)
 TARGET = Temp
 TARGET_LIB_SHARED = libEtsiTs102941.so
 TARGET_LIB = libEtsiTs102941.a
-
-ifdef COVERAGE
-CPPFLAGS += -fprofile-arcs -ftest-coverage -g
-CXXFLAGS += -fprofile-arcs -ftest-coverage -g
-LDFLAGS += -fprofile-arcs -ftest-coverage -g -lgcov
-endif
 
 YAML_CFLAGS := $(shell pkg-config --cflags yaml-cpp)
 YAML_LDFLAGS := $(shell pkg-config --libs yaml-cpp)
@@ -143,7 +142,7 @@ WIN32_LIBS = -L$(XMLDIR)/lib -lxml2 -lncurses
 #
 # Rules for building the executable...
 #
-all: $(TARGET) pki-its-tools;
+all: $(TARGET) ;
 
 $(TARGET_LIB): $(OBJECTS)
 	$(AR) -r $@ $(OBJECTS)
@@ -166,12 +165,8 @@ compile: $(TTCN3_MODULES) $(ASN1_MODULES)
 	$(ASN1_MODULES) $(ASN1_STATIC_MODULES) - $?
 	touch $@
 
-# pki-its-tools: $(TARGET_LIB) pki-its-tools.o Temp.o
-pki-its-tools: $(TARGET_LIB) pki-its-tools.o
-	$(CXX) $(LDFLAGS) -g -o $@ $^ $(TARGET_LIB) -L$(TTCN3_DIR)/lib -l$(TTCN3_LIB) -L$(OPENSSL_DIR)/lib -lcrypto $($(PLATFORM)_LIBS) -lboost_program_options
-
 clean:
-	-$(RM) $(TARGET) $(OBJECTS) $(GENERATED_HEADERS) \
+	-$(RM) $(TARGET) $(TARGET_LIB) $(TARGET_LIB_SHARED) $(OBJECTS) $(GENERATED_HEADERS) \
 	$(GENERATED_SOURCES) compile *.log *.gcda *.gcno
 
 dep: $(GENERATED_SOURCES)
