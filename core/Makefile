@@ -216,7 +216,8 @@ LIBRARY := libttcn3$(RT2_SUFFIX).a
 PARALLEL_LIBRARY := libttcn3$(RT2_SUFFIX)-parallel.a
 SHAREDLIB := libttcn3$(RT2_SUFFIX)-dynamic.so
 PARALLEL_SHAREDLIB := libttcn3$(RT2_SUFFIX)-parallel-dynamic.so
-	
+PKGCONFIGFILE := ttcn3.pc
+
 # Executables
 ifneq ($(FUNCTION_TEST_RUNTIME), yes)
 PROGRAMS := ttcn3_profmerge$(EXESUFFIX)
@@ -285,7 +286,20 @@ $(GENERATED_MODULES): $(SCHEMAS) ../xsdconvert/xsd2ttcn$(EXESUFFIX)
 	sed -e 's/XSD.String/charstring/g;s/XSD.AnySimpleType/charstring/g;s/XSD.Integer/integer/g;s/XSD.Float/float/g;s/XSD.Double/float/g;s/XSD.Boolean/boolean/g;s/import from XSD all;//g' TitanLoggerApi.ttcn >TitanLoggerApi.ttcn_
 	mv TitanLoggerApi.ttcn_ TitanLoggerApi.ttcn
 
-install: $(TARGETS) $(PROGRAMS)
+$(PKGCONFIGFILE): $(LIBRARY)
+	mkdir -p $(PKGCONFIGDIR)
+	echo "prefix=$(TTCN3_DIR)" > $(PKGCONFIGDIR)/$@
+	echo "exec_prefix=$$""{prefix}/bin" >> $(PKGCONFIGDIR)/$@
+	echo "includedir=$$""{prefix}/include" >> $(PKGCONFIGDIR)/$@
+	echo "libdir=$$""{prefix}/lib" >> $(PKGCONFIGDIR)/$@
+	echo "" >> $(PKGCONFIGDIR)/$@
+	echo "Name: ttcn3" >> $(PKGCONFIGDIR)/$@
+	echo "Description: TTCN3 ASN.1 parser/encoder" >> $(PKGCONFIGDIR)/$@
+	echo "Version: 6.5.0" >> $(PKGCONFIGDIR)/$@
+	echo "Libs: -L$$""{libdir} -lttcn3" >> $(PKGCONFIGDIR)/$@
+	echo "Cflags: -I$$""{includedir}" >> $(PKGCONFIGDIR)/$@
+
+install: $(TARGETS) $(PROGRAMS) $(PKGCONFIGFILE)
 ifeq ($(DYNAMIC_LINKING), yes)
   ifeq ($(DEBUG), no)
 	$(STRIP) $(SHAREDLIB) $(PARALLEL_SHAREDLIB)
