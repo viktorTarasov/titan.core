@@ -2090,7 +2090,7 @@ void defRecordOfClassMemAllocOptimized(const struct_of_def *sdef, output_struct 
     "return ret_val;\n"
   "}\n\n", name, name, name, dispname, dispname, dispname, name);
   def = mputprintf(def,
-    "%s replace(int index, int len, const %s_template& repl) const;\n\n",
+    "  %s replace(int index, int len, const %s_template& repl) const;\n\n",
     name, name);
   src = mputprintf(src,
     "%s %s::replace(int index, int len, const %s_template& repl) const\n"
@@ -2101,7 +2101,7 @@ void defRecordOfClassMemAllocOptimized(const struct_of_def *sdef, output_struct 
     "}\n\n", name, name, name);
 
   /* set_size function */
-  def = mputstr(def, "void set_size(int new_size);\n");
+  def = mputstr(def, "  void set_size(int new_size);\n");
   src = mputprintf(src, "void %s::set_size(int new_size)\n"
     "{\n"
     "if (new_size<0) TTCN_error(\"Internal error: Setting a negative size for "
@@ -2129,15 +2129,15 @@ void defRecordOfClassMemAllocOptimized(const struct_of_def *sdef, output_struct 
 
   /* is_bound function */
   def = mputstr(def,
-    "inline boolean is_bound() const {return n_elements!=-1; }\n");
+    "  inline boolean is_bound() const {return n_elements!=-1; }\n");
 
   /* is_present function */
   def = mputstr(def,
-    "inline boolean is_present() const { return is_bound(); }\n");
+    "  inline boolean is_present() const { return is_bound(); }\n");
 
   /* is_value function */
   def = mputstr(def,
-    "boolean is_value() const;\n");
+    "  boolean is_value() const;\n");
   src = mputprintf(src,
     "boolean %s::is_value() const\n"
     "{\n"

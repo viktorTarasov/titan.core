@@ -3708,7 +3708,7 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
 
   /* is_present */
   def = mputstr(def,
-      "inline boolean is_present() const { return is_bound(); }\n");
+      "  inline boolean is_present() const { return is_bound(); }\n");
 
   /* is_value */
   def = mputprintf(def,
@@ -6538,34 +6538,34 @@ static void defEmptyRecordClass(const struct_def *sdef,
 
     /* non-equal operators */
     def = mputprintf(def,
-	"inline boolean operator!=(null_type other_value) const "
+	"  inline boolean operator!=(null_type other_value) const "
 	"{ return !(*this == other_value); }\n"
-	"inline boolean operator!=(const %s& other_value) const "
+	"  inline boolean operator!=(const %s& other_value) const "
 	"{ return !(*this == other_value); }\n", name);
 
 
     /* is_bound function */
-    def = mputstr(def, "inline boolean is_bound() const "
+    def = mputstr(def, "  inline boolean is_bound() const "
 	"{ return bound_flag; }\n");
 
     /* is_present function */
     def = mputstr(def,
-      "inline boolean is_present() const { return is_bound(); }\n");
+      "  inline boolean is_present() const { return is_bound(); }\n");
 
     /* is_value function */
-    def = mputstr(def, "inline boolean is_value() const "
+    def = mputstr(def, "  inline boolean is_value() const "
         "{ return bound_flag; }\n");
 
     /* clean_up function */
-    def = mputstr(def, "inline void clean_up() "
+    def = mputstr(def, "  inline void clean_up() "
         "{ bound_flag = FALSE; }\n");
 
     /* must_bound function */
-    def = mputstr(def, "inline void must_bound(const char *err_msg) const "
+    def = mputstr(def, "  inline void must_bound(const char *err_msg) const "
 	"{ if (!bound_flag) TTCN_error(\"%s\", err_msg); }\n");
 
     /* log function */
-    def = mputstr(def, "void log() const;\n");
+    def = mputstr(def, "  void log() const;\n");
     src = mputprintf(src, "void %s::log() const\n"
 	"{\n"
 	"if (bound_flag) TTCN_Logger::log_event_str(\"{ }\");\n"
@@ -6573,7 +6573,7 @@ static void defEmptyRecordClass(const struct_def *sdef,
 	"}\n\n", name);
 
     /* set_param function */
-    def = mputstr(def, "void set_param(Module_Param& param);\n");
+    def = mputstr(def, "  void set_param(Module_Param& param);\n");
     src = mputprintf(src, "void %s::set_param(Module_Param& param)\n"
       "{\n"
       "  param.basic_check(Module_Param::BC_VALUE, \"empty record/set value (i.e. { })\");\n"
@@ -6584,14 +6584,14 @@ static void defEmptyRecordClass(const struct_def *sdef,
       "}\n\n", name, dispname);
 
     /* encode_text function */
-    def = mputstr(def, "void encode_text(Text_Buf& text_buf) const;\n");
+    def = mputstr(def, "  void encode_text(Text_Buf& text_buf) const;\n");
     src = mputprintf(src, "void %s::encode_text(Text_Buf& /*text_buf*/) const\n"
 	"{\n"
 	"must_bound(\"Text encoder: Encoding an unbound value of type %s.\");\n"
 	"}\n\n", name, dispname);
 
     /* decode_text function */
-    def = mputstr(def, "void decode_text(Text_Buf& text_buf);\n");
+    def = mputstr(def, "  void decode_text(Text_Buf& text_buf);\n");
     src = mputprintf(src, "void %s::decode_text(Text_Buf& /*text_buf*/)\n"
 	"{\n"
 	"bound_flag = TRUE;\n"
