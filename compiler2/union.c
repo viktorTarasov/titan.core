@@ -192,6 +192,15 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
     "clean_up();\n"
     "}\n\n", name, name);
 
+  if (!use_runtime_2) {
+#ifndef NDEBUG
+  def = mputprintf(def, "  // written by defUnionClass in %s at %d\n", __FILE__, __LINE__);
+#endif
+  def = mputstr(def, "  const TTCN_Typedescriptor_t* get_descriptor() const;\n");
+  src = mputprintf(src,
+          "const TTCN_Typedescriptor_t* %s::get_descriptor() const { return &%s_descr_; }\n",
+           name, name);
+  }
   /* assignment operator */
   def = mputprintf(def, "  %s& operator=(const %s& other_value);\n", name, name);
   src = mputprintf(src, "%s& %s::operator=(const %s& other_value)\n"

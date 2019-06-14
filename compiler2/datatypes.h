@@ -80,6 +80,7 @@ typedef struct {
     struct_named_constraint parent_nc;
     int in_op_or;
     int in_op_or_head;
+    int in_choice;
 } struct_constraints;
 
 typedef struct {

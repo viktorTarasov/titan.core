@@ -468,6 +468,8 @@ namespace Common {
 
   bool ContainedSubtypeConstraint::get_constraints_def(struct_constraints *cons_def)
   {
+    int ii;
+
     if (!checked) FATAL_ERROR("ContainedSubtypeConstraint::get_constraints_def()");
 
     if (!type || !my_type) FATAL_ERROR("ContainedSubtypeConstraint::get_constraints_def()");
@@ -486,7 +488,7 @@ namespace Common {
       cons_def->con_str = mputstr(cons_def->con_str, "\nfield_present = FALSE; /* ContainedSubtypeConstraint: init begin */\n");
 
     cons_def->con_str = mputstr(cons_def->con_str, "{  /* ContainedSubtypeConstraint begin */\n");
-    cons_def->con_str = mputprintf(cons_def->con_str, "if(%s.is_present()) field_present = TRUE;\n", cons_def->con_chain);
+    cons_def->con_str = mputprintf(cons_def->con_str, "if(%s.is_present()) field_present = TRUE; /* ContainedSubtypeConstraint (from chain) */\n", cons_def->con_chain);
 
     char *ec_core = NULL;
     ec_core = mputstr(ec_core,    "      if (ec != NULL)\n");
@@ -495,8 +497,8 @@ namespace Common {
     ec_core = mputstr(ec_core,    "      return FALSE;\n");
 
     if (cons_def->parent_nc.refd == (int)(Type::T_SEQOF))   {
-      cons_def->con_str = mputprintf(cons_def->con_str, "if(%s.is_present())\n", cons_def->con_chain);
-      cons_def->con_str = mputprintf(cons_def->con_str,"  for(int ii=0;ii<%s.size_of();ii++) {\n", cons_def->con_chain);
+      cons_def->con_str = mputprintf(cons_def->con_str, "if(%s.is_present()) /* ContainedSubtypeConstraint */ \n", cons_def->con_chain);
+      cons_def->con_str = mputprintf(cons_def->con_str,"  for(int ii=0;ii<%s.size_of();ii++) {   /* ContainedSubtypeConstraint (parent SEQOF) */ \n", cons_def->con_chain);
       cons_def->con_str = mputprintf(cons_def->con_str, "    if (%s_validate_constraints(%s[ii], ec) == FALSE)  {\n%s    }\n",
 		      type->get_type_refd()->get_genname_own().c_str(), cons_def->con_chain, ec_core);
       cons_def->con_str = mputstr(cons_def->con_str, "  }\n");
@@ -508,6 +510,11 @@ namespace Common {
     }
     cons_def->con_str = mputprintf(cons_def->con_str, "if(!field_present)  {\n%s}\n", ec_core);
     cons_def->con_str = mputstr(cons_def->con_str, "}  /* ContainedSubtypeConstraint fin */\n");
+
+    for (ii=0; ii < cons_def->in_choice; ii++)
+       cons_def->con_str = mputprintf(cons_def->con_str,"} /* %s +%i: close choice, ii:%i */\n", __FILE__, __LINE__, ii+1);
+
+
 
     Free(ec_core);
     Free(cons_def->con_chain);
@@ -1105,6 +1112,11 @@ namespace Common {
   {
     const char *id_str = get_id().get_dispname().c_str();
     int parent_refd = cons_def->parent_nc.refd;
+    int ii;
+
+    if (strcmp(id_str, "symmRecipInfo") == 0)   {
+	    printf("%s +%i: stop here\n", __FILE__, __LINE__);
+    }
 
     if (cons_def == NULL)
       return FALSE;
@@ -1114,26 +1126,30 @@ namespace Common {
     cons_def->in_op_or_head = FALSE;
 
     if (parent_refd == Type::T_CHOICE_A)   {
-      if (cons_def->con_str == NULL)
+      if (cons_def->con_str == NULL)   {
         cons_def->con_str = mputstr(cons_def->con_str, "\nfield_present = FALSE; /* NamedConstraint: begin: parent T_CHOICE_A */\n");
+        cons_def->in_choice = 0;
+      }
 
-      cons_def->con_str = mputprintf(cons_def->con_str,"if(%s.ischosen(%s::%s::ALT_%s))  /* NamedConstraint: parent T_CHOICE_A */\n",
-		      cons_def->con_chain, cons_def->parent_nc.scope, cons_def->parent_nc.type, id_str);
+      cons_def->in_choice++;
+      cons_def->con_str = mputprintf(cons_def->con_str,"if(%s.ischosen(%s::%s::ALT_%s))  { /* NamedConstraint: parent T_CHOICE_A  (%s:%i) in-choice:%i*/\n",
+		      cons_def->con_chain, cons_def->parent_nc.scope, cons_def->parent_nc.type, id_str,
+		      get_filename(), get_first_line(), cons_def->in_choice);
     }
     else if (parent_refd == (int)(Type::T_SEQOF))   {
       if (cons_def->con_str == NULL)
         cons_def->con_str = mputstr(cons_def->con_str, "\nfield_present = FALSE;  /* NamedConstraint: begin: parent T_SEQOF */\n");
 
-      cons_def->con_str = mputprintf(cons_def->con_str,"for(int ii=0;ii<%s.size_of();ii++)\n", cons_def->con_chain);
+      cons_def->con_str = mputprintf(cons_def->con_str,"for(int ii=0;ii<%s.size_of();ii++) /* NamedConstraint: parent T_SEQOF */\n", cons_def->con_chain);
       cons_def->con_chain = mputstr(cons_def->con_chain, "[ii]");
     }
     else if(parent_refd == Type::T_ENUM_A)   {
       FATAL_ERROR("NamedConstraint::get_constraints_def() ENUM parent is not yet supported");
     }
 
-    cons_def->con_chain = mputprintf(cons_def->con_chain, "%s%s()", (cons_def->parent_nc.id != NULL ? "." : "value."), id_str);
-
     if (presence_constraint == PC_NONE)   {
+      cons_def->con_chain = mputprintf(cons_def->con_chain, "%s%s()", (cons_def->parent_nc.id != NULL ? "." : "value."), id_str);
+
       if (value_constraint == NULL)
         FATAL_ERROR("NamedConstraint::get_constraints_def() missing constraint value");
 
@@ -1147,15 +1163,28 @@ namespace Common {
         return FALSE;
     }
     else if (presence_constraint == PC_PRESENT || presence_constraint == PC_ABSENT)   {
+      Type *t = my_type->get_type_refd_last();
+      Type *pt = my_type->get_parent_type();
+
       if ((cons_def->con_str == NULL || cons_def->in_op_or_head) && cons_def->in_op_or == 0)
         cons_def->con_str = mputstr(cons_def->con_str, "\nfield_present = FALSE;\n");
 
-      cons_def->con_str = mputprintf(cons_def->con_str, "if(%s.is_present()) field_present = TRUE;\n", cons_def->con_chain);
+      if (pt->get_typetype() == Type::T_CHOICE_A)   {
+      	cons_def->con_chain = mputprintf(cons_def->con_chain, "%s.ischosen(%s::%s::ALT_%s)", 
+			(cons_def->parent_nc.id != NULL ? "" : "value"), 
+			cons_def->parent_nc.scope, pt->get_dispname().c_str(), id_str);
+      }
+      else   {
+      	cons_def->con_chain = mputprintf(cons_def->con_chain, "%s%s().is_present()", (cons_def->parent_nc.id != NULL ? "." : "value."), id_str);
+      }
+     
+      cons_def->con_str = mputprintf(cons_def->con_str, "if(%s) field_present = TRUE; /* NamedConstraint: %s; parent %s*/\n",
+		      cons_def->con_chain, id_str, pt->get_dispname().c_str());
 
       if (presence_constraint == PC_PRESENT)   {
         if (cons_def->in_op_or == 0 || cons_def->in_op_or == 1)   {
           if (cons_def->in_op_or == 1)   {
-	    cons_def->con_str = mputstr(cons_def->con_str, "if(!field_present) return FALSE;\n");
+	    cons_def->con_str = mputprintf(cons_def->con_str, "if(!field_present) return FALSE; /* NamedConstraint:: %s %s */\n", id_str, get_id().get_name().c_str());
 	  }
 	  else   {
 	    cons_def->con_str = mputstr(cons_def->con_str, "if(!field_present)  {\n");
@@ -1169,7 +1198,7 @@ namespace Common {
       else  {
         if (cons_def->in_op_or == 0 || cons_def->in_op_or == 1)   {
           if (cons_def->in_op_or == 1)   {
-	    cons_def->con_str = mputstr(cons_def->con_str, "if(field_present) return FALSE;\n");
+	    cons_def->con_str = mputprintf(cons_def->con_str, "if(field_present) return FALSE; /* NamedConstraint::: %s %s */\n", id_str, get_id().get_name().c_str());
           }
 	  else   {
 	    cons_def->con_str = mputstr(cons_def->con_str, "if(field_present)  {\n");
@@ -1181,6 +1210,9 @@ namespace Common {
 	}
       }
 
+      for (ii=0; ii < cons_def->in_choice; ii++)
+	      cons_def->con_str = mputprintf(cons_def->con_str,"} /* %s +%i: close choice, ii:%i */\n", __FILE__, __LINE__, ii+1);
+
       Free(cons_def->con_chain);
       cons_def->con_chain = NULL;
 
@@ -1189,6 +1221,13 @@ namespace Common {
       cons_def->strs_num++;
       cons_def->con_str = NULL;
     }
+    else   {
+      FATAL_ERROR("Invalid presence constraint");
+    }
+
+    if (parent_refd == Type::T_CHOICE_A)
+	    if (cons_def->in_choice)
+	    	cons_def->in_choice--;
 
     return TRUE;
   }
