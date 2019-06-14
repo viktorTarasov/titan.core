@@ -472,6 +472,7 @@ testcase tc_OER_Uint64() runs on Test_CT {
 testcase tc_OER_Int() runs on Test_CT {
   const Int i0 := 0
   const Int i1 := 1
+  const Int i3 := 3
   const Int i254 := 254
   const Int iR := 8234104123542484900769178205574010627627573691361805720124810878238590820080
   const octetstring oR := '20123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0'O
@@ -486,6 +487,7 @@ testcase tc_OER_Int() runs on Test_CT {
 
   if (enc_OER_Int(i0) == '0100'O) {setverdict(pass);} else {setverdict(fail);}
   if (enc_OER_Int(i1) == '0101'O) {setverdict(pass);} else {setverdict(fail);}
+  if (enc_OER_Int(i3) == '0103'O) {setverdict(pass);} else {setverdict(fail);}
   if (enc_OER_Int(i254) == '0200FE'O) {setverdict(pass);} else {setverdict(fail);}
   if (enc_OER_Int(iR) == oR) {setverdict(pass);} else {setverdict(fail);}
   if (enc_OER_Int(iB) == oB) {setverdict(pass);} else {setverdict(fail);}
@@ -494,6 +496,7 @@ testcase tc_OER_Int() runs on Test_CT {
 
   if (dec_OER_Int('0100'O) == i0) {setverdict(pass);} else {setverdict(fail);}
   if (dec_OER_Int('0101'O) == i1) {setverdict(pass);} else {setverdict(fail);}
+  if (dec_OER_Int('0103'O) == i3) {setverdict(pass);} else {setverdict(fail);}
   if (dec_OER_Int('0200FE'O) == i254) {setverdict(pass);} else {setverdict(fail);}
   if (dec_OER_Int(oR) == iR) {setverdict(pass);} else {setverdict(fail);}
   if (dec_OER_Int(oB) == iB) {setverdict(pass);} else {setverdict(fail);}
