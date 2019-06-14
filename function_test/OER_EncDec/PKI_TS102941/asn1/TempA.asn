@@ -1,0 +1,23 @@
+
+TempA
+
+DEFINITIONS ::=
+
+BEGIN
+
+IMPORTS
+  Certificate, Ieee1609Dot2Data FROM IEEE1609dot2 {
+    iso(1) identified-organization(3) ieee(111)
+    standards-association-numbered-series-standards(2) wave-stds(1609)
+    dot2(2) base(1) schema(1) major-version-2(2)
+  }
+
+  EtsiTs102941Data, EtsiTs102941DataContent FROM EtsiTs102941MessagesCa {
+    itu-t(0) identified-organization(4) etsi(0)
+    itsDomain(5) wg5(5) ts(102941) messagesCa(0) version1(1)
+  };
+
+  TestCertificate ::= Certificate
+
+END
+
