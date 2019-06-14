@@ -114,7 +114,7 @@ EtsiTs103097Data-Encrypted {ToBeEncryptedDataContent} ::= EtsiTs103097Data (WITH
 	})
 })
 
-EtsiTs103097DataEncryptedBis ::= EtsiTs103097Data (WITH COMPONENTS {...,
+EtsiTs103097Data-Encrypted-My ::= EtsiTs103097Data (WITH COMPONENTS {...,
 	content (WITH COMPONENTS {
 		encryptedData (WITH COMPONENTS {...,
 			ciphertext (WITH COMPONENTS {...,

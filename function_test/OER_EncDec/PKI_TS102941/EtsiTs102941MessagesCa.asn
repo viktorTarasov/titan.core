@@ -10,6 +10,12 @@ BEGIN
 
 IMPORTS
 
+Uint8
+FROM
+IEEE1609dot2BaseTypes {iso(1) identified-organization(3) ieee(111)
+standards-association-numbered-series-standards(2) wave-stds(1609)
+dot2(2) base(1) base-types(2) major-version-2(2)}
+
 EtsiTs103097Data-Signed,
 --EtsiTs103097Data-Encrypted,
 EtsiTs103097Data-SignedExternalPayload
@@ -66,7 +72,8 @@ CaCertificateRekeyingMessage ::= EtsiTs103097Data-Signed {EtsiTs103097Data-Signe
 ************/
 
 EtsiTs102941Data::= SEQUENCE {
-  version Version (v1),
+  -- version Version (v1),
+  version Uint8 (1),
   content EtsiTs102941DataContent
   }
 

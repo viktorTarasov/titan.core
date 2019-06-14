@@ -17,7 +17,7 @@ IEEE1609dot2 {iso(1) identified-organization(3) ieee(111)
 standards-association-numbered-series-standards(2) wave-stds(1609)  
 dot2(2) base (1) schema (1) major-version-2(2)}
 
-EtsiTs103097Data-Encrypted, EtsiTs103097Data-Signed, EtsiTs103097Data-SignedExternalPayload
+EtsiTs103097Data-Encrypted-My, EtsiTs103097Data-Encrypted, EtsiTs103097Data-Signed, EtsiTs103097Data-SignedExternalPayload
 FROM EtsiTs103097Module
 { itu-t(0) identified-organization(4) etsi(0) itsDomain(5) wg5(5) ts(103097) securedMessageV1(0)}
 ;
@@ -38,7 +38,8 @@ CertificateSubjectAttributes ::= SEQUENCE {
    WITH COMPONENTS { ..., certIssuePermissions PRESENT})
 
 EcSignature::= CHOICE {
-  encryptedEcSignature 	EtsiTs103097Data-Encrypted{EtsiTs103097Data-SignedExternalPayload}, 
+  -- encryptedEcSignature 	EtsiTs103097Data-Encrypted{EtsiTs103097Data-SignedExternalPayload}, 
+  encryptedEcSignature 	EtsiTs103097Data-Encrypted-My, 
   ecSignature           EtsiTs103097Data-SignedExternalPayload
   }
 
