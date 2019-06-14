@@ -213,17 +213,19 @@ endif
 
 # # # # Library and shared lib names
 LIBRARY := libttcn3$(RT2_SUFFIX).a
+LIBRARY_NOMAIN := libttcn3-nomain$(RT2_SUFFIX).a
 PARALLEL_LIBRARY := libttcn3$(RT2_SUFFIX)-parallel.a
 SHAREDLIB := libttcn3$(RT2_SUFFIX)-dynamic.so
 PARALLEL_SHAREDLIB := libttcn3$(RT2_SUFFIX)-parallel-dynamic.so
 PKGCONFIGFILE := ttcn3.pc
+PKGCONFIGFILE_NOMAIN := ttcn3-nomain.pc
 
 # Executables
 ifneq ($(FUNCTION_TEST_RUNTIME), yes)
 PROGRAMS := ttcn3_profmerge$(EXESUFFIX)
 endif
 
-TARGETS := $(LIBRARY) $(PARALLEL_LIBRARY)
+TARGETS := $(LIBRARY) $(LIBRARY_NOMAIN) $(PARALLEL_LIBRARY)
 
 # Determine whether to build shared libraries:
 DYNAMIC_LINKING := yes
@@ -299,7 +301,21 @@ $(PKGCONFIGFILE): $(LIBRARY)
 	echo "Libs: -L$$""{libdir} -lttcn3" >> $(PKGCONFIGDIR)/$@
 	echo "Cflags: -I$$""{includedir}" >> $(PKGCONFIGDIR)/$@
 
-install: $(TARGETS) $(PROGRAMS) $(PKGCONFIGFILE)
+$(PKGCONFIGFILE_NOMAIN): $(LIBRARY)
+	mkdir -p $(PKGCONFIGDIR)
+	echo "prefix=$(TTCN3_DIR)" > $(PKGCONFIGDIR)/$@
+	echo "exec_prefix=$$""{prefix}/bin" >> $(PKGCONFIGDIR)/$@
+	echo "includedir=$$""{prefix}/include" >> $(PKGCONFIGDIR)/$@
+	echo "libdir=$$""{prefix}/lib" >> $(PKGCONFIGDIR)/$@
+	echo "" >> $(PKGCONFIGDIR)/$@
+	echo "Name: ttcn3" >> $(PKGCONFIGDIR)/$@
+	echo "Description: TTCN3 ASN.1 parser/encoder" >> $(PKGCONFIGDIR)/$@
+	echo "Version: 6.5.0" >> $(PKGCONFIGDIR)/$@
+	echo "Libs: -L$$""{libdir} -lttcn3-nomain" >> $(PKGCONFIGDIR)/$@
+	echo "Cflags: -I$$""{includedir}" >> $(PKGCONFIGDIR)/$@
+
+install: $(TARGETS) $(PROGRAMS) $(PKGCONFIGFILE) $(PKGCONFIGFILE_NOMAIN)
+
 ifeq ($(DYNAMIC_LINKING), yes)
   ifeq ($(DEBUG), no)
 	$(STRIP) $(SHAREDLIB) $(PARALLEL_SHAREDLIB)
@@ -347,6 +363,9 @@ ttcn3_profmerge$(EXESUFFIX): $(PROFMERGE_OBJECTS)
 
 # # # # static link libraries
 $(LIBRARY): $(LIBRARY_OBJECTS_NOMAIN) LoggerPlugin_static.o Single_main.o
+	$(AR) -r $@ $?
+
+$(LIBRARY_NOMAIN): $(LIBRARY_OBJECTS_NOMAIN) LoggerPlugin_static.o
 	$(AR) -r $@ $?
 
 $(PARALLEL_LIBRARY): $(LIBRARY_OBJECTS_NOMAIN) LoggerPlugin_static.o Parallel_main.o
