@@ -347,19 +347,19 @@ endif
 
 # # # # executables
 single$(RT2_SUFFIX)$(EXESUFFIX): $(LIBRARY)
-	$(CXX) $(LDFLAGS) -o $@ $^ -lcrypto $($(PLATFORM)_LIBS)
+	$(CXX) $(LDFLAGS) -o $@ $^ $(LDFLAGS)  -lcrypto $($(PLATFORM)_LIBS)
 
 single$(RT2_SUFFIX)-dynamic$(EXESUFFIX): Single_main.o $(SHAREDLIB)
-	$(CXX) $(LDFLAGS) -o $@ $^ -lcrypto $($(PLATFORM)_LIBS)
+	$(CXX) $(LDFLAGS) -o $@ $^ $(LDFLAGS) -lcrypto $($(PLATFORM)_LIBS)
 
 parallel$(RT2_SUFFIX)$(EXESUFFIX): $(PARALLEL_LIBRARY)
-	$(CXX) $(LDFLAGS) -o $@ $^ -lcrypto $($(PLATFORM)_LIBS)
+	$(CXX) $(LDFLAGS) -o $@ $^ $(LDFLAGS) -lcrypto $($(PLATFORM)_LIBS)
 
 parallel$(RT2_SUFFIX)-dynamic$(EXESUFFIX): Parallel_main.o $(PARALLEL_SHAREDLIB)
-	$(CXX) $(LDFLAGS) -o $@ $^ -lcrypto $($(PLATFORM)_LIBS)
+	$(CXX) $(LDFLAGS) -o $@ $^ $(LDFLAGS) -lcrypto $($(PLATFORM)_LIBS)
 	
 ttcn3_profmerge$(EXESUFFIX): $(PROFMERGE_OBJECTS)
-	$(CXX) $(LDFLAGS) -o $@ $^ $(LICENSE_LIBS) $($(PLATFORM)_LIBS)
+	$(CXX) $(LDFLAGS) -o $@ $^ $(LDFLAGS) $(LICENSE_LIBS) $($(PLATFORM)_LIBS)
 
 # # # # static link libraries
 $(LIBRARY): $(LIBRARY_OBJECTS_NOMAIN) LoggerPlugin_static.o Single_main.o
