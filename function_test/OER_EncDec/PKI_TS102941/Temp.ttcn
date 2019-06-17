@@ -1,0 +1,89 @@
+module Temp {
+
+
+type component Test_CT {}
+
+
+import from IEEE1609dot2 all;
+import from EtsiTs103097Module all;
+
+external function enc_Ieee1609Dot2Data(in Ieee1609Dot2Data pdu) return octetstring with { extension "prototype(convert) encode(OER)" }
+external function dec_Ieee1609Dot2Data(in octetstring stream) return Ieee1609Dot2Data with { extension "prototype(convert) decode(OER)" }
+
+external function enc_EtsiTs103097Data(in EtsiTs103097Data pdu) return octetstring with { extension "prototype(convert) encode(OER)" }
+external function dec_EtsiTs103097Data(in octetstring stream) return EtsiTs103097Data with { extension "prototype(convert) decode(OER)" }
+
+//*********************************************
+// TESTCASES
+//*********************************************
+
+testcase tc_Ieee1609Dot2Data() runs on Test_CT {
+  const octetstring encrypted_data_encoded := '03820101826CC2023B5115003E8083B398874C55EEBECBC09440B7904A3B1AAD786B606E1786F8E06B7926B0D8852E11C07D88519FE1564A81D58561F575C7C01AF55280FE45006175930FEB93B94380AB52F0B193CD6659F421B98B818CA75B0B6EF8D41D47D41F6CE678434D9081A8BF7296396A1EC09EB5DA15C83FEA8F0CCEC6850203B58B51812B5A7A5FA40F9AF0B9ABABBD6A45D2D5EBB86FCCA7A2A2B4074DBCB19B936A507D19E77AA52C5402AF117CE0735DBCE7C4835BCC97E205FC0CB13B8462FC2C3BAB94CDBDA1BC75C4C37E32CE36D48832F078519335C21A5FB2BD77D6038D99A2F3'O;
+  const Ieee1609Dot2Data encrypted_data := {
+	protocolVersion := 3,
+	content := {
+		encryptedData := {
+			recipients := { {
+				certRecipInfo := {
+					recipientId := '6CC2023B5115003E'O,
+					encKey := {
+						eciesNistP256 := {
+							v := { compressed_y_1 := 'B398874C55EEBECBC09440B7904A3B1AAD786B606E1786F8E06B7926B0D8852E'O },
+							c := '11C07D88519FE1564A81D58561F575C7'O,
+							t := 'C01AF55280FE45006175930FEB93B943'O
+						}
+					}
+				}
+			} },
+			ciphertext := {
+				aes128ccm := {
+					nonce := 'AB52F0B193CD6659F421B98B'O,
+					ccmCiphertext := 'A75B0B6EF8D41D47D41F6CE678434D9081A8BF7296396A1EC09EB5DA15C83FEA8F0CCEC6850203B58B51812B5A7A5FA40F9AF0B9ABABBD6A45D2D5EBB86FCCA7A2A2B4074DBCB19B936A507D19E77AA52C5402AF117CE0735DBCE7C4835BCC97E205FC0CB13B8462FC2C3BAB94CDBDA1BC75C4C37E32CE36D48832F078519335C21A5FB2BD77D6038D99A2F3'O
+				}
+			}
+		}
+	}
+  };
+
+  const EtsiTs103097Data etsi_encrypted_data := {
+	protocolVersion := 3,
+	content := {
+		encryptedData := {
+			recipients := { {
+				certRecipInfo := {
+					recipientId := '6CC2023B5115003E'O,
+					encKey := {
+						eciesNistP256 := {
+							v := { compressed_y_1 := 'B398874C55EEBECBC09440B7904A3B1AAD786B606E1786F8E06B7926B0D8852E'O },
+							c := '11C07D88519FE1564A81D58561F575C7'O,
+							t := 'C01AF55280FE45006175930FEB93B943'O
+						}
+					}
+				}
+			} },
+			ciphertext := {
+				aes128ccm := {
+					nonce := 'AB52F0B193CD6659F421B98B'O,
+					ccmCiphertext := 'A75B0B6EF8D41D47D41F6CE678434D9081A8BF7296396A1EC09EB5DA15C83FEA8F0CCEC6850203B58B51812B5A7A5FA40F9AF0B9ABABBD6A45D2D5EBB86FCCA7A2A2B4074DBCB19B936A507D19E77AA52C5402AF117CE0735DBCE7C4835BCC97E205FC0CB13B8462FC2C3BAB94CDBDA1BC75C4C37E32CE36D48832F078519335C21A5FB2BD77D6038D99A2F3'O
+				}
+			}
+		}
+	}
+  };
+
+
+  if (enc_Ieee1609Dot2Data(encrypted_data) == encrypted_data_encoded) {setverdict(pass);} else {setverdict(fail);};
+  if (dec_Ieee1609Dot2Data(encrypted_data_encoded) == encrypted_data) {setverdict(pass);} else {setverdict(fail);};
+
+  enc_EtsiTs103097Data(etsi_encrypted_data);
+}
+
+//*********************************************
+// CONTROL PART
+//*********************************************
+
+control {
+  execute(tc_Ieee1609Dot2Data());
+}
+
+}
