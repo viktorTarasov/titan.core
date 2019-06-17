@@ -1,0 +1,9 @@
+TTCN3_DIR := /usr/share/ttcn3
+OPENSSL_DIR := default
+#JDKDIR := /usr/lib/jvm/java-7-openjdk-amd64
+XMLDIR := default
+JNI := no
+GEN_PDF := no
+CXX := g++
+CC := gcc
+
