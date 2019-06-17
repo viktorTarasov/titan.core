@@ -57,9 +57,20 @@ ALLDIRS += usrguide
 # Dirlist for "install"
 INSTALLDIRS := $(ALLDIRS)
 
-INSTALLDIRS += etc help hello
+# INSTALLDIRS += etc help hello
+INSTALLDIRS += etc
+ifneq ($(INSTALL_HELP), no)
+	INSTALLDIRS += help
+endif
+ifneq ($(INSTALL_HELLO), no)
+	INSTALLDIRS += hello
+endif
 
 ###########################################################
+
+$(warning ######################## PLATFORM $(PLATFORM))
+$(warning ######################## JNI $(JNI))
+$(warning ######################## ALLDIRS $(ALLDIRS))
 
 all run clean distclean:
 	@for dir in $(ALLDIRS); do \
