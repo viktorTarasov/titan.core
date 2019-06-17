@@ -113,10 +113,12 @@ USER_HEADERS =
 
 # All object files needed for the executable test suite:
 OBJECTS = $(ASN1_TTCN_MODULES:.asn=.o)
+HEADERS = $(ASN1_TTCN_MODULES:.asn=.hh)
 
 # The name of the executable test suite:
 TARGET = Temp
-TARGET_LIB = libEtsiTs102941.a
+TARGET_LIB_NAME = EtsiTs102941
+TARGET_LIB = lib$(TARGET_LIB_NAME).a
 
 YAML_CFLAGS := $(shell pkg-config --cflags yaml-cpp)
 YAML_LDFLAGS := $(shell pkg-config --libs yaml-cpp)
@@ -134,6 +136,9 @@ LINUX_LIBS = -L$(XMLDIR)/lib -lxml2 -lpthread -lrt -lncurses
 FREEBSD_LIBS = -L$(XMLDIR)/lib -lxml2 -lncurses
 WIN32_LIBS = -L$(XMLDIR)/lib -lxml2 -lncurses
 
+PKGCONFIG_DIR = $(TTCN3_DIR)/lib/pkgconfig/
+PKGCONFIG_FILE = $(PKGCONFIG_DIR)/$(TARGET_LIB_NAME).pc
+
 #
 # Rules for building the executable...
 #
@@ -143,7 +148,26 @@ $(TARGET_LIB): $(OBJECTS)
 	$(AR) -r $@ $(OBJECTS)
 
 $(TARGET): Temp.o TempA.o $(TARGET_LIB)
-	$(CXX) $(LDFLAGS) -o $@ $^ -L$(TTCN3_DIR)/lib -l$(TTCN3_LIB) -L$(OPENSSL_DIR)/lib -lcrypto $($(PLATFORM)_LIBS)
+	$(CXX) $(LDFLAGS) -o $@ $^ $(LDFLAGS) -L$(TTCN3_DIR)/lib -l$(TTCN3_LIB) -L$(OPENSSL_DIR)/lib -lcrypto $($(PLATFORM)_LIBS)
+
+$(PKGCONFIG_FILE): $(TARGET_LIB) 
+	mkdir -p $(PKGCONFIG_DIR)
+	echo "prefix=$(TTCN3_DIR)" > $@
+	echo "exec_prefix=$$""{prefix}/bin" >> $@
+	echo "includedir=$$""{prefix}/include/$(TARGET_LIB_NAME)" >> $@
+	echo "libdir=$$""{prefix}/lib" >> $@
+	echo "" >> $@
+	echo "Name: $(PROJECT)" >> $@
+	echo "Description: Etsi parse/encode library for ITS-PKI project" >> $@
+	echo "Version: 0.0.1" >> $@
+	echo "Libs: -L$$""{libdir} -l$(TARGET_LIB_NAME) -lstdc++fs" >> $@
+	echo "Cflags: -I$$""{includedir}" >> $@
+
+install: $(TARGET_LIB) $(PKGCONFIG_FILE)
+	mkdir -p $(TTCN3_DIR)/lib
+	cp $(TARGET_LIB) $(TTCN3_DIR)/lib/
+	mkdir -p $(TTCN3_DIR)/include/$(TARGET_LIB_NAME)
+	cp $(HEADERS) $(TTCN3_DIR)/include/$(TARGET_LIB_NAME)/ 
 
 .cc.o .c.o:
 	$(CXX) -g -c $(CPPFLAGS) $(CXXFLAGS) $<
