@@ -1114,10 +1114,6 @@ namespace Common {
     int parent_refd = cons_def->parent_nc.refd;
     int ii;
 
-    if (strcmp(id_str, "symmRecipInfo") == 0)   {
-	    printf("%s +%i: stop here\n", __FILE__, __LINE__);
-    }
-
     if (cons_def == NULL)
       return FALSE;
 
