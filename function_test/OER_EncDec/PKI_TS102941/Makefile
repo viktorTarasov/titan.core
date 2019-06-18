@@ -137,7 +137,7 @@ LINUX_LIBS = -L$(XMLDIR)/lib -lxml2 -lpthread -lrt -lncurses
 FREEBSD_LIBS = -L$(XMLDIR)/lib -lxml2 -lncurses
 WIN32_LIBS = -L$(XMLDIR)/lib -lxml2 -lncurses
 
-PKGCONFIG_DIR = $(TTCN3_DIR)/lib/pkgconfig/
+PKGCONFIG_DIR = $(TTCN3_DIR)/lib/pkgconfig
 PKGCONFIG_FILE = $(PKGCONFIG_DIR)/$(TARGET_LIB_NAME).pc
 
 #
@@ -169,6 +169,9 @@ install: $(TARGET_LIB) $(PKGCONFIG_FILE)
 	cp $(TARGET_LIB) $(TTCN3_DIR)/lib/
 	mkdir -p $(TTCN3_DIR)/include/$(TARGET_LIB_NAME)
 	cp $(HEADERS) $(TTCN3_DIR)/include/$(TARGET_LIB_NAME)/ 
+ifdef   INSTALL_PKGCONFIG_PATH
+	ln -sf $(PKGCONFIG_FILE) $(INSTALL_PKGCONFIG_PATH)/$(TARGET_LIB_NAME).pc
+endif
 
 .cc.o .c.o:
 	$(CXX) -g -c $(CPPFLAGS) $(CXXFLAGS) $<

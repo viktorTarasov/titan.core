@@ -5,6 +5,7 @@ XMLDIR := default
 JNI := no
 INSTALL_HELP := no
 INSTALL_HELLO := no
+INSTALL_PKGCONFIG_PATH := /usr/local/lib/pkgconfig/
 GEN_PDF := no
 CXX := g++
 CC := gcc
