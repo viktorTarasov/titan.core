@@ -55,7 +55,8 @@ endif
 
 # Flags for the C++ preprocessor (and makedepend as well):
 # CPPFLAGS = -D$(PLATFORM) -I$(TTCN3_DIR)/include -I$(XMLDIR)/include/libxml2
-CPPFLAGS = -fPIC -D$(PLATFORM) -I$(TTCN3_DIR)/include -I$(XMLDIR)/include/libxml2 -I/home/vtarasov/projects/idnomic/innovation/its-pki-lib/gerrithub.titan.core/core
+# CPPFLAGS = -fPIC -D$(PLATFORM) -I$(TTCN3_DIR)/include -I$(XMLDIR)/include/libxml2 -I/home/vtarasov/projects/idnomic/innovation/its-pki-lib/gerrithub.titan.core/core
+CPPFLAGS = -fPIC -D$(PLATFORM) -I$(TTCN3_DIR)/include -I$(XMLDIR)/include/libxml2
 ifdef RT2
 CPPFLAGS += -DTITAN_RUNTIME_2
 endif
