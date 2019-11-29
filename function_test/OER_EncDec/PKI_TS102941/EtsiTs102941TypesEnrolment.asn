@@ -41,7 +41,8 @@ EnrolmentResponseCode ::= ENUMERATED {
 InnerEcRequestSignedForPop::= EtsiTs103097Data-Signed{InnerEcRequest}
 
 InnerEcRequest ::= SEQUENCE {
-  itsId                                 IA5String,
+  -- itsId                                 IA5String,
+  itsId                                 OCTET STRING,
   certificateFormat                     CertificateFormat,
   publicKeys                            PublicKeys,
   requestedSubjectAttributes            CertificateSubjectAttributes (WITH COMPONENTS{certIssuePermissions ABSENT}),
